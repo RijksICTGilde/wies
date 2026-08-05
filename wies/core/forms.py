@@ -13,7 +13,7 @@ from wies.core.editables.user import UserEditables
 from .form_mixins import NlddFormMixin
 from .models import Colleague, Label, LabelCategory, Skill, Suborganization
 from .services.users import validate_email_domain
-from .widgets import MultiselectDropdown
+from .widgets import ComboBoxSelect, MultiselectDropdown
 
 logger = logging.getLogger(__name__)
 
@@ -234,6 +234,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         queryset=Suborganization.objects.all(),
         required=False,
         empty_label=" ",
+        widget=ComboBoxSelect,
     )
 
     # Init will create category_* fields for the different label categories

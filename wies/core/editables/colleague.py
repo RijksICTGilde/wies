@@ -6,7 +6,7 @@ from django.db import transaction
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import Colleague, LabelCategory, Suborganization
-from wies.core.widgets import MultiselectDropdown
+from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 
 LABELS_PREFIX = "labels_"
 
@@ -73,6 +73,7 @@ class ColleagueEditables(EditableSet):
         choices=_suborganization_choices,
         required=False,
         empty_label=" ",
+        widget=ComboBoxSelect,
         display="forms/displays/colleague_suborganization.html",
     )
 
