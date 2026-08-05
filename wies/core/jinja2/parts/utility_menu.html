@@ -1,5 +1,5 @@
 {# Gebruikersmenu in de utility-slot van de navigatiebalk; ook gebruikt door
-   base_legal.html, dat een eigen balk met terugknop rendert. #}
+   base_footer.html, dat een eigen balk met terugknop rendert. #}
 {% if request.user.is_authenticated %}
   <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
   <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text" {% if request.path == url('user-profile') %}current{% endif %}>

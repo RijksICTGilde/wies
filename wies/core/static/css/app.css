@@ -188,6 +188,13 @@ a {
   padding: 0.75rem 0;
 }
 
+/* Versieregel in de "Over Wies"-kolom van de NLDD page-footer: gedempt en
+   klein; de rest van de opmaak verzorgt nldd-rich-text. */
+.wies-footer-version {
+  color: var(--semantics-text-subtle, #4f5155);
+  font-size: 0.875rem;
+}
+
 .flash-messages {
   position: fixed;
   top: 1rem;

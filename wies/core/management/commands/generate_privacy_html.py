@@ -13,15 +13,15 @@ HTML_PATH = Path(settings.BASE_DIR) / "wies" / "core" / "jinja2" / "privacy.html
 
 PREAMBLE = """\
 {# AUTO-GENERATED FROM docs/privacy.md by `manage.py generate_privacy_html`. DO NOT EDIT BY HAND. #}
-{% extends "base_legal.html" %}
+{% extends "base_footer.html" %}
 {% block title %}
   Privacy · Wies
 {% endblock title %}
-{% block legal_content %}
+{% block footer_content %}
   <nldd-rich-text>
 """
 
-POSTAMBLE = "  </nldd-rich-text>\n{% endblock legal_content %}\n"
+POSTAMBLE = "  </nldd-rich-text>\n{% endblock footer_content %}\n"
 
 
 def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
