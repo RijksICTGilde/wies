@@ -177,7 +177,9 @@
     // De ruimte tussen de lijst en de knop eronder hoort bij de lijst: staat hij
     // in de template, dan blijft er een gat van 12px onder het label zolang er
     // niets gekozen is. Hier wordt hij mee opgeruimd door de innerHTML-reset.
-    container.appendChild(cell("nldd-spacer", { size: "12", direction: "vertical" }));
+    container.appendChild(
+      cell("nldd-spacer", { size: "12", direction: "vertical" }),
+    );
   }
 
   function renderFromInputs() {
