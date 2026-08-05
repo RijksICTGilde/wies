@@ -19,11 +19,7 @@
     {% endblock error_supporting_text %}
   {% endset %}
   <nldd-simple-section>
-  <nldd-inline-dialog variant="alert"
-                      size="lg"
-                      heading-level="1"
-                      text="{{ error_text | trim }}"
-                      supporting-text="{{ error_supporting_text | trim }}">
+  <nldd-inline-dialog variant="alert" size="lg" heading-level="1" text="{{ error_text | trim }}" supporting-text="{{ error_supporting_text | trim }}">
   {% block error_actions %}
     <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
   {% endblock error_actions %}
