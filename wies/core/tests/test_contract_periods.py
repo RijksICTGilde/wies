@@ -95,15 +95,16 @@ class ContractPeriodFormsetTest(TestCase):
 
 
 class TeamEditorHoursTest(TestCase):
-    """Uren per week is editable per placement through the Team editor."""
+    """Uren per week is editable per role (service) through the Team editor,
+    for filled roles and open aanvragen alike."""
 
     def setUp(self):
         self.colleague = Colleague.objects.create(name="Plaats Baar", email="pb@rijksoverheid.nl", source="wies")
         self.assignment = Assignment.objects.create(name="Opdracht", source="wies")
-        self.service = Service.objects.create(assignment=self.assignment, description="rol", source="wies")
-        self.placement = Placement.objects.create(
-            colleague=self.colleague, service=self.service, source="wies", assignment_hours_per_week=24
+        self.service = Service.objects.create(
+            assignment=self.assignment, description="rol", source="wies", assignment_hours_per_week=24
         )
+        self.placement = Placement.objects.create(colleague=self.colleague, service=self.service, source="wies")
 
     def _rows_to_services_data(self, rows, override):
         return [
@@ -118,7 +119,7 @@ class TeamEditorHoursTest(TestCase):
                 "has_custom_period": r["has_custom_period"],
                 "placement_start_date": r["placement_start_date"] if r["has_custom_period"] else None,
                 "placement_end_date": r["placement_end_date"] if r["has_custom_period"] else None,
-                "assignment_hours_per_week": override.get(r["placement_id"], r["assignment_hours_per_week"]),
+                "assignment_hours_per_week": override.get(r["id"], r["assignment_hours_per_week"]),
             }
             for r in rows
         ]
@@ -127,16 +128,27 @@ class TeamEditorHoursTest(TestCase):
         row = _services_initial(self.assignment)[0]
         assert row["assignment_hours_per_week"] == 24
 
-    def test_editing_hours_persists_on_placement(self):
+    def test_editing_hours_persists_on_service(self):
         rows = _services_initial(self.assignment)
-        data = self._rows_to_services_data(rows, override={self.placement.id: 28})
+        data = self._rows_to_services_data(rows, override={self.service.id: 28})
         apply_services_to_assignment(self.assignment, data)
-        self.placement.refresh_from_db()
-        assert self.placement.assignment_hours_per_week == 28
+        self.service.refresh_from_db()
+        assert self.service.assignment_hours_per_week == 28
 
     def test_clearing_hours_sets_none(self):
         rows = _services_initial(self.assignment)
-        data = self._rows_to_services_data(rows, override={self.placement.id: None})
+        data = self._rows_to_services_data(rows, override={self.service.id: None})
         apply_services_to_assignment(self.assignment, data)
-        self.placement.refresh_from_db()
-        assert self.placement.assignment_hours_per_week is None
+        self.service.refresh_from_db()
+        assert self.service.assignment_hours_per_week is None
+
+    def test_aanvraag_keeps_hours(self):
+        """An open aanvraag (no placement) carries its own hours — the field is
+        no longer hidden/cleared when there is no consultant (guards #2)."""
+        open_service = Service.objects.create(
+            assignment=self.assignment, description="vacature", source="wies", assignment_hours_per_week=32
+        )
+        rows = _services_initial(self.assignment)
+        open_row = next(r for r in rows if r["id"] == open_service.id)
+        assert open_row["assignment_hours_per_week"] == 32
+        assert open_row["placement_id"] is None

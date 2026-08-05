@@ -13,7 +13,6 @@ from django.conf import settings
 
 from wies.core.editables import (
     AssignmentEditables,
-    PlacementEditables,
     ServiceEditables,
     UserEditables,
 )
@@ -153,8 +152,8 @@ def update_service_description(user, s):
     )
 
 
-@rule(UPDATE, PlacementEditables.assignment_hours_per_week)
-def update_placement_hours(user, p):
+@rule(UPDATE, ServiceEditables.assignment_hours_per_week)
+def update_service_hours(user, s):
     """Exploratory BM-feature (branch ``explore-bm-views``): open to every
     authenticated user so it can be demoed without permission modelling.
     Tighten to the RIG BM-owner before this ever ships."""

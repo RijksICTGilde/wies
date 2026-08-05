@@ -375,6 +375,13 @@ dialog#side_panel::backdrop {
   margin-left: -0.25rem;
 }
 
+/* Uren per week on an aanvraag row, subtle like the period text. */
+.service-card__hours {
+  font-size: 0.85rem;
+  color: var(--rvo-color-grijs-600, #475569);
+  white-space: nowrap;
+}
+
 .service-card__description {
   padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
   font-style: italic;

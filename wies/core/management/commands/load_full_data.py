@@ -49,7 +49,9 @@ MAX_LABELS_PER_CATEGORY = 2
 # ── Contract hours ─────────────────────────────────────────────────────────────
 CONTRACT_HOURS_CHOICES = [24, 28, 32, 36, 40]
 CONTRACT_HAS_HISTORY_PROBABILITY = 0.3  # some colleagues have a previous, closed period
-PLACEMENT_HOURS_FILLED_PROBABILITY = 0.8  # most placements have hours filled in
+PLACEMENT_HOURS_FILLED_PROBABILITY = 0.8  # most services have hours filled in
+# Open services pinned into a mid-horizon window so demand > capacity there (Prognose).
+AANVRAAG_SPIKE_COUNT = 16
 
 # ── Hours-feature demo distribution (used by generate_demo_data) ───────────────
 # 36u is the most common government contract; some part-timers, a few 40u.
@@ -787,6 +789,10 @@ class Command(BaseCommand):
                 period_source="ASSIGNMENT",
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
+                # Hours belong to the service (the role); most are filled in.
+                assignment_hours_per_week=(
+                    rng.choice(CONTRACT_HOURS_CHOICES) if rng.random() < PLACEMENT_HOURS_FILLED_PROBABILITY else None
+                ),
             )
             all_services.append(service)
 
@@ -802,6 +808,9 @@ class Command(BaseCommand):
                 period_source="ASSIGNMENT",
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
+                assignment_hours_per_week=(
+                    rng.choice(CONTRACT_HOURS_CHOICES) if rng.random() < PLACEMENT_HOURS_FILLED_PROBABILITY else None
+                ),
             )
             all_services.append(service)
 
@@ -824,6 +833,7 @@ class Command(BaseCommand):
 
         placement_count = 0
         service_idx = 0
+        placed_service_ids: set[int] = set()
 
         shuffled_colleagues = list(colleagues)
         rng.shuffle(shuffled_colleagues)
@@ -835,11 +845,6 @@ class Command(BaseCommand):
                 service = placeable_services[service_idx]
                 service_idx += 1
 
-                # Most placements have hours filled in; some are left empty.
-                hours = (
-                    rng.choice(CONTRACT_HOURS_CHOICES) if rng.random() < PLACEMENT_HOURS_FILLED_PROBABILITY else None
-                )
-
                 Placement.objects.create(
                     colleague=colleague,
                     service=service,
@@ -848,9 +853,37 @@ class Command(BaseCommand):
                     specific_end_date=None,
                     source=weighted_choice(rng, SOURCE_WEIGHTS),
                     source_id="",
-                    assignment_hours_per_week=hours,
                 )
                 placement_count += 1
+                placed_service_ids.add(service.id)
 
         self.stdout.write(f"Placements: {placement_count}")
+
+        # ── 9. Aanvragen demand spike ────────────────────────────────────
+        # Open services (no placement) are "aanvragen". Every service already
+        # carries hours, so open ones taper as their assignments end. Pin a
+        # subset into a mid-horizon window with generous hours so demand
+        # (ingepland + aanvragen) rises above the available capacity there and
+        # then tapers — this is what the Prognose chart illustrates.
+        open_services = [s for s in all_services if s.id not in placed_service_ids]
+        rng.shuffle(open_services)
+        spike_start = today - timedelta(days=30)
+        spike_end = today + timedelta(days=120)
+        for i, service in enumerate(open_services):
+            if i < AANVRAAG_SPIKE_COUNT:
+                service.period_source = "SERVICE"
+                service.specific_start_date = spike_start
+                service.specific_end_date = spike_end
+                service.assignment_hours_per_week = rng.choice([32, 36, 40, 40])
+            else:
+                service.assignment_hours_per_week = rng.choice([16, 20, 24, 28, 32])
+            service.save(
+                update_fields=[
+                    "period_source",
+                    "specific_start_date",
+                    "specific_end_date",
+                    "assignment_hours_per_week",
+                ]
+            )
+        self.stdout.write(f"Aanvragen (open services): {len(open_services)}, spike: {AANVRAAG_SPIKE_COUNT}")
         self.stdout.write(self.style.SUCCESS("Done!"))

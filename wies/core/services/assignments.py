@@ -119,7 +119,8 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
             service.description = svc.get("description", "")
             service.skill = skill
             service.status = svc.get("status", service.status)
-            update_fields = ["description", "skill", "status"]
+            service.assignment_hours_per_week = svc.get("assignment_hours_per_week")
+            update_fields = ["description", "skill", "status", "assignment_hours_per_week"]
             if svc.get("has_custom_period"):
                 service.period_source = Service.SERVICE
                 service.specific_start_date = svc.get("placement_start_date")
@@ -137,6 +138,7 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                 "skill": skill,
                 "status": svc.get("status", "OPEN"),
                 "source": "wies",
+                "assignment_hours_per_week": svc.get("assignment_hours_per_week"),
             }
             if svc.get("has_custom_period"):
                 create_kwargs["period_source"] = Service.SERVICE
@@ -183,11 +185,6 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                     placement.specific_end_date = new_end
                     update_fields.append("specific_end_date")
 
-                new_hours = svc.get("assignment_hours_per_week")
-                if placement.assignment_hours_per_week != new_hours:
-                    placement.assignment_hours_per_week = new_hours
-                    update_fields.append("assignment_hours_per_week")
-
                 if update_fields:
                     placement.save(update_fields=update_fields)
             else:
@@ -197,7 +194,6 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                 "colleague_id": int(colleague_id),
                 "service": service,
                 "source": "wies",
-                "assignment_hours_per_week": svc.get("assignment_hours_per_week"),
             }
             if svc.get("has_custom_period"):
                 create_kwargs["period_source"] = Placement.PLACEMENT

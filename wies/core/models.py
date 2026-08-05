@@ -194,12 +194,6 @@ class Placement(models.Model):
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)  # only for non wies
-    assignment_hours_per_week = models.PositiveSmallIntegerField(
-        null=True,
-        blank=True,
-        validators=[MinValueValidator(1), MaxValueValidator(40)],
-        verbose_name="Uren per week op plaatsing",
-    )
 
     def __str__(self):
         return f"{self.colleague.name} - {self.service.description}"
@@ -241,6 +235,12 @@ class Service(models.Model):
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)  # only for non wies
+    assignment_hours_per_week = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(40)],
+        verbose_name="Uren per week",
+    )
 
     def __str__(self):
         return f"{self.description}"

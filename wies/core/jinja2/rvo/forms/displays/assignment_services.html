@@ -59,6 +59,9 @@
                 Aanvraag
               </c-tag>
             </span>
+            {% if row.assignment_hours_per_week %}
+              <span class="service-card__hours">{{ row.assignment_hours_per_week }} u/wk</span>
+            {% endif %}
             {% set svc = row.service %}
             {% if svc and (svc.start_date or svc.end_date) %}
               <span class="service-card__period">

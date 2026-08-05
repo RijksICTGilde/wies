@@ -14,10 +14,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
-from django.db.models import Q
+from django.db.models import Count, Q
 
-from wies.core.models import Colleague, ContractPeriod, Placement
-from wies.core.querysets import annotate_placement_dates
+from wies.core.models import Colleague, ContractPeriod, Placement, Service
+from wies.core.querysets import annotate_placement_dates, annotate_service_dates
 
 # Timeline horizon and "pressing" thresholds.
 HORIZON_BACK_DAYS = 90
@@ -163,7 +163,10 @@ def colleague_occupancy(today: date) -> list[OccupancyRow]:
             start = placement.actual_start_date
             end = placement.actual_end_date
             phase = _phase(start, end, today)
-            hours = placement.assignment_hours_per_week or 0
+            # Hours live on the service now; ``service__assignment`` is already
+            # select_related above, so this is no extra query. A service with
+            # several placements reports its full hours per placement (demo).
+            hours = placement.service.assignment_hours_per_week or 0
             if phase == "active":
                 active_count += 1
                 active_hours += hours
@@ -223,14 +226,17 @@ def _covers(start: date | None, end: date | None, d: date) -> bool:
 
 
 def capacity_forecast(today: date) -> dict:
-    """Weekly capacity vs. planned hours across the horizon, for the Prognose chart.
+    """Weekly capacity vs. demand across the horizon, for the Prognose chart.
 
     For each week in [today - HORIZON_BACK_DAYS, today + HORIZON_AHEAD_DAYS]:
-      - capacity = Σ contract hours of every ContractPeriod covering that week,
-      - planned  = Σ active placement hours at that week.
+      - capacity  = Σ contract hours of every ContractPeriod covering that week,
+      - planned   = Σ hours of every *filled* Service (≥1 placement) covering it,
+      - aanvragen = Σ hours of every *open* Service (no placement) covering it.
 
-    Two queries total (contract periods + annotated placements); the per-week
-    aggregation runs in Python. Returns JSON-ready lists.
+    Demand (planned + aanvragen) can exceed capacity: an open aanvraag carries
+    hours whether or not a consultant is placed. Two queries total (contract
+    periods + annotated services); the per-week aggregation runs in Python.
+    Returns JSON-ready lists.
     """
     horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
     horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
@@ -245,23 +251,30 @@ def capacity_forecast(today: date) -> dict:
         cursor += timedelta(days=7)
 
     contract_periods = list(ContractPeriod.objects.all())
-    placements = list(
-        annotate_placement_dates(Placement.objects.all()).values(
-            "actual_start_date", "actual_end_date", "assignment_hours_per_week"
-        )
+    services = list(
+        annotate_service_dates(Service.objects.all())
+        .annotate(placement_count=Count("placements"))
+        .values("actual_start_date", "actual_end_date", "assignment_hours_per_week", "placement_count")
     )
 
     capacity: list[int] = []
     planned: list[int] = []
+    aanvragen: list[int] = []
     for week in weeks:
         cap = sum(cp.hours_per_week for cp in contract_periods if _covers(cp.start_date, cp.end_date, week))
-        plan = sum(
-            (p["assignment_hours_per_week"] or 0)
-            for p in placements
-            if _covers(p["actual_start_date"], p["actual_end_date"], week)
-        )
+        plan = 0
+        aanvraag = 0
+        for s in services:
+            if not _covers(s["actual_start_date"], s["actual_end_date"], week):
+                continue
+            hours = s["assignment_hours_per_week"] or 0
+            if s["placement_count"] > 0:  # a filled service is "ingepland"
+                plan += hours
+            else:  # an open service (no placement) is an "aanvraag"
+                aanvraag += hours
         capacity.append(cap)
         planned.append(plan)
+        aanvragen.append(aanvraag)
 
     # Index of the week the "today" marker sits in (the last week start <= today).
     today_index = max((i for i, w in enumerate(weeks) if w <= today), default=0)
@@ -270,7 +283,11 @@ def capacity_forecast(today: date) -> dict:
         "weeks": [w.isoformat() for w in weeks],
         "capacity": capacity,
         "planned": planned,
-        "unfilled": [c - p for c, p in zip(capacity, planned, strict=True)],
+        "aanvragen": aanvragen,
+        # Free capacity after both planned and requested demand (never negative);
+        # overcommit is the excess demand above capacity (0 when there is slack).
+        "unfilled": [max(c - p - a, 0) for c, p, a in zip(capacity, planned, aanvragen, strict=True)],
+        "overcommit": [max(p + a - c, 0) for c, p, a in zip(capacity, planned, aanvragen, strict=True)],
         "today_index": today_index,
         "today": today.isoformat(),
     }

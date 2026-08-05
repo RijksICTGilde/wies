@@ -232,6 +232,10 @@ class Command(BaseCommand):
 
         def create_placement(colleague, service, hours):
             nonlocal placement_count
+            # Hours belong to the service (the role) now; each service here has a
+            # single placement, so set them on the service.
+            service.assignment_hours_per_week = hours
+            service.save(update_fields=["assignment_hours_per_week"])
             Placement.objects.create(
                 colleague=colleague,
                 service=service,
@@ -240,7 +244,6 @@ class Command(BaseCommand):
                 specific_end_date=None,
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
-                assignment_hours_per_week=hours,
             )
             placement_count += 1
 

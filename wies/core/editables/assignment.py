@@ -141,7 +141,7 @@ def _services_initial(assignment):
                 "has_custom_period": inherits_assignment_period,
                 "placement_start_date": effective_start,
                 "placement_end_date": effective_end,
-                "assignment_hours_per_week": placement.assignment_hours_per_week if placement else None,
+                "assignment_hours_per_week": service.assignment_hours_per_week,
                 "placement": placement,
                 "service": service,
             }
@@ -246,7 +246,7 @@ def placement_audit_row(placement) -> dict:
             "has_custom_period": placement.period_source != Placement.PLACEMENT,
             "placement_start_date": placement.start_date,
             "placement_end_date": placement.end_date,
-            "assignment_hours_per_week": placement.assignment_hours_per_week,
+            "assignment_hours_per_week": service.assignment_hours_per_week,
         }
     )
 

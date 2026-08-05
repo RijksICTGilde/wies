@@ -55,6 +55,30 @@ def annotate_placement_dates(queryset):
     )
 
 
+def annotate_service_dates(queryset):
+    """
+    Annotate Service queryset with actual start_date and end_date.
+
+    Dates cascade one level: from the Assignment (period_source='ASSIGNMENT')
+    or from the service's own specific_* dates otherwise. Mirrors
+    ``annotate_placement_dates`` but one level shallower, avoiding the N+1
+    ``Service.start_date`` property on batch operations.
+
+    Returns:
+        QuerySet with 'actual_start_date' and 'actual_end_date' annotations
+    """
+    return queryset.annotate(
+        actual_start_date=Case(
+            When(period_source="ASSIGNMENT", then=F("assignment__start_date")),
+            default=F("specific_start_date"),
+        ),
+        actual_end_date=Case(
+            When(period_source="ASSIGNMENT", then=F("assignment__end_date")),
+            default=F("specific_end_date"),
+        ),
+    )
+
+
 def annotate_usage_counts(queryset):
     """
     Annotate LabelCategory queryset with usage counts on labels

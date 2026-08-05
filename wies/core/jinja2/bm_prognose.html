@@ -16,12 +16,16 @@
       Prognose
     </c-h1>
     <c-paragraph>
-      Hoeveel capaciteit is er, en hoeveel daarvan is al ingepland? De grijze band is de
-      beschikbare capaciteit (som van de contracturen), het groene vlak de ingeplande uren.
+      Hoeveel capaciteit is er, en hoeveel daarvan is al ingepland of aangevraagd? De grijze
+      band is de beschikbare capaciteit (som van de contracturen), het groene vlak de ingeplande
+      uren en het oranje vlak de openstaande aanvragen — bovenop het ingeplande gestapeld. In
+      een deel van de horizon kan de gevraagde capaciteit (ingepland + aanvragen) boven de
+      beschikbare capaciteit uitkomen.
     </c-paragraph>
     <div class="prognose-legend">
       <span class="prognose-legend__item"><span class="prognose-swatch prognose-swatch--capacity"></span>Beschikbare capaciteit</span>
       <span class="prognose-legend__item"><span class="prognose-swatch prognose-swatch--planned"></span>Ingepland</span>
+      <span class="prognose-legend__item"><span class="prognose-swatch prognose-swatch--aanvragen"></span>Aanvragen</span>
     </div>
     {# Data reaches the chart via a data-attribute (never an inline script block),
        so the script-src 'self' CSP and the inline-JS guard are both satisfied. #}

@@ -7787,7 +7787,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -7803,7 +7804,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 11
     }
   },
   {
@@ -7819,7 +7821,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -7835,7 +7838,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 13
     }
   },
   {
@@ -7851,7 +7855,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -7867,7 +7872,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -7883,7 +7889,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -7899,7 +7906,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -7915,7 +7923,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -7931,7 +7940,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -7947,7 +7957,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -7963,7 +7974,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -7979,7 +7991,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -7995,7 +8008,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 25
     }
   },
   {
@@ -8011,7 +8025,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8027,7 +8042,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 21
     }
   },
   {
@@ -8043,7 +8059,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8059,7 +8076,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8075,7 +8093,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8091,7 +8110,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 17
     }
   },
   {
@@ -8107,7 +8127,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -8123,7 +8144,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8139,7 +8161,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8155,7 +8178,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8171,7 +8195,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8187,7 +8212,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8203,7 +8229,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8219,7 +8246,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -8235,7 +8263,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 22
     }
   },
   {
@@ -8251,7 +8280,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8267,7 +8297,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8283,7 +8314,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 1
     }
   },
   {
@@ -8299,7 +8331,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8315,7 +8348,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 15
     }
   },
   {
@@ -8331,7 +8365,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8347,7 +8382,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8363,7 +8399,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 14
     }
   },
   {
@@ -8379,7 +8416,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 2
     }
   },
   {
@@ -8395,7 +8433,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8405,13 +8444,14 @@
       "assignment": 72,
       "description": "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
       "skill": 1,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8427,7 +8467,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8443,7 +8484,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 14
     }
   },
   {
@@ -8459,7 +8501,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 1
     }
   },
   {
@@ -8475,7 +8518,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 15
     }
   },
   {
@@ -8491,7 +8535,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8507,7 +8552,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 21
     }
   },
   {
@@ -8523,7 +8569,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 38
     }
   },
   {
@@ -8539,7 +8586,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8555,7 +8603,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8571,7 +8620,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8587,7 +8637,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -8603,7 +8654,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 8
     }
   },
   {
@@ -8619,7 +8671,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 19
     }
   },
   {
@@ -8635,7 +8688,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8645,13 +8699,14 @@
       "assignment": 87,
       "description": "Opstellen van beleidskaders voor digitalisering en informatievoorziening",
       "skill": 14,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8667,7 +8722,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8683,7 +8739,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -8699,7 +8756,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8715,7 +8773,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8731,7 +8790,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 19
     }
   },
   {
@@ -8747,7 +8807,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8763,7 +8824,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8779,7 +8841,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 10
     }
   },
   {
@@ -8795,7 +8858,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 22
     }
   },
   {
@@ -8811,7 +8875,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8827,7 +8892,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 3
     }
   },
   {
@@ -8843,7 +8909,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8859,7 +8926,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8875,7 +8943,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8891,7 +8960,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8907,7 +8977,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -8923,7 +8994,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 17
     }
   },
   {
@@ -8939,7 +9011,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 13
     }
   },
   {
@@ -8955,7 +9028,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -8971,7 +9045,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -8987,7 +9062,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 10
     }
   },
   {
@@ -9003,7 +9079,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 1
     }
   },
   {
@@ -9019,7 +9096,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9035,7 +9113,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9051,7 +9130,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9067,7 +9147,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -9083,7 +9164,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9099,7 +9181,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9115,7 +9198,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9131,7 +9215,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9147,7 +9232,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -9163,7 +9249,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 15
     }
   },
   {
@@ -9179,7 +9266,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9195,7 +9283,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9211,7 +9300,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -9227,7 +9317,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9243,7 +9334,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 1
     }
   },
   {
@@ -9253,13 +9345,14 @@
       "assignment": 125,
       "description": "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
       "skill": 1,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9275,7 +9368,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9291,7 +9385,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9307,7 +9402,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9317,13 +9413,14 @@
       "assignment": 129,
       "description": "Advisering over de implementatie van nieuwe wet- en regelgeving in digitale systemen",
       "skill": 14,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9339,7 +9436,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 12
     }
   },
   {
@@ -9355,7 +9453,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 23
     }
   },
   {
@@ -9371,7 +9470,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 13
     }
   },
   {
@@ -9387,7 +9487,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 8
     }
   },
   {
@@ -9403,7 +9504,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9419,7 +9521,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9435,7 +9538,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 7
     }
   },
   {
@@ -9451,7 +9555,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9467,7 +9572,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9483,7 +9589,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9499,7 +9606,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9515,7 +9623,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9531,7 +9640,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 17
     }
   },
   {
@@ -9547,7 +9657,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9563,7 +9674,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9579,7 +9691,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9595,7 +9708,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9611,7 +9725,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9627,7 +9742,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9643,7 +9759,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9659,7 +9776,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 4
     }
   },
   {
@@ -9675,7 +9793,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9691,7 +9810,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 13
     }
   },
   {
@@ -9707,7 +9827,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9723,7 +9844,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 12
     }
   },
   {
@@ -9739,7 +9861,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 19
     }
   },
   {
@@ -9755,7 +9878,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -9765,13 +9889,14 @@
       "assignment": 157,
       "description": "Beheer van het applicatielandschap en advisering over rationalisatie",
       "skill": 28,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9787,7 +9912,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9803,7 +9929,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9819,7 +9946,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -9835,7 +9963,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9851,7 +9980,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9867,7 +9997,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9877,13 +10008,14 @@
       "assignment": 179,
       "description": "Opstellen van informatieplannen en bewaken van de informatiearchitectuur",
       "skill": 28,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -9893,13 +10025,14 @@
       "assignment": 180,
       "description": "Analyse van de organisatiecultuur en aanbevelingen voor verandermanagement",
       "skill": 12,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -9915,7 +10048,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -9931,7 +10065,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9947,7 +10082,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -9963,7 +10099,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -9979,7 +10116,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -9995,7 +10133,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10005,13 +10144,14 @@
       "assignment": 187,
       "description": "Analyse van beleidsopties en impactbeoordeling voor ICT-investeringen",
       "skill": 14,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10027,7 +10167,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10043,7 +10184,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10059,7 +10201,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10075,7 +10218,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10091,7 +10235,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10107,7 +10252,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10123,7 +10269,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -10139,7 +10286,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10149,13 +10297,14 @@
       "assignment": 196,
       "description": "Coaching van teamleden en stakeholders in agile werkwijzen",
       "skill": 23,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10171,7 +10320,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10187,7 +10337,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -10203,7 +10354,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -10219,7 +10371,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10235,7 +10388,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10251,7 +10405,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10267,7 +10422,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10277,13 +10433,14 @@
       "assignment": 204,
       "description": "Ondersteuning bij de adoptie van nieuwe systemen en werkwijzen door eindgebruikers",
       "skill": 16,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10299,7 +10456,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -10315,7 +10473,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10325,13 +10484,14 @@
       "assignment": 207,
       "description": "Bouwen van een datawarehouse voor managementrapportages en stuurinformatie",
       "skill": 8,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10347,7 +10507,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10363,7 +10524,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 16
     }
   },
   {
@@ -10379,7 +10541,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10389,13 +10552,14 @@
       "assignment": 211,
       "description": "Begeleiding bij acceptatietesten en validatie van opgeleverde functionaliteit",
       "skill": 24,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10411,7 +10575,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10421,13 +10586,14 @@
       "assignment": 213,
       "description": "Bouwen van koppelingen met externe registraties en basisregistraties",
       "skill": 1,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10443,7 +10609,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10459,7 +10626,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10475,7 +10643,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10491,7 +10660,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10507,7 +10677,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10523,7 +10694,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10539,7 +10711,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10555,7 +10728,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10565,13 +10739,14 @@
       "assignment": 167,
       "description": "Gebruikersonderzoek en ontwerp van intuïtieve workflows voor interne medewerkers",
       "skill": 4,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10581,13 +10756,14 @@
       "assignment": 168,
       "description": "Bouwen van toegankelijke formulieren en dashboards conform WCAG-richtlijnen",
       "skill": 2,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 36
     }
   },
   {
@@ -10603,7 +10779,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10619,7 +10796,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10635,7 +10813,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 24
     }
   },
   {
@@ -10651,7 +10830,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10661,13 +10841,14 @@
       "assignment": 173,
       "description": "Begeleiden van de organisatie bij de transitie naar agile werken",
       "skill": 16,
-      "period_source": "ASSIGNMENT",
-      "specific_start_date": null,
-      "specific_end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": "2026-07-06",
+      "specific_end_date": "2026-12-03",
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 40
     }
   },
   {
@@ -10683,7 +10864,8 @@
       "status": "OPEN",
       "source": "otys_iir",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 20
     }
   },
   {
@@ -10699,7 +10881,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 32
     }
   },
   {
@@ -10715,7 +10898,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10731,7 +10915,8 @@
       "status": "OPEN",
       "source": "wies",
       "source_id": "",
-      "source_url": ""
+      "source_url": "",
+      "assignment_hours_per_week": 28
     }
   },
   {
@@ -10745,8 +10930,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 12
+      "source_url": ""
     }
   },
   {
@@ -10760,8 +10944,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 19
+      "source_url": ""
     }
   },
   {
@@ -10775,8 +10958,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 1
+      "source_url": ""
     }
   },
   {
@@ -10790,8 +10972,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -10805,8 +10986,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 8
+      "source_url": ""
     }
   },
   {
@@ -10820,8 +11000,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -10835,8 +11014,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 20
+      "source_url": ""
     }
   },
   {
@@ -10850,8 +11028,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -10865,8 +11042,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -10880,8 +11056,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -10895,8 +11070,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -10910,8 +11084,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -10925,8 +11098,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 1
+      "source_url": ""
     }
   },
   {
@@ -10940,8 +11112,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -10955,8 +11126,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 7
+      "source_url": ""
     }
   },
   {
@@ -10970,8 +11140,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -10985,8 +11154,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11000,8 +11168,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11015,8 +11182,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11030,8 +11196,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11045,8 +11210,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11060,8 +11224,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11075,8 +11238,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11090,8 +11252,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 24
+      "source_url": ""
     }
   },
   {
@@ -11105,8 +11266,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 3
+      "source_url": ""
     }
   },
   {
@@ -11120,8 +11280,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 17
+      "source_url": ""
     }
   },
   {
@@ -11135,8 +11294,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 20
+      "source_url": ""
     }
   },
   {
@@ -11150,8 +11308,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11165,8 +11322,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11180,8 +11336,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11195,8 +11350,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11210,8 +11364,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 1
+      "source_url": ""
     }
   },
   {
@@ -11225,8 +11378,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 13
+      "source_url": ""
     }
   },
   {
@@ -11240,8 +11392,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 14
+      "source_url": ""
     }
   },
   {
@@ -11255,8 +11406,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 1
+      "source_url": ""
     }
   },
   {
@@ -11270,8 +11420,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 10
+      "source_url": ""
     }
   },
   {
@@ -11285,8 +11434,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 13
+      "source_url": ""
     }
   },
   {
@@ -11300,8 +11448,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11315,8 +11462,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -11330,8 +11476,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11345,8 +11490,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11360,8 +11504,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11375,8 +11518,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 17
+      "source_url": ""
     }
   },
   {
@@ -11390,8 +11532,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 15
+      "source_url": ""
     }
   },
   {
@@ -11405,8 +11546,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -11420,8 +11560,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11435,8 +11574,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11450,8 +11588,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11465,8 +11602,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 21
+      "source_url": ""
     }
   },
   {
@@ -11480,8 +11616,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 19
+      "source_url": ""
     }
   },
   {
@@ -11495,8 +11630,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11510,8 +11644,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -11525,8 +11658,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11540,8 +11672,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11555,8 +11686,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11570,8 +11700,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11585,8 +11714,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 14
+      "source_url": ""
     }
   },
   {
@@ -11600,8 +11728,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 22
+      "source_url": ""
     }
   },
   {
@@ -11615,8 +11742,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11630,8 +11756,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11645,8 +11770,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 12
+      "source_url": ""
     }
   },
   {
@@ -11660,8 +11784,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 24
+      "source_url": ""
     }
   },
   {
@@ -11675,8 +11798,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11690,8 +11812,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11705,8 +11826,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 16
+      "source_url": ""
     }
   },
   {
@@ -11720,8 +11840,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11735,8 +11854,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 38
+      "source_url": ""
     }
   },
   {
@@ -11750,8 +11868,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 2
+      "source_url": ""
     }
   },
   {
@@ -11765,8 +11882,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11780,8 +11896,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11795,8 +11910,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11810,8 +11924,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11825,8 +11938,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -11840,8 +11952,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 20
+      "source_url": ""
     }
   },
   {
@@ -11855,8 +11966,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11870,8 +11980,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -11885,8 +11994,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -11900,8 +12008,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 19
+      "source_url": ""
     }
   },
   {
@@ -11915,8 +12022,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 17
+      "source_url": ""
     }
   },
   {
@@ -11930,8 +12036,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -11945,8 +12050,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -11960,8 +12064,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 8
+      "source_url": ""
     }
   },
   {
@@ -11975,8 +12078,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 16
+      "source_url": ""
     }
   },
   {
@@ -11990,8 +12092,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 23
+      "source_url": ""
     }
   },
   {
@@ -12005,8 +12106,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 13
+      "source_url": ""
     }
   },
   {
@@ -12020,8 +12120,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12035,8 +12134,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12050,8 +12148,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12065,8 +12162,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12080,8 +12176,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12095,8 +12190,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -12110,8 +12204,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12125,8 +12218,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -12140,8 +12232,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12155,8 +12246,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 15
+      "source_url": ""
     }
   },
   {
@@ -12170,8 +12260,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 25
+      "source_url": ""
     }
   },
   {
@@ -12185,8 +12274,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12200,8 +12288,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12215,8 +12302,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12230,8 +12316,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -12245,8 +12330,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12260,8 +12344,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -12275,8 +12358,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12290,8 +12372,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12305,8 +12386,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12320,8 +12400,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12335,8 +12414,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 21
+      "source_url": ""
     }
   },
   {
@@ -12350,8 +12428,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 15
+      "source_url": ""
     }
   },
   {
@@ -12365,8 +12442,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 4
+      "source_url": ""
     }
   },
   {
@@ -12380,8 +12456,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 13
+      "source_url": ""
     }
   },
   {
@@ -12395,8 +12470,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 11
+      "source_url": ""
     }
   },
   {
@@ -12410,8 +12484,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 24
+      "source_url": ""
     }
   },
   {
@@ -12425,8 +12498,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 32
+      "source_url": ""
     }
   },
   {
@@ -12440,8 +12512,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -12455,8 +12526,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 36
+      "source_url": ""
     }
   },
   {
@@ -12470,8 +12540,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 22
+      "source_url": ""
     }
   },
   {
@@ -12485,8 +12554,7 @@
       "specific_end_date": null,
       "source": "otys_iir",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 10
+      "source_url": ""
     }
   },
   {
@@ -12500,8 +12568,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 28
+      "source_url": ""
     }
   },
   {
@@ -12515,8 +12582,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   },
   {
@@ -12530,8 +12596,7 @@
       "specific_end_date": null,
       "source": "wies",
       "source_id": "",
-      "source_url": "",
-      "assignment_hours_per_week": 40
+      "source_url": ""
     }
   }
 ]

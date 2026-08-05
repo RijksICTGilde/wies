@@ -30,7 +30,7 @@
           {% for service in assignment.services_with_skills[:3] %}
             <span role="listitem">
               <c-tag type="info">
-                {{ service.skill.name }}
+                {{ service.skill.name }}{% if service.assignment_hours_per_week %} · {{ service.assignment_hours_per_week }} u/wk{% endif %}
               </c-tag>
             </span>
           {% endfor %}

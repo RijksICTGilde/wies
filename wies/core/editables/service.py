@@ -23,3 +23,4 @@ class ServiceEditables(EditableSet):
     specific_start_date = Editable(label="Specifieke startdatum")
     specific_end_date = Editable(label="Specifieke einddatum")
     status = Editable(label="Status", display=lambda s: s.get_status_display())
+    assignment_hours_per_week = Editable(label="Uren per week")

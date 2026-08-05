@@ -279,7 +279,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
     has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
-    # Hours belong to the Placement; only meaningful for a placed consultant.
+    # Hours belong to the Service (the role), so they apply to an aanvraag too.
     assignment_hours_per_week = forms.TypedChoiceField(
         label="Uren per week",
         choices=[("", "---")] + [(h, f"{h} uur") for h in range(1, 41)],
