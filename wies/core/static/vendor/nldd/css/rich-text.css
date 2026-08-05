@@ -1,0 +1,654 @@
+/* # Host */
+
+nldd-rich-text {
+	--_spacing: var(--components-rich-text-spacing-snug);
+	--_wide-max-width: var(--components-rich-text-wide-max-width);
+	--_wide-bleed-width: calc(
+		(var(--_wide-max-width) - var(--components-rich-text-main-max-width)) / 2
+	);
+	--_main-shortfall: max(
+		0px,
+		calc(100% - var(--components-rich-text-main-max-width))
+	);
+	--_dt-width: var(--primitives-area-200);
+	--_dl-column-gap: var(--primitives-space-16);
+	--_dl-gap: calc(var(--_spacing) / 2);
+
+	container-type: inline-size;
+	box-sizing: border-box;
+	display: grid;
+	width: 100%;
+	grid-template-columns:
+		[full-start]   0
+		[wide-start]   0
+		[main-start]   minmax(0, var(--components-rich-text-main-max-width))
+		[main-end]     min(calc(var(--_wide-bleed-width) * 2), var(--_main-shortfall))
+		[wide-end]     1fr
+		[full-end];
+	row-gap: var(--_spacing);
+	color: var(--semantics-content-color);
+	font: var(--primitives-font-body-md-regular-snug);
+	-webkit-text-size-adjust: 100%;
+	text-size-adjust: 100%;
+}
+
+nldd-rich-text[centered] {
+	--_wide-max-width: var(--components-rich-text-centered-wide-max-width);
+
+	grid-template-columns:
+		[full-start]   1fr
+		[wide-start]   min(var(--_wide-bleed-width), calc(var(--_main-shortfall) / 2))
+		[main-start]   minmax(0, var(--components-rich-text-main-max-width))
+		[main-end]     min(var(--_wide-bleed-width), calc(var(--_main-shortfall) / 2))
+		[wide-end]     1fr
+		[full-end];
+}
+
+nldd-rich-text[spacing="flat"]  { --_spacing: var(--components-rich-text-spacing-flat); }
+nldd-rich-text[spacing="tight"] { --_spacing: var(--components-rich-text-spacing-tight); }
+nldd-rich-text[spacing="loose"] { --_spacing: var(--components-rich-text-spacing-loose); }
+
+nldd-rich-text[hidden] {
+	display: none;
+}
+
+/* # Color inherit
+   color="inherit" makes all text follow the surface's text color (e.g. a
+   filled-categories panel that sets a pure white/black content color).
+   Links keep the underline as their affordance and signal hover with a
+   thicker line instead of a color shift; figcaption takes the same color
+   at the system-wide secondary opacity tier. Known v1 gaps: inline code,
+   mark, tables and hr keep their own surfaces. */
+
+nldd-rich-text[color="inherit"] {
+	color: inherit;
+}
+
+nldd-rich-text[color="inherit"] a {
+	color: currentColor;
+	/* Pin the underline to the inherited color in every state. The hover rule
+	   below only changes thickness, so without this an underline could keep the
+	   default link blue and leak it against a colored surface. */
+	text-decoration-color: currentColor;
+}
+
+nldd-rich-text[color="inherit"] a:hover {
+	color: currentColor;
+	text-decoration-thickness: var(--primitives-border-width-regular);
+}
+
+nldd-rich-text[color="inherit"] a:active {
+	color: currentColor;
+}
+
+nldd-rich-text[color="inherit"] figcaption {
+	color: color-mix(in oklab, currentColor var(--semantics-content-secondary-opacity), transparent);
+}
+
+/* # Child placement
+   Text reads at the main measure; everything else (components, tables,
+   code) gets the full span by default so new components automatically
+   receive room. justify-self: start makes that room available without
+   forcing it: width-100% children fill the span, the rest shrinkwraps.
+   In the left-aligned layout the full/wide start lines collapse onto
+   main-start, so `full` and `wide` read as rightward bleed there and as
+   symmetric spans in [centered]. */
+
+nldd-rich-text > * {
+	grid-column: full;
+	justify-self: start;
+}
+
+nldd-rich-text[centered] > * {
+	justify-self: center;
+}
+
+nldd-rich-text > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, div, section, blockquote) {
+	grid-column: main;
+	/* Fill the main column so short text blocks keep a shared left edge —
+	   justify-self: center would otherwise float a shrinkwrapped heading
+	   loose from the paragraphs below it. border-box keeps padded elements
+	   (ul/ol list indent) inside the column. */
+	box-sizing: border-box;
+	width: 100%;
+}
+
+/* nldd-table stays on the generic full default; use data-width to
+   override per table. */
+nldd-rich-text > :is(img, figure, video, iframe, table) {
+	grid-column: wide;
+}
+
+nldd-rich-text > :is(pre, nldd-code-viewer) {
+	width: 100%;
+}
+
+/* Per-item override for editors; wins on specificity from every default
+   above. */
+nldd-rich-text > [data-width="main"] {
+	grid-column: main;
+}
+
+nldd-rich-text > [data-width="wide"] {
+	grid-column: wide;
+}
+
+nldd-rich-text > [data-width="full"] {
+	grid-column: full;
+}
+
+nldd-rich-text > :first-child {
+	margin-top: 0;
+}
+
+nldd-rich-text > :last-child {
+	margin-bottom: 0;
+}
+
+nldd-rich-text *:focus-visible {
+	outline: var(--semantics-focus-ring-outline);
+	outline-offset: var(--semantics-focus-ring-outline-offset);
+	box-shadow: var(--semantics-focus-ring-box-shadow);
+}
+
+nldd-rich-text *:focus:not(:focus-visible) {
+	outline: none;
+}
+
+
+/* # Headings */
+
+nldd-rich-text :is(h1, h2, h3, h4, h5, h6) {
+	margin-top: var(--_spacing);
+	margin-bottom: 0;
+	text-wrap: pretty;
+}
+
+
+/* # Heading 1 */
+
+nldd-rich-text h1 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-1-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-1-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-1-lg);
+	}
+}
+
+
+/* # Heading 2 */
+
+nldd-rich-text h2 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-2-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-2-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-2-lg);
+	}
+}
+
+
+/* # Heading 3 */
+
+nldd-rich-text h3 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-3-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-3-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-3-lg);
+	}
+}
+
+
+/* # Heading 4 */
+
+nldd-rich-text h4 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-4-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-4-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-4-lg);
+	}
+}
+
+
+/* # Heading 5 */
+
+nldd-rich-text h5 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-5-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-5-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-5-lg);
+	}
+}
+
+
+/* # Heading 6 */
+
+nldd-rich-text h6 {
+	@container (max-width: 640px) {
+		font: var(--primitives-font-display-6-sm);
+	}
+
+	@container (min-width: 641px) and (max-width: 1007px) {
+		font: var(--primitives-font-display-6-md);
+	}
+
+	@container (min-width: 1008px) {
+		font: var(--primitives-font-display-6-lg);
+	}
+}
+
+
+/* # Paragraph */
+
+nldd-rich-text p {
+	margin: 0;
+	/* Vangnet, los van [hyphens]: laat lange URLs en Nederlandse
+	   samenstellingen breken zodra ze breder zijn dan de kolom, i.p.v. te
+	   overlopen op smalle (mobiele) breedtes. break-word (niet anywhere) raakt
+	   de grid-min-content-maat niet, dus de main-kolom blijft intact. */
+	overflow-wrap: break-word;
+}
+
+
+/* # Hyphenation */
+
+/* Opt-in via [hyphens]; werkt alleen met een correcte `lang` op de pagina. */
+nldd-rich-text[hyphens] :is(p, li, dd) {
+	-webkit-hyphens: auto;
+	hyphens: auto;
+	-webkit-hyphenate-limit-before: 3;
+	-webkit-hyphenate-limit-after: 3;
+	hyphenate-limit-chars: 6 3 3;
+}
+
+
+/* # Lists */
+
+nldd-rich-text ul {
+	margin: 0;
+	padding-left: var(--components-rich-text-grid-size);
+	list-style-type: disc;
+}
+
+nldd-rich-text ol {
+	margin: 0;
+	padding-left: var(--components-rich-text-grid-size);
+	list-style-type: decimal;
+}
+
+nldd-rich-text > :is(ul, ol) {
+	margin-block: calc(var(--_spacing) / -2);
+}
+
+nldd-rich-text ol > li > ol {
+	list-style-type: lower-alpha;
+}
+
+
+/* # List Item */
+
+nldd-rich-text li {
+	margin: calc(var(--_spacing) / 2) 0;
+	padding: 0;
+	/* Zelfde vangnet als p: lange strings breken i.p.v. overlopen. */
+	overflow-wrap: break-word;
+}
+
+nldd-rich-text li > * + * {
+	margin-top: var(--_spacing);
+}
+
+
+/* # Definition list */
+
+nldd-rich-text dl {
+	margin: 0;
+	display: grid;
+	column-gap: var(--_dl-column-gap);
+
+	@container (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+
+	@container (min-width: 641px) {
+		grid-template-columns: var(--_dt-width) 1fr;
+	}
+}
+
+nldd-rich-text dt {
+	font-weight: var(--primitives-font-weight-body-bold);
+
+	@container (min-width: 641px) {
+		grid-column: 1;
+	}
+}
+
+nldd-rich-text dd {
+	margin-inline: 0;
+
+	@container (min-width: 641px) {
+		grid-column: 2;
+	}
+}
+
+/* Gap before each new definition group: a dt that starts a group, i.e. the
+   first dt after the previous group's dd. (The old dt:not(:first-child) also
+   gapped a second, synonym dt within the same group.) */
+nldd-rich-text dd + dt {
+	margin-top: var(--_dl-gap);
+}
+
+/* Wide-viewport companion: in the two-column grid the new group's dd shares
+   its row with that group-starting dt, so it needs the same top margin to
+   stay aligned. */
+nldd-rich-text dd + dt + dd {
+	@container (min-width: 641px) {
+		margin-top: var(--_dl-gap);
+	}
+}
+
+
+/* # Link */
+
+nldd-rich-text a {
+	border-radius: var(--primitives-corner-radius-xxs);
+	color: var(--semantics-links-color);
+	text-decoration: underline;
+	text-underline-offset: var(--primitives-space-2);
+	cursor: pointer;
+
+	&:hover {
+		color: var(--semantics-links-is-hovered-color);
+	}
+
+	&:active {
+		color: var(--semantics-links-is-active-color);
+	}
+}
+
+
+/* # Strong and Bold */
+
+nldd-rich-text strong,
+nldd-rich-text b {
+	color: inherit;
+	font-weight: var(--primitives-font-weight-body-bold);
+}
+
+
+/* # Emphasis and Italic */
+
+nldd-rich-text em,
+nldd-rich-text i {
+	color: inherit;
+	font-style: italic;
+}
+
+
+/* # Code */
+
+nldd-rich-text code {
+	padding: var(--primitives-space-4);
+	border-radius: var(--semantics-controls-xs-corner-radius);
+	background-color: var(--semantics-surfaces-tinted-background-color);
+	font-family: var(--primitives-font-family-monospace);
+	font-size: 0.85em;
+}
+
+/* Inside table cells, let long code tokens (e.g. type_spec.precision) break so
+   they don't force a column wide; in running text code stays intact. */
+nldd-rich-text :is(th, td) code {
+	overflow-wrap: anywhere;
+}
+
+/* A markdown renderer emits a fenced block as `<pre><code>`, so the frame goes
+   on the pre: it is the block-level element, and `code` stays inline. Without
+   overflow-x a long line escapes the element and stretches every ancestor,
+   which shows up as a card that ignores its own width. */
+nldd-rich-text pre {
+	box-sizing: border-box;
+	margin: 0;
+	padding: var(--primitives-space-16);
+	border-radius: var(--semantics-surfaces-corner-radius);
+	/* Inner box-shadow paints the ring inside the radius without taking layout
+	   space, same as nldd-box, nldd-banner and nldd-code-viewer. Without it the
+	   block is invisible on a tinted surface: identical background, no edge. */
+	box-shadow: inset 0 0 0 var(--semantics-surfaces-border-width) var(--semantics-surfaces-tinted-border-color);
+	background-color: var(--semantics-surfaces-tinted-background-color);
+	font: var(--primitives-font-monospace-sm-regular-snug);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+
+	/* forced-colors strips box-shadow, so restore the frame with a real border.
+	   Same fallback as nldd-box, nldd-banner and nldd-list. */
+	@media (forced-colors: active) {
+		border: var(--semantics-surfaces-border-width) solid CanvasText;
+	}
+}
+
+/* The tinted chip is for inline code. Inside a pre it paints once per rendered
+   line, so the block hands it back and lets the pre carry the frame. */
+nldd-rich-text pre > code {
+	padding: 0;
+	border-radius: 0;
+	background-color: transparent;
+	font: inherit;
+}
+
+
+/* # Mark */
+
+nldd-rich-text mark {
+	padding: var(--primitives-space-1) var(--primitives-space-2);
+	border-radius: var(--semantics-controls-xs-corner-radius);
+	background-color: var(--semantics-content-mark-background-color);
+	color: var(--semantics-content-mark-color);
+}
+
+
+/* # Figure */
+
+nldd-rich-text figure {
+	display: flex;
+	flex-direction: column;
+	gap: var(--primitives-space-8);
+	margin: 0;
+}
+
+
+/* # Figure Caption */
+
+nldd-rich-text figcaption {
+	color: var(--semantics-content-secondary-color);
+	font: var(--primitives-font-body-xs-regular-snug);
+	text-align: left;
+	text-wrap: pretty;
+}
+
+
+/* # Blockquote */
+
+nldd-rich-text blockquote {
+	display: flex;
+	flex-direction: column;
+	gap: calc(var(--semantics-blockquotes-md-spacing) / 2);
+	margin-block: max(
+		0px,
+		calc(var(--semantics-blockquotes-md-spacing) - var(--_spacing))
+	);
+	margin-inline: 0;
+	padding-inline: var(--semantics-blockquotes-md-spacing);
+	border-left: var(--semantics-blockquotes-border);
+	font: var(--semantics-blockquotes-md-quote-font);
+
+	@container (max-width: 640px) {
+		gap: calc(var(--semantics-blockquotes-sm-spacing) / 2);
+		margin-block: max(
+			0px,
+			calc(var(--semantics-blockquotes-sm-spacing) - var(--_spacing))
+		);
+		padding-inline: var(--semantics-blockquotes-sm-spacing);
+		font: var(--semantics-blockquotes-sm-quote-font);
+	}
+}
+
+nldd-rich-text blockquote > p {
+	margin: 0;
+}
+
+
+/* # Inline Quote */
+
+nldd-rich-text q {
+	font-style: italic;
+
+	&::before {
+		content: open-quote;
+	}
+
+	&::after {
+		content: close-quote;
+	}
+}
+
+
+/* # Image */
+
+nldd-rich-text img {
+	display: block;
+	border-radius: var(--semantics-controls-md-corner-radius);
+	max-width: 100%;
+	height: auto;
+}
+
+
+/* # Horizontal Rule */
+
+nldd-rich-text hr {
+	margin: 0;
+	border: none;
+	border-top: var(--semantics-dividers-thickness) solid var(--semantics-dividers-color);
+	/* An hr has no content, so the justify-self: start default would
+	   shrinkwrap it to zero width. */
+	width: 100%;
+}
+
+
+/* # Table */
+
+nldd-rich-text table {
+	display: block;
+	/* Mobile scroll: the block shrinks to its content (so the border hugs
+	   narrow tables) but caps at the container, scrolling when the columns
+	   need more room. width: auto would instead fill 100% as a block. */
+	width: max-content;
+	max-width: 100%;
+	margin-block: max(
+		0px,
+		calc(var(--components-rich-text-spacing-snug) - var(--_spacing))
+	);
+	border-collapse: separate;
+	border-spacing: 0;
+	border: var(--semantics-tables-border-width) solid var(--semantics-tables-border-color);
+	border-radius: var(--semantics-tables-corner-radius);
+	background-color: var(--semantics-surfaces-base-background-color);
+	font: var(--primitives-font-body-md-regular-tight);
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+
+	@container (min-width: 641px) {
+		display: table;
+		width: 100%;
+		overflow-x: unset;
+		scrollbar-width: unset;
+	}
+}
+
+/* ## Table Row */
+
+nldd-rich-text tr {
+	/* Row min-height: `min-height` does not apply to a table-cell per spec, so
+	   set it on the row, where `height` acts as a minimum. Mirrors nldd-table. */
+	height: var(--semantics-tables-row-min-height);
+}
+
+/* ## Table Header Cell */
+
+nldd-rich-text th {
+	min-width: var(--primitives-area-160);
+	padding-block: var(--semantics-tables-row-padding-block);
+	padding-inline: calc(var(--semantics-tables-column-gap) / 2);
+	border-bottom: var(--semantics-tables-border-width) solid var(--semantics-tables-border-color);
+	font: var(--primitives-font-body-md-bold-tight);
+	text-align: start;
+
+	@container (min-width: 641px) {
+		min-width: unset;
+	}
+}
+
+/* ## Table Data Cell */
+
+nldd-rich-text td {
+	min-width: var(--primitives-area-160);
+	padding-block: var(--semantics-tables-row-padding-block);
+	padding-inline: calc(var(--semantics-tables-column-gap) / 2);
+	border-bottom: var(--semantics-tables-border-width) solid var(--semantics-tables-border-color);
+	font: var(--primitives-font-body-md-regular-tight);
+	text-align: left;
+
+	@container (min-width: 641px) {
+		min-width: unset;
+	}
+}
+
+/* ## Table Outer Cells */
+
+nldd-rich-text tr > :is(th, td):first-child {
+	padding-inline-start: var(--semantics-tables-row-padding-inline);
+}
+
+nldd-rich-text tr > :is(th, td):last-child {
+	padding-inline-end: var(--semantics-tables-row-padding-inline);
+}
+
+/* ## Table Last Row */
+
+/* Only the final BODY row drops its bottom border (the table's own border
+   closes it off). Without the `tbody` scope an unscoped `tr:last-child` also
+   matches the header row — it is the last (only) child of `thead` — which
+   wrongly stripped the header underline on tables that render a `<thead>`. */
+nldd-rich-text tbody tr:last-child > :is(th, td) {
+	border-bottom: none;
+}

@@ -16,7 +16,7 @@
           sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
-    <link rel="stylesheet" href="{{ nldd_asset('ndd.styles.css') }}">
+    <link rel="stylesheet" href="{{ nldd_asset('css/global.css') }}">
     <link rel="stylesheet" href="{{ static('css/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
@@ -24,7 +24,7 @@
     {# Global htmx config; must run right after htmx, before it processes
        history (disables the history snapshot cache — see htmx_config.js). #}
     <script src="{{ static('js/htmx_config.js') }}"></script>
-    <script defer src="{{ nldd_asset('ndd.bundle.js') }}"></script>
+    <script defer src="{{ nldd_asset('nldd.min.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
     <script src="{{ static('js/hx_link_guard.js') }}"></script>

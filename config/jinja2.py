@@ -159,7 +159,7 @@ def get_sort_state(request, field):
 def nldd_asset(filename: str) -> str:
     """URL for a vendored design-system asset, cache-busted on its version.
 
-    The file names are fixed (ndd.bundle.js, ndd.styles.css), so without this a
+    The file names are fixed (nldd.min.js, css/global.css), so without this a
     browser can keep serving the previous design system from cache after an
     upgrade. See get_nldd_version for why production does not need it.
     """
