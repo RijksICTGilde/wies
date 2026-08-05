@@ -1,23 +1,32 @@
 {% extends "base.html" %}
-{% block header %}
-{% endblock header %}
 {% block content %}
-  <nldd-container padding="24" style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
-  <div style="max-width: 500px; text-align: center;">
-    <nldd-rich-text>
-    <h1>
-      {% block error_title %}
-        Fout
-      {% endblock error_title %}
-    </h1>
-    <p>
-      {% block error_message %}
-        Er is iets misgegaan.
-      {% endblock error_message %}
-    </p>
-    {% block error_extra %}
-    {% endblock error_extra %}
-    </nldd-rich-text>
-  </div>
-  </nldd-container>
+  {# nldd-inline-dialog rather than a hand-centered box: that is the pattern the
+     rest of the app already uses for "Niet gevonden" and "Geen personen
+     gevonden", so an error page looks like the app instead of a separate
+     screen. The previous markup also put an inline display: flex on the
+     nldd-container, which shrank the box inside it to min-content and broke the
+     text one character per line. #}
+  {# Through set blocks, because text and supporting-text are attributes: a
+     {% block %} straight inside an attribute value trips djlint T028. #}
+  {% set error_text %}
+    {% block error_text %}
+      Er is iets misgegaan
+    {% endblock error_text %}
+  {% endset %}
+  {% set error_supporting_text %}
+    {% block error_supporting_text %}
+      Probeer het later opnieuw.
+    {% endblock error_supporting_text %}
+  {% endset %}
+  <nldd-simple-section>
+  <nldd-inline-dialog variant="alert"
+                      size="lg"
+                      heading-level="1"
+                      text="{{ error_text | trim }}"
+                      supporting-text="{{ error_supporting_text | trim }}">
+  {% block error_actions %}
+    <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
+  {% endblock error_actions %}
+  </nldd-inline-dialog>
+  </nldd-simple-section>
 {% endblock content %}
