@@ -68,7 +68,11 @@
     {{ panel_data.service.end_date|datum_nl if panel_data.service.end_date else "heden" }}
     </nldd-form-field-help-text>
     </nldd-form-field>
-    <nldd-form-field label="{{ form.specific_start_date.label }}">
+    {# Server-side dezelfde ingeklapte staat renderen die
+       placement_period_toggle.js op init zet (update), zodat de eerste paint al
+       klopt en het veld niet zichtbaar-dan-ingeklapt flitst. De JS blijft
+       .hidden toggelen. #}
+    <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
     {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
     {% for error in form.specific_start_date.errors %}
       <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
@@ -76,10 +80,10 @@
     </nldd-form-field>
     {# Uit betekent: geen einddatum bekend, de plaatsing loopt door. De switch
            post niet mee; hij stuurt alleen het einddatumveld aan. #}
-    <nldd-form-field>
+    <nldd-form-field{% if inherits %} hidden{% endif %}>
     <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
     </nldd-form-field>
-    <nldd-form-field label="{{ form.specific_end_date.label }}">
+    <nldd-form-field label="{{ form.specific_end_date.label }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
     {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
     {% for error in form.specific_end_date.errors %}
       <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
