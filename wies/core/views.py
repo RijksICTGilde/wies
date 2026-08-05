@@ -2559,20 +2559,41 @@ def suborganization_admin(request):
 
 @permission_required("core.add_suborganization", raise_exception=True)
 def suborganization_create(request):
-    """Create a suborganization. POST-only; re-renders the merk list partial (htmx)."""
+    """Create a suborganization via the sheet (htmx).
+
+    GET opens the sheet; a valid POST saves and re-renders the merk list while
+    closing the sheet; an invalid POST re-renders only the sheet body so the
+    open sheet keeps standing (mirrors the label form flow).
+    """
+    form_post_url = reverse("suborganization-create")
+    modal_title = "Merk toevoegen"
+    form_button_label = "Voeg merk toe"
+    element_id = "suborganizationFormModal"
+
     if request.method == "POST":
         form = SuborganizationForm(request.POST)
         if form.is_valid():
             form.save()
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-            return render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
-        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-        return render(
-            request,
-            "parts/suborganization_list.html",
-            {"suborganizations": suborganizations, "errors": dict(form.errors.items())},
-        )
-    return HttpResponse(status=405)
+            response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
+            response["HX-Retarget"] = "#suborganization_list_container"
+            response["HX-Trigger"] = "closeModal"
+            return response
+    else:
+        form = SuborganizationForm()
+
+    return render(
+        request,
+        "parts/generic_form_modal.html",
+        {
+            "content": form,
+            "form_post_url": form_post_url,
+            "modal_title": modal_title,
+            "form_button_label": form_button_label,
+            "modal_element_id": element_id,
+            "target_element_id": element_id,
+        },
+    )
 
 
 @permission_required("core.change_suborganization", raise_exception=True)

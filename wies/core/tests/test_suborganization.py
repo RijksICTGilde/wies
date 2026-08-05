@@ -295,17 +295,36 @@ class SuborganizationAdminTest(TestCase):
         response = self.client.get(reverse("suborganization-admin"))
         assert response.status_code == 200
 
+    def test_admin_page_renders_nldd_not_rvo(self):
+        Suborganization.objects.create(name="Rijks ICT Gilde")
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-admin"))
+        body = response.content.decode()
+        # Migrated to NLDD web components.
+        assert "nldd-list" in body
+        assert "nldd-button" in body
+        # The old RVO/jinja-roos markup is gone.
+        assert "c-table" not in body
+        assert "c-h1" not in body
+        assert "rvo-badge" not in body
+
     def test_beheerder_can_create_suborganization(self):
         self.client.force_login(self.admin_user)
         response = self.client.post(reverse("suborganization-create"), {"name": "Nieuw Merk"})
         assert response.status_code == 200
+        # A valid create re-renders the list and closes the sheet.
+        assert response["HX-Retarget"] == "#suborganization_list_container"
+        assert response["HX-Trigger"] == "closeModal"
         assert Suborganization.objects.filter(name="Nieuw Merk").exists()
 
     def test_create_duplicate_suborganization_rejected(self):
         Suborganization.objects.create(name="Bestaand")
         self.client.force_login(self.admin_user)
-        self.client.post(reverse("suborganization-create"), {"name": "Bestaand"})
+        response = self.client.post(reverse("suborganization-create"), {"name": "Bestaand"})
         assert Suborganization.objects.filter(name="Bestaand").count() == 1
+        # An invalid create keeps the sheet open (no close) and shows the error.
+        assert "HX-Trigger" not in response
+        self.assertContains(response, "Naam wordt al gebruikt")
 
     def test_beheerder_can_delete_suborganization(self):
         suborganization = Suborganization.objects.create(name="Weg")
@@ -374,10 +393,13 @@ class SuborganizationAdminTest(TestCase):
         colleague.refresh_from_db()
         assert colleague.suborganization_id is None
 
-    def test_create_get_not_allowed(self):
+    def test_create_get_opens_sheet(self):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-create"))
-        assert response.status_code == 405
+        assert response.status_code == 200
+        # GET now opens the "Merk toevoegen" sheet instead of returning 405.
+        self.assertContains(response, "nldd-sheet")
+        self.assertContains(response, "Merk toevoegen")
 
     def test_delete_get_renders_modal_not_405(self):
         suborganization = Suborganization.objects.create(name="Weg")
