@@ -70,9 +70,6 @@ RUN rm -rf /app/docker && \
   rm -rf /app/uv.lock && \
   rm -rf /app/temp
 
-# NLDD design-system assets are vendored (committed under
-# wies/core/static/vendor/nldd/, like htmx) and arrive via the COPY above, so
-# no node/npm build step is needed here — collectstatic picks them up directly.
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so

@@ -71,7 +71,7 @@ just manage [...]   # Django manage.py commands
 just lint           # Run ruff check + format check
 just format         # Auto-fix lint issues and format code
 just pre-commit     # Run all pre-commit hooks
-just update-vendor  # Update vendor assets (htmx, nldd)
+just update-vendor  # Update vendor assets (like htmx)
 ```
 
 ### Vendor Assets
@@ -87,7 +87,7 @@ This project vendors external JavaScript instead of using a CDN. This ensures th
 
 To update vendor dependencies:
 
-1. Edit the version numbers at the top of `justfile` (e.g. `HTMX_VERSION`, `NLDD_VERSION`).
+1. Edit the version numbers at the top of `justfile` (e.g. `HTMX_VERSION`).
 
 2. Run the update command:
 
