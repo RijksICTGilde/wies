@@ -10,6 +10,56 @@ both stay in sync without a shared wrapper element. #}
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
   <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
   </nldd-button>
+  {# Het overflowmenu toont een KLOON en meldt de keuze terug als select op dit
+     origineel; sidebar_toggle.js luistert daarom op beide gebeurtenissen. #}
+  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines"></nldd-menu-item>
+  </nldd-toolbar-item>
+  {# Gewone links en geen htmx-swap: de toolbar rendert alleen bij een volledige
+     paginalading ({% if not is_htmx %} hierboven), dus na een swap zou de
+     knoptekst de vorige sortering blijven tonen. Sorteren is geen handeling die
+     je tien keer per minuut doet, dus een navigatie mag.
+
+     De sorteerknop toont de gekozen volgorde, niet het woord "Sorteren": in een
+     toolbar die op mobiel al krap is zegt de huidige keuze meer dan het
+     werkwoord. Zonder ?order= staat de lijst in zijn eigen volgorde, en dan is
+     er nog niets te tonen. #}
+  {% set sort_labels = {
+    'name': 'Naam (A–Z)',
+    '-name': 'Naam (Z–A)',
+    'assignment': 'Opdracht (A–Z)',
+    '-assignment': 'Opdracht (Z–A)',
+    '-end_date': 'Einddatum (nieuwste eerst)',
+    'end_date': 'Einddatum (oudste eerst)',
+  } %}
+  {% set current_order = request.GET.get('order') %}
+  {# De standaardvolgorde is geen waarde maar de afwezigheid van ?order=, dus
+     die optie krijgt een link die de parameter juist weghaalt. Radio's en geen
+     knoppen: sorteren is één keuze uit een lijst, en alleen bij type radio of
+     checkbox toont een item zijn selected-staat. Een href negeert het DS op een
+     radio (het is een keuze, geen navigatie), dus de URL staat in een
+     data-attribuut en sort_menu.js navigeert op select. #}
+  {# "Plaatsing" noemt het ding, net als Naam en Opdracht hieronder, en niet een
+     datumveld: er wordt gesorteerd op de startdatum van de opdracht, terwijl de
+     zichtbare datum in de rij de einddatum is. Een label als "Plaatsingdatum"
+     of "Startdatum" stuurt je dus naar een kolom die er niet staat. #}
+  {% set default_sort_label = 'Plaatsing (nieuwste eerst)' %}
+  <nldd-toolbar-item slot="end">
+  <nldd-button variant="secondary" expandable start-icon="sort" text="{{ sort_labels.get(current_order) or default_sort_label }}">
+  <nldd-menu slot="popup" placement="bottom-end">
+  <nldd-menu-item type="radio" text="{{ default_sort_label }}" {% if not current_order %}selected{% endif %} data-wies-sort-url="{{ url_without_param(request, 'order') }}"></nldd-menu-item>
+  {% for value, label in sort_labels.items() %}
+    <nldd-menu-item type="radio" text="{{ label }}" {% if value == current_order %}selected{% endif %} data-wies-sort-url="{{ url_with_param(request, 'order', value) }}"></nldd-menu-item>
+  {% endfor %}
+  </nldd-menu>
+  </nldd-button>
+  {# Hetzelfde als groep in het overflowmenu: een knop die zelf een menu opent
+     heeft daar geen zinnig equivalent, de opties zelf wel. #}
+  <nldd-menu-group slot="overflow" text="Sorteren">
+  <nldd-menu-item type="radio" text="{{ default_sort_label }}" {% if not current_order %}selected{% endif %} data-wies-sort-url="{{ url_without_param(request, 'order') }}"></nldd-menu-item>
+  {% for value, label in sort_labels.items() %}
+    <nldd-menu-item type="radio" text="{{ label }}" {% if value == current_order %}selected{% endif %} data-wies-sort-url="{{ url_with_param(request, 'order', value) }}"></nldd-menu-item>
+  {% endfor %}
+  </nldd-menu-group>
   </nldd-toolbar-item>
   </nldd-toolbar>
   {# variant=listbox houdt de focus in het zoekveld. Het menu staat buiten de
