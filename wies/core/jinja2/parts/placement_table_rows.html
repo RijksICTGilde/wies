@@ -29,13 +29,30 @@ intercepts the click to open the side panel instead of navigating. #}
   {% set end_date = placement.actual_end_date|datum_nl if placement.actual_end_date else '' %}
   {# Het voorzetsel per cel apart in plaats van een |capitalize achteraf: die
      filter maakt de rest van de zin juist klein, en dan verliezen de
-     organisatienamen hun hoofdletters ("Bij rijkswaterstaat"). #}
-  <nldd-text-cell hide-below="md" text="{{ placement.service.assignment.name }}" supporting-text="{% if client_label %}Bij {{ client_label }}{% if end_date %} tot {{ end_date }}{% endif %}{% elif end_date %}Tot {{ end_date }}{% endif %}"></nldd-text-cell>
+     organisatienamen hun hoofdletters ("Bij rijkswaterstaat"). De zin wordt hier
+     opgebouwd en niet in het attribuut zelf, want een {% if %} in een
+     attribuutwaarde levert djlint T028 op. #}
+  {% set wide_supporting = "" %}
+  {% if client_label and end_date %}
+    {% set wide_supporting = "Bij " ~ client_label ~ " tot " ~ end_date %}
+  {% elif client_label %}
+    {% set wide_supporting = "Bij " ~ client_label %}
+  {% elif end_date %}
+    {% set wide_supporting = "Tot " ~ end_date %}
+  {% endif %}
+  <nldd-text-cell hide-below="md" text="{{ placement.service.assignment.name }}" supporting-text="{{ wide_supporting }}"></nldd-text-cell>
   {# Smal scherm: alles in één cel, want twee tekstkolommen naast elkaar knijpen
      daar allebei tot een paar letters per regel. De rol staat als tag achter de
      naam: als tweede regel zou hij concurreren met de opdracht eronder, en dat
      is de regel waar je hier op zoekt. #}
-  <nldd-text-cell hide-above="sm" supporting-text="{{ placement.service.assignment.name }}{% if client_label %} bij {{ client_label }}{% endif %}{% if end_date %} tot {{ end_date }}{% endif %}">
+  {% set narrow_supporting = placement.service.assignment.name %}
+  {% if client_label %}
+    {% set narrow_supporting = narrow_supporting ~ " bij " ~ client_label %}
+  {% endif %}
+  {% if end_date %}
+    {% set narrow_supporting = narrow_supporting ~ " tot " ~ end_date %}
+  {% endif %}
+  <nldd-text-cell hide-above="sm" supporting-text="{{ narrow_supporting }}">
   <span>{{ placement.colleague.name }}{% if role_name %} <nldd-tag size="sm">{{ role_name }}</nldd-tag>{% endif %}</span>
   </nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
