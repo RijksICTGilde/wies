@@ -133,12 +133,13 @@ class OnboardingLabelSaveTest(TestCase):
 
     def test_onboarding_label_choice_persists(self):
         self.client.force_login(self.user)
-        html = self.client.get(reverse("home")).content.decode()
-        token = self._token_re().search(html).group(1)
+        # Het token hoort bij dít categorieveld: de render bevat er meerdere
+        # (merk, en één per labelcategorie), dus het eerste token uit de HTML
+        # pakken zou het verkeerde veld treffen en de save als conflict weigeren.
+        token = self._token_for(self.category.id)
 
-        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{self.category.id}"])
         # De widget rendert name="labels", zoals de browser die post.
-        response = self.client.post(url, {"labels": str(self.label.id), "_concurrency_token": token})
+        response = self._post_labels(self.category.id, self.label.id, token)
         assert response.status_code == 200
         self.colleague.refresh_from_db()
         assert list(self.colleague.labels.values_list("id", flat=True)) == [self.label.id]

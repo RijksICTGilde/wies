@@ -42,7 +42,13 @@
       </nldd-list>
     {% endif %}
   </div>
-  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {# De spacer onder de lijst hoort bij de lijst: assignment_org_picker.js voegt
+     hem mee toe bij een render, dus hier alleen tonen als de server al iets
+     rendert — anders staat er een gat onder het label zolang er niets gekozen
+     is. #}
+  {% if selections %}
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% endif %}
   <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
   <div id="assignment-org-inputs">
     {% if selections %}

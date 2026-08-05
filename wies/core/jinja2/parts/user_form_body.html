@@ -18,6 +18,7 @@
     {{ content.last_name.as_field_group() }}
     {{ content.email.as_field_group() }}
     {{ content.groups.as_field_group() }}
+    {{ content.suborganization.as_field_group() }}
     {% for field_name in content.fields %}
       {% if field_name.startswith('category_') %}
         {{ content[field_name].as_field_group() }}

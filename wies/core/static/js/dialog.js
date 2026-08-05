@@ -155,6 +155,7 @@ document.addEventListener("closeModal", function () {
   const modalContainers = [
     "labelFormModal",
     "userFormModal",
+    "suborganizationFormModal",
     "clientModalContainer",
     "errorSheet",
   ];

@@ -32,6 +32,23 @@ class RBACSetupTest(TestCase):
                 f"Beheerder group missing {codename} permission"
             )
 
+    def test_setup_roles_grants_suborganization_permissions(self):
+        """Test that Beheerder group can manage suborganizations (merken)"""
+        setup_roles()
+
+        admin_group = Group.objects.get(name="Beheerder")
+
+        expected_permissions = [
+            "view_suborganization",
+            "add_suborganization",
+            "change_suborganization",
+            "delete_suborganization",
+        ]
+        for codename in expected_permissions:
+            assert admin_group.permissions.filter(codename=codename).exists(), (
+                f"Beheerder group missing {codename} permission"
+            )
+
     def test_beheerder_group_user_can_access_views(self):
         """Test that a user in Beheerder group can access all user management views"""
         setup_roles()
@@ -57,8 +74,8 @@ class RBACSetupTest(TestCase):
         assert response.status_code == 200
 
         # Test user creation
-        category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        label = Label.objects.create(name="Test Brand", category=category)
+        category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
+        label = Label.objects.create(name="AI", category=category)
         response = client.post(
             reverse("user-create"),
             {

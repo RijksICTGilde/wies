@@ -19,9 +19,9 @@ class NlddUserFormRenderingTest(TestCase):
     def setUp(self):
         """Create test data"""
         # Create test labels
-        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        self.label_a = Label.objects.create(name="Brand A", category=self.category)
-        self.label_b = Label.objects.create(name="Brand B", category=self.category)
+        self.category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
+        self.label_a = Label.objects.create(name="AI", category=self.category)
+        self.label_b = Label.objects.create(name="ICT", category=self.category)
 
         # Create test groups for checkbox rendering
         self.admin_group = Group.objects.create(name="Beheerder")

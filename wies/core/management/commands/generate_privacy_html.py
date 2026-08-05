@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import tempfile
 from html import escape
@@ -121,13 +122,20 @@ def _djlint_format(content: str) -> str:
     we deliberately do not pass ``check=True``. The file is rewritten in place;
     we read it back and return the formatted text.
     """
-    djlint_bin = Path(settings.BASE_DIR) / ".venv" / "bin" / "djlint"
+    # Resolve djlint from PATH: it lives in the active venv (/opt/venv in the
+    # container image, .venv locally). It is NOT at BASE_DIR/.venv -- inside the
+    # container that path is the bind-mounted host (macOS) venv, whose binaries
+    # can't execute on Linux.
+    djlint_bin = shutil.which("djlint")
+    if djlint_bin is None:
+        msg = "djlint not found on PATH; install the dev dependency group (uv sync --group dev)."
+        raise CommandError(msg)
     with tempfile.NamedTemporaryFile("w", suffix=".html", delete=False, encoding="utf-8") as tmp:
         tmp.write(content)
         tmp_path = Path(tmp.name)
     try:
-        subprocess.run(  # noqa: S603 — fixed argv, paths under BASE_DIR
-            [str(djlint_bin), str(tmp_path), "--reformat", "--profile=jinja", "--indent=2", "--quiet"],
+        subprocess.run(  # noqa: S603 — argv from shutil.which + paths under BASE_DIR
+            [djlint_bin, str(tmp_path), "--reformat", "--profile=jinja", "--indent=2", "--quiet"],
             check=False,
             capture_output=True,
         )

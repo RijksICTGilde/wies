@@ -1,10 +1,12 @@
 from unittest.mock import Mock, patch
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import RequestFactory, TestCase
 
-from wies.core.models import Assignment, Colleague, Event, Label, LabelCategory, Placement, Service
+from wies.core.errors import SuborganizationNotFoundError
+from wies.core.models import Assignment, Colleague, Event, Placement, Service, Suborganization
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -13,7 +15,7 @@ User = get_user_model()
 
 
 class DataImportIntegrationTest(TestCase):
-    """High-level integration tests for CSV imports and OTYS sync with label assignment"""
+    """High-level integration tests for CSV imports and OTYS sync with merk assignment"""
 
     def setUp(self):
         """Create necessary groups for CSV import tests"""
@@ -21,8 +23,11 @@ class DataImportIntegrationTest(TestCase):
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name="Business Development Manager")
 
-    def test_csv_user_import_with_brand_creates_labels(self):
-        """Test: CSV with brand column creates users with labels in Merk category"""
+    def test_csv_user_import_with_brand_assigns_existing_merken(self):
+        """Test: CSV with brand column assigns each user's (pre-existing) merk"""
+        rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
+        rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
+
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
 John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n
 Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n
@@ -33,26 +38,50 @@ Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
         # Verify import success
         assert result["success"]
         assert result["users_created"] == 3
-        assert result["labels_created"] == 2  # Two unique brands
-        assert "Rijks ICT Gilde" in result["created_labels"]
-        assert "Rijksconsultants" in result["created_labels"]
+        # No new merken created — brands are looked up, never created.
+        assert Suborganization.objects.count() == 2
 
-        # Verify Merk category was created
-        merken_category = LabelCategory.objects.get(name="Merk")
-
-        # Verify labels were created in Merk category
-        rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
-        rc_label = Label.objects.get(name="Rijksconsultants", category=merken_category)
-
-        # Verify users' linked colleagues have correct labels
+        # Verify users' linked colleagues have correct merk
         john = User.objects.get(email="john@rijksoverheid.nl")
-        assert rig_label in john.colleague.labels.all()
+        assert john.colleague.suborganization == rig_suborg
 
         jane = User.objects.get(email="jane@rijksoverheid.nl")
-        assert rc_label in jane.colleague.labels.all()
+        assert jane.colleague.suborganization == rc_suborg
 
         bob = User.objects.get(email="bob@rijksoverheid.nl")
-        assert rig_label in bob.colleague.labels.all()
+        assert bob.colleague.suborganization == rig_suborg
+
+    def test_csv_user_import_unknown_brand_rejects_whole_import(self):
+        """Test: an unknown brand fails the entire import; nothing is written"""
+        Suborganization.objects.create(name="Rijks ICT Gilde")
+
+        csv_content = """first_name,last_name,email,brand
+John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde
+Jane,Smith,jane@rijksoverheid.nl,Onbekend Merk"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert not result["success"]
+        assert result["users_created"] == 0
+        assert any("Onbekend Merk" in error for error in result["errors"])
+        # All-or-nothing: even the valid row's user is not created.
+        assert not User.objects.filter(email="john@rijksoverheid.nl").exists()
+        assert Suborganization.objects.count() == 1  # no new merk created
+
+    def test_csv_user_import_brand_matches_case_insensitively(self):
+        """Test: a differently-cased brand resolves to the existing merk (no duplicate)"""
+        rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
+
+        csv_content = """first_name,last_name,email,brand
+John,Doe,john@rijksoverheid.nl,rijks ict gilde"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"]
+        assert result["users_created"] == 1
+        assert Suborganization.objects.count() == 1
+        john = User.objects.get(email="john@rijksoverheid.nl")
+        assert john.colleague.suborganization == rig_suborg
 
     def test_csv_user_import_logs_ip_and_user_agent(self):
         """When a request is passed, each imported user's create event records the
@@ -89,8 +118,8 @@ Noreq,User,noreq@rijksoverheid.nl,"""
         assert event.ip is None
         assert event.user_agent == ""
 
-    def test_csv_user_import_without_brand_creates_users_without_labels(self):
-        """Test: CSV without brand column or empty brand creates users with no labels"""
+    def test_csv_user_import_without_brand_creates_users_without_merk(self):
+        """Test: CSV without brand column or empty brand creates users with no merk"""
         csv_content = """first_name,last_name,email,brand
 Alice,Wonder,alice@rijksoverheid.nl,
 Charlie,Brown,charlie@rijksoverheid.nl,"""
@@ -99,20 +128,18 @@ Charlie,Brown,charlie@rijksoverheid.nl,"""
 
         assert result["success"]
         assert result["users_created"] == 2
-        assert result["labels_created"] == 0
 
-        # Verify users have no linked colleague (no labels were assigned)
+        # Verify colleagues have no merk assigned
         alice = User.objects.get(email="alice@rijksoverheid.nl")
-        assert alice.colleague.labels.count() == 0
+        assert alice.colleague.suborganization is None
 
         charlie = User.objects.get(email="charlie@rijksoverheid.nl")
-        assert charlie.colleague.labels.count() == 0
+        assert charlie.colleague.suborganization is None
 
-    def test_csv_user_import_reuses_existing_labels(self):
-        """Test: Importing multiple users with same brand reuses existing label"""
-        # Pre-create the category and label (use get_or_create to avoid conflicts)
-        merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        existing_label = Label.objects.create(name="Pre-existing Brand", category=merken_category)
+    def test_csv_user_import_reuses_existing_merk(self):
+        """Test: Importing multiple users with same brand reuses existing merk"""
+        # Pre-create the merk
+        existing_suborg = Suborganization.objects.create(name="Pre-existing Brand")
 
         csv_content = """first_name,last_name,email,brand
 User,One,user1@rijksoverheid.nl,Pre-existing Brand
@@ -123,23 +150,24 @@ User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
 
         assert result["success"]
         assert result["users_created"] == 3
-        assert result["labels_created"] == 0  # No new labels created
 
-        # Verify only one label exists with that name
-        labels_count = Label.objects.filter(name="Pre-existing Brand").count()
-        assert labels_count == 1
+        # Verify only one merk exists with that name
+        assert Suborganization.objects.filter(name="Pre-existing Brand").count() == 1
 
-        # Verify all users' linked colleagues have the same label
+        # Verify all users' linked colleagues have the same merk
         user1 = User.objects.get(email="user1@rijksoverheid.nl")
         user2 = User.objects.get(email="user2@rijksoverheid.nl")
         user3 = User.objects.get(email="user3@rijksoverheid.nl")
 
-        assert existing_label in user1.colleague.labels.all()
-        assert existing_label in user2.colleague.labels.all()
-        assert existing_label in user3.colleague.labels.all()
+        assert user1.colleague.suborganization == existing_suborg
+        assert user2.colleague.suborganization == existing_suborg
+        assert user3.colleague.suborganization == existing_suborg
 
     def test_csv_user_import_duplicate_email_handling(self):
         """Test: Re-importing user with existing email skips and warns"""
+        Suborganization.objects.create(name="Brand A")
+        Suborganization.objects.create(name="Brand B")
+
         # First import
         csv_content1 = """first_name,last_name,email,brand
 Original,Name,duplicate@rijksoverheid.nl,Brand A"""
@@ -162,8 +190,10 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
         assert user.first_name == "Original"
         assert user.last_name == "Name"
 
-    def test_csv_assignment_import_with_brand_assigns_label(self):
-        """Test: CSV placement import with brand columns assigns brand labels to new colleagues"""
+    def test_csv_assignment_import_with_brand_assigns_merk(self):
+        """Test: CSV placement import with brand columns assigns (pre-existing) merk to new colleagues"""
+        rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
+
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
 
@@ -172,21 +202,29 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,3
         assert result["success"]
         assert result["colleagues_created"] > 0
 
-        # Verify Merk category exists
-        merken_category = LabelCategory.objects.get(name="Merk")
-
-        # Verify Rijks ICT Gilde label was created
-        rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
-
-        # Verify colleagues have the label
+        # Verify colleagues have the merk
         john = Colleague.objects.get(email="john@rijksoverheid.nl")
-        assert rig_label in john.labels.all()
+        assert john.suborganization == rig_suborg
 
         owner = Colleague.objects.get(email="owner@rijksoverheid.nl")
-        assert rig_label in owner.labels.all()
+        assert owner.suborganization == rig_suborg
 
-    def test_csv_placement_import_without_brand_no_label(self):
-        """Test: CSV placement import without brand columns or empty brands creates colleagues with no labels"""
+    def test_csv_assignment_import_unknown_brand_rejects_whole_import(self):
+        """Test: an unknown owner/colleague brand fails the import; nothing is written"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Onbekend Merk,Onbekend Merk"""
+
+        result = create_assignments_from_csv(None, csv_content)
+
+        assert not result["success"]
+        assert any("Onbekend Merk" in error for error in result["errors"])
+        # Atomic rollback: no colleagues, assignments, or merken created.
+        assert not Colleague.objects.filter(email="john@rijksoverheid.nl").exists()
+        assert not Assignment.objects.exists()
+        assert Suborganization.objects.count() == 0
+
+    def test_csv_placement_import_without_brand_no_merk(self):
+        """Test: CSV placement import without brand columns or empty brands creates colleagues with no merk"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Test Description,Owner Name,owner@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,,"""
 
@@ -195,15 +233,19 @@ Test Assignment,Test Description,Owner Name,owner@minbzk.nl,,01-01-2025,31-12-20
         assert result["success"]
         assert result["colleagues_created"] > 0
 
-        # Verify colleagues have no labels
+        # Verify colleagues have no merk
         john = Colleague.objects.get(email="john@minbzk.nl")
-        assert john.labels.count() == 0
+        assert john.suborganization is None
 
         owner = Colleague.objects.get(email="owner@minbzk.nl")
-        assert owner.labels.count() == 0
+        assert owner.suborganization is None
 
     def test_csv_placement_import_multiple_brands(self):
-        """Test: CSV placement import with different brands for owners vs colleagues"""
+        """Test: CSV placement import with different (pre-existing) brands for owners vs colleagues"""
+        rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
+        rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
+        iir_suborg = Suborganization.objects.create(name="I-Interim Rijk")
+
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Assignment 1,Test,Owner A,ownera@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,Rijks ICT Gilde,Rijksconsultants
 Assignment 2,Test,Owner B,ownerb@minbzk.nl,,01-01-2025,31-12-2025,Java,Jane Smith,jane@minbzk.nl,I-Interim Rijk,Rijks ICT Gilde"""
@@ -213,44 +255,29 @@ Assignment 2,Test,Owner B,ownerb@minbzk.nl,,01-01-2025,31-12-2025,Java,Jane Smit
         assert result["success"]
         assert result["colleagues_created"] == 4  # 2 owners + 2 placement colleagues
 
-        # Verify Merk category exists
-        merken_category = LabelCategory.objects.get(name="Merk")
-
-        # Verify brand labels were created
-        rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
-        rc_label = Label.objects.get(name="Rijksconsultants", category=merken_category)
-        iir_label = Label.objects.get(name="I-Interim Rijk", category=merken_category)
-
         # Verify first row: owner has RIG, colleague has RC
         john = Colleague.objects.get(email="john@minbzk.nl")
-        assert rc_label in john.labels.all()
-        assert rig_label not in john.labels.all()
+        assert john.suborganization == rc_suborg
 
         owner_a = Colleague.objects.get(email="ownera@minbzk.nl")
-        assert rig_label in owner_a.labels.all()
-        assert rc_label not in owner_a.labels.all()
+        assert owner_a.suborganization == rig_suborg
 
         # Verify second row: owner has IIR, colleague has RIG
         jane = Colleague.objects.get(email="jane@minbzk.nl")
-        assert rig_label in jane.labels.all()
-        assert iir_label not in jane.labels.all()
+        assert jane.suborganization == rig_suborg
 
         owner_b = Colleague.objects.get(email="ownerb@minbzk.nl")
-        assert iir_label in owner_b.labels.all()
-        assert rig_label not in owner_b.labels.all()
+        assert owner_b.suborganization == iir_suborg
 
-    def test_csv_assignment_import_existing_colleague_no_duplicate_label(self):
-        """Test: Re-importing placement for existing colleague doesn't duplicate label"""
-        # Pre-create colleague with label (use get_or_create to avoid conflicts)
-        merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=merken_category)
+    def test_csv_assignment_import_existing_colleague_keeps_merk(self):
+        """Test: Re-importing placement for an existing colleague leaves their merk untouched"""
+        rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
 
         colleague = Colleague.objects.create(
-            name="Existing Colleague", email="existing@rijksoverheid.nl", source="wies"
+            name="Existing Colleague", email="existing@rijksoverheid.nl", source="wies", suborganization=rig_suborg
         )
-        colleague.labels.add(rig_label)
 
-        # Import placement with existing colleague and same brand
+        # Import placement with existing colleague (brand only applies to new colleagues)
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
 
@@ -258,14 +285,14 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
 
         assert result["success"]
 
-        # Verify colleague still has only one label instance (no duplicate)
         colleague.refresh_from_db()
-        assert colleague.labels.count() == 1
-        assert rig_label in colleague.labels.all()
+        assert colleague.suborganization == rig_suborg
 
     @patch("wies.core.services.sync.OTYSAPI")
-    def test_otys_sync_assigns_i_interim_rijk_label(self, mock_otys_api):
-        """Test: OTYS sync assigns I-Interim Rijk label to synced colleagues"""
+    def test_otys_sync_assigns_i_interim_rijk_merk(self, mock_otys_api):
+        """Test: OTYS sync assigns the (pre-existing) I-Interim Rijk merk to synced colleagues"""
+        Suborganization.objects.create(name="I-Interim Rijk")
+
         # Mock OTYS API responses
         mock_api_instance = Mock()
         mock_otys_api.return_value.__enter__.return_value = mock_api_instance
@@ -298,30 +325,29 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
 
         assert result["candidates_synced"] == 2
 
-        # Verify Merk category and I-Interim Rijk label were created
-        merken_category = LabelCategory.objects.get(name="Merk")
-        iir_label = Label.objects.get(name="I-Interim Rijk", category=merken_category)
+        iir_suborg = Suborganization.objects.get(name="I-Interim Rijk")
 
-        # Verify both colleagues have the label
+        # Verify both colleagues have the merk
         jane = Colleague.objects.get(source_id="12345", source="otys_iir")
-        assert iir_label in jane.labels.all()
+        assert jane.suborganization == iir_suborg
         assert jane.name == "Jane Doe"
 
         john = Colleague.objects.get(source_id="67890", source="otys_iir")
-        assert iir_label in john.labels.all()
+        assert john.suborganization == iir_suborg
         assert john.name == "John van Smith"
 
     @patch("wies.core.services.sync.OTYSAPI")
-    def test_otys_sync_idempotency_no_duplicate_labels(self, mock_otys_api):
-        """Test: Re-syncing OTYS data doesn't duplicate I-Interim Rijk label"""
-        # Pre-create colleague with label (use get_or_create to avoid conflicts)
-        merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=merken_category)
+    def test_otys_sync_idempotency_keeps_single_merk(self, mock_otys_api):
+        """Test: Re-syncing OTYS data keeps the I-Interim Rijk merk (no duplicate merken)"""
+        iir_suborg = Suborganization.objects.create(name="I-Interim Rijk")
 
         colleague = Colleague.objects.create(
-            name="Existing OTYS User", source_id="99999", source="otys_iir", email="existing@otys.com"
+            name="Existing OTYS User",
+            source_id="99999",
+            source="otys_iir",
+            email="existing@otys.com",
+            suborganization=iir_suborg,
         )
-        colleague.labels.add(iir_label)
 
         # Mock OTYS API to return the same colleague
         mock_api_instance = Mock()
@@ -351,49 +377,43 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
 
         assert result["candidates_synced"] == 1
 
-        # Verify colleague still has only one label instance
+        # Verify colleague still has the same merk and only one merk row exists
         colleague.refresh_from_db()
-        assert colleague.labels.count() == 1
-        assert iir_label in colleague.labels.all()
+        assert colleague.suborganization == iir_suborg
+        assert Suborganization.objects.filter(name="I-Interim Rijk").count() == 1
 
-    def test_csv_and_otys_labels_coexist(self):
-        """Test: Colleagues from different sources can have multiple labels"""
-        # Create labels (use get_or_create to avoid conflicts)
-        merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=merken_category)
-        iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=merken_category)
+    @patch("wies.core.services.sync.OTYSAPI")
+    def test_otys_sync_missing_seed_raises(self, mock_otys_api):
+        """Test: OTYS sync fails clearly when the I-Interim Rijk merk is not seeded"""
+        mock_api_instance = Mock()
+        mock_otys_api.return_value.__enter__.return_value = mock_api_instance
+        mock_api_instance.get_candidate_list.return_value = {"listOutput": []}
+        mock_api_instance.get_vacancy_list.return_value = {"listOutput": []}
 
-        # Create colleague with both labels
-        colleague = Colleague.objects.create(
-            name="Multi-Label Colleague", email="multi@rijksoverheid.nl", source="wies"
-        )
-        colleague.labels.add(rig_label, iir_label)
-
-        # Verify both labels are assigned
-        assert colleague.labels.count() == 2
-        assert rig_label in colleague.labels.all()
-        assert iir_label in colleague.labels.all()
+        with patch("wies.core.services.sync.settings") as mock_settings:
+            mock_settings.OTYS_API_KEY = "test_key"
+            mock_settings.OTYS_URL = "https://test.otys.com"
+            with pytest.raises(SuborganizationNotFoundError):
+                sync_all_otys_iir_records()
 
     def test_full_import_workflow_csv_to_ui_visibility(self):
         """Test: Complete workflow from CSV import to data visibility"""
-        # Import users with labels
+        test_suborg = Suborganization.objects.create(name="Test Brand")
+
+        # Import users with a brand → merk
         csv_content = """first_name,last_name,email,brand
 Test,User,testuser@rijksoverheid.nl,Test Brand"""
 
         result = create_users_from_csv(None, csv_content)
         assert result["success"]
 
-        # Verify label was created in correct category
-        merken_category = LabelCategory.objects.get(name="Merk")
-        test_label = Label.objects.get(name="Test Brand", category=merken_category)
-
-        # Verify user's linked colleague has label
+        # Verify user's linked colleague has the merk
         user = User.objects.get(email="testuser@rijksoverheid.nl")
-        assert test_label in user.colleague.labels.all()
+        assert user.colleague.suborganization == test_suborg
 
-        # Verify label appears in queryset (simulating UI display via colleague)
-        users_with_label = User.objects.filter(colleague__labels=test_label)
-        assert user in users_with_label
+        # Verify merk appears in queryset (simulating UI display via colleague)
+        users_with_suborg = User.objects.filter(colleague__suborganization=test_suborg)
+        assert user in users_with_suborg
 
     def test_csv_two_rows_same_skill_different_colleagues_create_two_services(self):
         """Test: Two CSV rows with the same skill and different colleagues create two Services."""
