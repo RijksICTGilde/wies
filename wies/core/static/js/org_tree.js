@@ -154,11 +154,13 @@
     return row;
   };
 
-  /* Deliberately no `selected` on the row. The checkbox segment already paints
-     its own checked fill, and a row-level one bleeds out past the chevron — so a
-     row you picked yourself would look different from one that turned on because
-     all its children did, while both are simply checked. Which of the two is the
-     explicit choice is what the footer says. */
+  /* We mark the rows the user picked HERSELF with data-explicit and style those
+     apart (bold label, darker checkbox). The checkbox `checked` state alone can't
+     tell them from rows that only turned on because all their children did — both
+     are simply checked — and the footer tokens are easy to miss, so the tree
+     needs its own cue for which row IS the selection. Not the DS `selected`
+     attribute: it resolves to the same tokens as `checked`, so it would look
+     identical. See app.css for the [data-explicit] styling. */
   OrgTree.prototype.sync = function () {
     var self = this;
     this.state.nodes.forEach(function (node) {
@@ -175,6 +177,10 @@
         box.checked = node.checked;
         box.indeterminate = node.indeterminate;
       }
+      row.toggleAttribute(
+        "data-explicit",
+        self.state.explicitSelections.has(node.id),
+      );
     });
   };
 
