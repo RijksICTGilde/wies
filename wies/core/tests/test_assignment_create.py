@@ -433,7 +433,7 @@ class AssignmentCreateTest(TestCase):
         response = self.client.get(reverse("assignment-create-sheet"))
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
-        assert b"Aanmaken" in response.content
+        assert b"Voer opdracht in" in response.content
 
     def test_sheet_post_creates_assignment_without_services(self):
         self.client.force_login(self.bdm_user)

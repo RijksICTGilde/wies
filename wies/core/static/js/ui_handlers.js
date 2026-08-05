@@ -22,6 +22,13 @@
     "show-more": function (el) {
       if (typeof toggleShowMore === "function") toggleShowMore(el);
     },
+    // Back button on the error pages. history.back() does nothing when the page
+    // was opened directly (a pasted URL, a bookmark), so fall back to the home
+    // page rather than leaving a button that looks broken.
+    "history-back": function () {
+      if (window.history.length > 1) window.history.back();
+      else window.location.assign("/");
+    },
   };
 
   // event.target is an Element for user-driven events, but not for events

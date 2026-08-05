@@ -2,16 +2,15 @@
 {% block title %}
   Pagina niet gevonden (404) · Wies
 {% endblock title %}
-{% block error_title %}
-  HTTP 404 - Pagina niet gevonden
-{% endblock error_title %}
-{% block error_message %}
-  De pagina die je zoekt bestaat niet of is verplaatst.
-{% endblock error_message %}
-{% block error_extra %}
+{% block error_text %}
+  Deze pagina bestaat niet
+{% endblock error_text %}
+{% block error_supporting_text %}
+  De pagina die je zoekt is verplaatst of verwijderd.
+{% endblock error_supporting_text %}
+{% block error_actions %}
+  <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
   {# djlint:off J018 - url() doesn't work in error handler context #}
-  <p>
-    <a href="/">Ga naar de homepage</a>
-  </p>
+  <nldd-button slot="actions" variant="secondary" start-icon="home" text="Ga naar de homepage" href="/"></nldd-button>
   {# djlint:on #}
-{% endblock error_extra %}
+{% endblock error_actions %}

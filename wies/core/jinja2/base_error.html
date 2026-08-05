@@ -1,23 +1,28 @@
 {% extends "base.html" %}
-{% block header %}
-{% endblock header %}
 {% block content %}
-  <nldd-container padding="24" style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
-  <div style="max-width: 500px; text-align: center;">
-    <nldd-rich-text>
-    <h1>
-      {% block error_title %}
-        Fout
-      {% endblock error_title %}
-    </h1>
-    <p>
-      {% block error_message %}
-        Er is iets misgegaan.
-      {% endblock error_message %}
-    </p>
-    {% block error_extra %}
-    {% endblock error_extra %}
-    </nldd-rich-text>
-  </div>
-  </nldd-container>
+  {# nldd-inline-dialog en geen eigen gecentreerde doos: dat is het patroon dat
+     de rest van de app al gebruikt voor "Niet gevonden" en "Geen personen
+     gevonden", dus een foutpagina ziet eruit als de app en niet als een los
+     scherm. De vorige opzet zette bovendien een inline display: flex op de
+     nldd-container, waardoor de doos erbinnen tot min-content kromp en de tekst
+     per letter afbrak. #}
+  {# Via set-blokken, want text en supporting-text zijn attributen: een
+     {% block %} rechtstreeks in een attribuutwaarde levert djlint T028 op. #}
+  {% set error_text %}
+    {% block error_text %}
+      Er is iets misgegaan
+    {% endblock error_text %}
+  {% endset %}
+  {% set error_supporting_text %}
+    {% block error_supporting_text %}
+      Probeer het later opnieuw.
+    {% endblock error_supporting_text %}
+  {% endset %}
+  <nldd-simple-section>
+  <nldd-inline-dialog variant="alert" size="lg" heading-level="1" text="{{ error_text | trim }}" supporting-text="{{ error_supporting_text | trim }}">
+  {% block error_actions %}
+    <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
+  {% endblock error_actions %}
+  </nldd-inline-dialog>
+  </nldd-simple-section>
 {% endblock content %}

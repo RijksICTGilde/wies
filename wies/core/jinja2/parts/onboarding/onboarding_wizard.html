@@ -7,8 +7,10 @@
 {# no-light-dismiss: een klik naast het venster mag de wizard niet afsluiten,
    daar zit ingevulde informatie in. Sluit en Escape doen dat wel.
    height: alle stappen even hoog, anders springt het venster bij elke stap. De
-   langste stap (drie opdrachten) scrolt binnen die hoogte. #}
-<nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(640px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
+   maat komt van de profielstap, de langste stap die helemaal moet passen: door
+   labelvelden heen scrollen is vervelend. De opdrachtenstap scrolt wel, want
+   die groeit met het aantal opdrachten. #}
+<nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(700px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Sluit"></nldd-top-title-bar>
 <nldd-container data-onboarding-chrome padding="16">
