@@ -139,33 +139,30 @@
         slot: "popup",
         placement: "bottom-end",
       });
+      // Geen per-item listener: de acties lopen via de gedelegeerde `select`-
+      // listener onderaan, die het item herkent aan data-org-picker-action. Zo
+      // zijn server-gerenderde en hier-gebouwde chips identiek en gedragen ze
+      // zich gelijk. data-node-id zegt op welke opdrachtgever de actie slaat.
       if (!isPrimary) {
-        var makePrimary = cell("nldd-menu-item", {
-          text: "Maak primaire opdrachtgever",
-          icon: "primary",
-        });
-        makePrimary.addEventListener("select", function () {
-          rows.forEach(function (r) {
-            r.role = r.nodeId === row.nodeId ? "PRIMARY" : "INVOLVED";
-          });
-          renderSelection(rows);
-        });
-        menu.appendChild(makePrimary);
-        menu.appendChild(cell("nldd-menu-divider", {}));
-      }
-      var remove = cell("nldd-menu-item", {
-        text: "Verwijder opdrachtgever",
-        icon: "delete",
-        destructive: "",
-      });
-      remove.addEventListener("select", function () {
-        renderSelection(
-          rows.filter(function (r) {
-            return r.nodeId !== row.nodeId;
+        menu.appendChild(
+          cell("nldd-menu-item", {
+            text: "Maak primaire opdrachtgever",
+            icon: "primary",
+            "data-org-picker-action": "make-primary",
+            "data-node-id": row.nodeId,
           }),
         );
-      });
-      menu.appendChild(remove);
+        menu.appendChild(cell("nldd-menu-divider", {}));
+      }
+      menu.appendChild(
+        cell("nldd-menu-item", {
+          text: "Verwijder opdrachtgever",
+          icon: "delete",
+          destructive: "",
+          "data-org-picker-action": "remove",
+          "data-node-id": row.nodeId,
+        }),
+      );
       trigger.appendChild(menu);
       menuCell.appendChild(trigger);
       item.appendChild(menuCell);
@@ -184,45 +181,71 @@
 
   function renderFromInputs() {
     if (!document.getElementById(INPUTS_ID)) return;
+    // De server rendert de chiplijst al mee in de eerste paint; de gedelegeerde
+    // `select`-listener maakt hem interactief. Dan hier niet wipen-en-herbouwen
+    // (dat geeft een tweede reflow). Alleen bouwen als hij er nog niet is:
+    // full-page aanmaken start leeg, en de eerste apply uit de sheet bouwt hem.
+    var container = document.getElementById(SELECTIONS_ID);
+    if (container && container.querySelector("nldd-list")) return;
     renderSelection(rowsFromInputs());
   }
 
-  /** The trigger's htmx:configRequest adds what /client-modal needs: the orgs to
-   *  pre-check, and count_mode=none so the endpoint returns the picker sheet
-   *  (and no placement counts). Idempotent — runs on page load and after every
-   *  swap, wiring the button exactly once. */
+  /** The trigger's htmx:configRequest sets count_mode=none so the endpoint
+   *  returns the picker sheet (and no placement counts). The sheet opens empty:
+   *  it adds to the orgs already on the assignment rather than editing the whole
+   *  set, so we deliberately do not pre-check anything. Idempotent — runs on page
+   *  load and after every swap, wiring the button exactly once. */
   function wireTriggerButton() {
     var button = document.getElementById("assignment-org-trigger-btn");
     if (!button || button.__wiesOrgPickerWired) return;
     button.__wiesOrgPickerWired = true;
     button.addEventListener("htmx:configRequest", function (e) {
-      var orgIds = [];
-      document
-        .querySelectorAll("#" + INPUTS_ID + " input[data-org-id]")
-        .forEach(function (input) {
-          if (input.dataset.orgId) orgIds.push(input.dataset.orgId);
-        });
       e.detail.parameters["count_mode"] = "none";
-      if (orgIds.length) e.detail.parameters["org"] = orgIds;
     });
   }
 
-  document.addEventListener("wies:org-selection-applied", function (e) {
-    // Keep the role of an organisation that was already on the assignment: the
-    // sheet knows nothing about primary/involved.
-    var existingRoles = {};
-    rowsFromInputs().forEach(function (row) {
-      existingRoles[row.nodeId] = row.role;
+  // Gedelegeerde acties op de chips (server-gerenderd én hier-gebouwd). De rijen
+  // komen uit de hidden inputs — de enige bron van waarheid, die rebuildInputs
+  // bij elke render gelijk houdt — zodat we niet afhangen van een meegevangen
+  // rows-array. Spiegelt het patroon in side_panel.js.
+  document.addEventListener("select", function (e) {
+    var item = e.composedPath().find(function (el) {
+      return el instanceof Element && el.dataset && el.dataset.orgPickerAction;
     });
-    var isFirst = true;
-    var rows = (e.detail.rows || []).map(function (row) {
-      var result = {
-        nodeId: row.nodeId,
-        label: row.label,
-        role: existingRoles[row.nodeId] || (isFirst ? "PRIMARY" : "INVOLVED"),
-      };
-      isFirst = false;
-      return result;
+    if (!item) return;
+    var action = item.dataset.orgPickerAction;
+    var nodeId = item.dataset.nodeId;
+    var rows = rowsFromInputs();
+    if (action === "make-primary") {
+      rows.forEach(function (r) {
+        r.role = r.nodeId === nodeId ? "PRIMARY" : "INVOLVED";
+      });
+    } else if (action === "remove") {
+      rows = rows.filter(function (r) {
+        return r.nodeId !== nodeId;
+      });
+    } else {
+      return;
+    }
+    renderSelection(rows);
+  });
+
+  document.addEventListener("wies:org-selection-applied", function (e) {
+    // The sheet opens empty and adds to what is already on the assignment: keep
+    // the current rows (and their primary/involved roles, which the sheet knows
+    // nothing about) and append only orgs that are not attached yet. An org the
+    // user re-picks is silently skipped rather than duplicated. renderSelection
+    // promotes the first row to PRIMARY when the set has none, so adding to an
+    // empty assignment still yields a valid primary.
+    var rows = rowsFromInputs();
+    var seen = {};
+    rows.forEach(function (row) {
+      seen[row.nodeId] = true;
+    });
+    (e.detail.rows || []).forEach(function (row) {
+      if (seen[row.nodeId]) return;
+      seen[row.nodeId] = true;
+      rows.push({ nodeId: row.nodeId, label: row.label, role: "INVOLVED" });
     });
     renderSelection(rows);
   });
