@@ -528,10 +528,13 @@ class FilterFacetFailClosedTests(TestCase):
         self.placement = Placement.objects.create(colleague=placed, service=service, source="wies")
         self.client.force_login(self.user)
 
-    def _shows_placement(self, params):
+    def _page(self, params):
         response = self.client.get(reverse("home"), params)
         assert response.status_code == 200
-        return self.PLACED_NAME in response.content.decode()
+        return response.content.decode()
+
+    def _shows_placement(self, params):
+        return self.PLACED_NAME in self._page(params)
 
     def test_baseline_without_filters_shows_the_placement(self):
         assert self._shows_placement({})
@@ -553,6 +556,39 @@ class FilterFacetFailClosedTests(TestCase):
         for param in self.FACETS:
             with self.subTest(param=param):
                 assert not self._shows_placement({param: "1"})
+
+    def test_empty_value_is_no_filter_at_all(self):
+        """``?org=`` is an empty select, not a selection that matched nothing.
+        Emptying the list on it would strand the user on a filter they never
+        chose."""
+        for param in self.FACETS:
+            with self.subTest(param=param):
+                assert self._shows_placement({param: ""})
+
+    def test_unresolvable_value_stays_clearable(self):
+        """Failing closed must not be a dead end: the empty list still carries
+        the clear-all button, so the user can get back. Asserted on the chip
+        strip's marker, since the modal footer renders a clear-all button
+        unconditionally and its raw text would pass either way."""
+        stranger = str(generate_public_id())
+        for param in self.FACETS:
+            with self.subTest(param=param):
+                page = self._page({param: stranger})
+                assert self.PLACED_NAME not in page
+                assert "data-clear-all-filters" in page
+
+    def test_unknown_org_gets_a_named_chip(self):
+        """The org chips are built by hand, so an unknown value needs its own
+        label instead of silently dropping out of the chip row."""
+        page = self._page({"org": str(generate_public_id())})
+
+        assert "Onbekende opdrachtgever" in page
+
+    def test_known_org_chip_still_shows_its_label(self):
+        page = self._page({"org": str(self.org.public_id)})
+
+        assert "Ministerie" in page
+        assert "Onbekende opdrachtgever" not in page
 
     def test_a_resolvable_value_still_filters_normally(self):
         assert self._shows_placement({"org": str(self.org.public_id)})

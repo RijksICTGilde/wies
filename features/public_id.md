@@ -83,6 +83,17 @@ anyway; there is simply no reason for it, and real migration risk.)
   `ResolvedFacet.requested`. A stale id in a shared or bookmarked URL
   must not quietly show more than it asks for, and this is uniform across
   `?org=`, `?org_self=`, `?rol=`, `?merk=` and `?labels=`.
+- **But never into a dead end.** A value that resolves to nothing still
+  counts as an active filter (`ResolvedFacet.active_values`), so the empty
+  list keeps its chip strip and its "Wis alle filters" button. Without
+  that the user lands on an empty page with no filter in sight and no way
+  back. Unknown organizations get their own chip label
+  (`UNKNOWN_ORG_LABEL`), since the org chips are built by hand rather than
+  matched against a rendered option.
+- **An empty value is not a filter.** `?org=` is an unset select, not a
+  selection that matched nothing, so `resolve_facet` drops blank tokens
+  before deciding `requested`. Emptying the list on a blank value would
+  strand the user on a filter they never chose.
 - **Select options:** Django keys `ModelChoiceField` options on the pk, so
   `use_public_id_choices()` sets `to_field_name="public_id"` for every
   choice field whose model has one. `_build_form_field` applies it to all

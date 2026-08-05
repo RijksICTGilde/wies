@@ -63,23 +63,37 @@ def backfill_public_ids(apps, app_label: str, model_names: list[str]) -> None:
 class ResolvedFacet:
     """One filter facet's public_id tokens resolved against the database.
 
-    ``requested`` is True as soon as the param appears in the URL, even when not
-    a single token resolves. That is what makes an unknown or malformed value
-    fail closed: the caller applies the filter with an empty id list and gets no
-    rows, rather than dropping the filter and widening the result. A stale id in
-    a shared or bookmarked URL must never quietly show more than it asks for.
+    ``requested`` is True once the param carries at least one non-empty value,
+    even when none of them resolves. That is what makes an unknown or malformed
+    value fail closed: the caller applies the filter with an empty id list and
+    gets no rows, rather than dropping the filter and widening the result. A
+    stale id in a shared or bookmarked URL must never quietly show more than it
+    asks for.
 
-    ``public_ids`` and ``ids`` hold only the tokens that match a real row, in URL
-    order, deduplicated, and index-aligned with each other.
+    An empty value (``?org=``) is no selection at all, not a selection that
+    matched nothing, so it leaves ``requested`` False.
+
+    ``public_ids`` and ``ids`` hold the tokens that match a real row, in URL
+    order, deduplicated, and index-aligned with each other. ``unresolved`` holds
+    the rest: they filter everything away, but the caller must still surface them
+    as an active filter, otherwise the user is left on an empty list with nothing
+    to see or clear.
     """
 
     requested: bool
     public_ids: list[str] = field(default_factory=list)
     ids: list[int] = field(default_factory=list)
+    unresolved: list[str] = field(default_factory=list)
+
+    @property
+    def active_values(self) -> list[str]:
+        """Every value that is filtering, whether it resolved or not."""
+        return [*self.public_ids, *self.unresolved]
 
 
 def resolve_facet(model: type[Model], tokens: list[str]) -> ResolvedFacet:
     """Resolve one facet's raw query-param values against ``model``."""
+    tokens = [str(token) for token in tokens if str(token).strip()]
     if not tokens:
         return ResolvedFacet(requested=False)
     id_by_public_id = {
@@ -90,13 +104,17 @@ def resolve_facet(model: type[Model], tokens: list[str]) -> ResolvedFacet:
     }
     public_ids: list[str] = []
     ids: list[int] = []
+    unresolved: list[str] = []
     for token in tokens:
-        row_id = id_by_public_id.get(str(token))
-        if row_id is None or str(token) in public_ids:
+        if token in public_ids or token in unresolved:
             continue
-        public_ids.append(str(token))
+        row_id = id_by_public_id.get(token)
+        if row_id is None:
+            unresolved.append(token)
+            continue
+        public_ids.append(token)
         ids.append(row_id)
-    return ResolvedFacet(requested=True, public_ids=public_ids, ids=ids)
+    return ResolvedFacet(requested=True, public_ids=public_ids, ids=ids, unresolved=unresolved)
 
 
 class FacetResolver:

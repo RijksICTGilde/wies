@@ -43,9 +43,9 @@ class ListFilterInvalidLabelParamTests(TestCase):
 
 class ActiveFilterIndicatorTests(TestCase):
     """The active-filter indicators must reflect the filters that are actually
-    applied. A non-numeric filter param is ignored by the queryset, so it must not
-    count as an active filter — otherwise the page shows an "active" indicator for a
-    filter that isn't set.
+    applied. A filter value that resolves to no row is not ignored: it filters
+    everything away, so it IS an active filter and must show its indicator. An
+    empty value is the opposite case, an unset filter, and must not.
 
     Two indicators are gated on ``active_filter_count``:
     - the chip strip's clear-all button (``data-clear-all-filters``), on the
@@ -62,10 +62,20 @@ class ActiveFilterIndicatorTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="viewer@rijksoverheid.nl", first_name="V", last_name="iewer")
 
-    def test_home_non_numeric_label_hides_clear_all(self):
+    def test_home_unresolvable_label_shows_clear_all(self):
+        """It empties the list, so the user needs the way back."""
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("home"), {"labels": "abc"})
+
+        assert response.status_code == 200
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
+
+    def test_home_empty_label_hides_clear_all(self):
+        """An empty value filters nothing, so nothing is active."""
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("home"), {"labels": ""})
 
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER not in response.content.decode()
@@ -82,11 +92,20 @@ class ActiveFilterIndicatorTests(TestCase):
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER in response.content.decode()
 
-    def test_admin_users_non_numeric_label_hides_active_badge(self):
+    def test_admin_users_unresolvable_label_shows_active_badge(self):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("admin-users"), {"labels": "abc"})
+
+        assert response.status_code == 200
+        assert self.ACTIVE_BADGE_MARKER in response.content.decode()
+
+    def test_admin_users_empty_label_hides_active_badge(self):
+        self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("admin-users"), {"labels": ""})
 
         assert response.status_code == 200
         assert self.ACTIVE_BADGE_MARKER not in response.content.decode()
@@ -102,10 +121,18 @@ class ActiveFilterIndicatorTests(TestCase):
         assert response.status_code == 200
         assert self.ACTIVE_BADGE_MARKER in response.content.decode()
 
-    def test_assignments_non_numeric_rol_hides_clear_all(self):
+    def test_assignments_unresolvable_rol_shows_clear_all(self):
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("assignment-list"), {"rol": "abc"})
+
+        assert response.status_code == 200
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
+
+    def test_assignments_empty_rol_hides_clear_all(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse("assignment-list"), {"rol": ""})
 
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER not in response.content.decode()

@@ -618,6 +618,13 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
+# Shown for a filter value that matches no organization (a deleted or edited
+# bookmark). The value itself is a meaningless token to the reader, but the chip
+# has to be there: it is what tells them why the list is empty and lets them
+# click the filter away.
+UNKNOWN_ORG_LABEL = "Onbekende opdrachtgever"
+
+
 def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: list[str]) -> list[dict]:
     """Chips for the opdrachtgever facets, in the order they appear in the URL."""
     labels: dict[str, str] = {}
@@ -632,17 +639,17 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
         {
             "param_name": "org",
             "param_value": public_id,
-            "label": labels.get(public_id, f"Organisatie {public_id}"),
+            "label": labels.get(public_id, UNKNOWN_ORG_LABEL),
         }
-        for public_id in org.public_ids
+        for public_id in org.active_values
     ]
     chips.extend(
         {
             "param_name": "org_self",
             "param_value": public_id,
-            "label": f"{labels.get(public_id, f'Organisatie {public_id}')} (direct)",
+            "label": f"{labels[public_id]} (direct)" if public_id in labels else UNKNOWN_ORG_LABEL,
         }
-        for public_id in org_self.public_ids
+        for public_id in org_self.active_values
     )
     chips.extend(
         {
@@ -659,7 +666,9 @@ class PublicIdFacetsMixin:
     """Resolves the public_id filter params of a list view once per request.
 
     Every facet fails closed: a param that is present but resolves to no row
-    filters everything away instead of being dropped. See ``ResolvedFacet``.
+    filters everything away instead of being dropped. Such a value still counts
+    as an active filter, so the user gets a chip and the "Wis alle filters"
+    button rather than an unexplained empty list. See ``ResolvedFacet``.
     """
 
     @cached_property
@@ -697,10 +706,10 @@ class PublicIdFacetsMixin:
         """Register the opdrachtgever facets as active filters and build their chips."""
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
-        if org.public_ids:
-            active_filters["org"] = org.public_ids
-        if org_self.public_ids:
-            active_filters["org_self"] = org_self.public_ids
+        if org.active_values:
+            active_filters["org"] = org.active_values
+        if org_self.active_values:
+            active_filters["org_self"] = org_self.active_values
         if self.org_type_filter:
             active_filters["org_type"] = self.org_type_filter
         context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter)
@@ -900,16 +909,17 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         if loopt_af_values:
             active_filters["loopt_af"] = loopt_af_values
 
-        # Multi-select facets carry public_ids; only values that exist are active.
-        rol_filter = self.facets("rol", Skill).public_ids
+        # Multi-select facets carry public_ids. A value that resolves to nothing
+        # still counts, so an empty list always comes with a way to clear it.
+        rol_filter = self.facets("rol", Skill).active_values
         if rol_filter:
             active_filters["rol"] = rol_filter
 
-        label_filter = self.facets("labels", Label).public_ids
+        label_filter = self.facets("labels", Label).active_values
         if label_filter:
             active_filters["labels"] = label_filter
 
-        suborganization_filter = self.facets("merk", Suborganization).public_ids
+        suborganization_filter = self.facets("merk", Suborganization).active_values
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
@@ -1177,7 +1187,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
 
         # rol filter supports multi-select (values are skill public_ids)
-        rol_filter = self.facets("rol", Skill).public_ids
+        rol_filter = self.facets("rol", Skill).active_values
         if rol_filter:
             active_filters["rol"] = rol_filter
 
@@ -1356,12 +1366,12 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         active_filters = {}
 
         # label filter supports multi-select (values are label public_ids)
-        label_filter = self.facets("labels", Label).public_ids
+        label_filter = self.facets("labels", Label).active_values
         if label_filter:
             active_filters["labels"] = label_filter
 
         # merk filter supports multi-select (values are suborganization public_ids)
-        suborganization_filter = self.facets("merk", Suborganization).public_ids
+        suborganization_filter = self.facets("merk", Suborganization).active_values
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
