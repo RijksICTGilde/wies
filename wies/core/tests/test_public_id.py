@@ -12,7 +12,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import IntegrityError
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils import timezone
@@ -22,6 +22,7 @@ from wies.core.inline_edit.forms import use_public_id_choices
 from wies.core.models import (
     Assignment,
     Colleague,
+    ErrorEvent,
     Label,
     LabelCategory,
     OrganizationUnit,
@@ -382,6 +383,37 @@ class SkillOrgPublicIdTests(TestCase):
         assert o1.public_id != o2.public_id
 
 
+@override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+class ErrorEventPublicIdTests(TestCase):
+    """The staff error pages are routed on the id, so ErrorEvent carries a
+    public_id too: if the staff check ever breaks, the errors (which quote
+    tracebacks and request paths) are still not walkable."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff = User.objects.create_user(email="staff@rijksoverheid.nl", first_name="St", last_name="Aff")
+        self.error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
+        self.client.force_login(self.staff)
+
+    def test_error_event_gets_a_unique_public_id(self):
+        other = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Ook kapot")
+
+        assert_is_public_id(self.error.public_id)
+        assert self.error.public_id != other.public_id
+
+    def test_detail_route_resolves_by_public_id(self):
+        url = reverse("error-detail", args=[self.error.public_id])
+        assert self.client.get(url).status_code == 200
+
+    def test_routes_no_longer_accept_integer_pk(self):
+        for route in ("error-detail", "delete-error"):
+            try:
+                url = reverse(route, args=[self.error.pk])
+            except NoReverseMatch:
+                continue
+            assert self.client.get(url).status_code == 404, route
+
+
 class SuborganizationPublicIdTests(TestCase):
     def test_suborganization_gets_a_unique_public_id(self):
         s1 = Suborganization.objects.create(name="Rijks ICT Gilde")
@@ -518,10 +550,11 @@ class FilterFacetFailClosedTests(TestCase):
         self.org = OrganizationUnit.objects.create(name="Ministerie", label="Ministerie")
         assignment = Assignment.objects.create(name="Opdracht", source="wies")
         assignment.organizations.add(self.org)
+        self.skill = Skill.objects.create(name="Developer")
         service = Service.objects.create(
             assignment=assignment,
             description="Werk",
-            skill=Skill.objects.create(name="Developer"),
+            skill=self.skill,
             status="OPEN",
             source="wies",
         )
@@ -577,18 +610,28 @@ class FilterFacetFailClosedTests(TestCase):
                 assert self.PLACED_NAME not in page
                 assert "data-clear-all-filters" in page
 
-    def test_unknown_org_gets_a_named_chip(self):
-        """The org chips are built by hand, so an unknown value needs its own
-        label instead of silently dropping out of the chip row."""
-        page = self._page({"org": str(generate_public_id())})
+    def test_unknown_value_gets_a_named_chip_for_every_facet(self):
+        """A chip is only rendered for a value that matches an option, so an
+        unknown one needs its own label instead of dropping out of the chip row
+        and leaving an empty list with no filter in sight."""
+        chip_labels = {
+            "org": "Onbekende opdrachtgever",
+            "org_self": "Onbekende opdrachtgever",
+            "rol": "Onbekende rol",
+            "merk": "Onbekend merk",
+            "labels": "Onbekend label",
+        }
+        stranger = str(generate_public_id())
+        for param, label in chip_labels.items():
+            with self.subTest(param=param):
+                assert label in self._page({param: stranger})
 
-        assert "Onbekende opdrachtgever" in page
-
-    def test_known_org_chip_still_shows_its_label(self):
-        page = self._page({"org": str(self.org.public_id)})
+    def test_known_value_still_shows_its_own_chip(self):
+        page = self._page({"org": str(self.org.public_id), "rol": str(self.skill.public_id)})
 
         assert "Ministerie" in page
-        assert "Onbekende opdrachtgever" not in page
+        assert "Developer" in page
+        assert "Onbeken" not in page
 
     def test_a_resolvable_value_still_filters_normally(self):
         assert self._shows_placement({"org": str(self.org.public_id)})

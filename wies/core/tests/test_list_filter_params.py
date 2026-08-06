@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -145,3 +145,41 @@ class ActiveFilterIndicatorTests(TestCase):
 
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER in response.content.decode()
+
+
+class UserAdminRoleFilterTests(TestCase):
+    """``?rol=`` on the Gebruikers page names a Group pk: Group is Django's own
+    model and has no public_id. It fails closed like every other facet, so a
+    stale or hand-edited value empties the list instead of showing everyone."""
+
+    TARGET = "Doelwit"
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="viewer@rijksoverheid.nl", first_name="V", last_name="iewer")
+        self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
+        User.objects.create_user(email="target@rijksoverheid.nl", first_name="T", last_name=self.TARGET)
+        self.client.force_login(self.user)
+
+    def _shows_target(self, params):
+        response = self.client.get(reverse("admin-users"), params)
+        assert response.status_code == 200
+        return self.TARGET in response.content.decode()
+
+    def test_baseline_without_filter_shows_the_user(self):
+        assert self._shows_target({})
+
+    def test_unknown_group_matches_nothing(self):
+        assert not self._shows_target({"rol": "999999"})
+
+    def test_malformed_value_matches_nothing(self):
+        assert not self._shows_target({"rol": "abc"})
+
+    def test_empty_value_is_no_filter_at_all(self):
+        assert self._shows_target({"rol": ""})
+
+    def test_existing_group_still_filters_normally(self):
+        group = Group.objects.create(name="Beheerder")
+        User.objects.get(last_name=self.TARGET).groups.add(group)
+
+        assert self._shows_target({"rol": str(group.id)})

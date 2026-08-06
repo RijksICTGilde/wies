@@ -130,7 +130,7 @@ class ErrorReportingHandler(logging.Handler):
 
         base_url = getattr(settings, "SITE_BASE_URL", "")
         if base_url:
-            detail_url = f"{base_url}{reverse('error-detail', args=[error_event.pk])}"
+            detail_url = f"{base_url}{reverse('error-detail', args=[error_event.public_id])}"
             lines.append(f"[Bekijk details]({detail_url})")
 
         return "\n".join(lines)

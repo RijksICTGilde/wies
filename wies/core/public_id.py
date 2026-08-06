@@ -34,31 +34,6 @@ def parse_public_ids(values) -> list[uuid.UUID]:
     return parsed
 
 
-_BACKFILL_BATCH_SIZE = 1000
-
-
-def backfill_public_ids(apps, app_label: str, model_names: list[str]) -> None:
-    """Give every existing row its own public_id, in batches.
-
-    Used by the migrations that introduce the column. It cannot be a plain
-    ``AddField`` default: a callable default is evaluated once, so every existing
-    row would get the same value and the unique constraint would reject it.
-    OrganizationUnit holds the whole national register, hence ``bulk_update``
-    rather than a save() per row.
-    """
-    for model_name in model_names:
-        model = apps.get_model(app_label, model_name)
-        batch = []
-        for obj in model.objects.filter(public_id__isnull=True).iterator():
-            obj.public_id = generate_public_id()
-            batch.append(obj)
-            if len(batch) >= _BACKFILL_BATCH_SIZE:
-                model.objects.bulk_update(batch, ["public_id"])
-                batch = []
-        if batch:
-            model.objects.bulk_update(batch, ["public_id"])
-
-
 @dataclass(frozen=True)
 class ResolvedFacet:
     """One filter facet's public_id tokens resolved against the database.

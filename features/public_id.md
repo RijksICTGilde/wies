@@ -13,18 +13,38 @@ id and has no retention window, so replacing the PK would break it).
 
 ## What carries a public_id
 
-The client-facing models: `LabelCategory`, `Label`, `Skill`,
-`Colleague`, `Assignment`, `Placement`, `Service`, `OrganizationUnit`,
-`Suborganization` (plus `User`). Each declares the field the same way:
+Everything that is reachable from the client: `LabelCategory`, `Label`,
+`Skill`, `Colleague`, `Assignment`, `Placement`, `Service`,
+`OrganizationUnit`, `Suborganization`, `ErrorEvent` (plus `User`). Each
+declares the field the same way:
 
 ```python
 public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
 ```
 
 It appears in the object URLs (panels `?opdracht=`/`?collega=`/
-`?plaatsing=`, the beheer edit/delete routes, the inline-edit endpoint)
-and in the filter facets (`?org=`, `?rol=`, `?labels=`, `?merk=`,
-including the organization tree in the modal).
+`?plaatsing=`, the beheer edit/delete routes, the staff error pages, the
+inline-edit endpoint) and in the filter facets (`?org=`, `?rol=`,
+`?labels=`, `?merk=`, including the organization tree in the modal).
+
+## What does not, and why
+
+The rule is the URL, not the sensitivity of the model: if a value crosses
+into the client, it is a public_id. The exceptions:
+
+- **`Event` and `AuthEvent`** (the audit log): never addressed from the
+  client. They are listed per object on a page the viewer already has
+  access to, and reference their subject by internal `id`, which is
+  exactly why the PK has to stay internal.
+- **`Group`** (roles): Django's own model, so the column cannot be added
+  without a proxy table for no gain. Its ids identify a fixed, tiny set of
+  roles that every user can already see in the filter, and reveal nothing
+  about records. It is the one id still exposed in a URL (`?rol=` on the
+  Gebruikers page); it fails closed like the rest.
+
+`ErrorEvent` used to be on this list on the argument that it is
+staff-only. It is not any more: it is routed on its id, and being
+staff-only is a permission check, not a reason to skip the second lock.
 
 ## Why UUIDv4
 
@@ -87,9 +107,11 @@ anyway; there is simply no reason for it, and real migration risk.)
   counts as an active filter (`ResolvedFacet.active_values`), so the empty
   list keeps its chip strip and its "Wis alle filters" button. Without
   that the user lands on an empty page with no filter in sight and no way
-  back. Unknown organizations get their own chip label
-  (`UNKNOWN_ORG_LABEL`), since the org chips are built by hand rather than
-  matched against a rendered option.
+  back. A chip is normally rendered by matching the value against a
+  rendered option, which an unknown value has none of, so every facet
+  gets its own fallback label (`UNKNOWN_FACET_LABELS`, "Onbekende rol"
+  and friends). The Gebruikers page renders the compact filter bar instead
+  of chips; there the count badge marks the filter as active.
 - **An empty value is not a filter.** `?org=` is an unset select, not a
   selection that matched nothing, so `resolve_facet` drops blank tokens
   before deciding `requested`. Emptying the list on a blank value would
@@ -109,7 +131,11 @@ anyway; there is simply no reason for it, and real migration risk.)
 2. Write the migration in three steps (nullable, backfill distinct values,
    then unique + non-null). One `AddField` with a callable default gives
    every existing row the _same_ value and breaks the unique constraint.
-   See `wies/core/migrations/0012_public_ids.py`.
+   See `wies/core/migrations/0012_public_ids.py`: its model list and its
+   backfill loop are spelled out in the migration itself, so a later change
+   to the app cannot change what an old migration does. The field default
+   is the one thing it imports, since it has to be the very callable the
+   model declares or `makemigrations` keeps proposing a follow-up.
 3. Route on `<uuid:public_id>` and look the object up by `public_id`.
 4. If the model appears in a filter facet, resolve it through
    `FacetResolver` so it inherits the fail-closed behaviour.

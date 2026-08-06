@@ -323,6 +323,7 @@ class ErrorEvent(models.Model):
     so no seed/dummy data. Inspected by staff on the statistieken page.
     """
 
+    public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     level = models.CharField(max_length=16, blank=True)
     logger_name = models.CharField(max_length=255, blank=True)

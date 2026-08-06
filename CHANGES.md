@@ -9,6 +9,8 @@ This files lists the changes during the lifetime of this project.
 - 474: (migration) plekken die een object of filter in de URL zetten gebruiken nu een onraadbare identifier (`public_id`, een UUIDv4) in plaats van het volgnummer, zodat records en overzichten niet meer op te sommen zijn door id's op te hogen. Dit dekt opdrachten, collega's, plaatsingen, diensten, gebruikers, labels en merken (paneel- en beheer-URL's + inline bewerken) én de filters op opdrachtgever, rol, label en merk (`?org=`, `?rol=`, `?labels=`, `?merk=`, inclusief de organisatie-boom in de modal). Ook de keuzelijsten (merk, rol, label, business manager, consultant) sturen nu de `public_id` in plaats van het volgnummer. Het interne id blijft ongewijzigd en intern in gebruik.
 - 474: (migration) URL's en filters gebruiken nu een onraadbare identifier in plaats van het volgnummer, zodat records en overzichten niet meer op te sommen zijn door id's op te hogen. Een filterwaarde die niet bestaat levert voortaan een leeg resultaat op in plaats van de volledige lijst.
 - 474: (migration) URLs and filters now use a uuid identifier instead of the sequential id, so records and overviews can no longer be enumerated by incrementing ids. A filter value that does not exist now yields an empty result instead of the full list.
+- 474: URLs and filters now use a uuid identifier instead of the sequential id, so records and overviews can no longer be enumerated by incrementing ids.
+- 474: A filter value that matches nothing now shows a chip ("Onbekende rol", "Onbekend label", "Onbekend merk", "Onbekende opdrachtgever").
 
 ## 2026-08-04
 

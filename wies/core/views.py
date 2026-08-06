@@ -491,17 +491,17 @@ def error_table(request):
 
 
 @staff_required
-def error_detail(request, pk):
+def error_detail(request, public_id):
     """Full detail page for a single error (traceback etc.), staff-only."""
-    error = get_object_or_404(ErrorEvent, pk=pk)
+    error = get_object_or_404(ErrorEvent, public_id=public_id)
     return render(request, "error_detail.html", {"error": error})
 
 
 @staff_required
 @require_POST
-def delete_error(request, pk):
+def delete_error(request, public_id):
     """Delete a single handled error and return the refreshed current page of the table."""
-    ErrorEvent.objects.filter(pk=pk).delete()
+    ErrorEvent.objects.filter(public_id=public_id).delete()
     return _render_error_table(request, request.GET.get("pagina"))
 
 
@@ -618,11 +618,17 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
-# Shown for a filter value that matches no organization (a deleted or edited
-# bookmark). The value itself is a meaningless token to the reader, but the chip
-# has to be there: it is what tells them why the list is empty and lets them
-# click the filter away.
-UNKNOWN_ORG_LABEL = "Onbekende opdrachtgever"
+# Shown for a filter value that matches no row (a deleted or edited bookmark).
+# The value itself is a meaningless token to the reader, but the chip has to be
+# there: it is what tells them why the list is empty and lets them click the
+# filter away.
+UNKNOWN_FACET_LABELS = {
+    "org": "Onbekende opdrachtgever",
+    "org_self": "Onbekende opdrachtgever",
+    "rol": "Onbekende rol",
+    "labels": "Onbekend label",
+    "merk": "Onbekend merk",
+}
 
 
 def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: list[str]) -> list[dict]:
@@ -639,7 +645,7 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
         {
             "param_name": "org",
             "param_value": public_id,
-            "label": labels.get(public_id, UNKNOWN_ORG_LABEL),
+            "label": labels.get(public_id, UNKNOWN_FACET_LABELS["org"]),
         }
         for public_id in org.active_values
     ]
@@ -647,7 +653,7 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
         {
             "param_name": "org_self",
             "param_value": public_id,
-            "label": f"{labels[public_id]} (direct)" if public_id in labels else UNKNOWN_ORG_LABEL,
+            "label": f"{labels[public_id]} (direct)" if public_id in labels else UNKNOWN_FACET_LABELS["org_self"],
         }
         for public_id in org_self.active_values
     )
@@ -713,6 +719,24 @@ class PublicIdFacetsMixin:
         if self.org_type_filter:
             active_filters["org_type"] = self.org_type_filter
         context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter)
+
+    def add_unknown_filter_chips(self, context: dict, facets: dict[str, type[Model]]) -> None:
+        """Chips for the values of ``facets`` that match no row.
+
+        The regular chips are rendered by matching an active value against the
+        filter group's options, so a value that no longer exists renders nothing
+        at all: an empty list with no filter in sight. The org facets build their
+        chips by hand and carry their unknown values themselves.
+        """
+        context["unknown_chip_data"] = [
+            {
+                "param_name": param,
+                "param_value": value,
+                "label": UNKNOWN_FACET_LABELS[param],
+            }
+            for param, model in facets.items()
+            for value in self.facets(param, model).unresolved
+        ]
 
     @cached_property
     def labels_by_category(self) -> dict[int, list[int]]:
@@ -925,6 +949,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Organization filter (multi-select via modal)
         self.add_org_filter_context(context, active_filters)
+        self.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "merk": Suborganization})
 
         # For each filter category, count on a queryset excluding that category's filter
         base_qs = self._get_base_queryset()
@@ -1215,6 +1240,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Organization filter (multi-select via modal)
         self.add_org_filter_context(context, active_filters)
+        self.add_unknown_filter_chips(context, {"rol": Skill})
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -1316,6 +1342,18 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         return qs
 
+    @cached_property
+    def role_filter(self) -> str:
+        """``?rol=`` carries a Group pk: Group is Django's own model and has no public_id."""
+        return self.request.GET.get("rol", "").strip()
+
+    @cached_property
+    def role_filter_ids(self) -> list[int]:
+        """The group the filter names, empty when it names none: like every other facet it fails closed."""
+        if not self.role_filter.isdigit():
+            return []
+        return list(Group.objects.filter(id=self.role_filter).values_list("id", flat=True))
+
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Apply all selection filters, optionally excluding one filter type.
 
@@ -1332,10 +1370,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             qs = qs.filter(colleague__suborganization_id__in=merk.ids)
 
         # Role filter
-        if exclude_filter != "rol":
-            role_filter = self.request.GET.get("rol")
-            if role_filter and role_filter.isdigit():
-                qs = qs.filter(groups__id=role_filter)
+        if exclude_filter != "rol" and self.role_filter:
+            qs = qs.filter(groups__id__in=self.role_filter_ids)
 
         return qs
 
@@ -1375,9 +1411,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
-        role_filter = self.request.GET.get("rol")
-        if role_filter and role_filter.isdigit():
-            active_filters["rol"] = role_filter
+        if self.role_filter:
+            active_filters["rol"] = self.role_filter
+
+        # No chips here: this page renders the compact filter bar, whose badge
+        # already marks a filter that matches nothing as active.
 
         # For each label category, count on queryset excluding that category's filter
         base_qs = self._get_base_queryset()

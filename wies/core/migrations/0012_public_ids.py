@@ -1,14 +1,40 @@
+import uuid
+
 from django.db import migrations, models
 
-from wies.core.public_id import backfill_public_ids, generate_public_id
+from wies.core.public_id import generate_public_id
 
-# Every URL-exposed core model gains an unguessable public_id (the User model in
-# the rijksauth app gets its own migration; migrations cannot span apps).
-MODELS = ["assignment", "colleague", "placement", "service", "label", "labelcategory", "suborganization"]
+# Every URL-exposed core model; the User model lives in rijksauth and gets its
+# own migration, since migrations cannot span apps.
+MODELS = [
+    "assignment",
+    "colleague",
+    "placement",
+    "service",
+    "label",
+    "labelcategory",
+    "suborganization",
+    "organizationunit",
+    "skill",
+    "errorevent",
+]
+
+BATCH_SIZE = 1000
 
 
 def fill_public_ids(apps, schema_editor):
-    backfill_public_ids(apps, "core", MODELS)
+    """One distinct value per existing row; a callable AddField default would give them all the same one."""
+    for model_name in MODELS:
+        model = apps.get_model("core", model_name)
+        batch = []
+        for obj in model.objects.filter(public_id__isnull=True).iterator():
+            obj.public_id = uuid.uuid4()
+            batch.append(obj)
+            if len(batch) >= BATCH_SIZE:
+                model.objects.bulk_update(batch, ["public_id"])
+                batch = []
+        if batch:
+            model.objects.bulk_update(batch, ["public_id"])
 
 
 class Migration(migrations.Migration):
@@ -17,8 +43,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Add all columns nullable first, then backfill distinct values, then
-        # enforce unique + non-null, which is safe on the populated production DB.
+        # Nullable first, backfill, then unique + non-null: safe on a populated database.
         *[
             migrations.AddField(
                 model_name=model_name,
