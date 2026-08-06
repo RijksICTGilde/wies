@@ -82,7 +82,7 @@ class RBACSetupTest(TestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "email": "newuser@rijksoverheid.nl",
-                "labels": [label.id],
+                "labels": [label.public_id],
             },
         )
         assert response.status_code == 302
@@ -94,6 +94,6 @@ class RBACSetupTest(TestCase):
             first_name="Delete",
             last_name="Me",
         )
-        response = client.post(reverse("user-delete", args=[user_to_delete.id]))
+        response = client.post(reverse("user-delete", args=[user_to_delete.public_id]))
         assert response.status_code == 200
         assert not User.objects.filter(id=user_to_delete.id).exists()

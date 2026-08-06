@@ -43,6 +43,10 @@ This files lists the changes during the lifetime of this project.
 - 427: NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - 427: NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
 - ?
+- 525: logging in no longer dead-ends on a 500 page when the login callback fails, whatever the cause. The most common one is Keycloak having lost its authentication session (for example because the login screen was left open for too long); the login is then restarted once automatically, and if that fails as well the user gets a page explaining what happened. Any other failure gets its own page pointing at support, and is still reported to the team.
+- 525: the "geen toegang" page pointed at wies-support@rijksoverheid.nl, which does not exist; it now points at wies-odi@rijksoverheid.nl
+- 474: URLs and filters now use a uuid identifier instead of the sequential id, so records and overviews can no longer be enumerated by incrementing ids.
+- 474: A filter value that matches nothing now shows a chip ("Onbekende rol", "Onbekend label", "Onbekend merk", "Onbekende opdrachtgever").
 
 ## 2026-08-04
 

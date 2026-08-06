@@ -230,6 +230,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     suborganization = forms.ModelChoiceField(
         label="Merk",
         queryset=Suborganization.objects.all(),
+        to_field_name="public_id",
         required=False,
         empty_label=" ",
         widget=ComboBoxSelect,
@@ -261,7 +262,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         # Pre-select the colleague's current merk when editing an existing user
         # (suborganization isn't in Meta.fields, so ModelForm won't populate it).
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
-            self.fields["suborganization"].initial = instance.colleague.suborganization_id
+            current_merk = instance.colleague.suborganization
+            self.fields["suborganization"].initial = current_merk.public_id if current_merk else None
         self._configure_field("suborganization")
 
         # Map labels stored on model to separate fields per category, which are dynamically generated
@@ -271,11 +273,12 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
             initial = []
             if instance and hasattr(instance, "colleague") and instance.colleague is not None:
-                initial = list(instance.colleague.labels.filter(category=category).values_list("pk", flat=True))
+                initial = list(instance.colleague.labels.filter(category=category).values_list("public_id", flat=True))
 
             self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,
                 queryset=Label.objects.filter(category=category),
+                to_field_name="public_id",
                 required=False,
                 initial=initial,
                 widget=MultiselectDropdown(),
@@ -335,6 +338,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
     colleague = forms.ModelChoiceField(
         label="Consultant",
         queryset=Colleague.objects.order_by("name"),
+        to_field_name="public_id",
         required=False,
         empty_label=" ",
     )
@@ -347,7 +351,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
         # Replace ModelChoiceField with a ChoiceField so __new__ is a valid value
         if skill_choices is None:
             skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-            skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
+            skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
         self.fields["skill"] = forms.ChoiceField(
             label="Rol",
             choices=skill_choices,

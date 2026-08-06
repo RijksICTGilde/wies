@@ -65,7 +65,7 @@ class LabelManagementIntegrationTest(TestCase):
                 "first_name": "Test",
                 "last_name": "User",
                 "email": "test@rijksoverheid.nl",
-                "category_Test Category": label.id,
+                "category_Test Category": label.public_id,
             },
             follow=True,
         )
@@ -79,7 +79,9 @@ class LabelManagementIntegrationTest(TestCase):
         self.assertContains(response, "Test User")
 
         # The label survives the category delete under the catch-all
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         assert not LabelCategory.objects.filter(id=category.id).exists()
@@ -109,7 +111,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Edit the label
         response = self.client.post(
-            reverse("label-edit", kwargs={"pk": label.id}),
+            reverse("label-edit", kwargs={"public_id": label.public_id}),
             {"name": "Updated Name", "category": category.id},
             follow=True,
         )
@@ -139,7 +141,7 @@ class LabelManagementIntegrationTest(TestCase):
         category = LabelCategory.objects.create(name="Test", color="#111111")
 
         # Attempt to delete as regular user
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}))
+        response = self.client.post(reverse("label-category-delete", kwargs={"public_id": category.public_id}))
         assert response.status_code == 403
 
         # Verify category still exists
@@ -170,7 +172,9 @@ class LabelManagementIntegrationTest(TestCase):
         colleague2.labels.add(label2, label3)
 
         # Delete the category
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         fallback = LabelCategory.objects.get(name="Overig")
@@ -205,7 +209,9 @@ class LabelManagementIntegrationTest(TestCase):
         colleague = Colleague.objects.create(user=user, name="Dup User", email="dup@rijksoverheid.nl", source="wies")
         colleague.labels.add(duplicate)
 
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": doomed_category.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": doomed_category.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         assert not Label.objects.filter(pk=duplicate.pk).exists()
@@ -219,7 +225,7 @@ class LabelManagementIntegrationTest(TestCase):
         label = Label.objects.create(name="Python", category=category)
 
         response = self.client.post(
-            reverse("label-category-delete", kwargs={"pk": category.id}),
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}),
             {"labels_verwijderen": "1"},
             follow=True,
         )
@@ -235,7 +241,9 @@ class LabelManagementIntegrationTest(TestCase):
         fallback = LabelCategory.objects.create(name="Overig", color="#DCE3EA")
         label = Label.objects.create(name="Los label", category=fallback)
 
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": fallback.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": fallback.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         assert not Label.objects.filter(pk=label.pk).exists()

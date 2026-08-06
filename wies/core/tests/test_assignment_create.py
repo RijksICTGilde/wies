@@ -41,7 +41,7 @@ def org_formset_data(orgs):
         "org-MAX_NUM_FORMS": "1000",
     }
     for i, (org, role) in enumerate(orgs):
-        data[f"org-{i}-organization"] = org.id
+        data[f"org-{i}-organization"] = org.public_id
         data[f"org-{i}-role"] = role
     return data
 
@@ -113,7 +113,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create-sheet"),
             {
                 "name": "Sheet Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -121,7 +121,7 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 204
         # HX-Location stuurt de client naar het nieuwe opdrachtpaneel.
         assignment = Assignment.objects.get(name="Sheet Opdracht")
-        assert f"opdracht={assignment.id}" in response["HX-Location"]
+        assert f"opdracht={assignment.public_id}" in response["HX-Location"]
         # Geen rollen: die komen later via het paneel.
         assert assignment.services.count() == 0
 
@@ -131,7 +131,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create-sheet"),
             {
                 "name": "Sheet Audit",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -146,7 +146,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create-sheet"),
             {
                 "name": "Zonder Opdrachtgever",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -176,7 +176,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create-sheet"),
             {
                 "name": "Banner Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },

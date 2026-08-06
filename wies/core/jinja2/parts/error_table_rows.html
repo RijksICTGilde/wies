@@ -1,7 +1,7 @@
 {% for error in object_list %}
   {# De hele rij opent het detail in een sheet: een aparte oogknop ernaast zou
      hetzelfde doen. Verwijderen zit in die sheet. #}
-  <nldd-list-item button hx-get="{{ url('error-detail', args=[error.id]) }}?pagina={{ page_obj.number }}" hx-target="#errorSheet" hx-swap="innerHTML">
+  <nldd-list-item button hx-get="{{ url('error-detail', args=[error.public_id]) }}?pagina={{ page_obj.number }}" hx-target="#errorSheet" hx-swap="innerHTML">
   <nldd-text-cell text="{{ error.short_description }}" supporting-text="{{ error.exception_message or error.message }}"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   {# Relatief, want bij "recente foutmeldingen" wil je weten hoe lang geleden.

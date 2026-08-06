@@ -86,7 +86,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by the "Digitale weerbaarheid" label
-        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.id})
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.public_id})
         assert response.status_code == 200
 
         # user1 and user3 have the thema-A label, user2 doesn't
@@ -99,7 +99,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by the "Artificiële intelligentie" label
-        response = self.client.get(reverse("admin-users"), {"labels": self.thema_b_label.id})
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_b_label.public_id})
         assert response.status_code == 200
 
         # Only user2 has the thema-B label
@@ -136,7 +136,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by the "Digitale weerbaarheid" label
-        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.public_id})
         assert response.status_code == 200
 
         # colleague1 and colleague3 have the thema-A label, colleague2 doesn't
@@ -149,7 +149,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by the "Netwerksamenwerking" label
-        response = self.client.get(reverse("home"), {"labels": self.thema_c_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.thema_c_label.public_id})
         assert response.status_code == 200
 
         # Only colleague2 has the thema-C label
@@ -162,7 +162,9 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by both label and skill
-        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id, "rol": self.skill.id})
+        response = self.client.get(
+            reverse("home"), {"labels": self.thema_a_label.public_id, "rol": self.skill.public_id}
+        )
         assert response.status_code == 200
 
         # Should show placements matching both filters
@@ -205,7 +207,7 @@ class LabelFilteringAndDisplayTest(TestCase):
             colleague.labels.add(self.thema_a_label)
 
         # Request first page with label filter
-        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.id, "pagina": 1})
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.public_id, "pagina": 1})
         assert response.status_code == 200
 
         # All users on this page should have the label
@@ -233,7 +235,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Both colleague1 and colleague3 have the thema-A label
-        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.public_id})
         assert response.status_code == 200
 
         # Both should be in results

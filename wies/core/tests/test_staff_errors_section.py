@@ -105,7 +105,7 @@ class StaffErrorsSectionTest(TestCase):
             traceback="Traceback (most recent call last):\n  ValueError: kaboom",
         )
 
-        response = self.client.get(f"/beheer/statistieken/fout/{error.id}/")
+        response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/")
 
         assert response.status_code == 200
         body = response.content.decode()
@@ -117,7 +117,7 @@ class StaffErrorsSectionTest(TestCase):
         # The row opens the detail in a sheet; the full page stays for direct links.
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
 
-        response = self.client.get(f"/beheer/statistieken/fout/{error.id}/", headers={"hx-request": "true"})
+        response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/", headers={"hx-request": "true"})
 
         assert response.status_code == 200
         body = response.content.decode()
@@ -131,14 +131,14 @@ class StaffErrorsSectionTest(TestCase):
         response = self.client.get(ERROR_TABLE_URL)
 
         body = response.content.decode()
-        assert f"/beheer/statistieken/fout/{error.id}/" in body
+        assert f"/beheer/statistieken/fout/{error.public_id}/" in body
         assert "nldd-icon-button" not in body
         assert "verwijderen/" not in body
 
     def test_delete_closes_the_detail_sheet(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.id}/verwijderen/")
+        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
         assert response["HX-Trigger"] == "closeModal"
 
@@ -148,7 +148,7 @@ class StaffErrorsSectionTest(TestCase):
             non_staff = User.objects.create_user(email="ns@rijksoverheid.nl", first_name="No", last_name="Staff")
             self.client.force_login(non_staff)
 
-            response = self.client.get(f"/beheer/statistieken/fout/{error.id}/", follow=False)
+            response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/", follow=False)
 
             assert response.status_code == 302
             assert response.url.startswith("/geen-toegang/")
@@ -156,7 +156,7 @@ class StaffErrorsSectionTest(TestCase):
     def test_delete_error_removes_row_and_returns_table(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.id}/verwijderen/")
+        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
         assert response.status_code == 200
         assert not ErrorEvent.objects.filter(pk=error.pk).exists()
@@ -166,7 +166,7 @@ class StaffErrorsSectionTest(TestCase):
     def test_delete_error_rejects_get(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Blijf staan")
 
-        response = self.client.get(f"/beheer/statistieken/fout/{error.id}/verwijderen/")
+        response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
         assert response.status_code == 405
         assert ErrorEvent.objects.filter(pk=error.pk).exists()
@@ -187,7 +187,7 @@ class StaffErrorsSectionTest(TestCase):
         self.client.force_login(non_staff)
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Beschermd")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.id}/verwijderen/", follow=False)
+        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/", follow=False)
 
         assert response.status_code == 302
         assert ErrorEvent.objects.filter(pk=error.pk).exists()

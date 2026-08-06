@@ -14,7 +14,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import PlacementListView
+from wies.core.views import PlacementListView, _get_top_org_options
 
 User = get_user_model()
 
@@ -71,6 +71,19 @@ class FilterCombiningTestBase(TestCase):
         view.request = request
         return list(view.get_queryset().values_list("id", flat=True))
 
+    def _get_org_quick_options(self, params: dict) -> list[dict]:
+        """Return the opdrachtgever quick options from the rendered context."""
+        factory = RequestFactory()
+        request = factory.get("/", params)
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        org_group = next(g for g in context["filter_groups"] if g.get("type") == "modal")
+        return org_group["top_options"]
+
 
 class LabelORWithinCategoryTest(FilterCombiningTestBase):
     """Labels within the same category combine with OR."""
@@ -80,7 +93,7 @@ class LabelORWithinCategoryTest(FilterCombiningTestBase):
         p_thema_b = self._create_placement("Bob", self.skill_python, labels=[self.label_thema_b])
         p_none = self._create_placement("Charlie", self.skill_python)
 
-        ids = self._get_placement_ids({"labels": str(self.label_thema_a.id)})
+        ids = self._get_placement_ids({"labels": str(self.label_thema_a.public_id)})
 
         assert p_thema_a.id in ids
         assert p_thema_b.id not in ids
@@ -92,7 +105,9 @@ class LabelORWithinCategoryTest(FilterCombiningTestBase):
         p_thema_b = self._create_placement("Bob", self.skill_python, labels=[self.label_thema_b])
         p_none = self._create_placement("Charlie", self.skill_python)
 
-        ids = self._get_placement_ids({"labels": [str(self.label_thema_a.id), str(self.label_thema_b.id)]})
+        ids = self._get_placement_ids(
+            {"labels": [str(self.label_thema_a.public_id), str(self.label_thema_b.public_id)]}
+        )
 
         assert p_thema_a.id in ids, "Thema-A colleague should match (OR within Thema)"
         assert p_thema_b.id in ids, "Thema-B colleague should match (OR within Thema)"
@@ -102,7 +117,9 @@ class LabelORWithinCategoryTest(FilterCombiningTestBase):
         """Colleague with both labels in same category should appear exactly once."""
         p_both = self._create_placement("Alice", self.skill_python, labels=[self.label_thema_a, self.label_thema_b])
 
-        ids = self._get_placement_ids({"labels": [str(self.label_thema_a.id), str(self.label_thema_b.id)]})
+        ids = self._get_placement_ids(
+            {"labels": [str(self.label_thema_a.public_id), str(self.label_thema_b.public_id)]}
+        )
 
         assert ids.count(p_both.id) == 1, "Should appear exactly once, not duplicated"
 
@@ -116,7 +133,9 @@ class LabelANDBetweenCategoriesTest(FilterCombiningTestBase):
         p_thema_only = self._create_placement("Bob", self.skill_python, labels=[self.label_thema_a])
         p_expertise_only = self._create_placement("Charlie", self.skill_python, labels=[self.label_expertise_a])
 
-        ids = self._get_placement_ids({"labels": [str(self.label_thema_a.id), str(self.label_expertise_a.id)]})
+        ids = self._get_placement_ids(
+            {"labels": [str(self.label_thema_a.public_id), str(self.label_expertise_a.public_id)]}
+        )
 
         assert p_both.id in ids, "Colleague with both labels should match"
         assert p_thema_only.id not in ids, "Colleague with only the Thema label should not match"
@@ -135,7 +154,13 @@ class LabelANDBetweenCategoriesTest(FilterCombiningTestBase):
         p_expertise_only = self._create_placement("Dave", self.skill_python, labels=[self.label_expertise_a])
 
         ids = self._get_placement_ids(
-            {"labels": [str(self.label_thema_a.id), str(self.label_thema_b.id), str(self.label_expertise_a.id)]}
+            {
+                "labels": [
+                    str(self.label_thema_a.public_id),
+                    str(self.label_thema_b.public_id),
+                    str(self.label_expertise_a.public_id),
+                ]
+            }
         )
 
         assert p_a_exp.id in ids, "Thema-A + Expertise should match"
@@ -151,7 +176,7 @@ class RolFilterCombiningTest(FilterCombiningTestBase):
         p_python = self._create_placement("Alice", self.skill_python)
         p_java = self._create_placement("Bob", self.skill_java)
 
-        ids = self._get_placement_ids({"rol": str(self.skill_python.id)})
+        ids = self._get_placement_ids({"rol": str(self.skill_python.public_id)})
 
         assert p_python.id in ids
         assert p_java.id not in ids
@@ -161,7 +186,7 @@ class RolFilterCombiningTest(FilterCombiningTestBase):
         p_python = self._create_placement("Alice", self.skill_python)
         p_java = self._create_placement("Bob", self.skill_java)
 
-        ids = self._get_placement_ids({"rol": [str(self.skill_python.id), str(self.skill_java.id)]})
+        ids = self._get_placement_ids({"rol": [str(self.skill_python.public_id), str(self.skill_java.public_id)]})
 
         assert p_python.id in ids
         assert p_java.id in ids
@@ -172,7 +197,9 @@ class RolFilterCombiningTest(FilterCombiningTestBase):
         p_python_no_label = self._create_placement("Bob", self.skill_python)
         p_java_label = self._create_placement("Charlie", self.skill_java, labels=[self.label_thema_a])
 
-        ids = self._get_placement_ids({"rol": str(self.skill_python.id), "labels": str(self.label_thema_a.id)})
+        ids = self._get_placement_ids(
+            {"rol": str(self.skill_python.public_id), "labels": str(self.label_thema_a.public_id)}
+        )
 
         assert p_python_label.id in ids, "Python + label should match"
         assert p_python_no_label.id not in ids, "Python without the label should not match"
@@ -187,7 +214,7 @@ class OrgFilterCombiningTest(FilterCombiningTestBase):
         p_org_a_java = self._create_placement("Bob", self.skill_java, org=self.org_a)
         p_org_b_python = self._create_placement("Charlie", self.skill_python, org=self.org_b)
 
-        ids = self._get_placement_ids({"org_self": str(self.org_a.id), "rol": str(self.skill_python.id)})
+        ids = self._get_placement_ids({"org_self": str(self.org_a.public_id), "rol": str(self.skill_python.public_id)})
 
         assert p_org_a_python.id in ids, "Org A + Python should match"
         assert p_org_a_java.id not in ids, "Org A + Java should not match"
@@ -200,11 +227,66 @@ class OrgFilterCombiningTest(FilterCombiningTestBase):
             "Charlie", self.skill_python, org=self.org_b, labels=[self.label_thema_a]
         )
 
-        ids = self._get_placement_ids({"org_self": str(self.org_a.id), "labels": str(self.label_thema_a.id)})
+        ids = self._get_placement_ids(
+            {"org_self": str(self.org_a.public_id), "labels": str(self.label_thema_a.public_id)}
+        )
 
         assert p_org_a_label.id in ids, "Org A + label should match"
         assert p_org_a_no_label.id not in ids, "Org A without label should not match"
         assert p_org_b_label.id not in ids, "Org B + label should not match (wrong org)"
+
+
+class TopOrgOptionsTest(FilterCombiningTestBase):
+    """`_get_top_org_options` always surfaces selected orgs — including a
+    "direct onder…" self-node (org_self) and an org-type group (org_type) —
+    as checked quick options, each carrying its own param. Regression for the
+    self/type selections that previously got no checkmark in the sidebar list.
+    """
+
+    def test_org_selection_is_checked_with_org_param(self):
+        # Selections come in as internal ids; the rendered option value is the public_id.
+        opts = _get_top_org_options("placements", [], {self.org_a.id})
+        match = [o for o in opts if o["value"] == str(self.org_a.public_id)]
+        assert match, "selected org must appear as a quick option"
+        assert match[0]["param"] == "org"
+        assert match[0]["selected"] is True
+
+    def test_self_selection_is_checked_with_org_self_param(self):
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
+        match = [o for o in opts if o["param"] == "org_self" and o["value"] == str(self.org_a.public_id)]
+        assert match, "selected self-node must appear as a quick option"
+        assert match[0]["selected"] is True
+        assert "(direct)" in match[0]["label"]
+
+    def test_type_selection_is_checked_with_org_type_param(self):
+        opts = _get_top_org_options("placements", [], set(), selected_type_labels={"Ministerie"})
+        match = [o for o in opts if o["param"] == "org_type" and o["value"] == "Ministerie"]
+        assert match, "selected org-type must appear as a quick option"
+        assert match[0]["selected"] is True
+
+    def test_selected_options_sort_before_unselected(self):
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
+        assert opts[0]["selected"] is True
+
+
+class OrgQuickCountsTest(FilterCombiningTestBase):
+    """Opdrachtgever quick-option counts reflect the OTHER active filters
+    (like rol/labels), not a global baseline. Regression for stale counts.
+    """
+
+    def test_org_count_reflects_active_rol_filter(self):
+        # Org A: one Python placement + one Java placement (count 2 unfiltered).
+        self._create_placement("Alice", self.skill_python, org=self.org_a)
+        self._create_placement("Bob", self.skill_java, org=self.org_a)
+
+        baseline = {o["value"]: o["count"] for o in self._get_org_quick_options({})}
+        assert baseline.get(str(self.org_a.public_id)) == 2, "unfiltered count should be 2"
+
+        # With rol=Python active, Org A's count must drop to 1.
+        with_rol = {
+            o["value"]: o["count"] for o in self._get_org_quick_options({"rol": str(self.skill_python.public_id)})
+        }
+        assert with_rol.get(str(self.org_a.public_id)) == 1, "count must reflect the active rol filter"
 
 
 class AllFiltersCombinedTest(FilterCombiningTestBase):
@@ -229,9 +311,9 @@ class AllFiltersCombinedTest(FilterCombiningTestBase):
 
         ids = self._get_placement_ids(
             {
-                "org_self": str(self.org_a.id),
-                "rol": str(self.skill_python.id),
-                "labels": [str(self.label_thema_a.id), str(self.label_expertise_a.id)],
+                "org_self": str(self.org_a.public_id),
+                "rol": str(self.skill_python.public_id),
+                "labels": [str(self.label_thema_a.public_id), str(self.label_expertise_a.public_id)],
             }
         )
 

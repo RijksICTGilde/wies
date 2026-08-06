@@ -53,8 +53,8 @@ def inline_edit(ctx, obj, name, **extras):
     else:
         value = {e.field or e.name: _current_value(obj, e) for e in editables}
     render_ctx = {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{name}",
-        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, name]),
+        "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
+        "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
         "label": _spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
@@ -106,8 +106,8 @@ def inline_edit_form(ctx, obj, name, **extras):
     editables = resolve_editables(editable_set, spec)
     form_cls, initial = build_form_class(editables, obj=obj, group_clean=getattr(spec, "clean", None))
     render_ctx = {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{name}",
-        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, name]),
+        "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
+        "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
         "label": _spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,

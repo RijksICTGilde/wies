@@ -41,7 +41,7 @@
       <nldd-toolbar-item slot="start" priority="1">
       <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
       <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
-      <nldd-tab-bar-item text="Updates" data-tab-panel="tab-panel-updates" hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}" hx-target="#tab-panel-updates" hx-swap="innerHTML"></nldd-tab-bar-item>
+      <nldd-tab-bar-item text="Updates" data-tab-panel="tab-panel-updates" hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.public_id]) }}" hx-target="#tab-panel-updates" hx-swap="innerHTML"></nldd-tab-bar-item>
       </nldd-tab-bar>
       </nldd-toolbar-item>
     {% endif %}
@@ -58,8 +58,8 @@
       {# priority="-1": verwijderen wijkt als eerste naar het overflowmenu, zodat
          bij krappe ruimte bewerken zichtbaar blijft (de vaakste actie). #}
       <nldd-toolbar-item slot="end" priority="-1">
-      <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
-      <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+      <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
     </nldd-toolbar>

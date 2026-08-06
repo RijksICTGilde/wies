@@ -32,11 +32,11 @@ def _owner_display_context(assignment, request) -> dict:
         return {"owner_url": "", "owner_mailto": ""}
 
     base_url = current_page_path(request)
-    owner_url = f"{base_url}?collega={assignment.owner.id}"
+    owner_url = f"{base_url}?collega={assignment.owner.public_id}"
 
     owner_mailto = ""
     if assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
+        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.public_id}")
         subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
         body_lines = [
             f"Beste {assignment.owner.name},",
@@ -95,7 +95,7 @@ def _organizations_render_change(state) -> str:
 
 def _skill_choices():
     choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-    choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
+    choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
     return choices
 
 
@@ -132,7 +132,7 @@ def _services_initial(assignment):
             {
                 "id": service.id,
                 "placement_id": placement.id if placement else None,
-                "skill": str(service.skill_id) if service.skill_id else "",
+                "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",

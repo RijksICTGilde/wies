@@ -119,7 +119,7 @@ class OnboardingLabelSaveTest(TestCase):
         return _concurrency_token(ColleagueEditables, spec, self.colleague)
 
     def _post_labels(self, category_id, label_id, token):
-        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{category_id}"])
+        url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{category_id}"])
         return self.client.post(url, {"labels": str(label_id), "_concurrency_token": token})
 
     def test_labels_form_renders_a_valid_concurrency_token(self):
@@ -139,7 +139,7 @@ class OnboardingLabelSaveTest(TestCase):
         token = self._token_for(self.category.id)
 
         # De widget rendert name="labels", zoals de browser die post.
-        response = self._post_labels(self.category.id, self.label.id, token)
+        response = self._post_labels(self.category.id, self.label.public_id, token)
         assert response.status_code == 200
         self.colleague.refresh_from_db()
         assert list(self.colleague.labels.values_list("id", flat=True)) == [self.label.id]
@@ -147,8 +147,8 @@ class OnboardingLabelSaveTest(TestCase):
     def test_missing_token_is_rejected_as_conflict(self):
         # Bewijst dat het token de blokker was: zonder token slaat niets op.
         self.client.force_login(self.user)
-        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{self.category.id}"])
-        self.client.post(url, {"labels": str(self.label.id)})
+        url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{self.category.id}"])
+        self.client.post(url, {"labels": str(self.label.public_id)})
         self.colleague.refresh_from_db()
         assert list(self.colleague.labels.all()) == []
 
@@ -162,10 +162,10 @@ class OnboardingLabelSaveTest(TestCase):
         token1 = self._token_for(self.category.id)
         token2 = self._token_for(self.category2.id)
 
-        r1 = self._post_labels(self.category.id, self.label.id, token1)
+        r1 = self._post_labels(self.category.id, self.label.public_id, token1)
         # token2 is nog op de begintoestand berekend, net als in de wizard: een
         # save in categorie 1 mag hem niet ongeldig maken.
-        r2 = self._post_labels(self.category2.id, self.label2.id, token2)
+        r2 = self._post_labels(self.category2.id, self.label2.public_id, token2)
 
         assert r1.status_code == 200
         assert r2.status_code == 200

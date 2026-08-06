@@ -55,7 +55,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         url = reverse("assignment-edit", args=[self.assignment.id]) + "?veld=owner"
         response = self.client.post(
             url,
-            {"owner": str(self.other.id), "terug_url": f"/opdrachten/?opdracht={self.assignment.id}"},
+            {"owner": str(self.other.public_id), "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"},
         )
         assert response.status_code == 204
         assert "HX-Location" in response
@@ -69,7 +69,7 @@ class AssignmentEditSingleFieldTest(TestCase):
 
     def test_panel_menu_links_carry_the_field(self):
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.id}",
+            f"/opdrachten/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         body = response.content.decode()
@@ -80,5 +80,5 @@ class AssignmentEditSingleFieldTest(TestCase):
     def test_forbidden_without_edit_rights(self):
         self.client.force_login(self.other_user)
         url = reverse("assignment-edit", args=[self.assignment.id]) + "?veld=owner"
-        response = self.client.post(url, {"owner": str(self.owner.id)})
+        response = self.client.post(url, {"owner": str(self.owner.public_id)})
         assert response.status_code == 403

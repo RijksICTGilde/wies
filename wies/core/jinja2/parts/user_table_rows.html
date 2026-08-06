@@ -23,15 +23,15 @@
   {# Profiel bekijken opent het collegapaneel op de "Wie zit waar?"-lijst; dat
      bestaat alleen als de gebruiker aan een collega hangt. #}
   {% if user.colleague %}
-    <nldd-menu-item text="Profiel bekijken" icon="person" hx-get="{{ url('admin-users') }}?collega={{ user.colleague.id }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-menu-item>
+    <nldd-menu-item text="Profiel bekijken" icon="person" hx-get="{{ url('admin-users') }}?collega={{ user.colleague.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-menu-item>
   {% endif %}
   {% if user.email %}
     <nldd-menu-item text="E-mailen" icon="envelope" href="mailto:{{ user.email }}"></nldd-menu-item>
   {% endif %}
   {% if user.colleague or user.email %}<nldd-menu-divider></nldd-menu-divider>{% endif %}
-  <nldd-menu-item text="Bewerken" icon="edit" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  <nldd-menu-item text="Bewerken" icon="edit" hx-get="{{ url('user-edit', args=[user.public_id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
   <nldd-menu-divider></nldd-menu-divider>
-  <nldd-menu-item text="Verwijderen" icon="delete" destructive hx-get="{{ url('user-delete', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  <nldd-menu-item text="Verwijderen" icon="delete" destructive hx-get="{{ url('user-delete', args=[user.public_id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-menu>
   </nldd-icon-button>
   </nldd-cell>

@@ -37,7 +37,7 @@
     <nldd-cell width="112px">{{ form.color }}</nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-cell width="fit-content">
-    <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'pk': form.instance.pk}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
+    <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'public_id': form.instance.public_id}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
     </nldd-cell>
     </nldd-list-item>
   {% endfor %}

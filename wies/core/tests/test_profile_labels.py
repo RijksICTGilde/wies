@@ -18,7 +18,8 @@ def token_field_values(html, field_name):
     """
     match = re.search(rf'<nldd-token-field name="{field_name}" values="([^"]*)"', html)
     assert match, f"no token field named {field_name} in the sheet"
-    return {int(v) for v in match.group(1).split(",") if v}
+    # Waarden zijn public_ids (UUID-strings), niet de interne pk.
+    return {v for v in match.group(1).split(",") if v}
 
 
 class ProfileLabelsEditTest(TestCase):
@@ -51,8 +52,8 @@ class ProfileLabelsEditTest(TestCase):
         # Every category maps onto the same m2m, so a naive initial would put
         # the Thema label inside the Expertise field as well.
         html = self.client.get(self.url).content.decode()
-        assert token_field_values(html, self._field(self.expertise)) == {self.ai.id}
-        assert token_field_values(html, self._field(self.thema)) == {self.veiligheid.id}
+        assert token_field_values(html, self._field(self.expertise)) == {str(self.ai.public_id)}
+        assert token_field_values(html, self._field(self.thema)) == {str(self.veiligheid.public_id)}
 
     def test_fields_do_not_carry_the_optional_badge(self):
         # All three are optional; repeating the badge tells the user nothing.
@@ -63,8 +64,8 @@ class ProfileLabelsEditTest(TestCase):
         response = self.client.post(
             self.url,
             {
-                self._field(self.expertise): [self.cloud.id],
-                self._field(self.thema): [self.veiligheid.id],
+                self._field(self.expertise): [self.cloud.public_id],
+                self._field(self.thema): [self.veiligheid.public_id],
             },
         )
         assert response.status_code == 200
@@ -74,7 +75,7 @@ class ProfileLabelsEditTest(TestCase):
     def test_empty_category_clears_only_that_category(self):
         self.client.post(
             self.url,
-            {self._field(self.expertise): [self.ai.id], self._field(self.thema): []},
+            {self._field(self.expertise): [self.ai.public_id], self._field(self.thema): []},
         )
         assert set(self.colleague.labels.all()) == {self.ai}
 

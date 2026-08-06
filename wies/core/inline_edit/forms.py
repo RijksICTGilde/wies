@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
+from django.core.exceptions import FieldDoesNotExist
 from django.db.models import ManyToManyField
 from django.forms.models import fields_for_model
 
@@ -15,6 +16,25 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
     from django.db.models import Model
+
+
+def has_public_id(model: type[Model]) -> bool:
+    try:
+        model._meta.get_field("public_id")
+    except FieldDoesNotExist:
+        return False
+    return True
+
+
+def use_public_id_choices(field: forms.Field) -> None:
+    """Make a ModelChoiceField render and accept ``public_id`` instead of the pk.
+
+    Option values cross the client boundary, and Django keys them on the pk by
+    default. Models without a public_id (e.g. Group) keep the pk.
+    See ``features/public_id.md``."""
+    queryset = getattr(field, "queryset", None)
+    if queryset is not None and has_public_id(queryset.model):
+        field.to_field_name = "public_id"
 
 
 def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
@@ -48,6 +68,7 @@ def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — stra
             base.choices = list(opts)
     if editable.empty_label is not None and hasattr(base, "empty_label"):
         base.empty_label = editable.empty_label
+    use_public_id_choices(base)
 
     return base
 

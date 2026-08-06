@@ -13,7 +13,7 @@
 {% include "parts/error_detail_body.html" %}
 </nldd-simple-section>
 <nldd-container slot="footer" padding="16" padding-top="0">
-<nldd-button variant="destructive" width="full" start-icon="trash" text="Verwijderen" hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ pagina }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#error_table_container" hx-swap="innerHTML"></nldd-button>
+<nldd-button variant="destructive" width="full" start-icon="trash" text="Verwijderen" hx-post="{{ url('delete-error', args=[error.public_id]) }}?pagina={{ pagina }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#error_table_container" hx-swap="innerHTML"></nldd-button>
 </nldd-container>
 </nldd-page>
 </nldd-sheet>

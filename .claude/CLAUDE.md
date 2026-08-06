@@ -35,9 +35,11 @@ Language: Dutch UI, English code.
 ### Model Changes
 
 1. Update the model in `wies/core/models.py`
-2. Update `wies/core/management/commands/load_full_data.py` to match new model structure
-3. Run `uv run python manage.py makemigrations` to generate migrations
-4. Update affected forms and views
+2. Give the model a `public_id` if it will ever appear in a URL (the integer PK
+   stays internal, always). See `features/public_id.md`.
+3. Update `wies/core/management/commands/load_full_data.py` to match new model structure
+4. Run `uv run python manage.py makemigrations` to generate migrations
+5. Update affected forms and views
 
 ### UI Changes
 

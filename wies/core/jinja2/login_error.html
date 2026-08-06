@@ -1,0 +1,17 @@
+{% extends "base_error.html" %}
+{% block title %}
+  Inloggen niet gelukt - Wies
+{% endblock title %}
+{% block error_text %}
+  Inloggen is niet gelukt
+{% endblock error_text %}
+{% block error_supporting_text %}
+  {% if recoverable %}
+    De inlogsessie is verlopen of afgebroken. Dat gebeurt bijvoorbeeld als het inlogscherm te lang open heeft gestaan.
+  {% else %}
+    Er is een storing in de koppeling met de inlogdienst. De beheerders van Wies hebben hier automatisch bericht van gekregen.
+  {% endif %}
+{% endblock error_supporting_text %}
+{% block error_actions %}
+  <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Probeer het inloggen opnieuw" data-href="{{ url('login') }}"></nldd-button>
+{% endblock error_actions %}

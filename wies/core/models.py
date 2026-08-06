@@ -1,3 +1,5 @@
+import uuid
+
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
@@ -66,6 +68,8 @@ DEFAULT_LABELS = {
 
 
 class LabelCategory(models.Model):
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=7)  # Hex color like #FF5733
 
@@ -109,6 +113,8 @@ class LabelCategory(models.Model):
 
 
 class Label(models.Model):
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=100)
     category = models.ForeignKey("LabelCategory", models.CASCADE, related_name="labels")
 
@@ -123,6 +129,8 @@ class Label(models.Model):
 class Suborganization(models.Model):
     """A suborganisation ("merk") a colleague belongs to. Exactly one per colleague."""
 
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=100, unique=True)
 
     class Meta:
@@ -133,6 +141,8 @@ class Suborganization(models.Model):
 
 
 class Skill(models.Model):
+    # URL-facing identifier; the integer PK is never exposed in URLs (used as a filter value).
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=30, unique=True)
 
     class Meta:
@@ -143,6 +153,8 @@ class Skill(models.Model):
 
 
 class Colleague(models.Model):
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="colleague"
     )
@@ -179,6 +191,8 @@ class Colleague(models.Model):
 
 # Create your models here.
 class Assignment(models.Model):
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     name = models.CharField(max_length=200)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(null=True, blank=True)
@@ -218,6 +232,8 @@ class Placement(models.Model):
     PLACEMENT = "PLACEMENT"
     PERIOD_SOURCE_CHOICES = {SERVICE: "Zelfde als opdracht", PLACEMENT: "Afwijkend van opdracht"}
 
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     colleague = models.ForeignKey(
         "Colleague", models.CASCADE, related_name="placements"
     )  # if we implement anonymization, this should maybe be changed
@@ -258,6 +274,8 @@ class Service(models.Model):
     SERVICE = "SERVICE"
     PERIOD_SOURCE_CHOICES = {ASSIGNMENT: "Zelfde als opdracht", SERVICE: "Afwijkend van opdracht"}
 
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
     description = models.CharField(max_length=500)
     skill = models.ForeignKey("Skill", models.SET_NULL, related_name="services", null=True, blank=True)
@@ -347,6 +365,7 @@ class ErrorEvent(models.Model):
     so no seed/dummy data. Inspected by staff on the statistieken page.
     """
 
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     level = models.CharField(max_length=16, blank=True)
     logger_name = models.CharField(max_length=255, blank=True)
@@ -397,6 +416,9 @@ class OrganizationType(models.Model):
 
 class OrganizationUnit(models.Model):
     """Hierarchical organization model for Dutch government organizations."""
+
+    # URL-facing identifier; the integer PK is never exposed in URLs (used as a filter value).
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 
     # === Basic fields ===
     name = models.CharField(max_length=200, verbose_name="Naam")

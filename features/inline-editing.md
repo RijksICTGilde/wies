@@ -17,7 +17,7 @@ EditableSet  (per model)
   └── EditableCollection   N rows of a child object (e.g. services on an assignment)
 ```
 
-One shared URL, `/inline-edit/<model_label>/<pk>/<name>/`, serves every
+One shared URL, `/inline-edit/<model_label>/<public_id>/<name>/`, serves every
 editable. It handles the full flow: GET returns the display (or the
 form with `?edit=true`), POST validates and saves, `?cancel=true`
 restores the display, and permission denials degrade to a read-only
@@ -283,8 +283,8 @@ if not has_permission(Verb.UPDATE, obj, request.user, spec):
     return _permission_denied(...)
 
 # Regular Django view
-def assignment_panel(request, pk):
-    assignment = get_object_or_404(Assignment, pk=pk)
+def assignment_panel(request, public_id):
+    assignment = get_object_or_404(Assignment, public_id=public_id)
     return render(..., {"user_can_edit": has_permission(Verb.UPDATE, assignment, request.user)})
 
 # Jinja template (`has_permission`, `Verb`, and each EditableSet are
@@ -336,11 +336,12 @@ clean lives in the form's `clean()` method.
 ## URL contract
 
 ```
-/inline-edit/<model_label>/<pk>/<name>/
+/inline-edit/<model_label>/<public_id>/<name>/
 ```
 
-- `model_label` — `Model._meta.model_name` (lowercase, e.g. `assignment`).
-- `pk` — integer primary key.
+- `model_label`: `Model._meta.model_name` (lowercase, e.g. `assignment`).
+- `public_id`: the record's URL-facing UUID, never the integer pk
+  (see `features/public_id.md`).
 - `name` — attribute name on the EditableSet (e.g. `extra_info`,
   `period`, `services`, `labels_42`).
 
@@ -356,7 +357,7 @@ a `--just-saved` flash, failure returns the form with errors inline.
 ## DOM contract
 
 Each editable is wrapped in
-`<div id="inline-edit-<model>-<pk>-<name>">…</div>`. The wrapper
+`<div id="inline-edit-<model>-<public_id>-<name>">…</div>`. The wrapper
 itself carries no layout class — HTMX swaps it via `outerHTML`, so
 keeping it classless means the swap never toggles layout classes on
 the target. The display-mode flex layout lives on an inner

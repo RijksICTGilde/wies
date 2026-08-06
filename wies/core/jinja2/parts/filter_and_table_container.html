@@ -68,11 +68,17 @@ both stay in sync without a shared wrapper element. #}
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
-{% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
+{% set has_active_filters = (org_chip_data|length > 0) or (unknown_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
 <nldd-container id="results">
 {% if has_active_filters %}
   <nldd-container layout="wrap" gap="8" vertical-alignment="center">
   {% for chip in org_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {# Fail-closed: een facetwaarde die niets matcht (stale/verzonnen public_id)
+     krijgt een "Onbekend"-chip i.p.v. stil te verdwijnen — zo blijft de lege
+     lijst uitlegbaar en wisbaar. Zie PublicIdFacetsMixin.add_unknown_filter_chips. #}
+  {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
   {% if search_filter %}

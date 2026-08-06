@@ -91,12 +91,12 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         self.other_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="Other")
 
     def _edit_url(self, colleague):
-        return reverse("inline-edit", args=["colleague", colleague.id, "suborganization"])
+        return reverse("inline-edit", args=["colleague", colleague.public_id, "suborganization"])
 
     def test_colleague_can_edit_own_suborganization(self):
         self.client.force_login(self.owner_user)
         response = post_inline_edit(
-            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id}
         )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
@@ -109,7 +109,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         self.admin_user.user_permissions.add(perm)
         self.client.force_login(self.admin_user)
         response = post_inline_edit(
-            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id}
         )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
@@ -118,7 +118,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
     def test_unrelated_user_cannot_edit_others_suborganization(self):
         self.client.force_login(self.other_user)
         # inline_edit_view returns a permission-denied alert instead of saving.
-        self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id})
+        self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id})
         self.own_colleague.refresh_from_db()
         assert self.own_colleague.suborganization == self.suborg_a
 
@@ -161,13 +161,13 @@ class SuborganizationPlacementFilterTest(TestCase):
 
     def _count_for(self, suborganization, params=None):
         group = self._merk_group(params)
-        option = next(o for o in group["options"] if o["value"] == str(suborganization.id))
+        option = next(o for o in group["options"] if o["value"] == str(suborganization.public_id))
         return option["count"]
 
     def test_filter_placements_by_suborganization(self):
         self.client.force_login(self.auth_user)
         # The GET filter param stays "merk" (Dutch UI surface).
-        response = self.client.get(reverse("home"), {"merk": self.suborg_rig.id})
+        response = self.client.get(reverse("home"), {"merk": self.suborg_rig.public_id})
         assert response.status_code == 200
         self.assertContains(response, "Rig Person")
         self.assertNotContains(response, "Rc Person")
@@ -176,7 +176,7 @@ class SuborganizationPlacementFilterTest(TestCase):
     def test_filter_placements_multiselect_is_or_within_group(self):
         """Selecting two merken returns colleagues in either (OR within group)."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("home"), {"merk": [self.suborg_rig.id, self.suborg_rc.id]})
+        response = self.client.get(reverse("home"), {"merk": [self.suborg_rig.public_id, self.suborg_rc.public_id]})
         assert response.status_code == 200
         self.assertContains(response, "Rig Person")
         self.assertContains(response, "Rc Person")
@@ -192,16 +192,17 @@ class SuborganizationPlacementFilterTest(TestCase):
         """Counts within the merk group ignore an active merk selection, so the
         user can still see the size of the other (unselected) merken."""
         # Even though only 'Rijks ICT Gilde' is selected, the other merk keeps its count.
-        assert self._count_for(self.suborg_rig, {"merk": self.suborg_rig.id}) == 1
-        assert self._count_for(self.suborg_rc, {"merk": self.suborg_rig.id}) == 1
+        assert self._count_for(self.suborg_rig, {"merk": self.suborg_rig.public_id}) == 1
+        assert self._count_for(self.suborg_rc, {"merk": self.suborg_rig.public_id}) == 1
 
-    def test_invalid_merk_param_is_ignored(self):
+    def test_invalid_merk_param_matches_nothing(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("home"), {"merk": "not-a-number"})
+        response = self.client.get(reverse("home"), {"merk": "not-a-uuid"})
         assert response.status_code == 200
-        # Non-numeric filter is dropped, so nothing is filtered out.
-        self.assertContains(response, "Rig Person")
-        self.assertContains(response, "Rc Person")
+        # A merk was asked for that resolves to no row, so the filter matches
+        # nothing instead of being dropped and showing every colleague.
+        self.assertNotContains(response, "Rig Person")
+        self.assertNotContains(response, "Rc Person")
 
 
 class SuborganizationUserFilterTest(TestCase):
@@ -249,19 +250,21 @@ class SuborganizationUserFilterTest(TestCase):
 
     def _count_for(self, suborganization, params=None):
         group = self._merk_group(params)
-        option = next(o for o in group["options"] if o["value"] == str(suborganization.id))
+        option = next(o for o in group["options"] if o["value"] == str(suborganization.public_id))
         return option["count"]
 
     def test_filter_users_by_suborganization(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("admin-users"), {"merk": self.suborg_rig.id})
+        response = self.client.get(reverse("admin-users"), {"merk": self.suborg_rig.public_id})
         assert response.status_code == 200
         self.assertContains(response, "Rigbertha")
         self.assertNotContains(response, "Consultina")
 
     def test_filter_users_multiselect_is_or_within_group(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("admin-users"), {"merk": [self.suborg_rig.id, self.suborg_rc.id]})
+        response = self.client.get(
+            reverse("admin-users"), {"merk": [self.suborg_rig.public_id, self.suborg_rc.public_id]}
+        )
         assert response.status_code == 200
         self.assertContains(response, "Rigbertha")
         self.assertContains(response, "Consultina")
@@ -329,21 +332,23 @@ class SuborganizationAdminTest(TestCase):
     def test_beheerder_can_delete_suborganization(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("suborganization-delete", args=[suborganization.id]))
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
         assert not Suborganization.objects.filter(id=suborganization.id).exists()
 
     def test_edit_get_renders_form_modal(self):
         suborganization = Suborganization.objects.create(name="Oud")
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("suborganization-edit", args=[suborganization.id]))
+        response = self.client.get(reverse("suborganization-edit", args=[suborganization.public_id]))
         assert response.status_code == 200
         self.assertContains(response, "Oud")
 
     def test_beheerder_can_edit_suborganization(self):
         suborganization = Suborganization.objects.create(name="Oud")
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("suborganization-edit", args=[suborganization.id]), {"name": "Nieuw"})
+        response = self.client.post(
+            reverse("suborganization-edit", args=[suborganization.public_id]), {"name": "Nieuw"}
+        )
         assert response.status_code == 200
         assert response["HX-Retarget"] == "#suborganization_list_container"
         assert response["HX-Trigger"] == "closeModal"
@@ -354,7 +359,7 @@ class SuborganizationAdminTest(TestCase):
         Suborganization.objects.create(name="Bestaand")
         target = Suborganization.objects.create(name="Anders")
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("suborganization-edit", args=[target.id]), {"name": "Bestaand"})
+        response = self.client.post(reverse("suborganization-edit", args=[target.public_id]), {"name": "Bestaand"})
         assert response.status_code == 200
         target.refresh_from_db()
         # The name is unchanged because the duplicate is rejected.
@@ -365,7 +370,9 @@ class SuborganizationAdminTest(TestCase):
         uniqueness check against the instance's own row."""
         suborganization = Suborganization.objects.create(name="Zelfde")
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("suborganization-edit", args=[suborganization.id]), {"name": "Zelfde"})
+        response = self.client.post(
+            reverse("suborganization-edit", args=[suborganization.public_id]), {"name": "Zelfde"}
+        )
         assert response.status_code == 200
         assert response.get("HX-Trigger") == "closeModal"
         suborganization.refresh_from_db()
@@ -377,7 +384,7 @@ class SuborganizationAdminTest(TestCase):
             name="Gebruiker", email="gebruiker@rijksoverheid.nl", source="wies", suborganization=suborganization
         )
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("suborganization-delete", args=[suborganization.id]))
+        response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
         # The warning names how many colleagues still use the merk.
         self.assertContains(response, "1 collega")
@@ -388,7 +395,7 @@ class SuborganizationAdminTest(TestCase):
             name="Gebruiker", email="gebruiker@rijksoverheid.nl", source="wies", suborganization=suborganization
         )
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("suborganization-delete", args=[suborganization.id]))
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
         colleague.refresh_from_db()
         assert colleague.suborganization_id is None
@@ -404,7 +411,7 @@ class SuborganizationAdminTest(TestCase):
     def test_delete_get_renders_modal_not_405(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("suborganization-delete", args=[suborganization.id]))
+        response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
 
 
@@ -430,12 +437,12 @@ class SuborganizationAdminPermissionGranularityTest(TestCase):
 
     def test_view_only_user_cannot_edit(self):
         self.client.force_login(self._user_with("view_suborganization"))
-        response = self.client.get(reverse("suborganization-edit", args=[self.suborg.id]))
+        response = self.client.get(reverse("suborganization-edit", args=[self.suborg.public_id]))
         assert response.status_code == 403
 
     def test_view_only_user_cannot_delete(self):
         self.client.force_login(self._user_with("view_suborganization"))
-        response = self.client.post(reverse("suborganization-delete", args=[self.suborg.id]))
+        response = self.client.post(reverse("suborganization-delete", args=[self.suborg.public_id]))
         assert response.status_code == 403
         assert Suborganization.objects.filter(id=self.suborg.id).exists()
 

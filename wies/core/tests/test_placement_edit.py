@@ -68,12 +68,12 @@ class PlacementEditViewTest(TestCase):
     def _valid_payload(self, **overrides):
         """Geldige POST voor het gecombineerde Service+Placement-formulier."""
         payload = {
-            "skill": str(self.skill.id),
+            "skill": str(self.skill.public_id),
             "description": "Bouwt dingen",
             "period_source": Placement.PLACEMENT,
             "specific_start_date": "2026-03-01",
             "specific_end_date": "2026-06-30",
-            "terug_url": f"/?plaatsing={self.placement.id}",
+            "terug_url": f"/?plaatsing={self.placement.public_id}",
         }
         payload.update(overrides)
         return payload
