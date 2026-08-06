@@ -60,7 +60,12 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
         {% endfor %}
         {# De "Meer" actie hoort bij de lijst, dus hij is een rij en geen losse
         knop eronder: hij deelt de rijhoogte, de hover en de uitlijning. #}
-        <nldd-list-item button hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="#org-filter-inputs">
+        {# hx-include="[data-filter-input]" (niet enkel #org-filter-inputs): stuurt
+        naast de org-selecties (voor de aangevinkte staat) óók de andere actieve
+        filters mee, zodat de telling in de boom de rol/labels/merk-filters volgt —
+        net als de zijbalk. De org-inputs dragen zelf ook data-filter-input, dus dit
+        omvat ze allebei. #}
+        <nldd-list-item button hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="[data-filter-input]">
         {# 24 voor de breedte van de checkbox-cel, 8 voor de spacer erachter:
         zo begint "Meer..." op dezelfde x als de labels erboven. #}
         <nldd-spacer-cell size="24"></nldd-spacer-cell>
