@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 525: logging in no longer dead-ends on a 500 page when the login callback fails, whatever the cause. The most common one is Keycloak having lost its authentication session (for example because the login screen was left open for too long); the login is then restarted once automatically, and if that fails as well the user gets a page explaining what happened. Any other failure gets its own page pointing at support, and is still reported to the team.
+- 525: the "geen toegang" page pointed at wies-support@rijksoverheid.nl, which does not exist; it now points at wies-odi@rijksoverheid.nl
 
 ## 2026-08-04
 

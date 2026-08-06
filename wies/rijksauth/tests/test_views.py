@@ -1,11 +1,13 @@
 from unittest.mock import patch
 
+from authlib.integrations.base_client import MismatchingStateError, OAuthError
 from django.contrib.auth import get_user_model
 from django.http import HttpResponse
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.rijksauth.models import AuthEvent
+from wies.rijksauth.views import OIDC_AUTH_RETRY_SESSION_KEY
 
 User = get_user_model()
 
@@ -148,7 +150,7 @@ class AuthViewsTest(TestCase):
         }
         self.client.force_login(self.colleague)
         session = self.client.session
-        session["oidc_id_token"] = "fake-id-token"  # noqa: S105 (hardcoded-password) — test fixture, not a real token
+        session["oidc_id_token"] = "fake-id-token"  # noqa: S105 (hardcoded-password) - test fixture, not a real token
         session.save()
 
         response = self.client.post(reverse("logout"))
@@ -192,7 +194,7 @@ class AuthViewsTest(TestCase):
 
         call_args = mock_get_oidc.return_value.authorize_redirect.call_args
         assert call_args.kwargs.get("prompt") == "login"
-        # Cookie is NOT cleared on the login redirect — only after the full auth
+        # Cookie is NOT cleared on the login redirect, only after the full auth
         # round-trip completes, so abandoning the Keycloak flow doesn't silently
         # re-enable silent SSO on the next attempt.
         assert "wies_post_logout" not in response.cookies
@@ -252,3 +254,165 @@ class AuthViewsTest(TestCase):
 
         # Email should be stored in session
         assert self.client.session.get("failed_login_email") == "unknown@external.com"
+
+
+class OidcCallbackErrorTest(TestCase):
+    """Keycloak redirects `?error=...` to the callback when its authentication session
+    is gone. That must restart the login flow, not surface as a 500."""
+
+    def setUp(self):
+        self.client = Client()
+
+    @staticmethod
+    def _fail_with(mock_get_oidc, error, description=""):
+        mock_get_oidc.return_value.authorize_access_token.side_effect = OAuthError(
+            error=error,
+            description=description,
+        )
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_expired_authentication_session_restarts_flow(self, mock_get_oidc):
+        """The user sat on the Keycloak login page past its timeout."""
+        self._fail_with(mock_get_oidc, "temporarily_unavailable", "authentication_expired")
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 302
+        assert response.url == reverse("login")
+        assert self.client.session[OIDC_AUTH_RETRY_SESSION_KEY] is True
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_missing_response_type_restarts_flow(self, mock_get_oidc):
+        """A login-page link re-entered the authorize endpoint without response_type."""
+        self._fail_with(mock_get_oidc, "invalid_request", "Missing parameter: response_type")
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 302
+        assert response.url == reverse("login")
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_mismatching_state_restarts_flow(self, mock_get_oidc):
+        """A state gone from the session (blocked cookies, stale tab) is recoverable too."""
+        mock_get_oidc.return_value.authorize_access_token.side_effect = MismatchingStateError()
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 302
+        assert response.url == reverse("login")
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_second_consecutive_failure_shows_error_page(self, mock_get_oidc):
+        """login redirects straight back to Keycloak, so retrying forever would loop."""
+        self._fail_with(mock_get_oidc, "temporarily_unavailable", "authentication_expired")
+
+        self.client.get(reverse("auth"))
+        response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert "Inloggen is niet gelukt" in response.content.decode()
+        # Marker is cleared, so a later attempt gets its one retry again.
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_access_denied_is_not_retried(self, mock_get_oidc):
+        """The user or the upstream IdP refused, so do not send them back in."""
+        self._fail_with(mock_get_oidc, "access_denied", "user cancelled")
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_successful_login_clears_retry_marker(self, mock_get_oidc):
+        User.objects.create_user(email="test@rijksoverheid.nl", first_name="Test", last_name="User")
+        self._fail_with(mock_get_oidc, "temporarily_unavailable", "authentication_expired")
+        self.client.get(reverse("auth"))
+        assert self.client.session[OIDC_AUTH_RETRY_SESSION_KEY] is True
+
+        mock_get_oidc.return_value.authorize_access_token.side_effect = None
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "id_token": "fake-id-token",
+            "userinfo": {
+                "sub": "test_sso_user",
+                "email": "test@rijksoverheid.nl",
+                "email_verified": True,
+            },
+        }
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.url == f"http://testserver{reverse('home')}"
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_callback_error_logs_parameter_names_but_not_values(self, mock_get_oidc):
+        """Which parameters arrived is the diagnostic signal; their values carry tokens."""
+        self._fail_with(mock_get_oidc, "invalid_request", "Missing parameter: response_type")
+
+        with self.assertLogs("wies.rijksauth.views", level="WARNING") as logs:
+            self.client.get(reverse("auth"), {"error": "invalid_request", "state": "secret-state-value"})
+
+        [message] = logs.output
+        assert "invalid_request" in message
+        assert "'state'" in message
+        assert "secret-state-value" not in message
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_expected_errors_stay_below_error_level(self, mock_get_oidc):
+        """WARNING keeps flow noise out of ErrorReportingHandler, which fires on ERROR."""
+        self._fail_with(mock_get_oidc, "temporarily_unavailable", "authentication_expired")
+
+        with self.assertLogs("wies.rijksauth.views", level="WARNING") as logs:
+            self.client.get(reverse("auth"))
+
+        assert [record.levelname for record in logs.records] == ["WARNING"]
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_unexpected_error_is_logged_at_error_level(self, mock_get_oidc):
+        """A broken client registration must reach the error reporting handler."""
+        self._fail_with(mock_get_oidc, "invalid_client", "Invalid client credentials")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR") as logs:
+            response = self.client.get(reverse("auth"))
+
+        [record] = logs.records
+        assert record.levelname == "ERROR"
+        assert record.exc_info is not None
+        assert record.request.path == reverse("auth")
+        assert response.status_code == 400
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_unexpected_error_is_not_retried(self, mock_get_oidc):
+        """Restarting the flow cannot fix a misconfiguration, so do not suggest it."""
+        self._fail_with(mock_get_oidc, "server_error", "upstream exploded")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR"):
+            response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+        body = response.content.decode()
+        assert "Er is een storing in de koppeling met de inlogdienst" in body
+        assert "inlogsessie is verlopen" not in body
+        # Never a dead end: the user can always start the flow again themselves.
+        assert "Probeer het inloggen opnieuw" in body
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_failure_without_an_oauth_error_code_also_gets_the_explanation_page(self, mock_get_oidc):
+        """The token exchange can break on the network, on JWT validation or on a bug of
+        ours. Those carry no OAuth error code and must not reach the user as a bare 500."""
+        mock_get_oidc.return_value.authorize_access_token.side_effect = ValueError("boom")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR") as logs:
+            response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert "Er is een storing in de koppeling met de inlogdienst" in response.content.decode()
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+        # Recovering for the user must not hide the bug: still reported, with its traceback.
+        [record] = logs.records
+        assert record.exc_info is not None
+        assert record.request.path == reverse("auth")
+        assert "ValueError" in record.getMessage()
