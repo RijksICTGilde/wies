@@ -7,7 +7,6 @@ from django.urls import reverse
 
 from wies.core.models import (
     Assignment,
-    AssignmentOrganizationUnit,
     Colleague,
     Event,
     OrganizationUnit,
@@ -90,7 +89,6 @@ class AssignmentCreateTest(TestCase):
             name="Belastingdienst",
             label="Belastingdienst",
         )
-
 
     # --- Aanmaak via het zijpaneel (assignment-create-sheet) ---
     # Zelfde opdrachtvelden als de full-page create, maar zonder rollen: die
