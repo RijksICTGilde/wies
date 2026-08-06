@@ -119,7 +119,9 @@ class EditableCollection:
     label: str
     formset_factory: Callable[..., Any]
     initial: Callable[[Model], list[dict]]
-    save: Callable[[Model, Any], None]
+    # None for a read-only collection: shown via ``display`` and edited through a
+    # dedicated flow, so the generic inline-edit save path does not apply.
+    save: Callable[[Model, Any], None] | None = None
     # Body template included inside collection_form.html; receives the
     # formset as ``formset``.
     form_template: str | None = None

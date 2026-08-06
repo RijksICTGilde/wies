@@ -45,14 +45,9 @@ class LabelManagementIntegrationTest(TestCase):
         """Test: Create category → Create label → Assign to user → Verify in list → Delete"""
         self.client.force_login(self.admin_user)
 
-        # Step 1: Create a label category
-        response = self.client.post(
-            reverse("label-category-create"),
-            {"name": "Test Category", "color": "#F9DFDD"},
-        )
-        assert response.status_code == 200
-
-        category = LabelCategory.objects.get(name="Test Category")
+        # Step 1: A label category (categories are managed via the
+        # "Categorieën beheren" sheet; created directly here as a fixture).
+        category = LabelCategory.objects.create(name="Test Category", color="#F9DFDD")
         assert category.color == "#F9DFDD"
 
         # Step 2: Create a label in that category
@@ -136,8 +131,8 @@ class LabelManagementIntegrationTest(TestCase):
         response = self.client.get(reverse("label-admin"))
         assert response.status_code == 403
 
-        # Attempt to create category
-        response = self.client.post(reverse("label-category-create"), {"name": "Unauthorized", "color": "#000000"})
+        # Attempt to manage categories (create/rename via the beheer sheet)
+        response = self.client.get(reverse("label-category-manage"))
         assert response.status_code == 403
 
         # Create a category as admin first

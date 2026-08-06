@@ -47,13 +47,10 @@ from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     CATEGORY_COLOR_CHOICES,
-    AssignmentCreateForm,
-    LabelCategoryForm,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
     ProfileNameForm,
-    ServiceFormSet,
     SuborganizationForm,
     UserForm,
 )
@@ -81,8 +78,6 @@ from .querysets import (
 from .services.assignments import (
     apply_team_change,
     assignment_edit_specs,
-    create_assignment_from_form,
-    extract_services_data,
     initial_row_to_services_data,
 )
 from .services.events import create_event
@@ -2089,107 +2084,6 @@ def label_admin(request):
     return render(request, "label_admin.html", {"categories": categories})
 
 
-@permission_required("core.change_labelcategory", raise_exception=True)
-def label_category_create(request):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-
-    """Create a new label category"""
-    form_post_url = reverse("label-category-create")
-    modal_title = "Nieuwe categorie"
-    element_id = "labelFormModal"
-    form_button_label = "Toevoegen"
-
-    if request.method == "GET":
-        form = LabelCategoryForm()
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-            },
-        )
-    if request.method == "POST":
-        form = LabelCategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-            },
-        )
-    return None
-
-
-@permission_required("core.change_labelcategory", raise_exception=True)
-def label_category_edit(request, pk):
-    """
-    Edit a label category
-    Returns a partial html page, to be used with htmx
-    """
-
-    category = get_object_or_404(LabelCategory, pk=pk)
-    form_post_url = reverse("label-category-edit", kwargs={"pk": pk})
-    modal_title = f"Bewerk categorie: {category.name}"
-    form_button_label = "Opslaan"
-    element_id = "labelFormModal"
-
-    if request.method == "GET":
-        form = LabelCategoryForm(instance=category)
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
-            },
-        )
-    if request.method == "POST":
-        form = LabelCategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
-
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
-            },
-        )
-    return None
-
-
 @login_required
 @require_POST
 def user_theme(request):
@@ -3662,7 +3556,12 @@ def _attach_formset_error(formset, message: str) -> None:
 
 def _handle_inline_edit_collection(request, editable_set, spec: EditableCollection, obj) -> HttpResponse:
     # FormSet equivalent of the Editable/Group path in inline_edit_view.
+    # A read-only collection (no save) still renders its display, but has no
+    # editable form: saving and the edit-form GET are rejected.
+    read_only = spec.save is None
     if request.method == "POST":
+        if read_only:
+            raise Http404("Collection is not editable")
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
             conflict = False
@@ -3705,6 +3604,8 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
     if request.GET.get("edit"):
+        if read_only:
+            raise Http404("Collection is not editable")
         formset = spec.formset_factory(initial=spec.initial(obj))
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
