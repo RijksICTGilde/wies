@@ -1,0 +1,51 @@
+{# Bord-filters (PoC): gilde en "aflopend binnen N maanden". Staat in de filter-
+   sheet (#filter-sheet), geopend via de "Filter"-knop. Elke rij is een htmx-link
+   die het bord opnieuw ophaalt en alleen #bm-board-grid vervangt; de sheet zelf
+   blijft open. Het andere filter blijft staan (we geven z'n huidige waarde mee in
+   de URL); een actieve rij klikken wist dat filter (toggle). Geen JS-bridge: de
+   rijen sturen zelf de querystring, CSP-veilig. Na een wissel gaat deze partial
+   als OOB-swap mee zodat de checked-staat klopt.
+   Verwacht: active_filters {gilde, aflopend}. #}
+{% set g = active_filters.gilde %}
+{% set a = active_filters.aflopend %}
+{% macro qs(gilde, aflopend) -%}
+  {%- set parts = [] -%}
+  {%- if gilde %}{% set _ = parts.append('gilde=' ~ gilde) %}
+  {% endif -%}
+  {%- if aflopend %}{% set _ = parts.append('aflopend=' ~ aflopend) %}
+  {% endif -%}
+  {{- url("bm-board") }}{% if parts %}?{{ parts|join("&") }}{% endif -%}
+{%- endmacro %}
+{% macro filter_row(label, target_url, selected) -%}
+  <nldd-list-item button hx-get="{{ target_url }}" hx-target="#bm-board-grid" hx-swap="outerHTML" hx-push-url="true">
+  <nldd-cell>
+  <nldd-checkbox aria-hidden="true" tabindex="-1" {% if selected %}checked{% endif %}></nldd-checkbox>
+  </nldd-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ label }}"></nldd-text-cell>
+  </nldd-list-item>
+{%- endmacro %}
+<nldd-simple-section id="bm-board-filters" {% if filters_oob %}hx-swap-oob="outerHTML"{% endif %}>
+<nldd-title size="6">
+<h3>Gilde</h3>
+</nldd-title>
+<nldd-spacer size="4"></nldd-spacer>
+<nldd-list variant="simple" accessible-label="Gilde">
+{{ filter_row("IT Gilde", qs("it" if g != "it" else none, a), g == "it") }}
+{{ filter_row("Digi Gilde", qs("digi" if g != "digi" else none, a), g == "digi") }}
+</nldd-list>
+<nldd-spacer size="24"></nldd-spacer>
+<nldd-title size="6">
+<h3>Aflopend binnen</h3>
+</nldd-title>
+<nldd-spacer size="4"></nldd-spacer>
+<nldd-list variant="simple" accessible-label="Aflopend binnen">
+{{ filter_row("1 maand", qs(g, 1 if a != 1 else none), a == 1) }}
+{{ filter_row("2 maanden", qs(g, 2 if a != 2 else none), a == 2) }}
+{{ filter_row("3 maanden", qs(g, 3 if a != 3 else none), a == 3) }}
+</nldd-list>
+{% if g or a %}
+  <nldd-spacer size="16"></nldd-spacer>
+  <nldd-button variant="secondary" size="sm" width="full" text="Filters wissen" hx-get="{{ url('bm-board') }}" hx-target="#bm-board-grid" hx-swap="outerHTML" hx-push-url="true"></nldd-button>
+{% endif %}
+</nldd-simple-section>

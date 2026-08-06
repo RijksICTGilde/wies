@@ -37,6 +37,31 @@ verwijderen) lopen via het rijmenu in de laatste cel. #}
           {% endif %}
         </span>
       {% endif %}
+      {# PoC-dummy: benutting per week over de afgelopen 12 weken — geeft in één
+         oogopslag of het teamlid vol zit of ruimte heeft. 36 u = fulltime.
+         De meeste teamleden zitten vol (36 u = groen); een enkeling heeft ruimte
+         (blauwe, lagere balk). Consistent per teamlid uit collega-id; later
+         voeden echte plaatsingsuren dit. #}
+      {% set _weeks = 12 %}
+      {% set _fulltime = 36 %}
+      {# Bijna iedereen zit vol (100%, groen). Een enkeling heeft structureel
+         ruimte: consistent op 80% of 90% (blauw). Vast per persoon uit collega-id;
+         geen week-tot-week ruis. #}
+      {# Uitzonderingen zeldzaam houden: de meesten 100%, af en toe iemand op
+         80% of 90%. #}
+      {% set _pct = 80 if row.colleague.id % 5 == 0 else (90 if row.colleague.id % 7 == 0 else 100) %}
+      {% set _hours = (_pct * _fulltime / 100) | round | int %}
+      <div class="member-util"
+           aria-label="Benutting per week, afgelopen {{ _weeks }} weken (indicatief)">
+        {% for _w in range(_weeks) %}
+          {% set _weeks_ago = _weeks - _w %}
+          {# djlint:off T028 #}
+          <span class="member-util__week{% if _pct >= 100 %} is-full{% endif %}"
+                style="--fill: {{ [_pct, 100] | min }}%"
+                data-tip="{% if _weeks_ago == 1 %}Vorige week{% else %}{{ _weeks_ago }} wk geleden{% endif %} · {{ _hours }}/{{ _fulltime }} u · {{ _pct }}%"></span>
+          {# djlint:on #}
+        {% endfor %}
+      </div>
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       {% include "wies/forms/displays/assignment_services_row_menu.html" %}

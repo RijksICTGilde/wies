@@ -1,0 +1,53 @@
+{# PoC: opmerkingen bij een opdracht — dezelfde opzet als het team. Elke opmerking
+   is een rij met een "…"-menu (bewerken, verwijderen); toevoegen via de knop
+   erboven. Toevoegen en bewerken openen dezelfde child-sheet. De rij zelf is niet
+   klikbaar; alle acties lopen via het menu. Verwacht: assignment, panel_data. #}
+<div id="assignment-notes">
+  <nldd-title size="4">
+  <h2>Opmerkingen</h2>
+  </nldd-title>
+  {% if panel_data.note_can_manage %}
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-toolbar label="Opmerkingen" size="sm">
+    <nldd-toolbar-item slot="start">
+    <nldd-button text="Toevoegen" start-icon="plus" accessible-label="Opmerking toevoegen" hx-get="{{ panel_data.note_add_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
+    </nldd-toolbar-item>
+    </nldd-toolbar>
+  {% endif %}
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% if panel_data.notes %}
+    <nldd-list variant="box">
+    {% for note in panel_data.notes %}
+      <nldd-list-item>
+      <nldd-cell>
+      <nldd-avatar size="40" icon="message-rectangle-text" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell divider-start>
+      <span>
+        {{ note.text }}
+        {% if note.show_on_board %}
+          <nldd-tag size="sm" icon="eye" text="Op het bord"></nldd-tag>
+        {% endif %}
+      </span>
+      <span slot="supporting-text">{{ note.author.name if note.author else 'Onbekend' }} · {{ note.created_at|datum_nl }}</span>
+      </nldd-text-cell>
+      {% if panel_data.note_can_manage %}
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-cell>
+        <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor opmerking">
+        <nldd-menu slot="popup" placement="bottom-end">
+        <nldd-menu-item text="Bewerken" icon="edit" hx-get="?opdracht={{ assignment.id }}&notitie={{ note.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        <nldd-menu-divider></nldd-menu-divider>
+        <nldd-menu-item text="Verwijderen" icon="delete" destructive hx-post="{{ url('assignment-note-delete', args=[assignment.id, note.id]) }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-confirm="Deze opmerking verwijderen?" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-icon-button>
+        </nldd-cell>
+      {% endif %}
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+  {% else %}
+    <nldd-inline-dialog icon="message-rectangle-text" text="Nog geen opmerkingen" supporting-text="Er staan nog geen opmerkingen bij deze opdracht."></nldd-inline-dialog>
+  {% endif %}
+</div>

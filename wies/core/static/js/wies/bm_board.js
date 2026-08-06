@@ -122,4 +122,48 @@
         );
     });
   }
+
+  // Kolommen in-/uitklappen: ingeklapt wordt de kolom een smalle strip (CSS op
+  // [data-collapsed]). De staat blijft per kolom bewaard in localStorage.
+  const COLLAPSE_KEY = "bmBoardCollapsedColumns";
+
+  function readCollapsed() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) || "[]"));
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  function writeCollapsed(set) {
+    try {
+      localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...set]));
+    } catch (_) {
+      /* private mode e.d.: de staat is dan alleen voor deze sessie. */
+    }
+  }
+
+  function setColumnCollapsed(col, isCollapsed) {
+    col.toggleAttribute("data-collapsed", isCollapsed);
+    const toggle = col.querySelector("[data-board-collapse]");
+    if (toggle) toggle.setAttribute("aria-expanded", String(!isCollapsed));
+  }
+
+  const collapsed = readCollapsed();
+  board.querySelectorAll("[data-board-column]").forEach((col) => {
+    if (collapsed.has(col.dataset.boardColumn)) setColumnCollapsed(col, true);
+  });
+
+  board.addEventListener("click", (e) => {
+    const toggle = e.target.closest("[data-board-collapse]");
+    if (!toggle) return;
+    const col = toggle.closest("[data-board-column]");
+    if (!col) return;
+    const nowCollapsed = !col.hasAttribute("data-collapsed");
+    setColumnCollapsed(col, nowCollapsed);
+    const set = readCollapsed();
+    if (nowCollapsed) set.add(col.dataset.boardColumn);
+    else set.delete(col.dataset.boardColumn);
+    writeCollapsed(set);
+  });
 })();

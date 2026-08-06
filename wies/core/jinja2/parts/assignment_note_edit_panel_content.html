@@ -1,0 +1,41 @@
+{# Child sheet van het opdrachtpaneel: één opmerking (toevoegen of bewerken),
+   opgezet zoals de "Teamlid bewerken"-sheet. Toevoegen en bewerken delen dit
+   formulier; de server bepaalt via note_id of het een nieuwe of bestaande is.
+   Verwacht: panel_data.note (of None), note_heading, note_save_url, parent_url. #}
+{% set note = panel_data.note %}
+{% set obj = panel_data.assignment %}
+{% set panel_heading = panel_data.note_heading %}
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ obj.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form hx-post="{{ panel_data.note_save_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML">
+  {% if panel_data.note_error %}
+    <nldd-banner variant="critical" text="{{ panel_data.note_error }}"></nldd-banner>
+  {% endif %}
+  {# De textarea leest z'n waarde uit het `value`-attribuut (.value in het
+     component), niet uit de body — dus bij bewerken moet note.text daar staan. #}
+  <nldd-form-field label="Opmerking">
+  <nldd-multi-line-text-field name="text" rows="4" accessible-label="Opmerking" value="{{ note.text if note else '' }}" required></nldd-multi-line-text-field>
+  </nldd-form-field>
+  {# nldd-switch (niet -field): het form-associated element staat zo in de light
+     DOM en submit wél. De zichtbare tekst zit in de form-field-wrapper; op de
+     switch zelf accessible-label voor screenreaders. #}
+  <nldd-form-field label="Klein tonen op de bord-kaart">
+  <nldd-switch name="show_on_board" value="1" accessible-label="Klein tonen op de bord-kaart" {% if note and note.show_on_board %}checked{% endif %}></nldd-switch>
+  </nldd-form-field>
+  {# De ouder-URL reist mee: op de POST is het pad het save-endpoint, dus de
+     server kan het paneel-pad niet zelf opbouwen (zie _note_save_response). #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>

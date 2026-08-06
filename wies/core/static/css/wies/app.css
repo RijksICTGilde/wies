@@ -1,5 +1,63 @@
 /* NLDD app-level overrides for Wies */
 
+/* PoC-dummy: benutting per week onder een teamlid. Reeks smalle balkjes (één per
+   week, oud→nieuw); elk balkje vult van onderaf naar --fill (bezettingsgraad).
+   Een volle week (>= fulltime) kleurt in de accentkleur, minder in een lichtere
+   tint, zodat je in één blik ziet of iemand structureel ruimte heeft. */
+.member-util {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 28px;
+  margin-top: 0.375rem;
+}
+.member-util__week {
+  flex: 1;
+  max-width: 10px;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--semantics-surfaces-tinted-background-color, #eef1f5);
+  position: relative;
+  /* Geen overflow:hidden — dat kapte de tooltip af. De vulling volgt de
+     afronding zelf. */
+}
+.member-util__week::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--fill, 0%);
+  border-radius: 2px;
+  /* Niet-vol = blauw (heeft ruimte); vol = groen (goed benut). */
+  background: var(--semantics-informative-color, #4a7fb5);
+}
+.member-util__week.is-full::after {
+  background: var(--primitives-color-donkergroen-500, #39870c);
+}
+
+/* Snelle, gestylede tooltip: verschijnt direct op hover (geen native
+   title-vertraging). data-tip levert de tekst. */
+.member-util__week[data-tip] {
+  cursor: default;
+}
+.member-util__week[data-tip]:hover::before {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  background: var(--semantics-content-color, #1a1a1a);
+  color: #fff;
+  font-size: 0.6875rem;
+  line-height: 1;
+  padding: 4px 6px;
+  border-radius: 4px;
+  z-index: 10;
+  pointer-events: none;
+}
+
 *,
 *::before,
 *::after {

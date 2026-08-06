@@ -198,6 +198,23 @@ class Assignment(models.Model):
         return "active"
 
 
+class AssignmentNote(models.Model):
+    """PoC: een vrije opmerking bij een opdracht. ``show_on_board`` bepaalt of hij
+    klein op de bord-kaart getoond wordt."""
+
+    assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="notes")
+    author = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=True, related_name="assignment_notes")
+    text = models.TextField(max_length=500)
+    show_on_board = models.BooleanField(default=False, verbose_name="Tonen op het bord")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"Notitie bij {self.assignment_id}: {self.text[:40]}"
+
+
 class Placement(models.Model):
     SERVICE = "SERVICE"
     PLACEMENT = "PLACEMENT"

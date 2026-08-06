@@ -33,6 +33,8 @@ from wies.core.views import (
     assignment_match_place,
     assignment_member_delete_view,
     assignment_member_edit_view,
+    assignment_note_delete,
+    assignment_note_save,
     bm_board,
     bm_board_move,
     client_modal,
@@ -91,6 +93,14 @@ urlpatterns = [
     path("", PlacementListView.as_view(), name="home"),
     path("bord/", bm_board, name="bm-board"),  # PoC: BM-kanban
     path("bord/opdracht/<int:assignment_id>/verplaatsen/", bm_board_move, name="bm-board-move"),
+    path(
+        "opdracht/<int:assignment_id>/notitie/<int:note_id>/opslaan/", assignment_note_save, name="assignment-note-save"
+    ),
+    path(
+        "opdracht/<int:assignment_id>/notitie/<int:note_id>/verwijderen/",
+        assignment_note_delete,
+        name="assignment-note-delete",
+    ),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
     path("inloggen/", login, name="login"),
     path("geen-toegang/", no_access),

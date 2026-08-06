@@ -21,6 +21,7 @@ from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -58,6 +59,7 @@ from .forms import (
 )
 from .models import (
     Assignment,
+    AssignmentNote,
     AssignmentOrganizationUnit,
     Colleague,
     ErrorEvent,
@@ -135,7 +137,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "match")
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "match", "notitie")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -198,6 +200,12 @@ def _build_assignment_panel_data(assignment, request):
         "edit_panel_url": _build_panel_url(request, opdracht=assignment.id, bewerken=1),
         "member_add_aanvraag_url": _build_panel_url(request, opdracht=assignment.id, teamlid="nieuw-aanvraag"),
         "member_add_ingevuld_url": _build_panel_url(request, opdracht=assignment.id, teamlid="nieuw-ingevuld"),
+        # PoC opmerkingen: rijen met een "…"-menu (net als het team). Toevoegen en
+        # bewerken openen dezelfde child-sheet — nieuw via ?notitie=nieuw, één
+        # bestaande via ?notitie=<id>. Alleen de BM van de opdracht mag beheren.
+        "note_add_url": _build_panel_url(request, opdracht=assignment.id, notitie="nieuw"),
+        "note_can_manage": _user_is_board_owner(request, assignment),
+        "notes": list(assignment.notes.select_related("author")),
     }
     # Child sheets: ?bewerken= opent het gecombineerde opdrachtformulier,
     # ?teamlid= het formulier van één teamlid (of een nieuw lid via
@@ -215,6 +223,10 @@ def _build_assignment_panel_data(assignment, request):
         match_panel = _build_assignment_match_panel_data(assignment, request)
         if match_panel is not None:
             data.update(match_panel)
+    elif request.GET.get("notitie"):
+        note_panel = _build_assignment_note_panel_data(assignment, request)
+        if note_panel is not None:
+            data.update(note_panel)
     return data
 
 
@@ -4048,9 +4060,55 @@ def bm_board(request):
     """PoC: kanban-bord van de diensten waarvan de ingelogde gebruiker BM is."""
     from wies.core.services.board import COLUMNS, build_bm_board  # noqa: PLC0415 — PoC, lokaal
 
+    # Een kaart opent het opdrachtpaneel via ?opdracht= op /bord zelf (niet via
+    # /opdrachten), zodat de adresbalk op /bord blijft en een refresh het paneel
+    # terugbrengt. Alle paneel-URL's komen uit request.path, dus ze wijzen ook
+    # terug naar /bord. Zie AssignmentListView voor hetzelfde patroon.
+    panel_data = None
+    assignment_id = request.GET.get("opdracht")
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request)
+        except Assignment.DoesNotExist, ValueError:
+            pass
+
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target", "")
+        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    from wies.core.services.board import GILDES  # noqa: PLC0415 — PoC, lokaal
+
     colleague = getattr(request.user, "colleague", None)
-    board = build_bm_board(colleague)
+
+    # Filters (PoC): gilde (it/digi, dummy uit opdracht-id) en "aflopend binnen"
+    # N maanden. Onbekende waarden negeren we, zodat een rare querystring niet
+    # crasht maar gewoon niet filtert.
+    gilde = request.GET.get("gilde") if request.GET.get("gilde") in GILDES else None
+    try:
+        ending_within = int(request.GET.get("aflopend", ""))
+    except ValueError:
+        ending_within = None
+    if ending_within not in (1, 2, 3):
+        ending_within = None
+
+    board = build_bm_board(colleague, gilde=gilde, ending_within_months=ending_within)
     columns = [{"key": key, "label": label, "cards": board[key]} for key, label in COLUMNS]
+    active_filters = {"gilde": gilde, "aflopend": ending_within}
+
+    # Filterwissel: de filterrijen targeten #bm-board-grid, dus lever de kolommen
+    # terug plus de sidebar als OOB-swap (anders houden de rijen hun oude
+    # checked-staat en toggle-URL's).
+    if "HX-Request" in request.headers and request.headers.get("HX-Target") == "bm-board-grid":
+        grid = render_to_string("parts/bm_board_columns.html", {"columns": columns}, request=request)
+        sidebar = render_to_string(
+            "parts/bm_board_filters.html",
+            {"active_filters": active_filters, "filters_oob": True},
+            request=request,
+        )
+        return HttpResponse(grid + sidebar)
+
     # Zelfde "Opdracht invoeren"-knop als de Aanvragen-lijst: opent de
     # aanmaak-sheet in het zijpaneel van het bord.
     primary_button = None
@@ -4064,7 +4122,16 @@ def bm_board(request):
                 "hx-push-url": "false",
             },
         }
-    return render(request, "bm_board.html", {"columns": columns, "primary_button": primary_button})
+    return render(
+        request,
+        "bm_board.html",
+        {
+            "columns": columns,
+            "primary_button": primary_button,
+            "panel_data": panel_data,
+            "active_filters": active_filters,
+        },
+    )
 
 
 @require_POST
@@ -4086,6 +4153,143 @@ def bm_board_move(request, assignment_id):
     if not move_assignment_to_status(assignment, status):
         return HttpResponse(status=422)
     return HttpResponse(status=204)
+
+
+def _board_owner_or_403(request, assignment_id):
+    """De opdracht als de ingelogde gebruiker de BM ervan is, anders None."""
+    colleague = getattr(request.user, "colleague", None)
+    assignment = Assignment.objects.filter(pk=assignment_id).first()
+    if assignment is None or colleague is None or assignment.owner_id != colleague.id:
+        return None, colleague
+    return assignment, colleague
+
+
+def _user_is_board_owner(request, assignment):
+    """Alleen de BM van de opdracht beheert de opmerkingen (toevoegen/togglen/verwijderen)."""
+    colleague = getattr(request.user, "colleague", None)
+    return colleague is not None and assignment.owner_id == colleague.id
+
+
+def _build_assignment_note_panel_data(assignment, request):
+    """Context voor de opmerking-child-sheet, of None zonder BM-rechten.
+
+    Net als het teamlid: ``?notitie=nieuw`` opent een leeg formulier, ``?notitie=
+    <id>`` bewerkt één bestaande opmerking. Toevoegen en bewerken delen hetzelfde
+    formulier (tekst + 'tonen op het bord'). Zonder BM-rechten valt de parameter
+    terug op het leespaneel.
+    """
+    if not _user_is_board_owner(request, assignment):
+        return None
+
+    notitie = request.GET.get("notitie", "")
+    if notitie == "nieuw":
+        note = None
+        heading = "Opmerking toevoegen"
+    else:
+        try:
+            note = assignment.notes.get(pk=int(notitie))
+        except ValueError, AssignmentNote.DoesNotExist:
+            return None
+        heading = "Opmerking bewerken"
+
+    return {
+        "panel_content_template": "parts/assignment_note_edit_panel_content.html",
+        "note": note,
+        "note_heading": heading,
+        "note_save_url": reverse("assignment-note-save", args=[assignment.id, note.id if note else 0]),
+        "parent_url": _url_drop_params(request.path, request.GET, ("notitie",)),
+    }
+
+
+def _note_save_response(request, assignment):
+    """Her-render het opdrachtpaneel (child-sheet sluit, verse opmerkingen-lijst)
+    plus de bord-kaart als out-of-band swap.
+
+    Bewust GEEN HX-Location zoals de teamlid-sheet: die herlaadt alleen
+    #side-panel-content en short-circuit't de OOB-swap in deze response, dus de
+    bord-kaart eronder ververst dan niet. We renderen daarom het paneel direct in
+    de body én de OOB-kaart, zodat htmx beide toepast.
+    """
+    from urllib.parse import urlparse  # noqa: PLC0415
+
+    from django.http import QueryDict  # noqa: PLC0415
+
+    from wies.core.services.board import build_bm_board  # noqa: PLC0415 — PoC, lokaal
+
+    # Het paneel bouwt al z'n actie-URL's uit request.path/GET. Op deze POST is dat
+    # het save-endpoint, dus richt het even op de ouder-URL (terug_url) zodat de
+    # knoppen weer naar /bord (of /opdrachten) wijzen. Daarna terugzetten.
+    parent = _safe_return_path(request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id))
+    parsed = urlparse(parent)
+    orig_path, orig_get = request.path, request.GET
+    request.path, request.GET = parsed.path, QueryDict(parsed.query)
+    try:
+        panel_data = _build_assignment_panel_data(assignment, request)
+        panel_html = render_to_string(panel_data["panel_content_template"], {"panel_data": panel_data}, request=request)
+    finally:
+        request.path, request.GET = orig_path, orig_get
+    board = build_bm_board(assignment.owner)
+    card = next((c for cards in board.values() for c in cards if c["id"] == assignment.id), None)
+    card_html = ""
+    if card is not None:
+        card_html = render_to_string("parts/bm_board_card.html", {"card": card, "oob": True}, request=request)
+    return HttpResponse(panel_html + card_html)
+
+
+@login_required
+@require_POST
+def assignment_note_save(request, assignment_id, note_id):
+    """PoC: sla één opmerking op (toevoegen als note_id 0 is, anders bewerken).
+
+    Tekst + 'tonen op het bord' komen uit hetzelfde formulier als toevoegen.
+    Alleen de BM van de opdracht.
+    """
+    assignment, colleague = _board_owner_or_403(request, assignment_id)
+    if assignment is None:
+        return HttpResponseForbidden()
+
+    text = (request.POST.get("text") or "").strip()
+    show_on_board = bool(request.POST.get("show_on_board"))
+    if not text:
+        # Leeg tekstveld: her-render het formulier met een melding.
+        panel_data = _build_assignment_panel_data(assignment, request)
+        note = assignment.notes.filter(pk=note_id).first() if note_id else None
+        panel_data.update(
+            {
+                "note": note,
+                "note_heading": "Opmerking bewerken" if note else "Opmerking toevoegen",
+                "note_save_url": reverse("assignment-note-save", args=[assignment.id, note_id]),
+                "parent_url": _safe_return_path(
+                    request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id)
+                ),
+                "note_error": "Vul een opmerking in.",
+            }
+        )
+        return render(request, "parts/assignment_note_edit_panel_content.html", {"panel_data": panel_data})
+
+    if note_id:
+        note = assignment.notes.filter(pk=note_id).first()
+        if note is None:
+            return HttpResponseForbidden()
+        note.text = text[:500]
+        note.show_on_board = show_on_board
+        note.save(update_fields=["text", "show_on_board"])
+    else:
+        AssignmentNote.objects.create(
+            assignment=assignment, author=colleague, text=text[:500], show_on_board=show_on_board
+        )
+    return _note_save_response(request, assignment)
+
+
+@login_required
+@require_POST
+def assignment_note_delete(request, assignment_id, note_id):
+    """PoC: verwijder een opmerking. Alleen de BM."""
+    assignment, _ = _board_owner_or_403(request, assignment_id)
+    if assignment is None:
+        return HttpResponseForbidden()
+    assignment.notes.filter(pk=note_id).delete()
+    return _note_save_response(request, assignment)
 
 
 @login_required

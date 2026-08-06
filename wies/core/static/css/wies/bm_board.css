@@ -5,24 +5,54 @@
   gap: 1rem;
 }
 
+/* Opmerking op een bord-kaart: eigen witte achtergrond zodat hij opvalt tussen
+   de opdrachtgegevens. De list-item-host neemt deze light-DOM styling over; de
+   inhoud zit in zijn shadow root en blijft ongemoeid. */
+.bm-card__note {
+  display: block;
+  background: var(--semantics-surface-color, #fff);
+  border: 1px solid var(--semantics-border-subtle-color, #e2e8f0);
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-top: 4px;
+}
+
+/* Bijna-afgelopen opdracht: klok-rij in de waarschuwingskleur. */
+.bm-card__ending {
+  color: var(--semantics-content-warning-color, #b25900);
+}
+
+/* Compacter: minder ruimte tussen de gegevens-regels (die rijen krijgen bijna
+   geen eigen padding meer). De lucht boven/onder de content komt van spacers in
+   de template. */
+.bm-board [data-board-card] {
+  --context-cell-padding-block: 0px;
+}
+.bm-board [data-board-card] nldd-title h3 {
+  font-size: 0.9375rem;
+  line-height: 1.25;
+}
+
 /* PoC: BM-kanban-bord. Vier gelijke kolommen; op smal scherm scrollt de rij
    horizontaal in plaats van de kolommen te versmallen. */
 .bm-board {
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(240px, 1fr);
+  display: flex;
   gap: 1rem;
   overflow-x: auto;
   padding-bottom: 0.5rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 /* De kolom is enkel een layout-wrapper: titel + de nldd-list-box eronder. De
-   box (variant="box") levert zelf de rand/fill, dus hier geen eigen achtergrond. */
+   box (variant="box") levert zelf de rand/fill, dus hier geen eigen achtergrond.
+   Open kolommen delen de breedte gelijk (flex:1); een ingeklapte kolom valt uit
+   die verdeling (flex:0) zodat de open kolommen zijn ruimte overnemen. */
 .bm-board__column {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1 1 240px;
+  min-width: 240px;
 }
 
 .bm-board__column-head {
@@ -36,6 +66,32 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 600;
+}
+
+/* Ingeklapt: de kolom valt uit de 1fr-verdeling en wordt een smalle strip, zodat
+   de overige kolommen de vrijgekomen breedte krijgen. De kaartenlijst verdwijnt;
+   de kop blijft, met de titel verticaal zodat hij in de smalle strip past. */
+.bm-board__column[data-collapsed] {
+  flex: 0 0 auto;
+  min-width: 0;
+  width: max-content;
+}
+.bm-board__column[data-collapsed] [data-board-dropzone] {
+  display: none;
+}
+.bm-board__column[data-collapsed] .bm-board__column-head {
+  flex-direction: column;
+  gap: 0.5rem;
+  height: 100%;
+}
+.bm-board__column[data-collapsed] .bm-board__column-title {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+/* Chevron wijst naar rechts als de kolom ingeklapt is ("klik om uit te klappen"),
+   naar beneden als hij open is. De draai zit op de icon-button-host. */
+.bm-board__column[data-collapsed] .bm-board__column-toggle {
+  transform: rotate(-90deg);
 }
 
 /* De kolom-lijst is ook de dropzone; een min-hoogte zodat je ook op een lege

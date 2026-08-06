@@ -1,0 +1,56 @@
+{# Eén bord-kaart. Gedeeld door het bord (bm_board.html) en de OOB-swap na een
+   opmerking-actie, zodat beide exact dezelfde markup renderen. `card` is een
+   dict uit build_bm_board; `oob` zet hx-swap-oob voor de live-update.
+   Het stabiele id (bm-card-<id>) is het OOB-doel.
+
+   Compacte BM-kaart: titel, dan opdrachtgever, en één regel met periode links
+   (met een klok-waarschuwing als de opdracht bijna afloopt) en de bezetting
+   ingevuld/totaal rechts. De content zit in één cel omdat title-cell alleen
+   default/overline/supporting-text-slots heeft. #}
+{% set ending_soon = card.weeks_until_end is not none and 0 <= card.weeks_until_end <= 6 %}
+<nldd-list-item id="bm-card-{{ card.id }}" data-board-card data-assignment-id="{{ card.id }}"{% if oob %} hx-swap-oob="true"{% endif %} href="{{ url('bm-board') }}?opdracht={{ card.id }}" hx-get="{{ url('bm-board') }}?opdracht={{ card.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="{{ url('bm-board') }}?opdracht={{ card.id }}">
+<nldd-drag-handle-cell size="sm" data-board-handle draggable="true"></nldd-drag-handle-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-cell width="full">
+{# Lucht boven/onder de content via spacers (design-system), niet via padding. #}
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+<nldd-title size="6">
+<h3>{{ card.name }}</h3>
+</nldd-title>
+<nldd-spacer size="6" direction="vertical"></nldd-spacer>
+<nldd-list variant="simple" no-dividers accessible-label="Opdrachtgegevens">
+{% if card.org_label %}
+  <nldd-list-item size="sm">
+  <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell size="sm" text="{{ card.org_label }}"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+{% if card.start_date or card.end_date or card.fte %}
+  {# Periode links (met klok-waarschuwing als de opdracht bijna afloopt), en de
+     bezetting ingevuld/totaal rechts op dezelfde regel. #}
+  {# djlint:off T028 #}
+  <nldd-list-item size="sm"{% if ending_soon %} class="bm-card__ending"{% endif %}>
+  <nldd-icon-cell size="16" icon="{{ 'clock' if ending_soon else 'calendar-event' }}"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell size="sm" text="{% if card.start_date or card.end_date %}{{ card.start_date|datum_nl('b Y') if card.start_date else '?' }} – {{ card.end_date|datum_nl('b Y') if card.end_date else '?' }}{% endif %}{% if ending_soon %} · nog {{ card.weeks_until_end }} wk{% endif %}"></nldd-text-cell>
+  {% if card.fte %}
+    <nldd-icon-cell size="16" icon="users"></nldd-icon-cell>
+    <nldd-spacer-cell size="4"></nldd-spacer-cell>
+    <nldd-cell><nldd-text-cell size="sm" text="{{ card.filled }}/{{ card.fte }}"></nldd-text-cell></nldd-cell>
+  {% endif %}
+  </nldd-list-item>
+  {# djlint:on #}
+{% endif %}
+{% for note in card.notes %}
+  {# Opmerking valt op met een eigen witte achtergrond (bm_board.css). #}
+  <nldd-list-item size="sm" class="bm-card__note">
+  <nldd-icon-cell size="16" icon="message-rectangle-text"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell size="sm" text="{{ note }}"></nldd-text-cell>
+  </nldd-list-item>
+{% endfor %}
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+</nldd-list>
+</nldd-cell>
+</nldd-list-item>

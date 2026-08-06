@@ -1,0 +1,31 @@
+{# De vier bord-kolommen. Los partial zodat een filterwissel alleen dit deel
+   herrendert (htmx-target #bm-board-grid). `columns` komt uit build_bm_board. #}
+{# PoC: kaarten zijn sleepbaar tussen kolommen (bm_board.js, native drag-and-drop
+   — nldd-list reorderable werkt alleen binnen één lijst). data-board-move-url +
+   de csrf token voeden de POST bij het neerzetten. #}
+<div id="bm-board-grid"
+     class="bm-board"
+     data-board-move-url-template="{{ url('bm-board-move', args=[0]) }}">
+  {{ get_csrf_hidden_input(request) }}
+  {% for column in columns %}
+    <section class="bm-board__column"
+             data-board-column="{{ column.key }}"
+             aria-label="{{ column.label }}">
+      {# De chevron-knop klapt de kolom in/uit; bm_board.js onthoudt de staat per
+         kolom en draait de chevron. Ingeklapt blijft alleen de kop staan. #}
+      <div class="bm-board__column-head">
+        <nldd-icon-button class="bm-board__column-toggle" size="sm" icon="chevron-down" data-board-collapse aria-expanded="true" text="{{ column.label }} in- of uitklappen"></nldd-icon-button>
+        <h2 class="bm-board__column-title">{{ column.label }}</h2>
+        <nldd-badge number="{{ column.cards|length }}" accessible-label="{{ column.cards|length }} in {{ column.label }}"></nldd-badge>
+      </div>
+      {# Eén eigen drag-laag (bm_board.js) doet zowel herordenen BINNEN als slepen
+         TUSSEN kolommen, uitsluitend via de drag-handle. Klik op de rij opent het
+         opdrachtpaneel (href + hx-get, hx_link_guard.js houdt de href tegen). #}
+      <nldd-list variant="box" data-board-dropzone="{{ column.key }}">
+      {% for card in column.cards %}
+        {% include "parts/bm_board_card.html" %}
+      {% endfor %}
+      </nldd-list>
+    </section>
+  {% endfor %}
+</div>

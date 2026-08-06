@@ -9,67 +9,53 @@
   {# Zijpaneel + org-picker-modal voor de aanmaak-sheet ("Opdracht invoeren"). #}
   <script src="{{ static('js/wies/side_panel.js') }}" defer></script>
   <script src="{{ static('js/wies/client_modal.js') }}" defer></script>
+  {# De "Filter"-knop opent de filter-sheet (standaard verborgen). #}
+  <script src="{{ static('js/wies/board_filter_sheet.js') }}" defer></script>
 {% endblock extra_head %}
 {% block content %}
   <div class="bm-board__header">
     <nldd-title size="3">
     <h1>Bord</h1>
     </nldd-title>
+    <nldd-toolbar label="Acties">
+    <nldd-toolbar-item slot="end">
+    {# Klik opent de filter-sheet (board_filter_sheet.js). #}
+    {# djlint:off T028 #}
+    <nldd-button data-open-board-filters variant="secondary" start-icon="list-decreasing-lines" text="Filter{% if active_filters.gilde or active_filters.aflopend %} ●{% endif %}"></nldd-button>
+    {# djlint:on #}
+    </nldd-toolbar-item>
+    <nldd-toolbar-item slot="end">
     {% include "parts/primary_button.html" %}
+    </nldd-toolbar-item>
+    </nldd-toolbar>
   </div>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   <nldd-rich-text>
   <p class="wies-text-secondary">De diensten van jouw opdrachten, verdeeld over hun status. Sleep een kaart naar een andere kolom om de status te wijzigen.</p>
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# PoC: vier kolommen; kaarten zijn sleepbaar tussen kolommen (bm_board.js,
-     native drag-and-drop — nldd-list reorderable werkt alleen binnen één lijst).
-     data-board-move-url + de csrf token voeden de POST bij het neerzetten. #}
-  <div class="bm-board"
-       data-board-move-url-template="{{ url('bm-board-move', args=[0]) }}">
-    {{ get_csrf_hidden_input(request) }}
-    {% for column in columns %}
-      <section class="bm-board__column"
-               data-board-column="{{ column.key }}"
-               aria-label="{{ column.label }}">
-        <div class="bm-board__column-head">
-          <h2 class="bm-board__column-title">{{ column.label }}</h2>
-          <nldd-badge number="{{ column.cards|length }}" accessible-label="{{ column.cards|length }} in {{ column.label }}"></nldd-badge>
-        </div>
-        {# Eén eigen drag-laag (bm_board.js) doet zowel herordenen BINNEN als slepen
-       TUSSEN kolommen, uitsluitend via de drag-handle. Daarom géén nldd
-       `reorderable` (dat kan alleen binnen één lijst en zou botsen). Klik op de
-       rij opent het opdrachtpaneel (href + hx-get, hx_link_guard.js houdt de
-       href tegen); de handle start het slepen. #}
-        <nldd-list variant="box" data-board-dropzone="{{ column.key }}">
-        {% for card in column.cards %}
-          {% set period %}{% if card.start_date or card.end_date %}{{ card.start_date|datum_nl("b Y") if card.start_date else "?" }} – {{ card.end_date|datum_nl("b Y") if card.end_date else "?" }}{% endif %}{% endset %}
-          <nldd-list-item data-board-card data-assignment-id="{{ card.id }}" href="{{ url('assignment-list') }}?opdracht={{ card.id }}" hx-get="{{ url('assignment-list') }}?opdracht={{ card.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false">
-          <nldd-drag-handle-cell size="sm" data-board-handle draggable="true"></nldd-drag-handle-cell>
-          <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-title-cell size="6" text="{{ card.name }}" supporting-text="{{ period|trim }}">
-          {% if card.roles %}
-            <nldd-container slot="overline" layout="wrap" gap="4">
-            {% for role in card.roles[:3] %}
-              <nldd-tag size="sm" text="{{ role }}"></nldd-tag>
-            {% endfor %}
-            {% if card.roles|length > 3 %}
-              <nldd-tag size="sm" text="+{{ card.roles|length - 3 }}"></nldd-tag>
-            {% endif %}
-            </nldd-container>
-          {% endif %}
-          </nldd-title-cell>
-          </nldd-list-item>
-        {% endfor %}
-        </nldd-list>
-      </section>
-    {% endfor %}
-  </div>
+  {% include "parts/bm_board_columns.html" %}
 {% endblock content %}
 {% block panel %}
-  {# Zijpaneel voor de aanmaak-sheet; het bord toont zelf geen detailpaneel. #}
-  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Opdracht invoeren">
-  <nldd-page id="side-panel-content" sticky-header></nldd-page>
+  {# Zijpaneel: de aanmaak-sheet ("Opdracht invoeren") én het opdrachtpaneel dat
+     een kaart opent. Bij ?opdracht= op /bord staat panel_data gevuld, zodat een
+     refresh het paneel terugbrengt; side_panel.js opent de sheet als er inhoud
+     in staat. #}
+  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
+  </nldd-sheet>
+  {# Filter-sheet: standaard dicht, opent via de "Filter"-knop. Bevat de
+     filterrijen; een keuze ververst het bord (htmx) en sluit niets — je verwerpt
+     niets, dus "Klaar" om te sluiten. #}
+  <nldd-sheet id="filter-sheet" placement="left" width="360px" accessible-label="Filter">
+  <nldd-page sticky-header>
+  <nldd-top-title-bar slot="header" text="Filter" dismiss-text="Klaar"></nldd-top-title-bar>
+  {% include "parts/bm_board_filters.html" %}
+  </nldd-page>
   </nldd-sheet>
   <div id="client-modal-container"></div>
 {% endblock panel %}

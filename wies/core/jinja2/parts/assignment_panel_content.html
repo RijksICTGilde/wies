@@ -188,6 +188,13 @@
     {% if _can_delete %}
       <div id="assignmentDeleteModal"></div>
     {% endif %}
+    {# PoC: opmerkingen bij de opdracht — alleen de BM van de opdracht beheert ze. #}
+    {% if panel_data.note_can_manage %}
+      <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+      {% with assignment = panel_data.assignment %}
+        {% include "parts/assignment_notes.html" %}
+      {% endwith %}
+    {% endif %}
   </div>
   {% if panel_data.show_updates_tab %}
     <div id="tab-panel-updates" hidden></div>
