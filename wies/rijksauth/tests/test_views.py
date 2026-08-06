@@ -398,3 +398,21 @@ class OidcCallbackErrorTest(TestCase):
         assert "inlogsessie is verlopen" not in body
         # Never a dead end: the user can always start the flow again themselves.
         assert "Probeer het inloggen opnieuw" in body
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_failure_without_an_oauth_error_code_also_gets_the_explanation_page(self, mock_get_oidc):
+        """The token exchange can break on the network, on JWT validation or on a bug of
+        ours. Those carry no OAuth error code and must not reach the user as a bare 500."""
+        mock_get_oidc.return_value.authorize_access_token.side_effect = ValueError("boom")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR") as logs:
+            response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert "Er is een storing in de koppeling met de inlogdienst" in response.content.decode()
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+        # Recovering for the user must not hide the bug: still reported, with its traceback.
+        [record] = logs.records
+        assert record.exc_info is not None
+        assert record.request.path == reverse("auth")
+        assert "ValueError" in record.getMessage()

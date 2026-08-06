@@ -68,7 +68,7 @@ def login(request):
 def auth(request):
     try:
         oidc_response = _get_oidc().authorize_access_token(request)
-    except OAuthError as exc:
+    except Exception as exc:  # noqa: BLE001 (blind except) - every callback failure belongs on the login page, not on a 500; unexpected ones are still logged and reported
         return _handle_callback_error(request, exc)
 
     request.session.pop(OIDC_AUTH_RETRY_SESSION_KEY, None)
@@ -102,25 +102,32 @@ def auth(request):
     return response
 
 
-def _handle_callback_error(request, exc: OAuthError):
-    """Recover from an `?error=...` redirect on the callback instead of raising a 500.
+def _handle_callback_error(request, exc: Exception):
+    """Recover from a failed callback instead of raising a 500.
 
-    Keycloak sends one when it cannot resolve its authentication session: the login
-    screen sat open past its timeout, or a link on it re-entered the authorize endpoint
-    with only client_id and tab_id (https://github.com/keycloak/keycloak/issues/16063).
+    Usually an `?error=...` redirect, which Keycloak sends when it cannot resolve its
+    authentication session: the login screen sat open past its timeout, or a link on it
+    re-entered the authorize endpoint with only client_id and tab_id
+    (https://github.com/keycloak/keycloak/issues/16063).
+
+    Anything else that breaks the token exchange (the network, JWT validation, a bug of
+    ours) lands here too. It has no OAuth error code, so it can never match the expected
+    set and always takes the ERROR branch: reported, and not worth a retry.
     """
+    error = exc.error if isinstance(exc, OAuthError) else type(exc).__name__
+    description = exc.description if isinstance(exc, OAuthError) else str(exc)
     # Parameter names, never values: those carry tokens. A `state` means Keycloak still
     # had the client context (from KC_RESTART), no `state` means it lost the parameters.
     log_args = (
-        exc.error,
-        exc.description,
+        error,
+        description,
         sorted(request.GET.keys()),
         request.headers.get("Referer", ""),
     )
     already_retried = request.session.get(OIDC_AUTH_RETRY_SESSION_KEY, False)
     request.session.pop(OIDC_AUTH_RETRY_SESSION_KEY, None)
 
-    if exc.error not in OIDC_EXPECTED_CALLBACK_ERRORS:
+    if error not in OIDC_EXPECTED_CALLBACK_ERRORS:
         logger.error(
             "OIDC callback failed with %s (%s), query params: %s, referer: %s",
             *log_args,
@@ -133,7 +140,7 @@ def _handle_callback_error(request, exc: OAuthError):
     logger.warning("OIDC callback error %s (%s), query params: %s, referer: %s", *log_args)
 
     # access_denied is a deliberate refusal by the user or the upstream IdP.
-    if already_retried or exc.error == "access_denied":
+    if already_retried or error == "access_denied":
         return render(request, "login_error.html", {"recoverable": True}, status=400)
 
     # login redirects straight back to Keycloak, so one restart costs the user nothing.
