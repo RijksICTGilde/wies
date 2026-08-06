@@ -1,5 +1,7 @@
 {% for assignment in object_list %}
-  <nldd-card background="tinted" accessible-label="{{ assignment.name }}" button hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  {# href houdt de kaart een echte link (hover, ⌘/middenklik → eigen tab);
+     hx_link_guard.js vangt de gewone klik zodat htmx het paneel opent. #}
+  <nldd-card background="tinted" accessible-label="{{ assignment.name }}" href="{{ assignment.panel_url }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
   <h3>{{ assignment.name }}</h3>
