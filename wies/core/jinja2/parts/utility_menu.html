@@ -9,9 +9,9 @@
      server-side as data-scheme on <html>. The hidden csrf input feeds the
      fetch in theme_menu.js; the cookie name differs per environment, so the
      token comes from the markup. #}
-  <nldd-menu-item text="Weergave" icon="eye">
+  <nldd-menu-item text="Weergave" icon="appearance">
   <nldd-menu data-theme-url="{{ url('user-theme') }}">
-  <nldd-menu-item data-theme-choice="system" type="radio" text="Systeem" icon="desk-with-screen" {% if not request.user.colleague or request.user.colleague.theme == 'system' %}selected{% endif %}></nldd-menu-item>
+  <nldd-menu-item data-theme-choice="system" type="radio" text="Systeem" icon="display" {% if not request.user.colleague or request.user.colleague.theme == 'system' %}selected{% endif %}></nldd-menu-item>
   <nldd-menu-item data-theme-choice="light" type="radio" text="Licht" icon="sun" {% if request.user.colleague and request.user.colleague.theme == 'light' %}selected{% endif %}></nldd-menu-item>
   <nldd-menu-item data-theme-choice="dark" type="radio" text="Donker" icon="moon" {% if request.user.colleague and request.user.colleague.theme == 'dark' %}selected{% endif %}></nldd-menu-item>
   </nldd-menu>
