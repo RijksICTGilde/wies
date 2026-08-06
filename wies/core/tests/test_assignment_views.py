@@ -1,5 +1,6 @@
 import datetime
 import importlib
+import uuid
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
@@ -20,7 +21,6 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.public_id import generate_public_id
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
@@ -473,7 +473,7 @@ class AssignmentEditAttributeTest(TestCase):
         as a 404-vs-200 existence oracle over sequential PKs."""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("inline-edit", args=["assignment", generate_public_id(), "name"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", uuid.uuid4(), "name"]))
 
         assert response.status_code == 200
         self.assertContains(response, "geen rechten")

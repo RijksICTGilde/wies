@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -8,7 +9,6 @@ from django.urls import reverse
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
-from wies.core.public_id import generate_public_id
 
 User = get_user_model()
 
@@ -425,7 +425,7 @@ class UserViewsTest(TestCase):
         """Test deletion of non-existent user returns 404"""
         self.client.force_login(self.auth_user)
 
-        response = self.client.post(reverse("user-delete", args=[generate_public_id()]))
+        response = self.client.post(reverse("user-delete", args=[uuid.uuid4()]))
         assert response.status_code == 404
 
     def test_user_delete_requires_login(self):
@@ -617,7 +617,7 @@ class UserViewsTest(TestCase):
         """Test editing of non-existent user returns 404"""
         self.client.force_login(self.auth_user)
 
-        response = self.client.get(reverse("user-edit", args=[generate_public_id()]))
+        response = self.client.get(reverse("user-edit", args=[uuid.uuid4()]))
         assert response.status_code == 404
 
     def test_user_edit_requires_login(self):

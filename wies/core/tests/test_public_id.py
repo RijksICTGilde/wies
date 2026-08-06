@@ -31,7 +31,6 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.public_id import generate_public_id
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
@@ -264,7 +263,7 @@ class PlacementPanelParamTests(TestCase):
         hidden = self._placement(start_offset=-30, end_offset=-10)
 
         assert self._panel(hidden.public_id).status_code == 404
-        assert self._panel(generate_public_id()).status_code == 404
+        assert self._panel(uuid.uuid4()).status_code == 404
 
     def test_malformed_value_is_404(self):
         assert self._panel("not-a-uuid").status_code == 404
@@ -573,7 +572,7 @@ class FilterFacetFailClosedTests(TestCase):
         assert self._shows_placement({})
 
     def test_unknown_value_matches_nothing_for_every_facet(self):
-        stranger = str(generate_public_id())
+        stranger = str(uuid.uuid4())
         for param in self.FACETS:
             with self.subTest(param=param):
                 assert not self._shows_placement({param: stranger})
@@ -603,7 +602,7 @@ class FilterFacetFailClosedTests(TestCase):
         the clear-all button, so the user can get back. Asserted on the chip
         strip's marker, since the modal footer renders a clear-all button
         unconditionally and its raw text would pass either way."""
-        stranger = str(generate_public_id())
+        stranger = str(uuid.uuid4())
         for param in self.FACETS:
             with self.subTest(param=param):
                 page = self._page({param: stranger})
@@ -621,7 +620,7 @@ class FilterFacetFailClosedTests(TestCase):
             "merk": "Onbekend merk",
             "labels": "Onbekend label",
         }
-        stranger = str(generate_public_id())
+        stranger = str(uuid.uuid4())
         for param, label in chip_labels.items():
             with self.subTest(param=param):
                 assert label in self._page({param: stranger})

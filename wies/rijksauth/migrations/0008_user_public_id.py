@@ -2,8 +2,6 @@ import uuid
 
 from django.db import migrations, models
 
-from wies.core.public_id import generate_public_id
-
 MODELS = ["user"]
 
 BATCH_SIZE = 1000
@@ -43,7 +41,7 @@ class Migration(migrations.Migration):
             migrations.AlterField(
                 model_name=model_name,
                 name="public_id",
-                field=models.UUIDField(default=generate_public_id, editable=False, unique=True),
+                field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
             )
             for model_name in MODELS
         ],

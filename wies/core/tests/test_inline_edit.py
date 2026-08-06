@@ -7,6 +7,7 @@ avoid leaking into unrelated tests.
 """
 
 import re
+import uuid
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -38,7 +39,6 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
-from wies.core.public_id import generate_public_id
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.widgets import OrgPickerWidget
@@ -127,7 +127,7 @@ class InlineEditInfrastructureTest(TestCase):
         REGISTRY.update(self._prev_registry)
 
     def test_unknown_model_returns_404(self):
-        resp = self.client.get(reverse("inline-edit", args=["unknown", generate_public_id(), "name"]))
+        resp = self.client.get(reverse("inline-edit", args=["unknown", uuid.uuid4(), "name"]))
         assert resp.status_code == 404
 
     def test_unknown_name_returns_404(self):
@@ -1502,7 +1502,7 @@ class OrgPickerWidgetTest(TestCase):
     def test_field_rejects_unknown_public_id(self):
         f = OrganizationsField(required=True)
         with self.assertRaises(ValidationError):  # noqa: PT027
-            f.clean([{"organization": generate_public_id(), "role": "PRIMARY"}])
+            f.clean([{"organization": uuid.uuid4(), "role": "PRIMARY"}])
 
 
 class InlineOrganizationsEditTest(TestCase):

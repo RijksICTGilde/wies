@@ -3,6 +3,10 @@
 A UUIDv4, the industry-standard opaque unguessable identifier, so URLs never
 expose the sequential PK. Rationale (and why it is a separate column, not the PK)
 in ``features/public_id.md``.
+
+The models default the column to ``uuid.uuid4`` directly rather than to a helper
+here, so the migrations that declare the field import nothing but the standard
+library and stay frozen in time.
 """
 
 from __future__ import annotations
@@ -15,10 +19,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from django.db.models import Model
     from django.http import HttpRequest
-
-
-def generate_public_id() -> uuid.UUID:
-    return uuid.uuid4()
 
 
 def parse_public_ids(values) -> list[uuid.UUID]:

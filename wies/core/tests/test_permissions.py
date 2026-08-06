@@ -4,6 +4,7 @@ Covers the engine surface (verb composition, field vs whole-object
 lookup) and the production rules in ``permissions.py``.
 """
 
+import uuid
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -19,7 +20,6 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.public_id import generate_public_id
 
 User = get_user_model()
 
@@ -194,7 +194,7 @@ class InlineEditExistenceOracleTest(_Setup):
         owner-only) and cannot see it (it is planned). The response for the real,
         hidden placement must match the response for a non-existent public_id."""
         self.client.force_login(self.unrelated_user)
-        missing_public_id = generate_public_id()
+        missing_public_id = uuid.uuid4()
 
         forbidden = self._get(self.placement.public_id)
         missing = self._get(missing_public_id)

@@ -19,7 +19,7 @@ Everything that is reachable from the client: `LabelCategory`, `Label`,
 declares the field the same way:
 
 ```python
-public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
+public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 ```
 
 It appears in the object URLs (panels `?opdracht=`/`?collega=`/
@@ -131,11 +131,17 @@ anyway; there is simply no reason for it, and real migration risk.)
 2. Write the migration in three steps (nullable, backfill distinct values,
    then unique + non-null). One `AddField` with a callable default gives
    every existing row the _same_ value and breaks the unique constraint.
-   See `wies/core/migrations/0012_public_ids.py`: its model list and its
-   backfill loop are spelled out in the migration itself, so a later change
-   to the app cannot change what an old migration does. The field default
-   is the one thing it imports, since it has to be the very callable the
-   model declares or `makemigrations` keeps proposing a follow-up.
+   See `wies/core/migrations/0012_public_ids.py`: it imports nothing but the
+   standard library. The model list, the backfill loop and the field default
+   all live in the migration itself, so a later change to the app cannot
+   change what an old migration does.
+
+   This is why the field default is `uuid.uuid4` and not a helper of ours.
+   Django compares the default by callable identity, so a migration-local
+   copy of an app function is a _different_ callable and `makemigrations`
+   keeps proposing an `AlterField` for it forever. A stdlib callable is the
+   same object everywhere and can never move.
+
 3. Route on `<uuid:public_id>` and look the object up by `public_id`.
 4. If the model appears in a filter facet, resolve it through
    `FacetResolver` so it inherits the fail-closed behaviour.
@@ -163,10 +169,11 @@ anyway; there is simply no reason for it, and real migration risk.)
 
 ## Key files
 
-- `wies/core/public_id.py`: `generate_public_id` (uuid4),
-  `parse_public_ids` (filter-input parsing), and `ResolvedFacet` /
-  `resolve_facet` / `FacetResolver` (per-request facet resolution)
-- `wies/core/models.py`: the per-model `public_id` field
+- `wies/core/public_id.py`: `parse_public_ids` (filter-input parsing) and
+  `ResolvedFacet` / `resolve_facet` / `FacetResolver` (per-request facet
+  resolution)
+- `wies/core/models.py`: the per-model `public_id` field, defaulting to
+  `uuid.uuid4`
 - `wies/core/views.py`: `PublicIdFacetsMixin`, which gives a list view its
   `facets` resolver and the shared org-filter/chip helpers
 - `wies/core/inline_edit/forms.py`: `use_public_id_choices` (select

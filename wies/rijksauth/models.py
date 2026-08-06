@@ -1,8 +1,8 @@
+import uuid
+
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models.functions import Lower
-
-from wies.core.public_id import generate_public_id
 
 
 class UserManager(BaseUserManager):
@@ -20,7 +20,7 @@ class UserManager(BaseUserManager):
 class User(AbstractUser):
     username = None
     # URL-facing identifier; the integer PK is never exposed in URLs.
-    public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     email = models.EmailField()
 
     # Stable OIDC subject identifier (issuer-unique `sub` claim). Bound on the

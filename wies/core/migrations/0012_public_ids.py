@@ -2,8 +2,6 @@ import uuid
 
 from django.db import migrations, models
 
-from wies.core.public_id import generate_public_id
-
 # Every URL-exposed core model; the User model lives in rijksauth and gets its
 # own migration, since migrations cannot span apps.
 MODELS = [
@@ -57,7 +55,7 @@ class Migration(migrations.Migration):
             migrations.AlterField(
                 model_name=model_name,
                 name="public_id",
-                field=models.UUIDField(default=generate_public_id, editable=False, unique=True),
+                field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
             )
             for model_name in MODELS
         ],

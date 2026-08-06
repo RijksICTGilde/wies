@@ -19,7 +19,7 @@ so exposing it lets any logged-in user enumerate records. A model that is
 reachable from the client carries a `public_id` instead:
 
 ```python
-public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
+public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
 ```
 
 Route on `<uuid:public_id>`, look the object up by `public_id`, and resolve
@@ -27,6 +27,21 @@ filter facets through `FacetResolver` so they inherit the fail-closed
 behaviour. The migration needs three steps (nullable, backfill distinct
 values, then unique + non-null); one `AddField` with a callable default gives
 every existing row the same value. Full workflow: `features/public_id.md`.
+
+## Migrations Stay Self-Contained
+
+A migration must import nothing from the app: it is frozen in time, and app
+code is not. Spell the model list, the data loop and the field default out in
+the migration itself. Prefer a stdlib callable for a field default
+(`uuid.uuid4`, not a helper of ours): Django compares defaults by callable
+identity, so a migration-local copy of an app function is a different callable
+and `makemigrations` keeps proposing an `AlterField` for it forever.
+
+A test that drives the executor (`test_*_migration.py`) must return the
+database to the graph's leaf in `tearDown`, never to a hardcoded name.
+Migrating to a target that is already applied puts the executor in backwards
+mode, so a fixed name silently rolls back everything added after it and leaves
+the rest of the suite on an outdated schema.
 
 ## Dummy Data
 

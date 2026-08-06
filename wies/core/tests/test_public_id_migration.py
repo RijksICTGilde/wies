@@ -9,6 +9,7 @@ import uuid
 
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase
 
 APP = "core"
@@ -27,6 +28,13 @@ class PublicIdBackfillMigrationTest(TransactionTestCase):
     def _apps_at(self, target):
         return MigrationExecutor(connection).loader.project_state((APP, target)).apps
 
+    def _migrate_to_latest(self):
+        # Resolved from the graph, never hardcoded: migrating to a named target
+        # that is already applied puts the executor in backwards mode, so a fixed
+        # name would silently roll back every migration added after it and leave
+        # the rest of the suite on an outdated schema.
+        self._migrate(MigrationLoader(connection).graph.leaf_nodes(APP)[0][1])
+
     def setUp(self):
         # Roll back to the state just before the column exists, and fill it with
         # rows that the migration has to backfill.
@@ -38,7 +46,7 @@ class PublicIdBackfillMigrationTest(TransactionTestCase):
 
     def tearDown(self):
         # Leave the DB at the latest migration for the rest of the suite.
-        self._migrate(MIGRATE_TO)
+        self._migrate_to_latest()
 
     def test_every_existing_row_gets_its_own_public_id(self):
         self._migrate(MIGRATE_TO)
