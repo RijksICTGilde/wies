@@ -6,7 +6,6 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
-from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.user import UserEditables
 
@@ -20,7 +19,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 __all__ = [
-    "AssignmentCreateForm",
     "LabelCategoryForm",
     "LabelForm",
     "ServiceForm",
@@ -300,31 +298,6 @@ class UserForm(NlddFormMixin, forms.ModelForm):
                 cleaned_data["labels"].extend(selected_labels)
 
         return cleaned_data
-
-
-class AssignmentCreateForm(NlddFormMixin, forms.Form):
-    """Full-page form for creating a new Assignment.
-
-    Field configurations come from ``AssignmentEditables`` so the create
-    flow stays in lockstep with the inline-edit declarations. The form
-    is a plain ``forms.Form`` (not ``ModelForm``) because the create
-    flow handles its own multi-table atomic save (Assignment +
-    AssignmentOrganizationUnit + Services + Placements).
-    """
-
-    name = AssignmentEditables.name.form_field()
-    extra_info = AssignmentEditables.extra_info.form_field()
-    start_date = AssignmentEditables.start_date.form_field()
-    end_date = AssignmentEditables.end_date.form_field()
-    owner = AssignmentEditables.owner.form_field()
-    organizations = AssignmentEditables.organizations.form_field()
-
-    def clean(self):
-        cleaned = super().clean()
-        start, end = cleaned.get("start_date"), cleaned.get("end_date")
-        if start and end and end < start:
-            raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
-        return cleaned
 
 
 class ServiceForm(NlddFormMixin, forms.Form):

@@ -47,13 +47,10 @@ from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     CATEGORY_COLOR_CHOICES,
-    AssignmentCreateForm,
-    LabelCategoryForm,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
     ProfileNameForm,
-    ServiceFormSet,
     SuborganizationForm,
     UserForm,
 )
@@ -81,8 +78,6 @@ from .querysets import (
 from .services.assignments import (
     apply_team_change,
     assignment_edit_specs,
-    create_assignment_from_form,
-    extract_services_data,
     initial_row_to_services_data,
 )
 from .services.events import create_event
@@ -2108,107 +2103,6 @@ def label_admin(request):
     return render(request, "label_admin.html", {"categories": categories})
 
 
-@permission_required("core.change_labelcategory", raise_exception=True)
-def label_category_create(request):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-
-    """Create a new label category"""
-    form_post_url = reverse("label-category-create")
-    modal_title = "Nieuwe categorie"
-    element_id = "labelFormModal"
-    form_button_label = "Toevoegen"
-
-    if request.method == "GET":
-        form = LabelCategoryForm()
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-            },
-        )
-    if request.method == "POST":
-        form = LabelCategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-            },
-        )
-    return None
-
-
-@permission_required("core.change_labelcategory", raise_exception=True)
-def label_category_edit(request, pk):
-    """
-    Edit a label category
-    Returns a partial html page, to be used with htmx
-    """
-
-    category = get_object_or_404(LabelCategory, pk=pk)
-    form_post_url = reverse("label-category-edit", kwargs={"pk": pk})
-    modal_title = f"Bewerk categorie: {category.name}"
-    form_button_label = "Opslaan"
-    element_id = "labelFormModal"
-
-    if request.method == "GET":
-        form = LabelCategoryForm(instance=category)
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
-            },
-        )
-    if request.method == "POST":
-        form = LabelCategoryForm(request.POST, instance=category)
-        if form.is_valid():
-            form.save()
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
-
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
-            },
-        )
-    return None
-
-
 @login_required
 @require_POST
 def user_theme(request):
@@ -2578,20 +2472,41 @@ def suborganization_admin(request):
 
 @permission_required("core.add_suborganization", raise_exception=True)
 def suborganization_create(request):
-    """Create a suborganization. POST-only; re-renders the merk list partial (htmx)."""
+    """Create a suborganization via the sheet (htmx).
+
+    GET opens the sheet; a valid POST saves and re-renders the merk list while
+    closing the sheet; an invalid POST re-renders only the sheet body so the
+    open sheet keeps standing (mirrors the label form flow).
+    """
+    form_post_url = reverse("suborganization-create")
+    modal_title = "Merk toevoegen"
+    form_button_label = "Voeg merk toe"
+    element_id = "suborganizationFormModal"
+
     if request.method == "POST":
         form = SuborganizationForm(request.POST)
         if form.is_valid():
             form.save()
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-            return render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
-        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-        return render(
-            request,
-            "parts/suborganization_list.html",
-            {"suborganizations": suborganizations, "errors": dict(form.errors.items())},
-        )
-    return HttpResponse(status=405)
+            response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
+            response["HX-Retarget"] = "#suborganization_list_container"
+            response["HX-Trigger"] = "closeModal"
+            return response
+    else:
+        form = SuborganizationForm()
+
+    return render(
+        request,
+        "parts/generic_form_modal.html",
+        {
+            "content": form,
+            "form_post_url": form_post_url,
+            "modal_title": modal_title,
+            "form_button_label": form_button_label,
+            "modal_element_id": element_id,
+            "target_element_id": element_id,
+        },
+    )
 
 
 @permission_required("core.change_suborganization", raise_exception=True)
@@ -3177,78 +3092,6 @@ Disallow: /
     return HttpResponse(content, content_type="text/plain")
 
 
-@permission_required("core.add_assignment", raise_exception=True)
-def assignment_create(request):
-    """Handle assignment creation - standalone form page."""
-    template = "assignment_create.html"
-
-    skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-    skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
-
-    if request.method == "GET":
-        initial = {}
-        if hasattr(request.user, "colleague"):
-            initial["owner"] = request.user.colleague
-        form = AssignmentCreateForm(initial=initial)
-        service_formset = ServiceFormSet(prefix="service", form_kwargs={"skill_choices": skill_choices})
-        return render(request, template, {"form": form, "service_formset": service_formset})
-
-    if request.method == "POST":
-        form = AssignmentCreateForm(request.POST)
-        service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
-
-        # Check if at least one service has a skill selected (works even when formset is invalid)
-        raw_total_forms = request.POST.get("service-TOTAL_FORMS", "0")
-        # A crafted/non-numeric management-form value must not crash the view; treat
-        # it as zero rows, which surfaces the normal "add at least one role" error.
-        total_forms = min(int(raw_total_forms), 100) if raw_total_forms.isdigit() else 0
-        has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
-        services_error = "" if has_any_service else "Voeg minimaal één rol toe."
-
-        form_valid = form.is_valid()
-        formset_valid = service_formset.is_valid()
-
-        if not form_valid or not formset_valid or services_error:
-            if services_error:
-                form.add_error(None, services_error)
-            return render(request, template, {"form": form, "service_formset": service_formset})
-
-        services_data = extract_services_data(service_formset)
-        orgs = form.cleaned_data["organizations"]
-        primary_org = next(o["organization"] for o in orgs if o["role"] == "PRIMARY")
-        involved_orgs = [o["organization"] for o in orgs if o["role"] == "INVOLVED"]
-
-        assignment = create_assignment_from_form(
-            name=form.cleaned_data["name"],
-            extra_info=form.cleaned_data.get("extra_info", ""),
-            start_date=form.cleaned_data.get("start_date"),
-            end_date=form.cleaned_data.get("end_date"),
-            owner=form.cleaned_data.get("owner"),
-            primary_organization_id=primary_org.id,
-            involved_organization_ids=[o.id for o in involved_orgs],
-            services_data=services_data,
-        )
-
-        create_event(
-            object_type="Assignment",
-            action="create",
-            source="user",
-            object_id=assignment.id,
-            user=request.user,
-            request=request,
-            context=_assignment_audit_snapshot(assignment),
-        )
-
-        link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
-        messages.success(
-            request,
-            f'Opdracht "{assignment.name}" is aangemaakt.',
-            extra_tags=f"link:{link_url}|Bekijk opdracht",
-        )
-        return redirect("assignment-list")
-    return HttpResponse(status=405)
-
-
 def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
@@ -3767,7 +3610,12 @@ def _attach_formset_error(formset, message: str) -> None:
 
 def _handle_inline_edit_collection(request, editable_set, spec: EditableCollection, obj) -> HttpResponse:
     # FormSet equivalent of the Editable/Group path in inline_edit_view.
+    # A read-only collection (no save) still renders its display, but has no
+    # editable form: saving and the edit-form GET are rejected.
+    read_only = spec.save is None
     if request.method == "POST":
+        if read_only:
+            raise Http404("Collection is not editable")
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
             conflict = False
@@ -3810,6 +3658,8 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
     if request.GET.get("edit"):
+        if read_only:
+            raise Http404("Collection is not editable")
         formset = spec.formset_factory(initial=spec.initial(obj))
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)

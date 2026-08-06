@@ -1,4 +1,4 @@
-"""Editables for Assignment. Reused by the inline-edit view and AssignmentCreateForm.
+"""Editables for Assignment. Reused by the inline-edit view and the assignment-create sheet.
 
 Permissions live in ``wies/core/permissions.py``.
 """
@@ -15,7 +15,6 @@ from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.placement_visibility import LABELS, evaluate
-from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
 from wies.core.services.urls import current_page_path
 from wies.core.widgets import ComboBoxSelect
 
@@ -95,7 +94,6 @@ def _organizations_render_change(state) -> str:
 
 
 def _skill_choices():
-    # Matches the shape used by assignment-create so service_row.html renders identically.
     choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
     choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
     return choices
@@ -190,19 +188,13 @@ def _services_display_context(assignment, request) -> dict:
 
 
 def _services_formset_factory(data=None, initial=None):
-    # prefix="service" matches assignment_create.html / service_row.html / assignment_form.js
-    # so the same row partial renders identically on create and inline-edit.
+    # prefix="service" is the formset prefix the member-edit sheet posts under.
     from wies.core.forms import ServiceFormSet  # noqa: PLC0415 — avoids circular import
 
     kwargs = {"prefix": "service", "form_kwargs": {"skill_choices": _skill_choices()}}
     if data is not None:
         return ServiceFormSet(data, **kwargs)
     return ServiceFormSet(initial=initial or [], **kwargs)
-
-
-def _save_services(assignment, formset):
-    services_data = extract_services_data(formset)
-    apply_services_to_assignment(assignment, services_data)
 
 
 def _fmt_date(value) -> str | None:
@@ -415,16 +407,19 @@ class AssignmentEditables(EditableSet):
         display="forms/displays/organizations.html",
     )
 
+    # No form_template/save: the collection is not edited in place. The team is
+    # shown via `display` and edited through the per-member sheet
+    # (assignment_member_edit_view), which uses `formset_factory` directly and
+    # audits via apply_team_change — so audit_state/render_change/visible_changes
+    # stay. The permission (`user_can_edit_team`) still gates the member sheet.
     services = EditableCollection(
         label="Team",
         formset_factory=_services_formset_factory,
         initial=_services_initial,
-        save=_save_services,
         audit_state=_services_audit_state,
         render_change=_services_render_change,
         visible_changes=_services_visible_changes,
         hide_edit_button=True,
-        form_template="parts/assignment_services_form.html",
         display="forms/displays/assignment_services.html",
         display_context=_services_display_context,
     )

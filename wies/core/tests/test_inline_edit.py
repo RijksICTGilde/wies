@@ -19,12 +19,12 @@ from wies.core.editables.assignment import AssignmentEditables, _services_render
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
-from wies.core.forms import AssignmentCreateForm
 from wies.core.inline_edit.base import (
     Editable,
     EditableGroup,
     EditableSet,
 )
+from wies.core.inline_edit.forms import build_combined_form_class
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -38,6 +38,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.widgets import OrgPickerWidget
@@ -751,28 +752,30 @@ class AssignmentEditablesFullTest(TestCase):
 
 
 class AssignmentCreateFormIntegrationTest(TestCase):
-    """Verify that AssignmentCreateForm composes its fields from the
-    shared AssignmentEditables declaration — labels/widgets/errors that
-    change on the Editable must flow through into the create form
-    automatically.
+    """Verify that the assignment-create sheet form composes its fields from the
+    shared AssignmentEditables declaration — labels/widgets/errors that change on
+    the Editable must flow through automatically. The form is built from
+    ``assignment_create_specs()`` (the live create-sheet flow).
     """
 
+    def _form_cls(self):
+        form_cls, _ = build_combined_form_class(assignment_create_specs())
+        return form_cls
+
     def test_labels_come_from_editables(self):
-        form = AssignmentCreateForm()
-        # Each form field's label matches the Editable's label.
+        form = self._form_cls()()
         for name in ["name", "extra_info", "start_date", "end_date", "owner"]:
-            assert form.fields[name].label == getattr(AssignmentEditables, name).label
+            assert str(form.fields[name].label) == str(getattr(AssignmentEditables, name).label)
 
     def test_owner_queryset_filtered_to_bdm_group(self):
-        # ModelChoiceField queryset is derived from Editable.choices — it
-        # includes the BDM group filter defined in the editables module.
-        form = AssignmentCreateForm()
+        # The owner queryset is derived from the Editable's choices — it includes
+        # the BDM group filter defined in the editables module.
+        form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        # The generated SQL references the BDM group name.
         assert "Business Development Manager" in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
-        form = AssignmentCreateForm(
+        form = self._form_cls()(
             data={
                 "name": "X",
                 "start_date": "2026-06-01",
@@ -972,14 +975,19 @@ class AssignmentServicesDisplayTest(TestCase):
 
 
 class AssignmentServicesAuditTest(TestCase):
-    """Saving the services collection emits one audit event with a
-    before/after team summary."""
+    """Editing one team member via the member-edit route emits one audit
+    event with a before/after team summary.
 
-    FORMSET_MGMT_KEYS = {
-        "service-INITIAL_FORMS": "2",
-        "service-MIN_NUM_FORMS": "1",
-        "service-MAX_NUM_FORMS": "1000",
-    }
+    Team editing moved from the (now read-only) ``services`` inline-edit
+    collection to the per-member flow: the ``assignment-member-edit`` route
+    posts a single row (formset prefix ``service``, index 0) and reconstructs
+    the rest of the team from the database. Because a member POST only touches
+    its own row, every save produces a one-row audit diff — which is exactly
+    what these tests already assert. The endpoint routes through
+    ``apply_team_change``, the same audit machinery the old inline-edit save
+    used, so the event context (``field_name``/``field_label``/``changes``) is
+    unchanged.
+    """
 
     def setUp(self):
         self.client = Client()
@@ -1002,48 +1010,49 @@ class AssignmentServicesAuditTest(TestCase):
         self.vacant_service = Service.objects.create(
             description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+        self.member_url = reverse("assignment-member-edit", args=[self.assignment.id])
 
-    def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
+    def _post_member(self, row):
+        """POST one team-member row to the member-edit endpoint the way the
+        child sheet does: a single-row formset under the ``service`` prefix."""
         data = {
-            f"service-{idx}-id": str(service.id),
-            f"service-{idx}-skill": str(skill.id),
-            f"service-{idx}-description": description,
-            f"service-{idx}-is_filled": "ingevuld" if is_filled else "aanvraag",
-            f"service-{idx}-has_custom_period": "on",  # inherit assignment period
+            "service-TOTAL_FORMS": "1",
+            "service-INITIAL_FORMS": "0",
+            "service-MIN_NUM_FORMS": "0",
+            "service-MAX_NUM_FORMS": "1000",
+            **{f"service-0-{key}": value for key, value in row.items()},
+            "terug_url": f"/?opdracht={self.assignment.id}",
+        }
+        return self.client.post(self.member_url, data)
+
+    def _member_row(self, *, service, skill, description, is_filled=False, colleague=None):
+        row = {
+            "id": str(service.id),
+            "skill": str(skill.id),
+            "description": description,
+            "is_filled": "ingevuld" if is_filled else "aanvraag",
+            "has_custom_period": "on",  # inherit assignment period
         }
         if is_filled and colleague is not None:
-            data[f"service-{idx}-colleague"] = str(colleague.id)
+            row["colleague"] = str(colleague.id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
-                data[f"service-{idx}-placement_id"] = str(placement.id)
-        return data
+                row["placement_id"] = str(placement.id)
+        return row
 
     def test_services_post_emits_event_on_change(self):
         # Fill the previously vacant Java service with the colleague — the
         # diff should list one "Gewijzigd" line for it.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
-                service=self.filled_service,
-                skill=self.skill_python,
-                description="Filled",
-                is_filled=True,
-                colleague=self.colleague,
-            ),
-            **self._row(
-                1,
+        resp = self._post_member(
+            self._member_row(
                 service=self.vacant_service,
                 skill=self.skill_java,
                 description="Vacant",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
         event = events[0]
@@ -1059,41 +1068,36 @@ class AssignmentServicesAuditTest(TestCase):
         assert change["new"]["colleague_name"] == self.colleague.name
 
     def test_services_post_no_change_no_event(self):
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
+        # Re-post the filled row exactly as it stands: no field changes, so
+        # the before/after team state is identical and no event is emitted.
+        resp = self._post_member(
+            self._member_row(
                 service=self.filled_service,
                 skill=self.skill_python,
                 description="Filled",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
     def test_services_post_emits_event_on_period_change(self):
         """A period-only edit still emits a team audit event (#393)."""
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            # Filled row: drop the inherit checkbox and give a custom period.
-            "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.id),
-            "service-0-description": "Filled",
-            "service-0-is_filled": "ingevuld",
-            "service-0-colleague": str(self.colleague.id),
-            "service-0-placement_id": str(self.placement.id),
-            "service-0-placement_start_date": "2026-01-01",
-            "service-0-placement_end_date": "2026-06-30",
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        # Filled row: drop the inherit checkbox and give a custom period.
+        resp = self._post_member(
+            {
+                "id": str(self.filled_service.id),
+                "skill": str(self.skill_python.id),
+                "description": "Filled",
+                "is_filled": "ingevuld",
+                "colleague": str(self.colleague.id),
+                "placement_id": str(self.placement.id),
+                "placement_start_date": "2026-01-01",
+                "placement_end_date": "2026-06-30",
+            }
+        )
+        assert resp.status_code == 204
         self.placement.refresh_from_db()
         assert self.placement.specific_start_date is not None
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
@@ -1106,49 +1110,53 @@ class AssignmentServicesAuditTest(TestCase):
         """Flipping a filled service to "aanvraag" must free the placement,
         even when the (hidden) consultant select still posts its value —
         is_filled is authoritative, not the lingering colleague."""
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            # Filled row switched to aanvraag, but colleague + placement_id
-            # still posted (JS only hides the field; this is the bug case).
-            "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.id),
-            "service-0-description": "Filled",
-            "service-0-is_filled": "aanvraag",
-            "service-0-has_custom_period": "on",
-            "service-0-colleague": str(self.colleague.id),
-            "service-0-placement_id": str(self.placement.id),
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        # Filled row switched to aanvraag, but colleague + placement_id
+        # still posted (JS only hides the field; this is the bug case).
+        resp = self._post_member(
+            {
+                "id": str(self.filled_service.id),
+                "skill": str(self.skill_python.id),
+                "description": "Filled",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+                "colleague": str(self.colleague.id),
+                "placement_id": str(self.placement.id),
+            }
+        )
+        assert resp.status_code == 204
         # Placement gone, service kept as an open aanvraag.
         assert not Placement.objects.filter(id=self.placement.id).exists()
         self.filled_service.refresh_from_db()
         assert self.filled_service.status == "OPEN"
         assert not self.filled_service.placements.exists()
 
-    def test_edit_formset_renders_pk_hidden_inputs(self):
-        """The hidden ``service-N-id`` and ``service-N-placement_id``
-        inputs must render so the formset round-trips PKs back to
-        apply_services_to_assignment. Without them every save would
-        delete-and-recreate (silently dropping Placement metadata)."""
-        resp = self.client.get(self.url + "?edit=true")
-        assert resp.status_code == 200
-        content = resp.content.decode()
+    def test_member_sheet_renders_pk_hidden_inputs(self):
+        """The member-edit sheet must render the hidden ``service-0-id`` and
+        ``service-0-placement_id`` inputs so the single-row POST round-trips
+        the PKs back to apply_services_to_assignment. Without them the save
+        would delete-and-recreate (silently dropping Placement metadata).
 
-        def hidden_value(field_name):
+        Each member opens in its own single-row sheet (``?teamlid=<id>``), so
+        the pks are asserted per row instead of across one combined formset."""
+
+        def hidden_value(content, field_name):
             m = re.search(
                 rf'<input type="hidden"\s+name="{re.escape(field_name)}"\s+value="([^"]*)"',
                 content,
             )
             return m.group(1) if m else None
 
-        # Vacancies-first sort: vacant row renders at index 0, filled at 1.
-        assert hidden_value("service-0-id") == str(self.vacant_service.id)
-        assert hidden_value("service-0-placement_id") == ""
-        assert hidden_value("service-1-id") == str(self.filled_service.id)
-        assert hidden_value("service-1-placement_id") == str(self.placement.id)
+        vacant = self.client.get(f"/?opdracht={self.assignment.id}&teamlid={self.vacant_service.id}")
+        assert vacant.status_code == 200
+        vacant_content = vacant.content.decode()
+        assert hidden_value(vacant_content, "service-0-id") == str(self.vacant_service.id)
+        assert hidden_value(vacant_content, "service-0-placement_id") == ""
+
+        filled = self.client.get(f"/?opdracht={self.assignment.id}&teamlid={self.filled_service.id}")
+        assert filled.status_code == 200
+        filled_content = filled.content.decode()
+        assert hidden_value(filled_content, "service-0-id") == str(self.filled_service.id)
+        assert hidden_value(filled_content, "service-0-placement_id") == str(self.placement.id)
 
     def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
         """Editing only the description must update the existing Service
@@ -1156,22 +1164,16 @@ class AssignmentServicesAuditTest(TestCase):
         audit event must list exactly one Toelichting line."""
         original_service_id = self.filled_service.id
         original_placement_id = self.placement.id
-        # Vacancies-first ordering: vacant row is index 0, filled at index 1.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(0, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-            **self._row(
-                1,
+        resp = self._post_member(
+            self._member_row(
                 service=self.filled_service,
                 skill=self.skill_python,
                 description="New description",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
 
         self.filled_service.refresh_from_db()
         self.placement.refresh_from_db()
@@ -1187,33 +1189,18 @@ class AssignmentServicesAuditTest(TestCase):
         assert changes[0]["old"]["description"] == "Filled"
         assert changes[0]["new"]["description"] == "New description"
 
-    def test_remove_row_via_team_bewerken_deletes_service(self):
-        """Bug: in "Team bewerken", clicking "Verwijderen" on a row and
-        then "Opslaan" must delete that row's service. The JS removes
-        the row from the DOM without renumbering or decrementing
-        ``TOTAL_FORMS``, so the server sees a gap in the form indexes.
-        Django's formset interprets the gap as an empty form, and
-        ``ServiceForm.clean()`` rejects it with "Vul een periode in...".
-        The save fails, the deleted row re-renders as a blank
-        errored form, and the user can never delete a team member."""
+    def test_remove_member_deletes_only_that_service(self):
+        """Removing a team member (its own "Verwijderen" route) deletes that
+        row's service and leaves the rest of the team untouched.
+
+        The old formset-gap deletion path is gone: deletion now has a
+        dedicated ``assignment-member-delete`` endpoint that reconstructs the
+        team minus the removed row, so the "blank errored form" bug the
+        original test guarded against can no longer occur."""
         original_vacant_id = self.vacant_service.id
-        # Only submit row 0 (the filled service), simulating the user
-        # having clicked "Verwijderen" on row 1 (the vacant one).
-        # TOTAL_FORMS is unchanged — this is the production behaviour.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
-                service=self.filled_service,
-                skill=self.skill_python,
-                description="Filled",
-                is_filled=True,
-                colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        delete_url = reverse("assignment-member-delete", args=[self.assignment.id, self.vacant_service.id])
+        resp = self.client.post(delete_url, {"terug_url": f"/?opdracht={self.assignment.id}"})
+        assert resp.status_code == 204
         # The removed service must actually be gone from the DB.
         assert not Service.objects.filter(id=original_vacant_id).exists()
         # And the surviving service is unchanged.
@@ -1318,8 +1305,6 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             period_source=Placement.SERVICE,
         )
 
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
-
     def test_initial_data_reflects_effective_period_per_row(self):
         """Direct check on ``_services_initial``: every row whose effective
         dates differ from the assignment must carry
@@ -1371,51 +1356,56 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             f"vs assignment {self.assignment_start} to {self.assignment_end}."
         )
 
-    def test_edit_get_renders_checkbox_state_matching_effective_period(self):
-        """End-to-end: GET ?edit on the team must render each row's
-        checkbox state matching its effective period."""
-        resp = self.client.get(self.url + "?edit=true")
-        assert resp.status_code == 200
-        content = resp.content.decode()
+    def test_member_sheet_renders_period_choice_matching_effective_period(self):
+        """End-to-end: opening a member's edit sheet (``?teamlid=<service-id>``)
+        must render that row's period choice matching its effective period.
 
-        def checkbox_html_for_placement(placement_id: int) -> str:
-            m = re.search(
-                rf'name="service-(\d+)-placement_id"\s+value="{placement_id}"',
+        Team editing moved to the per-member sheets, so each row is fetched
+        via its own single-row sheet instead of one combined ?edit render.
+        The old "Neem opdrachtperiode over" checkbox became a segmented
+        control (``data-period-choice``) backed by a hidden
+        ``has_custom_period`` input: ``value="on"`` / segment ``SERVICE`` =
+        inherit the assignment period, empty / segment ``PLACEMENT`` = custom.
+        The regression guarded is the same: a row whose effective dates differ
+        from the assignment must NOT come up as "inherit"."""
+
+        def period_state_for_service(service_id: int) -> tuple[str, str]:
+            """(hidden has_custom_period value, segmented-control value) for
+            the one row rendered in this member's sheet."""
+            resp = self.client.get(f"/?opdracht={self.assignment.id}&teamlid={service_id}")
+            assert resp.status_code == 200
+            content = resp.content.decode()
+            hidden = re.search(
+                r'<input[^>]*name="service-0-has_custom_period"[^>]*value="([^"]*)"',
                 content,
             )
-            assert m, f"no row found for placement_id={placement_id}"
-            idx = m.group(1)
-            # nldd-checkbox since the widget migration; keep <input> in the
-            # pattern so this still reads as "the checkbox", whatever renders it.
-            cb = re.search(
-                rf'<(?:input|nldd-checkbox)[^>]*name="service-{idx}-has_custom_period"[^>]*>',
-                content,
+            assert hidden, f"no has_custom_period input found for service {service_id}"
+            control = re.search(
+                r'<nldd-segmented-control[^>]*value="(SERVICE|PLACEMENT)"[^>]*data-period-choice', content
             )
-            assert cb, f"no has_custom_period checkbox found for row {idx}"
-            return cb.group(0)
+            assert control, f"no period-choice control found for service {service_id}"
+            return hidden.group(1), control.group(1)
 
-        inherit_html = checkbox_html_for_placement(self.placement_inherit.id)
-        custom_html = checkbox_html_for_placement(self.placement_custom.id)
-        via_service_html = checkbox_html_for_placement(self.placement_via_service.id)
+        inherit_value, inherit_segment = period_state_for_service(self.service_inherit.id)
+        custom_value, custom_segment = period_state_for_service(self.service_for_custom_placement.id)
+        via_value, via_segment = period_state_for_service(self.service_custom.id)
 
-        # Inheriting placement → checked (correct today).
-        assert "checked" in inherit_html, f"inheriting row missing checked attr: {inherit_html}"
-        # Placement with its own custom period → unchecked.
-        assert "checked" not in custom_html, (
-            "placement with period_source=PLACEMENT rendered with the "
-            '"Neem opdrachtperiode over" checkbox checked — its custom '
-            f"period is being hidden as inherited. checkbox: {custom_html}"
+        # Inheriting placement → "inherit assignment period" (correct today).
+        assert inherit_value == "on", f"inheriting row should render as inherit, got value={inherit_value!r}"
+        assert inherit_segment == "SERVICE"
+        # Placement with its own custom period → "custom".
+        assert custom_value == "", (
+            "placement with period_source=PLACEMENT rendered as inheriting the "
+            "assignment period — its custom period is being hidden."
         )
-        # Placement inheriting a custom service period → unchecked.
-        # This row appears with custom dates in the side panel, but in
-        # the team-edit form its checkbox comes up checked, contradicting
-        # the dates rendered below it.
-        assert "checked" not in via_service_html, (
-            "placement that inherits from a service with custom dates "
-            'rendered with the "Neem opdrachtperiode over" checkbox '
-            "checked — but its effective dates differ from the "
-            f"assignment period. checkbox: {via_service_html}"
+        assert custom_segment == "PLACEMENT"
+        # Placement inheriting a custom service period → "custom", because its
+        # effective dates differ from the assignment (the original bug).
+        assert via_value == "", (
+            "placement that inherits from a service with custom dates rendered "
+            "as inheriting the assignment period — but its effective dates differ."
         )
+        assert via_segment == "PLACEMENT"
 
 
 class ServicesRenderChangeUnitTests(TestCase):
