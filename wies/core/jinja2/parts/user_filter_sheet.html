@@ -1,0 +1,15 @@
+{# Filtersheet voor de gebruikerslijst. Hergebruikt exact het filter-systeem van
+   de opdrachten/plaatsingen-lijst (filter_sidebar.html + filter_interactions.js):
+   list-item-checkbox-rijen, top-3 + "Meer…", live filteren bij aanvinken. Anders
+   dan die pagina's staat het hier altijd als sheet (de linker sidebar is hier de
+   beheer-navigatie), geopend via de Filters-knop. user_filter.js opent hem. #}
+<nldd-sheet id="user-filter-sheet" placement="left" width="480px" accessible-label="Filters">
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="Filters" dismiss-text="Klaar"></nldd-top-title-bar>
+<nldd-simple-section>
+{% with filter_in_sheet = true %}
+  {% include "parts/filter_sidebar.html" %}
+{% endwith %}
+</nldd-simple-section>
+</nldd-page>
+</nldd-sheet>

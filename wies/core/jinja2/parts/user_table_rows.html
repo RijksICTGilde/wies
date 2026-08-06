@@ -6,7 +6,16 @@
   <nldd-avatar size="40" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell divider-start text="{{ user.first_name }} {{ user.last_name }}" supporting-text="{{ user.email }}"></nldd-text-cell>
+  {# Rol-tag(s) inline achter de naam (zoals de skill-tag bij een teamlid). Veel
+     dummy-users hebben geen groep; dan blijft het simpelweg naam + e-mail. #}
+  <nldd-text-cell divider-start width="full" supporting-text="{{ user.email }}">
+  <span>
+    {{ user.first_name }} {{ user.last_name }}
+    {% for group in user.groups.all() %}
+      <nldd-tag size="sm" color="neutral" text="{{ group.name }}"></nldd-tag>
+    {% endfor %}
+  </span>
+  </nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-cell>
   <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ user.get_full_name() or user.email }}">

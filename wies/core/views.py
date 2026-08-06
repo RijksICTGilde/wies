@@ -1547,11 +1547,11 @@ class UserListView(PermissionRequiredMixin, ListView):
             if suborganization_ids:
                 qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
 
-        # Role filter
+        # Rol-filter: multi-select (OR binnen de groep), zoals merk/labels.
         if exclude_filter != "rol":
-            role_filter = self.request.GET.get("rol")
-            if role_filter and role_filter.isdigit():
-                qs = qs.filter(groups__id=role_filter)
+            role_ids = [int(x) for x in self.request.GET.getlist("rol") if x.isdigit()]
+            if role_ids:
+                qs = qs.filter(groups__id__in=role_ids)
 
         return qs
 
@@ -1576,11 +1576,17 @@ class UserListView(PermissionRequiredMixin, ListView):
         if "HX-Request" in self.request.headers:
             if self.request.headers.get("HX-Target") == "side-panel-content":
                 return ["parts/colleague_panel_content.html"]
-            # If paginating, return only rows
+            # "Meer…"-sheet van één filtergroep (gedeeld met de lijsten).
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
+            # Filtersheet (alle groepen) openen.
+            if self.request.GET.get("filters"):
+                return ["parts/user_filter_sheet.html"]
+            # Paginering: alleen de extra rijen.
             if self.request.GET.get("pagina"):
                 return ["parts/user_table_rows.html"]
-            # Otherwise, return full table (for filter changes)
-            return ["parts/user_table.html"]
+            # Filterwijziging: vervang de resultatenlijst (sheet swapt OOB mee).
+            return ["parts/user_results.html"]
         return ["user_admin.html"]
 
     def get_context_data(self, **kwargs):
@@ -1612,8 +1618,9 @@ class UserListView(PermissionRequiredMixin, ListView):
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
-        role_filter = self.request.GET.get("rol")
-        if role_filter and role_filter.isdigit():
+        # rol filter supports multi-select
+        role_filter = {v for v in self.request.GET.getlist("rol") if v.isdigit()}
+        if role_filter:
             active_filters["rol"] = role_filter
 
         # For each label category, count on queryset excluding that category's filter
@@ -1678,30 +1685,43 @@ class UserListView(PermissionRequiredMixin, ListView):
             "selected_values": suborganization_selected_values,
         }
 
-        role_options = [
-            {"value": "", "label": "Alle rollen"},
-        ]
-        role_value = ""
+        # Rol-groep (multi; counts sluiten het rol-filter zelf uit, zoals merk).
+        role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
+        role_id_values = role_user_qs.values_list("groups__id", flat=True)
+        role_counts = Counter(gid for gid in role_id_values if gid is not None)
+
+        role_options = [{"value": "", "label": ""}]
+        role_selected_values = []
         for group in Group.objects.all().order_by("name"):
-            role_options.append({"value": str(group.id), "label": group.name})
-            if active_filters.get("rol") == str(group.id):
+            role_options.append({"value": str(group.id), "label": group.name, "count": role_counts.get(group.id, 0)})
+            if str(group.id) in active_filters.get("rol", set()):
                 role_options[-1]["selected"] = True
-                role_value = str(group.id)
+                role_selected_values.append(str(group.id))
+
+        role_filter_group = {
+            "type": "select-multi",
+            "name": "rol",
+            "label": "Rol",
+            "options": role_options,
+            "selected_values": role_selected_values,
+        }
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        # Doel-URL voor het filterform en de "Meer…"-sheet (zie filter_sidebar).
+        context["filter_target_url"] = reverse("admin-users")
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         context["filter_groups"] = [
-            {
-                "type": "select",
-                "name": "rol",
-                "label": "Rol",
-                "options": role_options,
-                "value": role_value,
-            },
+            role_filter_group,
             *label_filter_groups,
             suborganization_filter_group,
         ]
+        # top_options + has_more per select-multi groep, zodat de filtersheet
+        # per groep de top-3 toont met een "Meer..."-toggle (zoals de andere
+        # lijsten). Rol (select) wordt overgeslagen; die heeft maar 3 opties.
+        _finalize_filter_groups(context["filter_groups"])
 
         context["primary_button"] = {
             "button_text": "Gebruiker toevoegen",

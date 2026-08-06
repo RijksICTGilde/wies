@@ -5,3 +5,8 @@ these clickable rows that nldd-table-row (data display) lacks. #}
   {% include "parts/user_table_rows.html" %}
   </nldd-list>
 </div>
+{# Bij een htmx-swap reist de Filters-knop mee als OOB-update, zodat de teller
+   in de toolbar (buiten #user-content) de actieve filters blijft volgen. #}
+{% if request.headers.get("HX-Request") %}
+  <div hx-swap-oob="outerHTML:#user-filter-button">{% include "parts/user_filter_button.html" %}</div>
+{% endif %}

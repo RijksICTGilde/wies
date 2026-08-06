@@ -1,0 +1,19 @@
+{# #results-fragment: telregel + lijst. Het filterform (in de sheet) vervangt
+   dit blok bij elke filterwijziging (hx-target="#results"). De filtersheet zelf
+   swapt apart als OOB mee, zodat de counts/selectie in de sheet meelopen. #}
+<nldd-container id="results">
+{% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
+<nldd-rich-text spacing="flat">
+<p>{{ paginator.count }} {{ count_label }}</p>
+</nldd-rich-text>
+<nldd-spacer size="12"></nldd-spacer>
+{% include "parts/user_table.html" %}
+</nldd-container>
+{% if request.headers.get("HX-Request") %}
+  {# De sheet-inhoud (form met bijgewerkte counts/selectie) reist mee als OOB. #}
+  <div hx-swap-oob="outerHTML:#filter-panel">
+    {% with filter_in_sheet = true %}
+      {% include "parts/filter_sidebar.html" %}
+    {% endwith %}
+  </div>
+{% endif %}
