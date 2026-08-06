@@ -40,7 +40,7 @@ def org_formset_data(orgs):
         "org-MAX_NUM_FORMS": "1000",
     }
     for i, (org, role) in enumerate(orgs):
-        data[f"org-{i}-organization"] = org.id
+        data[f"org-{i}-organization"] = org.public_id
         data[f"org-{i}-role"] = role
     return data
 
@@ -110,11 +110,11 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Test Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-has_custom_period": "on",
             },
         )
@@ -133,14 +133,14 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Ingevulde Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-is_filled": "ingevuld",
                 "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.id,
+                "service-0-colleague": self.colleague.public_id,
             },
         )
         assert response.status_code == 302
@@ -155,11 +155,11 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Opdracht met Org",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Dienst",
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-has_custom_period": "on",
             },
         )
@@ -178,16 +178,16 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Audit Snapshot Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
                 **FORMSET_MGMT_2,
                 "service-0-description": "Gevulde rol",
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-is_filled": "ingevuld",
                 "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.id,
+                "service-0-colleague": self.colleague.public_id,
                 "service-1-description": "Open rol",
-                "service-1-skill": self.skill.id,
+                "service-1-skill": self.skill.public_id,
                 "service-1-has_custom_period": "on",
             },
         )
@@ -208,14 +208,14 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Multi Service Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_2,
                 "service-0-description": "Frontend",
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-has_custom_period": "on",
                 "service-1-description": "Backend",
-                "service-1-skill": self.skill.id,
+                "service-1-skill": self.skill.public_id,
                 "service-1-has_custom_period": "on",
             },
         )
@@ -231,7 +231,7 @@ class AssignmentCreateTest(TestCase):
                 "name": "",
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-description": "Dienst",
             },
         )
@@ -245,13 +245,13 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Opdracht Zonder Org",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 "org-TOTAL_FORMS": "0",
                 "org-INITIAL_FORMS": "0",
                 "org-MIN_NUM_FORMS": "1",
                 "org-MAX_NUM_FORMS": "1000",
                 **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-description": "Dienst",
             },
         )
@@ -304,7 +304,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Opdracht Nieuwe Rol",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Nieuwe dienst",
@@ -328,7 +328,7 @@ class AssignmentCreateTest(TestCase):
                 "end_date": "2026-01-01",
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-description": "Dienst",
             },
         )
@@ -342,7 +342,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Test Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 "org-TOTAL_FORMS": "1",
                 "org-INITIAL_FORMS": "0",
                 "org-MIN_NUM_FORMS": "1",
@@ -350,7 +350,7 @@ class AssignmentCreateTest(TestCase):
                 "org-0-organization": "99999",
                 "org-0-role": "PRIMARY",
                 **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-description": "Dienst",
             },
         )
@@ -362,13 +362,13 @@ class AssignmentCreateTest(TestCase):
         self.client.force_login(self.bdm_user)
         data = {
             "name": "Test Opdracht",
-            "owner": self.bdm_colleague.id,
+            "owner": self.bdm_colleague.public_id,
             **org_formset_data([(self.org, "PRIMARY")]),
             "service-TOTAL_FORMS": "9999",
             "service-INITIAL_FORMS": "0",
             "service-MIN_NUM_FORMS": "1",
             "service-MAX_NUM_FORMS": "1000",
-            "service-0-skill": self.skill.id,
+            "service-0-skill": self.skill.public_id,
             "service-0-description": "Dienst",
         }
         response = self.client.post(reverse("assignment-create"), data)
@@ -381,7 +381,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Test Opdracht",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-skill": "__new__",
@@ -400,14 +400,14 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Source Check",
-                "owner": self.bdm_colleague.id,
+                "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
+                "service-0-skill": self.skill.public_id,
                 "service-0-description": "Dienst",
                 "service-0-is_filled": "ingevuld",
                 "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.id,
+                "service-0-colleague": self.colleague.public_id,
             },
         )
         assignment = Assignment.objects.get(name="Source Check")

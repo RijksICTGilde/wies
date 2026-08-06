@@ -10,6 +10,7 @@ Backfill rules (see migrations/0010_suborganization_colleague_suborganization.py
 
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
+from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase
 
 APP = "core"
@@ -29,6 +30,13 @@ class SuborganizationBackfillMigrationTest(TransactionTestCase):
     def _apps_at(self, target):
         return MigrationExecutor(connection).loader.project_state((APP, target)).apps
 
+    def _migrate_to_latest(self):
+        # Resolved from the graph, never hardcoded: migrating to a named target
+        # that is already applied puts the executor in backwards mode, so a fixed
+        # name would silently roll back every migration added after it and leave
+        # the rest of the suite on an outdated schema.
+        self._migrate(MigrationLoader(connection).graph.leaf_nodes(APP)[0][1])
+
     def setUp(self):
         # Roll back to the state just before the backfill migration.
         self._migrate(MIGRATE_FROM)
@@ -40,7 +48,7 @@ class SuborganizationBackfillMigrationTest(TransactionTestCase):
 
     def tearDown(self):
         # Leave the DB at the latest migration for the rest of the suite.
-        self._migrate(MIGRATE_TO)
+        self._migrate_to_latest()
 
     def _make_colleague(self, name, email):
         return self.Colleague.objects.create(name=name, email=email, source="wies")

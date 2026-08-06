@@ -13,7 +13,7 @@
     <c-table-body>
       {% for suborganization in suborganizations %}
         <c-table-row class="clickable-row"
-                     hx-get="{{ url('suborganization-edit', kwargs={'pk': suborganization.pk}) }}"
+                     hx-get="{{ url('suborganization-edit', kwargs={'public_id': suborganization.public_id}) }}"
                      hx-target="#suborganizationFormModal"
                      hx-swap="innerHTML"
                      title="Bewerk {{ suborganization.name }}">

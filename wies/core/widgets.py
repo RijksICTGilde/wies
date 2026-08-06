@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import contextlib
-
 from django import forms
 from django.forms import SelectMultiple
 
 from wies.core.models import OrganizationUnit, OrganizationUnitRole
+from wies.core.public_id import parse_public_ids
 
 
 class MultiselectDropdown(SelectMultiple):
@@ -74,18 +73,20 @@ class OrgPickerWidget(forms.Widget):
         """Supply ``prefix`` + hydrated ``selections`` to the template."""
         ctx = super().get_context(name, value, attrs)
         selections = self.format_value(value)
-        raw_ids = [s["organization"] for s in selections if not hasattr(s.get("organization"), "id")]
-        if raw_ids:
-            try:
-                ids = [int(x) for x in raw_ids]
-            except TypeError, ValueError:
-                ids = []
-            resolved = OrganizationUnit.objects.in_bulk(ids) if ids else {}
+        raw_public_ids = [s["organization"] for s in selections if not hasattr(s.get("organization"), "id")]
+        if raw_public_ids:
+            # in_bulk on a UUIDField keys by UUID; the raw selections hold string
+            # tokens, so key by str for the lookup.
+            resolved = {
+                str(pid): org
+                for pid, org in OrganizationUnit.objects.in_bulk(
+                    parse_public_ids(raw_public_ids), field_name="public_id"
+                ).items()
+            }
             for s in selections:
                 org = s.get("organization")
                 if not hasattr(org, "id"):
-                    with contextlib.suppress(TypeError, ValueError):
-                        s["organization"] = resolved.get(int(org), org)
+                    s["organization"] = resolved.get(str(org), org)
         ctx["widget"]["prefix"] = self.prefix
         ctx["widget"]["selections"] = selections
         return ctx

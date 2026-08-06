@@ -7,11 +7,28 @@ from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.public_id import parse_public_ids
 
 if TYPE_CHECKING:
     from datetime import date
 
     from wies.core.models import Colleague
+
+
+def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
+    """Map the submitted skill tokens to internal ids in one query.
+
+    The rol select posts public_ids (the client never sees the pk); everything
+    downstream keys on the internal id."""
+    tokens = [
+        f.cleaned_data.get("skill")
+        for f in service_formset
+        if f.cleaned_data and f.cleaned_data.get("skill") not in (None, "", "__new__")
+    ]
+    if not tokens:
+        return {}
+    rows = Skill.objects.filter(public_id__in=parse_public_ids(tokens)).values_list("public_id", "id")
+    return {str(public_id): skill_id for public_id, skill_id in rows}
 
 
 def extract_services_data(service_formset) -> list[dict]:
@@ -23,6 +40,7 @@ def extract_services_data(service_formset) -> list[dict]:
     caller (apply_services_to_assignment) re-verifies ownership before
     writing.
     """
+    skill_ids = _skill_ids_by_public_id(service_formset)
     services_data = []
     for svc_form in service_formset:
         if not svc_form.cleaned_data:
@@ -33,7 +51,7 @@ def extract_services_data(service_formset) -> list[dict]:
         has_skill = (skill_val and skill_val != "__new__") or new_skill
         if not has_skill:
             continue
-        skill_id = int(skill_val) if skill_val and skill_val != "__new__" else None
+        skill_id = skill_ids.get(skill_val) if skill_val and skill_val != "__new__" else None
         # "aanvraag" means this service is a vacancy: ignore any colleague the
         # (hidden) select still carries, so apply_services_to_assignment drops
         # the placement and the row turns into an open aanvraag.

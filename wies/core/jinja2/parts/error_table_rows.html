@@ -25,7 +25,7 @@
     </c-table-cell>
     <c-table-cell class="error-table__actions-col">
       <div class="error-table__actions">
-        <a href="{{ url('error-detail', args=[error.id]) }}"
+        <a href="{{ url('error-detail', args=[error.public_id]) }}"
            class="error-table__icon-btn"
            title="Details bekijken"
            aria-label="Details bekijken">
@@ -35,7 +35,7 @@
                 class="error-table__icon-btn"
                 title="Foutmelding verwijderen"
                 aria-label="Foutmelding verwijderen"
-                hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
+                hx-post="{{ url('delete-error', args=[error.public_id]) }}?pagina={{ page_obj.number }}"
                 hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
                 hx-target="#error_table_container"
                 hx-swap="innerHTML">

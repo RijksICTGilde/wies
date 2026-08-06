@@ -94,7 +94,7 @@ class ErrorReportingHandlerTest(TestCase):
         assert "ValueError" in message
         assert "/kaboom/" in message
         # Links to the detail page instead of dumping the traceback in chat.
-        assert f"https://wies.example.org/beheer/statistieken/fout/{event.pk}/" in message
+        assert f"https://wies.example.org/beheer/statistieken/fout/{event.public_id}/" in message
         assert "Traceback (most recent" not in message
 
     @override_settings(MATTERMOST_TOKEN="", MATTERMOST_WIES_OPS_CHANNEL_URL="")
