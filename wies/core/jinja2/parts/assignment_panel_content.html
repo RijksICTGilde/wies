@@ -173,8 +173,12 @@
     {% if panel_data.user_can_edit_team %}
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <nldd-toolbar label="Team" size="sm">
-      <nldd-toolbar-item slot="start">
-      <nldd-button text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
+      {# size="sm" ook expliciet op item + knop: nldd-toolbar forwardt zijn size
+         pas in zijn uitgestelde build (setTimeout(0)) naar de knop, dus zonder
+         dit rendert de knop eerst op de md-default (breder) en krimpt daarna naar
+         sm — een zichtbare resize-flash na een htmx-swap in de zijbalk. #}
+      <nldd-toolbar-item slot="start" size="sm">
+      <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
       <nldd-menu slot="popup" placement="bottom-start">
       <nldd-menu-item text="Aanvraag toevoegen" icon="add-text-document" hx-get="{{ panel_data.member_add_aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ panel_data.member_add_ingevuld_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>

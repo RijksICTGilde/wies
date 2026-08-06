@@ -20,7 +20,7 @@ wies/
 ├── core/
 │   ├── models.py      # All models
 │   ├── views.py       # View functions/classes
-│   ├── forms.py       # Django forms with RVOMixin
+│   ├── forms.py       # Django forms with NlddFormMixin
 │   ├── urls.py        # URL routing
 │   ├── roles.py       # Role/permission definitions
 │   ├── querysets.py   # Custom querysets
@@ -66,11 +66,11 @@ def my_view(request):
 
 ## Forms
 
-- Use `RVOMixin` for RVO design system styling
+- Use `NlddFormMixin` (from `wies/core/form_mixins.py`) for design-system styling
 - Define `verbose_name` in model for automatic Dutch labels
 
 ```python
-class MyForm(RVOMixin, forms.ModelForm):
+class MyForm(NlddFormMixin, forms.ModelForm):
     class Meta:
         model = MyModel
         fields = ["field1", "field2"]
@@ -79,7 +79,7 @@ class MyForm(RVOMixin, forms.ModelForm):
 ## Templates (Jinja2)
 
 - Located in `wies/core/jinja2/`
-- Use jinja-roos-components for UI elements
+- Use @nldd/design-system web components for UI elements
 - CSRF token: `{{ get_csrf_hidden_input(request) }}`
 - Static files: `{{ static('path/to/file') }}`
 

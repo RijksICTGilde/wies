@@ -79,10 +79,26 @@
       {{ _main_content }}
     {% endif %}
     <nldd-page-footer slot="footer" width="1920px">
+    {# Standaard-formaat: het naamloze slot vult page-footer__main. De
+       nldd-container lijnt de tekst uit met de breadcrumbs/legal bar; de
+       nldd-rich-text verzorgt de opmaak van de titel en inline-links. #}
+    <nldd-container>
+    <nldd-rich-text>
+    <h2>Over Wies</h2>
+    <p>Portaal voor ODI om inzicht te verschaffen over het wie, waar, wanneer en wat van collega's binnen de organisatie.</p>
+    <p>
+      <a href="https://github.com/RijksICTGilde/wies"
+         target="_blank"
+         rel="noopener">GitHub</a>
+      · <a href="{{ url('faq') }}">Veelgestelde vragen</a>
+      · <a href="{{ url('contact') }}">Contact</a>
+    </p>
+    <p class="wies-footer-version">Versie: {{ APP_VERSION }}</p>
+    </nldd-rich-text>
+    </nldd-container>
     <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
-    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('contact') }}" text="Contact"></nldd-page-footer-legal-bar-item>
     </nldd-page-footer-legal-bar>
     </nldd-page-footer>
     </nldd-page>

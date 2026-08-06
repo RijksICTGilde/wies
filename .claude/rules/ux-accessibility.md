@@ -8,35 +8,24 @@
 
 ## Accessibility
 
-- All form fields need labels (RVO components handle this)
+- All form fields need labels (NLDD components handle this)
 - Images need alt text
 - Tables need headers and captions
 - Color contrast must meet WCAG AA
 
-## RVO Design System
+## NLDD Design System
 
-- Use RVO components for consistent look
+- Use @nldd/design-system web components for consistent look
 - Follow nl-design-system patterns
-- Reference: https://github.com/nl-design-system/rvo
+- Reference: https://minbzk.github.io/storybook/
 
-### RVO Icons
+### Icons
 
-Never guess `rvo-icon-*` class names — they are Dutch and unpredictable. Always look them up first:
-
-```bash
-python3 -c "
-import json; from pathlib import Path
-f = Path('.venv/lib/python3.14/site-packages/jinja_roos_components/overall_definitions.json')
-icons = json.loads(f.read_text()).get('icons', [])
-for i in icons:
-    name = i['name'] if isinstance(i, dict) else i
-    if 'SEARCH_TERM' in name.lower(): print(name)
-"
-```
-
-Replace `SEARCH_TERM` with a Dutch keyword (e.g. `slot` for lock, `zoek` for search, `verwijder` for delete).
+Use the `<nldd-icon name="...">` web component from @nldd/design-system. Check the
+storybook (https://minbzk.github.io/storybook/) or existing templates in
+`wies/core/jinja2/` for valid icon names rather than guessing.
 
 ## Mobile
 
-- Responsive layouts (RVO handles this)
+- Responsive layouts (NLDD components handle this)
 - Touch-friendly button sizes

@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0010_event_ip_event_user_agent"),
+        ("core", "0011_suborganization_colleague_suborganization"),
     ]
 
     operations = [

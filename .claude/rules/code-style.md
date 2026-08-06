@@ -18,7 +18,7 @@
 ## Templates (Jinja2)
 
 - Located in `wies/core/jinja2/`
-- Use RVO macros from jinja-roos-components
+- Use @nldd/design-system web components
 - Dutch labels for all user-facing text
 
 ## JavaScript
@@ -28,8 +28,8 @@ Inline JavaScript wordt door de browser stil geblokkeerd (dode knop, alleen een
 console-warning), dus:
 
 - Geen `<script>`-blokken in templates; altijd een bestand in `wies/core/static/js/`.
-- Geen `onclick=`/`onsubmit=`/`hx-on` en **geen `@click=` op c-componenten** —
-  jinja-roos-components compileert die naar `onclick=`.
+- Geen `onclick=`/`onsubmit=`/`hx-on`; ook geen event-handler-attributen die door
+  een component naar `onclick=` gecompileerd worden.
 - Bind gedrag met een data-attribuut en handel het af in `static/js/ui_handlers.js`:
   `data-action="<naam>"` (klik, met een entry in `CLICK_ACTIONS`), `data-confirm="<vraag>"`
   (bevestiging voor gewone formulieren; op htmx-formulieren `hx-confirm` gebruiken),
