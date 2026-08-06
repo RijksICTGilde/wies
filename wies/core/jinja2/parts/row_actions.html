@@ -1,0 +1,25 @@
+{# Rijacties in een detailpaneel: bij precies één actie tonen we het actie-icoon
+   direct als knop (één klik, met tooltip), bij meerdere de puntjesknop met een
+   menu. `actions` is een lijst dicts met `icon`, `text` en `attrs` (de ruwe
+   hx-*/data-*-string) — beide takken delen dezelfde bedrading, zodat een
+   menu-item en de losse knop identiek werken.
+
+   Importeer met: {% from "parts/row_actions.html" import render_row_actions %} #}
+{% macro render_row_actions(actions, label) %}
+  {% if actions|length == 1 %}
+    {% set a = actions[0] %}
+    {# Losse actieknop: het icoon alleen (potlood/oog/enveloppe) verklaart zich
+       niet, dus de tooltip (default-timing) blijft aan. #}
+    <nldd-icon-button size="sm" icon="{{ a.icon }}" text="{{ a.text }}" {{ a.attrs|safe }}></nldd-icon-button>
+  {% elif actions|length > 1 %}
+    {# De puntjesknop is een bekend patroon en opent een menu met labels, dus
+       een eigen tooltip voegt niets toe. #}
+    <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="{{ label }}">
+    <nldd-menu slot="popup" placement="bottom-end">
+    {% for a in actions %}
+      <nldd-menu-item text="{{ a.text }}" icon="{{ a.icon }}" {{ a.attrs|safe }}></nldd-menu-item>
+    {% endfor %}
+    </nldd-menu>
+    </nldd-icon-button>
+  {% endif %}
+{% endmacro %}

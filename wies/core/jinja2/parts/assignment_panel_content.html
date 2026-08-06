@@ -1,3 +1,4 @@
+{% from "parts/row_actions.html" import render_row_actions %}
 {# Panel-loads herladen base.html niet, dus flash-banners (bv. na 'Opdracht
    invoeren' in de sheet) reizen mee als OOB-swap naar #flash-messages. Alleen
    bij htmx: bij een volledige page-load rendert base.html ze al. #}
@@ -44,20 +45,22 @@
       </nldd-tab-bar>
       </nldd-toolbar-item>
     {% endif %}
+    {# Elk item: zichtbare knop (click) + nested slot="overflow"-item
+       (hx-trigger="select", want het overflowmenu klikt een kloon). NLDD schuift
+       ze bij smalle breedte samen in één ...-menu. #}
     {% if panel_data.user_can_edit %}
       <nldd-toolbar-item slot="end">
       <nldd-icon-button icon="edit" text="Gegevens bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
-      {# hx-trigger="select" om dezelfde reden als hieronder: het menu toont een
-      kloon en meldt de keuze terug op dit origineel. #}
       <nldd-menu-item slot="overflow" text="Gegevens bewerken" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
-    {# slot="overflow" op de toolbar = altijd in het overflowmenu gepind. #}
     {% if _can_delete %}
-      {# hx-trigger="select": the toolbar's overflow menu shows a CLONE of this
-      item and relays the choice back to this original as a select event, so
-      htmx must listen for that - a click never reaches this element. #}
+      {# priority="-1": verwijderen wijkt als eerste naar het overflowmenu, zodat
+         bij krappe ruimte bewerken zichtbaar blijft (de vaakste actie). #}
+      <nldd-toolbar-item slot="end" priority="-1">
+      <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
       <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+      </nldd-toolbar-item>
     {% endif %}
     </nldd-toolbar>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
@@ -115,42 +118,35 @@
         </nldd-text-cell>
         {% if row_kind == "organizations" and panel_data.organization_rows %}
           {% set _primary_breadcrumb = get_org_breadcrumb(panel_data.organization_rows[0].organization, _base_url) %}
+          {% set _actions = [] %}
+          {% if panel_data.user_can_edit %}
+            {% set _ = _actions.append({"text": "Opdrachtgever wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
+          {% endif %}
+          {% set _ = _actions.append({"text": "Bekijk alle opdrachten", "icon": "stack", "attrs": 'data-href="' ~ _primary_breadcrumb.url ~ '"'}) %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor opdrachtgever">
-          <nldd-menu slot="popup" placement="bottom-end">
-          {% if panel_data.user_can_edit %}
-            <nldd-menu-item text="Opdrachtgever wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
-          {% endif %}
-          <nldd-menu-item text="Bekijk alle opdrachten" icon="stack" data-href="{{ _primary_breadcrumb.url }}"></nldd-menu-item>
-          </nldd-menu>
-          </nldd-icon-button>
+          {{ render_row_actions(_actions, "Acties voor opdrachtgever") }}
           </nldd-cell>
         {% elif row_kind == "period" and panel_data.user_can_edit %}
+          {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor periode">
-          <nldd-menu slot="popup" placement="bottom-end">
-          <nldd-menu-item text="Periode wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
-          </nldd-menu>
-          </nldd-icon-button>
+          {{ render_row_actions(_actions, "Acties voor periode") }}
           </nldd-cell>
         {% elif row_kind == "owner" and panel_data.assignment.owner %}
-          <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-cell>
-          <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor Business Manager">
-          <nldd-menu slot="popup" placement="bottom-end">
+          {% set _actions = [] %}
           {% if panel_data.user_can_edit %}
-            <nldd-menu-item text="Business Manager wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=owner" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+            {% set _ = _actions.append({"text": "Business Manager wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=owner" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
           {% endif %}
           {% if panel_data.owner_display.owner_url %}
-            <nldd-menu-item text="Bekijk profiel" icon="user" hx-get="{{ panel_data.owner_display.owner_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+            {% set _ = _actions.append({"text": "Bekijk profiel", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
           {% endif %}
           {% if panel_data.assignment.owner.email %}
-            <nldd-menu-item text="E-mailen" icon="email" data-href="{{ panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email) }}"></nldd-menu-item>
+            {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": 'data-href="' ~ (panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email)) ~ '"'}) %}
           {% endif %}
-          </nldd-menu>
-          </nldd-icon-button>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-cell>
+          {{ render_row_actions(_actions, "Acties voor Business Manager") }}
           </nldd-cell>
         {% endif %}
         </nldd-list-item>

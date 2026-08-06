@@ -1,3 +1,4 @@
+{% from "parts/row_actions.html" import render_row_actions %}
 {% if not panel_data %}
   {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Plaatsing" dismiss-text="Sluit"></nldd-top-title-bar>
@@ -67,7 +68,7 @@
   {% endif %}
   {# Periode boven Rol: de rol-omschrijving kan lang zijn, dus de korte periode
      staat dicht bij de kop in plaats van weggeduwd onder een lange tekst. #}
-  <nldd-list-item {% if panel_data.user_can_edit_details %}button hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"{% endif %}>
+  <nldd-list-item>
   <nldd-text-cell width="100px" text="Periode"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell>
@@ -80,19 +81,23 @@
   {% endif %}
   </nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
+    {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-icon-cell size="20" icon="edit"></nldd-icon-cell>
-    <nldd-spacer-cell size="4"></nldd-spacer-cell>
+    <nldd-cell>
+    {{ render_row_actions(_actions, "Acties voor periode") }}
+    </nldd-cell>
   {% endif %}
   </nldd-list-item>
-  <nldd-list-item {% if panel_data.user_can_edit_details %}button hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"{% endif %}>
+  <nldd-list-item>
   <nldd-text-cell width="100px" text="Rol"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
+    {% set _actions = [{"text": "Rol wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-icon-cell size="20" icon="edit"></nldd-icon-cell>
-    <nldd-spacer-cell size="4"></nldd-spacer-cell>
+    <nldd-cell>
+    {{ render_row_actions(_actions, "Acties voor rol") }}
+    </nldd-cell>
   {% endif %}
   </nldd-list-item>
   </nldd-list>
