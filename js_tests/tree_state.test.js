@@ -390,3 +390,58 @@ describe("edge cases", function () {
     assert.ok(!ts.explicitSelections.has("self-10"));
   });
 });
+
+// Single-child tree — the shape that made the collapse bug most visible:
+//   Parent
+//   └── OnlyChild
+function singleChildTree() {
+  return [
+    {
+      id: "parent",
+      label: "Parent",
+      children: [{ id: "child", label: "OnlyChild" }],
+    },
+  ];
+}
+
+// The filter picker builds its TreeState with { collapseToParent: false }: a
+// checked child stays the selection instead of being swallowed by its (now
+// fully-checked) parent. The assignment picker relies on the same flag.
+describe("collapseToParent: false (filter picker behaviour)", function () {
+  it("keeps a sole child as the selection, not its parent", function () {
+    var ts = new TreeState(singleChildTree(), { collapseToParent: false });
+    ts.check("child");
+    // The parent lights up via cascade...
+    assert.equal(ts.getNode("parent").checked, true);
+    // ...but the selection stays on the child that was clicked.
+    assert.ok(ts.explicitSelections.has("child"));
+    assert.ok(!ts.explicitSelections.has("parent"));
+    assert.equal(ts.explicitSelections.size, 1);
+  });
+
+  it("keeps individual children even when all siblings are checked", function () {
+    var ts = new TreeState(simpleTree(), { collapseToParent: false });
+    ts.check("2");
+    ts.check("3");
+    assert.equal(ts.getNode("1").checked, true);
+    assert.ok(ts.explicitSelections.has("2"));
+    assert.ok(ts.explicitSelections.has("3"));
+    assert.ok(!ts.explicitSelections.has("1"));
+  });
+
+  it("restoreSelections does not collapse a full child set to the parent", function () {
+    var ts = new TreeState(singleChildTree(), { collapseToParent: false });
+    ts.restoreSelections({ child: "OnlyChild" });
+    assert.ok(ts.explicitSelections.has("child"));
+    assert.ok(!ts.explicitSelections.has("parent"));
+  });
+
+  it("collapses to the parent when the flag defaults on", function () {
+    // Guards the opt-in: the default still collapses (assignment vs filter differ
+    // only by this flag).
+    var ts = new TreeState(singleChildTree());
+    ts.check("child");
+    assert.ok(ts.explicitSelections.has("parent"));
+    assert.ok(!ts.explicitSelections.has("child"));
+  });
+});

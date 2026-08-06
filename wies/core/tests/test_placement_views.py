@@ -1547,6 +1547,90 @@ class PlacementOrganizationFilterTest(TestCase):
         assert p_wrong_skill.id not in ids, "Placement with wrong skill should be excluded"
 
 
+class OrgFilterCountCrossFilterTest(TestCase):
+    """The Opdrachtgever counts must reflect the OTHER active filters.
+
+    With a rol filter active, an org's count should be the number of matching
+    placements under it, not the unfiltered total. This holds for both the
+    sidebar quick options and the "Opdrachtgevers selecteren" modal tree.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="test@rijksoverheid.nl")
+        self.skill_a = Skill.objects.create(name="Skill A")
+        self.skill_b = Skill.objects.create(name="Skill B")
+        self.org_a = OrganizationUnit.objects.create(name="Org A", label="Org A")
+        self.org_b = OrganizationUnit.objects.create(name="Org B", label="Org B")
+
+    def _place(self, org, skill, suffix=""):
+        colleague = Colleague.objects.create(
+            name=f"C {org.name}{suffix}",
+            email=f"c-{org.id}-{skill.id}-{suffix}@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name=f"A {org.name}{suffix}",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+        service = Service.objects.create(assignment=assignment, description="S", skill=skill, source="wies")
+        return Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
+
+    def _sidebar_org_counts(self, params: dict) -> dict[str, int]:
+        """{org_id (str): count} from the Opdrachtgever sidebar group's top_options.
+
+        Built by calling the view directly — the app uses Jinja2, so the test
+        client never populates response.context.
+        """
+        request = RequestFactory().get(reverse("home"), params)
+        request.user = self.user
+        view = PlacementListView()
+        view.request = request
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        org_group = next(g for g in context["filter_groups"] if g["name"] == "organisatie")
+        return {opt["value"]: opt["count"] for opt in org_group["top_options"] if opt["param"] == "org"}
+
+    def test_sidebar_counts_reflect_active_rol_filter(self):
+        # Org A: one Skill-A placement. Org B: one Skill-B placement.
+        self._place(self.org_a, self.skill_a)
+        self._place(self.org_b, self.skill_b)
+
+        counts = self._sidebar_org_counts({"rol": str(self.skill_a.id)})
+
+        assert counts.get(str(self.org_a.id)) == 1, "Org A has a matching Skill-A placement"
+        # Org B has no Skill-A placement, so it must count 0 (or drop out entirely).
+        assert counts.get(str(self.org_b.id), 0) == 0, "Org B has no Skill-A placement"
+
+    def test_modal_counts_reflect_active_rol_filter(self):
+        self._place(self.org_a, self.skill_a)
+        self._place(self.org_b, self.skill_b)
+
+        self.client.force_login(self.user)
+        response = self.client.get(
+            reverse("client-modal"),
+            {"count_mode": "placements", "rol": str(self.skill_a.id)},
+        )
+        counts = _modal_org_self_counts(response)
+
+        assert counts.get(self.org_a.id) == 1, "Modal: Org A has a matching Skill-A placement"
+        # Pruned or 0 — either way not the unfiltered total.
+        assert counts.get(self.org_b.id, 0) == 0, "Modal: Org B has no Skill-A placement"
+
+    def test_sidebar_counts_unfiltered_without_rol(self):
+        # Sanity: with no rol filter, both orgs count their placement.
+        self._place(self.org_a, self.skill_a)
+        self._place(self.org_b, self.skill_b)
+
+        counts = self._sidebar_org_counts({})
+
+        assert counts.get(str(self.org_a.id)) == 1
+        assert counts.get(str(self.org_b.id)) == 1
+
+
 class PlacementSearchTest(TestCase):
     """Tests for the 'zoek' search parameter in PlacementListView."""
 

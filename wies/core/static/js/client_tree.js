@@ -9,7 +9,11 @@
 
   if (!container) return;
 
-  var treeState = new TreeState(data);
+  // No collapse-to-parent: clicking a child records THAT child as the selection,
+  // even when it is the only child of its parent. A parent still lights up via
+  // cascade, but the token/filter stays on what you clicked — matching the older
+  // behaviour the filter is meant to have.
+  var treeState = new TreeState(data, { collapseToParent: false });
   var tree = new WiesOrgTree({
     state: treeState,
     container: container,

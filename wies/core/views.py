@@ -1135,6 +1135,14 @@ class PlacementListView(ListView):
                 skill_selected_values.append(str(skill.id))
             skill_options.append(option)
 
+        # Org counts: exclude the org filter, so the numbers reflect the other
+        # active filters (rol/labels/merk/loopt_af/zoek) — same cross-filter rule
+        # as the skill/merk/label groups above.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
+        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
@@ -1155,6 +1163,7 @@ class PlacementListView(ListView):
                     set(org_filter),
                     selected_self_ids=set(org_self_filter),
                     selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
                 ),
             },
             {
@@ -1405,6 +1414,15 @@ class AssignmentListView(ListView):
             for type_label in org_type_filter
         )
 
+        # Org counts: exclude the org filter, so the numbers reflect the other
+        # active filters — same cross-filter rule as the skill counts above.
+        # base_qs is already limited to assignments with an unfilled open service
+        # (open_assignments semantics), so counting organizations over the
+        # filtered set matches _get_org_counts's open_assignments branch.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_id_values = org_filtered_qs.values_list("organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
@@ -1423,6 +1441,7 @@ class AssignmentListView(ListView):
                     set(org_filter),
                     selected_self_ids=set(org_self_filter),
                     selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
                 ),
             },
             {
@@ -3115,6 +3134,34 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Cou
     return Counter(org_id for org_id in org_id_list if org_id is not None)
 
 
+def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
+    """Per-org counts that honour the list's OTHER active filters (rol/labels/
+    merk/loopt_af/zoek), so the modal tree matches the sidebar.
+
+    Reuses the list view's own ``_apply_filters`` (excluding the org filter, the
+    same cross-filter rule the sidebar groups use) rather than re-implementing the
+    predicates here — a second copy would drift. ``_apply_filters`` and
+    ``_get_base_queryset`` depend only on ``self.request``, so a bare view
+    instance with the request attached is enough; base_qs already carries
+    visibility gating (placements) or the open-service constraint (assignments).
+    """
+    view_cls = AssignmentListView if count_mode == "open_assignments" else PlacementListView
+    view = view_cls()
+    view.request = request
+    filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
+
+    if count_mode == "open_assignments":
+        if excluded_org_ids:
+            filtered_qs = filtered_qs.exclude(organizations__id__in=excluded_org_ids)
+        org_id_list = filtered_qs.values_list("organizations__id", flat=True)
+    else:
+        placement_qs = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+        if excluded_org_ids:
+            placement_qs = placement_qs.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+        org_id_list = placement_qs.values_list("service__assignment__organizations__id", flat=True)
+    return Counter(org_id for org_id in org_id_list if org_id is not None)
+
+
 def _build_org_hierarchy(
     org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool
 ) -> list[dict]:
@@ -3251,8 +3298,15 @@ def client_modal(request):
     excluded_org_ids = get_excluded_org_ids()
     count_mode = request.GET.get("count_mode", "placements")
 
-    viewer = getattr(request.user, "colleague", None)
-    org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
+    # count_mode "none" is the assignment-form org picker (not a filter list): it
+    # has no other filters, so it keeps the plain (empty) baseline. The two filter
+    # modes count over the list's other active filters, so the tree matches the
+    # sidebar. The sidebar sends those filters along via hx-include.
+    if count_mode == "none":
+        viewer = getattr(request.user, "colleague", None)
+        org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
+    else:
+        org_self_counts = _filter_aware_org_counts(request, count_mode, excluded_org_ids)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 

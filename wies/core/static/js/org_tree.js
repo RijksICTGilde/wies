@@ -22,6 +22,9 @@
   // depth.
   var LEAF_CHEVRON_ZONE = "44";
   var INDENT_STEP = "16";
+  // Below this, a query matches so many orgs it would force-build most of the
+  // tree — the very cost lazy rendering exists to avoid. See `filter`.
+  var MIN_SEARCH_LENGTH = 2;
 
   function cell(tag, attrs) {
     var el = document.createElement(tag);
@@ -62,6 +65,13 @@
       "no-dividers": "",
       "accessible-label": this.accessibleLabel,
     });
+    // Build ONLY the root rows up front (a handful of org-type groups). Every
+    // branch — including a group's immediate children — is materialised the
+    // first time it is expanded (see `_ensureChildren`). At production scale the
+    // groups' direct children alone were ~2.6k rows / ~21k DS web components:
+    // ~0.2s to build, and the resulting huge connected Lit tree made every later
+    // interaction (sync/filter/keyboard) sluggish. Starting fully collapsed keeps
+    // the live DOM tiny (~25 rows) until the user opens a branch.
     for (var i = 0; i < this.state.roots.length; i++) {
       list.appendChild(this._buildRow(this.state.roots[i], 0));
     }
@@ -70,11 +80,27 @@
     return this;
   };
 
+  /**
+   * Build the direct child rows of `node` if they aren't built yet, appending
+   * them into the node's already-built row. Grandchildren are left for their
+   * own parents to build lazily. Idempotent: safe to call on every expand.
+   */
+  OrgTree.prototype._ensureChildren = function (node) {
+    var row = this.domNodes.get(node.id);
+    if (!row || row.dataset.childrenBuilt) return;
+    row.dataset.childrenBuilt = "1";
+    var depth = Number(row.dataset.depth) + 1;
+    for (var i = 0; i < node.children.length; i++) {
+      row.appendChild(this._buildRow(node.children[i], depth));
+    }
+  };
+
   OrgTree.prototype._buildRow = function (node, depth) {
     var self = this;
     var hasChildren = node.children.length > 0;
     var row = cell("nldd-list-item", {});
     row.dataset.nodeId = node.id;
+    row.dataset.depth = depth;
     if (depth) row.setAttribute("slot", "children");
     this.domNodes.set(node.id, row);
 
@@ -94,7 +120,11 @@
       iconCell.appendChild(cell("nldd-icon", { name: "chevron-right" }));
       chevron.appendChild(iconCell);
       chevron.addEventListener("click", function () {
-        row.toggleAttribute("expanded", !row.hasAttribute("expanded"));
+        var willExpand = !row.hasAttribute("expanded");
+        // Build this branch's children the first time it opens, not on modal
+        // load. `expanded` only reveals rows that already exist in the slot.
+        if (willExpand) self._ensureChildren(node);
+        row.toggleAttribute("expanded", willExpand);
       });
       row.appendChild(chevron);
     } else {
@@ -137,7 +167,10 @@
         if (checked) {
           self.state.check(node.id);
           // Expanding on check keeps what you just selected in view.
-          if (hasChildren) row.setAttribute("expanded", "");
+          if (hasChildren) {
+            self._ensureChildren(node);
+            row.setAttribute("expanded", "");
+          }
         } else {
           self.state.uncheck(node.id);
         }
@@ -147,53 +180,76 @@
     }
     row.appendChild(action);
 
-    for (var i = 0; i < node.children.length; i++) {
-      row.appendChild(this._buildRow(node.children[i], depth + 1));
-    }
+    // A branch can be built long after selections were restored or a parent was
+    // checked, so mirror the node's current state onto the fresh row now.
+    if (selectable) this._syncRow(node, row);
 
+    // Children are built lazily by `_ensureChildren`, not here — see `render`.
     return row;
   };
 
-  /* Deliberately no `selected` on the row. The checkbox segment already paints
-     its own checked fill, and a row-level one bleeds out past the chevron — so a
-     row you picked yourself would look different from one that turned on because
-     all its children did, while both are simply checked. Which of the two is the
-     explicit choice is what the footer says. */
+  /* We mark the rows the user picked HERSELF with data-explicit and style those
+     apart (bold label, darker checkbox). The checkbox `checked` state alone can't
+     tell them from rows that only turned on because all their children did — both
+     are simply checked — and the footer tokens are easy to miss, so the tree
+     needs its own cue for which row IS the selection. Not the DS `selected`
+     attribute: it resolves to the same tokens as `checked`, so it would look
+     identical. See app.css for the [data-explicit] styling. */
+  /** Mirror one node's selection state onto its row. Rows that aren't built yet
+   *  (lazy branches) pick this up in `_buildRow` when they are created. */
+  OrgTree.prototype._syncRow = function (node, row) {
+    var action = row.querySelector(":scope > nldd-list-item-action[checkbox]");
+    if (action) action.checked = node.checked;
+    var box = row.querySelector(
+      ":scope > nldd-list-item-action[checkbox] nldd-checkbox",
+    );
+    if (box) {
+      box.checked = node.checked;
+      box.indeterminate = node.indeterminate;
+    }
+    row.toggleAttribute(
+      "data-explicit",
+      this.state.explicitSelections.has(node.id),
+    );
+  };
+
   OrgTree.prototype.sync = function () {
     var self = this;
     this.state.nodes.forEach(function (node) {
       var row = self.domNodes.get(node.id);
-      if (!row) return;
-      var action = row.querySelector(
-        ":scope > nldd-list-item-action[checkbox]",
-      );
-      if (action) action.checked = node.checked;
-      var box = row.querySelector(
-        ":scope > nldd-list-item-action[checkbox] nldd-checkbox",
-      );
-      if (box) {
-        box.checked = node.checked;
-        box.indeterminate = node.indeterminate;
-      }
+      if (row) self._syncRow(node, row);
     });
   };
 
-  /** Opens every branch above a node, so a restored selection is in view. */
+  /** Opens every branch above a node, so a restored selection is in view.
+   *  The node may sit inside a branch that was never expanded, so its row (and
+   *  its ancestors' child rows) might not be built yet. Walk the model's
+   *  ancestor chain top-down, building each level, before setting `expanded`. */
   OrgTree.prototype.expandAncestorsOf = function (nodeId) {
-    var row = this.domNodes.get(String(nodeId));
-    var ancestor =
-      row && row.parentElement && row.parentElement.closest("nldd-list-item");
+    var node = this.state.getNode(nodeId);
+    if (!node) return;
+    // Collect ancestors from the root down to (but excluding) the node itself.
+    var chain = [];
+    var ancestor = node.parent;
     while (ancestor) {
-      ancestor.setAttribute("expanded", "");
-      ancestor =
-        ancestor.parentElement &&
-        ancestor.parentElement.closest("nldd-list-item");
+      chain.unshift(ancestor);
+      ancestor = ancestor.parent;
+    }
+    for (var i = 0; i < chain.length; i++) {
+      this._ensureChildren(chain[i]); // builds the next level down
+      var row = this.domNodes.get(chain[i].id);
+      if (row) row.setAttribute("expanded", "");
     }
   };
 
   OrgTree.prototype.filter = function (query) {
     var self = this;
     var q = query.toLowerCase().trim();
+
+    // A one-character query matches nearly every org, which would force-build
+    // almost the whole tree and re-introduce the open-time hang. Treat queries
+    // shorter than two characters as empty: reveal nothing new, restore state.
+    if (q.length < MIN_SEARCH_LENGTH) q = "";
 
     if (!q) {
       // Restore the pre-search expansion instead of collapsing everything, so
@@ -216,6 +272,20 @@
         self.savedExpanded.set(row, row.hasAttribute("expanded"));
       });
     }
+
+    // A match may live inside a branch that was never expanded, so its row
+    // isn't built. Build the path down to every match first, then hide-all and
+    // reveal, so the reveal pass sees a complete DOM for the matching subtrees.
+    this.state.nodes.forEach(function (node) {
+      if (!TreeState.nodeMatches(node, q)) return;
+      var chain = [];
+      var ancestor = node.parent;
+      while (ancestor) {
+        chain.unshift(ancestor);
+        ancestor = ancestor.parent;
+      }
+      for (var i = 0; i < chain.length; i++) self._ensureChildren(chain[i]);
+    });
 
     // While searching, every branch is open: the hidden attribute alone decides
     // what you see, so a collapsed ancestor can never swallow a match.
@@ -297,8 +367,12 @@
           break;
         case "ArrowRight":
           e.preventDefault();
-          if (hasBranch(li)) {
+          // Branch-ness comes from the model, not built DOM: a collapsed lazy
+          // branch has a chevron but no child rows yet. Build them on expand.
+          var node = self.state.getNode(li.dataset.nodeId);
+          if (node && node.children.length > 0) {
             if (!li.hasAttribute("expanded")) {
+              self._ensureChildren(node);
               li.setAttribute("expanded", "");
             } else {
               var firstChild = li.querySelector(
