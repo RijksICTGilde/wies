@@ -23,7 +23,7 @@
     <nldd-menu>
     <nldd-menu-item text="Gebruikers" icon="users" data-href="{{ url('admin-users') }}"></nldd-menu-item>
     {% if DEBUG %}
-      <nldd-menu-item text="Opdrachtgevers" icon="office" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
+      <nldd-menu-item text="Opdrachtgevers" icon="offices" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
     {% endif %}
     <nldd-menu-item text="Labels" icon="labels" data-href="{{ url('label-admin') }}"></nldd-menu-item>
     {% if request.user.has_perm('core.view_suborganization') %}
