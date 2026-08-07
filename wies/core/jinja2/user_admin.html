@@ -25,12 +25,10 @@
   <nldd-search-field id="search-input" placeholder="Naam of e-mail zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input name="zoek">
   </nldd-search-field>
   </nldd-toolbar-item>
-  {# Filters openen de sheet (rol/merk/labels). De teller toont het aantal
-     actieve filters; het lijstfragment swapt de knop OOB zodat de teller na een
-     filterwijziging meteen klopt. #}
+  {# Filters openen de sheet (rol/merk/labels), die onderaan deze pagina staat. #}
   <nldd-toolbar-item slot="end">
   {% include "parts/user_filter_button.html" %}
-  <nldd-menu-item slot="overflow" text="Filters" icon="filter" hx-get="{{ url('admin-users') }}?filters=1" hx-trigger="select" hx-target="#user-filter-container" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" text="Filters" icon="filter" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="end">
   <nldd-button start-icon="plus" text="Nieuwe gebruiker" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
@@ -44,7 +42,11 @@
   {% include "parts/user_results.html" %}
   <div id="userFormModal"></div>
   {# Mount voor de filtersheet; user_filter.js opent hem na de htmx-swap. #}
-  <div id="user-filter-container"></div>
+  {# De sheet staat in de pagina, niet lazy: #filter-form erin is wat het
+     zoekveld en de chips aansturen. Lazy laden liet dat formulier ontbreken tot
+     je de sheet had geopend, en dan deden zoeken en token-dismiss niets. Een
+     nldd-sheet is verborgen tot show(), dus dit kost alleen render-tijd. #}
+  {% include "parts/user_filter_sheet.html" %}
   {# Mount voor de "Meer…"-sheet van een filtergroep (gedeeld met de lijsten). #}
   <div id="filter-options-modal-container"></div>
 {% endblock content %}

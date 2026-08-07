@@ -1486,9 +1486,6 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             # "Meer…"-sheet van één filtergroep (gedeeld met de lijsten).
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
-            # Filtersheet (alle groepen) openen.
-            if self.request.GET.get("filters"):
-                return ["parts/user_filter_sheet.html"]
             # Paginering: alleen de extra rijen.
             if self.request.GET.get("pagina"):
                 return ["parts/user_table_rows.html"]
@@ -1523,10 +1520,14 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             active_filters["merk"] = suborganization_filter
 
         if self.role_filter:
-            active_filters["rol"] = self.role_filter
+            # A list, not the bare string: the chips iterate every active_filters
+            # value, and iterating a string would walk it character by character —
+            # which silently matches nothing once a Group pk hits two digits.
+            active_filters["rol"] = [self.role_filter]
 
-        # No chips here: this page renders the compact filter bar, whose badge
-        # already marks a filter that matches nothing as active.
+        # Chips render in user_results.html, same as the other list pages: the
+        # filter panel lives in a sheet here, so without them nothing outside
+        # that sheet says WHAT is filtered — the badge only counts.
 
         # For each label category, count on queryset excluding that category's filter
         base_qs = self._get_base_queryset()
@@ -1614,7 +1615,6 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         }
 
         context["active_filters"] = active_filters
-        context["active_filter_count"] = len(active_filters)
         # Doel-URL voor het filterform en de "Meer…"-sheet (zie filter_sidebar).
         context["filter_target_url"] = reverse("admin-users")
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")

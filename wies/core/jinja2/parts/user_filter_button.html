@@ -1,5 +1,5 @@
-{# Filters-knop met teller. Los bestand zodat user_table.html hem OOB kan
-   meeswappen (id vast), zodat de teller na een filterwijziging meteen klopt. #}
-{% set filter_button_text = "Filters (%d)" % active_filter_count if active_filter_count else "Filters" %}
-<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="{{ filter_button_text }}" hx-get="{{ url('admin-users') }}?filters=1" hx-target="#user-filter-container" hx-swap="innerHTML" hx-push-url="false">
+{# Filters-knop. Geen teller: de chips in user_results.html zeggen wát er actief
+   is, en dat is meer dan een getal. De sheet staat al in de pagina, dus de knop
+   opent hem alleen — user_filter.js luistert op data-user-filter-open. #}
+<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open>
 </nldd-button>

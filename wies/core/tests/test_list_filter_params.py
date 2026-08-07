@@ -51,14 +51,13 @@ class ActiveFilterIndicatorTests(TestCase):
     are gated on having active filters, on the "Wie zit waar?" (home) and
     opdrachten (assignment-list) pages.
 
-    The Gebruikers (admin-users) page has no label filter in the NLDD design
-    system (only a search field), so it has no active-filter badge to assert on."""
+    De Gebruikers-pagina toont dezelfde chipstrip. Een waarde die nergens naar
+    resolvet krijgt geen eigen token (er is geen optie om te labelen), maar wel
+    de strip met "Wis alle filters" — anders sta je met een lege lijst zonder
+    weg terug."""
 
     ACTIVE_FILTER_MARKER = 'data-wies-dismiss="filter"'
     CLEAR_ALL_MARKER = "data-clear-all-filters"
-    # De Gebruikers-filterknop toont het aantal actieve filters ("Filters (N)");
-    # de telling verschijnt alleen als er iets actief is.
-    ACTIVE_BADGE_MARKER = "Filters ("
 
     def setUp(self):
         self.client = Client()
@@ -94,25 +93,25 @@ class ActiveFilterIndicatorTests(TestCase):
         assert response.status_code == 200
         assert self.ACTIVE_FILTER_MARKER in response.content.decode()
 
-    def test_admin_users_unresolvable_label_shows_active_badge(self):
+    def test_admin_users_unresolvable_label_shows_clear_all(self):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("admin-users"), {"labels": "abc"})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER in response.content.decode()
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
 
-    def test_admin_users_empty_label_hides_active_badge(self):
+    def test_admin_users_empty_label_hides_clear_all(self):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("admin-users"), {"labels": ""})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER not in response.content.decode()
+        assert self.CLEAR_ALL_MARKER not in response.content.decode()
 
-    def test_admin_users_valid_label_shows_active_badge(self):
+    def test_admin_users_valid_label_shows_clear_all(self):
         category = LabelCategory.objects.create(name="Cat", color="#FF5733")
         label = Label.objects.create(name="Python", category=category)
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
@@ -121,7 +120,7 @@ class ActiveFilterIndicatorTests(TestCase):
         response = self.client.get(reverse("admin-users"), {"labels": str(label.public_id)})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER in response.content.decode()
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
 
     def test_assignments_unresolvable_rol_shows_clear_all(self):
         self.client.force_login(self.user)

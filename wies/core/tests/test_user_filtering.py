@@ -29,9 +29,12 @@ class UserFilterRenderTest(TestCase):
         assert 'text="Beheerder"' in html  # rol-tag in de rij
 
     def test_filter_sheet_renders_role_and_merk(self):
+        # De sheet staat in de pagina zelf: #filter-form erin stuurt het zoekveld
+        # en de chips aan, dus het mag niet pas na openen bestaan.
         self.client.force_login(self.admin)
-        html = self.client.get(reverse("admin-users") + "?filters=1", headers={"hx-request": "true"}).content.decode()
+        html = self.client.get(reverse("admin-users")).content.decode()
         assert "user-filter-sheet" in html
+        assert 'id="filter-form"' in html
         assert "Beheerder" in html  # rol-optie
         assert "Merk A" in html  # merk-optie
         assert 'name="rol"' in html
@@ -46,27 +49,31 @@ class UserFilterRenderTest(TestCase):
                 user=u, name=f"X{i} Test", email=f"x{i}@rijksoverheid.nl", source="wies", suborganization=s
             )
         self.client.force_login(self.admin)
-        html = self.client.get(reverse("admin-users") + "?filters=1", headers={"hx-request": "true"}).content.decode()
+        html = self.client.get(reverse("admin-users")).content.decode()
         # Gedeeld filter_sidebar-patroon: top-3 + een "Meer..."-rij die de
         # filter_options_modal opent.
         assert "Meer..." in html
         assert "filter_modal=merk" in html
 
-    def test_filter_button_shows_count(self):
+    def test_active_filter_renders_chip(self):
+        # De chipstrip verving de teller op de knop: die zei hoeveel, niet wat.
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users") + f"?rol={self.beheerder.id}").content.decode()
-        assert "Filters (1)" in html
+        assert 'data-wies-dismiss="filter"' in html
+        assert 'data-filter-name="rol"' in html
+        assert "data-clear-all-filters" in html
 
 
 class UserFilterOobTest(UserFilterRenderTest):
-    def test_apply_swap_carries_oob_button_with_count(self):
+    def test_apply_swap_carries_chips_and_oob_sheet(self):
         self.client.force_login(self.admin)
         # Simuleer de apply-swap: filter-GET met HX-Request → #user-content fragment.
         html = self.client.get(
             reverse("admin-users") + f"?rol={self.beheerder.id}", headers={"hx-request": "true"}
         ).content.decode()
-        assert 'hx-swap-oob="outerHTML:#user-filter-button"' in html
-        assert "Filters (1)" in html
+        assert 'data-wies-dismiss="filter"' in html
+        # Het filterpaneel reist OOB mee, zodat de sheet de nieuwe counts toont.
+        assert 'hx-swap-oob="outerHTML:#filter-panel"' in html
 
 
 class UserFilterFlowTest(UserFilterRenderTest):
@@ -94,7 +101,7 @@ class UserFilterFlowTest(UserFilterRenderTest):
 class UserFilterSlotTest(UserFilterRenderTest):
     def test_sheet_filter_panel_has_no_sidebar_slot(self):
         self.client.force_login(self.admin)
-        html = self.client.get(reverse("admin-users") + "?filters=1", headers={"hx-request": "true"}).content.decode()
+        html = self.client.get(reverse("admin-users")).content.decode()
         # In de sheet mag het filterpaneel GEEN slot="sidebar" dragen.
         panel = html.split('id="filter-panel"')[1].split(">")[0]
         assert 'slot="sidebar"' not in panel, panel
