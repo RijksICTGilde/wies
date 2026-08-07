@@ -21,6 +21,11 @@
   // width (44) on every row; a leaf row's stand-in spacer matches it, at any
   // depth.
   var LEAF_CHEVRON_ZONE = "44";
+  var CHEVRON_ICON = "20";
+  // A group row's chevron is a bare cell, not a segment, so nothing separates it
+  // from the label. Same gap as the org-beheer tree (organization_admin.html),
+  // which pairs a bare chevron cell with its text the same way.
+  var GROUP_CHEVRON_GAP = "12";
   var INDENT_STEP = "16";
   // Below this, a query matches so many orgs it would force-build most of the
   // tree — the very cost lazy rendering exists to avoid. See `filter`.
@@ -108,7 +113,40 @@
       row.appendChild(cell("nldd-spacer-cell", { size: INDENT_STEP }));
     }
 
-    if (hasChildren) {
+    function toggleExpanded() {
+      var willExpand = !row.hasAttribute("expanded");
+      // Build this branch's children the first time it opens, not on modal
+      // load. `expanded` only reveals rows that already exist in the slot.
+      if (willExpand) self._ensureChildren(node);
+      row.toggleAttribute("expanded", willExpand);
+    }
+
+    var label = node.self ? 'Direct onder "' + node.label + '"' : node.label;
+    var selectable = this.isSelectable(node);
+    // A group row carries no checkbox, so expanding is its only action and the
+    // ROW is the control: whole row clickable, chevron cell marked `disclosure`
+    // so it still turns. A segmented action is for rows with more than one
+    // action — here that is a selectable branch, where the chevron expands and
+    // the label toggles the checkbox.
+    var rowIsControl = hasChildren && !selectable;
+
+    if (rowIsControl) {
+      row.setAttribute("button", "");
+      var groupChevron = cell("nldd-icon-cell", {
+        size: CHEVRON_ICON,
+        disclosure: "",
+      });
+      groupChevron.appendChild(cell("nldd-icon", { name: "chevron-right" }));
+      row.appendChild(groupChevron);
+      row.appendChild(cell("nldd-spacer-cell", { size: GROUP_CHEVRON_GAP }));
+      row.addEventListener("click", function (e) {
+        // Child rows sit INSIDE this row (slot="children"), so their clicks
+        // bubble through it. Without this guard, ticking a child collapses its
+        // group. Only this row's own control toggles it.
+        if (rowOf(e.composedPath()) !== row) return;
+        toggleExpanded();
+      });
+    } else if (hasChildren) {
       // `disclosure` makes the chevron announce the ROW's expanded state, so the
       // open/closed state lives in one place and drives the group as well.
       var chevron = cell("nldd-list-item-action", {
@@ -116,28 +154,24 @@
         disclosure: "",
         "accessible-label": node.label + " in- of uitklappen",
       });
-      var iconCell = cell("nldd-icon-cell", { size: "20" });
+      var iconCell = cell("nldd-icon-cell", { size: CHEVRON_ICON });
       iconCell.appendChild(cell("nldd-icon", { name: "chevron-right" }));
       chevron.appendChild(iconCell);
-      chevron.addEventListener("click", function () {
-        var willExpand = !row.hasAttribute("expanded");
-        // Build this branch's children the first time it opens, not on modal
-        // load. `expanded` only reveals rows that already exist in the slot.
-        if (willExpand) self._ensureChildren(node);
-        row.toggleAttribute("expanded", willExpand);
-      });
+      chevron.addEventListener("click", toggleExpanded);
       row.appendChild(chevron);
     } else {
       // Matches the chevron's in-grid width, or leaf rows drift.
       row.appendChild(cell("nldd-spacer-cell", { size: LEAF_CHEVRON_ZONE }));
     }
 
-    var label = node.self ? 'Direct onder "' + node.label + '"' : node.label;
-    var selectable = this.isSelectable(node);
-    var action = cell("nldd-list-item-action", {
-      width: "full",
-      "accessible-label": label,
-    });
+    // The row itself is the control for a group row, so its cells go straight
+    // in the row — nesting them in an action would put a control in a control.
+    var action = rowIsControl
+      ? row
+      : cell("nldd-list-item-action", {
+          width: "full",
+          "accessible-label": label,
+        });
     if (selectable) action.setAttribute("checkbox", "");
     if (selectable) {
       var boxCell = cell("nldd-cell", {});
@@ -178,7 +212,7 @@
         self.onToggle(node, checked);
       });
     }
-    row.appendChild(action);
+    if (action !== row) row.appendChild(action);
 
     // A branch can be built long after selections were restored or a parent was
     // checked, so mirror the node's current state onto the fresh row now.
@@ -327,13 +361,14 @@
     );
   };
 
-  /** The checkbox segment carries the row; a group row without one falls back to
-   *  its chevron, so every row in the tree is reachable. */
+  /** The checkbox segment carries the row; a group row IS the control, so it
+   *  takes focus itself. Either way every row in the tree is reachable. */
   function focusRow(row) {
     var action =
       row.querySelector(":scope > nldd-list-item-action[checkbox]") ||
       row.querySelector(":scope > nldd-list-item-action");
     if (action && action.focus) action.focus();
+    else if (row.focus) row.focus();
   }
 
   function hasBranch(row) {
@@ -342,15 +377,24 @@
     );
   }
 
-  function rowOf(el) {
-    var action = el.closest && el.closest("nldd-list-item-action");
-    return action ? action.closest("nldd-list-item") : null;
+  /** The row a key event came from. Walks the composed path rather than using
+   *  closest(): the focused control is a `<button>` inside a shadow root, either
+   *  the segmented action's or — on a group row — the row's own, and closest()
+   *  stops at that boundary. The first row in the path is the innermost one. */
+  function rowOf(path) {
+    for (var i = 0; i < path.length; i++) {
+      var el = path[i];
+      if (el.tagName && el.tagName.toLowerCase() === "nldd-list-item") {
+        return el;
+      }
+    }
+    return null;
   }
 
   OrgTree.prototype._bindKeyboard = function () {
     var self = this;
     this.container.addEventListener("keydown", function (e) {
-      var li = rowOf(e.composedPath()[0]);
+      var li = rowOf(e.composedPath());
       if (!li) return;
 
       var visible = self._visibleRows();
