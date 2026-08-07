@@ -37,7 +37,7 @@
   {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
-    {% for filter_group in filter_groups %}
+  {% for filter_group in filter_groups %}
     {% if filter_group.type == 'select-multi' %}
       {% set values = active_filters.get(filter_group.name) %}
       {% if values %}

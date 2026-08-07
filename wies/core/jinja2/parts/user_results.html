@@ -44,7 +44,5 @@
 {% include "parts/user_table.html" %}
 {% if request.headers.get("HX-Request") %}
   {# De sheet-inhoud (form met bijgewerkte counts/selectie) reist mee als OOB. #}
-  <div hx-swap-oob="outerHTML:#filter-panel">
-    {% include "parts/filter_sidebar.html" %}
-  </div>
+  <div hx-swap-oob="outerHTML:#filter-panel">{% include "parts/filter_sidebar.html" %}</div>
 {% endif %}
