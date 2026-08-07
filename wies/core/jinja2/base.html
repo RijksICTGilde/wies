@@ -81,10 +81,16 @@
     <nldd-page-footer slot="footer" width="1920px">
     {# Standaard-formaat: het naamloze slot vult page-footer__main. De
        nldd-container lijnt de tekst uit met de breadcrumbs/legal bar; de
-       nldd-rich-text verzorgt de opmaak van de titel en inline-links. #}
+       nldd-rich-text verzorgt de opmaak van de lopende tekst en inline-links.
+       De kop staat er bewust buiten: in rich-text krijgt een h2 de koppenschaal
+       van een pagina-titel, en dat is hier te groot. Met nldd-title stel je het
+       formaat los van het niveau in, zodat de h2 kan blijven wat hij is. #}
     <nldd-container>
-    <nldd-rich-text>
+    <nldd-title size="4">
     <h2>Over Wies</h2>
+    </nldd-title>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
     <p>Portaal voor ODI om inzicht te verschaffen over het wie, waar, wanneer en wat van collega's binnen de organisatie.</p>
     <p>
       <a href="https://github.com/RijksICTGilde/wies"
