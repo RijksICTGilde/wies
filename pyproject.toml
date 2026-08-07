@@ -130,8 +130,6 @@ profile = "jinja"
 indent = 2
 max_line_length = 120
 ignore = "H006,H021,H025,H030,H031"
-# Standalone HTML doc (investigation write-up), not a Jinja template.
-extend_exclude = "docs/org-picker-hang.html"
 # H006: img width/height (fix later)
 # H021: inline styles (fix later)
 # H025: orphan tag false-positive around the djlint:off block in header_logo.html (djlint 1.42.2)
