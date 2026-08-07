@@ -3,10 +3,13 @@ checkbox-rijen. De rij zelf is de checkbox (nldd-list-item[checkbox]); de
 nldd-checkbox erin is puur visueel. De waarden die het formulier submit staan
 als verborgen inputs achter de lijst — filter_interactions.js spiegelt de rij
 daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
-{# slot="sidebar" alleen in de nldd-sidebar-section (opdrachten/plaatsingen);
-   in de gebruikers-filtersheet staat geen sidebar-slot, dan zou de content
-   nergens geprojecteerd worden. filter_in_sheet zet de slot dan uit. #}
-<nldd-container id="filter-panel" {% if not filter_in_sheet %}slot="sidebar"{% endif %} padding="16" {% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}>
+{# Dit fragment reist als hx-swap-oob naar meerdere plekken (de sidebar-slot van
+   de lijstpagina's, de filtersheet van gebruikersbeheer), dus draagt het zelf
+   geen slot, padding of positionering: het weet niet waar het landt. Dat is aan
+   de parent — een nldd-container met slot en padding op de lijstpagina's, de
+   nldd-simple-section in de sheet. De container blijft staan omdat de OOB-swap
+   op zijn id richt. #}
+<nldd-container id="filter-panel" {% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <form id="filter-form"
       hx-get="{{ filter_target_url }}"
       hx-target="#results"

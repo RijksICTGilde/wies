@@ -7,9 +7,8 @@
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Filters" dismiss-text="Klaar"></nldd-top-title-bar>
 <nldd-simple-section>
-{% with filter_in_sheet = true %}
-  {% include "parts/filter_sidebar.html" %}
-{% endwith %}
+{# De section levert de padding; het filterpaneel brengt zelf niets mee. #}
+{% include "parts/filter_sidebar.html" %}
 </nldd-simple-section>
 </nldd-page>
 </nldd-sheet>
