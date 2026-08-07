@@ -24,7 +24,12 @@
       <nldd-spacer-cell size="32"></nldd-spacer-cell>
     {% endif %}
     {# djlint:off T028 #}
-    <nldd-text-cell text="{{ node.label or node.name }}{%- if node.abbreviations %} ({{ node.abbreviations[0] }}){% endif -%}{%- if node.is_inactive %} (inactief){% endif -%}"></nldd-text-cell>
+    {# divider-start: tijdelijk. Een bladrij opent met spacers, en tot NLDD 0.8.79
+       leidt de DS de divider-start alleen af als de rij met een icoon opent, dus
+       zonder deze marker loopt de lijn onder een blad door tot de rand terwijl
+       hij onder een tak wel bij de tekst begint. Weghalen zodra de vendored DS
+       de nieuwe default heeft. #}
+    <nldd-text-cell divider-start text="{{ node.label or node.name }}{%- if node.abbreviations %} ({{ node.abbreviations[0] }}){% endif -%}{%- if node.is_inactive %} (inactief){% endif -%}"></nldd-text-cell>
     {# djlint:on #}
     {% for child in node.tree_children or [] %}{{ render_row(child, depth + 1) }}{% endfor %}
     </nldd-list-item>
