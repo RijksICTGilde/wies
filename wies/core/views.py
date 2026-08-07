@@ -3534,6 +3534,10 @@ def _render_inline_edit_display(
         ),
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
+        # Laat display.html het potloodje `autofocus` geven na een opslag: htmx
+        # focust het eerste [autofocus]-element in geswapte inhoud, en zonder dat
+        # valt de focus naar <body> omdat de knop die hem had is weggeswapt.
+        "saved": saved,
         **extra,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
