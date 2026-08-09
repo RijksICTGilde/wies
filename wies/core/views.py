@@ -3780,8 +3780,10 @@ def _render_inline_edit_display(
         # Laat display.html het potloodje `autofocus` geven na een opslag: htmx
         # focust het eerste [autofocus]-element in geswapte inhoud, en zonder dat
         # valt de focus naar <body> omdat de knop die hem had is weggeswapt.
-        "saved": saved,
         **extra,
+        # Ná **extra: een display_context van een spec mag deze vlag niet stil
+        # overschrijven, want dan verdwijnt de focus zonder dat iets het meldt.
+        "saved": saved,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
