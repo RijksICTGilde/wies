@@ -132,6 +132,10 @@ def _services_initial(assignment):
             {
                 "id": service.id,
                 "placement_id": placement.id if placement else None,
+                # public_ids for the panel URLs the row menu builds (opdracht=, plaatsing=);
+                # the panel resolvers look up by public_id, never the integer PK.
+                "assignment_public_id": str(assignment.public_id),
+                "placement_public_id": str(placement.public_id) if placement else None,
                 "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,

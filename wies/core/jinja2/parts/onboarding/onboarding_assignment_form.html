@@ -14,7 +14,7 @@
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 <nldd-form>
 <form data-onboarding-detail-form
-      hx-post="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}"
+      hx-post="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#onboarding-detail"
       hx-swap="innerHTML">

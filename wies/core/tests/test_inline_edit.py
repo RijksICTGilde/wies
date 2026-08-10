@@ -493,13 +493,24 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-aanvraag")
         self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-ingevuld")
 
+    def test_unresolved_panel_target_404s_for_htmx_request(self):
+        """A panel HTMX request whose opdracht can't be resolved must 404 (so
+        HTMX shows the graceful "Niet gevonden" partial) rather than returning a
+        full page that gets swapped into the slide-over. Guards the HX-Target
+        string match in _is_side_panel_request (side-panel-content, hyphens)."""
+        response = self.client.get(
+            "/?opdracht=999",  # integer, never a valid public_id
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert response.status_code == 404
+
     def test_edit_param_renders_combined_form(self):
         """?opdracht=<id>&bewerken=1 renders the child sheet with one form over
         all assignment fields, posting to the assignment-edit endpoint."""
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken=1")
         assert response.status_code == 200
         self.assertContains(response, "Opdracht bewerken")
-        self.assertContains(response, f"/opdracht/{self.assignment.id}/bewerken/")
+        self.assertContains(response, f"/opdracht/{self.assignment.public_id}/bewerken/")
         for field in ("name", "extra_info", "owner", "start_date", "end_date"):
             self.assertContains(response, f'name="{field}"')
 
@@ -509,7 +520,7 @@ class AssignmentPanelRenderTest(TestCase):
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid=nieuw-aanvraag")
         assert response.status_code == 200
         self.assertContains(response, "Aanvraag toevoegen")
-        self.assertContains(response, f"/opdracht/{self.assignment.id}/teamlid/")
+        self.assertContains(response, f"/opdracht/{self.assignment.public_id}/teamlid/")
         self.assertContains(response, "service-TOTAL_FORMS")
         # The status radios post on their own (nldd-radio-button-field is
         # form-associated), so the group carries the field name and there is no
@@ -531,7 +542,7 @@ class AssignmentPanelRenderTest(TestCase):
         skill = Skill.objects.create(name="Ontwerper")
         existing = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
-            f"/opdracht/{self.assignment.id}/teamlid/",
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
             {
                 "service-TOTAL_FORMS": "1",
                 "service-INITIAL_FORMS": "0",
@@ -556,7 +567,7 @@ class AssignmentPanelRenderTest(TestCase):
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
-            f"/opdracht/{self.assignment.id}/teamlid/",
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
             {
                 "service-TOTAL_FORMS": "1",
                 "service-INITIAL_FORMS": "0",
@@ -578,7 +589,7 @@ class AssignmentPanelRenderTest(TestCase):
         keep = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         gone = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
-            f"/opdracht/{self.assignment.id}/teamlid/{gone.id}/verwijderen/",
+            f"/opdracht/{self.assignment.public_id}/teamlid/{gone.public_id}/verwijderen/",
             {"terug_url": f"/?opdracht={self.assignment.public_id}"},
         )
         assert response.status_code == 204
@@ -591,7 +602,7 @@ class AssignmentPanelRenderTest(TestCase):
         """A valid POST saves every field and sends the client back to the
         parent panel via HX-Location."""
         response = self.client.post(
-            f"/opdracht/{self.assignment.id}/bewerken/",
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
             {
                 "name": "Hernoemd",
                 "extra_info": "Toelichting",
@@ -618,7 +629,7 @@ class AssignmentPanelRenderTest(TestCase):
         """An invalid POST (missing required name) re-renders the child sheet
         with the error instead of saving."""
         response = self.client.post(
-            f"/opdracht/{self.assignment.id}/bewerken/",
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
             {
                 "name": "",
                 "owner": str(self.colleague.public_id),
@@ -976,6 +987,39 @@ class AssignmentServicesDisplayTest(TestCase):
         assert 'role="button"' not in team_outer
         assert "edit-icon-button" not in team_outer
 
+    def test_row_menu_edit_url_uses_public_id(self):
+        """The row "Aanvraag/Rol wijzigen" action must build its panel URL from
+        the assignment's public_id, not its integer PK — the panel resolver
+        looks up by public_id and a bare integer 404s ("Niet gevonden")."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        filled_row = self._row_containing(resp, self.colleague.name)
+        service = Placement.objects.get(colleague=self.colleague).service
+        assert f"opdracht={self.assignment.public_id}&teamlid={service.id}" in filled_row
+        # Never the integer assignment PK.
+        assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
+
+    def test_row_menu_view_url_uses_public_id(self):
+        """ "Bekijk teamlid" must build ?plaatsing= from the placement's
+        public_id, not its integer PK."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        filled_row = self._row_containing(resp, self.colleague.name)
+        placement = Placement.objects.get(colleague=self.colleague)
+        assert f"plaatsing={placement.public_id}" in filled_row
+        assert f"plaatsing={placement.id}&" not in filled_row
+
+    def test_row_menu_edit_url_resolves_to_member_panel(self):
+        """End-to-end: the URL the row menu emits must actually open the
+        member-edit panel (HTTP 200), not the "Niet gevonden" partial."""
+        service = Placement.objects.get(colleague=self.colleague).service
+        panel = self.client.get(
+            f"/?opdracht={self.assignment.public_id}&teamlid={service.id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert panel.status_code == 200
+        self.assertContains(panel, "Teamlid bewerken")
+
 
 class AssignmentServicesAuditTest(TestCase):
     """Editing one team member via the member-edit route emits one audit
@@ -1013,7 +1057,7 @@ class AssignmentServicesAuditTest(TestCase):
         self.vacant_service = Service.objects.create(
             description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
         )
-        self.member_url = reverse("assignment-member-edit", args=[self.assignment.id])
+        self.member_url = reverse("assignment-member-edit", args=[self.assignment.public_id])
 
     def _post_member(self, row):
         """POST one team-member row to the member-edit endpoint the way the
@@ -1201,7 +1245,9 @@ class AssignmentServicesAuditTest(TestCase):
         team minus the removed row, so the "blank errored form" bug the
         original test guarded against can no longer occur."""
         original_vacant_id = self.vacant_service.id
-        delete_url = reverse("assignment-member-delete", args=[self.assignment.id, self.vacant_service.id])
+        delete_url = reverse(
+            "assignment-member-delete", args=[self.assignment.public_id, self.vacant_service.public_id]
+        )
         resp = self.client.post(delete_url, {"terug_url": f"/?opdracht={self.assignment.public_id}"})
         assert resp.status_code == 204
         # The removed service must actually be gone from the DB.

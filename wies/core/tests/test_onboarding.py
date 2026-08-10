@@ -235,7 +235,7 @@ class OnboardingAssignmentStepTest(TestCase):
         self.assertContains(response, "Datateam MinBZK")
         # De stap toont de gegevens; wijzigen gebeurt in het bewerkscherm.
         self.assertContains(response, "Wijzigen")
-        self.assertContains(response, reverse("onboarding-assignment-edit", args=[assignment.id]))
+        self.assertContains(response, reverse("onboarding-assignment-edit", args=[assignment.public_id]))
         # The consultant's own rol + rolomschrijving are shown.
         self.assertContains(response, "Jouw rol")
         self.assertContains(response, "Data engineering")
@@ -248,7 +248,7 @@ class OnboardingAssignmentStepTest(TestCase):
     def test_assignment_edit_screen_renders_and_saves(self):
         assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
         self.client.force_login(self.user)
-        url = reverse("onboarding-assignment-edit", args=[assignment.id])
+        url = reverse("onboarding-assignment-edit", args=[assignment.public_id])
 
         response = self.client.get(url)
         assert response.status_code == 200
@@ -269,7 +269,7 @@ class OnboardingAssignmentStepTest(TestCase):
         )
         assert response.status_code == 200
         # De bijgewerkte box gaat terug naar de stap; het scherm sluit zichzelf.
-        assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.id}"
+        assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.public_id}"
         assert response["HX-Trigger"] == "onboardingDetailClose"
         assignment.refresh_from_db()
         service.refresh_from_db()
@@ -281,7 +281,7 @@ class OnboardingAssignmentStepTest(TestCase):
         # Een opdracht waar je niet op staat hoort niet bewerkbaar te zijn.
         other = Assignment.objects.create(name="Niet van mij", owner=self.bm, source="wies")
         self.client.force_login(self.user)
-        response = self.client.get(reverse("onboarding-assignment-edit", args=[other.id]))
+        response = self.client.get(reverse("onboarding-assignment-edit", args=[other.public_id]))
         assert response.status_code == 404
 
     def test_wizard_skips_opdracht_step_when_not_placed(self):

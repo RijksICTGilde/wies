@@ -187,7 +187,7 @@ class AssignmentCreateTest(TestCase):
         # De vervolg-request (zoals htmx die na HX-Location doet): panel-load.
         panel = self.client.get(
             reverse("assignment-list"),
-            {"opdracht": assignment.id},
+            {"opdracht": assignment.public_id},
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         html = panel.content.decode()

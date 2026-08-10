@@ -1,10 +1,11 @@
-"""Tests for ``placement_edit_view`` (POST /plaatsing/<pk>/bewerken/).
+"""Tests for ``placement_edit_view`` (POST /plaatsing/<public_id>/bewerken/).
 
 Regressietest: deze view had geen tests, waardoor een aanroep naar de
 niet-bestaande ``_emit_placement_change_on_assignment`` bij élke geslaagde
 opslag een 500 gaf (#393).
 """
 
+import uuid
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -63,7 +64,7 @@ class PlacementEditViewTest(TestCase):
             period_source=Placement.SERVICE,
             source="wies",
         )
-        self.url = reverse("placement-edit", args=[self.placement.pk])
+        self.url = reverse("placement-edit", args=[self.placement.public_id])
 
     def _valid_payload(self, **overrides):
         """Geldige POST voor het gecombineerde Service+Placement-formulier."""
@@ -132,6 +133,6 @@ class PlacementEditViewTest(TestCase):
     def test_unknown_pk_returns_404(self):
         self.client.force_login(self.owner_user)
 
-        response = self.client.post(reverse("placement-edit", args=[999999]), self._valid_payload())
+        response = self.client.post(reverse("placement-edit", args=[uuid.uuid4()]), self._valid_payload())
 
         assert response.status_code == 404

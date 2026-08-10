@@ -104,7 +104,7 @@ class AssignmentPanelParamTests(TestCase):
     """The ?opdracht= side-panel param resolves by public_id, so an authenticated
     user can no longer walk the integer PK space to harvest opdracht metadata."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()
@@ -173,7 +173,7 @@ class ColleaguePanelParamTests(TestCase):
     """The ?collega= side-panel param resolves by public_id, so an authenticated
     user can no longer walk the integer PK space to harvest colleague PII."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()
@@ -222,7 +222,7 @@ class PlacementPanelParamTests(TestCase):
     """The ?plaatsing= panel resolves by public_id AND keeps placement_visibility:
     a placement the viewer may not see is indistinguishable from a nonexistent one."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()

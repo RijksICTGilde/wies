@@ -1,7 +1,7 @@
 {# Ook los gerenderd door onboarding_assignment_edit na het opslaan, met
    HX-Retarget op deze wrapper — vandaar de id-div eromheen. #}
 {% set assignment = entry.assignment %}
-<div id="onboarding-assignment-{{ assignment.id }}">
+<div id="onboarding-assignment-{{ assignment.public_id }}">
   <nldd-box>
   <nldd-container padding="16">
   <nldd-title size="5">
@@ -50,7 +50,7 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-container layout="wrap" gap="8">
   {% if entry.user_can_edit %}
-    <nldd-button variant="secondary" size="sm" start-icon="edit" text="Wijzigen" hx-get="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}" hx-target="#onboarding-detail" hx-swap="innerHTML"></nldd-button>
+    <nldd-button variant="secondary" size="sm" start-icon="edit" text="Wijzigen" hx-get="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}" hx-target="#onboarding-detail" hx-swap="innerHTML"></nldd-button>
   {% endif %}
   {% if assignment.owner and entry.owner_mailto %}
     <nldd-button variant="secondary" size="sm" start-icon="envelope" text="E-mail {{ assignment.owner.name }}" href="{{ entry.owner_mailto }}"></nldd-button>

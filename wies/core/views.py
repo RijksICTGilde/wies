@@ -167,7 +167,7 @@ def _is_side_panel_request(request):
     ``panel_data``). Lets a view 404 an unresolved panel target instead of
     rendering a template with no data; a full-page load stays graceful and shows
     the page without a panel."""
-    return request.headers.get("HX-Target") in ("side_panel-content", "side_panel-container")
+    return request.headers.get("HX-Target") in ("side-panel-content", "side-panel-container")
 
 
 def _resolve_panel_object(request, model, public_id, *, select_related=()):
@@ -2945,13 +2945,13 @@ def onboarding_complete(request):
 # blijft.
 
 
-def _onboarding_entry(request, pk):
+def _onboarding_entry(request, public_id):
     """De onboarding-entry voor deze opdracht, of None als je er niet op staat."""
     from wies.core.context_processors import _onboarding_assignments  # noqa: PLC0415 — avoids import cycle
 
     colleague = getattr(request.user, "colleague", None)
     for entry in _onboarding_assignments(colleague, request.user):
-        if entry["assignment"].id == pk:
+        if entry["assignment"].public_id == public_id:
             return entry
     return None
 
@@ -3008,9 +3008,9 @@ def _onboarding_edit_groups(request, entry, data=None):
     return groups
 
 
-def onboarding_assignment_edit(request, pk):
+def onboarding_assignment_edit(request, public_id):
     """Bewerkscherm voor één opdracht binnen de onboardingwizard."""
-    entry = _onboarding_entry(request, pk)
+    entry = _onboarding_entry(request, public_id)
     if entry is None:
         raise Http404("Unknown assignment")
 
@@ -3024,9 +3024,9 @@ def onboarding_assignment_edit(request, pk):
                 save_edit_specs(request, group["specs"], group["form"].cleaned_data)
         # De bijgewerkte box vervangt de oude in de stap; het bewerkscherm sluit
         # zichzelf op de trigger (zie onboarding.js).
-        entry = _onboarding_entry(request, pk)
+        entry = _onboarding_entry(request, public_id)
         response = render(request, "parts/onboarding/onboarding_assignment_box.html", {"entry": entry})
-        response["HX-Retarget"] = f"#onboarding-assignment-{pk}"
+        response["HX-Retarget"] = f"#onboarding-assignment-{public_id}"
         response["HX-Reswap"] = "outerHTML"
         response["HX-Trigger"] = "onboardingDetailClose"
         return response
@@ -4007,7 +4007,7 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
 
 
 @require_POST
-def placement_edit_view(request, pk):
+def placement_edit_view(request, public_id):
     """Sla het gecombineerde bewerkformulier van de plaatsing-child-sheet op.
 
     Bij succes stuurt deze view de client via HX-Location terug naar de
@@ -4021,10 +4021,11 @@ def placement_edit_view(request, pk):
     GET nooit een leeg formulier kan tonen.
     """
     placement = (
-        Placement.objects.select_related("colleague", "service__assignment", "service__skill").filter(pk=pk).first()
+        Placement.objects.select_related("colleague", "service__assignment", "service__skill")
+        .filter(public_id=public_id)
+        .first()
     )
-    # _resolve_placement_panel handhaaft de zichtbaarheidsregels en zoekt op
-    # public_id (de route hier draait nog op de interne pk).
+    # _resolve_placement_panel handhaaft de zichtbaarheidsregels (en zoekt óók op public_id).
     if placement is None or _resolve_placement_panel(request, placement.public_id) is None:
         raise Http404("Unknown placement")
 
@@ -4041,7 +4042,7 @@ def placement_edit_view(request, pk):
         panel_data = _build_placement_panel_data(placement, request)
         panel_data["form"] = form
         panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = reverse("placement-edit", args=[placement.id])
+        panel_data["edit_url"] = reverse("placement-edit", args=[placement.public_id])
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
@@ -4061,7 +4062,7 @@ def _build_placement_edit_panel_data(placement, request):
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "form": form_cls(initial=initial),
         "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
-        "edit_url": reverse("placement-edit", args=[placement.id]),
+        "edit_url": reverse("placement-edit", args=[placement.public_id]),
     }
 
 
@@ -4086,12 +4087,12 @@ def _build_assignment_edit_panel_data(assignment, request):
         # Eén-veld-sheet: de titel noemt dat veld ("Business Manager wijzigen").
         "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
         "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
-        "edit_url": reverse("assignment-edit", args=[assignment.id]) + (f"?veld={only}" if only else ""),
+        "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
     }
 
 
 @require_POST
-def assignment_edit_view(request, pk):
+def assignment_edit_view(request, public_id):
     """Sla het gecombineerde opdrachtformulier van de child sheet op.
 
     Zelfde contract als placement_edit_view: bij succes HX-Location terug naar
@@ -4100,7 +4101,7 @@ def assignment_edit_view(request, pk):
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
-    assignment = Assignment.objects.filter(pk=pk).first()
+    assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
 
@@ -4113,7 +4114,7 @@ def assignment_edit_view(request, pk):
 
     fallback = _build_panel_url(request, opdracht=assignment.public_id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
-    edit_url = reverse("assignment-edit", args=[assignment.id]) + (f"?veld={only}" if only else "")
+    edit_url = reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else "")
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
@@ -4240,12 +4241,12 @@ def _build_assignment_member_panel_data(assignment, request):
         "member_formset": spec.formset_factory(initial=[initial_row]),
         "member_heading": heading,
         "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
-        "member_edit_url": reverse("assignment-member-edit", args=[assignment.id]),
+        "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
 
 @require_POST
-def assignment_member_edit_view(request, pk):
+def assignment_member_edit_view(request, public_id):
     """Sla één teamlid op uit de child sheet (bewerken of toevoegen).
 
     Het formulier post één formset-rij; de overige rijen komen uit de database,
@@ -4255,7 +4256,7 @@ def assignment_member_edit_view(request, pk):
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
     from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
 
-    assignment = Assignment.objects.filter(pk=pk).first()
+    assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
 
@@ -4271,7 +4272,7 @@ def assignment_member_edit_view(request, pk):
         panel_data["member_formset"] = formset
         panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
         panel_data["parent_url"] = return_path
-        panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.id])
+        panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
     formset = spec.formset_factory(data=request.POST)
@@ -4300,11 +4301,11 @@ def assignment_member_edit_view(request, pk):
 
 
 @require_POST
-def assignment_member_delete_view(request, pk, service_id):
+def assignment_member_delete_view(request, public_id, service_public_id):
     """Verwijder één teamlid, na de bevestigingsdialoog in het paneel."""
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
 
-    assignment = Assignment.objects.filter(pk=pk).first()
+    assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
 
@@ -4312,11 +4313,14 @@ def assignment_member_delete_view(request, pk, service_id):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return HttpResponseForbidden()
 
-    rows = _services_initial(assignment)
-    if not any(row["id"] == service_id for row in rows):
+    # De service wordt binnen deze opdracht op public_id opgezocht; de row-sync
+    # hieronder vergelijkt verder op de interne service-pk (row["id"]).
+    service = assignment.services.filter(public_id=service_public_id).first()
+    if service is None:
         raise Http404("Unknown service")
 
-    services_data = [initial_row_to_services_data(row) for row in rows if row["id"] != service_id]
+    rows = _services_initial(assignment)
+    services_data = [initial_row_to_services_data(row) for row in rows if row["id"] != service.id]
     apply_team_change(request, assignment, services_data)
 
     return_path = _safe_return_path(

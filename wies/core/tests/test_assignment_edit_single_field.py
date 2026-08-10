@@ -52,7 +52,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org, role="PRIMARY")
 
     def test_owner_save_leaves_name_and_period_untouched(self):
-        url = reverse("assignment-edit", args=[self.assignment.id]) + "?veld=owner"
+        url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(
             url,
             {"owner": str(self.other.public_id), "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"},
@@ -79,6 +79,6 @@ class AssignmentEditSingleFieldTest(TestCase):
 
     def test_forbidden_without_edit_rights(self):
         self.client.force_login(self.other_user)
-        url = reverse("assignment-edit", args=[self.assignment.id]) + "?veld=owner"
+        url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(url, {"owner": str(self.owner.public_id)})
         assert response.status_code == 403
