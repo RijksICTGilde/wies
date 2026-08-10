@@ -304,3 +304,162 @@ class LabelManagementIntegrationTest(TestCase):
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "Beheer")
+
+
+class LabelCategoryManageFormsetTest(TestCase):
+    """The "Categorieën beheren" sheet: add/remove rows and save run through the
+    single manage endpoint, which re-renders the body from the posted state."""
+
+    GREY = "#DCE3EA"
+
+    def setUp(self):
+        self.client = Client()
+        self.admin_user = User.objects.create_user(email="admin@rijksoverheid.nl", first_name="Admin", last_name="User")
+        self.admin_user.user_permissions.add(
+            *Permission.objects.filter(
+                codename__in=["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"]
+            )
+        )
+        self.client.force_login(self.admin_user)
+        self.url = reverse("label-category-manage")
+
+    def _management(self, total, initial):
+        return {
+            "form-TOTAL_FORMS": str(total),
+            "form-INITIAL_FORMS": str(initial),
+            "form-MIN_NUM_FORMS": "0",
+            "form-MAX_NUM_FORMS": "1000",
+        }
+
+    def test_plain_submit_saves(self):
+        """A plain submit (no control param) saves. Save is NOT keyed on a
+        button name/value: nldd-button keeps its submitter name in the shadow
+        root, so that never reaches the POST — the absence of extra_row/
+        delete_new_row_index is what marks a real save."""
+        data = self._management(total=1, initial=0)
+        data.update({"form-0-name": "Solo", "form-0-color": self.GREY})
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        assert response.headers.get("HX-Redirect") == reverse("label-admin")
+        assert set(LabelCategory.objects.values_list("name", flat=True)) == {"Solo"}
+
+    def test_save_creates_multiple_new_rows_ignoring_a_gap(self):
+        """Saving with two new rows at non-contiguous indices (a removed middle
+        row leaves a gap) creates both categories and skips the gap."""
+        data = self._management(total=3, initial=0)
+        data.update(
+            {
+                "form-0-name": "Alpha",
+                "form-0-color": self.GREY,
+                # index 1 intentionally absent — simulates a removed new row
+                "form-2-name": "Gamma",
+                "form-2-color": self.GREY,
+            }
+        )
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        assert response.headers.get("HX-Redirect") == reverse("label-admin")
+        assert set(LabelCategory.objects.values_list("name", flat=True)) == {"Alpha", "Gamma"}
+
+    def test_extra_row_adds_a_blank_row_and_keeps_typed_values(self):
+        """extra_row re-renders the body with one more blank row and no
+        validation errors, preserving already-typed values."""
+        data = self._management(total=1, initial=0)
+        data.update({"extra_row": "1", "form-0-name": "Halfway", "form-0-color": self.GREY})
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        # No save happened.
+        assert not LabelCategory.objects.exists()
+        # Typed value survives and the counter grew to two rows (the management
+        # input spans lines, so match on name + value separately).
+        self.assertContains(response, "Halfway")
+        self.assertContains(response, "form-TOTAL_FORMS")
+        self.assertContains(response, 'value="2"')
+        self.assertContains(response, 'name="form-1-name"')  # the new blank row
+        # No premature "required" error while still filling in.
+        self.assertNotContains(response, "verplicht")
+
+    def test_delete_new_row_index_removes_row_and_renumbers(self):
+        """Removing a new row drops it and renumbers the remaining new rows so no
+        blank gap row reappears; other typed values survive."""
+        data = self._management(total=3, initial=0)
+        data.update(
+            {
+                "delete_new_row_index": "1",
+                "form-0-name": "Alpha",
+                "form-0-color": self.GREY,
+                "form-1-name": "Beta",
+                "form-1-color": self.GREY,
+                "form-2-name": "Gamma",
+                "form-2-color": self.GREY,
+            }
+        )
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        assert not LabelCategory.objects.exists()
+        self.assertContains(response, 'value="Alpha"')
+        self.assertNotContains(response, 'value="Beta"')
+        self.assertContains(response, 'value="Gamma"')
+        # Two rows left, contiguous — Gamma renumbered to index 1, no gap.
+        self.assertContains(response, "form-TOTAL_FORMS")
+        self.assertContains(response, 'value="2"')
+        self.assertContains(response, 'name="form-1-name" value="Gamma"')
+
+    def test_delete_then_add_does_not_resurrect_the_removed_row(self):
+        """Regression: after removing a middle new row, adding another row must
+        not bring the removed row back as a blank. Because delete renumbers the
+        rows contiguously, the follow-up add sees no gap to re-materialise."""
+        # Delete the middle of three new rows → server returns two contiguous rows.
+        data = self._management(total=3, initial=0)
+        data.update(
+            {
+                "delete_new_row_index": "1",
+                "form-0-name": "Alpha",
+                "form-0-color": self.GREY,
+                "form-1-name": "Beta",
+                "form-1-color": self.GREY,
+                "form-2-name": "Gamma",
+                "form-2-color": self.GREY,
+            }
+        )
+        after_delete = self.client.post(self.url, data)
+        self.assertContains(after_delete, 'name="form-1-name" value="Gamma"')
+
+        # Now add a row on the compacted state (2 rows). The new blank lands at
+        # index 2; there is no resurrected "Beta" and no stray empty index-1 row.
+        add_data = self._management(total=2, initial=0)
+        add_data.update(
+            {
+                "extra_row": "1",
+                "form-0-name": "Alpha",
+                "form-0-color": self.GREY,
+                "form-1-name": "Gamma",
+                "form-1-color": self.GREY,
+            }
+        )
+        after_add = self.client.post(self.url, add_data)
+        self.assertContains(after_add, 'value="Alpha"')
+        self.assertContains(after_add, 'value="Gamma"')
+        self.assertNotContains(after_add, 'value="Beta"')
+        # Three rows now, the third blank; no phantom blank between the two filled.
+        self.assertContains(after_add, "form-TOTAL_FORMS")
+        self.assertContains(after_add, 'value="3"')
+        self.assertContains(after_add, 'name="form-2-name"')
+
+    def test_save_with_blanked_existing_name_shows_error_and_does_not_save(self):
+        """Blanking an existing category's name and saving is rejected (name is
+        required): the body re-renders with a visible, wired error, no redirect,
+        and nothing is saved."""
+        category = LabelCategory.objects.create(name="Skills", color=self.GREY)
+        data = self._management(total=1, initial=1)
+        data.update({"form-0-id": str(category.pk), "form-0-name": "", "form-0-color": self.GREY})
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        # Invalid → re-render the body, no HX-Redirect to the labels page.
+        assert response.headers.get("HX-Redirect") is None
+        # The error is rendered through as_field_group (nldd-form-field-error-text),
+        # not a bare widget — otherwise the message never shows.
+        self.assertContains(response, "Dit veld is verplicht.")
+        self.assertContains(response, "nldd-form-field-error-text")
+        category.refresh_from_db()
+        assert category.name == "Skills"

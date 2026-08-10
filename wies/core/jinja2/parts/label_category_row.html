@@ -1,0 +1,38 @@
+{# Eén rij in de "Categorieën beheren"-sheet. Gedeeld door de formset-lus en
+   door de her-render bij "rij toevoegen"/"rij weghalen". `form` is het
+   (gebonden) rijformulier, `row_index` de formset-index van deze rij.
+
+   De rij-actie verschilt per soort rij:
+   - Een opgeslagen categorie (form.instance.pk) verwijder je via de
+     bevestigingsdialoog (label-category-delete) — dat gaat meteen en verhuist de
+     labels eronder.
+   - Een nog niet opgeslagen rij haal je weg via de server (delete_new_row_index):
+     de knop post de huidige toestand terug en de body rendert opnieuw zonder die
+     rij. Dat gaat via de server en niet puur in de browser, omdat de her-render
+     bij een volgende toevoeging een DOM-verwijderd gat als lege rij zou
+     terugbrengen. #}
+<nldd-list-item data-category-row>
+<input type="hidden"
+       name="{{ form.add_prefix('id') }}"
+       value="{{ form.instance.pk or '' }}">
+{# as_field_group (niet {{ form.name }} = as_widget): dat wrapt het veld in een
+   nldd-form-field en koppelt de foutmelding via id, zodat "Dit veld is
+   verplicht." zichtbaar wordt bij een lege naam. #}
+{# vertical-alignment="top" op alle cellen: een validatiefout laat de naam-cel
+   groeien, en zonder dit centreren de kleur-dropdown en de prullenbak mee omlaag
+   waardoor de rij scheef staat. Nu blijven invoer, dropdown en knop op één lijn
+   en hangt de foutmelding eronder. #}
+<nldd-cell width="full" vertical-alignment="top">{{ form.name.as_field_group() }}</nldd-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+{# Vaste kolombreedte: "Blauw"/"Groen" zijn de langste woorden, met wat
+   speling voor de chevron. #}
+<nldd-cell width="112px" vertical-alignment="top">{{ form.color.as_field_group() }}</nldd-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-cell width="fit-content" vertical-alignment="top">
+{% if form.instance.pk %}
+  <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'public_id': form.instance.public_id}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
+{% else %}
+  <nldd-icon-button variant="destructive" icon="delete" text="Nieuwe categorie verwijderen" hx-post="{{ form_post_url }}" hx-vals='{"delete_new_row_index": "{{ row_index }}"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-icon-button>
+{% endif %}
+</nldd-cell>
+</nldd-list-item>

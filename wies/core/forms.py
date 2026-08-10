@@ -139,6 +139,17 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
         model = LabelCategory
         fields = ["name", "color"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # De rijen staan onder elkaar in één sheet, dus een zichtbaar "Naam"/
+        # "Kleur"-label bij elke rij is ruis. We renderen ze via as_field_group
+        # (zodat een validatiefout netjes gekoppeld en zichtbaar is), maar zonder
+        # zichtbaar label: het label verhuist naar accessible-label zodat
+        # screenreaders het veld nog benoemen.
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("accessible-label", str(field.label))
+            field.label = ""
+
     def has_changed(self):
         """Een lege nieuwe rij telt niet mee.
 
@@ -151,8 +162,9 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
         return super().has_changed()
 
 
-#: Rows can be added client-side, so the formset accepts more rows than it
-#: rendered; unchanged empty rows are skipped on save.
+#: Rows are added/removed server-side (the manage view re-renders the body from
+#: the posted state), so the formset accepts more rows than the queryset holds;
+#: unchanged empty rows are skipped on save (see LabelCategoryRowForm.has_changed).
 LabelCategoryFormSet = forms.modelformset_factory(
     LabelCategory,
     form=LabelCategoryRowForm,

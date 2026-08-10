@@ -48,7 +48,6 @@ from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
-    CATEGORY_COLOR_CHOICES,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
@@ -2108,14 +2107,36 @@ def profile_labels_edit(request):
 def label_category_manage(request):
     """Alle categorieën in één sheet: hernoemen, kleur kiezen, rijen toevoegen.
 
-    Hernoemen en nieuwe rijen zijn gestapeld tot "Opslaan"; verwijderen loopt
-    via de bevestigingsdialoog en gaat meteen, omdat het gevolgen heeft voor de
-    labels eronder (die verhuizen naar de vangnetcategorie).
+    Rij bijmaken (``extra_row``) en een nog niet opgeslagen rij weghalen
+    (``delete_new_row_index``) posten de huidige toestand terug en renderen
+    alleen de body opnieuw — zonder te valideren, zodat de al ingetypte waarden
+    blijven staan en "naam is verplicht" niet op lege rijen flitst. Weghalen
+    loopt via de server (niet puur in de browser): een gat in de indexen zou de
+    her-render bij een volgende toevoeging als lege rij terugbrengen, dus de
+    helper hernummert de nieuwe rijen aaneengesloten. Een gewone submit valideert
+    en bewaart.
+
+    Een bestaande categorie verwijderen loopt apart via ``label-category-delete``.
     """
     queryset = LabelCategory.objects.all()
+    prefix = LabelCategoryFormSet().prefix
 
     invalid_post = False
     if request.method == "POST":
+        is_rerender = "extra_row" in request.POST or "delete_new_row_index" in request.POST
+        if is_rerender:
+            data = request.POST.copy()
+            if "extra_row" in data:
+                total = int(data.get(f"{prefix}-TOTAL_FORMS", 0) or 0)
+                data[f"{prefix}-TOTAL_FORMS"] = str(total + 1)
+            else:
+                data = _drop_new_category_row(data, prefix, data.get("delete_new_row_index"))
+            formset = LabelCategoryFormSet(data, queryset=queryset)
+            if "extra_row" in request.POST and formset.forms:
+                # Focus de zojuist toegevoegde (laatste) rij, zoals de oude JS deed.
+                formset.forms[-1].fields["name"].widget.attrs["autofocus"] = True
+            return _render_category_manage_body(request, formset)
+
         formset = LabelCategoryFormSet(request.POST, queryset=queryset)
         if formset.is_valid():
             formset.save()
@@ -2132,13 +2153,55 @@ def label_category_manage(request):
     # Een fout ververst alleen de inhoud: de sheet staat al open, en de hele
     # sheet opnieuw sturen zou er een tweede overheen zetten.
     template = "parts/label_category_manage_body.html" if invalid_post else "parts/label_category_manage_sheet.html"
+    return _render_category_manage_body(request, formset, template=template)
 
+
+def _drop_new_category_row(data, prefix, drop_index):
+    """Haal één nog niet opgeslagen rij uit de geposte formset-data.
+
+    Een gat in de indexen zou als lege rij terugkomen zodra de body opnieuw
+    rendert (bijvoorbeeld bij een volgende "rij toevoegen"), dus we hernummeren
+    de nieuwe rijen aaneengesloten. Bestaande (opgeslagen) rijen houden hun
+    index: een modelformset koppelt de eerste INITIAL_FORMS formulieren op
+    volgorde aan de queryset, dus een bestaande rij naar een ander slot schuiven
+    zou hem als nieuw object opslaan.
+    """
+    try:
+        drop = int(drop_index)
+    except TypeError, ValueError:
+        return data
+
+    initial = int(data.get(f"{prefix}-INITIAL_FORMS", 0) or 0)
+    total = int(data.get(f"{prefix}-TOTAL_FORMS", 0) or 0)
+    if drop < initial:
+        # Alleen nieuwe rijen zijn zo weg te halen; negeer een rare index.
+        return data
+
+    result = data.copy()
+    # Verzamel de veldwaarden per index, laat de te verwijderen index vallen en
+    # hernummer de nieuwe rijen aaneengesloten vanaf INITIAL_FORMS.
+    new_rows = []
+    for i in range(initial, total):
+        if i == drop:
+            continue
+        new_rows.append({k[len(f"{prefix}-{i}-") :]: v for k, v in data.items() if k.startswith(f"{prefix}-{i}-")})
+    for i in range(initial, total):
+        for key in [k for k in result if k.startswith(f"{prefix}-{i}-")]:
+            del result[key]
+    for offset, fields in enumerate(new_rows):
+        i = initial + offset
+        for name, value in fields.items():
+            result[f"{prefix}-{i}-{name}"] = value
+    result[f"{prefix}-TOTAL_FORMS"] = str(initial + len(new_rows))
+    return result
+
+
+def _render_category_manage_body(request, formset, template="parts/label_category_manage_body.html"):
     return render(
         request,
         template,
         {
             "formset": formset,
-            "color_choices": CATEGORY_COLOR_CHOICES,
             "form_post_url": reverse("label-category-manage"),
         },
     )

@@ -1,7 +1,11 @@
-{# De inhoud van de categorie-beheer-sheet, los van de sheet zelf: bij een
-   validatiefout rendert de view alléén dit stuk (hx-target="#categoryManageBody"),
-   zodat de openstaande sheet blijft staan in plaats van dat er een tweede
-   overheen opent. #}
+{# De inhoud van de categorie-beheer-sheet, los van de sheet zelf: elke actie
+   (rij toevoegen, een nieuwe rij weghalen, opslaan met een validatiefout)
+   rendert alléén dit stuk (hx-target="#categoryManageBody"), zodat de
+   openstaande sheet blijft staan in plaats van dat er een tweede overheen opent.
+
+   Rij toevoegen en een nog niet opgeslagen rij weghalen lopen via de server: de
+   knoppen posten de huidige toestand terug met een stuurparameter, waarna de
+   view de body opnieuw rendert — inclusief de al ingetypte waarden. #}
 <nldd-form>
 <form method="post"
       action="{{ form_post_url }}"
@@ -26,24 +30,14 @@
          value="1000">
   <nldd-list accessible-label="Categorieën">
   {% for form in formset %}
-    <nldd-list-item data-category-row>
-    <input type="hidden"
-           name="{{ form.add_prefix('id') }}"
-           value="{{ form.instance.pk or '' }}">
-    <nldd-cell width="full">{{ form.name }}</nldd-cell>
-    <nldd-spacer-cell size="12"></nldd-spacer-cell>
-    {# Vaste kolombreedte: "Blauw"/"Groen" zijn de langste woorden, met wat
-       speling voor de chevron. #}
-    <nldd-cell width="112px">{{ form.color }}</nldd-cell>
-    <nldd-spacer-cell size="12"></nldd-spacer-cell>
-    <nldd-cell width="fit-content">
-    <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'public_id': form.instance.public_id}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
-    </nldd-cell>
-    </nldd-list-item>
+    {% set row_index = loop.index0 %}
+    {% include "parts/label_category_row.html" %}
   {% endfor %}
   <nldd-list-item>
   <nldd-cell width="full">
-  <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" data-add-category></nldd-button>
+  {# Rij bijmaken: post de huidige toestand terug met extra_row, de server
+     rendert de body met één lege rij erbij. #}
+  <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
   </nldd-cell>
   </nldd-list-item>
   </nldd-list>
@@ -52,25 +46,4 @@
   </nldd-form-actions>
 </form>
 </nldd-form>
-{# Buiten het formulier zodat de lege sjabloonvelden niet meeposten;
-   label_category_manage.js kloont de rij naar binnen. Binnen de body zodat het
-   sjabloon na een fout-swap opnieuw beschikbaar is. #}
-<template data-category-row-template>
-  <nldd-list-item data-category-row>
-  <nldd-cell width="full"><nldd-text-field name="form-__prefix__-name" accessible-label="Naam nieuwe categorie"></nldd-text-field></nldd-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-cell width="112px">
-  <nldd-dropdown>
-  <select name="form-__prefix__-color" aria-label="Kleur nieuwe categorie">
-    {% for value, label in color_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
-  </select>
-  </nldd-dropdown>
-  </nldd-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-cell width="fit-content">
-  {# Nog niet opgeslagen: deze rij verdwijnt zonder de server. #}
-  <nldd-icon-button variant="destructive" icon="delete" text="Nieuwe categorie verwijderen" data-remove-new-category></nldd-icon-button>
-  </nldd-cell>
-  </nldd-list-item>
-</template>
 <div id="categoryDeleteModal"></div>
