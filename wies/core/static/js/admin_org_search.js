@@ -8,7 +8,6 @@
 
   var input = document.getElementById("org-search");
   var root = document.getElementById("org-tree-root");
-  var emptyMsg = document.getElementById("org-search-empty");
   if (!input || !root) return;
 
   var allItems = Array.prototype.slice.call(
@@ -91,9 +90,6 @@
       });
       setHighlight("");
       restoreExpandedState();
-      emptyMsg.hidden = true;
-      emptyMsg.style.display = "none";
-      root.hidden = false;
       return;
     }
 
@@ -106,11 +102,9 @@
       item.hidden = true;
     });
 
-    var hasMatch = false;
     allItems.forEach(function (item) {
       if (item.hasAttribute("data-org-group")) return; // groups shown via ancestors
       if (matches(item, query)) {
-        hasMatch = true;
         item.hidden = false;
         showAncestors(item);
         showDescendants(item);
@@ -118,10 +112,8 @@
     });
 
     setHighlight(query);
-
-    emptyMsg.hidden = hasMatch;
-    emptyMsg.style.display = hasMatch ? "none" : "";
-    root.hidden = !hasMatch;
+    // Blijft er niets over, dan toont de lijst zelf zijn lege staat: alle rijen
+    // staan op [hidden] en dat is precies waar hij op afgaat.
   }
 
   var timer = null;

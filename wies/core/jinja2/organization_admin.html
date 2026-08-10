@@ -44,11 +44,9 @@
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <p id="org-search-empty"
-     class="wies-text-secondary"
-     style="display: none"
-     hidden>Geen organisaties gevonden.</p>
-  <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties">
+  {# De lege staat hoort bij de lijst: die weet zelf wanneer er niets meer te
+     zien is. Een eigen regel erboven leverde er twee tegelijk op. #}
+  <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties" empty-text="Geen opdrachtgevers gevonden">
   {% for type_name, units in type_groups %}
     <nldd-list-item button expanded data-label="{{ type_name|lower }}" data-org-group>
     <nldd-icon-cell disclosure size="20">

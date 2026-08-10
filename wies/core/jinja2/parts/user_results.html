@@ -29,10 +29,15 @@
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
-{% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
-<nldd-rich-text spacing="flat">
-<p>{{ paginator.count }} {{ count_label }}</p>
-</nldd-rich-text>
+{# Geen telregel bij nul: de lege staat eronder zegt het al, en "0 gebruikers"
+   erboven maakt er twee meldingen van. Net als op de opdrachten- en
+   wie-zit-waar-pagina. #}
+{% if paginator.count %}
+  {% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
+  <nldd-rich-text spacing="flat">
+  <p>{{ paginator.count }} {{ count_label }}</p>
+  </nldd-rich-text>
+{% endif %}
 </nldd-container>
 {% if not request.headers.get("HX-Request") %}
   <nldd-spacer size="12"></nldd-spacer>
