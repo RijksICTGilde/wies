@@ -4,20 +4,35 @@
    hx-*/data-*-string) — beide takken delen dezelfde bedrading, zodat een
    menu-item en de losse knop identiek werken.
 
+   Een actie mag i.p.v. `attrs` een `submenu` dragen: een lijst van dezelfde
+   dicts, gerenderd als geslotte `nldd-menu` zodat het item een drill-in
+   submenu-opener wordt (NLDD leidt dat af uit een geneste `nldd-menu`). Zo'n
+   actie navigeert zelf niet; zijn sub-items dragen de hrefs. Een submenu dwingt
+   de menu-tak af (de losse-knop-tak kan geen submenu tonen).
+
    Importeer met: {% from "parts/row_actions.html" import render_row_actions %} #}
 {% macro render_row_actions(actions, label) %}
-  {% if actions|length == 1 %}
+  {% set _has_submenu = actions|selectattr("submenu")|list|length > 0 %}
+  {% if actions|length == 1 and not _has_submenu %}
     {% set a = actions[0] %}
     {# Losse actieknop: het icoon alleen (potlood/oog/enveloppe) verklaart zich
        niet, dus de tooltip (default-timing) blijft aan. #}
     <nldd-icon-button size="sm" icon="{{ a.icon }}" text="{{ a.text }}" {{ a.attrs|safe }}></nldd-icon-button>
-  {% elif actions|length > 1 %}
+  {% elif actions %}
     {# De puntjesknop is een bekend patroon en opent een menu met labels, dus
        een eigen tooltip voegt niets toe. #}
     <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="{{ label }}">
     <nldd-menu slot="popup" placement="bottom-end">
     {% for a in actions %}
-      <nldd-menu-item text="{{ a.text }}" icon="{{ a.icon }}" {{ a.attrs|safe }}></nldd-menu-item>
+      <nldd-menu-item text="{{ a.text }}" icon="{{ a.icon }}" {{ a.attrs|safe }}>
+      {% if a.submenu %}
+        <nldd-menu>
+        {% for sub in a.submenu %}
+          <nldd-menu-item text="{{ sub.text }}" icon="{{ sub.icon }}" {{ sub.attrs|safe }}></nldd-menu-item>
+        {% endfor %}
+        </nldd-menu>
+      {% endif %}
+      </nldd-menu-item>
     {% endfor %}
     </nldd-menu>
     </nldd-icon-button>

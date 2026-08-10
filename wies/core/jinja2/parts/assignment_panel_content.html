@@ -122,7 +122,17 @@
           {% if panel_data.user_can_edit %}
             {% set _ = _actions.append({"text": "Opdrachtgever wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
           {% endif %}
-          {% set _ = _actions.append({"text": "Bekijk alle opdrachten", "icon": "stack", "attrs": 'data-href="' ~ _primary_breadcrumb.url ~ '"'}) %}
+          {# "Bekijk opdrachten" opent een submenu met één niveau per hiërarchie-
+             stap, van de gekozen node omhoog naar de root: de node zelf filtert
+             smal, een hoger niveau breed. Vervangt de oude "Bekijk alle
+             opdrachten" die alleen op de laagste node filterde (die juist de
+             minste andere opdrachten deelt). Submenu houdt het ⋯-menu kort, ook
+             bij een diepe boom. #}
+          {% set _levels = [{"text": _primary_breadcrumb.label, "icon": "stack", "attrs": 'data-href="' ~ _primary_breadcrumb.url ~ '"'}] %}
+          {% for ancestor in _primary_breadcrumb.ancestors|reverse %}
+            {% set _ = _levels.append({"text": ancestor.label, "icon": "stack", "attrs": 'data-href="' ~ ancestor.url ~ '"'}) %}
+          {% endfor %}
+          {% set _ = _actions.append({"text": "Bekijk opdrachten", "icon": "stack", "submenu": _levels}) %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
           {{ render_row_actions(_actions, "Acties voor opdrachtgever") }}
