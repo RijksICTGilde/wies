@@ -446,6 +446,37 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(after_add, 'value="3"')
         self.assertContains(after_add, 'name="form-2-name"')
 
+    def test_add_row_does_not_flash_validation_errors(self):
+        """Adding a row must not surface validation errors on the other rows —
+        you are still filling in. Even a new row that already duplicates an
+        existing category stays quiet until Opslaan.
+
+        Regression: as_field_group() renders field.errors, and reading that
+        lazily triggers a full_clean even though the view never calls
+        is_valid() on a re-render. The view suppresses that so no premature
+        "bestaat al" / "verplicht" appears.
+        """
+        existing = LabelCategory.objects.create(name="b", color=self.GREY)
+        data = self._management(total=2, initial=1)
+        data.update(
+            {
+                "extra_row": "1",
+                "form-0-id": str(existing.pk),
+                "form-0-name": "b",
+                "form-0-color": self.GREY,
+                "form-1-name": "b",  # duplicates existing → would error on save
+                "form-1-color": self.GREY,
+            }
+        )
+        response = self.client.post(self.url, data)
+        assert response.status_code == 200
+        # No validation flashed while still editing.
+        self.assertNotContains(response, "nldd-form-field-error-text")
+        self.assertNotContains(response, "bestaat al")
+        # The typed duplicate value is preserved, and the blank new row is added.
+        self.assertContains(response, 'name="form-1-name" value="b"')
+        self.assertContains(response, 'name="form-2-name"')
+
     def test_save_with_blanked_existing_name_shows_error_and_does_not_save(self):
         """Blanking an existing category's name and saving is rejected (name is
         required): the body re-renders with a visible, wired error, no redirect,
@@ -463,3 +494,70 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, "nldd-form-field-error-text")
         category.refresh_from_db()
         assert category.name == "Skills"
+
+    def test_remove_then_save_with_duplicate_name_shows_error_without_phantom_row(self):
+        """The case that drove the renumber-on-delete decision: remove a row and
+        then hit a validation error. The save-error path re-renders the whole
+        body, so the removal must have left no index gap — otherwise a phantom
+        blank row would reappear next to the real error.
+
+        Trigger via a duplicate name (LabelCategory.name is unique): a new row is
+        named the same as an existing category, which fails the model's unique
+        check and renders a wired field error on that row.
+        """
+        existing = LabelCategory.objects.create(name="Bestaand", color=self.GREY)
+
+        # Existing row (index 0) + three new rows. Remove the middle new one.
+        remove = self._management(total=4, initial=1)
+        remove.update(
+            {
+                "delete_new_row_index": "2",
+                "form-0-id": str(existing.pk),
+                "form-0-name": "Bestaand",
+                "form-0-color": self.GREY,
+                "form-1-name": "Nieuw1",
+                "form-1-color": self.GREY,
+                "form-2-name": "WegHiermee",
+                "form-2-color": self.GREY,
+                "form-3-name": "Nieuw3",
+                "form-3-color": self.GREY,
+            }
+        )
+        after_remove = self.client.post(self.url, remove)
+        # Compacted: existing at 0, Nieuw1 at 1, Nieuw3 at 2 — WegHiermee gone.
+        self.assertNotContains(after_remove, "WegHiermee")
+        self.assertContains(after_remove, 'name="form-2-name" value="Nieuw3"')
+
+        # Save the compacted state, but make the last new row duplicate the
+        # existing category's name → unique validation fails.
+        save = self._management(total=3, initial=1)
+        save.update(
+            {
+                "form-0-id": str(existing.pk),
+                "form-0-name": "Bestaand",
+                "form-0-color": self.GREY,
+                "form-1-name": "Nieuw1",
+                "form-1-color": self.GREY,
+                "form-2-name": "Bestaand",  # duplicate → error
+                "form-2-color": self.GREY,
+            }
+        )
+        response = self.client.post(self.url, save)
+        content = response.content.decode()
+
+        # Nothing saved: no redirect, and no second "Bestaand" created.
+        assert response.status_code == 200
+        assert response.headers.get("HX-Redirect") is None
+        assert LabelCategory.objects.filter(name="Bestaand").count() == 1
+
+        # The error is wired and visible on the duplicate row.
+        self.assertContains(response, "nldd-form-field-error-text")
+        self.assertContains(response, "invalid")
+
+        # Surviving rows keep their values, and there is NO phantom blank row:
+        # exactly three rows, contiguous, none with an empty name between filled.
+        self.assertContains(response, 'value="Nieuw1"')
+        self.assertContains(response, 'name="form-TOTAL_FORMS"')
+        self.assertContains(response, 'value="3"')
+        assert content.count("data-category-row") == 3
+        assert 'name="form-1-name" value=""' not in content

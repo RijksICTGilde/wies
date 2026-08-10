@@ -19,7 +19,7 @@ from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
-from django.forms.utils import ErrorList
+from django.forms.utils import ErrorDict, ErrorList
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -2132,6 +2132,10 @@ def label_category_manage(request):
             else:
                 data = _drop_new_category_row(data, prefix, data.get("delete_new_row_index"))
             formset = LabelCategoryFormSet(data, queryset=queryset)
+            # Niet valideren bij een rij-mutatie: je bent nog aan het invullen.
+            for form in formset.forms:
+                # Een lege errordict zetten onderdrukt de lazy full_clean die
+                form._errors = ErrorDict(renderer=form.renderer)
             if "extra_row" in request.POST and formset.forms:
                 # Focus de zojuist toegevoegde (laatste) rij, zoals de oude JS deed.
                 formset.forms[-1].fields["name"].widget.attrs["autofocus"] = True
