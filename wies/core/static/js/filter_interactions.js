@@ -674,21 +674,38 @@
     return document.scrollingElement || document.documentElement;
   }
 
+  // De echte filterbar-scroller is .sidebar-section__sidebar-box IN de shadow
+  // root van nldd-sidebar-section — niet #filter-panel (dat is slotted, overflow
+  // visible) en ook niet de .sidebar-section__sidebar eromheen (die is visible).
+  // findScroller vindt hem niet: het klimt via de host-keten omhoog terwijl de
+  // scroller in de shadow root van een voorouder zit. Pak hem dus direct. Op een
+  // breed scherm scrollt deze box; op smal wordt de sidebar een sheet met een
+  // eigen scroller (fallback: findScroller).
+  function filterSidebarScroller() {
+    const section = document.querySelector("nldd-sidebar-section");
+    const box = section?.shadowRoot?.querySelector(
+      ".sidebar-section__sidebar-box",
+    );
+    if (box && box.scrollHeight > box.clientHeight) return box;
+    const panel = document.getElementById("filter-panel");
+    return panel ? findScroller(panel) : null;
+  }
+
   function setupFilterScrollPreserve() {
     let saved = null;
     document.addEventListener("htmx:beforeSwap", (e) => {
       if (e.detail.target?.id !== "results") return;
-      const panel = document.getElementById("filter-panel");
-      if (!panel) return;
-      const scroller = findScroller(panel);
+      const scroller = filterSidebarScroller();
+      if (!scroller) return;
       saved = { scroller: scroller, top: scroller.scrollTop };
     });
     function restore() {
       if (!saved) return;
       const { scroller, top } = saved;
+      // De OOB-swap van #filter-panel herbouwt de slotted inhoud; de aside reset
+      // dan zijn scrollTop naar 0. Zet hem terug, en nog eens in de volgende
+      // frame omdat die reset asynchroon na de settle kan komen.
       scroller.scrollTop = top;
-      // nldd-page reset scrollTop asynchroon nadat de slotted sidebar opnieuw
-      // is opgebouwd, dus nog een keer in de volgende frame.
       requestAnimationFrame(() => {
         scroller.scrollTop = top;
         saved = null;
