@@ -244,6 +244,32 @@ def _build_assignment_panel_data(assignment, request):
     return data
 
 
+def _merge_preview_rows(group) -> list[dict]:
+    """One row per placement for the merge preview: assignment, consultant, fate.
+
+    The first assignment in the group is the one that stays; everything else
+    moves into it. A service without placements is a vacancy and still counts as
+    a line, because it moves along too.
+    """
+    target = group[0]
+    rows = []
+    for assignment in group:
+        keeps = assignment.id == target.id
+        # Vervoegd, niet in de gebiedende wijs: dit beschrijft wat er gebeurt,
+        # het is geen knop. "Behouden" en "Verplaatsen naar…" lazen als labels
+        # van een actie die je nog moet aanklikken. Herkomst en bestemming zitten
+        # allebei in de zin, zodat een regel op zichzelf te lezen is en er geen
+        # aparte opdracht-kolom naast hoeft.
+        action = f"Blijft in opdracht {target.id}" if keeps else f"Van opdracht {assignment.id} naar {target.id}"
+        for service in assignment.services.all():
+            names = [placement.colleague.name for placement in service.placements.all()]
+            if names:
+                rows.extend({"consultant": name, "vacant": False, "action": action, "keeps": keeps} for name in names)
+            else:
+                rows.append({"consultant": "Vacant", "vacant": True, "action": action, "keeps": keeps})
+    return rows
+
+
 def _merge_date_range(existing: dict, start, end):
     """Widen the date range of an assignment entry to include the given start/end."""
     if start and (existing["start_date"] is None or start < existing["start_date"]):
@@ -646,20 +672,24 @@ def staff_database(request):
             from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
 
             groups = find_duplicate_groups()
-            if not groups:
-                messages.info(request, "Geen dubbele opdrachten gevonden.")
-            else:
-                context["merge_groups"] = [
-                    {
-                        "name": group[0].name,
-                        "owner": str(group[0].owner),
-                        "count": len(group),
-                        "target": group[0],
-                        "duplicates": group[1:],
-                    }
-                    for group in groups
-                ]
-            return render(request, "staff_database.html", context)
+            # Ook zonder duplicaten gaat de sheet open: je hebt om een controle
+            # gevraagd, dus de uitkomst hoort op dezelfde plek te staan als het
+            # overzicht. Het lege geval wordt in de sheet zelf afgehandeld.
+            # Eén regel per plaatsing, plat: welke opdracht, welke consultant, en
+            # wat ermee gebeurt. Het samenvoegen zelf redeneert per opdracht, maar
+            # wie het controleert leest per regel — dus die vorm bouwen we hier,
+            # zodat het overzicht geen geneste lussen nodig heeft.
+            context["merge_groups"] = [
+                {
+                    "name": group[0].name,
+                    "owner": str(group[0].owner),
+                    "count": len(group),
+                    "target_id": group[0].id,
+                    "rows": _merge_preview_rows(group),
+                }
+                for group in groups
+            ]
+            return render(request, "parts/merge_duplicates_sheet.html", context)
 
         elif action == "merge_duplicates_apply":
             from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
@@ -672,7 +702,12 @@ def staff_database(request):
                 messages.info(request, "Geen dubbele opdrachten gevonden.")
             else:
                 with transaction.atomic():
-                    total = sum(len(g) - 1 for g in groups)
+                    # Hoeveel opdrachten erin gingen en hoeveel er overblijven.
+                    # "in 2 groep(en)" liet in het midden of dat groepen of
+                    # opdrachten waren; dit telt twee keer hetzelfde soort ding,
+                    # in dezelfde bewoording als de sheet die je net bevestigde.
+                    samengevoegd = sum(len(g) for g in groups)
+                    overgebleven = len(groups)
                     for group in groups:
                         target = group[0]
                         deleted_ids = [a.id for a in group[1:]]
@@ -692,7 +727,8 @@ def staff_database(request):
                         )
                     messages.success(
                         request,
-                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                        f"{samengevoegd} opdrachten samengevoegd tot {overgebleven} "
+                        f"{'opdracht' if overgebleven == 1 else 'opdrachten'}.",
                     )
 
         return redirect("staff-database")

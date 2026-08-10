@@ -91,82 +91,15 @@
   </p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  {% if merge_groups is defined and merge_groups %}
-    <div class="merge-preview" id="merge-preview">
-      <nldd-banner variant="warning" text="{{ merge_groups|length }} groep(en) gevonden. Controleer het overzicht en bevestig."></nldd-banner>
-      {% for group in merge_groups %}
-        <div class="merge-group">
-          <h3>{{ group.name }}</h3>
-          <p class="merge-group__meta">{{ group.count }} opdrachten · eigenaar: {{ group.owner }}</p>
-          <table class="merge-table">
-            <caption class="wies-visually-hidden">Overzicht samen te voegen opdrachten in groep {{ group.name }}: per opdracht de consultants en of de opdracht behouden of samengevoegd wordt.</caption>
-            <thead>
-              <tr>
-                <th class="merge-table__th" scope="col">#</th>
-                <th class="merge-table__th" scope="col">Consultant</th>
-                <th class="merge-table__th" scope="col">Actie</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for svc in group.target.services.all() %}
-                <tr class="merge-table__row">
-                  {% if loop.first %}
-                    <td class="merge-table__td" rowspan="{{ group.target.services.count() }}">{{ group.target.id }}</td>
-                  {% endif %}
-                  <td class="merge-table__td">
-                    {% for pl in svc.placements.all() %}
-                      {{ pl.colleague.name }} {%
-                        else %}
-                      <em>(vacant)</em>
-                    {% endfor %}
-                  </td>
-                  {% if loop.first %}
-                    <td class="merge-table__td" rowspan="{{ group.target.services.count() }}">
-                      <nldd-token>Behouden</nldd-token>
-                    </td>
-                  {% endif %}
-                </tr>
-              {% endfor %}
-              {% for dupe in group.duplicates %}
-                {% for svc in
-                  dupe.services.all() %}
-                  <tr class="merge-table__row">
-                    {% if loop.first %}
-                      <td class="merge-table__td" rowspan="{{ dupe.services.count() }}">{{ dupe.id }}</td>
-                    {% endif %}
-                    <td class="merge-table__td">
-                      {% for pl in svc.placements.all() %}
-                        {{ pl.colleague.name }} {%
-                          else %}
-                        <em>(vacant)</em>
-                      {% endfor %}
-                    </td>
-                    {% if loop.first %}
-                      <td class="merge-table__td" rowspan="{{ dupe.services.count() }}">
-                        <nldd-token>→ #{{ group.target.id }}</nldd-token>
-                      </td>
-                    {% endif %}
-                  </tr>
-                {% endfor %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% endfor %}
-      <form method="post"
-            data-confirm="Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="merge_duplicates_apply" />
-        <nldd-button variant="primary" type="submit" text="Samenvoegen bevestigen"></nldd-button>
-      </form>
-    </div>
-  {% else %}
-    <form method="post" action="{{ url('staff-database') }}#merge-preview">
-      {{ get_csrf_hidden_input(request) }}
-      <input type="hidden" name="action" value="merge_duplicates_preview" />
-      <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
-    </form>
-  {% endif %}
+  {# De preview is een controlestap, geen paginablok: hij komt als bottom sheet
+     binnen in de mount hieronder en dialog.js opent hem na de swap. #}
+  <form hx-post="{{ url('staff-database') }}"
+        hx-target="#merge-preview-mount"
+        hx-swap="innerHTML">
+    {{ get_csrf_hidden_input(request) }}
+    <input type="hidden" name="action" value="merge_duplicates_preview" />
+    <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
+  </form>
   </nldd-container>
   </nldd-box>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
@@ -220,4 +153,5 @@
      de 12 tussen zijn kop en zijn eigen gebied. #}
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
+  <div id="merge-preview-mount"></div>
 {% endblock content %}

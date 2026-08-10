@@ -63,56 +63,6 @@
   background: var(--primitives-color-donkerblauw-500, #00476b);
 }
 
-.merge-preview {
-  margin-top: 1rem;
-}
-
-.merge-group {
-  margin-bottom: 3rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--primitives-color-coolgray-200, #dde2e7);
-}
-
-.merge-group:last-child {
-  border-bottom: none;
-}
-
-.merge-group h3 {
-  margin: 1rem 0 0.25rem;
-}
-
-.merge-group__meta {
-  font-weight: 400;
-  font-size: 0.85rem;
-  color: var(--primitives-color-coolgray-600, #636363);
-}
-
-/* A real <table> with rowspan cells, not a component-styled div grid. */
-.merge-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9375rem;
-}
-.merge-table__th {
-  padding: 0.625rem 0.75rem;
-  text-align: left;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--semantics-content-secondary-color, #64748b);
-  border-bottom: var(--semantics-dividers-thickness) solid
-    var(--semantics-dividers-color);
-  white-space: nowrap;
-}
-.merge-table__td {
-  padding: 0.75rem;
-  vertical-align: top;
-  border-bottom: var(--semantics-dividers-thickness) solid
-    var(--semantics-dividers-color);
-  line-height: 1.4;
-}
-
 /* Error table: fill the container and never overflow the page */
 #error_table_container .rvo-table--responsive {
   overflow-x: auto;

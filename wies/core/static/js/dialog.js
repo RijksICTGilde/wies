@@ -98,8 +98,12 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   const extraHeader = sheet.querySelector(
     "[slot='header']:not(nldd-top-title-bar)",
   );
+  // Een sheet die met lopende tekst opent wil die ruimte juist wel: strak tegen
+  // de balk leest een alinea als een voortzetting van de titel. Formulieren en
+  // lijsten hebben er geen last van, vandaar dat dit de uitzondering is.
+  const houdtPadding = sheet.hasAttribute("data-keep-section-padding");
   const section = sheet.querySelector("nldd-simple-section");
-  if (section && !extraHeader) {
+  if (section && !extraHeader && !houdtPadding) {
     if (isChild) section.removeAttribute("padding-top");
     else section.setAttribute("padding-top", "0");
   }
@@ -132,9 +136,9 @@ document.addEventListener("keydown", function (e) {
 });
 
 // Delegated dismiss: een knop met [data-dismiss-modal] sluit de omvattende
-// nldd-modal-dialog. Vervangt een inline onclick-handler, zodat de CSP
-// script-src 'self' kan blijven (geen 'unsafe-inline'). composedPath omdat de
-// knop in de shadow root van het dialog kan zitten.
+// nldd-modal-dialog of nldd-sheet. Vervangt een inline onclick-handler, zodat
+// de CSP script-src 'self' kan blijven (geen 'unsafe-inline'). composedPath
+// omdat de knop in de shadow root van het dialog kan zitten.
 document.addEventListener("click", function (e) {
   const btn = e
     .composedPath()
@@ -145,7 +149,7 @@ document.addEventListener("click", function (e) {
         el.matches("[data-dismiss-modal]"),
     );
   if (!btn) return;
-  const dialog = btn.closest("nldd-modal-dialog");
+  const dialog = btn.closest("nldd-modal-dialog, nldd-sheet");
   if (dialog && typeof dialog.hide === "function") dialog.hide();
 });
 
