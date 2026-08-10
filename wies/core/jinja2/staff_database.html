@@ -3,8 +3,7 @@
   Database · Wies
 {% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}" />
-  <link rel="stylesheet" href="{{ static('css/staff.css') }}" />
+  <link rel="stylesheet" href="{{ app_asset('css/staff.css') }}" />
 {% endblock extra_head %}
 {% block sidebar %}
   {% include
@@ -39,26 +38,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if destructive_actions_enabled %}
     <nldd-box>
-    <nldd-title size="5">
-    <h2>Database leegmaken</h2>
-    </nldd-title>
-    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-    <nldd-rich-text>
-    <p>
-      Verwijder alle opdrachten, collega's, organisaties en labels. Gebruikers
-      blijven behouden.
-    </p>
-    </nldd-rich-text>
-    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    <form method="post"
-          data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
-      {{ get_csrf_hidden_input(request) }}
-      <input type="hidden" name="action" value="clear_data" />
-      <nldd-button variant="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
-    </form>
-    </nldd-box>
-    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-    <nldd-box>
+    <nldd-container padding="16">
     <nldd-title size="5">
     <h2>Dummy data laden</h2>
     </nldd-title>
@@ -72,10 +52,12 @@
       <input type="hidden" name="action" value="load_base_data" />
       <nldd-button variant="secondary" type="submit" text="Dummy data laden"></nldd-button>
     </form>
+    </nldd-container>
     </nldd-box>
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% endif %}
   <nldd-box>
+  <nldd-container padding="16">
   <nldd-title size="5">
   <h2>Organisaties synchroniseren</h2>
   </nldd-title>
@@ -92,9 +74,11 @@
     <input type="hidden" name="action" value="sync_organizations" />
     <nldd-button variant="secondary" type="submit" text="Organisaties synchroniseren"></nldd-button>
   </form>
+  </nldd-container>
   </nldd-box>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-box>
+  <nldd-container padding="16">
   <nldd-title size="5">
   <h2>Dubbele opdrachten samenvoegen</h2>
   </nldd-title>
@@ -183,9 +167,11 @@
       <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
     </form>
   {% endif %}
+  </nldd-container>
   </nldd-box>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-box>
+  <nldd-container padding="16">
   <nldd-title size="5">
   <h2>Onboarding resetten</h2>
   </nldd-title>
@@ -202,8 +188,36 @@
     <input type="hidden" name="action" value="reset_onboarding" />
     <nldd-button variant="secondary" type="submit" text="Onboarding resetten"></nldd-button>
   </form>
+  </nldd-container>
   </nldd-box>
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <nldd-spacer size="32" direction="vertical"></nldd-spacer>
+  {% if destructive_actions_enabled %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    {# Danger zone: onomkeerbaar. De kleur is versterking, niet het signaal —
+       kop, tekst en knoplabel benoemen zelf wat er verdwijnt (WCAG 1.4.1). #}
+    <nldd-box variant="critical">
+    <nldd-container padding="16">
+    <nldd-title size="5">
+    <h2>Database leegmaken</h2>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>
+      Verwijder alle opdrachten, collega's, organisaties en labels. Gebruikers
+      blijven behouden.
+    </p>
+    </nldd-rich-text>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    <form method="post"
+          data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="clear_data" />
+      <nldd-button variant="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
+    </form>
+    </nldd-container>
+    </nldd-box>
+  {% endif %}
+  {# Eén stap tussen de beheeracties en de takenlijst; de lijst zet zelf
+     de 12 tussen zijn kop en zijn eigen gebied. #}
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
 {% endblock content %}

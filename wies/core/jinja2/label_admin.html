@@ -3,9 +3,9 @@
   Labels · Wies
 {% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}" />
-  <link rel="stylesheet" href="{{ static('css/modals.css') }}" />
-  <script src="{{ static('js/label_category_manage.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ app_asset('css/side_panel.css') }}" />
+  <link rel="stylesheet" href="{{ app_asset('css/modals.css') }}" />
+  <script src="{{ app_asset('js/label_category_manage.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}

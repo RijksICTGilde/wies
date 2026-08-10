@@ -67,7 +67,7 @@
     var list = cell("nldd-list", {
       type: "tree",
       variant: "simple",
-      "no-dividers": "",
+      dividers: "never",
       "accessible-label": this.accessibleLabel,
     });
     // Build ONLY the root rows up front (a handful of org-type groups). Every

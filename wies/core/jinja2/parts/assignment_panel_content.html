@@ -67,7 +67,7 @@
   {% endif %}
   <div id="tab-panel-gegevens">
     {% set _base_url = current_page_path(request) %}
-    <nldd-list variant="box" accessible-label="Opdrachtgegevens">
+    <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
     {% set _rows = [
       ("Externe bron", "source"),
       ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),

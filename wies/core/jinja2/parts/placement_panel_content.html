@@ -10,7 +10,7 @@
   {# collapse-anchor: de naam staat in de bar pas zodra de naam in de inhoud eronder wegscrollt. #}
   <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  <nldd-list no-dividers accessible-label="Collega">
+  <nldd-list dividers="never" accessible-label="Collega">
   <nldd-list-item>
   <nldd-cell>
   <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
@@ -46,7 +46,7 @@
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% set card = panel_data.assignment_card %}
-  <nldd-list variant="box" accessible-label="Details inzet">
+  <nldd-list variant="box-tinted" accessible-label="Details inzet">
   {# Eén actie op de rij, dus de rij is zelf de knop en het icoon is decor. Zo
      is de hele rij het raakvlak in plaats van alleen het icoon, en zit er geen
      knop meer genest in een rij-brede actie. Bij twee of meer acties gaat het

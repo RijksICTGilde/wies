@@ -20,6 +20,6 @@
 {{ hierarchy|json_script("assignment-org-data") }}
 {{ current_selections|json_script("assignment-org-current-selections") }}
 {# Order matters: assignment_org_tree.js needs both TreeState and WiesOrgTree. #}
-<script src="{{ static('js/tree_state.js') }}"></script>
-<script src="{{ static('js/org_tree.js') }}"></script>
-<script src="{{ static('js/assignment_org_tree.js') }}"></script>
+<script src="{{ app_asset('js/tree_state.js') }}"></script>
+<script src="{{ app_asset('js/org_tree.js') }}"></script>
+<script src="{{ app_asset('js/assignment_org_tree.js') }}"></script>

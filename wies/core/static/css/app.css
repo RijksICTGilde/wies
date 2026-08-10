@@ -245,26 +245,6 @@ a {
   padding-bottom: var(--primitives-space-12, 0.75rem);
 }
 
-.flash-messages {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 400px;
-}
-.flash-messages--hiding {
-  animation: flash-fade-out 0.3s ease forwards;
-}
-@keyframes flash-fade-out {
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
 /* Direct vs indirect geselecteerde opdrachtgevers in de boom.
    Alleen de rij die de gebruiker ZELF koos (org_tree.js zet data-explicit vanuit
    TreeState.explicitSelections) krijgt de grijze rij-fill. nldd-list-item geeft

@@ -3,6 +3,7 @@
 {% set assignment = entry.assignment %}
 <div id="onboarding-assignment-{{ assignment.id }}">
   <nldd-box>
+  <nldd-container padding="16">
   <nldd-title size="5">
   <h4>{{ assignment.name }}</h4>
   </nldd-title>
@@ -54,6 +55,7 @@
   {% if assignment.owner and entry.owner_mailto %}
     <nldd-button variant="secondary" size="sm" start-icon="envelope" text="E-mail {{ assignment.owner.name }}" href="{{ entry.owner_mailto }}"></nldd-button>
   {% endif %}
+  </nldd-container>
   </nldd-container>
   </nldd-box>
 </div>
