@@ -178,12 +178,28 @@ class StaffErrorsSectionTest(TestCase):
         assert "-" in body  # en-dash for the missing user
 
     def test_delete_redirects_to_the_dashboard(self):
+        # POST deletes and answers with an HX-Redirect (the modal button posts over htmx).
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/", follow=False)
+        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
-        assert response.status_code == 302
-        assert response.url == reverse("staff-dashboard")
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("staff-dashboard")
+
+    def test_delete_get_returns_confirmation_modal(self):
+        # GET renders the shared confirm_delete_modal, same as opdracht verwijderen.
+        error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
+
+        response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
+
+        assert response.status_code == 200
+        body = response.content.decode()
+        assert "<nldd-modal-dialog" in body
+        assert "Foutmelding verwijderen?" in body
+        assert "Verwijder foutmelding" in body
+        assert "Behoud foutmelding" in body
+        # The error is untouched until the destructive button posts.
+        assert ErrorEvent.objects.filter(pk=error.pk).exists()
 
     def test_error_detail_requires_staff(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
@@ -202,14 +218,6 @@ class StaffErrorsSectionTest(TestCase):
         self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
         assert not ErrorEvent.objects.filter(pk=error.pk).exists()
-
-    def test_delete_error_rejects_get(self):
-        error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Blijf staan")
-
-        response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
-
-        assert response.status_code == 405
-        assert ErrorEvent.objects.filter(pk=error.pk).exists()
 
     @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
     def test_error_table_requires_staff(self):

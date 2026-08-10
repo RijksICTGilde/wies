@@ -560,8 +560,6 @@ ERRORS_PER_PAGE = 10
 
 @staff_required
 def staff_dashboard(request):
-    # The error table is rendered inline (first page) so it appears with the page;
-    # its pagination buttons then swap via the error-table endpoint.
     return render(
         request,
         "staff_dashboard.html",
@@ -604,11 +602,32 @@ def error_detail(request, public_id):
 
 
 @staff_required
-@require_POST
 def delete_error(request, public_id):
-
-    ErrorEvent.objects.filter(public_id=public_id).delete()
-    return redirect("staff-dashboard")
+    """
+    Confirm (GET → modal) and perform (POST) deletion of a single error.
+    """
+    error = get_object_or_404(ErrorEvent, public_id=public_id)
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/confirm_delete_modal.html",
+            {
+                "dialog_text": "Foutmelding verwijderen?",
+                "dialog_supporting": (
+                    "Weet je zeker dat je deze foutmelding wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
+                "confirm_label": "Verwijder foutmelding",
+                "cancel_label": "Behoud foutmelding",
+                "form_post_url": reverse("delete-error", kwargs={"public_id": public_id}),
+            },
+        )
+    if request.method == "POST":
+        error.delete()
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = reverse("staff-dashboard")
+        return response
+    return HttpResponse(status=405)
 
 
 @staff_required
