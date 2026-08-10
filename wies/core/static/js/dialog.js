@@ -1,29 +1,5 @@
-// HTMX + Dialog integration - hybrid approach
+// HTMX + NLDD dialog integration: auto-show sheets/modals that arrive via a swap.
 document.addEventListener("htmx:afterSwap", function (e) {
-  // When HTMX loads modal content into a container, find any dialogs and show them
-  const dialogs = e.detail.target.querySelectorAll("dialog[closedby]");
-
-  dialogs.forEach(function (dialog) {
-    // Auto-show dialog when HTMX loads content
-    if (dialog.innerHTML.trim()) {
-      dialog.showModal();
-      document.documentElement.style.overflow = "hidden";
-    }
-
-    // Unlock scroll when dialog closes
-    dialog.addEventListener("close", function () {
-      document.documentElement.style.overflow = "";
-    });
-
-    // Add close button listeners for .close elements (PR #116 style)
-    const closeElements = dialog.querySelectorAll(".close");
-    closeElements.forEach(function (element) {
-      element.addEventListener("click", function () {
-        dialog.close();
-      });
-    });
-  });
-
   // show() reads the <dialog> out of the shadow root and returns silently when
   // it isn't there yet. Right after a swap the element is upgraded but Lit has
   // not rendered, so wait for updateComplete or the modal stays invisible.
@@ -122,19 +98,6 @@ document.addEventListener("back", function (e) {
   sheet.hide();
 });
 
-// ESC key → close topmost modal dialog (closedby="none" blocks native ESC)
-document.addEventListener("keydown", function (e) {
-  if (e.key !== "Escape") return;
-  // Find the topmost open modal dialog (not the side panel, that has its own handler)
-  const dialogs = document.querySelectorAll('dialog[closedby="none"][open]');
-  for (const dialog of dialogs) {
-    if (dialog.id === "side_panel") continue;
-    e.preventDefault();
-    dialog.close();
-    return;
-  }
-});
-
 // Delegated dismiss: een knop met [data-dismiss-modal] sluit de omvattende
 // nldd-modal-dialog of nldd-sheet. Vervangt een inline onclick-handler, zodat
 // de CSP script-src 'self' kan blijven (geen 'unsafe-inline'). composedPath
@@ -166,8 +129,6 @@ document.addEventListener("closeModal", function () {
   modalContainers.forEach((modalId) => {
     const modalContainer = document.getElementById(modalId);
     if (modalContainer) {
-      const dialog = modalContainer.querySelector("dialog");
-      if (dialog) dialog.close();
       const win = modalContainer.querySelector("nldd-window, nldd-sheet");
       if (win && typeof win.hide === "function") win.hide();
     }
