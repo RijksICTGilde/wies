@@ -31,6 +31,12 @@
   // tree — the very cost lazy rendering exists to avoid. See `filter`.
   var MIN_SEARCH_LENGTH = 2;
 
+  /** The row's visible label. A `self` node stands for "the organisation
+   *  itself", next to its own children. */
+  function rowLabel(node) {
+    return node.self ? 'Direct onder "' + node.label + '"' : node.label;
+  }
+
   function cell(tag, attrs) {
     var el = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -121,7 +127,7 @@
       row.toggleAttribute("expanded", willExpand);
     }
 
-    var label = node.self ? 'Direct onder "' + node.label + '"' : node.label;
+    var label = rowLabel(node);
     var selectable = this.isSelectable(node);
     // A group row carries no checkbox, so expanding is its only action and the
     // ROW is the control: whole row clickable, chevron cell marked `disclosure`
@@ -166,17 +172,26 @@
 
     // The row itself is the control for a group row, so its cells go straight
     // in the row — nesting them in an action would put a control in a control.
+    // A selectable row's segment is a `button` action, NOT a `checkbox` action:
+    // a checkbox action paints the row-wide grey "selected" fill on every checked
+    // row via its internal .is-action-checked — including a child that only
+    // cascaded on because its parent was picked — and that fill can't be
+    // suppressed per-attribute. A button action doesn't paint it, so the grey
+    // comes solely from the DS `selected` attribute, set only on the row the user
+    // picked herself (see _syncRow). The button is still one control / one tab
+    // stop and gives the row its hover and focus state.
     var action = rowIsControl
       ? row
       : cell("nldd-list-item-action", {
           width: "full",
           "accessible-label": label,
         });
-    if (selectable) action.setAttribute("checkbox", "");
     if (selectable) {
+      action.setAttribute("button", "");
       var boxCell = cell("nldd-cell", {});
-      // Decorative: the row segment already carries role and state, and a second
-      // focusable control would double the tab stops.
+      // Decorative: the button segment carries role and state (promoted to a
+      // checkbox for assistive tech in _syncRow), and a second focusable control
+      // would double the tab stops.
       boxCell.appendChild(
         cell("nldd-checkbox", { "aria-hidden": "true", tabindex: "-1" }),
       );
@@ -196,8 +211,18 @@
       );
     }
     if (selectable) {
-      action.addEventListener("change", function (e) {
-        var checked = !!(e.detail && e.detail.checked);
+      // A `button` action doesn't toggle anything itself — it just fires a click
+      // (from a mouse press or Space/Enter on the button). We own the checked
+      // state in TreeState, so read the node's current state and flip it. Guard
+      // against a child row's click bubbling up: the action segment is a sibling
+      // of the child rows, but the click listener sits on the row-level action,
+      // so only presses on this row's own button count.
+      action.addEventListener("click", function (e) {
+        if (rowOf(e.composedPath()) !== row) return;
+        // Toggle off the visible tick, on otherwise. A parent showing a dash
+        // (indeterminate: some children on) is not "ticked", so a click selects
+        // the whole subtree rather than clearing it.
+        var checked = !(node.checked && !node.indeterminate);
         if (checked) {
           self.state.check(node.id);
           // Expanding on check keeps what you just selected in view.
@@ -222,30 +247,59 @@
     return row;
   };
 
-  /* We mark the rows the user picked HERSELF with data-explicit and style those
-     apart (bold label, darker checkbox). The checkbox `checked` state alone can't
-     tell them from rows that only turned on because all their children did — both
-     are simply checked — and the footer tokens are easy to miss, so the tree
-     needs its own cue for which row IS the selection. Not the DS `selected`
-     attribute: it resolves to the same tokens as `checked`, so it would look
-     identical. See app.css for the [data-explicit] styling. */
   /** Mirror one node's selection state onto its row. Rows that aren't built yet
-   *  (lazy branches) pick this up in `_buildRow` when they are created. */
+   *  (lazy branches) pick this up in `_buildRow` when they are created.
+   *
+   *  The tree needs its own cue for which row IS the selection: a parent lights
+   *  up (checkbox checked) both when the user picked it herself and when it only
+   *  cascaded on because all its children are on, and the footer tokens are easy
+   *  to miss. The cue is the row-wide grey fill via the DS `selected` attribute,
+   *  set ONLY on a row the user picked herself (in explicitSelections). Because
+   *  the segment is a `button` action (not a `checkbox` action), a checked
+   *  checkbox no longer paints that fill itself, so `selected` is the sole source
+   *  of grey — a cascaded child stays checked but ungreyed. No DS variable is
+   *  overridden.
+   *
+   *  The visible checkbox is decorative; the button carries the state for
+   *  assistive tech. A `button` action renders a bare <button>, so promote it to
+   *  role="checkbox" and keep aria-checked in step here. Lit owns neither
+   *  attribute on a button control, so they survive its re-renders. */
   OrgTree.prototype._syncRow = function (node, row) {
-    var action = row.querySelector(":scope > nldd-list-item-action[checkbox]");
-    if (action) action.checked = node.checked;
-    var box = row.querySelector(
-      ":scope > nldd-list-item-action[checkbox] nldd-checkbox",
+    // The selection button, not the chevron: a selectable branch has both, and
+    // the chevron is the `disclosure` one.
+    var action = row.querySelector(
+      ":scope > nldd-list-item-action[button]:not([disclosure])",
     );
+    var box = action && action.querySelector("nldd-checkbox");
     if (box) {
       box.checked = node.checked;
       box.indeterminate = node.indeterminate;
     }
-    row.toggleAttribute(
-      "data-explicit",
-      this.state.explicitSelections.has(node.id),
-    );
+    // A dash (indeterminate) reads as "mixed"; otherwise the tick's state.
+    var ariaChecked = node.indeterminate ? "mixed" : String(node.checked);
+    if (action) promoteButtonToCheckbox(action, ariaChecked);
+    row.toggleAttribute("selected", this.state.explicitSelections.has(node.id));
   };
+
+  /** Give a `button` action the checkbox role and state for assistive tech. The
+   *  inner <button> may not exist yet on the first sync (Lit renders it a tick
+   *  after the action is created), so wait on updateComplete when it's missing.
+   *  Lit owns neither attribute on a button control, so they survive re-renders. */
+  function promoteButtonToCheckbox(action, ariaChecked) {
+    var button = action.shadowRoot && action.shadowRoot.querySelector("button");
+    if (button) {
+      button.setAttribute("role", "checkbox");
+      button.setAttribute("aria-checked", ariaChecked);
+    } else if (action.updateComplete) {
+      action.updateComplete.then(function () {
+        var b = action.shadowRoot && action.shadowRoot.querySelector("button");
+        if (b) {
+          b.setAttribute("role", "checkbox");
+          b.setAttribute("aria-checked", ariaChecked);
+        }
+      });
+    }
+  }
 
   OrgTree.prototype.sync = function () {
     var self = this;
@@ -342,7 +396,7 @@
   };
 
   // Keyboard nav follows the WAI-ARIA Treeview pattern (↑/↓ visible nodes,
-  // ←/→ collapse/expand, Home/End first/last; Space toggles via the segment).
+  // ←/→ collapse/expand, Home/End first/last; Space toggles the row's checkbox).
 
   OrgTree.prototype._visibleRows = function () {
     return Array.from(this.container.querySelectorAll("nldd-list-item")).filter(
@@ -361,14 +415,19 @@
     );
   };
 
-  /** The checkbox segment carries the row; a group row IS the control, so it
-   *  takes focus itself. Either way every row in the tree is reachable. */
+  /** The button action is the control on a selectable row (a selectable branch
+   *  also has a chevron action, so match the button one); a group row IS the
+   *  control, so it takes focus itself. The action delegates focus() to its inner
+   *  control, so focusing the host reaches the button. Either way every row in
+   *  the tree is reachable. */
   function focusRow(row) {
-    var action =
-      row.querySelector(":scope > nldd-list-item-action[checkbox]") ||
-      row.querySelector(":scope > nldd-list-item-action");
-    if (action && action.focus) action.focus();
-    else if (row.focus) row.focus();
+    var target =
+      row.querySelector(
+        ":scope > nldd-list-item-action[button]:not([disclosure])",
+      ) ||
+      row.querySelector(":scope > nldd-list-item-action") ||
+      row;
+    if (target && target.focus) target.focus();
   }
 
   function hasBranch(row) {

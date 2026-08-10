@@ -101,13 +101,15 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--semantics-content-secondary-color, #64748b);
-  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  border-bottom: var(--semantics-dividers-thickness) solid
+    var(--semantics-dividers-color);
   white-space: nowrap;
 }
 .merge-table__td {
   padding: 0.75rem;
   vertical-align: top;
-  border-bottom: 1px solid var(--semantics-controls-border-color, #f1f5f9);
+  border-bottom: var(--semantics-dividers-thickness) solid
+    var(--semantics-dividers-color);
   line-height: 1.4;
 }
 
