@@ -3154,7 +3154,7 @@ def _get_top_org_options(
     org_counts: Counter[int] | None = None,
     limit: int = 3,
 ) -> list[dict]:
-    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
+    """Return opdrachtgever quick checkbox options in a stable count/label order.
 
     Each option carries its own ``param`` (``org``, ``org_self`` or
     ``org_type``) so the sidebar quick row stays in sync with whatever was
@@ -3168,12 +3168,11 @@ def _get_top_org_options(
     active filters. When omitted, falls back to the global ``_get_org_counts``
     baseline (used by the modal, which has no other filter context).
 
-    Mirrors the select-multi groups (see ``_finalize_filter_groups``): a
-    selected option is ALWAYS shown inline as a checked checkbox, even when it
-    isn't among the top-N by count (e.g. picked via the modal). Selected
-    options are listed first so the active selection reads clearly; once
-    anything is selected the empty top-N options are dropped to keep the list
-    calm.
+    A selected option is ALWAYS shown inline as a checked checkbox, even when it
+    isn't among the top-N by count (e.g. picked via the modal). The order does
+    NOT depend on selection: rows are sorted by count then label, so ticking an
+    option never makes it jump to the top — that reordering felt jarring. A pick
+    outside the top-N is appended (the list grows), it does not reshuffle.
     """
     selected_self_ids = selected_self_ids or set()
     selected_type_labels = selected_type_labels or set()
@@ -3183,13 +3182,13 @@ def _get_top_org_options(
     selected_ids = set(selected_org_ids)
     self_ids = set(selected_self_ids)
 
-    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
-    # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
-    # total (counting self/type selections towards the total so the list stays
-    # calm once anything is picked).
-    fill = max(0, limit - total_selected)
-    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
-    org_wanted = selected_ids | set(top_unselected)
+    # De top-N is vast: de ``limit`` populairste orgs op (initiële) count,
+    # ongeacht de selectie. Een aanvinken verdringt dus geen zichtbare optie en
+    # laat de lijst niet van inhoud wisselen. Een selectie die buiten die top-N
+    # valt komt er onderaan bij (de lijst wordt langer) i.p.v. een top-optie te
+    # vervangen. Zo verspringt of verdwijnt er niets bij het aanvinken.
+    top_n = [oid for oid, _ in org_counts.most_common(limit)]
+    org_wanted = selected_ids | set(top_n)
 
     options: list[dict] = []
 
@@ -3234,8 +3233,11 @@ def _get_top_org_options(
         for type_label in selected_type_labels
     )
 
-    # Selected first, then by descending count, then by label for a stable order.
-    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
+    # Stabiele volgorde op count dan label — bewust NIET op ``selected``, zodat
+    # een zojuist aangevinkte optie niet naar boven springt (dat voelde
+    # verwarrend). Een geselecteerde optie buiten de top-N is al toegevoegd via
+    # ``org_wanted``; die komt hier gewoon op zijn count/label-positie te staan.
+    options.sort(key=lambda o: (-o["count"], o["label"]))
     return options
 
 
@@ -3263,18 +3265,16 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
 
         real_options = [o for o in group["options"] if o.get("value")]
         selected = set(group.get("selected_values", []))
-        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
-        # Selected options first (so the active selection reads clearly), then
-        # fill up to top_n with the highest-count unselected options. Once
-        # anything is selected the empty top-N options drop away, keeping the
-        # list calm; the full alphabetical list stays in the "Meer" modal.
-        selected_opts = [o for o in by_count if o["value"] in selected]
-        unselected_opts = [o for o in by_count if o["value"] not in selected]
-        # Show all selected; pad with the highest-count unselected up to top_n.
-        # So with <top_n selected the user still sees some choices, and with
-        # >=top_n selected the empty options drop away (calmer, clearer).
-        fill = max(0, top_n - len(selected_opts))
-        top = selected_opts + unselected_opts[:fill]
+        by_count = sorted(real_options, key=lambda o: (-o.get("count", 0), o.get("label", "")))
+        # De top-N is vast: de ``top_n`` populairste opties op count, ongeacht de
+        # selectie. Aanvinken verdringt dus geen zichtbare optie en de rijen
+        # verspringen niet. Een selectie die buiten die top-N valt komt er
+        # onderaan bij (de lijst wordt langer) i.p.v. een top-optie te vervangen.
+        # De volgorde is puur count/label — bewust niet "selected first". Zelfde
+        # regel als _get_top_org_options voor de opdrachtgevers.
+        top = list(by_count[:top_n])
+        top_values = {o["value"] for o in top}
+        top.extend(o for o in by_count if o["value"] in selected and o["value"] not in top_values)
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
 

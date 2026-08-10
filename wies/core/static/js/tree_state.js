@@ -170,7 +170,18 @@ TreeState.prototype._cascadeUp = function (startNode) {
       return c.checked || c.indeterminate;
     });
 
-    if (allChecked) {
+    // In de filter (collapseToParent=false) is een parent alleen echt "checked"
+    // (grijze rij-fill) als de gebruiker hem ZELF koos. Staat hij aan puur doordat
+    // al zijn kinderen aanstaan, dan is dat indirect: toon een streepje
+    // (indeterminate), geen grijze achtergrond — zo is een zelf gekozen
+    // opdrachtgever te onderscheiden van een die meelift op zijn kinderen. De
+    // selectie die de filter submit (explicitSelections) blijft hetzelfde; dit
+    // raakt alleen het uiterlijk. Op het opdrachtformulier (collapseToParent=true)
+    // klapt een volle parent juist wél samen tot één checked selectie
+    // (_promoteAncestors), dus daar blijft "alle kinderen aan" = checked.
+    var showsAsChecked =
+      this.collapseToParent || this.explicitSelections.has(parent.id);
+    if (allChecked && showsAsChecked) {
       parent.checked = true;
       parent.indeterminate = false;
     } else if (someChecked) {

@@ -411,9 +411,12 @@ describe("collapseToParent: false (filter picker behaviour)", function () {
   it("keeps a sole child as the selection, not its parent", function () {
     var ts = new TreeState(singleChildTree(), { collapseToParent: false });
     ts.check("child");
-    // The parent lights up via cascade...
-    assert.equal(ts.getNode("parent").checked, true);
-    // ...but the selection stays on the child that was clicked.
+    // The parent isn't picked by the user, so it shows as indeterminate (a dash,
+    // no grey fill) rather than checked — a self-picked org must read differently
+    // from one that only rides along on its children.
+    assert.equal(ts.getNode("parent").checked, false);
+    assert.equal(ts.getNode("parent").indeterminate, true);
+    // ...and the selection stays on the child that was clicked.
     assert.ok(ts.explicitSelections.has("child"));
     assert.ok(!ts.explicitSelections.has("parent"));
     assert.equal(ts.explicitSelections.size, 1);
@@ -423,10 +426,22 @@ describe("collapseToParent: false (filter picker behaviour)", function () {
     var ts = new TreeState(simpleTree(), { collapseToParent: false });
     ts.check("2");
     ts.check("3");
-    assert.equal(ts.getNode("1").checked, true);
+    // All children checked, but the parent wasn't chosen: indeterminate, not
+    // checked (no grey fill). The selection is still the two children.
+    assert.equal(ts.getNode("1").checked, false);
+    assert.equal(ts.getNode("1").indeterminate, true);
     assert.ok(ts.explicitSelections.has("2"));
     assert.ok(ts.explicitSelections.has("3"));
     assert.ok(!ts.explicitSelections.has("1"));
+  });
+
+  it("checking the parent itself keeps it checked (grey fill), not indeterminate", function () {
+    var ts = new TreeState(simpleTree(), { collapseToParent: false });
+    ts.check("1");
+    // Directly picked, so it reads as a real selection: checked + grey fill.
+    assert.equal(ts.getNode("1").checked, true);
+    assert.equal(ts.getNode("1").indeterminate, false);
+    assert.ok(ts.explicitSelections.has("1"));
   });
 
   it("restoreSelections does not collapse a full child set to the parent", function () {

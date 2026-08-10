@@ -1,3 +1,4 @@
+from collections import Counter
 from datetime import date
 
 from django.contrib.auth import get_user_model
@@ -264,9 +265,34 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         assert match, "selected org-type must appear as a quick option"
         assert match[0]["selected"] is True
 
-    def test_selected_options_sort_before_unselected(self):
-        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
-        assert opts[0]["selected"] is True
+    def test_selecting_does_not_reorder_by_selection(self):
+        # Org B has the higher count, Org A none. Selecting the low-count Org A
+        # must NOT push it above Org B: the order is count/label, not "selected
+        # first", so a tick never makes a row jump to the top.
+        self._create_placement("Alice", self.skill_python, org=self.org_b)
+        self._create_placement("Bob", self.skill_python, org=self.org_b)
+        opts = _get_top_org_options("placements", [], {self.org_a.id})
+        values = [o["value"] for o in opts if o["param"] == "org"]
+        assert values.index(str(self.org_b.public_id)) < values.index(str(self.org_a.public_id))
+
+    def test_selecting_outside_top_n_appends_without_dropping_a_top_option(self):
+        # Five orgs by descending count; with limit=2 the top-N is org0, org1.
+        orgs = [OrganizationUnit.objects.create(name=f"O{i}", label=f"O{i}") for i in range(5)]
+        counts = Counter({o.id: c for o, c in zip(orgs, [5, 4, 3, 2, 1], strict=True)})
+        top = [orgs[0].id, orgs[1].id]
+
+        baseline = _get_top_org_options("placements", [], set(), org_counts=counts, limit=2)
+        base_ids = [o["value"] for o in baseline if o["param"] == "org"]
+
+        # Selecting the lowest-count org (outside the top-2) must keep both top
+        # options and append the pick — the list grows, nothing is dropped.
+        picked = _get_top_org_options("placements", [], {orgs[4].id}, org_counts=counts, limit=2)
+        picked_ids = [o["value"] for o in picked if o["param"] == "org"]
+
+        for top_id in top:
+            assert str(OrganizationUnit.objects.get(id=top_id).public_id) in picked_ids
+        assert str(orgs[4].public_id) in picked_ids
+        assert len(picked_ids) == len(base_ids) + 1
 
 
 class OrgQuickCountsTest(FilterCombiningTestBase):
