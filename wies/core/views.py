@@ -560,25 +560,34 @@ ERRORS_PER_PAGE = 10
 
 @staff_required
 def staff_dashboard(request):
-    # The error table is loaded separately via HTMX (see the error-table endpoint).
-    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+    # The error table is rendered inline (first page) so it appears with the page;
+    # its pagination buttons then swap via the error-table endpoint.
+    return render(
+        request,
+        "staff_dashboard.html",
+        {"usage": get_usage_stats(), **_error_table_context(page_number=None)},
+    )
 
 
-def _render_error_table(request, page_number):
-    """Render the paginated error table fragment for the given page."""
+def _error_table_context(page_number):
+    """Context for the paginated error table (shared by the dashboard and the endpoint)."""
     paginator = Paginator(ErrorEvent.objects.select_related("user"), ERRORS_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
     def page_url(number):
         return f"{reverse('error-table')}?pagina={number}"
 
-    context = {
+    return {
         "object_list": page_obj.object_list,
         "page_obj": page_obj,
         "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
     }
-    return render(request, "parts/error_table.html", context)
+
+
+def _render_error_table(request, page_number):
+    """Render the paginated error table fragment for the given page."""
+    return render(request, "parts/error_table.html", _error_table_context(page_number))
 
 
 @staff_required

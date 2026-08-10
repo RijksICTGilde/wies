@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from config.jinja2 import datetime_nl
 from wies.core.models import ErrorEvent
 from wies.core.views import ERRORS_PER_PAGE
 
@@ -21,14 +22,21 @@ class StaffErrorsSectionTest(TestCase):
         self.staff_user = User.objects.create_user(email=STAFF_EMAIL, first_name="Staff", last_name="User")
         self.client.force_login(self.staff_user)
 
-    def test_dashboard_hosts_error_table_container(self):
-        # The dashboard shows the heading + a container that lazy-loads the table.
+    def test_dashboard_renders_error_table_inline(self):
+        # The table renders with the page (no lazy-load flash); the container id
+        # stays because pagination swaps into it.
+        ErrorEvent.objects.create(
+            level="ERROR", logger_name="django.request", message="Kapot", exception_type="ValueError"
+        )
+
         response = self.client.get("/beheer/statistieken/")
 
         assert response.status_code == 200
         body = response.content.decode()
         assert "Recente foutmeldingen" in body
         assert 'id="error_table_container"' in body
+        assert "Foutmeldingen laden" not in body  # no placeholder
+        assert "ValueError" in body  # the error itself is already on the page
 
     def test_error_table_shows_recent_errors(self):
         ErrorEvent.objects.create(level="ERROR", logger_name="django.request", message="Kapot op de detailpagina")
@@ -138,6 +146,36 @@ class StaffErrorsSectionTest(TestCase):
         assert f'href="/beheer/statistieken/fout/{error.public_id}/"' in body
         assert "nldd-icon-button" not in body
         assert "verwijderen/" not in body
+
+    def test_row_shows_time_where_and_user_columns_for_a_web_error(self):
+        # A request-driven error: Waar is the method + path, Gebruiker the email.
+        error = ErrorEvent.objects.create(
+            level="ERROR",
+            logger_name="django.request",
+            message="Kapot",
+            exception_type="TypeError",
+            method="POST",
+            path="/opdrachten/25/verwijderen/",
+            user_email="jan@rijksoverheid.nl",
+        )
+
+        body = self.client.get(ERROR_TABLE_URL).content.decode()
+
+        # Tijd: absolute timestamp (datetime_nl), not a "x geleden" relative label.
+        assert datetime_nl(error.timestamp) in body
+        # Fout, Waar, Gebruiker columns.
+        assert "TypeError" in body
+        assert "POST /opdrachten/25/verwijderen/" in body
+        assert "jan@rijksoverheid.nl" in body
+
+    def test_row_where_falls_back_to_logger_and_user_to_a_dash(self):
+        # A background-task failure: no path (fall back to logger) and no user.
+        ErrorEvent.objects.create(level="ERROR", logger_name="wies.tasks", message="Task 5 failed")
+
+        body = self.client.get(ERROR_TABLE_URL).content.decode()
+
+        assert "wies.tasks" in body
+        assert "-" in body  # en-dash for the missing user
 
     def test_delete_redirects_to_the_dashboard(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")

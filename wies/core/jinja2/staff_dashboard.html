@@ -74,10 +74,7 @@
   <h2>Recente foutmeldingen</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  <div id="error_table_container"
-       hx-get="{{ url('error-table') }}"
-       hx-trigger="load"
-       hx-swap="innerHTML">
-    <span class="wies-text-secondary">Foutmeldingen laden...</span>
-  </div>
+  {# Inline gerenderd zodat het blok meteen met de pagina verschijnt; de
+     paginering swapt zichzelf later via de error-table-endpoint in dit id. #}
+  <div id="error_table_container">{% include "parts/error_table.html" %}</div>
 {% endblock content %}
