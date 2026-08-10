@@ -14,20 +14,7 @@
       hx-swap="innerHTML"
       data-category-manage-form>
   {{ get_csrf_hidden_input(request) }}
-  {# Handgeschreven management form: Django's eigen hidden-widget template is
-     een DTL-template en die kent deze Jinja2-renderer niet. #}
-  <input type="hidden"
-         name="{{ formset.management_form.TOTAL_FORMS.html_name }}"
-         value="{{ formset.total_form_count() }}">
-  <input type="hidden"
-         name="{{ formset.management_form.INITIAL_FORMS.html_name }}"
-         value="{{ formset.initial_form_count() }}">
-  <input type="hidden"
-         name="{{ formset.management_form.MIN_NUM_FORMS.html_name }}"
-         value="0">
-  <input type="hidden"
-         name="{{ formset.management_form.MAX_NUM_FORMS.html_name }}"
-         value="1000">
+  {{ formset.management_form }}
   <nldd-list accessible-label="Categorieën">
   {% for form in formset %}
     {% set row_index = loop.index0 %}

@@ -141,11 +141,8 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # De rijen staan onder elkaar in één sheet, dus een zichtbaar "Naam"/
-        # "Kleur"-label bij elke rij is ruis. We renderen ze via as_field_group
-        # (zodat een validatiefout netjes gekoppeld en zichtbaar is), maar zonder
-        # zichtbaar label: het label verhuist naar accessible-label zodat
-        # screenreaders het veld nog benoemen.
+        # Renderen zonder zichtbaar label vanwege tabel vorm
+        # Het label verhuist naar accessible-label zodat screenreaders het veld nog benoemen.
         for field in self.fields.values():
             field.widget.attrs.setdefault("accessible-label", str(field.label))
             field.label = ""
@@ -170,6 +167,8 @@ LabelCategoryFormSet = forms.modelformset_factory(
     form=LabelCategoryRowForm,
     extra=0,
     can_delete=False,
+    min_num=0,
+    max_num=1000,
 )
 
 
