@@ -245,26 +245,6 @@ a {
   padding-bottom: var(--primitives-space-12, 0.75rem);
 }
 
-.flash-messages {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 400px;
-}
-.flash-messages--hiding {
-  animation: flash-fade-out 0.3s ease forwards;
-}
-@keyframes flash-fade-out {
-  to {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-}
-
 /* Org-tree rows the user picked herself (org_tree.js sets data-explicit from
    TreeState.explicitSelections). A parent can also show a tickmark because all
    its children are checked; this cue says which row IS the selection.

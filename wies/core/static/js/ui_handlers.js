@@ -55,4 +55,18 @@
     var action = CLICK_ACTIONS[el.getAttribute("data-action")];
     if (action) action(el);
   });
+
+  // nldd-notification meldt dat hij weg is (wegklikken, Escape, of zijn eigen
+  // klok) maar ruimt zichzelf niet op: de consument bepaalt of de melding echt
+  // verdwijnt. Wij bewaren ze niet, dus weg is weg.
+  document.addEventListener("dismiss", function (event) {
+    var el = event.composedPath().find(function (node) {
+      return (
+        node instanceof Element &&
+        node.tagName &&
+        node.tagName.toLowerCase() === "nldd-notification"
+      );
+    });
+    if (el) el.remove();
+  });
 })();

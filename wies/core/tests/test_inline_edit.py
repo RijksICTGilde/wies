@@ -6,6 +6,7 @@ persistence behaviour. Registrations are cleaned up in tearDown to
 avoid leaking into unrelated tests.
 """
 
+import json
 import re
 import uuid
 
@@ -177,8 +178,9 @@ class InlineEditInfrastructureTest(TestCase):
         resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
         assert resp.status_code == 200
         self.assertContains(resp, "Updated name")
-        # Save feedback is a toast triggered client-side via HX-Trigger.
-        assert resp["HX-Trigger-After-Swap"] == "inline-edit-saved"
+        # Save feedback is a notification triggered client-side via HX-Trigger.
+        # The label rides along so the message can name what was saved.
+        assert json.loads(resp["HX-Trigger-After-Swap"]) == {"inline-edit-saved": {"label": ""}}
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated name"
 

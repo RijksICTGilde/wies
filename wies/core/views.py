@@ -622,10 +622,9 @@ def staff_database(request):
         elif action == "reset_onboarding":
             request.user.onboarding_completed_at = None
             request.user.save(update_fields=["onboarding_completed_at"])
-            messages.success(
-                request,
-                "Onboarding is gereset. De wizard verschijnt weer bij de volgende paginalading.",
-            )
+            # Geen melding: de wizard staat na de redirect meteen open, en dat is
+            # het bewijs. Een notificatie zou bovendien achter de wizard vallen —
+            # die is een modal in de top layer, de notificatieregio niet.
         elif action == "sync_organizations":
             # Check if there's already an active task
             if has_active_task("sync_organizations"):
@@ -3623,7 +3622,14 @@ def _render_inline_edit_display(
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
-        response["HX-Trigger-After-Swap"] = "inline-edit-saved"
+        # Het label reist mee zodat de melding benoemt wát er is opgeslagen: een
+        # kaal "Opgeslagen" laat je raden, en in de onboarding-wizard bewaar je
+        # meerdere velden achter elkaar. Editable, EditableGroup en
+        # EditableCollection hebben alle drie een label; ontbreekt het, dan valt
+        # de melding terug op de algemene tekst.
+        response["HX-Trigger-After-Swap"] = json.dumps(
+            {"inline-edit-saved": {"label": getattr(spec, "label", None) or ""}}
+        )
     return response
 
 
