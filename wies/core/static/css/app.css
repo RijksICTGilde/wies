@@ -98,9 +98,11 @@ a {
   color: var(--semantics-links-color, inherit);
 }
 
+/* Alleen de kleur. De eigen font-size hierin maakte er een tweede tekstsoort van:
+   een lege waarde stond kleiner dan de waarde die er had kunnen staan, en dat
+   verschil zei niets. De omliggende nldd-text-cell bepaalt de maat. */
 .wies-text-secondary {
   color: var(--semantics-content-secondary-color, #64748b);
-  font-size: 0.875rem;
 }
 
 /* Native inputs still rendered by hand: the date widget (nldd-date-field needs

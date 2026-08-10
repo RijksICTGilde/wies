@@ -6,7 +6,7 @@
      value  (required): the string to display.
 #}
 <div style="margin-top: 0.25rem;">
-  <span class="wies-text-secondary wies-text-xs">{{ label }}:</span>
+  <span class="wies-text-secondary">{{ label }}:</span>
   {% if value|length > 300 %}
     <span>
       <span class="truncated-text" style="display: block;">{{ value[:300] }}...</span>

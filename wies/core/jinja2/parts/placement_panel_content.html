@@ -77,7 +77,7 @@
     t/m
     {{ placement.end_date|datum_nl if placement.end_date else "heden" }}
   {% else %}
-    <em class="wies-text-secondary">Geen periode ingesteld</em>
+    <span class="wies-text-secondary">Geen periode ingesteld</span>
   {% endif %}
   </nldd-text-cell>
   {% if panel_data.user_can_edit_details %}

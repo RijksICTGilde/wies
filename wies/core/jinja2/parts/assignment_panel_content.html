@@ -101,7 +101,7 @@
               {%- if org_row.role == "PRIMARY" and panel_data.organization_rows|length > 1 %} <span class="wies-text-secondary">(primair)</span>{% endif -%}
             </div>
           {% else %}
-            <span class="wies-text-secondary"><em>Geen organisatie opgegeven</em></span>
+            <span class="wies-text-secondary">Geen organisatie opgegeven</span>
           {% endfor %}
         {% elif row_kind == "period" %}
           {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
@@ -112,7 +112,7 @@
           {% if panel_data.assignment.owner %}
             {{ panel_data.assignment.owner.name }}
           {% else %}
-            <em class="wies-text-secondary">Niet toegewezen</em>
+            <span class="wies-text-secondary">Niet toegewezen</span>
           {% endif %}
         {% endif %}
         </nldd-text-cell>
