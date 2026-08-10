@@ -191,7 +191,7 @@ a {
 /* Versieregel in de "Over Wies"-kolom van de NLDD page-footer: gedempt en
    klein; de rest van de opmaak verzorgt nldd-rich-text. */
 .wies-footer-version {
-  color: var(--semantics-text-subtle, #4f5155);
+  color: var(--semantics-content-secondary-color);
   font-size: 0.875rem;
 }
 
@@ -243,53 +243,4 @@ a {
   margin-left: calc(0.5em + var(--primitives-space-8, 0.5rem));
   padding-right: var(--primitives-space-8, 0.5rem);
   padding-bottom: var(--primitives-space-12, 0.75rem);
-}
-
-/* Org-tree rows the user picked herself (org_tree.js sets data-explicit from
-   TreeState.explicitSelections). A parent can also show a tickmark because all
-   its children are checked; this cue says which row IS the selection.
-   The components expose no ::part, so we override the custom properties they
-   read via var() — they cascade into the shadow roots.
-   - Bold label: nldd-text-cell renders its text in shadow DOM with a `font:`
-     shorthand, so font-weight can't reach it; swap the font TOKEN for the DS
-     bold variant (same size/line-height, heavier weight) instead.
-   - Darker checkbox: one accent step below the default selected fill (which is
-     accent-750/-650), matching the old darker-vs-lighter distinction. */
-/* Bold + dark-blue label on the explicit pick, scoped to the row's OWN action
-   segment (>) so the override can't inherit down into nested child rows — an
-   explicit parent would otherwise bold its children too. Child rows live in the
-   `children` slot as sibling nldd-list-item elements, not inside this action, so
-   `>` reaches only this row's label.
-   nldd-text-cell renders its text in shadow DOM with a `font:` shorthand, so
-   font-weight can't reach it; swap the font TOKEN for the DS bold variant (same
-   size/line-height, heavier weight). The label colour comes from the same cell,
-   which reads --semantics-content-color; point it at the accent-text token so
-   the explicit row is dark blue.
-   The checkbox is deliberately NOT overridden here: the explicit pick keeps the
-   DS default selected fill (a normal blue), and the lighter fill below marks the
-   cascade parent — so selected reads as the stronger of the two. */
-nldd-list-item[data-explicit] > nldd-list-item-action {
-  --primitives-font-body-md-regular-tight: var(
-    --primitives-font-body-md-bold-tight
-  );
-  --primitives-font-body-sm-regular-tight: var(
-    --primitives-font-body-sm-bold-tight
-  );
-  --semantics-content-color: var(--semantics-content-accent-color);
-}
-
-/* A parent lights up because all its children are checked (cascade), not
-   because the user picked it — give its checkbox a LIGHTER accent fill than the
-   explicit pick (which keeps the DS default) so the two read as clearly
-   different. Scoped to the row's OWN action (>) so it can't reach nested child
-   rows. Only checked rows paint a selected fill, so this is a no-op elsewhere. */
-nldd-list-item:not([data-explicit]) > nldd-list-item-action[checkbox] {
-  --components-checkbox-is-selected-background-color: light-dark(
-    var(--primitives-color-accent-300),
-    var(--primitives-color-accent-500)
-  );
-  --components-checkbox-is-selected-border-color: light-dark(
-    var(--primitives-color-accent-300),
-    var(--primitives-color-accent-500)
-  );
 }

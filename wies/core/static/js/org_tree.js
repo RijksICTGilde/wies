@@ -31,6 +31,12 @@
   // tree — the very cost lazy rendering exists to avoid. See `filter`.
   var MIN_SEARCH_LENGTH = 2;
 
+  /** The row's visible label. A `self` node stands for "the organisation
+   *  itself", next to its own children. */
+  function rowLabel(node) {
+    return node.self ? 'Direct onder "' + node.label + '"' : node.label;
+  }
+
   function cell(tag, attrs) {
     var el = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -121,7 +127,7 @@
       row.toggleAttribute("expanded", willExpand);
     }
 
-    var label = node.self ? 'Direct onder "' + node.label + '"' : node.label;
+    var label = rowLabel(node);
     var selectable = this.isSelectable(node);
     // A group row carries no checkbox, so expanding is its only action and the
     // ROW is the control: whole row clickable, chevron cell marked `disclosure`
@@ -241,10 +247,23 @@
       box.checked = node.checked;
       box.indeterminate = node.indeterminate;
     }
-    row.toggleAttribute(
-      "data-explicit",
-      this.state.explicitSelections.has(node.id),
+    var explicit = this.state.explicitSelections.has(node.id);
+    row.toggleAttribute("data-explicit", explicit);
+
+    // De rij die de gebruiker ZELF aanvinkte, onderscheiden van een ouder die
+    // meelicht omdat al zijn kinderen aanstaan: beide zijn `checked`, en de
+    // tokens in de voettekst zijn makkelijk te missen. Vet plus accentkleur via
+    // de eigen API van nldd-text-cell — `text` kent **-syntax en `color` kent
+    // 'accent' — zodat hier geen DS-variabelen overschreven hoeven te worden.
+    var textCell = row.querySelector(
+      ":scope > nldd-list-item-action > nldd-text-cell",
     );
+    if (textCell) {
+      var text = rowLabel(node);
+      textCell.setAttribute("text", explicit ? "**" + text + "**" : text);
+      if (explicit) textCell.setAttribute("color", "accent");
+      else textCell.removeAttribute("color");
+    }
   };
 
   OrgTree.prototype.sync = function () {
