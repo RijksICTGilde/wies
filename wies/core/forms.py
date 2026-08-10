@@ -134,6 +134,16 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
         model = LabelCategory
         fields = ["name", "color"]
 
+    def clean_name(self):
+        name = self.cleaned_data.get("name", "")
+        qs = LabelCategory.objects.filter(name=name)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            msg = "Er bestaat al een categorie met deze naam."
+            raise ValidationError(msg)
+        return name
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Geen zichtbaar label (tabelvorm); label naar accessible-label voor screenreaders.
