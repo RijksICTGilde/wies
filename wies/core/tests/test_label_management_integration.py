@@ -332,10 +332,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         }
 
     def test_plain_submit_saves(self):
-        """A plain submit (no control param) saves. Save is NOT keyed on a
-        button name/value: nldd-button keeps its submitter name in the shadow
-        root, so that never reaches the POST — the absence of extra_row/
-        delete_new_row_index is what marks a real save."""
+        """A plain submit (no extra_row/delete_new_row_index) saves."""
         data = self._management(total=1, initial=0)
         data.update({"form-0-name": "Solo", "form-0-color": self.GREY})
         response = self.client.post(self.url, data)
@@ -368,16 +365,13 @@ class LabelCategoryManageFormsetTest(TestCase):
         data.update({"extra_row": "1", "form-0-name": "Halfway", "form-0-color": self.GREY})
         response = self.client.post(self.url, data)
         assert response.status_code == 200
-        # No save happened.
         assert not LabelCategory.objects.exists()
-        # Typed value survives and the counter grew to two rows (the management
-        # input spans lines, so match on name + value separately).
+        # Typed value survives and the counter grew to two rows.
         self.assertContains(response, "Halfway")
         self.assertContains(response, "form-TOTAL_FORMS")
         self.assertContains(response, 'value="2"')
         self.assertContains(response, 'name="form-1-name"')  # the new blank row
-        # No premature "required" error while still filling in.
-        self.assertNotContains(response, "verplicht")
+        self.assertNotContains(response, "verplicht")  # no premature "required"
 
     def test_delete_new_row_index_removes_row_and_renumbers(self):
         """Removing a new row drops it and renumbers the remaining new rows so no
@@ -406,9 +400,8 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, 'name="form-1-name" value="Gamma"')
 
     def test_delete_then_add_does_not_resurrect_the_removed_row(self):
-        """Regression: after removing a middle new row, adding another row must
-        not bring the removed row back as a blank. Because delete renumbers the
-        rows contiguously, the follow-up add sees no gap to re-materialise."""
+        """Regression: removing a middle new row then adding another must not
+        resurrect the removed row as a blank (delete renumbers contiguously)."""
         # Delete the middle of three new rows → server returns two contiguous rows.
         data = self._management(total=3, initial=0)
         data.update(
@@ -447,14 +440,11 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(after_add, 'name="form-2-name"')
 
     def test_add_row_does_not_flash_validation_errors(self):
-        """Adding a row must not surface validation errors on the other rows —
-        you are still filling in. Even a new row that already duplicates an
-        existing category stays quiet until Opslaan.
+        """Adding a row must not flash validation errors on other rows, even a
+        new row that duplicates an existing category — quiet until Opslaan.
 
-        Regression: as_field_group() renders field.errors, and reading that
-        lazily triggers a full_clean even though the view never calls
-        is_valid() on a re-render. The view suppresses that so no premature
-        "bestaat al" / "verplicht" appears.
+        Regression: as_field_group() reads field.errors, which lazily triggers
+        full_clean; the view suppresses that on a re-render.
         """
         existing = LabelCategory.objects.create(name="b", color=self.GREY)
         data = self._management(total=2, initial=1)
@@ -478,33 +468,22 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, 'name="form-2-name"')
 
     def test_save_with_blanked_existing_name_shows_error_and_does_not_save(self):
-        """Blanking an existing category's name and saving is rejected (name is
-        required): the body re-renders with a visible, wired error, no redirect,
-        and nothing is saved."""
+        """Blanking a required name and saving is rejected: re-render with a
+        visible wired error, no redirect, nothing saved."""
         category = LabelCategory.objects.create(name="Skills", color=self.GREY)
         data = self._management(total=1, initial=1)
         data.update({"form-0-id": str(category.pk), "form-0-name": "", "form-0-color": self.GREY})
         response = self.client.post(self.url, data)
         assert response.status_code == 200
-        # Invalid → re-render the body, no HX-Redirect to the labels page.
         assert response.headers.get("HX-Redirect") is None
-        # The error is rendered through as_field_group (nldd-form-field-error-text),
-        # not a bare widget — otherwise the message never shows.
         self.assertContains(response, "Dit veld is verplicht.")
         self.assertContains(response, "nldd-form-field-error-text")
         category.refresh_from_db()
         assert category.name == "Skills"
 
     def test_remove_then_save_with_duplicate_name_shows_error_without_phantom_row(self):
-        """The case that drove the renumber-on-delete decision: remove a row and
-        then hit a validation error. The save-error path re-renders the whole
-        body, so the removal must have left no index gap — otherwise a phantom
-        blank row would reappear next to the real error.
-
-        Trigger via a duplicate name (LabelCategory.name is unique): a new row is
-        named the same as an existing category, which fails the model's unique
-        check and renders a wired field error on that row.
-        """
+        """Remove a row, then save into a validation error (duplicate name): the
+        error re-render must show no phantom blank row where the removed one was."""
         existing = LabelCategory.objects.create(name="Bestaand", color=self.GREY)
 
         # Existing row (index 0) + three new rows. Remove the middle new one.

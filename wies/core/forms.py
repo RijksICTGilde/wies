@@ -125,12 +125,7 @@ class ProfileLabelsForm(NlddFormMixin, forms.Form):
 
 
 class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
-    """One row in the "Categorieën beheren" sheet: name plus colour.
-
-    The colour lives here because the per-category edit form is gone; the tags
-    on the profile, placement and colleague panels still take their colour from
-    the category.
-    """
+    """One row in the "Categorieën beheren" sheet: name plus colour."""
 
     name = forms.CharField(label="Naam", required=True)
     color = forms.ChoiceField(label="Kleur", choices=CATEGORY_COLOR_CHOICES, widget=forms.Select)
@@ -141,27 +136,21 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Renderen zonder zichtbaar label vanwege tabel vorm
-        # Het label verhuist naar accessible-label zodat screenreaders het veld nog benoemen.
+        # Geen zichtbaar label (tabelvorm); label naar accessible-label voor screenreaders.
         for field in self.fields.values():
             field.widget.attrs.setdefault("accessible-label", str(field.label))
             field.label = ""
 
     def has_changed(self):
-        """Een lege nieuwe rij telt niet mee.
-
-        De kleurkeuze post altijd een waarde, dus zonder deze regel geldt een
-        zojuist toegevoegde maar niet ingevulde rij als gewijzigd en blokkeert
-        haar "naam is verplicht" het opslaan van de rest.
-        """
+        """Een lege nieuwe rij telt niet mee (kleur post altijd, dus anders geldt
+        ze als gewijzigd en blokkeert "naam is verplicht" het opslaan)."""
         if not self.instance.pk and not (self.data.get(self.add_prefix("name")) or "").strip():
             return False
         return super().has_changed()
 
 
-#: Rows are added/removed server-side (the manage view re-renders the body from
-#: the posted state), so the formset accepts more rows than the queryset holds;
-#: unchanged empty rows are skipped on save (see LabelCategoryRowForm.has_changed).
+#: Rows are added/removed server-side, so the formset accepts more rows than the
+#: queryset holds; empty rows are skipped on save (see has_changed).
 LabelCategoryFormSet = forms.modelformset_factory(
     LabelCategory,
     form=LabelCategoryRowForm,

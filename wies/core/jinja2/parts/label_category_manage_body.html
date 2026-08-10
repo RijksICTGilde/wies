@@ -1,11 +1,5 @@
-{# De inhoud van de categorie-beheer-sheet, los van de sheet zelf: elke actie
-   (rij toevoegen, een nieuwe rij weghalen, opslaan met een validatiefout)
-   rendert alléén dit stuk (hx-target="#categoryManageBody"), zodat de
-   openstaande sheet blijft staan in plaats van dat er een tweede overheen opent.
-
-   Rij toevoegen en een nog niet opgeslagen rij weghalen lopen via de server: de
-   knoppen posten de huidige toestand terug met een stuurparameter, waarna de
-   view de body opnieuw rendert — inclusief de al ingetypte waarden. #}
+{# Inhoud van de categorie-beheer-sheet, los van de sheet: elke actie rendert
+   alleen dit stuk (hx-target="#categoryManageBody"), zodat de sheet blijft staan. #}
 <nldd-form>
 <form method="post"
       action="{{ form_post_url }}"
@@ -22,8 +16,7 @@
   {% endfor %}
   <nldd-list-item>
   <nldd-cell width="full">
-  {# Rij bijmaken: post de huidige toestand terug met extra_row, de server
-     rendert de body met één lege rij erbij. #}
+  {# Rij bijmaken: post de toestand terug met extra_row; server rendert een lege rij erbij. #}
   <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
   </nldd-cell>
   </nldd-list-item>
