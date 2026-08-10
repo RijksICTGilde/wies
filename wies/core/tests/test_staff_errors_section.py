@@ -2,6 +2,7 @@
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
+from django.urls import reverse
 
 from wies.core.models import ErrorEvent
 from wies.core.views import ERRORS_PER_PAGE
@@ -112,35 +113,39 @@ class StaffErrorsSectionTest(TestCase):
         assert "Foutmelding" in body  # full page heading
         assert "Terug naar statistieken" in body  # back link, not a modal
         assert "ValueError: kaboom" in body
+        # Deleting lives on the page now, not in a sheet.
+        assert f"/beheer/statistieken/fout/{error.public_id}/verwijderen/" in body
 
-    def test_error_detail_over_htmx_renders_a_sheet(self):
-        # The row opens the detail in a sheet; the full page stays for direct links.
+    def test_error_detail_always_renders_the_full_page(self):
+        # The row and the Mattermost link both navigate to the full page; there
+        # is no htmx sheet variant.
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
 
         response = self.client.get(f"/beheer/statistieken/fout/{error.public_id}/", headers={"hx-request": "true"})
 
         assert response.status_code == 200
         body = response.content.decode()
-        assert "<nldd-sheet" in body
-        assert "Terug naar statistieken" not in body  # no full page chrome
+        assert "<nldd-sheet" not in body
+        assert "Terug naar statistieken" in body  # full page chrome
 
-    def test_row_opens_the_detail_and_carries_no_icon_buttons(self):
-        # The whole row is the control, so the eye is gone; deleting moved to the sheet.
+    def test_row_links_to_the_detail_page(self):
+        # The whole row navigates to the detail page; no eye button, delete lives there.
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
 
         response = self.client.get(ERROR_TABLE_URL)
 
         body = response.content.decode()
-        assert f"/beheer/statistieken/fout/{error.public_id}/" in body
+        assert f'href="/beheer/statistieken/fout/{error.public_id}/"' in body
         assert "nldd-icon-button" not in body
         assert "verwijderen/" not in body
 
-    def test_delete_closes_the_detail_sheet(self):
+    def test_delete_redirects_to_the_dashboard(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
+        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/", follow=False)
 
-        assert response["HX-Trigger"] == "closeModal"
+        assert response.status_code == 302
+        assert response.url == reverse("staff-dashboard")
 
     def test_error_detail_requires_staff(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
@@ -153,15 +158,12 @@ class StaffErrorsSectionTest(TestCase):
             assert response.status_code == 302
             assert response.url.startswith("/geen-toegang/")
 
-    def test_delete_error_removes_row_and_returns_table(self):
+    def test_delete_error_removes_the_error(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
 
-        response = self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
+        self.client.post(f"/beheer/statistieken/fout/{error.public_id}/verwijderen/")
 
-        assert response.status_code == 200
         assert not ErrorEvent.objects.filter(pk=error.pk).exists()
-        # The refreshed fragment no longer contains the deleted error.
-        assert "Weg ermee" not in response.content.decode()
 
     def test_delete_error_rejects_get(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Blijf staan")

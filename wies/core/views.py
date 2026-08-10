@@ -589,29 +589,17 @@ def error_table(request):
 
 @staff_required
 def error_detail(request, public_id):
-    """One error (traceback etc.), staff-only.
 
-    From the list on the dashboard this arrives over htmx and renders as a
-    sheet; a direct link renders the full page. Both include the same body
-    partial, so the two cannot drift.
-    """
     error = get_object_or_404(ErrorEvent, public_id=public_id)
-    if request.headers.get("HX-Request"):
-        context = {"error": error, "pagina": request.GET.get("pagina", "1")}
-        return render(request, "parts/error_detail_sheet.html", context)
     return render(request, "error_detail.html", {"error": error})
 
 
 @staff_required
 @require_POST
 def delete_error(request, public_id):
-    """Delete a single handled error and return the refreshed current page of the table."""
+
     ErrorEvent.objects.filter(public_id=public_id).delete()
-    response = _render_error_table(request, request.GET.get("pagina"))
-    # Deleting happens from the detail sheet, which describes a row that is now
-    # gone: close it along with the swap.
-    response["HX-Trigger"] = "closeModal"
-    return response
+    return redirect("staff-dashboard")
 
 
 @staff_required

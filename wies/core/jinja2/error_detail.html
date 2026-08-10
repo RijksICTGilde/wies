@@ -17,5 +17,12 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% include "parts/error_detail_body.html" %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <form method="post"
+        action="{{ url('delete-error', args=[error.public_id]) }}"
+        data-confirm="Weet je zeker dat je deze foutmelding wilt verwijderen?">
+    {{ get_csrf_hidden_input(request) }}
+    <nldd-button type="submit" variant="destructive" start-icon="trash" text="Verwijderen"></nldd-button>
+  </form>
   </nldd-simple-section>
 {% endblock content %}
