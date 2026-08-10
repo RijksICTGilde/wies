@@ -17,5 +17,11 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% include "parts/error_detail_body.html" %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# Bevestiging als nldd-modal-dialog, gelijk aan het verwijderen van een
+     opdracht: de knop laadt de modal in de host hieronder; de destructieve knop
+     in de modal post en de server antwoordt met een HX-Redirect. #}
+  <nldd-button variant="destructive" start-icon="delete" text="Verwijderen" hx-get="{{ url('delete-error', args=[error.public_id]) }}" hx-target="#errorDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
+  <div id="errorDeleteModal"></div>
   </nldd-simple-section>
 {% endblock content %}

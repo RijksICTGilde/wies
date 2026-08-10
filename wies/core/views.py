@@ -560,25 +560,32 @@ ERRORS_PER_PAGE = 10
 
 @staff_required
 def staff_dashboard(request):
-    # The error table is loaded separately via HTMX (see the error-table endpoint).
-    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+    return render(
+        request,
+        "staff_dashboard.html",
+        {"usage": get_usage_stats(), **_error_table_context(page_number=None)},
+    )
 
 
-def _render_error_table(request, page_number):
-    """Render the paginated error table fragment for the given page."""
+def _error_table_context(page_number):
+    """Context for the paginated error table (shared by the dashboard and the endpoint)."""
     paginator = Paginator(ErrorEvent.objects.select_related("user"), ERRORS_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
     def page_url(number):
         return f"{reverse('error-table')}?pagina={number}"
 
-    context = {
+    return {
         "object_list": page_obj.object_list,
         "page_obj": page_obj,
         "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
     }
-    return render(request, "parts/error_table.html", context)
+
+
+def _render_error_table(request, page_number):
+    """Render the paginated error table fragment for the given page."""
+    return render(request, "parts/error_table.html", _error_table_context(page_number))
 
 
 @staff_required
@@ -589,29 +596,38 @@ def error_table(request):
 
 @staff_required
 def error_detail(request, public_id):
-    """One error (traceback etc.), staff-only.
 
-    From the list on the dashboard this arrives over htmx and renders as a
-    sheet; a direct link renders the full page. Both include the same body
-    partial, so the two cannot drift.
-    """
     error = get_object_or_404(ErrorEvent, public_id=public_id)
-    if request.headers.get("HX-Request"):
-        context = {"error": error, "pagina": request.GET.get("pagina", "1")}
-        return render(request, "parts/error_detail_sheet.html", context)
     return render(request, "error_detail.html", {"error": error})
 
 
 @staff_required
-@require_POST
 def delete_error(request, public_id):
-    """Delete a single handled error and return the refreshed current page of the table."""
-    ErrorEvent.objects.filter(public_id=public_id).delete()
-    response = _render_error_table(request, request.GET.get("pagina"))
-    # Deleting happens from the detail sheet, which describes a row that is now
-    # gone: close it along with the swap.
-    response["HX-Trigger"] = "closeModal"
-    return response
+    """
+    Confirm (GET → modal) and perform (POST) deletion of a single error.
+    """
+    error = get_object_or_404(ErrorEvent, public_id=public_id)
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/confirm_delete_modal.html",
+            {
+                "dialog_text": "Foutmelding verwijderen?",
+                "dialog_supporting": (
+                    "Weet je zeker dat je deze foutmelding wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
+                "confirm_label": "Verwijder foutmelding",
+                "cancel_label": "Behoud foutmelding",
+                "form_post_url": reverse("delete-error", kwargs={"public_id": public_id}),
+            },
+        )
+    if request.method == "POST":
+        error.delete()
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = reverse("staff-dashboard")
+        return response
+    return HttpResponse(status=405)
 
 
 @staff_required

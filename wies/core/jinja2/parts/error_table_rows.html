@@ -1,12 +1,16 @@
 {% for error in object_list %}
-  {# De hele rij opent het detail in een sheet: een aparte oogknop ernaast zou
-     hetzelfde doen. Verwijderen zit in die sheet. #}
-  <nldd-list-item button hx-get="{{ url('error-detail', args=[error.public_id]) }}?pagina={{ page_obj.number }}" hx-target="#errorSheet" hx-swap="innerHTML">
-  <nldd-text-cell text="{{ error.short_description }}" supporting-text="{{ error.exception_message or error.message }}"></nldd-text-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  {# Relatief, want bij "recente foutmeldingen" wil je weten hoe lang geleden.
-     De exacte tijd staat in het detail. #}
-  <nldd-text-cell width="fit-content" horizontal-alignment="right" size="sm" color="secondary" text="{{ error.timestamp|tijdgeleden }}"></nldd-text-cell>
+  <nldd-list-item href="{{ url('error-detail', args=[error.public_id]) }}">
+  <nldd-text-cell hide-below="md" width="fit-content" size="sm" color="secondary" text="{{ error.timestamp|datetime_nl }}"></nldd-text-cell>
+  <nldd-spacer-cell hide-below="md" size="12"></nldd-spacer-cell>
+  <nldd-text-cell divider-start width="full" text="**{{ error.short_description }}**"></nldd-text-cell>
+  <nldd-spacer-cell hide-below="md" size="12"></nldd-spacer-cell>
+  {% if error.path %}
+    <nldd-text-cell hide-below="md" width="fit-content" max-width="240px" size="sm" color="secondary" text="{{ error.method }} {{ error.path }}"></nldd-text-cell>
+  {% else %}
+    <nldd-text-cell hide-below="md" width="fit-content" max-width="240px" size="sm" color="secondary" text="{{ error.logger_name }}"></nldd-text-cell>
+  {% endif %}
+  <nldd-spacer-cell hide-below="md" size="12"></nldd-spacer-cell>
+  <nldd-text-cell hide-below="md" width="fit-content" max-width="200px" size="sm" color="secondary" text="{{ error.user_email or '–' }}"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-icon-cell size="20">
   <nldd-icon name="chevron-right"></nldd-icon>
