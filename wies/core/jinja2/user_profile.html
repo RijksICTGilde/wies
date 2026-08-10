@@ -3,8 +3,8 @@
   Mijn profiel · Wies
 {% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}" />
-  <script src="{{ static('js/side_panel.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ app_asset('css/side_panel.css') }}" />
+  <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
 {# No sidebar on profile page — base.html auto-hides
 empty sidebar #}
@@ -12,7 +12,7 @@ empty sidebar #}
   {# Geen eigen breedte: de sectie houdt de standaard paginabreedte aan. #}
   <nldd-one-third-two-thirds-section>
   <div slot="left">
-    <nldd-list no-dividers accessible-label="Profiel">
+    <nldd-list dividers="never" accessible-label="Profiel">
     <nldd-list-item>
     <nldd-cell>
     <nldd-avatar size="48" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>

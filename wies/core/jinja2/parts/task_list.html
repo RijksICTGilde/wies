@@ -3,6 +3,7 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-box>
+<nldd-container padding="16">
 {% if latest_tasks %}
   <nldd-list>
   {% for task in latest_tasks %}
@@ -54,4 +55,5 @@
 {% else %}
   <nldd-inline-dialog text="Geen taken" supporting-text="Er staat op dit moment niets voor je open."></nldd-inline-dialog>
 {% endif %}
+</nldd-container>
 </nldd-box>
