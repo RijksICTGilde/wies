@@ -3,11 +3,11 @@
   Wie zit waar · Wies
 {% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
-  <script src="{{ static('js/filter_interactions.js') }}" defer></script>
-  <script src="{{ static('js/sidebar_toggle.js') }}" defer></script>
-  <script src="{{ static('js/side_panel.js') }}" defer></script>
-  <script src="{{ static('js/client_modal.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ app_asset('css/side_panel.css') }}">
+  <script src="{{ app_asset('js/filter_interactions.js') }}" defer></script>
+  <script src="{{ app_asset('js/sidebar_toggle.js') }}" defer></script>
+  <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
+  <script src="{{ app_asset('js/client_modal.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {# De sidebar-slot brengt geen padding mee (zie nldd-sidebar-section), en het

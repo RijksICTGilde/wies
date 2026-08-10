@@ -30,7 +30,7 @@
 {% if user.has_perm('core.view_suborganization') %}
   <nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">
-  <nldd-icon name="tag"></nldd-icon>
+  <nldd-icon name="brand"></nldd-icon>
   </nldd-icon-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell text="Merken"></nldd-text-cell>

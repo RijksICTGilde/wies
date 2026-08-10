@@ -1,8 +1,10 @@
 from datetime import date
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
+from django.contrib.staticfiles import finders
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
@@ -168,12 +170,37 @@ def nldd_asset(filename: str) -> str:
     return f"{url}?v={version}" if version else url
 
 
+def app_asset(filename: str) -> str:
+    """URL for one of our own static files, cache-busted on its mtime.
+
+    Same reason as nldd_asset, for the files we write ourselves: runserver
+    serves static straight from disk without Cache-Control, so a browser falls
+    back to heuristic caching and can keep running a stale ui_handlers.js or
+    app.css after an edit — the file name never changes. APP_VERSION is no use
+    as the token here: it is <branch>-<short-sha> in development and does not
+    move when you save a file.
+
+    DEBUG only. Production runs WhiteNoise's manifest storage, which content-
+    hashes the names, so the query would add nothing and the stat() per asset
+    per request would cost something. Also skipped when the file cannot be
+    found, so a typo'd path still renders (and still 404s, visibly).
+    """
+    url = static(filename)
+    if not settings.DEBUG:
+        return url
+    path = finders.find(filename)
+    if not path:
+        return url
+    return f"{url}?v={int(Path(path).stat().st_mtime)}"
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     env.globals.update(
         {
             "static": static,
             "nldd_asset": nldd_asset,
+            "app_asset": app_asset,
             "url": reverse,
             "get_csrf_token": get_token,
             "get_csrf_hidden_input": get_csrf_hidden_input,

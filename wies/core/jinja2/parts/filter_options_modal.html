@@ -12,7 +12,7 @@
 <nldd-simple-section>
 {# De rij is de checkbox, de nldd-checkbox erin is puur visueel. Hier submit
    niets rechtstreeks — de CTA schrijft de selectie terug naar de sidebar-groep. #}
-<nldd-list id="filter-options-list" variant="simple" no-dividers accessible-label="{{ group.label if group else 'Filter' }}">
+<nldd-list id="filter-options-list" variant="simple" dividers="never" accessible-label="{{ group.label if group else 'Filter' }}">
 {% if group %}
   {% for option in group.options if option.value %}
     <nldd-list-item checkbox {% if option.value in group.selected_values %}checked{% endif %} data-value="{{ option.value }}" data-option-label="{{ option.label | lower }}">

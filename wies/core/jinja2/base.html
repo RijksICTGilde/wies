@@ -17,32 +17,32 @@
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="{{ nldd_asset('css/global.css') }}">
-    <link rel="stylesheet" href="{{ static('css/app.css') }}">
+    <link rel="stylesheet" href="{{ app_asset('css/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     {# Global htmx config; must run right after htmx, before it processes
        history (disables the history snapshot cache — see htmx_config.js). #}
-    <script src="{{ static('js/htmx_config.js') }}"></script>
+    <script src="{{ app_asset('js/htmx_config.js') }}"></script>
     <script defer src="{{ nldd_asset('nldd.min.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
-    <script src="{{ static('js/hx_link_guard.js') }}"></script>
+    <script src="{{ app_asset('js/hx_link_guard.js') }}"></script>
     {# Global: opent nldd-window/dialog-inhoud die htmx in een mount swapt
        (verwijder-bevestigingen, formulier-modals) — die swaps gebeuren op
        elke pagina met een paneel. #}
-    <script src="{{ static('js/dialog.js') }}" defer></script>
+    <script src="{{ app_asset('js/dialog.js') }}" defer></script>
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
-    <script defer src="{{ static('js/assignment_org_picker.js') }}"></script>
-    <script src="{{ static('js/menu_nav.js') }}" defer></script>
-    <script src="{{ static('js/theme_menu.js') }}" defer></script>
+    <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
+    <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
+    <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
     {# Global: data-confirm (destructieve beheeracties) + data-action="show-more"
        (event-tijdlijn) worden via delegatie op document afgehandeld, en de
        tijdlijn arriveert ook via htmx-swaps — dus overal nodig. #}
-    <script src="{{ static('js/show_more.js') }}" defer></script>
-    <script src="{{ static('js/ui_handlers.js') }}" defer></script>
-    <script src="{{ static('js/placement_period_toggle.js') }}" defer></script>
+    <script src="{{ app_asset('js/show_more.js') }}" defer></script>
+    <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
+    <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
   </head>
   <body>
     {# De main groeit tot de footer onderaan staat, dus de oude min-height-hack
@@ -116,8 +116,8 @@
          are unaffected — the browser dedupes by URL. The label picker renders
          an nldd-token-field (from the NLDD bundle in <head>), so the old
          multi_select.js is no longer needed here. #}
-      <script src="{{ static('js/inline_edit.js') }}" defer></script>
-      <script src="{{ static('js/onboarding.js') }}" defer></script>
+      <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
+      <script src="{{ app_asset('js/onboarding.js') }}" defer></script>
     {% endif %}
   </body>
 </html>
