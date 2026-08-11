@@ -3,7 +3,8 @@
 <nldd-container layout="wrap" gap="6">
 {% if category_labels %}
   {% for label in category_labels %}
-    <nldd-tag color="{{ category.nldd_color }}">{{ label.name }}</nldd-tag>
+    {# TIJDELIJK kleurloos (#565), zie parts/colleague_panel_content.html. #}
+    <nldd-tag>{{ label.name }}</nldd-tag>
   {% endfor %}
 {% else %}
   <span class="wies-text-secondary">Geen labels</span>

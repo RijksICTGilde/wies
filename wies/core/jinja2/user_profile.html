@@ -54,7 +54,8 @@ empty sidebar #}
       {% if item.labels %}
         <nldd-container layout="wrap" gap="6">
         {% for label in item.labels %}
-          <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+          {# TIJDELIJK kleurloos (#565), zie parts/colleague_panel_content.html. #}
+          <nldd-tag>{{ label.name }}</nldd-tag>
         {% endfor %}
         </nldd-container>
       {% else %}

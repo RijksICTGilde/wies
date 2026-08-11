@@ -35,7 +35,10 @@
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% for label in labels %}
-      <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+      {# TIJDELIJK kleurloos (#565): dezelfde labels zijn als filter ongekleurd,
+         dus de categoriekleur zei hier niets. Terug: zet het color-attribuut
+         weer op label.category.nldd_color. #}
+      <nldd-tag>{{ label.name }}</nldd-tag>
     {% endfor %}
     </nldd-container>
   {% endif %}

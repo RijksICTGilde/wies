@@ -36,7 +36,8 @@
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% for label in labels %}
-      <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+      {# TIJDELIJK kleurloos (#565), zie colleague_panel_content.html. #}
+      <nldd-tag>{{ label.name }}</nldd-tag>
     {% endfor %}
     </nldd-container>
   {% endif %}
