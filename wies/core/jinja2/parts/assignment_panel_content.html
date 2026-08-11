@@ -1,5 +1,6 @@
 {% from "parts/row_actions.html" import render_row_actions %}
 {% from "parts/org_row.html" import render_org_line %}
+{% from "parts/privacy_chip.html" import privacy_chip %}
 {# Elke opdrachtgeverrij krijgt hetzelfde menu: twee ⋯-knoppen naast elkaar die
    stilletjes verschillen zijn een raadsel. Bij meerdere rijen noemt de
    toegankelijke naam de organisatie, anders heten alle menu's hetzelfde. #}
@@ -193,33 +194,32 @@
       <p>Wordt beheerd in {{ panel_data.team_external_source }}.</p>
       </nldd-rich-text>
     {% endif %}
-    {% if panel_data.team_privacy_note %}
-      {# Zelfde vorm als op de opdrachtkaarten: doorgestreept oog plus de kale
-         zin, zodat een beperkte zichtbaarheid er overal hetzelfde uitziet. #}
-      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-      <nldd-list variant="simple" dividers="never" accessible-label="Zichtbaarheid">
-      <nldd-list-item size="sm">
-      <nldd-icon-cell size="16" icon="hidden"></nldd-icon-cell>
-      <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ panel_data.team_privacy_note }}"></nldd-text-cell>
-      </nldd-list-item>
-      </nldd-list>
-    {% endif %}
-    {% if panel_data.user_can_edit_team %}
+    {# De chip staat in dezelfde toolbar als "Toevoegen" — actie links, status
+       rechts op één regel. Zonder bewerkrechten is er geen knop; dan gaat de
+       chip naar `start`, want in `end` zou hij als los blokje tegen de
+       rechterrand geduwd worden. #}
+    {% if panel_data.user_can_edit_team or panel_data.team_privacy_note %}
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <nldd-toolbar label="Team" size="sm">
-      {# size="sm" ook expliciet op item + knop: nldd-toolbar forwardt zijn size
-         pas in zijn uitgestelde build (setTimeout(0)) naar de knop, dus zonder
-         dit rendert de knop eerst op de md-default (breder) en krimpt daarna naar
-         sm — een zichtbare resize-flash na een htmx-swap in de zijbalk. #}
-      <nldd-toolbar-item slot="start" size="sm">
-      <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
-      <nldd-menu slot="popup" placement="bottom-start">
-      <nldd-menu-item text="Aanvraag toevoegen" icon="add-text-document" hx-get="{{ panel_data.member_add_aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
-      <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ panel_data.member_add_ingevuld_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
-      </nldd-menu>
-      </nldd-button>
-      </nldd-toolbar-item>
+      {% if panel_data.user_can_edit_team %}
+        {# size="sm" ook expliciet op item + knop: nldd-toolbar forwardt zijn size
+           pas in zijn uitgestelde build (setTimeout(0)) naar de knop, dus zonder
+           dit rendert de knop eerst op de md-default (breder) en krimpt daarna naar
+           sm — een zichtbare resize-flash na een htmx-swap in de zijbalk. #}
+        <nldd-toolbar-item slot="start" size="sm">
+        <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
+        <nldd-menu slot="popup" placement="bottom-start">
+        <nldd-menu-item text="Aanvraag toevoegen" icon="add-text-document" hx-get="{{ panel_data.member_add_aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ panel_data.member_add_ingevuld_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-button>
+        </nldd-toolbar-item>
+      {% endif %}
+      {% if panel_data.team_privacy_note %}
+        <nldd-toolbar-item slot="{{ 'end' if panel_data.user_can_edit_team else 'start' }}" size="sm">
+        {{ privacy_chip(panel_data.team_privacy_note, size="sm") }}
+        </nldd-toolbar-item>
+      {% endif %}
       </nldd-toolbar>
     {% endif %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>

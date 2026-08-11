@@ -1,3 +1,4 @@
+{% from "parts/privacy_chip.html" import privacy_chip %}
 {# Commit-message style: one running sentence per event (built by
    _attach_audit_sentence), with long values (textarea's) as a Van/Naar
    "body" under the subject line. #}
@@ -14,6 +15,13 @@
     <span slot="overline" title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</span>
     <div>
       {{ event.sentence }}
+      {# Alleen bij een teamregel die een naam noemt die niet iedereen ziet:
+         andere velden (omschrijving, periode) zijn voor iedereen gelijk. Regels
+         die zijn weggefilterd bestaan hier niet meer en kunnen dus geen chip
+         dragen -- de tijdlijn verzwijgt hun bestaan bewust. #}
+      {% if event.privacy_note %}
+        {{ privacy_chip(event.privacy_note, size="sm") }}
+      {% endif %}
       {% if event.render_kind == "textarea" %}
         {% if event.formatted_old %}
           {% with label="Van", value=event.formatted_old %}

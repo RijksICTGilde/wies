@@ -4,6 +4,7 @@ Permissions live in ``wies/core/permissions.py``.
 """
 
 import urllib.parse
+from types import SimpleNamespace
 
 from django import forms
 from django.db import transaction
@@ -303,6 +304,23 @@ def _visible_colleague_names(assignment, request, viewer) -> set[str]:
             names.add(viewer.name)
         cache[assignment.id] = names
     return cache[assignment.id]
+
+
+def team_changes_are_restricted(assignment, request, changes: list[dict]) -> bool:
+    """Of deze teamregels namen bevatten die niet iedereen op deze opdracht ziet.
+
+    Voor de noot bij één tijdlijnregel: de BM krijgt de ongefilterde lijst en
+    hoort te weten dat een regel voor anderen verborgen is. Getoetst tegen wat
+    een buitenstaander zou zien (viewer=None), niet tegen wat de kijker zelf mag
+    -- anders zou de eigen naam de regel altijd "zichtbaar" maken.
+    """
+    if not changes:
+        return False
+    # visible_service_rows leest alleen request.user; een simpel object zonder
+    # user levert dus de rijen zoals een buitenstaander ze ziet.
+    public_rows = visible_service_rows(assignment, SimpleNamespace(user=None))
+    public_names = {row["colleague"].name for row in public_rows if row["colleague"]}
+    return any(not _change_colleague_names(change) <= public_names for change in changes)
 
 
 def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:

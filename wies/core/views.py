@@ -2660,6 +2660,26 @@ def _attach_audit_sentence(event) -> None:
         event.sentence = f"{author} heeft {label} gewijzigd."
 
 
+def _team_event_privacy_note(assignment, request, changes) -> str:
+    """De noot bij één teamregel op de tijdlijn, of "" als er niets te melden is.
+
+    Alleen voor wie de regel ziet terwijl een ander hem niet krijgt -- in de
+    praktijk de BM. Regels die zijn weggefilterd bestaan hier niet meer en
+    kunnen dus geen noot dragen; die dekt de noot boven de lijst.
+    """
+    from wies.core.editables.assignment import (  # noqa: PLC0415 — avoids import cycle
+        team_changes_are_restricted,
+        visible_service_rows,
+    )
+
+    if not team_changes_are_restricted(assignment, request, changes):
+        return ""
+    return next(
+        (note for row in visible_service_rows(assignment, request) if (note := row.get("privacy_warning_text"))),
+        "",
+    )
+
+
 def _attach_audit_render_data(event, obj, request) -> bool:
     """Prepare `event` for the timeline. False means the viewer may see nothing
     of it and it must not be rendered at all."""
@@ -2698,6 +2718,12 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
+            # Wie hier méér ziet dan een buitenstaander (de BM krijgt de
+            # ongefilterde lijst) hoort te weten dat deze regel voor anderen
+            # niet zichtbaar is. Alleen op teamregels: andere velden zijn voor
+            # iedereen gelijk. Regels die wél zijn weggefilterd bestaan niet meer
+            # en kunnen dus geen chip dragen -- die dekt de noot boven de lijst.
+            event.privacy_note = _team_event_privacy_note(obj, request, visible)
             changes = visible
         if spec.render_change is not None:
             try:

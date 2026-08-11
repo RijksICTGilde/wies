@@ -17,6 +17,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     OrganizationUnit,
     Placement,
     Service,
@@ -1993,25 +1994,26 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert response.status_code == 200
         return response.content.decode()
 
-    def test_panel_shows_the_note_behind_an_eye_icon(self):
+    def test_panel_shows_the_note_as_a_chip_with_tooltip(self):
         body = self._panel()
-        assert 'icon="hidden"' in body
-        # De zin staat er onveranderd, niet ingebed en niet met een kleine letter.
-        assert f'text="{PRIVACY_BM}"' in body
+        # Kort op het scherm, de volledige zin in de tooltip.
+        assert 'text="Beperkt zichtbaar"' in body
+        assert f'<nldd-tooltip text="{PRIVACY_BM}" timing="instant">' in body
+        # Focusbaar, anders is de tooltip alleen met een muis te bereiken.
+        assert 'tabindex="0"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
         assert "De geplaatste teamleden zijn" not in body
         assert PRIVACY_BM[0].lower() + PRIVACY_BM[1:] not in body
 
-    def test_external_source_stays_its_own_line(self):
-        # De bronzin en de privacynoot zaten in dezelfde <p>; los van elkaar
-        # blijft de bron een gewone zin.
+    def test_external_source_and_chip_are_separate(self):
         self.assignment.source = "otys_iir"
         self.assignment.save(update_fields=["source"])
         body = self._panel()
         assert "Wordt beheerd in" in body
-        assert 'icon="hidden"' in body
+        assert 'text="Beperkt zichtbaar"' in body
 
     def test_all_three_notes_live_in_one_module(self):
         # Wie de formulering aanpast, moet ze bij elkaar vinden.
@@ -2019,3 +2021,102 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert PRIVACY_BM.startswith("Alleen zichtbaar voor")
         assert PRIVACY_TEAM.startswith("Alleen zichtbaar voor")
         assert len({PRIVACY_OWN, PRIVACY_BM, PRIVACY_TEAM}) == 3
+
+
+class TimelinePrivacyChipTest(TestCase):
+    """De Updates-tijdlijn laat regels over verborgen plaatsingen weg in plaats
+    van ze te redigeren. Wie ze wél ziet moet weten dat anderen dat niet doen;
+    wie ze niet ziet mag ook niet vernemen dát er iets ontbreekt.
+    """
+
+    def setUp(self):
+        self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
+        self.bm_client = Client()
+        self.bm_client.force_login(self.bm_user)
+        self.bm = Colleague.objects.get(user=self.bm_user)
+
+        self.consultant_user = User.objects.create_user(email="consultant@rijksoverheid.nl")
+        Client().force_login(self.consultant_user)
+        self.consultant = Colleague.objects.get(user=self.consultant_user)
+
+        self.outsider_user = User.objects.create_user(email="buiten@rijksoverheid.nl")
+        self.outsider_client = Client()
+        self.outsider_client.force_login(self.outsider_user)
+
+        past = timezone.now().date() - timedelta(days=400)
+        self.assignment = Assignment.objects.create(
+            name="Testopdracht", source="wies", owner=self.bm, start_date=past, end_date=past + timedelta(days=30)
+        )
+        org = OrganizationUnit.objects.create(name="Rijkswaterstaat", label="RWS")
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org, role="PRIMARY")
+        service = Service.objects.create(assignment=self.assignment, source="wies", description="Rol")
+        Placement.objects.create(colleague=self.consultant, service=service)
+
+    def _team_event(self):
+        """Een teamregel die de verborgen consultant noemt."""
+        Event.objects.create(
+            user=self.bm_user,
+            user_email=self.bm_user.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "services",
+                "field_label": "Team",
+                "changes": [{"old": None, "new": {"id": 1, "colleague_name": self.consultant.name}}],
+            },
+        )
+
+    def _other_field_event(self):
+        """Een regel over een veld dat voor iedereen gelijk is."""
+        Event.objects.create(
+            user=self.bm_user,
+            user_email=self.bm_user.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "extra_info",
+                "field_label": "Opdrachtomschrijving",
+                "old_value": "oud",
+                "new_value": "nieuw",
+            },
+        )
+
+    def _timeline(self, client) -> str:
+        response = client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
+        assert response.status_code == 200
+        return response.content.decode()
+
+    def test_bm_sees_the_chip_on_a_team_line(self):
+        # De BM krijgt deze regel wél en anderen niet, dus hoort de noot erbij.
+        self._team_event()
+        body = self._timeline(self.bm_client)
+        assert 'text="Beperkt zichtbaar"' in body
+        assert PRIVACY_BM in body
+
+    def test_other_fields_get_no_chip(self):
+        # De omschrijving is voor iedereen gelijk; een noot zou misleiden.
+        self._other_field_event()
+        assert "Beperkt zichtbaar" not in self._timeline(self.bm_client)
+
+    def test_outsider_sees_no_chip(self):
+        # De regel is voor hem al weggefilterd; een chip zou alsnog verraden
+        # dat er een verborgen plaatsing bestaat.
+        self._team_event()
+        body = self._timeline(self.outsider_client)
+        assert "Beperkt zichtbaar" not in body
+        assert PRIVACY_BM not in body
+        assert PRIVACY_OWN not in body
+
+    def test_active_placement_gives_no_chip(self):
+        # Een lopende plaatsing is voor iedereen zichtbaar; niets te waarschuwen.
+        today = timezone.now().date()
+        self.assignment.start_date = today - timedelta(days=10)
+        self.assignment.end_date = today + timedelta(days=10)
+        self.assignment.save(update_fields=["start_date", "end_date"])
+        self._team_event()
+
+        assert "Beperkt zichtbaar" not in self._timeline(self.bm_client)

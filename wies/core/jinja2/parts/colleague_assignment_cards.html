@@ -1,3 +1,4 @@
+{% from "parts/privacy_chip.html" import privacy_chip %}
 {# Opdrachtkaarten voor het collegapaneel en de profielpagina.
    Verwacht: assignments (list), hx_target (string).
    Opdrachtgever/periode staan in de footer-slot zodat die regels in elke kaart
@@ -14,7 +15,7 @@
     <nldd-title size="5">
     <h3>{{ assignment.name }}</h3>
     </nldd-title>
-    {% if assignment.tags %}
+    {% if assignment.tags or assignment.privacy_warning_text %}
       <nldd-spacer size="8"></nldd-spacer>
       <nldd-container layout="wrap" gap="6">
       {% for tag in assignment.tags[:3] %}
@@ -22,6 +23,11 @@
       {% endfor %}
       {% if assignment.tags|length > 3 %}
         <nldd-tag size="sm" text="+{{ assignment.tags|length - 3 }} meer"></nldd-tag>
+      {% endif %}
+      {# Bij de andere tags i.p.v. als losse regel onderin: zo valt hij op en
+         staat hij bij de kenmerken van de opdracht waar hij bij hoort. #}
+      {% if assignment.privacy_warning_text %}
+        {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}
       {% endif %}
       </nldd-container>
     {% endif %}
@@ -47,7 +53,7 @@
       <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       <nldd-text-cell size="sm" text="{{ assignment.organization }}"></nldd-text-cell>
-      {% if not has_period and not assignment.privacy_warning_text %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
+      {% if not has_period %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
       </nldd-list-item>
     {% endif %}
     {% if assignment.historical %}
@@ -55,25 +61,17 @@
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       <nldd-text-cell size="sm" text="{{ assignment.period_label or 'Afgelopen' }}"></nldd-text-cell>
-      {% if not assignment.privacy_warning_text %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
+      <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% elif assignment.start_date or assignment.end_date %}
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '?' }} – {{ assignment.end_date|datum_nl('b Y') if assignment.end_date else '?' }}"></nldd-text-cell>
-      {% if not assignment.privacy_warning_text %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
-      </nldd-list-item>
-    {% endif %}
-    {% if assignment.privacy_warning_text %}
-      <nldd-list-item size="sm">
-      <nldd-icon-cell size="16" icon="hidden"></nldd-icon-cell>
-      <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ assignment.privacy_warning_text }}"></nldd-text-cell>
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% endif %}
-    {% if not assignment.organization and not has_period and not assignment.privacy_warning_text %}
+    {% if not assignment.organization and not has_period %}
       <nldd-list-item size="sm">
       <nldd-text-cell size="sm"></nldd-text-cell>
       <nldd-cell>{{ chevron() }}</nldd-cell>

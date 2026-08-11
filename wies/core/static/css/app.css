@@ -204,6 +204,14 @@ a {
   color: var(--semantics-content-secondary-color, #64748b);
 }
 
+/* Boven de overlay-link van nldd-card, die anders de hover opving en de tooltip
+   van de chip nooit liet verschijnen. Zo schrijft de kaart-documentatie geneste
+   interactieve content voor. */
+.wies-privacy-chip {
+  position: relative;
+  z-index: 1;
+}
+
 /* Lange vrije tekst met een "Toon meer"-schakelaar (#576). pre-wrap en niet
    pre-line: ook dubbele spaties en inspringing in een geplakte omschrijving
    horen te blijven staan. `:not([hidden])` is nodig omdat inline_edit.js de
