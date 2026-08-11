@@ -1,0 +1,18 @@
+{# Weergave van één opdrachtgever van een opdracht. Een opdracht heeft precies
+   één primaire opdrachtgever (DB-constraint) en mag daarnaast betrokken
+   partijen hebben; elke opdrachtgever krijgt een eigen rij met een eigen
+   acties-menu, zodat je ook op een tweede opdrachtgever kunt filteren.
+
+   De bijbehorende "Bekijk opdrachten"-actie komt uit `get_org_levels_action`.
+   Importeer met: {% from "parts/org_row.html" import render_org_line %} #}
+{# De breadcrumb (Fin › DGBD › Datafundamenten) van één opdrachtgever. Het
+   rol-achtervoegsel verschijnt alleen als er meer dan één opdrachtgever is —
+   bij één zegt "primair" niets. #}
+{% macro render_org_line(org_row, base_url, show_role) %}
+  {% set breadcrumb = get_org_breadcrumb(org_row.organization, base_url) %}
+  <div>
+    {%- for ancestor in breadcrumb.ancestors %}{{ ancestor.label }} › {% endfor -%}
+    {{ breadcrumb.label }}
+    {%- if show_role %} <span class="wies-text-secondary">{{ "(primair)" if org_row.role == "PRIMARY" else "(betrokken)" }}</span>{% endif -%}
+  </div>
+{% endmacro %}

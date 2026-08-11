@@ -1,4 +1,22 @@
 {% from "parts/row_actions.html" import render_row_actions %}
+{% from "parts/org_row.html" import render_org_line %}
+{# Het ⋯-menu van één opdrachtgeverrij. Elke rij krijgt dezelfde opbouw —
+   wijzigen + bekijken — zodat de menu's naast elkaar niet stilletjes van elkaar
+   verschillen; alleen "Bekijk opdrachten" volgt de hiërarchie van díe rij.
+   "Opdrachtgever wijzigen" opent het formulier voor het hele veld; dat het
+   daarmee alle opdrachtgevers toont blijkt uit het formulier zelf, niet uit een
+   meervoud in het label. Bij meerdere rijen benoemt de toegankelijke naam de
+   organisatie, anders heten alle menu's hetzelfde. #}
+{% macro _org_row_actions(org_row, panel_data, base_url) %}
+  {%- set multiple = panel_data.organization_rows|length > 1 -%}
+  {%- set actions = [] -%}
+  {%- if panel_data.user_can_edit -%}
+    {%- set _ = actions.append({"text": "Opdrachtgever wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) -%}
+  {%- endif -%}
+  {%- set _ = actions.append(get_org_levels_action(org_row.organization, base_url)) -%}
+  {%- set name = org_row.organization.label or org_row.organization.name -%}
+  {{ render_row_actions(actions, "Acties voor opdrachtgever " ~ name if multiple else "Acties voor opdrachtgever") }}
+{% endmacro %}
 {# Panel-loads herladen base.html niet, dus flash-banners (bv. na 'Opdracht
    invoeren' in de sheet) reizen mee als OOB-swap naar #flash-messages. Alleen
    bij htmx: bij een volledige page-load rendert base.html ze al. #}
@@ -93,16 +111,14 @@
             {{ panel_data.assignment.get_source_display() }}
           {% endif %}
         {% elif row_kind == "organizations" %}
-          {% for org_row in panel_data.organization_rows %}
-            {% set org_breadcrumb = get_org_breadcrumb(org_row.organization, _base_url) %}
-            <div>
-              {%- for ancestor in org_breadcrumb.ancestors %}{{ ancestor.label }} › {% endfor -%}
-              {{ org_breadcrumb.label }}
-              {%- if org_row.role == "PRIMARY" and panel_data.organization_rows|length > 1 %} <span class="wies-text-secondary">(primair)</span>{% endif -%}
-            </div>
+          {# Alleen de eerste opdrachtgever staat hier; een tweede (of verdere)
+             krijgt zijn eigen list-item hieronder, zodat elke opdrachtgever een
+             eigen acties-menu met zijn eigen hiërarchie kan dragen. #}
+          {% if panel_data.organization_rows %}
+            {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
           {% else %}
             <span class="wies-text-secondary">Geen organisatie opgegeven</span>
-          {% endfor %}
+          {% endif %}
         {% elif row_kind == "period" %}
           {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
           {% include "forms/displays/assignment_period.html" %}
@@ -117,25 +133,9 @@
         {% endif %}
         </nldd-text-cell>
         {% if row_kind == "organizations" and panel_data.organization_rows %}
-          {% set _primary_breadcrumb = get_org_breadcrumb(panel_data.organization_rows[0].organization, _base_url) %}
-          {% set _actions = [] %}
-          {% if panel_data.user_can_edit %}
-            {% set _ = _actions.append({"text": "Opdrachtgever wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
-          {% endif %}
-          {# "Bekijk opdrachten" opent een submenu met één niveau per hiërarchie-
-             stap, van de gekozen node omhoog naar de root: de node zelf filtert
-             smal, een hoger niveau breed. Vervangt de oude "Bekijk alle
-             opdrachten" die alleen op de laagste node filterde (die juist de
-             minste andere opdrachten deelt). Submenu houdt het ⋯-menu kort, ook
-             bij een diepe boom. #}
-          {% set _levels = [{"text": _primary_breadcrumb.label, "icon": "stack", "attrs": 'data-href="' ~ _primary_breadcrumb.url ~ '"'}] %}
-          {% for ancestor in _primary_breadcrumb.ancestors|reverse %}
-            {% set _ = _levels.append({"text": ancestor.label, "icon": "stack", "attrs": 'data-href="' ~ ancestor.url ~ '"'}) %}
-          {% endfor %}
-          {% set _ = _actions.append({"text": "Bekijk opdrachten", "icon": "stack", "submenu": _levels}) %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          {{ render_row_actions(_actions, "Acties voor opdrachtgever") }}
+          {{ _org_row_actions(panel_data.organization_rows[0], panel_data, _base_url) }}
           </nldd-cell>
         {% elif row_kind == "period" and panel_data.user_can_edit %}
           {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
@@ -160,6 +160,24 @@
           </nldd-cell>
         {% endif %}
         </nldd-list-item>
+        {# Een tweede (of verdere) opdrachtgever krijgt een eigen rij met een
+           leeg label, zodat hij onder de eerste uitlijnt en zijn eigen menu met
+           zijn eigen hiërarchie draagt. #}
+        {% if row_kind == "organizations" %}
+          {% for org_row in panel_data.organization_rows[1:] %}
+            <nldd-list-item>
+            <nldd-text-cell width="140px" text=""></nldd-text-cell>
+            <nldd-spacer-cell size="8"></nldd-spacer-cell>
+            <nldd-text-cell>
+            {{ render_org_line(org_row, _base_url, true) }}
+            </nldd-text-cell>
+            <nldd-spacer-cell size="8"></nldd-spacer-cell>
+            <nldd-cell>
+            {{ _org_row_actions(org_row, panel_data, _base_url) }}
+            </nldd-cell>
+            </nldd-list-item>
+          {% endfor %}
+        {% endif %}
       {% endif %}
     {% endfor %}
     </nldd-list>

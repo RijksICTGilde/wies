@@ -589,3 +589,20 @@ def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
     url = f"{base_url}?org_self={org.public_id}" if is_self else f"{base_url}?org={org.public_id}"
 
     return {"label": label, "url": url, "ancestors": ancestors}
+
+
+def get_org_levels_action(org: OrganizationUnit, base_url: str = "/") -> dict:
+    """Build the "Bekijk opdrachten" row action for one organization.
+
+    The submenu holds one entry per hierarchy step, from the organization itself
+    up to the root: the node itself filters narrowly, a higher level broadly. A
+    single action on the lowest node would filter on the unit that shares the
+    fewest other assignments; the submenu keeps the ``⋯`` menu short even for a
+    deep tree.
+    """
+    breadcrumb = get_org_breadcrumb(org, base_url)
+    levels = [
+        {"text": level["label"], "icon": "stack", "attrs": f'data-href="{level["url"]}"'}
+        for level in [breadcrumb, *reversed(breadcrumb["ancestors"])]
+    ]
+    return {"text": "Bekijk opdrachten", "icon": "stack", "submenu": levels}
