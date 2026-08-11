@@ -50,14 +50,3 @@
   {# Mount voor de "Meer…"-sheet van een filtergroep (gedeeld met de lijsten). #}
   <div id="filter-options-modal-container"></div>
 {% endblock content %}
-{% block panel %}
-  {# Zelfde zijsheet als de lijstpagina's, zodat "Profiel bekijken" het
-     collegapaneel opent zonder de beheerpagina te verlaten. #}
-  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
-  <nldd-page id="side-panel-content" sticky-header>
-  {% if panel_data %}
-    {% include panel_data.panel_content_template %}
-  {% endif %}
-  </nldd-page>
-  </nldd-sheet>
-{% endblock panel %}

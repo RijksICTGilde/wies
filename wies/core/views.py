@@ -1546,18 +1546,9 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             return User.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
-    def _panel_colleague(self):
-        """The colleague whose panel is requested via ?collega=, if any."""
-        colleague_id = self.request.GET.get("collega")
-        if not colleague_id or not colleague_id.isdigit():
-            return None
-        return Colleague.objects.filter(id=colleague_id).first()
-
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "side-panel-content":
-                return ["parts/colleague_panel_content.html"]
             # "Meer…"-sheet van één filtergroep (gedeeld met de lijsten).
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
@@ -1571,12 +1562,6 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
-
-        # Het profielpaneel hangt aan deze pagina, zodat "Profiel bekijken" in
-        # het rijmenu de sheet hier opent in plaats van naar de lijstpagina te
-        # springen. Bij een directe load rendert het paneel server-side mee.
-        panel_colleague = self._panel_colleague()
-        context["panel_data"] = _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op naam of email..."
