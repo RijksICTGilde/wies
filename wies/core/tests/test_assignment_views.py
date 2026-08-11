@@ -471,9 +471,10 @@ class AssignmentEditAttributeTest(TestCase):
         # Should NOT contain "Toon meer" link for short text
         self.assertNotContains(response, "Toon meer")
 
-        # Should NOT contain truncated/full text classes
-        self.assertNotContains(response, "truncated-text")
-        self.assertNotContains(response, "full-text")
+        # Geen tweede (verborgen) span en geen schakelaar; de korte tekst staat
+        # er in zijn geheel, zonder inkorting.
+        self.assertNotContains(response, "inline-edit-long-text__full")
+        self.assertNotContains(response, "inline-edit-show-more")
 
         # Should contain the full text directly
         self.assertContains(response, "Short description")
@@ -574,8 +575,8 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "heeft de opdrachtomschrijving gewijzigd.")
-        self.assertContains(response, "truncated-text")
-        self.assertContains(response, "show-more-toggle")
+        self.assertContains(response, "inline-edit-long-text__truncated")
+        self.assertContains(response, "inline-edit-show-more")
         self.assertContains(response, "Toon meer")
         # Must NOT use the inline "van ... naar ..." form for textarea
         self.assertNotContains(response, f'van "{long_old}"')
@@ -603,7 +604,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "short old")
         self.assertContains(response, "short new")
-        self.assertNotContains(response, "show-more-toggle")
+        self.assertNotContains(response, "inline-edit-show-more")
 
     def test_timeline_renders_collection_event_as_bullets(self):
         """A services-collection event stores per-change deltas; the
@@ -657,7 +658,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "van &#34;Old Name&#34;")
         self.assertContains(response, "naar &#34;New Name&#34;")
-        self.assertNotContains(response, "show-more-toggle")
+        self.assertNotContains(response, "inline-edit-show-more")
 
     def test_timeline_legacy_event_without_field_type_renders_inline(self):
         """Pre-existing events missing field_type fall back to inline rendering"""

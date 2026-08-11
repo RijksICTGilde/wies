@@ -37,13 +37,9 @@
     <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
     <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
     <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
-    {# Global: data-confirm (destructieve beheeracties) + data-action="show-more"
-       (event-tijdlijn) worden via delegatie op document afgehandeld, en de
-       tijdlijn arriveert ook via htmx-swaps — dus overal nodig. #}
-    <script src="{{ app_asset('js/show_more.js') }}" defer></script>
-    {# Om dezelfde reden hier: de "Toon meer" van een lange tekst luistert ook
-       gedelegeerd. Stond dit alleen achter show_onboarding, dan deed die knop
-       in de panelen niets. #}
+    {# Hier en niet alleen achter show_onboarding: de "Toon meer" van een lange
+       tekst luistert gedelegeerd op document, en zulke teksten komen ook in de
+       panelen en de tijdlijn binnen via een htmx-swap. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
     <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>

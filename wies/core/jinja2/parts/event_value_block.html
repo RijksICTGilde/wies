@@ -1,22 +1,20 @@
-{# Renders an audit value with a label ("Van:" / "Naar:") and a
-   Toon meer toggle when the value exceeds 300 characters.
+{# Een audit-waarde met label ("Van:" / "Naar:") en een Toon meer-schakelaar
+   boven de 300 tekens.
 
    Params:
-     label  (required): "Van" or "Naar".
-     value  (required): the string to display.
+     label  (required): "Van" of "Naar".
+     value  (required): de te tonen tekst.
 #}
-<div style="margin-top: 0.25rem;">
+<div class="wies-event-value">
   <span class="wies-text-secondary">{{ label }}:</span>
   {% if value|length > 300 %}
-    <span>
-      <span class="truncated-text" style="display: block;">{{ value[:300] }}...</span>
-      <span class="full-text" style="display: none;">{{ value }}</span>
-      <button type="button" class="show-more-toggle" data-action="show-more">
-        <span class="show-more-toggle__icon">+</span>
-        <span class="show-more-toggle__text">Toon meer</span>
-      </button>
+    <span class="inline-edit-long-text">
+      <span class="inline-edit-long-text__truncated">{{ value[:300] }}…</span>
+      <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
+      {# Tekst en icoon wisselen via attributen (inline_edit.js). #}
+      <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer"></nldd-button>
     </span>
   {% else %}
-    <span class="pre-wrap">{{ value }}</span>
+    <span class="inline-edit-long-text__truncated">{{ value }}</span>
   {% endif %}
 </div>

@@ -201,6 +201,12 @@ a {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
+/* Een Van/Naar-waarde onder de zin van een tijdlijnregel: als eigen blok, zodat
+   een lange tekst niet als lopende zin achter "Naar:" aanschuift. */
+.wies-event-value {
+  margin-top: var(--primitives-space-4, 4px);
+}
+
 /* nldd-card tekent zelf geen hover-staat. Alleen href/button-kaarten krijgen er
    een, zodat de cijferkaarten op het dashboard niet klikbaar gaan lijken.
    `--_background-color` is de interne variabele die .card uitleest; die erft het
