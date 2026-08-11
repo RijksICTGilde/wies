@@ -22,6 +22,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.placement_visibility import PRIVACY_BM, PRIVACY_OWN, PRIVACY_TEAM
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.views import (
     PlacementListView,
@@ -1953,3 +1954,68 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
         self._place(start_offset_days=-10, end_offset_days=10)
 
         assert self._modal_count_for(self.unrelated_user) == 1
+
+
+class PrivacyNoteSurfacesTest(TestCase):
+    """De zichtbaarheidsmelding heeft overal dezelfde vorm en dezelfde bron.
+
+    Eerder plakte het opdrachtpaneel de noot in een omhullende zin ("De
+    geplaatste teamleden zijn ...") met een kleingemaakte eerste letter, terwijl
+    de opdrachtkaarten de kale zin achter een oogicoon zetten. En de variant voor
+    een oud-opdracht stond los in views.py in plaats van bij de andere twee.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
+        self.client.force_login(self.bm_user)
+        self.bm = Colleague.objects.get(user=self.bm_user)
+
+        consultant_client = Client()
+        self.consultant_user = User.objects.create_user(email="consultant@rijksoverheid.nl")
+        consultant_client.force_login(self.consultant_user)
+        self.consultant = Colleague.objects.get(user=self.consultant_user)
+
+        past = timezone.now().date() - timedelta(days=400)
+        self.assignment = Assignment.objects.create(
+            name="Testopdracht", source="wies", owner=self.bm, start_date=past, end_date=past + timedelta(days=30)
+        )
+        org = OrganizationUnit.objects.create(name="Rijkswaterstaat", label="RWS")
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org, role="PRIMARY")
+        service = Service.objects.create(assignment=self.assignment, source="wies", description="Rol")
+        Placement.objects.create(colleague=self.consultant, service=service)
+
+    def _panel(self) -> str:
+        response = self.client.get(
+            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert response.status_code == 200
+        return response.content.decode()
+
+    def test_panel_shows_the_note_behind_an_eye_icon(self):
+        body = self._panel()
+        assert 'icon="hidden"' in body
+        # De zin staat er onveranderd, niet ingebed en niet met een kleine letter.
+        assert f'text="{PRIVACY_BM}"' in body
+
+    def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
+        body = self._panel()
+        assert "De geplaatste teamleden zijn" not in body
+        assert PRIVACY_BM[0].lower() + PRIVACY_BM[1:] not in body
+
+    def test_external_source_stays_its_own_line(self):
+        # De bronzin en de privacynoot zaten in dezelfde <p>; los van elkaar
+        # blijft de bron een gewone zin.
+        self.assignment.source = "otys_iir"
+        self.assignment.save(update_fields=["source"])
+        body = self._panel()
+        assert "Wordt beheerd in" in body
+        assert 'icon="hidden"' in body
+
+    def test_all_three_notes_live_in_one_module(self):
+        # Wie de formulering aanpast, moet ze bij elkaar vinden.
+        assert PRIVACY_OWN.startswith("Alleen zichtbaar voor")
+        assert PRIVACY_BM.startswith("Alleen zichtbaar voor")
+        assert PRIVACY_TEAM.startswith("Alleen zichtbaar voor")
+        assert len({PRIVACY_OWN, PRIVACY_BM, PRIVACY_TEAM}) == 3

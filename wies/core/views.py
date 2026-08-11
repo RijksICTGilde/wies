@@ -43,7 +43,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, evaluate
+from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -201,12 +201,13 @@ def _build_assignment_panel_data(assignment, request):
         # Same human label as the "Externe bron" row (get_source_display), so
         # the intro says "OTYS IIR", not the raw uppercased key "OTYS_IIR".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
-        # Eén privacyzin boven de lijst in plaats van een noot per rij. De
+        # Eén privacynoot boven de lijst in plaats van een noot per rij. De
         # formulering komt uit placement_visibility en is al op de kijker
         # toegesneden ("... jou en de Business Manager" / "... jou en de
-        # consultant"), dus alleen de eerste letter hoeft mee te buigen.
+        # consultant"); hij staat onveranderd op het scherm, net als op de
+        # opdrachtkaarten.
         "team_privacy_note": next(
-            (note[0].lower() + note[1:] for row in team_rows if (note := row.get("privacy_warning_text"))),
+            (note for row in team_rows if (note := row.get("privacy_warning_text"))),
             "",
         ),
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
@@ -396,7 +397,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=end_date,
                     tags={"Business Manager": None},
                     historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en het team",
+                    privacy_warning_text=PRIVACY_TEAM,
                 )
             historical_by_id[assignment_id]["tags"]["Business Manager"] = None
         else:

@@ -351,6 +351,35 @@
       return;
     }
     const currentPath = window.location.pathname + window.location.search;
+    const requestPath =
+      (event.detail.pathInfo && event.detail.pathInfo.requestPath) ||
+      (event.detail.requestConfig && event.detail.requestConfig.path);
+    // Komt het nieuwe paneel op de URL uit waar we al staan, dan zijn we
+    // teruggekeerd in plaats van dieper gegaan — zo landt het bewerkformulier na
+    // opslaan (HX-Location zet de URL zelf). "De ouder is waar we vandaan komen"
+    // klopt dan niet: currentPanelTitle is nog het formulier, en de terugknop
+    // wees naar het scherm dat je net had afgerond. De echte ouder komt van de
+    // stack, die afterSettle zo meteen tot dit punt terugknipt.
+    const isReturn =
+      !!requestPath &&
+      new URL(requestPath, window.location.origin).pathname +
+        new URL(requestPath, window.location.origin).search ===
+        currentPath;
+    if (isReturn) {
+      // De ouder is de stap vóór deze op de stack; staat die er niet op (we
+      // kwamen rechtstreeks van de lijst), dan hoort er geen terugknop.
+      const backTo = panelStack.findIndex((entry) => entry.url === currentPath);
+      const parentEntry = backTo > 0 ? panelStack[backTo - 1] : null;
+      writeBackButton(
+        bar,
+        section,
+        parentEntry &&
+          hasPanelParam(new URL(parentEntry.url, window.location.origin))
+          ? parentEntry
+          : null,
+      );
+      return;
+    }
     const parent = hasPanelParam(new URL(currentPath, window.location.origin))
       ? { url: currentPath, title: currentPanelTitle }
       : null;
@@ -385,6 +414,17 @@
     const reqUrl = new URL(requestPath, window.location.origin);
     const reqPath = reqUrl.pathname + reqUrl.search;
     const currentPath = window.location.pathname + window.location.search;
+
+    // Keren we terug naar een paneel dat al op de stack staat, dan is dit een
+    // stap terug en geen stap dieper: knip de stack daar af. Het bewerkformulier
+    // komt na opslaan via HX-Location op het ouderpaneel uit — dat is een GET,
+    // en die zette de bewerkstap anders als "vorige" neer. Gevolg was een
+    // terugknop naar het formulier dat je net had afgerond ("Opdrachtperiode
+    // wijzigen"). HX-Location zet de URL zelf al, dus reqPath en currentPath
+    // zijn dan gelijk en het blok hieronder slaat over — vandaar hier.
+    const backTo = panelStack.findIndex((entry) => entry.url === reqPath);
+    if (backTo !== -1) panelStack.length = backTo;
+
     if (reqPath !== currentPath) {
       // currentPanelTitle hoort nog bij het paneel dat we verlaten; pas ná de
       // push wisselen naar de titel van het nieuwe paneel (pendingNewTitle).

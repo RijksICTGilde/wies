@@ -11,6 +11,10 @@ from dataclasses import dataclass
 
 PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Manager"
 PRIVACY_BM = "Alleen zichtbaar voor jou en de consultant"
+# Een afgelopen opdracht waar de kijker BM was maar zelf niet op stond: dan gaat
+# het niet om één consultant maar om het hele team. Hoort hier en niet los in de
+# view, zodat wie de formulering aanpast alle varianten bij elkaar ziet.
+PRIVACY_TEAM = "Alleen zichtbaar voor jou en het team"
 
 # Chip labels per timing, for the non-active states.
 LABELS = {"ended": "Afgelopen", "future": "Gepland"}
