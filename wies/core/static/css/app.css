@@ -94,6 +94,29 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
   display: inline-flex;
 }
 
+/* Zoekveld springt bij het laden even van smal naar breed. De nldd-toolbar leest
+   de width/min-width/max-width-attributen van het item pas in een latere tick
+   (_syncHosts), en zet dán het `fluid`-attribuut plus de --_item-*-vars waar de
+   shadow-CSS flex-basis uit haalt. Tussen de upgrade en die sync staat het item
+   nog op flex-basis:auto en krimpt het tot de intrinsieke breedte van het
+   zoekveld (~290px), om daarna naar 560 te springen. Dit is dus NIET het
+   :not(:defined)-FOUC-geval — het element is al defined.
+
+   We overbruggen die tick door dezelfde flex-maat alvast toe te passen zolang het
+   `fluid`-attribuut er nog niet is. De selector `[width]` matcht alleen de items
+   met een breedte-attribuut (de zoekvelden); zodra _syncHosts `fluid` zet valt de
+   regel weg en neemt de eigen shadow-CSS het over. Waarden gelijk aan de
+   attributen op het item (zie o.a. parts/filter_and_table_container.html en
+   parts/filter_and_card_container_assignments.html). */
+nldd-toolbar-item[width]:not([fluid]) {
+  flex: 0 1 560px;
+  min-width: 240px;
+  max-width: 560px;
+}
+nldd-toolbar-item[width]:not([fluid]) > * {
+  width: 100%;
+}
+
 a {
   color: var(--semantics-links-color, inherit);
 }
