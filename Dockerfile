@@ -70,7 +70,6 @@ RUN rm -rf /app/docker && \
   rm -rf /app/uv.lock && \
   rm -rf /app/temp
 
-
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so
 # pass harmless placeholders; the running container supplies the real
