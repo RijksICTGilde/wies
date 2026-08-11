@@ -44,12 +44,9 @@ def _takes_obj(fn: Callable) -> bool:
     Bestaande callables nemen geen argument; alleen wie er één declareert krijgt
     het object mee.
     """
-    # Eén except-type: `except (TypeError, ValueError)` wordt door de
-    # ruff-format in dit project herschreven naar ongeldige syntax (zie de
-    # eerdere "re-apply except-tuple fix"-commits). Exception dekt beide.
     try:
         return len(inspect.signature(fn).parameters) >= 1
-    except Exception:  # noqa: BLE001 — builtins/C-functies hebben geen signature
+    except TypeError, ValueError:  # builtins/C-functies hebben geen signature
         return False
 
 
