@@ -14,8 +14,8 @@
   margin: 0;
 }
 
-/* Rand, hover, radius en overlay-link komen uit de nldd-card zelf; hier
-   alleen de opmaak binnen de kaart. */
+/* Rand, radius en overlay-link komen uit de nldd-card zelf, de hover-staat uit
+   app.css (die tekent de kaart niet); hier alleen de opmaak binnen de kaart. */
 .wies-assignment-card__top {
   display: flex;
   justify-content: space-between;

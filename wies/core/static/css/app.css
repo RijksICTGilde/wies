@@ -181,6 +181,30 @@ a {
   color: var(--semantics-content-secondary-color, #64748b);
 }
 
+/* Een klikbare kaart (de hele kaart is een link naar het paneel) had alleen een
+   pointer-cursor als affordance: nldd-card tekent zelf een focusring, maar geen
+   hover-staat. Alleen kaarten met href/button krijgen 'm, zodat de statische
+   cijferkaarten op het dashboard niet klikbaar gaan lijken.
+
+   `--_background-color` is de interne variabele die .card in de shadow-DOM
+   uitleest; custom properties erven naar binnen, dus dit kleurt de kaart zonder
+   ::part of een eigen achtergrond — de kaart houdt zo zijn eigen radius, rand
+   en clipping.
+
+   Eén stap op de neutrale schaal vanaf de kaartachtergrond. Die schaal loopt
+   in licht naar donkerder en in donker naar lichter, dus één token dekt beide
+   thema's: de kaart komt in allebei verder van de pagina af te staan. Geen
+   eigen light-dark() nodig — de primitives zijn dat zelf al. De
+   tinted-button-tokens beginnen op neutral-75 en zouden hier twee stappen
+   springen, wat als ingedrukt leest.
+
+   Een transition hoort op .card en die zit buiten ons bereik, dus de kleur
+   wisselt direct — voor een hover prima, en het scheelt beweging. */
+nldd-card[href]:hover,
+nldd-card[button]:hover {
+  --_background-color: var(--primitives-color-neutral-50);
+}
+
 /* "Meer tonen"-knop onder een lijst of kaart-grid. grid-column spant alle
    kolommen in de kaart-grid; in een lijst (geen grid) wordt het genegeerd. */
 .wies-load-more {
