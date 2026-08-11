@@ -1,18 +1,19 @@
 {# First-login onboarding wizard, included by base.html when show_onboarding is
    True (see wies.core.context_processors.onboarding). Een nldd-window met een
-   nldd-page erin: de titelbalk levert "Sluit" (dismiss), de stapindicator
-   en stapnavigatie komen uit onboarding.js. "Sluit" en "Aan de slag" POSTen
-   allebei naar onboarding-complete, dat de wizard afvinkt. #}
+   nldd-page erin: de titelbalk levert "Overslaan" (dismiss), de stapindicator
+   en stapnavigatie komen uit onboarding.js. "Overslaan" en "Aan de slag" POSTen
+   allebei naar onboarding-complete, dat de wizard afvinkt. Escape sluit het
+   venster alleen voor nu — dan komt de wizard bij de volgende pagina terug. #}
 {% set ns = namespace(step=0) %}
 {# no-light-dismiss: een klik naast het venster mag de wizard niet afsluiten,
-   daar zit ingevulde informatie in. Sluit en Escape doen dat wel.
+   daar zit ingevulde informatie in. Overslaan en Escape doen dat wel.
    height: alle stappen even hoog, anders springt het venster bij elke stap. De
    maat komt van de profielstap, de langste stap die helemaal moet passen: door
    labelvelden heen scrollen is vervelend. De opdrachtenstap scrolt wel, want
    die groeit met het aantal opdrachten. #}
 <nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(700px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
 <nldd-page sticky-header>
-<nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Overslaan"></nldd-top-title-bar>
 <nldd-container data-onboarding-chrome padding="16">
 <nldd-step-indicator data-onboarding-progress current="1" accessible-label="Voortgang">
 <nldd-step-indicator-item text="Welkom"></nldd-step-indicator-item>
@@ -130,7 +131,7 @@
 </nldd-container>
 </nldd-page>
 </nldd-window>
-{# Sluit en Aan de slag POSTen hetzelfde; onboarding.js dient dit formulier
+{# Overslaan en Aan de slag POSTen hetzelfde; onboarding.js dient dit formulier
    in, zodat de knoppen zelf DS-knoppen kunnen blijven. #}
 <form id="onboardingCompleteForm"
       method="post"

@@ -1,8 +1,9 @@
 // First-login onboarding wizard: auto-open + step navigation.
 // Het venster staat inline in base.html (niet via HTMX), dus we openen het hier
-// zelf. Sluit (de dismiss van de title bar) en "Aan de slag" dienen beide
+// zelf. Overslaan (de dismiss van de title bar) en "Aan de slag" dienen beide
 // hetzelfde verborgen formulier in; de server antwoordt met een
-// `closeOnboarding`-trigger, waarop we het venster sluiten.
+// `closeOnboarding`-trigger, waarop we het venster sluiten. Escape sluit het
+// venster alleen voor nu: de wizard komt bij de volgende pagina terug.
 (function () {
   "use strict";
 
@@ -169,13 +170,18 @@
     });
   }
 
-  // Sluit zit in de title bar: nldd-window sluit zichzelf op die dismiss,
-  // dus het sluiten van het venster is het signaal om af te vinken. Zo geldt
-  // dat ook voor ESC en een klik op de achtergrond.
+  // Alleen Overslaan vinkt de onboarding af; Escape sluit het venster voor nu
+  // (#553). Vandaar de dismiss van de titelbalk en niet de `close` van het
+  // venster: nldd-window roept op allebei hide() aan, dus in die `close` zijn ze
+  // niet meer te onderscheiden. De listener zit op de titelbalk zelf, want het
+  // venster stopt de propagatie van zo'n dismiss.
+  if (titleBar) {
+    titleBar.addEventListener("dismiss", complete);
+  }
+
   wizard.addEventListener("close", function (e) {
     if (e.target !== wizard) return;
     document.documentElement.style.overflow = "";
-    complete();
   });
 
   // Het bewerkscherm is binnengeswapt → tonen. De terugknop erin en een

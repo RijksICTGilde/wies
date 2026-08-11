@@ -80,6 +80,13 @@ class OnboardingWizardRenderTest(TestCase):
         self.assertContains(response, 'data-step="2"')
         self.assertNotContains(response, 'data-step="3"')
 
+    def test_dismiss_button_says_overslaan(self):
+        # "Overslaan" en niet "Sluit": de knop vinkt de onboarding definitief af,
+        # terwijl Escape 'm alleen voor nu wegklikt (#553).
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, 'dismiss-text="Overslaan"')
+
     def test_wizard_not_shown_after_completion(self):
         self.user.onboarding_completed_at = timezone.now()
         self.user.save(update_fields=["onboarding_completed_at"])
