@@ -14,7 +14,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import AssignmentListView
+from wies.core.views import AssignmentListView, _filter_aware_org_counts
 
 User = get_user_model()
 
@@ -347,6 +347,51 @@ class AssignmentListViewTest(TestCase):
         # org filter on both orgs makes _apply_filters match via organizations and fan out.
         groups = self._filter_groups({"org_self": [str(org_a.public_id), str(org_b.public_id)]})
         assert self._rol_count(groups, self.skill2) == 1
+
+    def _modal_org_counts(self, query_params=None):
+        """Build the org-selection modal's per-org self-count Counter directly.
+
+        The "Opdrachtgevers selecteren" tree (client_modal → _build_org_hierarchy) is
+        fed by _filter_aware_org_counts for the open_assignments mode. We call it
+        straight, the same way client_modal does. Fixture-loaded assignments have
+        created_at = None; we mirror that (see _filter_groups) so the SELECT DISTINCT
+        collapse reproduces.
+        """
+        Assignment.objects.update(created_at=None)
+        request = RequestFactory().get("/client-modal/", query_params or {})
+        request.user = self.auth_user
+        return _filter_aware_org_counts(request, "open_assignments", [])
+
+    def test_modal_org_count_does_not_collapse_multiple_aanvragen(self):
+        """The org modal must count every aanvraag on an org, not collapse to 1.
+
+        Same ``SELECT DISTINCT organizations.id`` collapse as the sidebar, in
+        _filter_aware_org_counts' open_assignments branch. setUp put self.vacancy on
+        self.org; a second aanvraag makes the true self-count 2.
+        """
+        self._open_aanvraag("Second Aanvraag", self.org, self.skill)
+
+        counts = self._modal_org_counts()
+        assert counts[self.org.id] == 2
+
+    def test_modal_org_count_not_inflated_by_service_fanout(self):
+        """One aanvraag with two matching services counts once per org in the modal.
+
+        Guards against a naïve ``.distinct()`` removal: an active rol filter joins
+        services and would fan the org row out to 2 without re-keying on distinct ids.
+        """
+        fanout_org = OrganizationUnit.objects.create(name="Modal Fanout Org", label="Modal Fanout Org")
+        assignment = Assignment.objects.create(name="Two Service Aanvraag", source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=fanout_org)
+        Service.objects.create(
+            assignment=assignment, description="svc a", skill=self.skill, status="OPEN", source="wies"
+        )
+        Service.objects.create(
+            assignment=assignment, description="svc b", skill=self.skill2, status="OPEN", source="wies"
+        )
+
+        counts = self._modal_org_counts({"rol": [str(self.skill.public_id), str(self.skill2.public_id)]})
+        assert counts[fanout_org.id] == 1
 
     def test_filter_by_rol_excludes_filled_services(self):
         """Rol filter should only match assignments with an OPEN unfilled service for that skill"""

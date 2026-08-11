@@ -3149,9 +3149,14 @@ def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[in
     filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
 
     if count_mode == "open_assignments":
+        # Re-key on distinct assignment ids before projecting organizations__id:
+        # projecting straight off the .distinct() queryset emits SELECT DISTINCT
+        # org_id, collapsing every assignment on one org into a single row (undercount).
+        # Mirrors the sidebar org count and the placements branch below.
+        assignment_qs = Assignment.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
         if excluded_org_ids:
-            filtered_qs = filtered_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = filtered_qs.values_list("organizations__id", flat=True)
+            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
+        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
     else:
         placement_qs = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
         if excluded_org_ids:
