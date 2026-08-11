@@ -41,6 +41,10 @@
        (event-tijdlijn) worden via delegatie op document afgehandeld, en de
        tijdlijn arriveert ook via htmx-swaps — dus overal nodig. #}
     <script src="{{ app_asset('js/show_more.js') }}" defer></script>
+    {# Om dezelfde reden hier: de "Toon meer" van een lange tekst luistert ook
+       gedelegeerd. Stond dit alleen achter show_onboarding, dan deed die knop
+       in de panelen niets. #}
+    <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
     <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
   </head>
@@ -112,11 +116,9 @@
     {% endblock panel %}
     {% if show_onboarding %}
       {% include "parts/onboarding/onboarding_wizard.html" %}
-      {# inline_edit (label pickers) needs these; pages that already load them
-         are unaffected — the browser dedupes by URL. The label picker renders
-         an nldd-token-field (from the NLDD bundle in <head>), so the old
-         multi_select.js is no longer needed here. #}
-      <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
+      {# inline_edit.js staat in <head> (overal nodig); de label picker rendert
+         een nldd-token-field uit de NLDD-bundel, dus het oude multi_select.js
+         hoeft hier ook niet meer. #}
       <script src="{{ app_asset('js/onboarding.js') }}" defer></script>
     {% endif %}
   </body>

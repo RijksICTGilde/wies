@@ -431,6 +431,29 @@ class AssignmentEditAttributeTest(TestCase):
         # Full text is hidden initially (client-side toggle flips it).
         self.assertContains(response, "hidden>", count=1)
 
+    def test_panel_shows_the_description_inside_the_data_tab(self):
+        """De omschrijving is een gegeven en hoort in de gegevenslijst.
+
+        Stond hij boven de tabs, dan duwde een lange tekst de tabs en alle
+        velden naar beneden terwijl hij inhoudelijk buiten het tabblad
+        "Gegevens" viel (#576).
+        """
+        self.client.force_login(self.user_with_permission)
+        response = self.client.get(
+            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        body = response.content.decode()
+        assert 'text="Omschrijving"' in body
+        # De "Toon meer"-knop luistert gedelegeerd vanuit inline_edit.js; stond
+        # dat script alleen achter show_onboarding, dan deed de knop hier niets.
+        page = self.client.get("/opdrachten/").content.decode()
+        assert "js/inline_edit.js" in page
+        # De omschrijving staat ná de opening van het gegevens-tabblad.
+        assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
+        # En is per rij te bewerken, net als de andere velden.
+        assert "&veld=extra_info" in body
+
     def test_assignment_extra_info_short_text_no_toggle(self):
         """Test that short descriptions don't have toggle functionality"""
         self.client.force_login(self.user_with_permission)

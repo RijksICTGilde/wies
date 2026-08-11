@@ -1,12 +1,8 @@
 {% from "parts/row_actions.html" import render_row_actions %}
 {% from "parts/org_row.html" import render_org_line %}
-{# Het ⋯-menu van één opdrachtgeverrij. Elke rij krijgt dezelfde opbouw —
-   wijzigen + bekijken — zodat de menu's naast elkaar niet stilletjes van elkaar
-   verschillen; alleen "Bekijk opdrachten" volgt de hiërarchie van díe rij.
-   "Opdrachtgever wijzigen" opent het formulier voor het hele veld; dat het
-   daarmee alle opdrachtgevers toont blijkt uit het formulier zelf, niet uit een
-   meervoud in het label. Bij meerdere rijen benoemt de toegankelijke naam de
-   organisatie, anders heten alle menu's hetzelfde. #}
+{# Elke opdrachtgeverrij krijgt hetzelfde menu: twee ⋯-knoppen naast elkaar die
+   stilletjes verschillen zijn een raadsel. Bij meerdere rijen noemt de
+   toegankelijke naam de organisatie, anders heten alle menu's hetzelfde. #}
 {% macro _org_row_actions(org_row, panel_data, base_url) %}
   {%- set multiple = panel_data.organization_rows|length > 1 -%}
   {%- set actions = [] -%}
@@ -42,12 +38,6 @@
   <nldd-title size="3">
   <h2 id="panel-title">{{ panel_data.assignment.name }}</h2>
   </nldd-title>
-  {% if panel_data.assignment.extra_info %}
-    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    <nldd-rich-text>
-    <p>{{ panel_data.assignment.extra_info }}</p>
-    </nldd-rich-text>
-  {% endif %}
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   {# Verwijderen opent de bestaande bevestigingsmodal via #assignmentDeleteModal. #}
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
@@ -86,8 +76,12 @@
   <div id="tab-panel-gegevens">
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
+    {# De omschrijving staat in deze lijst en niet boven de tabs: daar duwde een
+       lange tekst de tabs en alle velden weg. "Omschrijving" en niet
+       "Opdrachtomschrijving": dat woord brak af in de labelkolom. #}
     {% set _rows = [
       ("Externe bron", "source"),
+      ("Omschrijving", "extra_info"),
       ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
       ("Periode", "period"),
       ("Plaatsingsdatum", "created_at"),
@@ -95,6 +89,7 @@
     ] %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
+      {% elif row_kind == "extra_info" and not panel_data.assignment.extra_info %}
       {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
       {% else %}
         <nldd-list-item>
@@ -110,10 +105,13 @@
           {% else %}
             {{ panel_data.assignment.get_source_display() }}
           {% endif %}
+        {% elif row_kind == "extra_info" %}
+          {# De textarea-weergave bewaart regelovergangen en kort in tot "Toon meer". #}
+          {% with value = panel_data.assignment.extra_info %}
+            {% include "forms/displays/textarea.html" %}
+          {% endwith %}
         {% elif row_kind == "organizations" %}
-          {# Alleen de eerste opdrachtgever staat hier; een tweede (of verdere)
-             krijgt zijn eigen list-item hieronder, zodat elke opdrachtgever een
-             eigen acties-menu met zijn eigen hiërarchie kan dragen. #}
+          {# Alleen de eerste; een tweede krijgt zijn eigen list-item hieronder. #}
           {% if panel_data.organization_rows %}
             {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
           {% else %}
@@ -136,6 +134,12 @@
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
           {{ _org_row_actions(panel_data.organization_rows[0], panel_data, _base_url) }}
+          </nldd-cell>
+        {% elif row_kind == "extra_info" and panel_data.user_can_edit %}
+          {% set _actions = [{"text": "Omschrijving wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=extra_info" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-cell>
+          {{ render_row_actions(_actions, "Acties voor omschrijving") }}
           </nldd-cell>
         {% elif row_kind == "period" and panel_data.user_can_edit %}
           {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
@@ -160,9 +164,7 @@
           </nldd-cell>
         {% endif %}
         </nldd-list-item>
-        {# Een tweede (of verdere) opdrachtgever krijgt een eigen rij met een
-           leeg label, zodat hij onder de eerste uitlijnt en zijn eigen menu met
-           zijn eigen hiërarchie draagt. #}
+        {# Leeg label, zodat de rij onder de eerste opdrachtgever uitlijnt. #}
         {% if row_kind == "organizations" %}
           {% for org_row in panel_data.organization_rows[1:] %}
             <nldd-list-item>

@@ -181,25 +181,32 @@ a {
   color: var(--semantics-content-secondary-color, #64748b);
 }
 
-/* Een klikbare kaart (de hele kaart is een link naar het paneel) had alleen een
-   pointer-cursor als affordance: nldd-card tekent zelf een focusring, maar geen
-   hover-staat. Alleen kaarten met href/button krijgen 'm, zodat de statische
-   cijferkaarten op het dashboard niet klikbaar gaan lijken.
+/* Lange vrije tekst met een "Toon meer"-schakelaar (#576). pre-wrap en niet
+   pre-line: ook dubbele spaties en inspringing in een geplakte omschrijving
+   horen te blijven staan. `:not([hidden])` is nodig omdat inline_edit.js de
+   twee spans via het hidden-attribuut wisselt en een `display` uit het document
+   wint van de [hidden]-regel van de browser. */
+.inline-edit-long-text__truncated:not([hidden]),
+.inline-edit-long-text__full:not([hidden]) {
+  display: block;
+  white-space: pre-wrap;
+}
 
-   `--_background-color` is de interne variabele die .card in de shadow-DOM
-   uitleest; custom properties erven naar binnen, dus dit kleurt de kaart zonder
-   ::part of een eigen achtergrond — de kaart houdt zo zijn eigen radius, rand
-   en clipping.
+/* De nldd-button tekent zichzelf; alleen positie is van ons. Geen display op de
+   host: het component rekent met zijn eigen inline-flex en blaast anders zijn
+   icoon op. De negatieve marge compenseert de knoppadding, zodat het label in
+   de kantlijn van de tekst valt. */
+.inline-edit-show-more {
+  margin-top: var(--primitives-space-4, 4px);
+  margin-left: calc(-1 * var(--primitives-space-8, 8px));
+}
 
-   Eén stap op de neutrale schaal vanaf de kaartachtergrond. Die schaal loopt
-   in licht naar donkerder en in donker naar lichter, dus één token dekt beide
-   thema's: de kaart komt in allebei verder van de pagina af te staan. Geen
-   eigen light-dark() nodig — de primitives zijn dat zelf al. De
-   tinted-button-tokens beginnen op neutral-75 en zouden hier twee stappen
-   springen, wat als ingedrukt leest.
-
-   Een transition hoort op .card en die zit buiten ons bereik, dus de kleur
-   wisselt direct — voor een hover prima, en het scheelt beweging. */
+/* nldd-card tekent zelf geen hover-staat. Alleen href/button-kaarten krijgen er
+   een, zodat de cijferkaarten op het dashboard niet klikbaar gaan lijken.
+   `--_background-color` is de interne variabele die .card uitleest; die erft het
+   shadow-DOM in, dus de kaart houdt zijn eigen radius en clipping. De neutrale
+   schaal loopt in licht naar donkerder en in donker naar lichter, dus één token
+   dekt beide thema's. */
 nldd-card[href]:hover,
 nldd-card[button]:hover {
   --_background-color: var(--primitives-color-neutral-50);

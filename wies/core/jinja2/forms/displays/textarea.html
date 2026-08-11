@@ -8,10 +8,8 @@
     <span class="inline-edit-long-text">
       <span class="inline-edit-long-text__truncated">{{ truncated }}…</span>
       <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
-      <button type="button" class="inline-edit-show-more">
-        <span class="inline-edit-show-more__icon">+</span>
-        <span class="inline-edit-show-more__label">Toon meer</span>
-      </button>
+      {# Tekst en icoon wisselen via attributen (inline_edit.js). #}
+      <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer"></nldd-button>
     </span>
   {% else %}
     <span class="inline-edit-long-text__truncated">{{ value }}</span>

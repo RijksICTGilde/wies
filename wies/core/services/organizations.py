@@ -594,11 +594,9 @@ def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
 def get_org_levels_action(org: OrganizationUnit, base_url: str = "/") -> dict:
     """Build the "Bekijk opdrachten" row action for one organization.
 
-    The submenu holds one entry per hierarchy step, from the organization itself
-    up to the root: the node itself filters narrowly, a higher level broadly. A
-    single action on the lowest node would filter on the unit that shares the
-    fewest other assignments; the submenu keeps the ``⋯`` menu short even for a
-    deep tree.
+    One submenu entry per hierarchy step, from the organization up to the root:
+    the node itself filters narrowly, a higher level broadly. Filtering only on
+    the lowest node would hit the unit sharing the fewest other assignments.
     """
     breadcrumb = get_org_breadcrumb(org, base_url)
     levels = [

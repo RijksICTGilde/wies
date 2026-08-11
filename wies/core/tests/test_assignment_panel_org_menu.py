@@ -134,20 +134,17 @@ class AssignmentPanelSecondOrgTest(TestCase):
         body = self._panel_body()
         assert "Datafundamenten" in body
         assert "Team Inkoop" in body
-        # Bij meerdere opdrachtgevers benoemt de rij welke rol hij heeft.
         assert "(primair)" in body
         assert "(betrokken)" in body
 
     def test_the_second_organization_has_its_own_level_menu(self):
         body = self._panel_body()
-        # De hiërarchie van de betrokken partij is bereikbaar -- DGABD zit
-        # alleen in háár pad, niet in dat van de primaire opdrachtgever.
+        # DGABD zit alleen in het pad van de betrokken partij, niet in dat van
+        # de primaire opdrachtgever.
         assert f"?org={self.dgabd.public_id}" in body
         assert f"?org={self.involved.public_id}" in body
-        # En die van de primaire opdrachtgever blijft bestaan.
         assert f"?org={self.dgbd.public_id}" in body
         assert f"?org={self.primary.public_id}" in body
-        # Twee openers, dus twee submenu's.
         assert body.count('text="Bekijk opdrachten"') == 2
 
     def test_each_menu_is_named_after_its_own_organization(self):
@@ -159,15 +156,11 @@ class AssignmentPanelSecondOrgTest(TestCase):
     def test_every_organization_menu_offers_the_edit_action(self):
         # Twee ⋯-knoppen naast elkaar die stilletjes verschillen zijn een
         # raadsel: je klikt op de tweede, verwacht "wijzigen" en krijgt niets.
-        # Elke rij biedt de actie dus, ook al bewerkt die het hele veld -- het
-        # meervoud in het label zegt dat.
         User.objects.filter(pk=self.user.pk).update(is_superuser=True, is_staff=True)
         body = self._panel_body()
         assert body.count('text="Opdrachtgever wijzigen"') == 2
-        # Elk menu opent hetzelfde veld-formulier.
+        # Elk menu opent hetzelfde veld-formulier, dus enkelvoud in het label.
         assert body.count("&veld=organizations") == 2
-        # Het label blijft enkelvoud: een meervoud leest als een andere actie,
-        # terwijl je gewoon dit ene veld bewerkt.
         assert "Opdrachtgevers wijzigen" not in body
 
     def test_single_organization_shows_no_role_suffix(self):

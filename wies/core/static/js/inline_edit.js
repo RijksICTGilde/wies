@@ -43,17 +43,15 @@ document.addEventListener("click", (event) => {
 
   const wrapper = toggle.parentElement;
   if (!wrapper) return;
-  // Template uses `inline-edit-long-text__*` for the value spans
-  // (the toggle button itself uses `inline-edit-show-more__*`).
+  // Template uses `inline-edit-long-text__*` for the value spans; de knop zelf
+  // is een nldd-button, dus tekst en icoon gaan via attributen.
   const truncated = wrapper.querySelector(".inline-edit-long-text__truncated");
   const full = wrapper.querySelector(".inline-edit-long-text__full");
-  const icon = toggle.querySelector(".inline-edit-show-more__icon");
-  const label = toggle.querySelector(".inline-edit-show-more__label");
-  if (!truncated || !full || !icon || !label) return;
+  if (!truncated || !full) return;
 
   const expanded = full.hidden === false;
   truncated.hidden = !expanded;
   full.hidden = expanded;
-  icon.textContent = expanded ? "+" : "−";
-  label.textContent = expanded ? "Toon meer" : "Toon minder";
+  toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
+  toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
 });

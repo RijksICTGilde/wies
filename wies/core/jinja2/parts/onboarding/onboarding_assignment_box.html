@@ -7,14 +7,22 @@
   <nldd-title size="5">
   <h4>{{ assignment.name }}</h4>
   </nldd-title>
-  {% if assignment.extra_info %}
-    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-    <nldd-rich-text>
-    <p>{{ assignment.extra_info }}</p>
-    </nldd-rich-text>
-  {% endif %}
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
   <nldd-list accessible-label="Gegevens van {{ assignment.name }}">
+  {% if assignment.extra_info %}
+    {# Als rij in de gegevenslijst, net als in het opdrachtpaneel: een lange
+       omschrijving boven de lijst duwde de gegevens weg. De textarea-weergave
+       houdt de regelovergangen heel en kort in tot "Toon meer" (#576). #}
+    <nldd-list-item>
+    <nldd-text-cell width="120px" text="Omschrijving"></nldd-text-cell>
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-text-cell>
+    {% with value = assignment.extra_info %}
+      {% include "forms/displays/textarea.html" %}
+    {% endwith %}
+    </nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
   <nldd-list-item>
   <nldd-text-cell width="120px" text="{{ 'Opdrachtgevers' if assignment.organization_relations.count() > 1 else 'Opdrachtgever' }}"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
