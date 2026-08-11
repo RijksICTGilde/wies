@@ -1,3 +1,4 @@
+import json
 import re
 
 from django.contrib.auth import get_user_model
@@ -95,17 +96,39 @@ class AssignmentCreateTest(TestCase):
     # voeg je daarna in het opdrachtpaneel toe. Bij succes een 204 met
     # HX-Location naar ?opdracht=<id>.
 
-    def test_sheet_requires_add_assignment_permission(self):
+    def test_sheet_post_requires_add_assignment_permission(self):
+        # De aanmaak-route is POST-only; zonder recht een 403.
         self.client.force_login(self.regular_user)
-        response = self.client.get(reverse("assignment-create-sheet"))
+        response = self.client.post(reverse("assignment-create-sheet"), {})
         assert response.status_code == 403
 
-    def test_sheet_get_returns_form(self):
+    def test_list_sentinel_htmx_returns_create_form(self):
+        # ?nieuwe-opdracht op de lijst opent het lege aanmaakformulier als paneel.
+        # De htmx-panelrequest krijgt alleen het fragment.
         self.client.force_login(self.bdm_user)
-        response = self.client.get(reverse("assignment-create-sheet"))
+        response = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": ""},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
         assert b"Voer opdracht in" in response.content
+
+    def test_list_sentinel_full_page_opens_create_panel(self):
+        # Volle-pagina GET (refresh/bookmark): de hele lijst mét het aanmaakpaneel.
+        self.client.force_login(self.bdm_user)
+        response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
+        assert response.status_code == 200
+        assert b"Opdracht invoeren" in response.content
+        assert b"Voer opdracht in" in response.content
+
+    def test_list_sentinel_without_permission_shows_list_no_panel(self):
+        # Zonder recht: gewone lijst, geen aanmaakpaneel — geen 403 (dit is de lijstview).
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
+        assert response.status_code == 200
+        assert b"Voer opdracht in" not in response.content
 
     def test_sheet_post_creates_assignment_without_services(self):
         self.client.force_login(self.bdm_user)
@@ -167,6 +190,24 @@ class AssignmentCreateTest(TestCase):
         assert picker is not None
         assert "invalid" in picker.group(1)
 
+    def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
+        # Een protocol-relatieve terug_url in de POST-body wordt door
+        # _safe_return_path geweigerd; de HX-Location valt terug op de lijst.
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Onveilige Terug",
+                "owner": self.bdm_colleague.public_id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": "//evil.example",
+            },
+        )
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Onveilige Terug")
+        location = json.loads(response["HX-Location"])
+        assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
+
     def test_sheet_success_banner_rides_along_on_panel_load(self):
         """De 'is aangemaakt'-banner reist als OOB-swap mee met de panel-response
         die op de HX-Location volgt — base.html herlaadt niet bij een panel-swap.
@@ -218,6 +259,16 @@ class AssignmentListButtonTest(TestCase):
         response = self.client.get(reverse("assignment-list"))
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
+
+    def test_create_button_targets_list_sentinel(self):
+        # De knop opent de aanmaak-sheet als paneel op de lijst (?nieuwe-opdracht),
+        # niet meer via de losse /invoeren/?terug=-route, en pusht de URL.
+        self.client.force_login(self.bdm_user)
+        response = self.client.get(reverse("assignment-list"))
+        html = response.content.decode()
+        assert "nieuwe-opdracht" in html
+        assert 'hx-push-url="true"' in html
+        assert "invoeren/?terug=" not in html
 
     def test_regular_user_does_not_see_create_button(self):
         self.client.force_login(self.regular_user)

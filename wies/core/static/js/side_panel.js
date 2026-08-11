@@ -24,8 +24,8 @@
   const CONTENT_ID = "side-panel-content";
   // Queryparams die een paneel openen (spiegelt PANEL_PARAMS in views.py, minus
   // 'pagina' dat over de lijst gaat). 'bewerken' hangt aan 'plaatsing' en opent
-  // dus nooit op zichzelf een paneel.
-  const PANEL_PARAMS = ["collega", "opdracht", "plaatsing"];
+  // dus nooit op zichzelf een paneel. 'nieuwe-opdracht' opent de aanmaak-sheet.
+  const PANEL_PARAMS = ["collega", "opdracht", "plaatsing", "nieuwe-opdracht"];
 
   function hasPanelParam(url) {
     return PANEL_PARAMS.some((name) => url.searchParams.has(name));

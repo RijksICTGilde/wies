@@ -137,7 +137,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld")
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -242,6 +242,22 @@ def _build_assignment_panel_data(assignment, request):
         if member_panel is not None:
             data.update(member_panel)
     return data
+
+
+def _build_assignment_create_panel_data(request, form, *, parent_url=None):
+    """panel_data voor het (lege/ongeldige) aanmaakformulier — gedeeld door de
+    lijst-GET-tak (AssignmentListView, ?nieuwe-opdracht) en de POST-handler
+    (assignment_create_sheet). ``parent_url`` laat de ongeldige-POST-herrender de
+    gesaneerde ``terug_url`` meegeven, zodat het terugadres een mislukte submit
+    overleeft."""
+    return {
+        "form": form,
+        "panel_content_template": "parts/assignment_create_panel_content.html",
+        "edit_url": reverse("assignment-create-sheet"),  # POST-doel
+        "parent_url": parent_url if parent_url is not None else _build_close_url(request),
+        "edit_heading": "Opdracht invoeren",
+        "submit_label": "Voer opdracht in",
+    }
 
 
 def _merge_preview_rows(group) -> list[dict]:
@@ -1416,16 +1432,18 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             context["next_page_url"] = None
 
         # Primary button for assignment creation (BDM permission). Opent de
-        # aanmaak-sheet in het zijpaneel; htmx:afterSettle op #side-panel-content
-        # opent de sheet zodra de partial er in geswapt is (zie side_panel.js).
+        # aanmaak-sheet als paneel op de lijst zelf via ?nieuwe-opdracht — net als
+        # een opdrachtkaart (?opdracht=). _build_panel_url houdt de actieve filters
+        # aan; hx-push-url zet de URL in de adresbalk zodat verversen de sheet
+        # heropent (zie side_panel.js init()).
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
                 "button_text": "Opdracht invoeren",
                 "attrs": {
-                    "hx-get": reverse("assignment-create-sheet") + "?terug=" + reverse("assignment-list"),
+                    "hx-get": _build_panel_url(self.request, **{"nieuwe-opdracht": ""}),
                     "hx-target": "#side-panel-content",
                     "hx-swap": "innerHTML",
-                    "hx-push-url": "false",
+                    "hx-push-url": "true",
                 },
             }
 
@@ -1434,7 +1452,22 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if placement_id:
+        # ?nieuwe-opdracht opent het lege aanmaakformulier als paneel op de lijst.
+        # Gaat vóór de object-lookups: dit paneel hangt niet aan een bestaand
+        # object. Zonder recht valt het weg (gewone lijst, geen paneel — geen 403,
+        # dit is de lijstview).
+        if self.request.GET.get("nieuwe-opdracht") is not None and self.request.user.has_perm("core.add_assignment"):
+            from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
+                assignment_create_specs,
+            )
+
+            specs = assignment_create_specs()
+            form_cls, initial = build_combined_form_class(specs)
+            # Voorvullen: de aanmaker is doorgaans zelf de BM.
+            if getattr(self.request.user, "colleague", None):
+                initial["owner"] = self.request.user.colleague
+            context["panel_data"] = _build_assignment_create_panel_data(self.request, form_cls(initial=initial))
+        elif placement_id:
             panel_data = _resolve_placement_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
@@ -4136,13 +4169,13 @@ def assignment_edit_view(request, public_id):
     return response
 
 
+@require_POST
 def assignment_create_sheet(request):
-    """Maak een opdracht aan via het zijpaneel — hergebruikt het opdracht-
-    formulier van de bewerk-sheet (naam, omschrijving, opdrachtgever, periode,
-    BM). Diensten/rollen voeg je daarna toe in het opdrachtpaneel.
-
-    GET: de sheet met een leeg formulier. POST: aanmaken en via HX-Location naar
-    het nieuwe opdrachtpaneel. Alleen voor wie opdrachten mag aanmaken.
+    """POST-doel van de aanmaak-sheet: maakt de opdracht aan en stuurt via
+    HX-Location naar het nieuwe opdrachtpaneel. Diensten/rollen voeg je daarna in
+    dat paneel toe. Het lege formulier zelf wordt gerenderd door AssignmentListView
+    (?nieuwe-opdracht), zodat het net als de object-panelen op de lijst-URL leeft
+    en verversen werkt. Alleen voor wie opdrachten mag aanmaken.
     """
     from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
         assignment_create_specs,
@@ -4153,51 +4186,38 @@ def assignment_create_sheet(request):
         return HttpResponseForbidden()
 
     specs = assignment_create_specs()
-    form_cls, initial = build_combined_form_class(specs)
-    return_to = _safe_return_path(request.GET.get("terug") or request.POST.get("terug_url"), reverse("assignment-list"))
+    form_cls, _ = build_combined_form_class(specs)
+    return_to = _safe_return_path(request.POST.get("terug_url"), reverse("assignment-list"))
 
-    if request.method == "POST":
-        form = form_cls(request.POST)
-        if form.is_valid():
-            with transaction.atomic():
-                assignment = create_assignment_from_specs(form.cleaned_data)
-            create_event(
-                object_type="Assignment",
-                action="create",
-                source="user",
-                object_id=assignment.id,
-                user=request.user,
-                request=request,
-                context=_assignment_audit_snapshot(assignment),
-            )
-            sep = "&" if "?" in return_to else "?"
-            path = f"{return_to}{sep}opdracht={assignment.public_id}"
-            # base.html herlaadt niet bij de panel-swap die op HX-Location volgt,
-            # dus assignment_panel_content.html swapt de banner apart in (OOB).
-            messages.success(
-                request,
-                f'Opdracht "{assignment.name}" is aangemaakt.',
-                extra_tags=f"link:{path}|Bekijk opdracht",
-            )
-            response = HttpResponse(status=204)
-            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
-            return response
-    else:
-        # Voorvullen: de aanmaker is doorgaans zelf de BM.
-        if getattr(request.user, "colleague", None):
-            initial["owner"] = request.user.colleague
-        form = form_cls(initial=initial)
+    form = form_cls(request.POST)
+    if form.is_valid():
+        with transaction.atomic():
+            assignment = create_assignment_from_specs(form.cleaned_data)
+        create_event(
+            object_type="Assignment",
+            action="create",
+            source="user",
+            object_id=assignment.id,
+            user=request.user,
+            request=request,
+            context=_assignment_audit_snapshot(assignment),
+        )
+        sep = "&" if "?" in return_to else "?"
+        path = f"{return_to}{sep}opdracht={assignment.public_id}"
+        # base.html herlaadt niet bij de panel-swap die op HX-Location volgt,
+        # dus assignment_panel_content.html swapt de banner apart in (OOB).
+        messages.success(
+            request,
+            f'Opdracht "{assignment.name}" is aangemaakt.',
+            extra_tags=f"link:{path}|Bekijk opdracht",
+        )
+        response = HttpResponse(status=204)
+        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+        return response
 
-    panel_data = {
-        "form": form,
-        "edit_url": reverse("assignment-create-sheet"),
-        "parent_url": return_to,
-        "edit_heading": "Opdracht invoeren",
-        # Gebiedende wijs, en hetzelfde werkwoord als de kop: de knop maakt de
-        # handeling af die de kop aankondigt. "Aanmaken" was een tweede werkwoord
-        # in dezelfde sheet, en als infinitief ook de vorm van een flow-opener.
-        "submit_label": "Voer opdracht in",
-    }
+    # Ongeldig: herrender het fragment met meldingen. parent_url = het gesaneerde
+    # terugadres, zodat terug_url een mislukte submit overleeft.
+    panel_data = _build_assignment_create_panel_data(request, form, parent_url=return_to)
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
