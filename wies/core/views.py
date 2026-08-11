@@ -127,14 +127,6 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 }
 
 
-def get_delete_context(delete_url_name, object_pk, object_name):
-    """Helper function to generate delete context for modals"""
-    return {
-        "delete_url": reverse(delete_url_name, args=[object_pk]),
-        "delete_confirm_message": f"Weet je zeker dat je {object_name} wilt verwijderen?",
-    }
-
-
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
@@ -2432,40 +2424,29 @@ def label_delete(request, public_id):
     """
 
     label = get_object_or_404(Label, public_id=public_id)
-    category = label.category
 
     label_use_count = label.colleagues.count()
 
     if request.method == "GET":
+        # Een gecentreerde bevestigingsdialoog (geen zijsheet), gelijk aan de
+        # categorie-verwijderdialoog en de rest van Wies.
         return render(
             request,
-            "parts/generic_form_modal.html",
+            "parts/confirm_delete_modal.html",
             {
-                "modal_title": f"Verwijder label: {label.name}",
-                "warning_modal": True,
-                "modal_element_id": "labelFormModal",
-                "target_element_id": f"label_category_{category.public_id}",
-                "delete_warning": (
+                "dialog_text": f"Label verwijderen: {label.name}?",
+                "dialog_supporting": (
                     f"Weet je zeker dat je dit label wilt verwijderen? Het wordt gebruikt op {label_use_count} plekken."
                 ),
+                "confirm_label": "Verwijderen",
+                "cancel_label": "Annuleren",
                 "form_post_url": reverse("label-delete", kwargs={"public_id": public_id}),
-                "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
         label.delete()
-
-        category_qs = LabelCategory.objects.filter(id=category.id)
-        category = annotate_usage_counts(category_qs).get()
-
-        response = render(
-            request,
-            "parts/label_category.html",
-            {
-                "category": category,
-            },
-        )
-        response["HX-Trigger"] = "closeModal"
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = reverse("label-admin")
         return response
 
     return HttpResponse(status=405)
@@ -2538,9 +2519,6 @@ def suborganization_edit(request, public_id):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context(
-                    "suborganization-delete", suborganization.public_id, f"merk '{suborganization.name}'"
-                ),
             },
         )
     if request.method == "POST":
@@ -2562,9 +2540,6 @@ def suborganization_edit(request, public_id):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context(
-                    "suborganization-delete", suborganization.public_id, f"merk '{suborganization.name}'"
-                ),
             },
         )
     return None
@@ -2577,27 +2552,26 @@ def suborganization_delete(request, public_id):
     suborganization_use_count = suborganization.colleagues.count()
 
     if request.method == "GET":
+        # Een gecentreerde bevestigingsdialoog (geen zijsheet), gelijk aan de
+        # categorie-verwijderdialoog en de rest van Wies.
         return render(
             request,
-            "parts/generic_form_modal.html",
+            "parts/confirm_delete_modal.html",
             {
-                "modal_title": f"Verwijder merk: {suborganization.name}",
-                "warning_modal": True,
-                "modal_element_id": "suborganizationFormModal",
-                "target_element_id": "suborganization_list_container",
-                "delete_warning": (
+                "dialog_text": f"Merk verwijderen: {suborganization.name}?",
+                "dialog_supporting": (
                     f"Weet je zeker dat je dit merk wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
                 ),
+                "confirm_label": "Verwijderen",
+                "cancel_label": "Annuleren",
                 "form_post_url": reverse("suborganization-delete", kwargs={"public_id": public_id}),
-                "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
         suborganization.delete()
-        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-        response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
-        response["HX-Trigger"] = "closeModal"
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = reverse("suborganization-admin")
         return response
     return HttpResponse(status=405)
 

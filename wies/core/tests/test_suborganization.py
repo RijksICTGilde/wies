@@ -408,11 +408,22 @@ class SuborganizationAdminTest(TestCase):
         self.assertContains(response, "nldd-sheet")
         self.assertContains(response, "Merk toevoegen")
 
-    def test_delete_get_renders_modal_not_405(self):
+    def test_delete_get_renders_centered_dialog_not_sheet(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
+        # The confirmation is a centered dialog, like the rest of Wies — not a
+        # right-side sheet.
+        self.assertContains(response, "nldd-modal-dialog")
+        self.assertNotContains(response, "nldd-sheet")
+
+    def test_delete_post_redirects_to_admin(self):
+        suborganization = Suborganization.objects.create(name="Weg")
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]))
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("suborganization-admin")
 
     def test_create_form_is_not_nested(self):
         """The sheet must render exactly one <form>, with the name field inside it.
