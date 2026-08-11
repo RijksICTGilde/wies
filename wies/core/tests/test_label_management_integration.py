@@ -109,13 +109,12 @@ class LabelManagementIntegrationTest(TestCase):
         colleague = Colleague.objects.create(name="Test Colleague", email="colleague@rijksoverheid.nl", source="wies")
         colleague.labels.add(label)
 
-        # Edit the label
         response = self.client.post(
-            reverse("label-edit", kwargs={"public_id": label.public_id}),
+            reverse("label-form-edit", kwargs={"public_id": label.public_id}),
             {"name": "Updated Name", "category": category.id},
-            follow=True,
         )
         assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("label-admin")
 
         # Verify the label name changed
         label.refresh_from_db()

@@ -414,6 +414,30 @@ class SuborganizationAdminTest(TestCase):
         response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
 
+    def test_create_form_is_not_nested(self):
+        """The sheet must render exactly one <form>, with the name field inside it.
+
+        Regression: {{ content }} rendered the form via forms/form.html, which
+        wrapped the fields in a second <nldd-form>. That inner nldd-form has no
+        <form> child, so in auto-wrap mode it created its own action-less <form>
+        in the light DOM; the form-associated name field bound to *that* form and
+        never reached the POST, so nothing got created. The view tests missed
+        this because they POST raw dicts and never render the template.
+        """
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-create"))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
+
+    def test_edit_form_is_not_nested(self):
+        suborganization = Suborganization.objects.create(name="Oud")
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-edit", args=[suborganization.public_id]))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
+
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):
     """Each endpoint is gated by its own permission, not just 'is Beheerder'."""

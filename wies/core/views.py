@@ -2425,61 +2425,6 @@ def label_category_delete(request, public_id):
     return HttpResponse(status=405)
 
 
-@permission_required("core.change_label", raise_exception=True)
-def label_edit(request, public_id):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-    label = get_object_or_404(Label, public_id=public_id)
-    category = label.category
-    form_post_url = reverse("label-edit", kwargs={"public_id": public_id})
-    modal_title = f"Bewerk label: {label.name}"
-    form_button_label = "Opslaan"
-    element_id = "labelFormModal"
-
-    if request.method == "GET":
-        form = LabelForm(instance=label, category_id=category.id)
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-delete", label.public_id, f"label '{label.name}'"),
-            },
-        )
-    if request.method == "POST":
-        form = LabelForm(request.POST, instance=label)
-        if form.is_valid():
-            form.save()
-
-            category_qs = LabelCategory.objects.filter(id=category.id)
-            category = annotate_usage_counts(category_qs).get()
-
-            response = render(request, "parts/label_category.html", {"category": category})
-            response["HX-Retarget"] = f"#label_category_{category.public_id}"
-            response["HX-Trigger"] = "closeModal"
-            return response
-        return render(
-            request,
-            "parts/generic_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": form_button_label,
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context("label-delete", label.public_id, f"label '{label.name}'"),
-            },
-        )
-    return None
-
-
 @permission_required("core.delete_label", raise_exception=True)
 def label_delete(request, public_id):
     """
