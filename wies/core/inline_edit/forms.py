@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import inspect
 from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
@@ -37,7 +38,22 @@ def use_public_id_choices(field: forms.Field) -> None:
         field.to_field_name = "public_id"
 
 
-def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
+def _takes_obj(fn: Callable) -> bool:
+    """Of een choices-callable het bewerkte object wil ontvangen.
+
+    Bestaande callables nemen geen argument; alleen wie er één declareert krijgt
+    het object mee.
+    """
+    # Eén except-type: `except (TypeError, ValueError)` wordt door de
+    # ruff-format in dit project herschreven naar ongeldige syntax (zie de
+    # eerdere "re-apply except-tuple fix"-commits). Exception dekt beide.
+    try:
+        return len(inspect.signature(fn).parameters) >= 1
+    except Exception:  # noqa: BLE001 — builtins/C-functies hebben geen signature
+        return False
+
+
+def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
     # Priority: explicit form_field_factory → derive from model field → CharField fallback.
     # Overrides (label/widget/choices/validators/error_messages/empty_label) apply last.
     if editable.form_field_factory is not None:
@@ -61,7 +77,13 @@ def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — stra
     if editable.widget is not None:
         base.widget = editable.widget() if isinstance(editable.widget, type) else editable.widget
     if editable.choices is not None:
-        opts = editable.choices() if callable(editable.choices) else editable.choices
+        # Een choices-callable mag het bewerkte object aannemen, zodat hij de
+        # huidige waarde in de lijst kan houden ook als die er volgens de gewone
+        # regels niet in hoort (zie _bdm_queryset).
+        if callable(editable.choices):
+            opts = editable.choices(obj) if _takes_obj(editable.choices) else editable.choices()
+        else:
+            opts = editable.choices
         if hasattr(base, "queryset"):
             base.queryset = opts
         else:
@@ -91,15 +113,20 @@ def build_form_class(
     editables: list[Editable],
     obj: Model | None = None,
     group_clean: Callable[[dict], dict] | None = None,
+    field_objs: dict[str, Model] | None = None,
 ) -> tuple[type[forms.Form], dict[str, Any]]:
-    """Return (FormClass, initial): NlddFormMixin-enabled form with one field per Editable."""
+    """Return (FormClass, initial): NlddFormMixin-enabled form with one field per Editable.
+
+    ``field_objs`` wijst per veldnaam het object aan waar dat veld bij hoort, voor
+    formulieren die meerdere objecten bundelen; zonder die map geldt ``obj``.
+    """
     form_fields: dict[str, forms.Field] = {}
     initial: dict[str, Any] = {}
     for e in editables:
         key = e.field or e.name
         if not key:
             raise ValueError(f"Editable must have a field or name: {e!r}")
-        form_fields[key] = _build_form_field(e)
+        form_fields[key] = _build_form_field(e, (field_objs or {}).get(key, obj))
         if obj is not None:
             initial[key] = _current_value(obj, e)
 
@@ -188,13 +215,19 @@ def build_combined_form_class(specs, *, bound_obj=None):
     """
     editables: list[Editable] = []
     initial: dict = {}
+    # Per editable zijn eigen object; `bound_obj` dekt dat niet, want de specs
+    # gaan hier over meerdere objecten.
+    field_objs: dict[str, Model] = {}
     group_clean = None
     for editable_set, spec, obj in specs:
         spec_editables = resolve_editables(editable_set, spec)
         editables.extend(spec_editables)
         for e in spec_editables:
-            initial[e.field or e.name] = _current_value(obj, e)
+            key = e.field or e.name
+            initial[key] = _current_value(obj, e)
+            if obj is not None:
+                field_objs[key] = obj
         if getattr(spec, "clean", None):
             group_clean = spec.clean
-    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean)
+    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean, field_objs=field_objs)
     return form_cls, initial

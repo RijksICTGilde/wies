@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- fix dat het bewerken van een opdracht de Business Manager wiste. De keuzelijst bevatte alleen collega's uit de groep "Business Development Manager"; stond de huidige eigenaar daar niet in — wat voor vrijwel elke opdracht gold — dan had de combo box geen optie die bij zijn waarde paste, rendeerde het veld leeg en poste opslaan een lege waarde. De huidige eigenaar staat nu altijd in de lijst, ook buiten die groep; bij het aanmaken van een opdracht (nog geen eigenaar) blijft de lijst tot de groep beperkt. Daarvoor mag een `choices`-callable van een editable voortaan het object aannemen dat bewerkt wordt
 - 553: Escape sluit de onboardingwizard weer alleen voor nu — bij de volgende pagina staat hij er gewoon weer, zoals vóór de NLDD-migratie. Alleen de knop in de titelbalk vinkt de onboarding definitief af, en die heet weer "Overslaan" in plaats van "Sluit". De wizard luisterde naar de `close` van het venster, maar `nldd-window` sluit zichzelf op zowel Escape als de dismiss-knop, waardoor die twee niet meer uit elkaar te houden waren en één Escape je onboarding permanent wegvinkte
 
 - klikbare kaarten (opdracht- en collega-opdrachtkaarten) kleuren nu licht op bij hover. `nldd-card` tekent zelf alleen een focusring en een pointer-cursor, geen hover-staat, terwijl de hele kaart een link is. Alleen kaarten met `href`/`button` krijgen 'm, zodat de cijferkaarten op het staff-dashboard niet klikbaar gaan lijken

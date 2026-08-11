@@ -82,3 +82,61 @@ class AssignmentEditSingleFieldTest(TestCase):
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(url, {"owner": str(self.owner.public_id)})
         assert response.status_code == 403
+
+
+class AssignmentOwnerOutsideBdmGroupTest(TestCase):
+    """De huidige Business Manager hoort in de keuzelijst, ook buiten de BDM-groep.
+
+    Zonder optie die bij zijn ``value`` past rendert de combo box leeg en wist
+    opslaan de Business Manager — wat vrijwel elke opdracht raakte.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        Group.objects.get_or_create(name="Business Development Manager")
+        # De eigenaar zit bewust NIET in de BDM-groep; hij bewerkt zijn eigen
+        # opdracht, want daar ontleent hij zijn bewerkrechten aan.
+        self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
+        self.client.force_login(self.owner_user)
+        self.owner = Colleague.objects.get(user=self.owner_user)
+
+        self.assignment = Assignment.objects.create(
+            name="Handhaving Informatiesysteem",
+            source="wies",
+            owner=self.owner,
+            start_date=date(2026, 1, 1),
+            end_date=date(2026, 12, 31),
+        )
+        org = OrganizationUnit.objects.create(name="Defensie", label="Def")
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org, role="PRIMARY")
+
+    def _edit_form(self):
+        response = self.client.get(
+            f"/opdrachten/?opdracht={self.assignment.public_id}&bewerken=1&veld=owner",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert response.status_code == 200
+        return response.content.decode()
+
+    def test_current_owner_is_an_option_and_preselected(self):
+        body = self._edit_form()
+        # De combo box wijst met `value` naar een optie die er ook echt is.
+        assert f'value="{self.owner.public_id}"' in body
+        assert f'<nldd-menu-item value="{self.owner.public_id}"' in body
+
+    def test_saving_another_field_keeps_the_owner(self):
+        # Het scenario uit de melding: je bewerkt de opdracht en de BM raakt weg.
+        url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
+        response = self.client.post(
+            url,
+            {"owner": str(self.owner.public_id), "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"},
+        )
+        assert response.status_code == 204
+        self.assignment.refresh_from_db()
+        assert self.assignment.owner_id == self.owner.id
+
+    def test_choices_without_an_assignment_stay_limited_to_the_group(self):
+        # Bij aanmaken is er nog geen eigenaar; dan blijft de lijst de groep.
+        from wies.core.editables.assignment import _bdm_queryset  # noqa: PLC0415 — lokaal, alleen voor deze test
+
+        assert self.owner not in list(_bdm_queryset())

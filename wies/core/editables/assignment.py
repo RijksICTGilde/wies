@@ -7,7 +7,7 @@ import urllib.parse
 
 from django import forms
 from django.db import transaction
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from django.urls import reverse
 from django.utils import timezone
 
@@ -19,9 +19,17 @@ from wies.core.services.urls import current_page_path
 from wies.core.widgets import ComboBoxSelect
 
 
-def _bdm_queryset():
+def _bdm_queryset(assignment=None):
     # Wrapped in a callable so `choices` evaluates lazily per request.
-    return Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name")
+    #
+    # De huidige eigenaar hoort er altijd bij, ook buiten de BDM-groep: zonder
+    # passende optie rendert de combo box leeg en wist opslaan de Business
+    # Manager. In de praktijk staan de meeste eigenaren niet in die groep.
+    in_group = Q(user__groups__name="Business Development Manager")
+    owner_id = getattr(assignment, "owner_id", None)
+    if owner_id is not None:
+        in_group |= Q(pk=owner_id)
+    return Colleague.objects.filter(in_group).distinct().order_by("name")
 
 
 def _owner_display_context(assignment, request) -> dict:
