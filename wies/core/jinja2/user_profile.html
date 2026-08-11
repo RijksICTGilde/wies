@@ -11,6 +11,12 @@ empty sidebar #}
 {% block content %}
   {# Geen eigen breedte: de sectie houdt de standaard paginabreedte aan. #}
   <nldd-one-third-two-thirds-section>
+  {# In het header-slot en niet erboven: deze pagina heeft geen zijbalk, dus
+     buiten de sectie is er geen enkele horizontale marge en plakt de kop tegen
+     de vensterrand. De sectie brengt hem zelf mee, en responsief. #}
+  <nldd-title slot="header" size="3">
+  <h1>Mijn profiel</h1>
+  </nldd-title>
   <div slot="left">
     <nldd-list dividers="never" accessible-label="Profiel">
     <nldd-list-item>

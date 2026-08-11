@@ -17,6 +17,12 @@
   </nldd-container>
 {% endblock sidebar %}
 {% block content %}
+  {# Buiten de container: die wordt bij een htmx-verzoek opnieuw gerenderd, de
+     paginakop hoort daar niet in mee te reizen. #}
+  <nldd-title size="3">
+  <h1>Wie zit waar?</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% include "parts/filter_and_table_container.html" %}
 {% endblock content %}
 {% block panel %}
