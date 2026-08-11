@@ -375,8 +375,6 @@ class AssignmentEditables(EditableSet):
     name = Editable(
         label="Opdrachtnaam",
         error_messages={"required": "Opdrachtnaam is verplicht"},
-        # Textarea zodat een lange naam afbreekt in plaats van wegscrolt.
-        widget=forms.Textarea(attrs={"rows": 1}),
     )
 
     extra_info = Editable(

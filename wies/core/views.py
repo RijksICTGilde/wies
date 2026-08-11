@@ -1353,11 +1353,21 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         if rol_filter:
             active_filters["rol"] = rol_filter
 
-        # Skill/role counts: exclude role filter for cross-filtering
+        # Skill/role counts: exclude role filter for cross-filtering.
         base_qs = self._get_base_queryset()
-        skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
-        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
+        skill_assignment_ids = (
+            self._apply_filters(base_qs, exclude_filter="rol").values_list("id", flat=True).distinct()
+        )
+        skill_pairs = (
+            Service.objects.filter(
+                assignment_id__in=skill_assignment_ids,
+                status="OPEN",
+                placements__isnull=True,
+            )
+            .values_list("assignment_id", "skill_id")
+            .distinct()
+        )
+        skill_counts = Counter(skill_id for _, skill_id in skill_pairs if skill_id is not None)
 
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
@@ -1377,8 +1387,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # base_qs is already limited to assignments with an unfilled open service
         # (open_assignments semantics), so counting organizations over the
         # filtered set matches _get_org_counts's open_assignments branch.
-        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
-        org_id_values = org_filtered_qs.values_list("organizations__id", flat=True)
+        # Count per DISTINCT assignment (see skill counts above): projecting
+        # organizations__id off a .distinct() queryset yields SELECT DISTINCT org_id,
+        # collapsing every assignment on the same org into one row (undercount).
+        org_assignment_ids = self._apply_filters(base_qs, exclude_filter="org").values_list("id", flat=True).distinct()
+        org_id_values = Assignment.objects.filter(id__in=org_assignment_ids).values_list("organizations__id", flat=True)
         org_counts = Counter(oid for oid in org_id_values if oid is not None)
 
         context["active_filters"] = active_filters
@@ -3121,9 +3134,14 @@ def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[in
     filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
 
     if count_mode == "open_assignments":
+        # Re-key on distinct assignment ids before projecting organizations__id:
+        # projecting straight off the .distinct() queryset emits SELECT DISTINCT
+        # org_id, collapsing every assignment on one org into a single row (undercount).
+        # Mirrors the sidebar org count and the placements branch below.
+        assignment_qs = Assignment.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
         if excluded_org_ids:
-            filtered_qs = filtered_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = filtered_qs.values_list("organizations__id", flat=True)
+            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
+        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
     else:
         placement_qs = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
         if excluded_org_ids:
