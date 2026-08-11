@@ -339,12 +339,12 @@ class LabelAdminRoutePublicIdTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_label_edit_resolves_by_public_id(self):
-        assert self.client.get(reverse("label-edit", args=[self.label.public_id])).status_code == 200
+        assert self.client.get(reverse("label-form-edit", args=[self.label.public_id])).status_code == 200
 
     def test_routes_no_longer_accept_integer_pk(self):
         # label-category-edit is op deze branch vervangen door de
         # "Categorieën beheren"-sheet (label-category-manage), dus die route is weg.
-        for route, obj in (("label-edit", self.label),):
+        for route, obj in (("label-form-edit", self.label),):
             try:
                 url = reverse(route, args=[obj.pk])
             except NoReverseMatch:

@@ -1,7 +1,12 @@
-{# Het formulierlichaam: nldd-form verzorgt de ruimte tussen de velden. Staat de
-   consumer zelf al een nldd-form om {{ form }} heen (zoals de sheets), dan
-   nesten die twee — dat mag: de binnenste bepaalt de afstand tussen de velden,
-   de buitenste die tot de knoppen. #}
+{# Het formulierlichaam: nldd-form verzorgt de ruimte tussen de velden.
+
+   LET OP: render dit template (via {{ form }}) NIET binnen een nldd-form die al
+   een eigen <form> heeft. De binnenste nldd-form heeft geen eigen <form>-child
+   en wrapt in auto-wrap mode zelf een actieloos <form> in de light DOM; de
+   form-associated velden horen dan bij dát <form>, niet bij het buitenste dat
+   post — en de POST komt leeg aan. Wil je de velden binnen een sheet-<form>
+   plaatsen, render ze dan veld-voor-veld met field.as_field_group() (zie
+   parts/generic_form_body.html, label_form_body.html, user_form_body.html). #}
 <nldd-form>
 {% for field, field_errors in fields %}{{ field.as_field_group() }}{% endfor %}
 {% for field in hidden_fields %}{{ field }}{% endfor %}

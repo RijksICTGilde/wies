@@ -9,18 +9,15 @@
       hx-target="#{{ body_id }}"
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
-  {% if delete_warning %}
-    <nldd-rich-text>
-    <p>{{ delete_warning }}</p>
-    </nldd-rich-text>
-  {% else %}
-    {{ content }}
-  {% endif %}
+  {# Velden veld-voor-veld, niet {{ content }}: dat zou forms/form.html een
+     tweede <nldd-form> om de velden laten zetten, en die wrapt in auto-wrap
+     mode zelf een actieloos <form> in de light DOM waar de form-associated
+     velden dan bij horen — niet bij het formulier hierboven. Gevolg: de POST
+     kwam leeg aan. Zelfde klasse fout als de checkbox/radio-bug (PR 427). #}
+  {% for field in content.visible_fields() %}{{ field.as_field_group() }}{% endfor %}
+  {% for field in content.hidden_fields() %}{{ field }}{% endfor %}
   <nldd-form-actions>
-  <nldd-button variant="{{ 'destructive' if warning_modal else 'primary' }}" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
-  {% if delete_url %}
-    <nldd-button variant="critical-tinted" width="full" text="Verwijderen" hx-get="{{ delete_url }}" hx-target="#{{ body_id }}" hx-swap="innerHTML"></nldd-button>
-  {% endif %}
+  <nldd-button variant="primary" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>

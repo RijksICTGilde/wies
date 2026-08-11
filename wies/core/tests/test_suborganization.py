@@ -408,11 +408,46 @@ class SuborganizationAdminTest(TestCase):
         self.assertContains(response, "nldd-sheet")
         self.assertContains(response, "Merk toevoegen")
 
-    def test_delete_get_renders_modal_not_405(self):
+    def test_delete_get_renders_centered_dialog_not_sheet(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
+        # The confirmation is a centered dialog, like the rest of Wies — not a
+        # right-side sheet.
+        self.assertContains(response, "nldd-modal-dialog")
+        self.assertNotContains(response, "nldd-sheet")
+
+    def test_delete_post_redirects_to_admin(self):
+        suborganization = Suborganization.objects.create(name="Weg")
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]))
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("suborganization-admin")
+
+    def test_create_form_is_not_nested(self):
+        """The sheet must render exactly one <form>, with the name field inside it.
+
+        Regression: {{ content }} rendered the form via forms/form.html, which
+        wrapped the fields in a second <nldd-form>. That inner nldd-form has no
+        <form> child, so in auto-wrap mode it created its own action-less <form>
+        in the light DOM; the form-associated name field bound to *that* form and
+        never reached the POST, so nothing got created. The view tests missed
+        this because they POST raw dicts and never render the template.
+        """
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-create"))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
+
+    def test_edit_form_is_not_nested(self):
+        suborganization = Suborganization.objects.create(name="Oud")
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-edit", args=[suborganization.public_id]))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
 
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):
