@@ -17,7 +17,7 @@
   {% for option in group.options if option.value %}
     <nldd-list-item checkbox {% if option.value in group.selected_values %}checked{% endif %} data-value="{{ option.value }}" data-option-label="{{ option.label | lower }}">
     <nldd-cell>
-    <nldd-checkbox aria-hidden="true" tabindex="-1" {% if option.value in group.selected_values %}checked{% endif %}></nldd-checkbox>
+    <nldd-checkbox decorative {% if option.value in group.selected_values %}checked{% endif %}></nldd-checkbox>
     </nldd-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>

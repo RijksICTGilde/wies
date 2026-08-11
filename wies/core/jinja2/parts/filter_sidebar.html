@@ -53,7 +53,7 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
         {% for option in filter_group.top_options %}
           <nldd-list-item checkbox {% if option.selected %}checked{% endif %} data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
           <nldd-cell>
-          <nldd-checkbox aria-hidden="true" tabindex="-1" {% if option.selected %}checked{% endif %}></nldd-checkbox>
+          <nldd-checkbox decorative {% if option.selected %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
@@ -92,7 +92,7 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
         {% for option in top_options %}
           <nldd-list-item checkbox {% if option.value in filter_group.selected_values %}checked{% endif %} data-value="{{ option.value }}">
           <nldd-cell>
-          <nldd-checkbox aria-hidden="true" tabindex="-1" {% if option.value in filter_group.selected_values %}checked{% endif %}></nldd-checkbox>
+          <nldd-checkbox decorative {% if option.value in filter_group.selected_values %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
