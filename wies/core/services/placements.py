@@ -289,13 +289,17 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
         }
 
 
-def placement_edit_specs(placement, user):
+def placement_edit_specs(placement, user, only=None):
     """De bewerkbare specs voor het plaatsingspaneel, elk met hun eigen object.
 
     Drie velden verdeeld over twee modellen (Service.skill, Service.description,
     Placement.period). Alleen specs waarvoor de gebruiker UPDATE-rechten heeft
     komen terug, zodat het formulier nooit een veld toont dat bij opslaan
     geweigerd zou worden.
+
+    ``only`` (spec-naam) beperkt tot één veld, zoals bij de opdracht: het potlood
+    op een rij bewerkt die rij, niet het hele formulier. "Rol" dekt twee specs
+    (de rol zelf en zijn omschrijving) omdat die op één rij samen worden getoond.
     """
     from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
@@ -307,6 +311,11 @@ def placement_edit_specs(placement, user):
         (ServiceEditables, ServiceEditables.description, service),
         (PlacementEditables, PlacementEditables.period, placement),
     ]
+    if only is not None:
+        # De rolrij toont de rol met zijn omschrijving eronder; die twee horen
+        # dus in hetzelfde formulier.
+        wanted = {"skill", "description"} if only == "skill" else {only}
+        candidates = [(s, spec, obj) for (s, spec, obj) in candidates if spec.name in wanted]
     return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
 
 

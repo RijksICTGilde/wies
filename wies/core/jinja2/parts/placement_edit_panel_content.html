@@ -7,7 +7,9 @@
    omdat htmx zijn attributen op het echte formulier nodig heeft. #}
 {% set colleague = panel_data.colleague %}
 {% set form = panel_data.form %}
-{% set panel_heading = "Rol bewerken" %}
+{# Stond vast op "Rol bewerken", ook boven het periodeformulier. De view geeft de
+   kop mee zodra ?veld= één rij bewerkt; zonder dat blijft het hele formulier. #}
+{% set panel_heading = panel_data.edit_heading or "Plaatsing bewerken" %}
 {# collapse-anchor: dezelfde titel staat in de bar en verschijnt daar pas zodra
    de kop in de inhoud eronder wegscrollt. #}
 <nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ colleague.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>

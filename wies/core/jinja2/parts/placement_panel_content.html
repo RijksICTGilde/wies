@@ -82,7 +82,7 @@
   {% endif %}
   </nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
-    {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
+    {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>
     {{ render_row_actions(_actions, "Acties voor periode") }}
@@ -94,7 +94,7 @@
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
-    {% set _actions = [{"text": "Rol wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
+    {% set _actions = [{"text": "Rol wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=skill" hx-target="#side-panel-content" hx-swap="innerHTML"'}] %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>
     {{ render_row_actions(_actions, "Acties voor rol") }}

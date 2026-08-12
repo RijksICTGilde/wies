@@ -4016,7 +4016,10 @@ def placement_edit_view(request, public_id):
     if placement is None or _resolve_placement_panel(request, placement.public_id) is None:
         raise Http404("Unknown placement")
 
-    specs = placement_edit_specs(placement, request.user)
+    # ?veld= beperkt de save tot dat ene veld (het potlood van een rij), zodat
+    # een één-veld-sheet niet ongemerkt de andere velden meeneemt.
+    only = request.GET.get("veld") or None
+    specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return HttpResponseForbidden()
 
@@ -4029,7 +4032,10 @@ def placement_edit_view(request, public_id):
         panel_data = _build_placement_panel_data(placement, request)
         panel_data["form"] = form
         panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = reverse("placement-edit", args=[placement.public_id])
+        panel_data["edit_url"] = reverse("placement-edit", args=[placement.public_id]) + (
+            f"?veld={only}" if only else ""
+        )
+        panel_data["edit_heading"] = PLACEMENT_FIELD_HEADINGS.get(only) if only else None
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
@@ -4039,17 +4045,26 @@ def placement_edit_view(request, public_id):
     return response
 
 
+# De kop van de één-veld-sheet. Niet uit de spec-labels afgeleid zoals bij de
+# opdracht: "Rol" dekt daar twee specs (rol + omschrijving), dus de eerste spec
+# zou de kop bepalen en dat leest als een halve titel.
+PLACEMENT_FIELD_HEADINGS = {"skill": "Rol bewerken", "period": "Periode bewerken"}
+
+
 def _build_placement_edit_panel_data(placement, request):
     """Context voor de bewerk-child-sheet, of None zonder bewerkrechten."""
-    specs = placement_edit_specs(placement, request.user)
+    only = request.GET.get("veld") or None
+    specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
     form_cls, initial = build_combined_form_class(specs)
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "form": form_cls(initial=initial),
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
-        "edit_url": reverse("placement-edit", args=[placement.public_id]),
+        # Eén-veld-sheet: de titel noemt dat veld ("Periode bewerken").
+        "edit_heading": PLACEMENT_FIELD_HEADINGS.get(only) if only else None,
+        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
 
