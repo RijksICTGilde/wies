@@ -35,9 +35,10 @@ def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
 def extract_services_data(service_formset) -> list[dict]:
     """Extracts services_data dicts from a validated ServiceFormSet.
 
-    ``id`` and ``placement_id`` round-trip existing Service / Placement PKs, and
-    are ``None`` for a newly added row. They come from attacker-controllable
-    hidden inputs, so add_service_to_assignment re-verifies ownership before writing.
+    ``service_public_id`` and ``placement_public_id`` round-trip existing
+    Service / Placement public_ids (as canonical strings), and are ``None`` for a
+    newly added row. They come from attacker-controllable hidden inputs, so
+    add_service_to_assignment re-verifies ownership before writing.
     """
     skill_ids = _skill_ids_by_public_id(service_formset)
     services_data = []
@@ -57,8 +58,10 @@ def extract_services_data(service_formset) -> list[dict]:
         colleague = cd.get("colleague")
         services_data.append(
             {
-                "id": cd.get("id"),
-                "placement_id": cd.get("placement_id"),
+                # UUIDField.clean() yields a uuid.UUID; str() makes it comparable
+                # to str(public_id) and safe for filter(public_id=...).
+                "service_public_id": str(cd["service_public_id"]) if cd.get("service_public_id") else None,
+                "placement_public_id": str(cd["placement_public_id"]) if cd.get("placement_public_id") else None,
                 "description": cd.get("description", ""),
                 "skill_id": skill_id,
                 "new_skill_name": new_skill if skill_val == "__new__" else None,
@@ -89,19 +92,20 @@ def _resolve_skill(svc: dict) -> Skill | None:
 def add_service_to_assignment(assignment: Assignment, svc: dict) -> Service:
     """Creates or updates a single Service (and its Placement) on ``assignment``.
 
-    ``id`` and ``placement_id`` are attacker-controllable hidden inputs; a PK not
-    belonging to this assignment raises ``ValidationError`` rather than silently
-    creating rows, keeping stale-form races and malicious posts equally visible.
+    ``service_public_id`` and ``placement_public_id`` are attacker-controllable
+    hidden inputs; a public_id not belonging to this assignment raises
+    ``ValidationError`` rather than silently creating rows, keeping stale-form
+    races and malicious posts equally visible.
 
-    Placement per row: ``placement_id`` + ``colleague_id`` → updated;
-    ``placement_id`` alone → deleted (filled→aanvraag); ``colleague_id`` alone →
-    created.
+    Placement per row: ``placement_public_id`` + ``colleague_id`` → updated;
+    ``placement_public_id`` alone → deleted (filled→aanvraag); ``colleague_id``
+    alone → created.
     """
     skill = _resolve_skill(svc)
 
-    service_id = svc.get("id")
-    if service_id:
-        service = assignment.services.filter(id=int(service_id)).first()
+    service_public_id = svc.get("service_public_id")
+    if service_public_id:
+        service = assignment.services.filter(public_id=service_public_id).first()
         if service is None:
             msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
@@ -139,11 +143,13 @@ def add_service_to_assignment(assignment: Assignment, svc: dict) -> Service:
 
 def _apply_placement(assignment: Assignment, service: Service, svc: dict) -> None:
     """Creates, updates or deletes ``service``'s Placement from a services_data row."""
-    placement_id = svc.get("placement_id")
+    placement_public_id = svc.get("placement_public_id")
     colleague_id = svc.get("colleague_id")
 
-    if placement_id:
-        placement = Placement.objects.filter(id=int(placement_id), service__assignment=assignment).first()
+    if placement_public_id:
+        placement = Placement.objects.filter(
+            public_id=placement_public_id, service__assignment=assignment
+        ).first()
         if placement is None:
             msg = "Een of meer plaatsingen bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)

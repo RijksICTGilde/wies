@@ -529,13 +529,13 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertNotContains(response, "data-status-input")
 
     def test_teamlid_edit_renders_existing_member(self):
-        """?teamlid=<service-id> renders the row of that one member."""
+        """?teamlid=<service public_id> renders the row of that one member."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
-        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.id}")
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
         assert response.status_code == 200
         self.assertContains(response, "Teamlid bewerken")
-        self.assertContains(response, 'name="service-0-id"')
+        self.assertContains(response, 'name="service-0-service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
         """A member POST only touches its own row: existing services survive."""
@@ -548,8 +548,8 @@ class AssignmentPanelRenderTest(TestCase):
                 "service-INITIAL_FORMS": "0",
                 "service-MIN_NUM_FORMS": "0",
                 "service-MAX_NUM_FORMS": "1000",
-                "service-0-id": "",
-                "service-0-placement_id": "",
+                "service-0-service_public_id": "",
+                "service-0-placement_public_id": "",
                 "service-0-is_filled": "aanvraag",
                 "service-0-skill": str(skill.public_id),
                 "service-0-has_custom_period": "on",
@@ -573,8 +573,8 @@ class AssignmentPanelRenderTest(TestCase):
                 "service-INITIAL_FORMS": "0",
                 "service-MIN_NUM_FORMS": "0",
                 "service-MAX_NUM_FORMS": "1000",
-                "service-0-id": str(service.id),
-                "service-0-placement_id": "",
+                "service-0-service_public_id": str(service.public_id),
+                "service-0-placement_public_id": "",
                 "service-0-is_filled": "aanvraag",
                 "service-0-skill": "",
                 "service-0-has_custom_period": "on",
@@ -995,8 +995,9 @@ class AssignmentServicesDisplayTest(TestCase):
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
         service = Placement.objects.get(colleague=self.colleague).service
-        assert f"opdracht={self.assignment.public_id}&teamlid={service.id}" in filled_row
-        # Never the integer assignment PK.
+        assert f"opdracht={self.assignment.public_id}&teamlid={service.public_id}" in filled_row
+        # Never the integer service or assignment PK.
+        assert f"teamlid={service.id}" not in filled_row
         assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
 
     def test_row_menu_view_url_uses_public_id(self):
@@ -1014,7 +1015,7 @@ class AssignmentServicesDisplayTest(TestCase):
         member-edit panel (HTTP 200), not the "Niet gevonden" partial."""
         service = Placement.objects.get(colleague=self.colleague).service
         panel = self.client.get(
-            f"/?opdracht={self.assignment.public_id}&teamlid={service.id}",
+            f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert panel.status_code == 200
@@ -1074,7 +1075,7 @@ class AssignmentServicesAuditTest(TestCase):
 
     def _member_row(self, *, service, skill, description, is_filled=False, colleague=None):
         row = {
-            "id": str(service.id),
+            "service_public_id": str(service.public_id),
             "skill": str(skill.public_id),
             "description": description,
             "is_filled": "ingevuld" if is_filled else "aanvraag",
@@ -1084,7 +1085,7 @@ class AssignmentServicesAuditTest(TestCase):
             row["colleague"] = str(colleague.public_id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
-                row["placement_id"] = str(placement.id)
+                row["placement_public_id"] = str(placement.public_id)
         return row
 
     def test_services_post_emits_event_on_change(self):
@@ -1134,12 +1135,12 @@ class AssignmentServicesAuditTest(TestCase):
         # Filled row: drop the inherit checkbox and give a custom period.
         resp = self._post_member(
             {
-                "id": str(self.filled_service.id),
+                "service_public_id": str(self.filled_service.public_id),
                 "skill": str(self.skill_python.public_id),
                 "description": "Filled",
                 "is_filled": "ingevuld",
                 "colleague": str(self.colleague.public_id),
-                "placement_id": str(self.placement.id),
+                "placement_public_id": str(self.placement.public_id),
                 "placement_start_date": "2026-01-01",
                 "placement_end_date": "2026-06-30",
             }
@@ -1157,17 +1158,17 @@ class AssignmentServicesAuditTest(TestCase):
         """Flipping a filled service to "aanvraag" must free the placement,
         even when the (hidden) consultant select still posts its value —
         is_filled is authoritative, not the lingering colleague."""
-        # Filled row switched to aanvraag, but colleague + placement_id
+        # Filled row switched to aanvraag, but colleague + placement_public_id
         # still posted (JS only hides the field; this is the bug case).
         resp = self._post_member(
             {
-                "id": str(self.filled_service.id),
+                "service_public_id": str(self.filled_service.public_id),
                 "skill": str(self.skill_python.public_id),
                 "description": "Filled",
                 "is_filled": "aanvraag",
                 "has_custom_period": "on",
                 "colleague": str(self.colleague.public_id),
-                "placement_id": str(self.placement.id),
+                "placement_public_id": str(self.placement.public_id),
             }
         )
         assert resp.status_code == 204
@@ -1177,15 +1178,15 @@ class AssignmentServicesAuditTest(TestCase):
         assert self.filled_service.status == "OPEN"
         assert not self.filled_service.placements.exists()
 
-    def test_member_sheet_renders_pk_hidden_inputs(self):
-        """The member-edit sheet must render the hidden ``service-0-id`` and
-        ``service-0-placement_id`` inputs so the single-row POST round-trips
-        the PKs back to add_service_to_assignment, which updates that Service/Placement
-        in place. Without them the save would create a new row instead of
-        editing the existing one.
+    def test_member_sheet_renders_public_id_hidden_inputs(self):
+        """The member-edit sheet must render the hidden ``service-0-service_public_id``
+        and ``service-0-placement_public_id`` inputs so the single-row POST
+        round-trips the public_ids back to add_service_to_assignment, which
+        updates that Service/Placement in place. Without them the save would
+        create a new row instead of editing the existing one.
 
-        Each member opens in its own single-row sheet (``?teamlid=<id>``), so
-        the pks are asserted per row instead of across one combined formset."""
+        Each member opens in its own single-row sheet (``?teamlid=<public_id>``),
+        so the ids are asserted per row instead of across one combined formset."""
 
         def hidden_value(content, field_name):
             m = re.search(
@@ -1194,17 +1195,17 @@ class AssignmentServicesAuditTest(TestCase):
             )
             return m.group(1) if m else None
 
-        vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.vacant_service.id}")
+        vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.vacant_service.public_id}")
         assert vacant.status_code == 200
         vacant_content = vacant.content.decode()
-        assert hidden_value(vacant_content, "service-0-id") == str(self.vacant_service.id)
-        assert hidden_value(vacant_content, "service-0-placement_id") == ""
+        assert hidden_value(vacant_content, "service-0-service_public_id") == str(self.vacant_service.public_id)
+        assert hidden_value(vacant_content, "service-0-placement_public_id") == ""
 
-        filled = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.id}")
+        filled = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
         assert filled.status_code == 200
         filled_content = filled.content.decode()
-        assert hidden_value(filled_content, "service-0-id") == str(self.filled_service.id)
-        assert hidden_value(filled_content, "service-0-placement_id") == str(self.placement.id)
+        assert hidden_value(filled_content, "service-0-service_public_id") == str(self.filled_service.public_id)
+        assert hidden_value(filled_content, "service-0-placement_public_id") == str(self.placement.public_id)
 
     def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
         """Editing only the description must update the existing Service
@@ -1366,11 +1367,11 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         )
 
         rows = _services_initial(self.assignment)
-        by_placement = {r["placement_id"]: r for r in rows}
+        by_placement = {r["placement_public_id"]: r for r in rows}
 
-        inherit_row = by_placement[self.placement_inherit.id]
-        custom_placement_row = by_placement[self.placement_custom.id]
-        via_service_row = by_placement[self.placement_via_service.id]
+        inherit_row = by_placement[str(self.placement_inherit.public_id)]
+        custom_placement_row = by_placement[str(self.placement_custom.public_id)]
+        via_service_row = by_placement[str(self.placement_via_service.public_id)]
 
         # Sanity: the effective dates returned to the template match the
         # screenshot (assignment range vs custom range).
@@ -1421,26 +1422,26 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         The regression guarded is the same: a row whose effective dates differ
         from the assignment must NOT come up as "inherit"."""
 
-        def period_state_for_service(service_id: int) -> tuple[str, str]:
+        def period_state_for_service(service_public_id: str) -> tuple[str, str]:
             """(hidden has_custom_period value, segmented-control value) for
             the one row rendered in this member's sheet."""
-            resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service_id}")
+            resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service_public_id}")
             assert resp.status_code == 200
             content = resp.content.decode()
             hidden = re.search(
                 r'<input[^>]*name="service-0-has_custom_period"[^>]*value="([^"]*)"',
                 content,
             )
-            assert hidden, f"no has_custom_period input found for service {service_id}"
+            assert hidden, f"no has_custom_period input found for service {service_public_id}"
             control = re.search(
                 r'<nldd-segmented-control[^>]*value="(SERVICE|PLACEMENT)"[^>]*data-period-choice', content
             )
-            assert control, f"no period-choice control found for service {service_id}"
+            assert control, f"no period-choice control found for service {service_public_id}"
             return hidden.group(1), control.group(1)
 
-        inherit_value, inherit_segment = period_state_for_service(self.service_inherit.id)
-        custom_value, custom_segment = period_state_for_service(self.service_for_custom_placement.id)
-        via_value, via_segment = period_state_for_service(self.service_custom.id)
+        inherit_value, inherit_segment = period_state_for_service(self.service_inherit.public_id)
+        custom_value, custom_segment = period_state_for_service(self.service_for_custom_placement.public_id)
+        via_value, via_segment = period_state_for_service(self.service_custom.public_id)
 
         # Inheriting placement → "inherit assignment period" (correct today).
         assert inherit_value == "on", f"inheriting row should render as inherit, got value={inherit_value!r}"

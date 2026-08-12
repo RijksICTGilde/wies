@@ -4026,8 +4026,8 @@ def assignment_create_sheet(request):
 def _build_assignment_member_panel_data(assignment, request):
     """Context for the team member child sheet, or None without rights.
 
-    ``?teamlid=<service-id>`` edits an existing member; ``nieuw-aanvraag`` and
-    ``nieuw-ingevuld`` add a row with the status preselected.
+    ``?teamlid=<service public_id>`` edits an existing member; ``nieuw-aanvraag``
+    and ``nieuw-ingevuld`` add a row with the status preselected.
     """
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
 
@@ -4041,11 +4041,11 @@ def _build_assignment_member_panel_data(assignment, request):
         initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
         heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
     else:
-        try:
-            service_id = int(teamlid)
-        except ValueError:
-            return None
-        initial_row = next((r for r in _services_initial(assignment) if r["id"] == service_id), None)
+        # teamlid is a Service public_id (UUID string); match it against the row
+        # identity. A non-matching or malformed value just misses → 404 panel.
+        initial_row = next(
+            (r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None
+        )
         if initial_row is None:
             return None
         heading = "Teamlid bewerken"

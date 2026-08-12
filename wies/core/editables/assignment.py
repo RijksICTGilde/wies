@@ -140,10 +140,11 @@ def _services_initial(assignment):
         inherits_assignment_period = effective_start == assignment.start_date and effective_end == assignment.end_date
         rows.append(
             {
-                "id": service.id,
-                "placement_id": placement.id if placement else None,
-                # public_ids for the panel URLs the row menu builds; the panel
-                # resolvers look up by public_id, never the integer PK.
+                # public_id strings: these identify the row across the client
+                # boundary (panel URLs, the hidden form inputs, the teamlid
+                # resolver). The integer PK never leaves the server; the audit
+                # snapshot re-derives it from ``service`` below.
+                "service_public_id": str(service.public_id),
                 "assignment_public_id": str(assignment.public_id),
                 "placement_public_id": str(placement.public_id) if placement else None,
                 "skill": str(service.skill.public_id) if service.skill_id else "",
@@ -231,7 +232,9 @@ def _service_audit_row(row: dict) -> dict:
 
 
 def _services_audit_state(assignment) -> list[dict]:
-    return [_service_audit_row(row) for row in _services_initial(assignment)]
+    # The audit snapshot keys on the integer PK; _services_initial rows now carry
+    # only the public_id, so re-derive the PK from the row's service instance.
+    return [_service_audit_row({**row, "id": row["service"].id}) for row in _services_initial(assignment)]
 
 
 def placement_audit_row(placement) -> dict:

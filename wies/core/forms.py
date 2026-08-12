@@ -304,14 +304,15 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
-    ``id`` and ``placement_id`` are hidden round-trip identifiers used to diff
-    existing rows against submitted ones, and are empty for new rows. They are
-    attacker-controllable, so the save helper must verify each points at a row
-    owned by the target Assignment before writing.
+    ``service_public_id`` and ``placement_public_id`` are hidden round-trip
+    identifiers (UUIDs) that tell the save helper which existing rows this
+    submission edits, and are empty for new rows. They are attacker-controllable,
+    so the save helper must verify each points at a row owned by the target
+    Assignment before writing.
     """
 
-    id = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    placement_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    service_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
+    placement_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     skill = forms.ModelChoiceField(
         label="Rol",
         queryset=Skill.objects.order_by("name"),
@@ -364,7 +365,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
         # as a blank form, so skip validation for content-free rows;
         # extract_services_data drops them before save.
         is_empty_row = (
-            not cleaned_data.get("id")
+            not cleaned_data.get("service_public_id")
             and not skill_val
             and not new_skill_name
             and not cleaned_data.get("description")
