@@ -496,9 +496,8 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "assignment_card": assignment_card,
         "other_active_assignments": [a for a in other_assignments if not a["historical"]],
         "past_assignments": [a for a in other_assignments if a["historical"]],
-        # The "Bewerken" button opens the child sheet; only shown when there is
-        # something to edit.
-        "user_can_edit_details": bool(placement_edit_specs(placement, request.user)),
+        "can_edit_period": bool(placement_edit_specs(placement, request.user, only="period")),
+        "can_edit_role": bool(placement_edit_specs(placement, request.user, only="skill")),
         "edit_panel_url": _build_panel_url(request, plaatsing=placement.public_id, bewerken=1),
     }
 

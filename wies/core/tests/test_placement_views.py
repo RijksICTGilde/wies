@@ -767,6 +767,64 @@ class PlacementPanelVisibilityTest(TestCase):
         assert data["assignment_card"]["privacy_warning_text"] is None
 
 
+class PlacementPanelPencilPermissionTest(TestCase):
+    """The Period and Role pencils in the placement panel are gated per field.
+
+    A placed colleague may edit their own role description but not the period, so
+    the panel must offer the Role pencil and withhold the Period one (it used to
+    show both off a single shared flag, giving a dead Period pencil)."""
+
+    def setUp(self):
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+
+    def _placement(self, *, owner):
+        assignment = Assignment.objects.create(name="Test", source="wies", owner=owner)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        return Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2026, 1, 1),
+            specific_end_date=date(2026, 12, 1),
+            source="wies",
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get(reverse("home"))
+        request.user = user
+        return request
+
+    @patch("wies.core.views.timezone")
+    def test_own_placement_offers_role_pencil_not_period(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        # Bob owns the assignment; Alice is only the placed colleague.
+        pl = self._placement(owner=self.colleague_bob)
+
+        data = _resolve_placement_panel(self._request(self.user_alice), pl.public_id)
+
+        assert data["can_edit_role"] is True
+        assert data["can_edit_period"] is False
+
+    @patch("wies.core.views.timezone")
+    def test_owner_gets_both_pencils(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        # Bob owns the assignment, so he may edit every field.
+        pl = self._placement(owner=self.colleague_bob)
+
+        data = _resolve_placement_panel(self._request(self.user_bob), pl.public_id)
+
+        assert data["can_edit_role"] is True
+        assert data["can_edit_period"] is True
+
+
 class ColleagueProfileFutureVisibilityTest(TestCase):
     """Own-profile / colleague-panel assignment cards filter future placements
     the same way (visible to the colleague themselves and the BM, not others)."""
