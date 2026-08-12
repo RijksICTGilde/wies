@@ -1,7 +1,7 @@
-{# Het menu-alternatief van parts/primary_button.html, voor als de knop in het
-   overflowmenu van de toolbar belandt. Het menu toont een KLOON van dit item en
-   meldt de keuze terug als select op het origineel, dus htmx luistert daarop en
-   niet op een klik. #}
+{# Menu counterpart of parts/primary_button.html, for when the button ends up in
+   the toolbar's overflow menu. The menu shows a CLONE of this item and reports
+   the choice back as `select` on the original, so htmx listens for that
+   instead of a click. #}
 {% if primary_button %}
   <nldd-menu-item slot="overflow" icon="plus" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- if primary_button.attrs %} hx-trigger="select"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
 {% endif %}

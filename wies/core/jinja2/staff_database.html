@@ -14,8 +14,8 @@
   <h1>Database</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# Dezelfde tegels als op het statistieken-dashboard: een aantal met een
-     label is daar een kaart, en een tag leest als een categorie of een filter. #}
+  {# Same tiles as the statistics dashboard: a count with a label is a card there,
+     while a tag would read as a category or a filter. #}
   {% set _tiles = [
     (assignment_count, "opdrachten"),
     (colleague_count, "collega's"),
@@ -91,8 +91,8 @@
   </p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  {# De preview is een controlestap, geen paginablok: hij komt als bottom sheet
-     binnen in de mount hieronder en dialog.js opent hem na de swap. #}
+  {# The preview is a confirmation step, not a page block: it lands in the mount
+     below as a bottom sheet and dialog.js opens it after the swap. #}
   <form hx-post="{{ url('staff-database') }}"
         hx-target="#merge-preview-mount"
         hx-swap="innerHTML">
@@ -125,8 +125,8 @@
   </nldd-box>
   {% if destructive_actions_enabled %}
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-    {# Danger zone: onomkeerbaar. De kleur is versterking, niet het signaal —
-       kop, tekst en knoplabel benoemen zelf wat er verdwijnt (WCAG 1.4.1). #}
+    {# Danger zone: irreversible. Color reinforces but never carries the signal —
+       heading, text and button label each name what disappears (WCAG 1.4.1). #}
     <nldd-box variant="critical">
     <nldd-container padding="16">
     <nldd-title size="5">
@@ -149,8 +149,8 @@
     </nldd-container>
     </nldd-box>
   {% endif %}
-  {# Eén stap tussen de beheeracties en de takenlijst; de lijst zet zelf
-     de 12 tussen zijn kop en zijn eigen gebied. #}
+  {# One step between the admin actions and the task list; the list adds its own
+     12 between its heading and its content. #}
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
   <div id="merge-preview-mount"></div>

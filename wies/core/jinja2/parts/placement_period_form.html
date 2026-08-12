@@ -1,15 +1,13 @@
-{# Custom body for PlacementEditables.period, included by
-   parts/inline_edit/form.html, which owns the form element, the
-   concurrency token, the non-field errors, the alert and the buttons — deze
-   body levert dus alleen de velden (#483).
-   placement_period_toggle.js leest de opdrachtperiode van [data-placement-period]
-   en de velden op naam binnen het omvattende formulier.
+{# Custom body for PlacementEditables.period. parts/inline_edit/form.html owns the
+   form element, concurrency token, errors and buttons, so this supplies only the
+   fields (#483). placement_period_toggle.js reads the assignment period from
+   [data-placement-period] and the fields by name.
    Context: form, obj (Placement instance). #}
 <div data-placement-period
      data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
      data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
-  {# Verborgen via een ouder met [hidden]: een `display:none` op de select zelf
-     wordt door de bundel-CSS overruled. #}
+  {# Hidden via a parent with [hidden]: `display:none` on the select itself is
+     overridden by the bundle CSS. #}
   <div hidden>{{ form.period_source.as_widget() }}</div>
   <nldd-form-field label="Periode">
   <nldd-checkbox-field id="placement-inherit-period" label="Neem opdrachtperiode over" {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>

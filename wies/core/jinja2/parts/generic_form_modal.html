@@ -1,9 +1,7 @@
-{# "Annuleer" zit in de top-title-bar (dismiss sluit de sheet), dus er is geen
-   losse annuleerknop. dialog.js opent de sheet na de htmx-swap via
-   data-auto-show.
-
-   Een POST komt hier alleen terecht als het formulier niet valideerde — de
-   sheet staat dan al open, dus dan gaat alleen de inhoud terug. #}
+{# Cancel lives in the top-title-bar dismiss, so there is no separate cancel
+   button; dialog.js opens the sheet after the htmx swap via data-auto-show.
+   A POST only reaches here when the form failed validation, and the sheet is
+   already open then, so only the body goes back. #}
 {% if request.method == "POST" %}
   {% include "parts/generic_form_body.html" %}
 {% else %}

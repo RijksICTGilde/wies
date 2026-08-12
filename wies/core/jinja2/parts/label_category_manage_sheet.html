@@ -1,12 +1,9 @@
-{# De kleurkeuze per categorie kleurt de tags op de profiel-, plaatsing- en
-   collegapanelen.
+{# Renames and additions are batched until "Opslaan"; deleting happens straight
+   after confirmation, because the labels below then move.
 
-   Hernoemen en toevoegen zijn gestapeld tot "Opslaan"; verwijderen gaat direct
-   na de bevestiging, omdat de labels eronder dan verhuizen.
-
-   De body staat in een eigen partial: bij een validatiefout vervangt htmx
-   alleen #categoryManageBody, zodat deze sheet blijft staan in plaats van dat
-   er een tweede overheen opent. #}
+   The body is a separate partial: on a validation error htmx replaces only
+   #categoryManageBody, so this sheet stays instead of a second one opening
+   on top of it. #}
 <nldd-sheet id="labelFormModal" data-auto-show placement="right" width="560px" accessible-label="Categorieën beheren">
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Categorieën beheren" dismiss-text="Annuleer"></nldd-top-title-bar>

@@ -1,14 +1,10 @@
-{# Flash-meldingen als nldd-notification: die plaatst zichzelf in de gedeelde
-   regio (rechtsboven vanaf md, daaronder over de volle breedte), telt zelf af,
-   pauzeert bij hover of focus, en stapelt tot een deck. Positioneren, timers en
-   fade-out horen dus niet meer hier of in app.css. Een `critical` blijft staan
-   tot je hem wegklikt; dat regelt het component zelf.
+{# nldd-notification moves itself into the shared region, runs its own timer and
+   stacking, and keeps `critical` messages until dismissed, so positioning,
+   timers and fade-out do not belong here or in app.css.
 
-   De wrapper staat er altijd (ook leeg), zodat een htmx OOB-swap altijd een
-   #flash-messages-target vindt — panel-responses die geen base.html herladen
-   (bv. na 'Opdracht invoeren' in de sheet) sturen dit blok met flash_oob=True
-   mee om de melding alsnog te tonen. De notificaties verhuizen zelf uit deze
-   wrapper naar hun eigen regio; ui_handlers.js ruimt ze op na `dismiss`. #}
+   The wrapper is always rendered, even empty, so an htmx OOB swap always finds
+   a #flash-messages target: panel responses that do not reload base.html send
+   this block with flash_oob=True. ui_handlers.js cleans up after `dismiss`. #}
 <div id="flash-messages"
      {% if flash_oob %}hx-swap-oob="outerHTML"{% endif %}>
   {% for message in get_messages(request) %}

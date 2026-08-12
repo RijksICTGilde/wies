@@ -1,6 +1,5 @@
-{# De inhoud van de gebruikerssheet, los van de sheet zelf: bij een validatie-
-   fout stuurt de view alleen dit stuk terug. Verwijderen zit niet in dit
-   formulier maar in het more-menu op de regel. #}
+{# User sheet content split from the sheet itself: on a validation error the view
+   returns only this part. Deleting lives in the row's more menu, not here. #}
 {% set body_id = modal_element_id ~ "Body" %}
 <nldd-form>
 <form method="post"

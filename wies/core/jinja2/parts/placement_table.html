@@ -1,7 +1,6 @@
 {# A list, not a table: nldd-list-item gives native hover/focus feedback for
 navigable rows, which nldd-table-row (data display) does not. #}
-{# Beide takken dragen hetzelfde id, zodat de OOB-swap ze in beide richtingen
-kan verwisselen. #}
+{# Both branches share one id, so the OOB swap can replace either with the other. #}
 {% if paginator.count %}
   <nldd-list id="placement-list" variant="simple" accessible-label="Wie zit waar" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_table_rows.html" %}

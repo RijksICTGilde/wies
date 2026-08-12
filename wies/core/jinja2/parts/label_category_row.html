@@ -1,16 +1,15 @@
-{# Eén rij in de "Categorieën beheren"-sheet. `row_index` is de formset-index.
-   Opgeslagen categorie (form.instance.pk): verwijderen via bevestigingsdialoog.
-   Nieuwe rij: weghalen via de server (delete_new_row_index) zodat de her-render
-   geen gat als lege rij terugbrengt. #}
+{# One row in the category management sheet; `row_index` is the formset index.
+   A saved category is deleted through a confirmation dialog; a new row is
+   removed server-side so the re-render does not bring back an empty row. #}
 <nldd-list-item data-category-row>
 <input type="hidden"
        name="{{ form.add_prefix('id') }}"
        value="{{ form.instance.pk or '' }}">
-{# as_field_group (niet as_widget): koppelt de foutmelding via id zodat ze zichtbaar wordt.
-   vertical-alignment="top": houdt cellen op één lijn als een fout de naam-cel laat groeien. #}
+{# as_field_group, not as_widget: it links the error by id so it becomes visible.
+   vertical-alignment="top" keeps the cells aligned when an error grows one. #}
 <nldd-cell width="full" vertical-alignment="top">{{ form.name.as_field_group() }}</nldd-cell>
 <nldd-spacer-cell size="12"></nldd-spacer-cell>
-{# Vaste kolombreedte voor de langste kleurnamen ("Blauw"/"Groen") plus chevron. #}
+{# Fixed column width fitting the longest color name plus chevron. #}
 <nldd-cell width="112px" vertical-alignment="top">{{ form.color.as_field_group() }}</nldd-cell>
 <nldd-spacer-cell size="12"></nldd-spacer-cell>
 <nldd-cell width="fit-content" vertical-alignment="top">

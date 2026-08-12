@@ -1,32 +1,22 @@
-{# Ontdubbel-overzicht als bottom sheet: het is een controlestap voor je iets
-   onomkeerbaars bevestigt, niet iets dat op de beheerpagina hoort te blijven
-   staan. data-auto-show laat dialog.js hem openen na de htmx-swap.
-
-   De regels zijn plat (views.py bouwt ze op): geen groepering per opdracht en
-   geen koprij, want wie dit controleert leest per regel wat er met wie gebeurt.
-   Vandaar ook de actie voluit in plaats van een token met een pijl. #}
+{# Deduplication preview as a bottom sheet: a review step before an irreversible
+   confirmation. data-auto-show lets dialog.js open it after the htmx swap.
+   Rows are flat and spell the action out in full, so each line reads as what
+   happens to whom. #}
 <nldd-sheet id="merge-preview-sheet" placement="bottom" data-auto-show data-keep-section-padding accessible-label="Dubbele opdrachten samenvoegen">
 {% if not merge_groups %}
-  {# Zonder duplicaten is er niets te overzien en niets te bevestigen: dan is de
-     uitkomst zelf de hele inhoud. Geen titelbalk en geen kop erboven, want die
-     zouden een overzicht aankondigen dat er niet is; het sluiten hoort dan bij
-     de melding, als actie van de dialog.
-
-     Success, want niets gevonden is hier het goede antwoord: je vroeg om een
-     controle en die is uitgevoerd. #}
+  {# Without duplicates there is nothing to review: the outcome is the whole
+     content, so no title bar or heading announcing an overview that is not
+     there. Success variant, because finding nothing is the good answer here. #}
   <nldd-simple-section>
   <nldd-inline-dialog variant="success" text="Geen dubbele opdrachten gevonden" supporting-text="Er zijn geen opdrachten die dezelfde naam, eigenaar en opdrachtgever delen.">
-  {# Primary: dit is de enige actie in de sheet, er valt niets naast te kiezen. #}
   <nldd-button slot="actions" variant="primary" text="Sluit" data-dismiss-modal></nldd-button>
   </nldd-inline-dialog>
   </nldd-simple-section>
 {% else %}
   <nldd-page sticky-header>
-  {# collapse-anchor wijst naar de kop waarvoor de balk zijn titel invult: zolang
-     je die ziet houdt de balk hem verborgen, en zodra je eroverheen scrolt neemt
-     de balk hem over. Ankeren op de kop zelf, niet op iets wat toevallig op die
-     hoogte staat — de balk geeft zijn titel er letterlijk aan over, en zonder
-     dat verband leest een schermlezer de titel twee keer. #}
+  {# collapse-anchor must point at the heading the bar stands in for: it hides its
+     own title while that heading is visible. Anchor anything else and a screen
+     reader announces the title twice. #}
   <nldd-top-title-bar slot="header" collapse-anchor="merge-preview-heading" text="Dubbele opdrachten samenvoegen" dismiss-text="Annuleer"></nldd-top-title-bar>
   <nldd-simple-section>
   <nldd-title size="3">
@@ -66,10 +56,9 @@
     <nldd-list variant="simple" accessible-label="Regels van {{ group.name }}">
     {% for row in group.rows %}
       <nldd-list-item>
-      {# decorative: de naam staat er als tekst naast, dus de avatar hoeft hem niet
-       nog eens aan hulpsoftware te melden. Een vacature krijgt het
-       text-document-icoon, net als in de opdrachten-sheet: dat leest als een
-       aanvraag en niet als een persoon. #}
+      {# decorative: the name sits next to it as text, so the avatar must not
+       announce it again. A vacancy gets the text-document icon, which reads as a
+       request rather than a person. #}
       <nldd-cell width="fit-content">
       {% if row.vacant %}
         <nldd-avatar size="24" icon="text-document" decorative></nldd-avatar>
@@ -80,9 +69,8 @@
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       <nldd-text-cell text="{{ row.consultant }}"></nldd-text-cell>
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
-      {# Alleen de regel die blijft staan krijgt kleur. Verplaatsen is de normale
-         uitkomst hier en geen waarschuwing; kleurden we die ook, dan was de hele
-         lijst gekleurd en zei kleur niets meer. #}
+      {# Only the surviving row gets colour; moving is the normal outcome, and
+         colouring that too would make colour meaningless. #}
       <nldd-text-cell width="fit-content" horizontal-alignment="right" {% if row.keeps %}color="success"{% endif %} text="{{ row.action }}"></nldd-text-cell>
       </nldd-list-item>
     {% endfor %}
@@ -91,8 +79,8 @@
     </nldd-box>
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% endfor %}
-  {# De knop staat in de flow onder de lijsten, niet in een sticky footer: het
-   overzicht is eindig en je bevestigt pas nadat je het hebt uitgelezen. #}
+  {# In the flow below the lists, not a sticky footer: you confirm only after
+   reading the finite overview. #}
   <form method="post" action="{{ url('staff-database') }}">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="merge_duplicates_apply" />

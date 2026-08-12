@@ -1,6 +1,5 @@
-{# Alleen organisaties waarvan een afkorting exact overeenkomt met de zoekterm:
-typ "RWS" en filter op Rijkswaterstaat. Geen match = geen items, en het menu
-blijft dicht. #}
+{# Only organizations whose abbreviation matches the search term exactly. No
+match means no items, and the menu stays closed. #}
 {% for org in org_suggestions %}
   <nldd-menu-item text="{{ org.label or org.name }}" value="{{ org.public_id }}" icon="office" data-org-id="{{ org.public_id }}" data-org-label="{{ org.label or org.name }}"></nldd-menu-item>
 {% endfor %}

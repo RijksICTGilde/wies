@@ -1,13 +1,12 @@
 {% from "parts/privacy_chip.html" import privacy_chip %}
-{# Opdrachtkaarten voor het collegapaneel en de profielpagina.
-   Verwacht: assignments (list), hx_target (string).
-   Opdrachtgever/periode staan in de footer-slot zodat die regels in elke kaart
-   van een rij op dezelfde hoogte uitlijnen.
-   `href` houdt het een echte link; hx_link_guard.js vangt de klik zodat htmx
-   het paneel vult in plaats van te navigeren. #}
+{# Assignment cards for the colleague panel and the profile page.
+   Expects: assignments (list), hx_target (string).
+   Client and period go in the footer slot so those lines align across the cards
+   in a row. `href` keeps it a real link; hx_link_guard.js catches the click so
+   htmx fills the panel instead of navigating. #}
 {% if assignments %}
-  {# Grid: op een brede pagina staan de kaarten naast elkaar, in het smalle
-     zijpaneel valt hetzelfde grid vanzelf terug op één kolom. #}
+  {# The same grid puts cards side by side on a wide page and falls back to one
+     column in the narrow side panel. #}
   <nldd-collection layout="grid" item-width="280px">
   {% for assignment in assignments %}
     <nldd-card background="tinted" href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
@@ -24,8 +23,8 @@
       {% if assignment.tags|length > 3 %}
         <nldd-tag size="sm" text="+{{ assignment.tags|length - 3 }} meer"></nldd-tag>
       {% endif %}
-      {# Bij de andere tags i.p.v. als losse regel onderin: zo valt hij op en
-         staat hij bij de kenmerken van de opdracht waar hij bij hoort. #}
+      {# With the other tags rather than on its own line at the bottom: it stands
+         out there and sits with the assignment traits it belongs to. #}
       {% if assignment.privacy_warning_text %}
         {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}
       {% endif %}

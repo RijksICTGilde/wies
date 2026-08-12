@@ -1,7 +1,6 @@
-{# Child sheet van het opdrachtpaneel: één teamlid (bewerken of toevoegen),
-   opgezet zoals de "Rol bewerken"-sheet van de plaatsing. Het formulier post
-   één formset-rij; de server vult de overige teamrijen zelf aan, dus deze POST
-   kan nooit ongewild andere leden raken (zie assignment_member_edit_view). #}
+{# Child sheet of the assignment panel: one team member. The form posts a single
+   formset row and the server fills in the remaining rows, so this POST can never
+   touch other members (see assignment_member_edit_view). #}
 {% set formset = panel_data.member_formset %}
 {% set svc_form = formset.forms[0] %}
 {% set obj = panel_data.assignment %}
@@ -44,7 +43,7 @@
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
   </nldd-form-field>
-  {# Ook een combobox: de consultantlijst is net zo lang als de rollenlijst. #}
+  {# A combo box too: the consultant list is as long as the role list. #}
   {% set colleague_value = svc_form.colleague.value() | string if svc_form.colleague.value() else "" %}
   <div data-colleague-field
        {% if status_value != "ingevuld" %}hidden{% endif %}>
@@ -61,10 +60,9 @@
     {% endfor %}
     </nldd-form-field>
   </div>
-  {# Combobox met allow-custom: een getypte naam die geen bestaande rol is,
-     wordt een nieuwe rol. De combobox post zelf niets; member_form.js vult de
-     hidden inputs volgens het bestaande contract (id in skill, of
-     skill=__new__ met de naam in new_skill_name). #}
+  {# allow-custom: a typed name that is not an existing role becomes a new one. The
+     combo box posts nothing itself; member_form.js fills the hidden inputs (id in
+     skill, or skill=__new__ with the name in new_skill_name). #}
   {% set skill_value = svc_form.skill.value() | string if svc_form.skill.value() else "" %}
   {% set new_skill_value = svc_form.new_skill_name.value() or "" %}
   <input type="hidden"
@@ -94,17 +92,17 @@
   {% endfor %}
   </nldd-form-field>
   {{ svc_form.description.as_field_group() }}
-  {# has_custom_period is omgekeerd: aangevinkt = opdrachtperiode overnemen.
-     De segmented control post niet zelf; de hidden input hieronder draagt de
-     keuze ("on" = overnemen, leeg = eigen periode). #}
+  {# has_custom_period is inverted: checked means inherit the assignment period. The
+     segmented control does not post; the hidden input below carries the choice
+     ("on" = inherit, empty = own period). #}
   {% set inherits = svc_form.has_custom_period.value() %}
   <nldd-form-field label="Periode">
   <nldd-segmented-control name="periode-keuze" width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
   <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
   <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
   </nldd-segmented-control>
-  {# Alleen zinvol bij "Van opdracht"; member_form.js verbergt hem zodra je
-     een eigen periode kiest. #}
+  {# Only meaningful for "Van opdracht"; member_form.js hides it once you pick
+     your own period. #}
   <nldd-form-field-help-text data-assignment-period-help>
   De periode van de opdracht is
   {{ obj.start_date|datum_nl if obj.start_date else "onbekend" }}
@@ -116,12 +114,10 @@
          name="{{ svc_form.has_custom_period.html_name }}"
          value="{{ 'on' if inherits else '' }}"
          data-inherit-input>
-  {# Niet as_field_group() maar met de hand: de `hidden` op deze nldd-form-field
-     moet server-side mee, zodat de eerste paint dezelfde ingeklapte staat toont die
-     member_form.js op init zet (updatePeriod) en het veld niet zichtbaar-dan-ingeklapt
-     flitst. as_field_group() rendert de wrapper zelf en kan die `hidden` niet meegeven.
-     member_form.js blijft .hidden toggelen; wire_field_errors koppelt hier de
-     foutmelding (wat as_field_group() anders zou doen). #}
+  {# Hand-rolled instead of as_field_group(): the `hidden` must be server-rendered so
+     the first paint matches the collapsed state member_form.js sets on init, without
+     a visible-then-collapsed flash. as_field_group() renders the wrapper itself and
+     cannot pass it through, so wire_field_errors links the error message here. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
   <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits %} hidden{% endif %}>
   {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
@@ -129,8 +125,8 @@
     <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
   </nldd-form-field>
-  {# Uit betekent: geen einddatum bekend, de plaatsing loopt door. De switch
-     post niet mee; hij stuurt alleen het einddatumveld aan. #}
+  {# Off means no known end date, the placement runs on. The switch does not post;
+     it only drives the end-date field. #}
   <nldd-form-field{% if inherits %} hidden{% endif %}>
   <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if svc_form.placement_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
   </nldd-form-field>
@@ -141,8 +137,8 @@
     <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
   </nldd-form-field>
-  {# Verborgen velden onderaan: nldd-form zet ruimte tussen alle siblings, dus
-     een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
+  {# Hidden inputs last: nldd-form spaces all siblings, so one at the top pushes
+     the first visible field down. #}
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <input type="hidden" name="member_heading" value="{{ panel_heading }}">
   <nldd-form-actions>

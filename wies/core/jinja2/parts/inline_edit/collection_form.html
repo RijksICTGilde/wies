@@ -3,14 +3,13 @@
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
-    {# Concurrency-token (#483): meegestuurd zodat de view bij opslaan kan zien
-       of de rijen ondertussen door iemand anders zijn gewijzigd. #}
+    {# Concurrency token (#483): lets the view detect rows changed meanwhile. #}
     <input type="hidden"
            name="_concurrency_token"
            value="{{ concurrency_token }}">
     {% include editable.form_template %}
-    {# role="alert": HTMX swapt dit formulier in; zonder live region kondigt een
-       screenreader de vastgehouden opslag (#483) niet aan. #}
+    {# role="alert": the form is swapped in by htmx, so without a live region a
+       screen reader never announces the blocked save (#483). #}
     {% if alert %}
       <div role="alert">
         <nldd-banner variant="{{ alert.kind }}" text="{{ alert.message }}"></nldd-banner>

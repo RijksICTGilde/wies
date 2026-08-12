@@ -1,6 +1,5 @@
-{# Normaal zijn de delen van het pad links naar de gefilterde lijst; met `plain`
-   (meegegeven aan inline_edit) blijft het tekst, voor plekken waar wegnavigeren
-   niet hoort -- zoals de onboarding. #}
+{# Path segments are links to the filtered list; with `plain` (passed to inline_edit)
+   they stay text, for places where navigating away is wrong, such as onboarding. #}
 {% if value %}
   {% set base_url = current_page_path(request) %}
   {% for row in value %}

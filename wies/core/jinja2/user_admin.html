@@ -20,12 +20,12 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-toolbar label="Gebruikers">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
-  {# data-wies-search-input: filter_interactions.js schrijft naar #search-hidden
-     in het filterform en runt de filter, net als op de andere lijsten. #}
+  {# data-wies-search-input: filter_interactions.js writes to #search-hidden in
+     the filter form and runs the filter, as on the other lists. #}
   <nldd-search-field id="search-input" placeholder="Naam of e-mail zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input name="zoek">
   </nldd-search-field>
   </nldd-toolbar-item>
-  {# Filters openen de sheet (rol/merk/labels), die onderaan deze pagina staat. #}
+  {# Filters open the sheet at the bottom of this page. #}
   <nldd-toolbar-item slot="end">
   {% include "parts/user_filter_button.html" %}
   <nldd-menu-item slot="overflow" text="Filters" icon="filter" data-user-filter-open></nldd-menu-item>
@@ -33,20 +33,18 @@
   <nldd-toolbar-item slot="end">
   <nldd-button start-icon="plus" text="Nieuwe gebruiker" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
   </nldd-button>
-  {# Het overflowmenu toont een KLOON van dit item en meldt de keuze terug als
-     select op het origineel, dus htmx luistert daarop en niet op een klik. #}
+  {# The overflow menu shows a clone of this item and reports the choice back as
+     a select event on the original, so htmx triggers on that, not on click. #}
   <nldd-menu-item slot="overflow" text="Nieuwe gebruiker" icon="plus" hx-get="{{ url('user-create') }}" hx-trigger="select" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% include "parts/user_results.html" %}
   <div id="userFormModal"></div>
-  {# Mount voor de filtersheet; user_filter.js opent hem na de htmx-swap. #}
-  {# De sheet staat in de pagina, niet lazy: #filter-form erin is wat het
-     zoekveld en de chips aansturen. Lazy laden liet dat formulier ontbreken tot
-     je de sheet had geopend, en dan deden zoeken en token-dismiss niets. Een
-     nldd-sheet is verborgen tot show(), dus dit kost alleen render-tijd. #}
+  {# Filter sheet mount; user_filter.js opens it after the htmx swap. #}
+  {# Rendered eagerly: the #filter-form inside is what the search field and chips
+     drive. Lazy loading left that form missing until the sheet was opened. #}
   {% include "parts/user_filter_sheet.html" %}
-  {# Mount voor de "Meer…"-sheet van een filtergroep (gedeeld met de lijsten). #}
+  {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
   <div id="filter-options-modal-container"></div>
 {% endblock content %}

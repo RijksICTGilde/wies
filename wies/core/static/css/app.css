@@ -86,28 +86,19 @@ body {
 #sidebar-toggle-item {
   display: none;
 }
-/* :not([hidden]) is niet cosmetisch: de toolbar zet [hidden] op een item dat
-   hij naar het overflowmenu verplaatst, en een display uit het document wint
-   van de [hidden]-regel van de browser. Zonder deze uitzondering bleef "Filter"
-   staan en schoof hij half onder de overflowknop. */
+/* :not([hidden]) is load-bearing: the toolbar sets [hidden] on an item it moves
+   into the overflow menu, and a display from the document beats the browser's
+   [hidden] rule. Without it, "Filter" stayed and slid under the overflow button. */
 nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
   display: inline-flex;
 }
 
-/* Zoekveld springt bij het laden even van smal naar breed. De nldd-toolbar leest
-   de width/min-width/max-width-attributen van het item pas in een latere tick
-   (_syncHosts), en zet dán het `fluid`-attribuut plus de --_item-*-vars waar de
-   shadow-CSS flex-basis uit haalt. Tussen de upgrade en die sync staat het item
-   nog op flex-basis:auto en krimpt het tot de intrinsieke breedte van het
-   zoekveld (~290px), om daarna naar 560 te springen. Dit is dus NIET het
-   :not(:defined)-FOUC-geval — het element is al defined.
-
-   We overbruggen die tick door dezelfde flex-maat alvast toe te passen zolang het
-   `fluid`-attribuut er nog niet is. De selector `[width]` matcht alleen de items
-   met een breedte-attribuut (de zoekvelden); zodra _syncHosts `fluid` zet valt de
-   regel weg en neemt de eigen shadow-CSS het over. Waarden gelijk aan de
-   attributen op het item (zie o.a. parts/filter_and_table_container.html en
-   parts/filter_and_card_container_assignments.html). */
+/* Bridges the tick in which the search field jumps from narrow to wide.
+   nldd-toolbar reads the item's width attributes only in a later tick
+   (_syncHosts), which then sets `fluid`; until then the item sits at
+   flex-basis:auto and shrinks to its intrinsic width. Not the :not(:defined)
+   FOUC case — the element is already defined. Values match the attributes on
+   the item; the rule drops out once `fluid` appears. */
 nldd-toolbar-item[width]:not([fluid]) {
   flex: 0 1 560px;
   min-width: 240px;
@@ -121,9 +112,9 @@ a {
   color: var(--semantics-links-color, inherit);
 }
 
-/* Alleen de kleur. De eigen font-size hierin maakte er een tweede tekstsoort van:
-   een lege waarde stond kleiner dan de waarde die er had kunnen staan, en dat
-   verschil zei niets. De omliggende nldd-text-cell bepaalt de maat. */
+/* Colour only. A font-size here made an empty value smaller than the value that
+   could have stood there, a difference that said nothing; the surrounding
+   nldd-text-cell sets the size. */
 .wies-text-secondary {
   color: var(--semantics-content-secondary-color, #64748b);
 }
@@ -204,59 +195,55 @@ a {
   color: var(--semantics-content-secondary-color, #64748b);
 }
 
-/* Boven de overlay-link van nldd-card, die anders de hover opving en de tooltip
-   van de chip nooit liet verschijnen. Zo schrijft de kaart-documentatie geneste
-   interactieve content voor. */
+/* Above nldd-card's overlay link, which would otherwise swallow the hover and
+   keep the chip's tooltip from ever appearing. This is how the card documents
+   nested interactive content. */
 .wies-privacy-chip {
   position: relative;
   z-index: 1;
 }
 
-/* Lange vrije tekst met een "Toon meer"-schakelaar (#576). pre-wrap en niet
-   pre-line: ook dubbele spaties en inspringing in een geplakte omschrijving
-   horen te blijven staan. `:not([hidden])` is nodig omdat inline_edit.js de
-   twee spans via het hidden-attribuut wisselt en een `display` uit het document
-   wint van de [hidden]-regel van de browser. */
+/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
+   double spaces and indentation of a pasted description should survive.
+   `:not([hidden])` is needed because inline_edit.js swaps the two spans via the
+   hidden attribute, and a display from the document beats [hidden]. */
 .inline-edit-long-text__truncated:not([hidden]),
 .inline-edit-long-text__full:not([hidden]) {
   display: block;
   white-space: pre-wrap;
 }
 
-/* De nldd-button tekent zichzelf; alleen positie is van ons. Geen display op de
-   host: het component rekent met zijn eigen inline-flex en blaast anders zijn
-   icoon op. De negatieve marge compenseert de knoppadding, zodat het label in
-   de kantlijn van de tekst valt. */
+/* nldd-button draws itself; only position is ours. No display on the host: the
+   component relies on its own inline-flex and blows its icon up otherwise. The
+   negative margin offsets the button padding so the label lines up with the text. */
 .inline-edit-show-more {
   margin-top: var(--primitives-space-4, 4px);
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
-/* Een Van/Naar-waarde onder de zin van een tijdlijnregel: als eigen blok, zodat
-   een lange tekst niet als lopende zin achter "Naar:" aanschuift. */
+/* A Van/Naar value below a timeline sentence, as its own block so long text does
+   not run on behind "Naar:". */
 .wies-event-value {
   margin-top: var(--primitives-space-4, 4px);
 }
 
-/* nldd-card tekent zelf geen hover-staat. Alleen klikbare kaarten krijgen er een,
-   zodat de cijferkaarten op het dashboard niet klikbaar gaan lijken.
-   `--_background-color` is de interne variabele die .card uitleest; die erft het
-   shadow-DOM in, dus de kaart houdt zijn eigen radius en clipping. De neutrale
-   schaal loopt in licht naar donkerder en in donker naar lichter, dus één token
-   dekt beide thema's.
+/* nldd-card draws no hover state of its own; only clickable cards get one, so
+   the statistics tiles do not look clickable. `--_background-color` is the
+   variable .card reads, and it inherits into the shadow root, so the card keeps
+   its radius and clipping. The neutral scale darkens in light mode and lightens
+   in dark, so one token covers both themes.
 
-   `[href]:not([href=""])` en niet `[href]`: de component reflecteert zijn eigen
-   default (`href = ''`) naar het attribuut, dus élke kaart draagt in de DOM een
-   `href=""` — ook de kaarten die in het template geen href meekrijgen. Een
-   attribuutselector toetst op aanwezigheid, niet op inhoud, dus `[href]` matchte
-   ze allemaal en kleurden de cijferkaarten mee. */
+   `[href]:not([href=""])` rather than `[href]`: the component reflects its own
+   default (`href = ''`) to the attribute, so every card carries `href=""` in the
+   DOM. An attribute selector tests for presence, not content, so `[href]`
+   matched them all. */
 nldd-card[href]:not([href=""]):hover,
 nldd-card[button]:hover {
   --_background-color: var(--primitives-color-neutral-50);
 }
 
-/* "Meer tonen"-knop onder een lijst of kaart-grid. grid-column spant alle
-   kolommen in de kaart-grid; in een lijst (geen grid) wordt het genegeerd. */
+/* "Meer tonen" button below a list or card grid. grid-column spans every column
+   in the card grid and is ignored in a list, which is not a grid. */
 .wies-load-more {
   grid-column: 1 / -1;
   display: flex;
@@ -264,16 +251,16 @@ nldd-card[button]:hover {
   padding: 0.75rem 0;
 }
 
-/* Versieregel in de "Over Wies"-kolom van de NLDD page-footer: gedempt en
-   klein; de rest van de opmaak verzorgt nldd-rich-text. */
+/* Version line in the page footer's "Over Wies" column: muted and small;
+   nldd-rich-text handles the rest. */
 .wies-footer-version {
   color: var(--semantics-content-secondary-color);
   font-size: 0.875rem;
 }
 
-/* FAQ-accordeon. Het NLDD Design System levert geen accordeon-component, dus
-   we stylen de native <details>/<summary> met NLDD-tokens (werkt zo ook in
-   donkere modus). Scoped op .wies-faq zodat andere <details> ongemoeid blijven. */
+/* FAQ accordion. The design system ships no accordion, so the native
+   <details>/<summary> is styled with NLDD tokens, which also covers dark mode.
+   Scoped to .wies-faq so other <details> stay untouched. */
 .wies-faq {
   border-top: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
 }

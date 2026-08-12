@@ -8,11 +8,11 @@
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  {# Een tak is zelf de knop, zodat de hele regel klikbaar is. Bladeren krijgen
-     een spacer van de controlmaat zodat de kolommen uitlijnen.
-     data-label/-abbr voeden admin_org_search.js. #}
+  {# A branch is itself the button so the whole row is clickable; leaves get a
+     spacer of the control size to keep the columns aligned. data-label/-abbr
+     feed admin_org_search.js. #}
   {% macro render_row(node, depth) %}
-    {# Geen expanded-attribuut = ingeklapt; admin_org_search.js zet hem om. #}
+    {# No expanded attribute means collapsed; admin_org_search.js toggles it. #}
     <nldd-list-item slot="children" {% if node.tree_children %}button{% endif %} data-label="{{ (node.label or node.name)|lower }}" {% if node.abbreviations %}data-abbr="{{ node.abbreviations|join(',') |lower }}"{% endif %}>
     {% for _ in range(depth) %}<nldd-spacer-cell size="16"></nldd-spacer-cell>{% endfor %}
     {% if node.tree_children %}
@@ -24,11 +24,9 @@
       <nldd-spacer-cell size="32"></nldd-spacer-cell>
     {% endif %}
     {# djlint:off T028 #}
-    {# divider-start: tijdelijk. Een bladrij opent met spacers, en tot NLDD 0.8.79
-       leidt de DS de divider-start alleen af als de rij met een icoon opent, dus
-       zonder deze marker loopt de lijn onder een blad door tot de rand terwijl
-       hij onder een tak wel bij de tekst begint. Weghalen zodra de vendored DS
-       de nieuwe default heeft. #}
+    {# divider-start is temporary: before NLDD 0.8.79 the DS only infers it when
+       a row opens with an icon, so without it the line under a leaf row runs to
+       the edge. Drop once the vendored DS has the new default. #}
     <nldd-text-cell divider-start text="{{ node.label or node.name }}{%- if node.abbreviations %} ({{ node.abbreviations[0] }}){% endif -%}{%- if node.is_inactive %} (inactief){% endif -%}"></nldd-text-cell>
     {# djlint:on #}
     {% for child in node.tree_children or [] %}{{ render_row(child, depth + 1) }}{% endfor %}
@@ -44,8 +42,8 @@
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# De lege staat hoort bij de lijst: die weet zelf wanneer er niets meer te
-     zien is. Een eigen regel erboven leverde er twee tegelijk op. #}
+  {# The empty state belongs to the list, which knows when nothing is left; a
+     separate line above showed two at once. #}
   <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties" empty-text="Geen opdrachtgevers gevonden">
   {% for type_name, units in type_groups %}
     <nldd-list-item button expanded data-label="{{ type_name|lower }}" data-org-group>

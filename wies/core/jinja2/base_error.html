@@ -1,13 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-  {# nldd-inline-dialog en geen eigen gecentreerde doos: dat is het patroon dat
-     de rest van de app al gebruikt voor "Niet gevonden" en "Geen personen
-     gevonden", dus een foutpagina ziet eruit als de app en niet als een los
-     scherm. De vorige opzet zette bovendien een inline display: flex op de
-     nldd-container, waardoor de doos erbinnen tot min-content kromp en de tekst
-     per letter afbrak. #}
-  {# Via set-blokken, want text en supporting-text zijn attributen: een
-     {% block %} rechtstreeks in een attribuutwaarde levert djlint T028 op. #}
+  {# nldd-inline-dialog rather than a custom centred box: it is the pattern the
+     rest of the app already uses for empty and not-found states. #}
+  {# Via set blocks, because text and supporting-text are attributes: a
+     {% block %} inside an attribute value trips djlint T028. #}
   {% set error_text %}
     {% block error_text %}
       Er is iets misgegaan

@@ -28,29 +28,26 @@
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
     <script src="{{ app_asset('js/hx_link_guard.js') }}"></script>
-    {# Global: opent nldd-window/dialog-inhoud die htmx in een mount swapt
-       (verwijder-bevestigingen, formulier-modals) — die swaps gebeuren op
-       elke pagina met een paneel. #}
+    {# Global: opens nldd-window/dialog content that htmx swaps into a mount, which
+       happens on every page with a panel. #}
     <script src="{{ app_asset('js/dialog.js') }}" defer></script>
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
     <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
     <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
     <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
-    {# Hier en niet alleen achter show_onboarding: de "Toon meer" van een lange
-       tekst luistert gedelegeerd op document, en zulke teksten komen ook in de
-       panelen en de tijdlijn binnen via een htmx-swap. #}
+    {# Not just behind show_onboarding: the "Toon meer" handler is delegated on
+       document, and long texts also arrive in panels and the timeline via htmx
+       swaps. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
     <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
-    {# Koppelt in de filter-sidebar de plakhoogte los van de hoogteberekening;
-       zie de kop van het bestand. Global omdat elke pagina met filters dezelfde
-       sidebar-section uit deze base gebruikt. #}
+    {# Decouples the filter sidebar's sticky offset from its height calculation;
+       see the file header. Global because every page with filters uses the
+       sidebar-section from this base. #}
     <script src="{{ app_asset('js/sidebar_sticky.js') }}" defer></script>
   </head>
   <body>
-    {# De main groeit tot de footer onderaan staat, dus de oude min-height-hack
-       (calc(100dvh - 120px)) op de sidebar-sectie kan weg. #}
     <nldd-page>
     {% block header %}
       <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
@@ -70,10 +67,10 @@
       {% block content %}
       {% endblock content %}
     {% endset %}
-    {# De zijbalk is hier altijd het filterpaneel; "Klaar" i.p.v. "Sluit" omdat
-       de filters al live toegepast zijn — je verwerpt niets bij het sluiten.
-       Zonder zijbalk komt de sidebar-section er niet omheen: dan is het een
-       lege laag die de breedte van de pagina overneemt. #}
+    {# The sidebar is always the filter panel; "Klaar" instead of "Sluit" because
+       filters apply live, so closing discards nothing. Without sidebar content the
+       sidebar-section is skipped: it would be an empty layer taking over the page
+       width. #}
     {% if _sidebar_content.strip() %}
       <nldd-sidebar-section width="1920px" sidebar-label="Filter" translations='{"components.sidebar-section.sheet-dismiss-action": "Klaar"}'>
       {{ _sidebar_content }}
@@ -83,12 +80,9 @@
       {{ _main_content }}
     {% endif %}
     <nldd-page-footer slot="footer" width="1920px">
-    {# Standaard-formaat: het naamloze slot vult page-footer__main. De
-       nldd-container lijnt de tekst uit met de breadcrumbs/legal bar; de
-       nldd-rich-text verzorgt de opmaak van de lopende tekst en inline-links.
-       De kop staat er bewust buiten: in rich-text krijgt een h2 de koppenschaal
-       van een pagina-titel, en dat is hier te groot. Met nldd-title stel je het
-       formaat los van het niveau in, zodat de h2 kan blijven wat hij is. #}
+    {# The heading sits outside nldd-rich-text on purpose: inside it an h2 gets the
+       page-title scale, which is too large here. nldd-title sets the size
+       independently of the level, so the h2 stays an h2. #}
     <nldd-container>
     <nldd-title size="4">
     <h2>Over Wies</h2>
@@ -116,9 +110,8 @@
     {% endblock panel %}
     {% if show_onboarding %}
       {% include "parts/onboarding/onboarding_wizard.html" %}
-      {# inline_edit.js staat in <head> (overal nodig); de label picker rendert
-         een nldd-token-field uit de NLDD-bundel, dus het oude multi_select.js
-         hoeft hier ook niet meer. #}
+      {# inline_edit.js already loads in <head>; the label picker renders an
+         nldd-token-field from the NLDD bundle, so no multi_select.js either. #}
       <script src="{{ app_asset('js/onboarding.js') }}" defer></script>
     {% endif %}
   </body>

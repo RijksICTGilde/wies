@@ -1,14 +1,11 @@
-{# #results-fragment: telregel + lijst. Het filterform (in de sheet) vervangt
-   dit blok bij elke filterwijziging (hx-target="#results"). De filtersheet zelf
-   swapt apart als OOB mee, zodat de counts/selectie in de sheet meelopen. #}
-{# Geen chip voor de zoekterm: die staat al in het zoekveld erboven, met een
-   eigen wisknop. De strip is voor filters die je nergens anders ziet. #}
+{# The filter form in the sheet replaces this block on every filter change; the
+   sheet itself swaps separately as OOB so its counts and selection follow.
+   No chip for the search term: it is already visible in the search field. #}
 {% set has_active_filters = active_filters|length > 0 %}
 <nldd-container id="results">
 {% if has_active_filters %}
-  {# Zelfde chips als op Wie zit waar en Aanvragen: het filterpaneel zit hier in
-     een sheet, dus zonder tokens is buiten die sheet niet te zien waarop je
-     filtert. De Filters-badge telt wel, maar zegt niet wat. #}
+  {# The filter panel lives in a sheet, so without these tokens there is no way
+     to see what is being filtered on: the badge counts but does not say what. #}
   <nldd-container layout="wrap" gap="8" vertical-alignment="center">
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'select-multi' %}
@@ -24,14 +21,13 @@
       {% endif %}
     {% endif %}
   {% endfor %}
-  {# filter_interactions.js vangt data-clear-all-filters. #}
+  {# filter_interactions.js handles data-clear-all-filters. #}
   <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
-{# Geen telregel bij nul: de lege staat eronder zegt het al, en "0 gebruikers"
-   erboven maakt er twee meldingen van. Net als op de opdrachten- en
-   wie-zit-waar-pagina. #}
+{# No count line at zero: the empty state below already says it, and "0
+   gebruikers" above would make it two messages. #}
 {% if paginator.count %}
   {% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
   <nldd-rich-text spacing="flat">
@@ -42,12 +38,11 @@
 {% if not request.headers.get("HX-Request") %}
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
-{# De lijst staat NAAST #results, niet erin, en swapt apart als OOB — zoals de
-   andere twee lijsten. Zo is hij een direct kind van de nldd-sidebar-section,
-   en pas dan doet de flex-grow van de lege staat iets: genest in block-
-   containers zou die tegen de telregel aan blijven plakken. #}
+{# The list sits NEXT TO #results, not inside it, so it is a direct child of the
+   nldd-sidebar-section: only then does the empty state's flex-grow do anything.
+   Nested in block containers it would stick to the count line. #}
 {% include "parts/user_table.html" %}
 {% if request.headers.get("HX-Request") %}
-  {# De sheet-inhoud (form met bijgewerkte counts/selectie) reist mee als OOB. #}
+  {# The sheet content, with updated counts and selection, rides along as OOB. #}
   <div hx-swap-oob="outerHTML:#filter-panel">{% include "parts/filter_sidebar.html" %}</div>
 {% endif %}

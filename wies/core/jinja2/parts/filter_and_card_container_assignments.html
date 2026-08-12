@@ -9,8 +9,8 @@
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
   <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
   </nldd-button>
-  {# Het overflowmenu toont een KLOON en meldt de keuze terug als select op dit
-     origineel; sidebar_toggle.js luistert daarom op beide gebeurtenissen. #}
+  {# The overflow menu shows a CLONE and reports the choice back as a select on this
+     original, so sidebar_toggle.js listens for both events. #}
   <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines"></nldd-menu-item>
   </nldd-toolbar-item>
   {% if primary_button %}
@@ -20,9 +20,9 @@
     </nldd-toolbar-item>
   {% endif %}
   </nldd-toolbar>
-  {# Menu staat buiten de toolbar: als overlay binnen een nldd-toolbar-item meet
-  Floating UI tegen de layout van dat item en landt de popover links in beeld.
-  variant=listbox houdt de focus in het zoekveld. #}
+  {# Menu outside the toolbar: inside an nldd-toolbar-item, Floating UI measures
+  against that item's layout and the popover lands on the left. variant=listbox
+  keeps focus in the search field. #}
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
@@ -33,7 +33,7 @@
   {% for chip in org_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
-  {# Fail-closed onbekend-chip, zie filter_and_table_container.html. #}
+  {# Fail-closed unknown chip, see filter_and_table_container.html. #}
   {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
@@ -52,14 +52,13 @@
     {% elif filter_group.type == 'date' %}
       {% set value = active_filters.get(filter_group.name) %}
       {% if value %}
-        {# Label plus datum, zodat het token de modus laat zien en niet enkel een
-        losse datum is. #}
+        {# Label plus date, so the token shows the mode and not just a bare date. #}
         <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ filter_group.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ value.strftime("%d-%m-%Y") }}</nldd-token>
       {% endif %}
     {% endif %}
   {% endfor %}
-  {# "Wis alle filters" hoort bij de chips (Funda-stijl): één klik leegt alle
-     actieve filters. filter_interactions.js vangt data-clear-all-filters. #}
+  {# Sits with the chips: one click clears every active filter.
+     filter_interactions.js handles data-clear-all-filters. #}
   <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
@@ -74,8 +73,7 @@
 {% if not is_htmx %}
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
-{# Beide takken dragen hetzelfde id, zodat de OOB-swap ze in beide richtingen
-kan verwisselen. #}
+{# Both branches share one id, so the OOB swap can replace either with the other. #}
 {% if paginator.count %}
   <nldd-collection id="assignment-card-grid" layout="grid" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}

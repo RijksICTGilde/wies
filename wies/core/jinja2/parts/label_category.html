@@ -1,14 +1,11 @@
-{# De toevoegknop onderaan elke categorie: opent dezelfde sheet als de knop in
-   de toolbar, met deze categorie al gekozen. Een echte knop (geen lijstregel)
-   zodat de actie niet als zoveelste label leest. #}
+{# Opens the same sheet as the toolbar button, with this category preselected. A
+   real button, not a list row, so the action does not read as another label. #}
 {% macro add_label_button(category) %}
   <nldd-button variant="secondary" size="sm" start-icon="plus" text="Label toevoegen" accessible-label="Label aan {{ category.name }} toevoegen" hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
 {% endmacro %}
-{# Categorieën zelf worden beheerd in de sheet achter "Categorieën beheren";
-   labels lopen via de universele toevoegknop en het more-menu op de regel.
-   Ook de htmx-herrender na een wijziging gebruikt deze partial, dus dit is de
-   enige opmaak. #}
+{# The htmx re-render after a change reuses this partial, so this is the only
+   markup for a category. #}
 <nldd-title size="4">
 <h2>{{ category.name }}</h2>
 </nldd-title>
@@ -16,13 +13,10 @@
 {% if category.labels.all() %}
   <nldd-list accessible-label="Labels in {{ category.name }}">
   {% for label in category.labels.all() %}
-    {# De regel zelf is niet interactief: bewerken en verwijderen lopen allebei
-       via het more-menu aan het einde. #}
     <nldd-list-item>
-    {# Het aantal staat in dezelfde cel als de naam, inline erachter. Als eigen
-       cel moest de naam fit-content krijgen om de badge ernaast te houden, en
-       die breedte krimpt niet mee: op een smal scherm duwde een lange naam de
-       badge en het menu het beeld uit. #}
+    {# The count lives inline in the name cell. As its own cell the name needed
+       fit-content, which does not shrink: a long name pushed the badge and menu
+       off a narrow screen. #}
     <nldd-text-cell>
     <span>{{ label.name }} <nldd-badge color="neutral" number="{{ label.usage_count|default(0) }}" accessible-label="{{ label.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
     </nldd-text-cell>

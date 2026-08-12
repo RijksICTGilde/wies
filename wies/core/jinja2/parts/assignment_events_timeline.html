@@ -7,7 +7,7 @@
   {% for event in events %}
     <nldd-list-item>
     <nldd-cell vertical-alignment="top">
-    {# Geen naam (onbekende gebruiker) = person-icoon, net als vacatures. #}
+    {# No name (unknown user) falls back to the person icon, as with vacancies. #}
     <nldd-avatar size="28" {% if event.author_name %}name="{{ event.author_name }}"{% endif %} decorative></nldd-avatar>
     </nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
@@ -15,10 +15,9 @@
     <span slot="overline" title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</span>
     <div>
       {{ event.sentence }}
-      {# Alleen bij een teamregel die een naam noemt die niet iedereen ziet:
-         andere velden (omschrijving, periode) zijn voor iedereen gelijk. Regels
-         die zijn weggefilterd bestaan hier niet meer en kunnen dus geen chip
-         dragen -- de tijdlijn verzwijgt hun bestaan bewust. #}
+      {# Only for a team entry naming someone not everyone may see; other fields
+         are the same for everyone. Filtered-out entries are gone by now and
+         carry no chip — the timeline deliberately hides that they existed. #}
       {% if event.privacy_note %}
         {{ privacy_chip(event.privacy_note, size="sm") }}
       {% endif %}

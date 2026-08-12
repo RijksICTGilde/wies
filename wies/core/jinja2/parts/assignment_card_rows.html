@@ -1,7 +1,6 @@
 {% for assignment in object_list %}
-  {# href houdt de kaart een echte link (statusbalk, ⌘/middenklik → eigen tab);
-     hx_link_guard.js vangt de gewone klik zodat htmx het paneel opent. De
-     hover-staat komt uit app.css, niet uit de kaart zelf. #}
+  {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
+     hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
   <nldd-card background="tinted" accessible-label="{{ assignment.name }}" href="{{ assignment.panel_url }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
@@ -19,8 +18,8 @@
     </nldd-container>
   {% endif %}
   </nldd-container>
-  {# In de footer-slot, zodat opdrachtgever en periode in elke kaart op
-  dezelfde hoogte staan, hoe lang de titel erboven ook is. #}
+  {# In the footer slot, so client and period line up across cards regardless of
+  title length. #}
   {% set has_date = assignment.start_date or assignment.end_date %}
   {% macro chevron() %}
     <span class="assignment-card__chevron" aria-hidden="true">
@@ -58,9 +57,8 @@
   </nldd-card>
 {% endfor %}
 {% if next_page_url %}
-  {# Klik i.p.v. auto-load: zie placement_table_rows.html. De knop staat als
-     grid-cel in de nldd-collection (spant alle kolommen) en vervangt zichzelf
-     door de volgende kaarten. #}
+  {# Click instead of auto-load, see placement_table_rows.html. The button is a grid
+     cell in the nldd-collection and replaces itself with the next cards. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

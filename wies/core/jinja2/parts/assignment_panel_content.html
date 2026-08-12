@@ -1,9 +1,8 @@
 {% from "parts/row_actions.html" import render_row_actions %}
 {% from "parts/org_row.html" import render_org_line %}
 {% from "parts/privacy_chip.html" import privacy_chip %}
-{# Bewerken zit in "Gegevens bewerken" bovenaan en niet per rij; hier blijft
-   alleen "Bekijk opdrachten". Bij meerdere rijen noemt de toegankelijke naam de
-   organisatie, anders heten alle menu's hetzelfde. #}
+{# Editing lives in the toolbar, not per row. With multiple rows the accessible
+   name includes the organization, otherwise every menu would be named alike. #}
 {% macro _org_row_actions(org_row, panel_data, base_url) %}
   {%- set multiple = panel_data.organization_rows|length > 1 -%}
   {%- set actions = [] -%}
@@ -11,16 +10,15 @@
   {%- set name = org_row.organization.label or org_row.organization.name -%}
   {{ render_row_actions(actions, "Acties voor opdrachtgever " ~ name if multiple else "Acties voor opdrachtgever") }}
 {% endmacro %}
-{# Panel-loads herladen base.html niet, dus flash-banners (bv. na 'Opdracht
-   invoeren' in de sheet) reizen mee als OOB-swap naar #flash-messages. Alleen
-   bij htmx: bij een volledige page-load rendert base.html ze al. #}
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap. Only under htmx: a full page load already renders them in base.html. #}
 {% if request.headers.get("HX-Request") %}
   {% with flash_oob = true %}
     {% include "parts/flash_messages.html" %}
   {% endwith %}
 {% endif %}
 {% if not panel_data %}
-  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Opdracht" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
   <nldd-inline-dialog variant="alert" text="Niet gevonden" supporting-text="Dit item bestaat niet meer of je hebt er geen toegang toe."></nldd-inline-dialog>
@@ -37,13 +35,11 @@
   <h2 id="panel-title">{{ panel_data.assignment.name }}</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {# Verwijderen opent de bestaande bevestigingsmodal via #assignmentDeleteModal. #}
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
     <nldd-toolbar label="Opdracht">
     {% if panel_data.show_updates_tab %}
-      {# priority hoger dan de knop ernaast: de tabs zijn de navigatie van dit
-      paneel en horen als laatste te wijken, zeker omdat ze in het overflowmenu
-      geen zinnig alternatief hebben. #}
+      {# Higher priority than the buttons: the tabs are this panel's navigation
+      and have no sensible equivalent in the overflow menu. #}
       <nldd-toolbar-item slot="start" priority="1">
       <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
       <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
@@ -51,9 +47,8 @@
       </nldd-tab-bar>
       </nldd-toolbar-item>
     {% endif %}
-    {# Elk item: zichtbare knop (click) + nested slot="overflow"-item
-       (hx-trigger="select", want het overflowmenu klikt een kloon). NLDD schuift
-       ze bij smalle breedte samen in één ...-menu. #}
+    {# Each item pairs a visible button (click) with a slot="overflow" item that
+       needs hx-trigger="select", because the overflow menu clicks a clone. #}
     {% if panel_data.user_can_edit %}
       <nldd-toolbar-item slot="end">
       <nldd-icon-button icon="edit" text="Gegevens bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
@@ -61,8 +56,8 @@
       </nldd-toolbar-item>
     {% endif %}
     {% if _can_delete %}
-      {# priority="-1": verwijderen wijkt als eerste naar het overflowmenu, zodat
-         bij krappe ruimte bewerken zichtbaar blijft (de vaakste actie). #}
+      {# priority="-1": delete moves to the overflow menu first, so editing (the
+         most common action) stays visible when space is tight. #}
       <nldd-toolbar-item slot="end" priority="-1">
       <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
       <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
@@ -74,9 +69,9 @@
   <div id="tab-panel-gegevens">
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
-    {# De omschrijving staat in deze lijst en niet boven de tabs: daar duwde een
-       lange tekst de tabs en alle velden weg. "Omschrijving" en niet
-       "Opdrachtomschrijving": dat woord brak af in de labelkolom. #}
+    {# The description sits in this list, not above the tabs, where a long text
+       pushed the tabs and fields out of view. Its label is shortened because
+       "Opdrachtomschrijving" wrapped in the label column. #}
     {% set _rows = [
       ("Externe bron", "source"),
       ("Omschrijving", "extra_info"),
@@ -103,12 +98,12 @@
             {{ panel_data.assignment.get_source_display() }}
           {% endif %}
         {% elif row_kind == "extra_info" %}
-          {# De textarea-weergave bewaart regelovergangen en kort in tot "Toon meer". #}
+          {# The textarea display keeps line breaks and truncates to "Toon meer". #}
           {% with value = panel_data.assignment.extra_info %}
             {% include "forms/displays/textarea.html" %}
           {% endwith %}
         {% elif row_kind == "organizations" %}
-          {# Alleen de eerste; een tweede krijgt zijn eigen list-item hieronder. #}
+          {# Only the first; any others get their own list-item below. #}
           {% if panel_data.organization_rows %}
             {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
           {% else %}
@@ -133,10 +128,9 @@
           {{ _org_row_actions(panel_data.organization_rows[0], panel_data, _base_url) }}
           </nldd-cell>
         {% elif row_kind == "owner" and panel_data.assignment.owner %}
-          {# Bewerken zit in "Gegevens bewerken" bovenaan, niet per rij: de
-             opdrachtnaam staat als kop en niet als rij, dus per-rij-bewerken zou
-             juist die naam onbereikbaar laten. Wat hier blijft zijn de acties
-             die géén bewerking zijn. #}
+          {# Editing lives in the toolbar, not per row: the assignment name is a
+             heading rather than a row, so per-row editing would leave exactly
+             that name unreachable. Only non-editing actions remain here. #}
           {% set _actions = [] %}
           {% if panel_data.owner_display.owner_url %}
             {% set _ = _actions.append({"text": "Bekijk profiel", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
@@ -150,7 +144,7 @@
           </nldd-cell>
         {% endif %}
         </nldd-list-item>
-        {# Leeg label, zodat de rij onder de eerste opdrachtgever uitlijnt. #}
+        {# Empty label so the row aligns under the first organization. #}
         {% if row_kind == "organizations" %}
           {% for org_row in panel_data.organization_rows[1:] %}
             <nldd-list-item>
@@ -179,18 +173,16 @@
       <p>Wordt beheerd in {{ panel_data.team_external_source }}.</p>
       </nldd-rich-text>
     {% endif %}
-    {# De chip staat in dezelfde toolbar als "Toevoegen" — actie links, status
-       rechts op één regel. Zonder bewerkrechten is er geen knop; dan gaat de
-       chip naar `start`, want in `end` zou hij als los blokje tegen de
-       rechterrand geduwd worden. #}
+    {# Chip and "Toevoegen" share one toolbar: action left, status right. Without
+       edit rights there is no button, so the chip moves to `start` instead of
+       being pushed against the right edge on its own. #}
     {% if panel_data.user_can_edit_team or panel_data.team_privacy_note %}
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <nldd-toolbar label="Team" size="sm">
       {% if panel_data.user_can_edit_team %}
-        {# size="sm" ook expliciet op item + knop: nldd-toolbar forwardt zijn size
-           pas in zijn uitgestelde build (setTimeout(0)) naar de knop, dus zonder
-           dit rendert de knop eerst op de md-default (breder) en krimpt daarna naar
-           sm — een zichtbare resize-flash na een htmx-swap in de zijbalk. #}
+        {# size="sm" repeated on item and button: nldd-toolbar only forwards its
+           size in a deferred build (setTimeout(0)), so without this the button
+           paints at the md default and then shrinks — a visible resize flash. #}
         <nldd-toolbar-item slot="start" size="sm">
         <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
         <nldd-menu slot="popup" placement="bottom-start">
@@ -212,8 +204,8 @@
     {% set user_can_edit = panel_data.user_can_edit_team %}
     {% include "forms/displays/assignment_services.html" %}
     {% if panel_data.user_can_edit_team %}
-      {# side_panel.js vult naam, supporting-text en actie-URL vanaf het gekozen
-      rijmenu-item en opent dit venster. #}
+      {# side_panel.js fills in name, supporting text and action URL from the
+      chosen row menu item, then opens this dialog. #}
       <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
       <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
       <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>

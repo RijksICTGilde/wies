@@ -1,6 +1,5 @@
-{# Een POST komt hier alleen terecht bij een validatiefout: dan gaat alleen de
-   inhoud terug zodat de openstaande sheet blijft staan (patroon van
-   generic_form_modal.html). #}
+{# A POST reaches this template only on a validation error: then only the body is
+   returned, so the open sheet stays (pattern of generic_form_modal.html). #}
 {% if request.method == "POST" %}
   {% include "parts/user_form_body.html" %}
 {% else %}

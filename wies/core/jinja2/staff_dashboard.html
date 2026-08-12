@@ -13,8 +13,8 @@
   <h1>Statistieken</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# De labels dragen een harde spatie tussen getal en "dagen": in een smalle
-     tegel brak "(30 dagen)" anders over twee regels. #}
+  {# The labels use a non-breaking space between number and "dagen", which
+     otherwise wrapped across two lines in a narrow tile. #}
   {% set _tiles = [
     (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
     (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
@@ -37,14 +37,12 @@
   {% endfor %}
   </nldd-collection>
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-  {# Een zusje van "Recente foutmeldingen", geen onderdeel ervan: zelfde
-     h2 met nldd-title size 4, en dezelfde ruimte eromheen. #}
   <nldd-title size="4">
   <h2>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {# De staven zijn puur visueel; de tabel eronder draagt dezelfde cijfers voor
-     schermlezers en toetsenbord. #}
+  {# The bars are purely visual; the table below carries the same figures for
+     screen readers and keyboard users. #}
   <div class="staff-chart" aria-hidden="true">
     {% for day, count in usage.daily_active_users %}
       <div class="staff-chart__bar"
@@ -74,7 +72,7 @@
   <h2>Recente foutmeldingen</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {# Inline gerenderd zodat het blok meteen met de pagina verschijnt; de
-     paginering swapt zichzelf later via de error-table-endpoint in dit id. #}
+  {# Rendered inline so the block arrives with the page; pagination later swaps
+     itself into this id via the error table endpoint. #}
   <div id="error_table_container">{% include "parts/error_table.html" %}</div>
 {% endblock content %}

@@ -1,22 +1,16 @@
-{# De chip die aangeeft dat iets beperkt zichtbaar is. Kort op het scherm, met
-   de volledige zin in een tooltip -- die zin is te lang voor een chip maar mag
-   niet verdwijnen: hij zegt vóór wie het zichtbaar is.
+{# Chip marking limited visibility: short on screen, full sentence in a tooltip.
 
-   tabindex + accessible-label zijn niet optioneel: nldd-tag is niet interactief
-   en dus niet focusbaar, waardoor de tooltip alleen met een muis te bereiken
-   zou zijn. Met tabindex komt hij in de tabvolgorde (getest: tooltip opent ook
-   op focus) en draagt de accessible-label de hele zin voor wie de tooltip niet
-   ziet.
+   tabindex + accessible-label are not optional: nldd-tag is not interactive and
+   therefore not focusable, so the tooltip would be mouse-only, and the label
+   carries the sentence for anyone who never sees the tooltip.
 
-   .wies-privacy-chip tilt de chip boven de overlay-link van een nldd-card; die
-   ligt over de hele kaart en ving anders de hover, zodat de tooltip daar nooit
-   verscheen (zo schrijft de kaart-documentatie geneste interactieve content
-   voor).
+   .wies-privacy-chip lifts the chip above an nldd-card's overlay link, which
+   covers the whole card and otherwise swallows the hover.
 
-   Importeer met: {% from "parts/privacy_chip.html" import privacy_chip %} #}
+   Import with: {% from "parts/privacy_chip.html" import privacy_chip %} #}
 {% macro privacy_chip(note, size="") %}
-  {# instant: de standaard show-delay is 700ms, en dat voelt traag voor een chip
-     die je juist aanwijst om te lezen wat er staat. #}
+  {# instant: the default 700ms show-delay feels slow for a chip you point at
+     precisely to read it. #}
   <nldd-tooltip text="{{ note }}" timing="instant">
   <nldd-tag class="wies-privacy-chip" {% if size %}size="{{ size }}"{% endif %} tabindex="0" color="warning" icon="hidden" text="Beperkt zichtbaar" accessible-label="Beperkt zichtbaar. {{ note }}"></nldd-tag>
   </nldd-tooltip>

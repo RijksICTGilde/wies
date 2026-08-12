@@ -1,26 +1,21 @@
-{# Rijacties in een detailpaneel: bij precies één actie tonen we het actie-icoon
-   direct als knop (één klik, met tooltip), bij meerdere de puntjesknop met een
-   menu. `actions` is een lijst dicts met `icon`, `text` en `attrs` (de ruwe
-   hx-*/data-*-string) — beide takken delen dezelfde bedrading, zodat een
-   menu-item en de losse knop identiek werken.
+{# Row actions: one action renders as a single icon button, several as a
+   more-button with a menu. `actions` is a list of dicts with `icon`, `text` and
+   `attrs` (the raw hx-*/data-* string); both branches share the same wiring.
 
-   Een actie mag i.p.v. `attrs` een `submenu` dragen: een lijst van dezelfde
-   dicts, gerenderd als geslotte `nldd-menu` zodat het item een drill-in
-   submenu-opener wordt (NLDD leidt dat af uit een geneste `nldd-menu`). Zo'n
-   actie navigeert zelf niet; zijn sub-items dragen de hrefs. Een submenu dwingt
-   de menu-tak af (de losse-knop-tak kan geen submenu tonen).
+   An action may carry a `submenu` instead of `attrs`: a nested `nldd-menu`,
+   which NLDD turns into a drill-in opener. Such an action does not navigate
+   itself, and it forces the menu branch (a lone button cannot show a submenu).
 
-   Importeer met: {% from "parts/row_actions.html" import render_row_actions %} #}
+   Import with: {% from "parts/row_actions.html" import render_row_actions %} #}
 {% macro render_row_actions(actions, label) %}
   {% set _has_submenu = actions|selectattr("submenu")|list|length > 0 %}
   {% if actions|length == 1 and not _has_submenu %}
     {% set a = actions[0] %}
-    {# Losse actieknop: het icoon alleen (potlood/oog/enveloppe) verklaart zich
-       niet, dus de tooltip (default-timing) blijft aan. #}
+    {# A lone icon does not explain itself, so keep the default tooltip timing. #}
     <nldd-icon-button size="sm" icon="{{ a.icon }}" text="{{ a.text }}" {{ a.attrs|safe }}></nldd-icon-button>
   {% elif actions %}
-    {# De puntjesknop is een bekend patroon en opent een menu met labels, dus
-       een eigen tooltip voegt niets toe. #}
+    {# The more-button is a known pattern and opens a labelled menu, so no
+       tooltip. #}
     <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="{{ label }}">
     <nldd-menu slot="popup" placement="bottom-end">
     {% for a in actions %}

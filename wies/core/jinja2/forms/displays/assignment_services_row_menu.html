@@ -1,8 +1,6 @@
-{# De rij zelf is niet interactief (de link is een
-   nldd-list-item-action-segment); het menu zit in de popup-slot van de knop,
-   die zelf het ankeren en openen/sluiten doet. #}
-{# Ook zonder bewerkrechten heeft een geplaatst lid een menu: "Bekijk
-   teamlid" hoort bij kijken, niet bij beheren (bv. een OTYS-opdracht). #}
+{# The menu sits in the button's popup slot, which handles anchoring and
+   open/close itself. A placed member has a menu even without edit rights:
+   viewing a team member is not managing one. #}
 {% if user_can_edit or pl %}
   <nldd-cell>
   <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ member_name }}">
@@ -15,7 +13,7 @@
   {% endif %}
   {% if user_can_edit %}
     <nldd-menu-divider></nldd-menu-divider>
-    {# Een aanvraag (geen plaatsing) is geen teamlid, dus daar past "team" niet. #}
+    {# A request is not a placement, so it is not a team member either. #}
     <nldd-menu-item text="{{ 'Uit team verwijderen' if pl else 'Uit opdracht verwijderen' }}" icon="delete" destructive data-wies-action="team-member-delete" data-member-name="{{ member_name }}" data-delete-url="{{ url('assignment-member-delete', args=[row.assignment_public_id, svc.public_id]) }}"></nldd-menu-item>
   {% endif %}
   </nldd-menu>

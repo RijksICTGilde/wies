@@ -1,5 +1,5 @@
-{# Ook los gerenderd door onboarding_assignment_edit na het opslaan, met
-   HX-Retarget op deze wrapper — vandaar de id-div eromheen. #}
+{# Also rendered on its own by onboarding_assignment_edit after saving, with
+   HX-Retarget onto this wrapper — hence the id div around it. #}
 {% set assignment = entry.assignment %}
 <div id="onboarding-assignment-{{ assignment.public_id }}">
   <nldd-box>
@@ -10,9 +10,9 @@
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
   <nldd-list accessible-label="Gegevens van {{ assignment.name }}">
   {% if assignment.extra_info %}
-    {# Als rij in de gegevenslijst, net als in het opdrachtpaneel: een lange
-       omschrijving boven de lijst duwde de gegevens weg. De textarea-weergave
-       houdt de regelovergangen heel en kort in tot "Toon meer" (#576). #}
+    {# A row in the data list, as in the assignment panel: a long description
+       above the list pushed the data out of view. The textarea display keeps
+       line breaks and truncates to "Toon meer" (#576). #}
     <nldd-list-item>
     <nldd-text-cell width="120px" text="Omschrijving"></nldd-text-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>

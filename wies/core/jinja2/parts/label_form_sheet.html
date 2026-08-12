@@ -1,8 +1,8 @@
-{# dialog.js opent de sheet na de htmx-swap via data-auto-show.
+{# dialog.js opens the sheet after the htmx swap via data-auto-show.
 
-   De body staat in een eigen partial: bij een validatiefout vervangt htmx
-   alleen #labelFormBody, zodat deze sheet blijft staan in plaats van dat er een
-   tweede overheen opent. #}
+   The body is a separate partial: on a validation error htmx replaces only
+   #labelFormBody, so this sheet stays instead of a second one opening on top
+   of it. #}
 <nldd-sheet id="{{ modal_element_id }}" data-auto-show placement="right" width="480px" accessible-label="{{ modal_title }}">
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>

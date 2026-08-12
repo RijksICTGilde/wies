@@ -1,12 +1,12 @@
 {% if not panel_data %}
-  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Persoonsgegevens" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
   <nldd-inline-dialog variant="alert" text="Niet gevonden" supporting-text="Dit item bestaat niet meer of je hebt er geen toegang toe."></nldd-inline-dialog>
   </nldd-simple-section>
 {% else %}
   {% set colleague = panel_data.colleague %}
-  {# collapse-anchor: naam verschijnt in de bar pas als hij in de inhoud eronder wegscrollt. #}
+  {# collapse-anchor: the name appears in the bar only once it scrolls out of view. #}
   <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
   <nldd-list dividers="never" accessible-label="Collega">
@@ -35,9 +35,8 @@
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% for label in labels %}
-      {# TIJDELIJK kleurloos (#565): dezelfde labels zijn als filter ongekleurd,
-         dus de categoriekleur zei hier niets. Terug: zet het color-attribuut
-         weer op label.category.nldd_color. #}
+      {# TEMPORARILY colourless (#565): the same labels are uncoloured as filters.
+         To restore, set color back to label.category.nldd_color. #}
       <nldd-tag>{{ label.name }}</nldd-tag>
     {% endfor %}
     </nldd-container>

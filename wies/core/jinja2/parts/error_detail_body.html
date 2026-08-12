@@ -1,12 +1,9 @@
-{# De inhoud van één foutmelding, gedeeld door de sheet vanuit de lijst en de
-   volledige pagina op /beheer/statistieken/fout/<id>/. Eén bron, zodat de twee
-   niet uit elkaar lopen.
+{# One error's content, shared by the sheet and the full detail page so the two
+   cannot drift apart.
 
-   De melding staat als kop plus lopende tekst bovenaan en niet als rij in de
-   lijst: hij is vaak een paar regels lang, en dan trekt een label-cel van 100px
-   ernaast de rij uit z'n verband. De sheet hangt zijn titelbalk aan deze kop
-   (collapse-anchor), zodat de balk pas de foutnaam draagt zodra je eroverheen
-   scrolt. #}
+   The message is a heading plus running text rather than a list row: it is
+   often several lines, which a 100px label cell next to it would distort. The
+   sheet anchors its title bar to this heading (collapse-anchor). #}
 <nldd-title size="3">
 <h2 id="error-detail-title">{{ error.short_description }}</h2>
 </nldd-title>
@@ -19,7 +16,7 @@
 {% endif %}
 </nldd-rich-text>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-{# Boxed, zodat de gegevens en de traceback eronder hetzelfde kader delen. #}
+{# Boxed so the details and the traceback below share one frame. #}
 <nldd-list variant="box-tinted" accessible-label="Gegevens van de foutmelding">
 <nldd-list-item>
 <nldd-text-cell width="100px" text="Tijd"></nldd-text-cell>
@@ -48,9 +45,8 @@
 </nldd-list>
 {% if error.traceback %}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# nldd-code-viewer in plaats van een eigen <pre>: die geeft de python-
-     highlighting, een kopieerknop voor het plakken in een issue, en een
-     scrollgebied dat de sheet niet oprekt. #}
+  {# nldd-code-viewer instead of a plain <pre>: it brings highlighting, a copy
+     button, and a scroll area that does not stretch the sheet. #}
   <nldd-code-viewer language="python" wrap>{{ error.traceback }}</nldd-code-viewer>
 {% else %}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>

@@ -1,13 +1,11 @@
-{# De merkenlijst. Bewerken en verwijderen lopen via het more-menu aan het einde
-   van de regel, net als bij labels. Deze partial wordt ook door de htmx-herrender
-   na een wijziging gebruikt, dus dit is de enige opmaak. #}
+{# The brand list; also re-rendered by htmx after a change, so this is the only
+   markup for it. #}
 {% if suborganizations %}
   <nldd-list accessible-label="Merken">
   {% for suborganization in suborganizations %}
     <nldd-list-item>
-    {# Het aantal staat in dezelfde cel als de naam, inline erachter, zodat een
-       lange naam op een smal scherm de badge en het menu niet het beeld uit
-       duwt (zie label_category.html). #}
+    {# The count sits inline in the name cell so a long name on a narrow screen
+       cannot push the badge and menu out of view (see label_category.html). #}
     <nldd-text-cell>
     <span>{{ suborganization.name }} <nldd-badge color="neutral" number="{{ suborganization.usage_count|default(0) }}" accessible-label="{{ suborganization.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
     </nldd-text-cell>

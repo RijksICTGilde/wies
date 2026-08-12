@@ -1,13 +1,12 @@
 {# Wraps a native <select> so the browser keeps form submission and keyboard
-   handling. The wrapper lives here rather than in field.html so the widget
-   also renders correctly on its own via
-   as_widget(). The aria-label sits on the <select> because nldd-form-field's
-   label wiring only reaches its first child — the nldd-dropdown host — and that
-   never forwards a name inward; NlddFormMixin._configure_field supplies it. #}
-{# nldd-form-field._findInput() geeft de nldd-dropdown host terug, niet de inner
-   <select>, en leest daar `invalid`/`error-message` van af. nldd-dropdown
-   reflecteert `invalid` (rode rand + icoon) en de foutmelding wordt zichtbaar en
-   via aria-describedby aangekondigd. Daarom hoort de wiring op de host. #}
+   handling. The wrapper lives here rather than in field.html so the widget also
+   renders correctly on its own via as_widget(). The aria-label sits on the
+   <select> because nldd-form-field's label wiring only reaches its first child —
+   the nldd-dropdown host — and that never forwards a name inward;
+   NlddFormMixin._configure_field supplies it.
+
+   The error wiring belongs on the host: _findInput() returns the nldd-dropdown,
+   not the inner <select>, and reads `invalid`/`error-message` there. #}
 <nldd-dropdown {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
 <select name="{{ widget.name }}" {% include "forms/widgets/attrs.html" %}>
   {% for group_name, group_choices, group_index in widget.optgroups %}

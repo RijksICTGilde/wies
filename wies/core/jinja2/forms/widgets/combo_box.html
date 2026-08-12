@@ -1,6 +1,6 @@
-{# Form-associated, dus hij post onder `name` als een gewone select. De opties
-   komen uit een geslot nldd-menu, net als bij nldd-token-field.
-   namespace: een {% set %} in een for-loop lekt niet naar buiten in Jinja. #}
+{# Form-associated, so it posts under `name` like a plain select; the options
+   come from a slotted nldd-menu. The namespace is needed because a Jinja
+   {% set %} inside a for-loop does not leak outside it. #}
 {% set ns = namespace(selected_value="") %}
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}

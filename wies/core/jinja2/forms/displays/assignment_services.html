@@ -1,13 +1,10 @@
 {# Display partial for the Assignment services EditableCollection. Renders the
-team list from `value` (row dicts produced by _services_initial, viewer-filtered
-+ vacancies-first by _services_display_context / visible_service_rows). The
-whole block toggles with edit mode: on edit the inline-edit wrapper is swapped
-for the formset; on save/cancel it swaps back to this display. Historical
-placements are flagged with a privacy note for the placed colleague and
-BM-owner, hidden from unrelated viewers.
+team list from `value` (row dicts from _services_initial, viewer-filtered and
+vacancies-first via _services_display_context). Edit mode swaps the inline-edit
+wrapper for the formset and back. Historical placements carry a privacy note for
+the placed colleague and BM owner, hidden from unrelated viewers.
 
-De rijen zijn zelf niet klikbaar: alle acties (bewerken, bekijken,
-verwijderen) lopen via het rijmenu in de laatste cel. #}
+Rows are not clickable: every action runs through the row menu in the last cell. #}
 {% if value %}
   <nldd-list variant="box-tinted">
   {% for row in value %}
@@ -47,13 +44,13 @@ verwijderen) lopen via het rijmenu in de laatste cel. #}
       {% set member_name = row.skill_name %}
       <nldd-list-item>
       <nldd-cell>
-      {# Geen naam; het text-document-icoon leest als aanvraag, niet als persoon. #}
+      {# No name: the text-document icon reads as a request, not as a person. #}
       <nldd-avatar size="40" icon="text-document" decorative></nldd-avatar>
       </nldd-cell>
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
       <nldd-text-cell divider-start>
-      {# "Aanvraag: <rol>" leest als één zin; een losse tag ernaast deed dat
-         werk minder duidelijk. #}
+      {# "Aanvraag: <rol>" reads as one sentence; a separate tag next to it did
+         that job less clearly. #}
       <span>Aanvraag: {{ row.skill_name }}</span>
       {% if svc and (svc.start_date or svc.end_date) %}
         <span slot="supporting-text">

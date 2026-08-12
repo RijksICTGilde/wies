@@ -1,6 +1,5 @@
-{# De breadcrumb (Fin › DGBD › Datafundamenten) van één opdrachtgever. Het
-   rol-achtervoegsel alleen bij meerdere opdrachtgevers: bij één zegt "primair"
-   niets. De bijbehorende actie komt uit `get_org_levels_action`. #}
+{# Breadcrumb of one client organization. The role suffix is shown only with
+   multiple clients: with one, "primair" says nothing. #}
 {% macro render_org_line(org_row, base_url, show_role) %}
   {% set breadcrumb = get_org_breadcrumb(org_row.organization, base_url) %}
   <div>

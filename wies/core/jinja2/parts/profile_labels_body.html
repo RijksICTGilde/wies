@@ -1,7 +1,6 @@
-{# Inhoud van de profiel-sheet, los van de sheet zelf: bij een validatiefout
-   stuurt de view alleen dit stuk terug, zodat de openstaande sheet blijft
-   staan. De velden komen uit de database (één per labelcategorie), dus ze
-   worden hier doorlopen in plaats van bij naam genoemd. #}
+{# Sheet content split from the sheet itself: on a validation error the view returns
+   only this part, so the open sheet stays. Fields come from the database (one per
+   label category), hence the loop instead of naming them. #}
 <nldd-form>
 <form method="post"
       action="{{ form_post_url }}"

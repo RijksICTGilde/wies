@@ -1,16 +1,13 @@
 {# Widget template for OrgPickerWidget (NLDD variant).
 
-  Rendert de zichtbare selectielijst server-side (in de eerste paint, geen
-  na-swap sprong) plus de raw formset-inputs (elk met `data-org-name` zodat de
-  JS labels kan herbouwen). assignment_org_picker.js maakt de server-lijst
-  interactief via event-delegatie en herbouwt hem na een apply uit de sheet of
-  een muteren (primair maken / verwijderen). De markup hieronder moet gelijk
-  blijven aan wat renderSelection() in die JS bouwt. #}
+  Renders the selection list server-side (so the first paint is complete, with
+  no post-swap jump) plus the raw formset inputs, each carrying `data-org-name`
+  so the JS can rebuild labels. The markup below must stay identical to what
+  renderSelection() in assignment_org_picker.js builds. #}
 {% set selections = widget.selections %}
 {% set prefix = widget.prefix %}
-{# nldd-form-field toont de fout alleen als zijn "input" (deze div, via
-   _findInput) invalid + error-message draagt; zonder deze attrs staat de melding
-   op hoogte 0. #}
+{# nldd-form-field only shows the error when its "input" (this div, via
+   _findInput) carries invalid + error-message; without them it has height 0. #}
 <div id="assignment-org-picker"
      {% if widget.attrs.invalid %} invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
   <div id="assignment-org-selections">
@@ -22,7 +19,7 @@
         {% set is_primary = row.role == 'PRIMARY' %}
         <nldd-list-item>
         <nldd-text-cell>
-        {# Trailing spatie + tag in dezelfde cel spiegelt renderSelection(). #}
+        {# Trailing space plus tag in one cell mirrors renderSelection(). #}
         <span>{{ org_name }} {% if is_primary %}<nldd-tag size="sm" color="accent" text="Primair"></nldd-tag>{% endif %}</span>
         </nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -42,10 +39,9 @@
       </nldd-list>
     {% endif %}
   </div>
-  {# De spacer onder de lijst hoort bij de lijst: assignment_org_picker.js voegt
-     hem mee toe bij een render, dus hier alleen tonen als de server al iets
-     rendert — anders staat er een gat onder het label zolang er niets gekozen
-     is. #}
+  {# The spacer belongs to the list: assignment_org_picker.js adds it on render,
+     so render it here only when the server has a list, otherwise there is a gap
+     under the label while nothing is selected. #}
   {% if selections %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}

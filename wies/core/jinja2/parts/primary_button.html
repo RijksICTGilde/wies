@@ -1,6 +1,5 @@
-{# Gedeelde "primaire actie"-knop (bv. "Opdracht invoeren"). De view zet
-   ``primary_button`` met een ``href`` (gewone link) of ``attrs`` (htmx). Include
-   dit blok waar de view die context zet. #}
+{# Shared primary action button. The view sets ``primary_button`` with either an
+   ``href`` (plain link) or ``attrs`` (htmx). #}
 {% if primary_button %}
   <nldd-button variant="primary" start-icon="plus" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-button>
 {% endif %}

@@ -1,13 +1,12 @@
 {% for user in object_list %}
-  {# The row itself is not interactive: bewerken en verwijderen lopen allebei
-     via het more-menu aan het einde van de regel. #}
+  {# The row itself is not interactive: editing and deleting both go through the
+     more-menu at the end of the row. #}
   <nldd-list-item>
   <nldd-cell>
   <nldd-avatar size="40" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  {# Rol-tag(s) inline achter de naam (zoals de skill-tag bij een teamlid). Veel
-     dummy-users hebben geen groep; dan blijft het simpelweg naam + e-mail. #}
+  {# Role tags inline after the name, like the skill tag on a team member. #}
   <nldd-text-cell divider-start width="full" supporting-text="{{ user.email }}">
   <span>
     {{ user.first_name }} {{ user.last_name }}
@@ -33,7 +32,7 @@
   </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
-  {# Klik i.p.v. auto-load: zie placement_table_rows.html. #}
+  {# Click instead of auto-load: see placement_table_rows.html. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

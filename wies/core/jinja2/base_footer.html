@@ -1,8 +1,6 @@
-{# Basis voor de footer-/informatiepagina's (de pagina's achter de footerlinks:
-   Contact, Veelgestelde vragen, Privacy, Toegankelijkheid). Twee verschillen met
-   base.html: de globale menubalk maakt plaats voor een terugknop naar de app, en
-   de tekst staat in een smallere simple-section zodat de regellengte leesbaar
-   blijft. #}
+{# Base for the information pages behind the footer links. Two differences with
+   base.html: the global menu bar gives way to a back button, and the text sits
+   in a narrower simple-section to keep the line length readable. #}
 {% extends "base.html" %}
 {% block header %}
   <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">

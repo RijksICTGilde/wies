@@ -19,13 +19,13 @@
   <p>Een merk is een suborganisatie waaronder een collega werkt. Een collega heeft maximaal één merk.</p>
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# Geen zoekveld op deze pagina, dus de knop staat links. #}
+  {# No search field on this page, so the button sits on the left. #}
   <nldd-toolbar label="Merken">
   <nldd-toolbar-item slot="start">
   <nldd-button start-icon="plus" text="Merk toevoegen" hx-get="{{ url('suborganization-create') }}" hx-target="#suborganizationFormModal" hx-swap="innerHTML">
   </nldd-button>
-  {# Het overflowmenu toont een KLOON van dit item en meldt de keuze terug als
-     select op het origineel, dus htmx luistert daarop en niet op een klik. #}
+  {# The overflow menu shows a CLONE and reports the choice back as a select on the
+     original, so htmx triggers on that instead of a click. #}
   <nldd-menu-item slot="overflow" text="Merk toevoegen" icon="plus" hx-get="{{ url('suborganization-create') }}" hx-trigger="select" hx-target="#suborganizationFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>

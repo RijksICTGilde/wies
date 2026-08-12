@@ -1,14 +1,9 @@
-{# NDD filter sidebar — elke groep is een nldd-title plus een nldd-list van
-checkbox-rijen. De rij zelf is de checkbox (nldd-list-item[checkbox]); de
-nldd-checkbox erin is puur visueel. De waarden die het formulier submit staan
-als verborgen inputs achter de lijst — filter_interactions.js spiegelt de rij
-daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
-{# Dit fragment reist als hx-swap-oob naar meerdere plekken (de sidebar-slot van
-   de lijstpagina's, de filtersheet van gebruikersbeheer), dus draagt het zelf
-   geen slot, padding of positionering: het weet niet waar het landt. Dat is aan
-   de parent — een nldd-container met slot en padding op de lijstpagina's, de
-   nldd-simple-section in de sheet. De container blijft staan omdat de OOB-swap
-   op zijn id richt. #}
+{# The row itself is the checkbox; the nldd-checkbox inside is decorative only.
+   Submitted values live in hidden inputs behind the list, mirrored there by
+   filter_interactions.js so hx-include picks them up natively (getlist). #}
+{# This fragment travels as hx-swap-oob to several places, so it carries no slot,
+   padding or positioning of its own — that is up to the parent. The container
+   stays because the OOB swap targets its id. #}
 <nldd-container id="filter-panel" {% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <form id="filter-form"
       hx-get="{{ filter_target_url }}"
@@ -17,13 +12,13 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
       hx-replace-url="true"
       hx-trigger="change from:[data-filter-input], input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
-  {# Bijgewerkt door nldd-search-field via bridge. #}
+  {# Updated by nldd-search-field through the bridge. #}
   <input type="hidden"
          name="zoek"
          id="search-hidden"
          value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
          data-filter-input />
-  {# Beheerd door de client modal. #}
+  {# Managed by the client modal. #}
   <div id="org-filter-inputs">
     {% for chip in org_chip_data %}
       <input type="hidden"
@@ -33,17 +28,16 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
              data-label="{{ chip.label }}" />
     {% endfor %}
   </div>
-  {# Scheider vóór elke groep in plaats van erna, zodat de laatste groep geen
-  loze ruimte onderaan achterlaat. Een groep kan niets renderen (geen opties),
-  dus loop.first/loop.last klopt hier niet — bijhouden wat er echt uit kwam. #}
+  {# Separator before each group, not after, so the last group leaves no trailing
+  space. A group can render nothing, so loop.first/last is unreliable here. #}
   {% set ns = namespace(rendered=false) %}
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'modal' %}
       {% if ns.rendered %}
         <nldd-spacer size="24"></nldd-spacer>
       {% endif %}
-      {# Opdrachtgever: top-3 quick opties (elk met een eigen param: org /
-  org_self / org_type) plus een "Meer" knop die de opdrachtgever-boom opent. #}
+      {# Client: top-3 quick options (each with its own param) plus a "Meer"
+  button that opens the client tree. #}
       <nldd-title size="6">
       <h3>{{ filter_group.label }}</h3>
       </nldd-title>
@@ -61,16 +55,13 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
           <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
           </nldd-list-item>
         {% endfor %}
-        {# De "Meer" actie hoort bij de lijst, dus hij is een rij en geen losse
-        knop eronder: hij deelt de rijhoogte, de hover en de uitlijning. #}
-        {# hx-include="[data-filter-input]" (niet enkel #org-filter-inputs): stuurt
-        naast de org-selecties (voor de aangevinkte staat) óók de andere actieve
-        filters mee, zodat de telling in de boom de rol/labels/merk-filters volgt —
-        net als de zijbalk. De org-inputs dragen zelf ook data-filter-input, dus dit
-        omvat ze allebei. #}
+        {# "Meer" is a row rather than a button below, so it shares the row
+        height, hover and alignment of the list. #}
+        {# hx-include="[data-filter-input]" (not just #org-filter-inputs) also
+        sends the other active filters, so counts in the tree follow them. #}
         <nldd-list-item button hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="[data-filter-input]">
-        {# 24 voor de breedte van de checkbox-cel, 8 voor de spacer erachter:
-        zo begint "Meer..." op dezelfde x als de labels erboven. #}
+        {# 24 for the checkbox cell, 8 for its spacer: aligns "Meer..." with the
+        labels above. #}
         <nldd-spacer-cell size="24"></nldd-spacer-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="center" color="accent" text="Meer..."></nldd-text-cell>
@@ -110,9 +101,8 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
           </nldd-list-item>
         {% endif %}
         </nldd-list>
-        {# De waarden die daadwerkelijk submitten. Eén per zichtbare optie plus de
-    via "Meer" gekozen waarden die geen rij hebben; filter_interactions.js zet
-    checked bij een rij-toggle. #}
+        {# The values that actually submit: one per visible option plus values
+    chosen via "Meer" that have no row. filter_interactions.js keeps them in sync. #}
         {% set inline_values = top_options|map(attribute='value')|list %}
         <span data-hidden-inputs="{{ filter_group.group_id }}" hidden>
           {% for option in top_options %}

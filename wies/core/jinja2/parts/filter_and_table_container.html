@@ -10,18 +10,17 @@ both stay in sync without a shared wrapper element. #}
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
   <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
   </nldd-button>
-  {# Het overflowmenu toont een KLOON en meldt de keuze terug als select op dit
-     origineel; sidebar_toggle.js luistert daarom op beide gebeurtenissen. #}
+  {# The overflow menu shows a CLONE but reports the choice back as select on this
+     original, so sidebar_toggle.js listens for both events. #}
   <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines"></nldd-menu-item>
   </nldd-toolbar-item>
-  {# De sorteercontrole ververst nu de lijst in-place (htmx-swap van #results +
-     OOB van #placement-list en #sort-control), net als de filters. De hx-* zitten
-     declaratief op de menu-items (hx-trigger="select"); zie parts/sort_control.html. #}
+  {# Sorting refreshes the list in place like the filters do; the hx-* attributes
+     sit on the menu items themselves. See parts/sort_control.html. #}
   {% include "parts/sort_control.html" %}
   </nldd-toolbar>
-  {# variant=listbox houdt de focus in het zoekveld. Het menu staat buiten de
-  toolbar: als overlay binnen een nldd-toolbar-item meet Floating UI tegen de
-  layout van dat item en landt de popover links in beeld. #}
+  {# variant=listbox keeps focus in the search field. The menu sits outside the
+  toolbar: inside an nldd-toolbar-item, Floating UI measures against that item's
+  layout and the popover lands at the left of the screen. #}
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
@@ -32,9 +31,9 @@ both stay in sync without a shared wrapper element. #}
   {% for chip in org_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
-  {# Fail-closed: een facetwaarde die niets matcht (stale/verzonnen public_id)
-     krijgt een "Onbekend"-chip i.p.v. stil te verdwijnen — zo blijft de lege
-     lijst uitlegbaar en wisbaar. Zie PublicIdFacetsMixin.add_unknown_filter_chips. #}
+  {# Fail-closed: a facet value that matches nothing (stale or invented public_id)
+     gets an "Onbekend" chip instead of vanishing, keeping the empty list
+     explainable and clearable. See PublicIdFacetsMixin.add_unknown_filter_chips. #}
   {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
@@ -53,14 +52,14 @@ both stay in sync without a shared wrapper element. #}
     {% elif filter_group.type == 'date' %}
       {% set value = active_filters.get(filter_group.name) %}
       {% if value %}
-        {# Label plus datum, zodat het token de modus laat zien en niet enkel een
-        losse datum is. #}
+        {# Label plus date, so the token shows which mode it is and not just a
+        bare date. #}
         <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ filter_group.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ value.strftime("%d-%m-%Y") }}</nldd-token>
       {% endif %}
     {% endif %}
   {% endfor %}
-  {# "Wis alle filters" hoort bij de chips (Funda-stijl): één klik leegt alle
-     actieve filters. filter_interactions.js vangt data-clear-all-filters. #}
+  {# Clearing all filters belongs with the chips; filter_interactions.js handles
+     data-clear-all-filters. #}
   <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
@@ -77,10 +76,9 @@ both stay in sync without a shared wrapper element. #}
 {% endif %}
 {% include "parts/placement_table.html" %}
 {% if is_htmx %}
-  {# De sorteercontrole reist OOB mee: de toolbar zelf rendert niet in een
-     htmx-respons (zie {% if not is_htmx %} bovenaan), maar de knoptekst en het
-     aangevinkte item moeten de nieuwe volgorde tonen. Het #sort-control-element
-     blijft staan en wordt op zijn id verwisseld. #}
+  {# The sort control rides along OOB: the toolbar itself does not render in an
+     htmx response, but the button text and checked item must show the new order.
+     #sort-control stays in place and is swapped on its id. #}
   {% set sort_control_oob = true %}
   {% include "parts/sort_control.html" %}
 {% endif %}

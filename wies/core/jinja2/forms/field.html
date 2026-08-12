@@ -1,17 +1,13 @@
 {# nldd-form-field only reveals an error text when the input reflects `invalid`
    and points at it by id via `error-message` — without that wiring the messages
-   render at height 0 and screen readers never announce them. Elke widget zet die
-   wiring nu zelf op het element dat _findInput() teruggeeft (zie de widget-
-   templates), dus het component toont de melding zodra het upgradet.
+   render at height 0 and screen readers never announce them. Each widget sets
+   that wiring itself on the element _findInput() returns.
 
-   We zetten `invalid` daarnaast alvast op de foutmelding als no-JS/pre-upgrade
-   fallback: een error-text bestaat alleen als er een fout is, dus dit is altijd
-   correct. _syncErrorText overschrijft het onvoorwaardelijk zodra het component
-   upgradet, maar met dezelfde waarde (invalid=true), dus het blijft consistent.
+   `invalid` is also set on the error text as a no-JS/pre-upgrade fallback; an
+   error text only exists when there is an error, so it is always correct.
 
-   Een veld dat technisch optioneel is maar dat de gebruiker niet als keuze
-   ervaart (er is een zinnige standaard) kan de Optioneel-badge onderdrukken met
-   `hide-optional` in widget.attrs. #}
+   A field that is technically optional but has a sensible default can suppress
+   the Optioneel badge with `hide-optional` in widget.attrs. #}
 {% set error_ids = wire_field_errors(field) %}
 <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}

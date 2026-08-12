@@ -1,11 +1,7 @@
-{# Sorteercontrole in de toolbar. Reist als OOB-fragment mee in een htmx-swap
-   (zowel bij sorteren als bij filteren), zodat de knoptekst en het aangevinkte
-   item na een swap de nieuwe volgorde tonen in plaats van de vorige. Beide
-   render-paden (volledige pagina en OOB) delen dit bestand.
-
-   sort_control_oob wordt gezet door de parent bij een htmx-respons; alleen dan
-   draagt het wrapper-element het oob-attribuut. Het id blijft staan zodat de
-   OOB-swap erop kan richten. #}
+{# Toolbar sort control, shared by the full-page and OOB render paths. It rides
+   along as an OOB fragment on every htmx swap so button text and checked item
+   show the new order. The parent sets sort_control_oob on htmx responses; the
+   id stays put either way so the OOB swap can target it. #}
 {% set sort_labels = {
   "name": "Naam (A-Z)",
   "-name": "Naam (Z-A)",
@@ -15,34 +11,22 @@
   "end_date": "Einddatum (oudste eerst)"
 } %}
 {% set current_order = request.GET.get('order') %}
-{# De standaardvolgorde is geen waarde maar de afwezigheid van ?order=, dus die
-   optie krijgt een url die de parameter juist weghaalt. Radio's en geen knoppen:
-   sorteren is één keuze uit een lijst, en alleen bij type radio of checkbox toont
-   een item zijn selected-staat.
-
-   Sorteren ververst de lijst in-place, net als de filters: een htmx-swap van
-   #results (aantal + chips) plus OOB van #placement-list (de rijen) en dit
-   #sort-control (knoptekst + aangevinkt item). Geen eigen JS: het hx-get zit op
-   het menu-item met hx-trigger="select" (de DS-gebeurtenis van een radio-keuze),
-   net als user_admin.html en assignment_panel_content.html. Het overflowmenu
-   toont een KLOON, maar meldt de keuze terug als select op dit ORIGINEEL, waar de
-   htmx-binding op zit — dus één swap, geen dubbel vuren en geen document.contains-
-   guard. hx-replace-url="true" zet de gekozen ?order= (met de filters die
-   url_with_param bewaart) in de adresbalk, zodat een reload de sortering onthoudt. #}
-{# "Plaatsing" noemt het ding, net als Naam en Opdracht hieronder, en niet een
-   datumveld: er wordt gesorteerd op de startdatum van de opdracht, terwijl de
-   zichtbare datum in de rij de einddatum is. Een label als "Plaatsingdatum" of
-   "Startdatum" stuurt je dus naar een kolom die er niet staat. #}
+{# The default order is the absence of ?order=, so that option gets a url that
+   strips the parameter. Radios, not buttons: only type radio or checkbox shows
+   a selected state. Sorting refreshes the list in place (htmx swap of #results
+   plus OOB of #placement-list and #sort-control); hx-replace-url keeps the
+   chosen order in the address bar so a reload remembers it. #}
+{# "Plaatsing" names the thing, not a date field: sorting is on the assignment's
+   start date while the row shows the end date, so "Startdatum" would point at a
+   column that isn't there. #}
 {% set default_sort_label = "Plaatsing (nieuwste eerst)" %}
-{# Eén item = één sorteerkeuze. Als macro zodat de zichtbare lijst en de overflow-
-   groep exact dezelfde attributen delen. hx-trigger="select" is de DS-gebeurtenis
-   van een radio-keuze; de overflow-kloon meldt de keuze terug op dit origineel. #}
+{# A macro so the visible list and the overflow group share the exact same
+   attributes. hx-trigger="select" is the DS event for a radio choice. #}
 {% macro sort_item(label, url, selected) -%}
   <nldd-menu-item type="radio" text="{{ label }}" {% if selected %}selected{% endif %} hx-get="{{ url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
 {%- endmacro %}
-{# De wrapper draagt id + oob: hx-swap-oob heeft één element met een id nodig, en
-   nldd-toolbar-item[slot=end] is dat element. Zie #filter-panel en
-   #placement-list voor hetzelfde patroon. #}
+{# The wrapper carries id + oob: hx-swap-oob needs a single element with an id,
+   and nldd-toolbar-item[slot=end] is it. Same pattern as #filter-panel. #}
 <nldd-toolbar-item id="sort-control" slot="end" {% if sort_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <nldd-button variant="secondary" expandable start-icon="sort" text="{{ sort_labels.get(current_order) or default_sort_label }}">
 <nldd-menu slot="popup" placement="bottom-end">
@@ -52,10 +36,10 @@
 {% endfor %}
 </nldd-menu>
 </nldd-button>
-{# Hetzelfde als groep in het overflowmenu: een knop die zelf een menu opent heeft
-   daar geen zinnig equivalent, de opties zelf wel. De DS toont hier een KLOON en
-   meldt de keuze terug als select op deze originelen; de htmx-binding op elk
-   origineel vangt dat af, dus één swap. #}
+{# The same options as a group in the overflow menu: a button that opens a menu
+   has no equivalent there, the options do. The DS renders a CLONE but reports
+   the choice back as select on these originals, where the htmx binding sits, so
+   there is one swap and no double fire. #}
 <nldd-menu-group slot="overflow" text="Sorteren">
 {{ sort_item(default_sort_label, url_without_param(request, 'order'), not current_order) }}
 {% for value, label in sort_labels.items() %}

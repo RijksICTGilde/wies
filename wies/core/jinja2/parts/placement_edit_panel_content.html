@@ -1,17 +1,16 @@
-{# Child sheet van het plaatsingspaneel: één formulier over Service.skill,
-   Service.description en de Placement.period-groep. De terugknop van de
-   top-title-bar vuurt een `back`-event dat side_panel.js afvangt; opslaan
-   rendert het ouderpaneel terug (zie placement_edit_view).
+{# Child sheet of the placement panel: one form over Service.skill,
+   Service.description and the Placement period group. The back button fires a
+   `back` event that side_panel.js handles; saving re-renders the parent panel.
 
-   nldd-form krijgt een eigen <form> als direct child (user-provided form mode),
-   omdat htmx zijn attributen op het echte formulier nodig heeft. #}
+   nldd-form gets its own <form> as a direct child (user-provided form mode),
+   because htmx needs its attributes on the real form element. #}
 {% set colleague = panel_data.colleague %}
 {% set form = panel_data.form %}
-{# Stond vast op "Rol bewerken", ook boven het periodeformulier. De view geeft de
-   kop mee zodra ?veld= één rij bewerkt; zonder dat blijft het hele formulier. #}
+{# The view supplies a heading when ?veld= edits a single row; without it the
+   whole form is shown. #}
 {% set panel_heading = panel_data.edit_heading or "Plaatsing bewerken" %}
-{# collapse-anchor: dezelfde titel staat in de bar en verschijnt daar pas zodra
-   de kop in de inhoud eronder wegscrollt. #}
+{# collapse-anchor: the bar shows the same title only once the heading below
+   scrolls out of view. #}
 <nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ colleague.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
@@ -26,8 +25,8 @@
       data-service-start="{{ panel_data.service.start_date.isoformat() if panel_data.service.start_date else '' }}"
       data-service-end="{{ panel_data.service.end_date.isoformat() if panel_data.service.end_date else '' }}">
   {% if form.skill %}
-    {# Combobox in plaats van de select-widget: de rollenlijst is lang genoeg
-           om te willen typen. #}
+    {# Combo box instead of the select widget: the role list is long enough
+           that typing beats scrolling. #}
     {% set skill_value = form.skill.value() | string if form.skill.value() else "" %}
     <nldd-form-field label="{{ form.skill.label }}">
     <nldd-combo-box name="skill" value="{{ skill_value }}" accessible-label="{{ form.skill.label }}" {% if form.skill.errors %}invalid{% endif %}>
@@ -46,9 +45,9 @@
     {{ form.description.as_field_group() }}
   {% endif %}
   {% if form.period_source %}
-    {# Verborgen via een ouder met [hidden]: een `display:none` op de select
-           zelf wordt door de bundel-CSS overruled. De radiogroep hieronder zet
-           de waarde (zie placement_period_toggle.js). #}
+    {# Hidden through a parent with [hidden]: a `display:none` on the select
+           itself is overruled by the bundle CSS. The control below sets the
+           value (see placement_period_toggle.js). #}
     <div hidden>{{ form.period_source.as_widget() }}</div>
     {% set inherits = form.period_source.value() == "SERVICE" %}
     <nldd-form-field label="Periode">
@@ -56,8 +55,8 @@
     <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
     </nldd-segmented-control>
-    {# Alleen zinvol bij "Van opdracht"; placement_period_toggle.js verbergt
-             hem zodra je een eigen periode kiest. #}
+    {# Only meaningful for the inherited period; placement_period_toggle.js
+             hides it once an own period is chosen. #}
     <nldd-form-field-help-text data-service-period-help>
     De periode van de opdracht is
     {{ panel_data.service.start_date|datum_nl if panel_data.service.start_date else "onbekend" }}
@@ -65,12 +64,11 @@
     {{ panel_data.service.end_date|datum_nl if panel_data.service.end_date else "heden" }}
     </nldd-form-field-help-text>
     </nldd-form-field>
-    {# Niet as_field_group() maar met de hand: de `hidden` op deze nldd-form-field
-       moet server-side mee, zodat de eerste paint dezelfde ingeklapte staat toont
-       die placement_period_toggle.js op init zet (update) en het veld niet
-       zichtbaar-dan-ingeklapt flitst. as_field_group() rendert de wrapper zelf en
-       kan die `hidden` niet meegeven. De JS blijft .hidden toggelen; wire_field_errors
-       koppelt hier de foutmelding (wat as_field_group() anders zou doen). #}
+    {# Written out instead of as_field_group(): the `hidden` must be there
+       server-side so the first paint already shows the collapsed state and the
+       field does not flash visible-then-hidden. as_field_group() renders the
+       wrapper itself and cannot pass it. wire_field_errors links the error
+       message here, which as_field_group() would otherwise do. #}
     {% set start_errors = wire_field_errors(form.specific_start_date) %}
     <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
     {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
@@ -78,8 +76,8 @@
       <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
     {% endfor %}
     </nldd-form-field>
-    {# Uit betekent: geen einddatum bekend, de plaatsing loopt door. De switch
-           post niet mee; hij stuurt alleen het einddatumveld aan. #}
+    {# Off means no known end date, the placement runs on. The switch is not
+           posted; it only drives the end date field. #}
     <nldd-form-field{% if inherits %} hidden{% endif %}>
     <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
     </nldd-form-field>
@@ -94,8 +92,8 @@
   {% for error in form.non_field_errors() %}
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
-  {# Verborgen velden onderaan: nldd-form zet ruimte tussen alle siblings,
-         dus een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
+  {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at
+         the top pushes the first visible field down. #}
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <nldd-form-actions>
   <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>

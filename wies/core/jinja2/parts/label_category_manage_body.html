@@ -1,5 +1,5 @@
-{# Inhoud van de categorie-beheer-sheet, los van de sheet: elke actie rendert
-   alleen dit stuk (hx-target="#categoryManageBody"), zodat de sheet blijft staan. #}
+{# Body of the category management sheet, kept separate from the sheet: every
+   action re-renders only this part so the sheet stays open. #}
 <nldd-form>
 <form method="post"
       action="{{ form_post_url }}"
@@ -16,7 +16,8 @@
   {% endfor %}
   <nldd-list-item>
   <nldd-cell width="full">
-  {# Rij bijmaken: post de toestand terug met extra_row; server rendert een lege rij erbij. #}
+  {# Adding a row posts the current state back with extra_row; the server renders
+     an empty row alongside it. #}
   <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
   </nldd-cell>
   </nldd-list-item>

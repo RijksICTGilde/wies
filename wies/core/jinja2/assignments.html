@@ -10,15 +10,15 @@
   <script src="{{ app_asset('js/client_modal.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
-  {# De sidebar-slot brengt geen padding mee (zie nldd-sidebar-section), en het
-     filterpaneel zelf ook niet: het reist als OOB-fragment. Dus hier. #}
+  {# Neither the sidebar slot nor the filter panel brings padding, so it goes
+     here. #}
   <nldd-container slot="sidebar" padding="16">
   {% include "parts/filter_sidebar.html" %}
   </nldd-container>
 {% endblock sidebar %}
 {% block content %}
-  {# Buiten de container: die wordt bij een htmx-verzoek opnieuw gerenderd, de
-     paginakop hoort daar niet in mee te reizen. #}
+  {# Outside the container: that is re-rendered on htmx requests, and the page
+     heading must not travel with it. #}
   <nldd-title size="3">
   <h1>Aanvragen</h1>
   </nldd-title>

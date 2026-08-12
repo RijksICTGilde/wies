@@ -1,9 +1,9 @@
-{# Een audit-waarde met label ("Van:" / "Naar:") en een Toon meer-schakelaar
-   boven de 300 tekens.
+{# An audit value with its label ("Van:" / "Naar:") and a show-more toggle above
+   300 characters.
 
    Params:
-     label  (required): "Van" of "Naar".
-     value  (required): de te tonen tekst.
+     label (required): "Van" or "Naar".
+     value (required): the text to show.
 #}
 <div class="wies-event-value">
   <span class="wies-text-secondary">{{ label }}:</span>
@@ -11,7 +11,7 @@
     <span class="inline-edit-long-text">
       <span class="inline-edit-long-text__truncated">{{ value[:300] }}…</span>
       <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
-      {# Tekst en icoon wisselen via attributen (inline_edit.js). #}
+      {# inline_edit.js swaps the text and icon attributes. #}
       <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer"></nldd-button>
     </span>
   {% else %}

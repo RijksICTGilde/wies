@@ -11,27 +11,23 @@ intercepts the click to open the side panel instead of navigating. #}
   <nldd-cell>
   <nldd-avatar size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
   </nldd-cell>
-  {# divider-start hier en niet op een naamcel: die twee wisselen per breedte en
-     de verborgene heeft geen positie, dus dan begint de streep op 0 en loopt hij
-     links de rij uit. Deze spacer staat er altijd, dus de streep begint overal
-     op dezelfde plek: bij de tekst, niet onder de avatar. #}
+  {# divider-start here and not on a name cell: those two swap per breakpoint and
+     the hidden one has no position, so the divider would start at 0 and run off
+     the row. This spacer is always present. #}
   <nldd-spacer-cell divider-start size="12"></nldd-spacer-cell>
-  {# De rij heeft twee indelingen, en de cel-API kent responsive zichtbaarheid
-     maar geen responsive breedte: je zet dus per breedte zijn eigen cellen neer
-     en verbergt de andere. Breed zijn het twee kolommen, smal is het er één.
-
-     De naamkolom is gecapt op 260px, anders deelt hij de rij doormidden met de
-     opdracht terwijl een naam plus rol veel minder nodig heeft. #}
+  {# The cell API has responsive visibility but no responsive width, so each
+     breakpoint gets its own cells and hides the others: two columns wide, one
+     narrow. The name column is capped at 260px so it does not split the row in
+     half with the assignment. #}
   {% set role_name = placement.service.skill.name if placement.service.skill else '' %}
   <nldd-text-cell hide-below="md" max-width="260px" text="{{ placement.colleague.name }}" supporting-text="{{ role_name }}"></nldd-text-cell>
-  {# Opdracht, opdrachtgever en einddatum in één cel: als losse kolommen stonden
-     de opdrachtgever en de datum ver uit elkaar terwijl ze samen één zin zijn. #}
+  {# Assignment, client and end date in one cell: as separate columns the client
+     and the date drifted apart while they read as one sentence. #}
   {% set end_date = placement.actual_end_date|datum_nl if placement.actual_end_date else '' %}
-  {# Het voorzetsel per cel apart in plaats van een |capitalize achteraf: die
-     filter maakt de rest van de zin juist klein, en dan verliezen de
-     organisatienamen hun hoofdletters ("Bij rijkswaterstaat"). De zin wordt hier
-     opgebouwd en niet in het attribuut zelf, want een {% if %} in een
-     attribuutwaarde levert djlint T028 op. #}
+  {# A per-case preposition instead of |capitalize: that filter lowercases the
+     rest of the sentence and strips the capitals from organization names ("Bij
+     rijkswaterstaat"). Built here rather than inside the attribute because an
+     {% if %} in an attribute value trips djlint T028. #}
   {% set wide_supporting = "" %}
   {% if client_label and end_date %}
     {% set wide_supporting = "Bij " ~ client_label ~ " tot " ~ end_date %}
@@ -41,10 +37,9 @@ intercepts the click to open the side panel instead of navigating. #}
     {% set wide_supporting = "Tot " ~ end_date %}
   {% endif %}
   <nldd-text-cell hide-below="md" text="{{ placement.service.assignment.name }}" supporting-text="{{ wide_supporting }}"></nldd-text-cell>
-  {# Smal scherm: alles in één cel, want twee tekstkolommen naast elkaar knijpen
-     daar allebei tot een paar letters per regel. De rol staat als tag achter de
-     naam: als tweede regel zou hij concurreren met de opdracht eronder, en dat
-     is de regel waar je hier op zoekt. #}
+  {# Narrow screens: one cell, since two text columns side by side squeeze to a
+     few letters per line. The role is a tag behind the name; as a second line it
+     would compete with the assignment, which is the line people scan for. #}
   {% set narrow_supporting = placement.service.assignment.name %}
   {% if client_label %}
     {% set narrow_supporting = narrow_supporting ~ " bij " ~ client_label %}
@@ -66,10 +61,9 @@ intercepts the click to open the side panel instead of navigating. #}
   </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
-  {# Klik i.p.v. auto-load (hx-trigger=revealed): anders zakt de pagina-footer
-     bij veel resultaten oneindig weg en is hij nooit te bereiken. Een gewone div
-     (geen nldd-list-item) zodat de rij-divider er niet onder loopt; hij vervangt
-     zichzelf door de volgende rijen (met opnieuw deze knop). #}
+  {# Click instead of auto-load (hx-trigger=revealed), which would push the page
+     footer endlessly out of reach. A plain div, not an nldd-list-item, so the row
+     divider does not run underneath it. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

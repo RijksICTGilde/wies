@@ -9,11 +9,10 @@
 {# No sidebar on profile page — base.html auto-hides
 empty sidebar #}
 {% block content %}
-  {# Geen eigen breedte: de sectie houdt de standaard paginabreedte aan. #}
   <nldd-one-third-two-thirds-section>
-  {# In het header-slot en niet erboven: deze pagina heeft geen zijbalk, dus
-     buiten de sectie is er geen enkele horizontale marge en plakt de kop tegen
-     de vensterrand. De sectie brengt hem zelf mee, en responsief. #}
+  {# In the header slot, not above it: this page has no sidebar, so outside the
+     section there is no horizontal margin and the heading sticks to the viewport
+     edge. #}
   <nldd-title slot="header" size="3">
   <h1>Mijn profiel</h1>
   </nldd-title>
@@ -54,7 +53,7 @@ empty sidebar #}
       {% if item.labels %}
         <nldd-container layout="wrap" gap="6">
         {% for label in item.labels %}
-          {# TIJDELIJK kleurloos (#565), zie parts/colleague_panel_content.html. #}
+          {# TEMPORARY: colourless (#565), see parts/colleague_panel_content.html. #}
           <nldd-tag>{{ label.name }}</nldd-tag>
         {% endfor %}
         </nldd-container>
@@ -67,8 +66,8 @@ empty sidebar #}
         <nldd-spacer size="16" direction="vertical"></nldd-spacer>
       {% endif %}
     {% endfor %}
-    {# Onder de labels, want de knop wijzigt precies wat erboven staat. Alleen
-       met een collegaprofiel: zonder dat is er niets om labels op te hangen. #}
+    {# Below the labels, since the button edits exactly what is above it. Only with
+       a colleague profile: without one there is nothing to hang labels on. #}
     {% if colleague and label_categories %}
       <nldd-spacer size="24" direction="vertical"></nldd-spacer>
       <nldd-button size="sm" start-icon="edit" text="Profiel wijzigen" hx-get="{{ url('profile-labels-edit') }}" hx-target="#profileLabelsMount" hx-swap="innerHTML"></nldd-button>
@@ -84,8 +83,8 @@ empty sidebar #}
     {% endwith %}
   </div>
   </nldd-one-third-two-thirds-section>
-  {# Mount voor de sheet: buiten de sectie, zodat een lege div geen kolom- of
-     footerruimte opsnoept. #}
+  {# Sheet mounts outside the section, so an empty div takes no column or footer
+     space. #}
   <div id="profileNameModal"></div>
   <div id="profileLabelsMount"></div>
 {% endblock content %}

@@ -1,16 +1,11 @@
 {# First-login onboarding wizard, included by base.html when show_onboarding is
-   True (see wies.core.context_processors.onboarding). Een nldd-window met een
-   nldd-page erin: de titelbalk levert "Overslaan" (dismiss), de stapindicator
-   en stapnavigatie komen uit onboarding.js. "Overslaan" en "Aan de slag" POSTen
-   allebei naar onboarding-complete, dat de wizard afvinkt. Escape sluit het
-   venster alleen voor nu — dan komt de wizard bij de volgende pagina terug. #}
+   True (see wies.core.context_processors.onboarding). Step navigation comes from
+   onboarding.js; both "Overslaan" and "Aan de slag" POST to onboarding-complete.
+   Escape only closes for now — the wizard returns on the next page. #}
 {% set ns = namespace(step=0) %}
-{# no-light-dismiss: een klik naast het venster mag de wizard niet afsluiten,
-   daar zit ingevulde informatie in. Overslaan en Escape doen dat wel.
-   height: alle stappen even hoog, anders springt het venster bij elke stap. De
-   maat komt van de profielstap, de langste stap die helemaal moet passen: door
-   labelvelden heen scrollen is vervelend. De opdrachtenstap scrolt wel, want
-   die groeit met het aantal opdrachten. #}
+{# no-light-dismiss: a click outside must not discard entered data. A fixed
+   height keeps the window from jumping between steps; it is sized on the profile
+   step, the longest one that must fit whole. #}
 <nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(700px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Overslaan"></nldd-top-title-bar>
@@ -108,14 +103,13 @@
     {% endfor %}
   </section>
 {% endif %}
-{# Detailscherm binnen het venster: "Wijzigen" swapt hier het opdrachtformulier
-   in en onboarding.js verbergt zolang de stappen en de stapnavigatie. #}
+{# Detail view inside the window: "Wijzigen" swaps the assignment form in here
+   and onboarding.js hides the steps and step navigation meanwhile. #}
 <div id="onboarding-detail" hidden></div>
 </nldd-simple-section>
-{# Alle knoppen staan in de footer van de page, dus op één plek onder de
-   stappen in plaats van binnen de sectie; onboarding.js toont er telkens een.
-   Niet sticky: de knop hoort na de inhoud van de stap te komen, niet erover.
-   Terug ga je met de knop in de titelbalk. #}
+{# All buttons live in the page footer, one place below the steps; onboarding.js
+   shows one at a time. Not sticky: the button belongs after the step content,
+   not over it. #}
 <nldd-container slot="footer" padding="16" padding-top="0">
 <nldd-container data-onboarding-nav layout="row" horizontal-alignment="right">
 <nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
@@ -123,16 +117,16 @@
 <nldd-container data-onboarding-finish-wrap hidden>
 <nldd-button data-onboarding-finish variant="primary" width="full" text="Aan de slag"></nldd-button>
 </nldd-container>
-{# Opslaan staat op dezelfde plek als "Aan de slag". De knop staat buiten het
-   formulier, dus onboarding.js dient het in. #}
+{# Save sits where "Aan de slag" does. The button is outside the form, so
+   onboarding.js submits it. #}
 <nldd-container data-onboarding-detail-nav hidden>
 <nldd-button data-onboarding-detail-save variant="primary" width="full" text="Opslaan"></nldd-button>
 </nldd-container>
 </nldd-container>
 </nldd-page>
 </nldd-window>
-{# Overslaan en Aan de slag POSTen hetzelfde; onboarding.js dient dit formulier
-   in, zodat de knoppen zelf DS-knoppen kunnen blijven. #}
+{# Both "Overslaan" and "Aan de slag" POST this form via onboarding.js, so the
+   buttons themselves can stay design-system buttons. #}
 <form id="onboardingCompleteForm"
       method="post"
       action="{{ url('onboarding-complete') }}"
