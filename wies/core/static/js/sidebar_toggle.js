@@ -31,8 +31,7 @@
   document.addEventListener("select", (e) => {
     const item = window.wiesClosestInPath(e, "#sidebar-toggle-menu-item");
     if (!item || !document.contains(item)) return;
-    // show() rather than toggle(): picking a menu item means "open the panel",
-    // and toggle() closed it again whenever the section thought it was open.
+    // show(), not toggle(): picking a menu item means "open".
     showSidebar();
   });
 })();
