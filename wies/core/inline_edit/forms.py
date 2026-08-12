@@ -28,25 +28,21 @@ def has_public_id(model: type[Model]) -> bool:
 
 
 def use_public_id_choices(field: forms.Field) -> None:
-    """Make a ModelChoiceField render and accept ``public_id`` instead of the pk.
+    """Makes a ModelChoiceField render and accept ``public_id`` instead of the pk.
 
-    Option values cross the client boundary, and Django keys them on the pk by
-    default. Models without a public_id (e.g. Group) keep the pk.
-    See ``features/public_id.md``."""
+    Option values cross the client boundary. Models without a public_id (e.g.
+    Group) keep the pk. See ``features/public_id.md``.
+    """
     queryset = getattr(field, "queryset", None)
     if queryset is not None and has_public_id(queryset.model):
         field.to_field_name = "public_id"
 
 
 def _takes_obj(fn: Callable) -> bool:
-    """Of een choices-callable het bewerkte object wil ontvangen.
-
-    Bestaande callables nemen geen argument; alleen wie er één declareert krijgt
-    het object mee.
-    """
+    """Returns whether a choices callable wants the edited object passed in."""
     try:
         return len(inspect.signature(fn).parameters) >= 1
-    except TypeError, ValueError:  # builtins/C-functies hebben geen signature
+    except TypeError, ValueError:  # Builtins and C functions have no signature.
         return False
 
 
@@ -74,9 +70,8 @@ def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Fie
     if editable.widget is not None:
         base.widget = editable.widget() if isinstance(editable.widget, type) else editable.widget
     if editable.choices is not None:
-        # Een choices-callable mag het bewerkte object aannemen, zodat hij de
-        # huidige waarde in de lijst kan houden ook als die er volgens de gewone
-        # regels niet in hoort (zie _bdm_queryset).
+        # A choices callable may take the edited object so it can keep the current
+        # value in the list even when the normal rules exclude it (see _bdm_queryset).
         if callable(editable.choices):
             opts = editable.choices(obj) if _takes_obj(editable.choices) else editable.choices()
         else:
@@ -112,10 +107,10 @@ def build_form_class(
     group_clean: Callable[[dict], dict] | None = None,
     field_objs: dict[str, Model] | None = None,
 ) -> tuple[type[forms.Form], dict[str, Any]]:
-    """Return (FormClass, initial): NlddFormMixin-enabled form with one field per Editable.
+    """Returns (FormClass, initial): an NlddFormMixin form with one field per Editable.
 
-    ``field_objs`` wijst per veldnaam het object aan waar dat veld bij hoort, voor
-    formulieren die meerdere objecten bundelen; zonder die map geldt ``obj``.
+    ``field_objs`` maps a field name to its owning object, for forms bundling
+    several objects; without it ``obj`` applies to every field.
     """
     form_fields: dict[str, forms.Field] = {}
     initial: dict[str, Any] = {}
@@ -141,7 +136,7 @@ def build_form_class(
 
 
 def resolve_editables(editable_set: type[EditableSet], spec: Editable | EditableGroup) -> list[Editable]:
-    """Flatten a spec into its Editables. Groups resolve string names against the set's siblings."""
+    """Flattens a spec into its Editables. Groups resolve string names against the set's siblings."""
     if isinstance(spec, Editable):
         return [spec]
     if isinstance(spec, EditableGroup):
@@ -162,7 +157,7 @@ def resolve_editables(editable_set: type[EditableSet], spec: Editable | Editable
 
 
 def save_editables(editables: list[Editable], cleaned_data: dict, obj: Model) -> None:
-    """Persist cleaned_data. Order: scalar setattr → obj.save() → M2M .set() → custom save."""
+    """Persists cleaned_data. Order: scalar setattr → obj.save() → M2M .set() → custom save."""
     custom_save: list[Editable] = []
     m2m: list[Editable] = []
 
@@ -195,7 +190,7 @@ def save_spec(
     cleaned_data: dict,
     obj: Model,
 ) -> None:
-    """Persist a spec. Group with its own save → atomic whole-group; else per-field."""
+    """Persists a spec. A group with its own save writes atomically; else per-field."""
     if isinstance(spec, EditableGroup) and spec.save is not None:
         spec.save(obj, cleaned_data)
         return
@@ -203,17 +198,15 @@ def save_spec(
 
 
 def build_combined_form_class(specs, *, bound_obj=None):
-    """Eén formulierklasse over meerdere specs, plus de initial-waarden.
+    """Returns one form class spanning several specs, plus its initial values.
 
-    ``specs`` is een lijst van ``(editable_set, spec, obj)``. Voor de child sheets
-    die velden over twee modellen bundelen (Service + Placement, of alle
-    opdrachtvelden in één formulier): de veldnamen botsen niet, dus ze kunnen plat
-    in één formulier. Een groep-``clean`` (zoals de periodevalidatie) blijft gelden.
+    ``specs`` is a list of ``(editable_set, spec, obj)``. Used by the child sheets
+    that bundle fields across two models (Service + Placement); field names do not
+    collide, so they flatten into one form. A group ``clean`` still applies.
     """
     editables: list[Editable] = []
     initial: dict = {}
-    # Per editable zijn eigen object; `bound_obj` dekt dat niet, want de specs
-    # gaan hier over meerdere objecten.
+    # Each editable keeps its own object; `bound_obj` cannot cover that here.
     field_objs: dict[str, Model] = {}
     group_clean = None
     for editable_set, spec, obj in specs:

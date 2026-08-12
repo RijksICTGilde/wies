@@ -1,9 +1,7 @@
-"""Tests voor de één-veld-variant van ``assignment_edit_view``.
+"""Tests for the single-field variant of ``assignment_edit_view``.
 
-Het ⋯-menu van een gegevensrij bewerkt via ``?veld=<naam>`` alleen dat veld;
-het potlood bewerkt alles. Deze test bewaakt dat een één-veld-save de overige
-velden niet aanraakt (anders zou een lege waarde in het weggelaten veld die
-kolom wissen).
+Regression: ``?veld=<name>`` must save only that field, since a blank value in
+an omitted field would wipe its column.
 """
 
 from datetime import date
@@ -26,8 +24,8 @@ User = get_user_model()
 class AssignmentEditSingleFieldTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # owner en other zijn allebei BDM, zodat beide een geldige keuze zijn in
-        # het Business Manager-veld (choices = _bdm_queryset).
+        # Both owner and other are BDM, so both are valid choices in the
+        # Business Manager field (choices = _bdm_queryset).
         bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
@@ -61,19 +59,17 @@ class AssignmentEditSingleFieldTest(TestCase):
         assert "HX-Location" in response
 
         self.assignment.refresh_from_db()
-        # Alleen de BM verandert; naam en periode blijven staan.
+        # Only the BM changes; name and period stay.
         assert self.assignment.owner_id == self.other.id
         assert self.assignment.name == "Originele naam"
         assert self.assignment.start_date == date(2026, 1, 1)
         assert self.assignment.end_date == date(2026, 12, 31)
 
     def test_panel_has_no_per_row_edit_links(self):
-        """Bewerken loopt via "Gegevens bewerken" bovenaan.
+        """The panel offers no per-row edit.
 
-        Per rij bewerken zou de opdrachtnaam onbereikbaar laten: die staat als
-        kop boven het paneel en niet als rij in de lijst. De ?veld=-route zelf
-        blijft bestaan (zie de saves hieronder), alleen het paneel biedt hem niet
-        meer aan.
+        A per-row edit would leave the assignment name unreachable: it is the
+        panel heading, not a row.
         """
         response = self.client.get(
             f"/opdrachten/?opdracht={self.assignment.public_id}",
@@ -81,7 +77,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         )
         body = response.content.decode()
         assert "&veld=" not in body
-        # De knop die alles opent staat er wel.
+        # The button that opens the full form is present.
         assert "bewerken=1" in body
 
     def test_forbidden_without_edit_rights(self):
@@ -92,17 +88,17 @@ class AssignmentEditSingleFieldTest(TestCase):
 
 
 class AssignmentOwnerOutsideBdmGroupTest(TestCase):
-    """De huidige Business Manager hoort in de keuzelijst, ook buiten de BDM-groep.
+    """The current Business Manager is a choice even outside the BDM group.
 
-    Zonder optie die bij zijn ``value`` past rendert de combo box leeg en wist
-    opslaan de Business Manager — wat vrijwel elke opdracht raakte.
+    Regression: without an option matching its ``value`` the combo box rendered
+    empty and saving wiped the Business Manager.
     """
 
     def setUp(self):
         self.client = Client()
         Group.objects.get_or_create(name="Business Development Manager")
-        # De eigenaar zit bewust NIET in de BDM-groep; hij bewerkt zijn eigen
-        # opdracht, want daar ontleent hij zijn bewerkrechten aan.
+        # The owner is deliberately NOT in the BDM group; his edit rights come
+        # from owning the assignment.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
@@ -127,12 +123,12 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def test_current_owner_is_an_option_and_preselected(self):
         body = self._edit_form()
-        # De combo box wijst met `value` naar een optie die er ook echt is.
+        # The combo box `value` points at an option that actually exists.
         assert f'value="{self.owner.public_id}"' in body
         assert f'<nldd-menu-item value="{self.owner.public_id}"' in body
 
     def test_saving_another_field_keeps_the_owner(self):
-        # Het scenario uit de melding: je bewerkt de opdracht en de BM raakt weg.
+        # The reported scenario: editing the assignment dropped the BM.
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(
             url,
@@ -143,7 +139,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
         assert self.assignment.owner_id == self.owner.id
 
     def test_choices_without_an_assignment_stay_limited_to_the_group(self):
-        # Bij aanmaken is er nog geen eigenaar; dan blijft de lijst de groep.
-        from wies.core.editables.assignment import _bdm_queryset  # noqa: PLC0415 — lokaal, alleen voor deze test
+        # On create there is no owner yet, so the list stays the group.
+        from wies.core.editables.assignment import _bdm_queryset  # noqa: PLC0415 (import not at top) — test-local
 
         assert self.owner not in list(_bdm_queryset())

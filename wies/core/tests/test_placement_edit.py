@@ -1,8 +1,7 @@
 """Tests for ``placement_edit_view`` (POST /plaatsing/<public_id>/bewerken/).
 
-Regressietest: deze view had geen tests, waardoor een aanroep naar de
-niet-bestaande ``_emit_placement_change_on_assignment`` bij élke geslaagde
-opslag een 500 gaf (#393).
+Regression: untested, this view called the non-existent
+``_emit_placement_change_on_assignment`` and 500'd on every save (#393).
 """
 
 import uuid
@@ -25,17 +24,17 @@ User = get_user_model()
 
 
 class PlacementEditViewTest(TestCase):
-    """POST-only opslag van het gecombineerde plaatsing-bewerkformulier.
+    """POST-only save of the combined placement edit form.
 
-    Bewerkrechten op een Placement chainen naar UPDATE op de ouder-opdracht,
-    en dat is de BM-owner van een wies-opdracht (zie permissions.py).
+    Edit rights on a Placement chain to UPDATE on the parent assignment, which
+    for a wies assignment is its BM-owner (see permissions.py).
     """
 
     def setUp(self):
         self.client = Client()
 
-        # De Colleague wordt pas bij login aangemaakt (user_logged_in-signal),
-        # dus loggen we hier in om hem als opdracht-eigenaar op te halen.
+        # The Colleague is created on login (user_logged_in signal), so log in
+        # here to fetch it as the assignment owner.
         self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
@@ -56,8 +55,8 @@ class PlacementEditViewTest(TestCase):
             description="Bouwt dingen",
             source="wies",
         )
-        # Start op SERVICE-periode; de edit wijzigt naar een afwijkende periode,
-        # wat de audit-mirror moet triggeren.
+        # Starts on the SERVICE period; the edit switches to a deviating one,
+        # which must trigger the audit mirror.
         self.placement = Placement.objects.create(
             colleague=self.owner,
             service=self.service,
@@ -67,7 +66,7 @@ class PlacementEditViewTest(TestCase):
         self.url = reverse("placement-edit", args=[self.placement.public_id])
 
     def _valid_payload(self, **overrides):
-        """Geldige POST voor het gecombineerde Service+Placement-formulier."""
+        """Returns a valid POST payload for the combined Service+Placement form."""
         payload = {
             "skill": str(self.skill.public_id),
             "description": "Bouwt dingen",
@@ -80,7 +79,7 @@ class PlacementEditViewTest(TestCase):
         return payload
 
     def test_happy_path_saves_and_returns_hx_location(self):
-        """Regressietest voor de NameError: geldige POST geeft 204, niet 500."""
+        """Regression for the NameError: a valid POST returns 204, not 500."""
         self.client.force_login(self.owner_user)
 
         response = self.client.post(self.url, self._valid_payload())
@@ -97,8 +96,7 @@ class PlacementEditViewTest(TestCase):
         assert self.placement.specific_end_date == date(2026, 6, 30)
 
     def test_happy_path_records_team_event_on_parent_assignment(self):
-        """De audit-mirror legt de plaatsingswijziging als "Team"-event op de
-        ouder-opdracht; een 500 vóór de save zou dit event nooit aanmaken."""
+        """The audit mirror records the change as a "Team" event on the assignment."""
         self.client.force_login(self.owner_user)
 
         self.client.post(self.url, self._valid_payload())
@@ -122,8 +120,7 @@ class PlacementEditViewTest(TestCase):
         assert self.placement.period_source == Placement.SERVICE
 
     def test_get_not_allowed(self):
-        """De view is POST-only (@require_POST); GET geeft 405 zodat een GET
-        nooit een leeg formulier kan tonen dat bij opslaan velden wist."""
+        """GET returns 405, so it can never show an empty form that wipes fields on save."""
         self.client.force_login(self.owner_user)
 
         response = self.client.get(self.url)

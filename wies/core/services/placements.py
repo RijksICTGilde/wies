@@ -25,23 +25,13 @@ logger = logging.getLogger(__name__)
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
-    """Parse date string in DD-MM-YYYY format to datetime.date."""
+    """Parses a DD-MM-YYYY date string into a ``datetime.date``."""
     day, month, year = date_str.split("-")
     return datetime.date(int(year), int(month), int(day))
 
 
 def filter_placements_by_period(queryset, period_from, period_to):
-    """
-    Filter placement queryset by period range for overlapping periods.
-
-    Args:
-        queryset: Placement queryset to filter
-        period_from: date object
-        period_from: date object
-    Returns:
-        Filtered queryset containing only placements that overlap with the given period
-    """
-
+    """Filters the queryset down to placements overlapping ``period_from``..``period_to``."""
     return queryset.filter(
         Q(actual_start_date__lte=period_to)
         & Q(actual_end_date__gte=period_from)
@@ -55,10 +45,12 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
 
 
 def filter_visible_placements(queryset, today, viewer):
-    """Placement visibility for the overview list: active placements are public,
-    ended ones are hidden from everyone, and not-yet-started ones are kept only
-    for the placed colleague and the assignment's BM-owner. Assumes
-    ``annotate_placement_dates`` was applied."""
+    """Filters the overview list by placement visibility.
+
+    Active placements are public, ended ones hidden from everyone, and not-yet-
+    started ones kept only for the placed colleague and the assignment's BM-owner.
+    Requires ``annotate_placement_dates`` to have been applied first.
+    """
     queryset = filter_placements_by_min_end_date(queryset, today)
     started = Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today)
     if viewer is None:
@@ -67,24 +59,16 @@ def filter_visible_placements(queryset, today, viewer):
 
 
 def create_assignments_from_csv(creator, csv_content: str, request=None):
+    """Creates colleagues, assignments, services and placements from CSV.
+
+    Required columns: assignment_name, assignment_description, assignment_owner,
+    assignment_owner_email, assignment_start_date, assignment_end_date,
+    service_skill, placement_colleague_name, placement_colleague_email.
+
+    Optional: client_1_url (PRIMARY client) and client_2_url / client_3_url
+    (INVOLVED clients), all organisaties.overheid.nl URLs; owner_brand and
+    colleague_brand set the suborganization on newly created colleagues.
     """
-    Create colleagues, assignments, services and placements from csv.
-
-    The CSV should contain the following required columns:
-    - assignment_name, assignment_description, assignment_owner, assignment_owner_email
-    - assignment_start_date, assignment_end_date
-    - service_skill, placement_colleague_name, placement_colleague_email
-
-    Optional columns:
-    - client_1_url: URL from organisaties.overheid.nl. Becomes PRIMARY client.
-    - client_2_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
-    - client_3_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
-    - owner_brand: If provided, sets the suborganization on newly created assignment owners.
-                   If empty or not provided, no suborganization is assigned.
-    - colleague_brand: If provided, sets the suborganization on newly created placement colleagues.
-                       If empty or not provided, no suborganization is assigned.
-    """
-
     try:
         dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
     except csv.Error:
@@ -115,7 +99,7 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
 
     try:
         with transaction.atomic():
-            # Cache for brand → Suborganization lookups to avoid repeated database queries
+            # Caches brand → Suborganization lookups across rows.
             suborg_mapping = {}
 
             def resolve_suborganization(brand_name):
@@ -132,8 +116,7 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
             placements_created = 0
             skills_created = 0
             organizations_linked = 0
-            for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
-                # Resolve owner/colleague merken from the CSV brand columns
+            for _, row in enumerate(csv_reader, start=2):  # Row 1 is the header.
                 owner_suborg = resolve_suborganization(row.get("owner_brand"))
                 colleague_suborg = resolve_suborganization(row.get("colleague_brand"))
 
@@ -153,14 +136,12 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
                 else:
                     owner = None
 
-                # Collect client URLs (all optional)
                 client_urls = [
                     (row.get("client_1_url", "").strip(), "PRIMARY"),
                     (row.get("client_2_url", "").strip(), "INVOLVED"),
                     (row.get("client_3_url", "").strip(), "INVOLVED"),
                 ]
 
-                # parse dates into proper types
                 start_date_str = row["assignment_start_date"] or ""
                 end_date_str = row["assignment_end_date"] or ""
                 start_date = parse_date_dmy(start_date_str) if start_date_str else None
@@ -191,7 +172,6 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
                         },
                     )
 
-                # Link organizations to assignment
                 for url, role in client_urls:
                     if not url:
                         continue
@@ -290,16 +270,14 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
 
 
 def placement_edit_specs(placement, user, only=None):
-    """De bewerkbare specs voor het plaatsingspaneel, elk met hun eigen object.
+    """Returns the placement panel's editable specs, each with its own object.
 
-    Drie velden verdeeld over twee modellen (Service.skill, Service.description,
-    Placement.period). Alleen specs waarvoor de gebruiker UPDATE-rechten heeft
-    komen terug, zodat het formulier nooit een veld toont dat bij opslaan
-    geweigerd zou worden.
+    Three fields across two models (Service.skill, Service.description,
+    Placement.period). Only specs the user may UPDATE come back, so the form never
+    shows a field that would be refused on save.
 
-    ``only`` (spec-naam) beperkt tot één veld, zoals bij de opdracht: het potlood
-    op een rij bewerkt die rij, niet het hele formulier. "Rol" dekt twee specs
-    (de rol zelf en zijn omschrijving) omdat die op één rij samen worden getoond.
+    ``only`` (a spec name) narrows it to one field, as with the assignment. "Rol"
+    covers two specs, since the role and its description share a row.
     """
     from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
@@ -312,23 +290,22 @@ def placement_edit_specs(placement, user, only=None):
         (PlacementEditables, PlacementEditables.period, placement),
     ]
     if only is not None:
-        # De rolrij toont de rol met zijn omschrijving eronder; die twee horen
-        # dus in hetzelfde formulier.
+        # The role row shows the role with its description below it, so both
+        # belong in the same form.
         wanted = {"skill", "description"} if only == "skill" else {only}
         candidates = [(s, spec, obj) for (s, spec, obj) in candidates if spec.name in wanted]
     return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
 
 
 def save_placement_edit(request, placement, specs, cleaned_data):
-    """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
-    from contextlib import nullcontext  # noqa: PLC0415 — lokaal, alleen deze functie
+    """Saves all specs in one transaction, with the same audit events as inline edit."""
+    from contextlib import nullcontext  # noqa: PLC0415 (import not at top level) — only used here
 
     from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.services.inline_edit_save import save_edit_specs  # noqa: PLC0415 — avoids import cycle
 
-    # Een plaatsingswijziging heeft geen eigen audit-type; PlacementEditables.audit_mirror
-    # spiegelt hem als "Team"-event op de tijdlijn van de opdracht, net als de inline-edit-
-    # en "Team bewerken"-flow (#393).
+    # A placement change has no audit type of its own; audit_mirror mirrors it as a
+    # "Team" event on the assignment timeline, like the inline-edit flow (#393).
     mirror = PlacementEditables.audit_mirror
     with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
         save_edit_specs(request, specs, cleaned_data)

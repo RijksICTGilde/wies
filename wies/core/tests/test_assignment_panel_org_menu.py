@@ -1,10 +1,8 @@
-"""Tests voor het opdrachtgever-menu in het opdrachtpaneel.
+"""Tests for the client (opdrachtgever) menu in the assignment panel.
 
-De opdrachtgever staat als breadcrumb (Fin > DGBD > Datafundamenten). Het
-acties-menu bood eerst een enkele "Bekijk alle opdrachten" die alleen op de
-laagste node filterde -- juist de eenheid die de minste andere opdrachten
-deelt. Nu opent "Bekijk opdrachten" een submenu met een item per niveau, zodat
-je ook op DGBD of Fin kunt filteren.
+The client renders as a breadcrumb (Fin > DGBD > Datafundamenten) and "Bekijk
+opdrachten" opens a submenu with one item per level, so you can filter on any
+ancestor instead of only the leaf.
 """
 
 from datetime import date
@@ -55,29 +53,29 @@ class AssignmentPanelOrgMenuTest(TestCase):
 
     def test_menu_has_a_submenu_item_per_hierarchy_level(self):
         body = self._panel_body()
-        # Eén "Bekijk opdrachten"-opener met een submenu-item per niveau.
-        assert "Bekijk opdrachten</nldd-menu-item>" not in body  # opener is geen platte tekst
+        # One "Bekijk opdrachten" opener with a submenu item per level.
+        assert "Bekijk opdrachten</nldd-menu-item>" not in body  # the opener is not plain text
         assert 'text="Bekijk opdrachten"' in body
         assert 'text="Datafundamenten &amp; Analytics"' in body
         assert 'text="DGBD"' in body
         assert 'text="Fin"' in body
-        # De opener nest een submenu.
+        # The opener nests a submenu.
         assert "<nldd-menu>" in body
-        # De oude enkele actie bestaat niet meer.
+        # The old single action is gone.
         assert "Bekijk alle opdrachten" not in body
 
     def test_each_level_links_to_its_own_org_filter(self):
         body = self._panel_body()
-        # Elk niveau filtert op zijn eigen public_id, niet alleen de laagste.
+        # Every level filters on its own public_id, not just the leaf.
         assert f"?org={self.dgbd.public_id}" in body
         assert f"?org={self.fin.public_id}" in body
-        # De laagste node draagt geen andere opdrachten in zijn subtree, dus
-        # filtert 'm direct op org (niet org_self).
+        # The leaf holds no assignments deeper in its subtree, so it filters on
+        # org rather than org_self.
         assert f"?org={self.leaf.public_id}" in body
 
     def test_leaf_with_deeper_assignments_filters_on_org_self(self):
-        # Hangt er een opdracht ónder de gekozen node, dan staat die node voor
-        # "deze eenheid zelf" en filtert 'm via org_self (subtree hoort erbij).
+        # With an assignment below the node, the node stands for "this unit
+        # itself" and filters via org_self.
         deeper = OrganizationUnit.objects.create(name="Team Data", parent=self.leaf)
         other = Assignment.objects.create(
             name="Ander", source="wies", start_date=date(2026, 1, 1), end_date=date(2026, 6, 1)
@@ -89,10 +87,10 @@ class AssignmentPanelOrgMenuTest(TestCase):
 
 
 class AssignmentPanelSecondOrgTest(TestCase):
-    """Een opdracht met een primaire opdrachtgever én een betrokken partij.
+    """Each client row of an assignment carries its own "Bekijk opdrachten" submenu.
 
-    Beide krijgen een eigen rij met een eigen "Bekijk opdrachten"-submenu; de
-    tweede was eerder onbereikbaar omdat het menu alleen de eerste rij kende.
+    Regression: the menu only knew the first row, leaving the involved party
+    unreachable.
     """
 
     def setUp(self):
@@ -100,7 +98,7 @@ class AssignmentPanelSecondOrgTest(TestCase):
         self.user = User.objects.create_user(email="kijker@rijksoverheid.nl")
         self.client.force_login(self.user)
 
-        # Fin > DGBD > Datafundamenten (primair) en Fin > DGABD > Inkoop (betrokken)
+        # Two branches: a primary client under DGBD, an involved one under DGABD.
         self.fin = OrganizationUnit.objects.create(name="Ministerie van Financiën", abbreviations=["Fin"])
         self.dgbd = OrganizationUnit.objects.create(name="DG Begroting", abbreviations=["DGBD"], parent=self.fin)
         self.primary = OrganizationUnit.objects.create(
@@ -139,8 +137,7 @@ class AssignmentPanelSecondOrgTest(TestCase):
 
     def test_the_second_organization_has_its_own_level_menu(self):
         body = self._panel_body()
-        # DGABD zit alleen in het pad van de betrokken partij, niet in dat van
-        # de primaire opdrachtgever.
+        # DGABD sits only in the involved party's path, not the primary one's.
         assert f"?org={self.dgabd.public_id}" in body
         assert f"?org={self.involved.public_id}" in body
         assert f"?org={self.dgbd.public_id}" in body
@@ -148,23 +145,23 @@ class AssignmentPanelSecondOrgTest(TestCase):
         assert body.count('text="Bekijk opdrachten"') == 2
 
     def test_each_menu_is_named_after_its_own_organization(self):
-        # Twee ⋯-menu's onder elkaar moeten uit elkaar te houden zijn.
+        # Two stacked ⋯ menus must be tellable apart.
         body = self._panel_body()
         assert 'text="Acties voor opdrachtgever Datafundamenten"' in body
         assert 'text="Acties voor opdrachtgever Team Inkoop"' in body
 
     def test_menus_hold_no_edit_action(self):
-        # Bewerken loopt via "Gegevens bewerken" bovenaan; per rij zou de
-        # opdrachtnaam onbereikbaar laten, want die staat als kop en niet als rij.
+        # Editing runs through "Gegevens bewerken" at the top; a per-row edit
+        # would leave the assignment name unreachable, as it is the heading.
         User.objects.filter(pk=self.user.pk).update(is_superuser=True, is_staff=True)
         body = self._panel_body()
         assert "Opdrachtgever wijzigen" not in body
         assert "&veld=organizations" not in body
-        # Wat blijft is de niet-bewerkende actie, op elke rij.
+        # What remains is the non-editing action, on every row.
         assert body.count('text="Bekijk opdrachten"') == 2
 
     def test_single_organization_shows_no_role_suffix(self):
-        # Bij één opdrachtgever zegt "(primair)" niets.
+        # With a single client, "(primair)" says nothing.
         AssignmentOrganizationUnit.objects.filter(assignment=self.assignment, role="INVOLVED").delete()
         body = self._panel_body()
         assert "(primair)" not in body

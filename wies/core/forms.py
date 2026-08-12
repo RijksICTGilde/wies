@@ -73,10 +73,10 @@ class SuborganizationForm(NlddFormMixin, forms.ModelForm):
 
 
 class ProfileNameForm(NlddFormMixin, forms.ModelForm):
-    """Voor- en achternaam samen, zoals de sheet op de profielpagina ze toont.
+    """First and last name together, as the profile page sheet shows them.
 
-    De veldconfiguratie komt uit UserEditables, zodat labels en meldingen gelijk
-    blijven aan de inline-edit en het beheerformulier.
+    Fields come from UserEditables so labels and messages stay identical to the
+    inline edit and the admin form.
     """
 
     first_name = UserEditables.first_name.form_field()
@@ -90,10 +90,8 @@ class ProfileNameForm(NlddFormMixin, forms.ModelForm):
 class ProfileLabelsForm(NlddFormMixin, forms.Form):
     """Every label category in one sheet, with the token fields from onboarding.
 
-    Categories live in the database, so the fields are built per instance
-    rather than declared. Each one reuses its ColleagueEditables spec, which
-    keeps label, choices and widget identical to the inline edit and to the
-    onboarding step.
+    Categories live in the database, so fields are built per instance rather
+    than declared, each reusing its ColleagueEditables spec.
     """
 
     def __init__(self, *args, colleague, categories, **kwargs):
@@ -104,18 +102,15 @@ class ProfileLabelsForm(NlddFormMixin, forms.Form):
             name = f"{LABELS_PREFIX}{category.id}"
             spec = ColleagueEditables.resolve_dynamic(name)
             field = spec.form_field()
-            # Every category maps onto the same m2m ("labels"), so the generic
-            # initial would hand each field the colleague's labels from all
-            # categories at once. Scope it to this category.
+            # Every category maps onto the same "labels" m2m, so the generic
+            # initial would hand each field all categories at once.
             field.initial = list(colleague.labels.filter(category=category))
-            # Every category is optional, so the badge would repeat on all of
-            # them without telling the user anything they can act on.
+            # Every category is optional, so the badge would repeat on all of them.
             field.widget.attrs["hide-optional"] = True
             self.fields[name] = field
             self._specs[name] = spec
-            # The mixin wires templates and labels for the fields that exist
-            # when it runs; these are added afterwards, so do it here or they
-            # fall back to Django's own form templates.
+            # The mixin only wires fields that exist when it runs; these are added
+            # afterwards, so configure them here or they fall back to Django's templates.
             self._configure_field(name)
 
     @transaction.atomic
@@ -146,14 +141,17 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Geen zichtbaar label (tabelvorm); label naar accessible-label voor screenreaders.
+        # Table layout has no visible label, so move it to accessible-label.
         for field in self.fields.values():
             field.widget.attrs.setdefault("accessible-label", str(field.label))
             field.label = ""
 
     def has_changed(self):
-        """Een lege nieuwe rij telt niet mee (kleur post altijd, dus anders geldt
-        ze als gewijzigd en blokkeert "naam is verplicht" het opslaan)."""
+        """Reports whether the row changed, treating a blank new row as unchanged.
+
+        Colour always posts, so without this the empty row counts as changed and
+        its "naam is verplicht" error blocks the save.
+        """
         if not self.instance.pk and not (self.data.get(self.add_prefix("name")) or "").strip():
             return False
         return super().has_changed()
@@ -174,10 +172,9 @@ LabelCategoryFormSet = forms.modelformset_factory(
 class LabelForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating Label instances.
 
-    Category is part of the form (a combo box), so one sheet serves both
-    "Label toevoegen" and "Label bewerken" — and a label can move to another
-    category without being recreated. `category_id` still seeds the field for
-    callers that open the form from within a category.
+    Category is part of the form, so one sheet serves both "Label toevoegen"
+    and "Label bewerken" and a label can move category without being recreated.
+    ``category_id`` seeds the field for callers opening it within a category.
     """
 
     name = forms.CharField(label="Naam", required=True)
@@ -200,13 +197,12 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
             self.initial["category"] = category_id
 
     def clean(self):
-        # Names are unique per category, so the check needs both fields — which
-        # is why it lives here and not in clean_name().
+        # Names are unique per category, so the check needs both fields and
+        # cannot live in clean_name().
         cleaned = super().clean()
         name = cleaned.get("name")
         category = cleaned.get("category")
-        # Category is required; if it (or the name) is missing the field-level
-        # error already stands, so there is nothing to check for uniqueness.
+        # A missing field already has its own error; nothing to check here.
         if not name or not category:
             return cleaned
         clash = Label.objects.filter(category=category, name=name).exclude(pk=self.instance.pk)
@@ -218,9 +214,8 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
 class UserForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating User instances.
 
-    Field configurations for first_name/last_name/email come from
-    ``UserEditables`` so the admin form stays in lockstep with the
-    inline-edit declarations on the user's own profile page.
+    Name and email fields come from ``UserEditables`` so the admin form stays
+    in lockstep with the inline-edit declarations on the profile page.
     """
 
     first_name = UserEditables.first_name.form_field()
@@ -264,14 +259,13 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
         instance = kwargs.get("instance")
 
-        # Pre-select the colleague's current merk when editing an existing user
-        # (suborganization isn't in Meta.fields, so ModelForm won't populate it).
+        # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
             current_merk = instance.colleague.suborganization
             self.fields["suborganization"].initial = current_merk.public_id if current_merk else None
         self._configure_field("suborganization")
 
-        # Map labels stored on model to separate fields per category, which are dynamically generated
+        # Map the labels m2m onto one dynamically built field per category.
         self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
@@ -289,16 +283,15 @@ class UserForm(NlddFormMixin, forms.ModelForm):
                 widget=MultiselectDropdown(),
             )
 
-            # used in clean
             self._category_field_names.add(field_name)
 
-            # necessary because form init already ran and otherwise wrong templates are referenced
+            # Form init already ran, so configure here or the wrong templates apply.
             self._configure_field(field_name)
 
     def clean(self):
         cleaned_data = super().clean()
 
-        # combine selected labels into single label attribute
+        # Combine the per-category selections back into one labels list.
         cleaned_data["labels"] = []
         for category_field_name in self._category_field_names:
             selected_labels = cleaned_data.pop(category_field_name, None)
@@ -311,11 +304,10 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
-    ``id`` and ``placement_id`` are hidden round-trip identifiers used by the
-    edit-from-side-panel path to diff existing rows against submitted rows.
-    Both are empty for newly-added rows on the create form. They are
-    attacker-controllable, so the save helper must verify each points at a
-    row owned by the target Assignment before writing.
+    ``id`` and ``placement_id`` are hidden round-trip identifiers used to diff
+    existing rows against submitted ones, and are empty for new rows. They are
+    attacker-controllable, so the save helper must verify each points at a row
+    owned by the target Assignment before writing.
     """
 
     id = forms.IntegerField(required=False, widget=forms.HiddenInput)
@@ -353,7 +345,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
 
     def __init__(self, *args, skill_choices=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # Replace ModelChoiceField with a ChoiceField so __new__ is a valid value
+        # A plain ChoiceField, so the sentinel "__new__" is a valid value.
         if skill_choices is None:
             skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
             skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
@@ -368,10 +360,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
-        # A row the user removed in the UI ("Verwijderen") leaves a gap
-        # in the formset indexes that Django re-materialises as a blank
-        # form. Treat any row with no identifying content as deleted and
-        # skip validation — extract_services_data drops it before save.
+        # A row removed in the UI leaves an index gap that Django re-materialises
+        # as a blank form, so skip validation for content-free rows;
+        # extract_services_data drops them before save.
         is_empty_row = (
             not cleaned_data.get("id")
             and not skill_val
@@ -387,8 +378,8 @@ class ServiceForm(NlddFormMixin, forms.Form):
         has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
         if not has_skill and has_other_data:
             self.add_error("skill", "Selecteer een rol.")
-        # has_custom_period checkbox means "Neem opdrachtperiode over" (inverted).
-        # Checked = take from assignment = no custom period.
+        # The checkbox is inverted: checked means "inherit the assignment
+        # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
         if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False

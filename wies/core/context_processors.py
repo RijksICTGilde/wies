@@ -9,7 +9,7 @@ from wies.core.querysets import annotate_placement_dates
 
 
 def _onboarding_owner_mailto(assignment) -> str:
-    """Return a mailto (address + subject, no body) for the BM of ``assignment``."""
+    """Returns a mailto (address and subject, no body) for the BM of ``assignment``."""
     if not assignment.owner or not assignment.owner.email:
         return ""
     subject = urllib.parse.quote(f"Opdracht {assignment.name}")
@@ -17,10 +17,10 @@ def _onboarding_owner_mailto(assignment) -> str:
 
 
 def _onboarding_can_edit(entry, user) -> bool:
-    """Mag deze gebruiker iets aan deze opdracht of eigen rol wijzigen?
+    """Returns whether the user may change anything on this assignment or their own role.
 
-    Bepaalt of de controlestap een "Wijzigen"-knop toont; de knop opent het
-    bewerkscherm dat op dezelfde specs draait (zie onboarding_assignment_edit).
+    Decides whether the check step shows a "Wijzigen" button, which opens the edit
+    screen running on these same specs (see onboarding_assignment_edit).
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
@@ -43,7 +43,7 @@ def _onboarding_can_edit(entry, user) -> bool:
 
 
 def _onboarding_assignments(colleague, user=None):
-    """Return the active assignments the user is placed on, for the self-check step."""
+    """Returns the active assignments the user is placed on, for the self-check step."""
     if colleague is None:
         return []
 
@@ -77,7 +77,7 @@ def _onboarding_assignments(colleague, user=None):
 
 
 def onboarding(request):
-    """Expose first-login onboarding state to the base template.
+    """Exposes first-login onboarding state to the base template.
 
     ``show_onboarding`` is True until the user finishes or skips the wizard.
     """

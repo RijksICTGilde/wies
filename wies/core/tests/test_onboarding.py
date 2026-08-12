@@ -13,11 +13,7 @@ User = get_user_model()
 
 
 def _request_for(user):
-    """Minimal request stand-in.
-
-    The context processor reads ``request.user``; the owner-mailto helper also
-    calls ``build_absolute_uri`` when an assignment has an owner with an email.
-    """
+    """Returns a minimal request stand-in with ``user`` and ``build_absolute_uri``."""
 
     class _Req:
         def build_absolute_uri(self, location=""):
@@ -81,8 +77,8 @@ class OnboardingWizardRenderTest(TestCase):
         self.assertNotContains(response, 'data-step="3"')
 
     def test_dismiss_button_says_overslaan(self):
-        # "Overslaan" en niet "Sluit": de knop vinkt de onboarding definitief af,
-        # terwijl Escape 'm alleen voor nu wegklikt (#553).
+        # "Overslaan", not "Sluit": the button completes onboarding for good,
+        # while Escape only dismisses it for now (#553).
         self.client.force_login(self.user)
         response = self.client.get(reverse("home"))
         self.assertContains(response, 'dismiss-text="Overslaan"')
@@ -97,11 +93,10 @@ class OnboardingWizardRenderTest(TestCase):
 
 
 class OnboardingLabelSaveTest(TestCase):
-    """De profielstap (labels) slaat op via de bare inline_edit_form-macro.
+    """The profile step (labels) saves through the bare inline_edit_form macro.
 
-    Regressie: die macro zette geen concurrency-token, en de save-view telt een
-    ontbrekend token als conflict — dus de gekozen labels landden nooit in het
-    profiel. De macro moet nu een geldig token renderen dat de save accepteert.
+    Regression: the macro rendered no concurrency token, which the save view
+    counts as a conflict, so chosen labels never reached the profile.
     """
 
     def setUp(self):
@@ -140,19 +135,18 @@ class OnboardingLabelSaveTest(TestCase):
 
     def test_onboarding_label_choice_persists(self):
         self.client.force_login(self.user)
-        # Het token hoort bij dít categorieveld: de render bevat er meerdere
-        # (merk, en één per labelcategorie), dus het eerste token uit de HTML
-        # pakken zou het verkeerde veld treffen en de save als conflict weigeren.
+        # The render holds one token per label category, so grabbing the first
+        # one from the HTML would target the wrong field and fail as a conflict.
         token = self._token_for(self.category.id)
 
-        # De widget rendert name="labels", zoals de browser die post.
+        # The widget renders name="labels", just as the browser posts it.
         response = self._post_labels(self.category.id, self.label.public_id, token)
         assert response.status_code == 200
         self.colleague.refresh_from_db()
         assert list(self.colleague.labels.values_list("id", flat=True)) == [self.label.id]
 
     def test_missing_token_is_rejected_as_conflict(self):
-        # Bewijst dat het token de blokker was: zonder token slaat niets op.
+        # Proves the token was the blocker: without one, nothing is saved.
         self.client.force_login(self.user)
         url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{self.category.id}"])
         self.client.post(url, {"labels": str(self.label.public_id)})
@@ -160,18 +154,18 @@ class OnboardingLabelSaveTest(TestCase):
         assert list(self.colleague.labels.all()) == []
 
     def test_multiple_categories_all_persist(self):
-        """De onboarding submit elke categorie serieel met het token dat op de
-        LEGE begintoestand is berekend. Het per-``labels_<cat>``-token mag alleen
-        die categorie hashen, anders maakt de eerste save de tokens van de andere
-        categorieën stale → conflict → maar één categorie werd bewaard.
+        """Each ``labels_<cat>`` token hashes only its own category.
+
+        Onboarding submits every category serially with tokens computed on the
+        empty initial state; a shared hash made the first save stale the rest.
         """
         self.client.force_login(self.user)
         token1 = self._token_for(self.category.id)
         token2 = self._token_for(self.category2.id)
 
         r1 = self._post_labels(self.category.id, self.label.public_id, token1)
-        # token2 is nog op de begintoestand berekend, net als in de wizard: een
-        # save in categorie 1 mag hem niet ongeldig maken.
+        # token2 was computed on the initial state, as in the wizard: a save in
+        # category 1 must not invalidate it.
         r2 = self._post_labels(self.category2.id, self.label2.public_id, token2)
 
         assert r1.status_code == 200
@@ -180,7 +174,7 @@ class OnboardingLabelSaveTest(TestCase):
         assert set(self.colleague.labels.values_list("id", flat=True)) == {self.label.id, self.label2.id}
 
     def test_token_is_per_category(self):
-        # Een label in categorie 1 mag het token van categorie 2 niet veranderen.
+        # A label in category 1 must not change category 2's token.
         self.colleague.labels.add(self.label)
         assert self._token_for(self.category.id) != self._token_for(self.category2.id)
 
@@ -240,7 +234,7 @@ class OnboardingAssignmentStepTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Controleer je opdracht")
         self.assertContains(response, "Datateam MinBZK")
-        # De stap toont de gegevens; wijzigen gebeurt in het bewerkscherm.
+        # The step only displays; editing happens on the edit screen.
         self.assertContains(response, "Wijzigen")
         self.assertContains(response, reverse("onboarding-assignment-edit", args=[assignment.public_id]))
         # The consultant's own rol + rolomschrijving are shown.
@@ -261,7 +255,7 @@ class OnboardingAssignmentStepTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Opdracht wijzigen")
         self.assertContains(response, "Datateam MinBZK")
-        # Opdrachtvelden en de eigen rol staan in één formulier, elk met prefix.
+        # Assignment fields and the own role share one form, each with a prefix.
         self.assertContains(response, "opdracht-name")
         self.assertContains(response, "Opdrachtomschrijving")
 
@@ -275,7 +269,7 @@ class OnboardingAssignmentStepTest(TestCase):
             },
         )
         assert response.status_code == 200
-        # De bijgewerkte box gaat terug naar de stap; het scherm sluit zichzelf.
+        # The updated box swaps back into the step; the screen closes itself.
         assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.public_id}"
         assert response["HX-Trigger"] == "onboardingDetailClose"
         assignment.refresh_from_db()
@@ -285,7 +279,7 @@ class OnboardingAssignmentStepTest(TestCase):
         assert service.description == "Data engineering plus"
 
     def test_assignment_edit_screen_rejects_other_assignment(self):
-        # Een opdracht waar je niet op staat hoort niet bewerkbaar te zijn.
+        # An assignment you are not placed on must not be editable.
         other = Assignment.objects.create(name="Niet van mij", owner=self.bm, source="wies")
         self.client.force_login(self.user)
         response = self.client.get(reverse("onboarding-assignment-edit", args=[other.public_id]))

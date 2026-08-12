@@ -9,20 +9,18 @@ User = get_user_model()
 
 
 class LabelManagementIntegrationTest(TestCase):
-    """High-level integration tests for complete label lifecycle"""
+    """Integration tests for the complete label lifecycle."""
 
     def setUp(self):
-        """Create test data"""
+        """Creates an admin with label permissions and an unprivileged user."""
         self.client = Client()
 
-        # Create admin user with all label permissions
         self.admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
         )
 
-        # Grant all label permissions
         label_cat_permissions = Permission.objects.filter(
             codename__in=["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"]
         )
@@ -34,7 +32,6 @@ class LabelManagementIntegrationTest(TestCase):
         )
         self.admin_user.user_permissions.add(*label_cat_permissions, *label_permissions, *user_permissions)
 
-        # Create unprivileged user
         self.regular_user = User.objects.create_user(
             email="regular@rijksoverheid.nl",
             first_name="Regular",
@@ -42,15 +39,13 @@ class LabelManagementIntegrationTest(TestCase):
         )
 
     def test_complete_label_lifecycle(self):
-        """Test: Create category → Create label → Assign to user → Verify in list → Delete"""
+        """Creating a category and label, assigning it, then deleting it all work."""
         self.client.force_login(self.admin_user)
 
-        # Step 1: A label category (categories are managed via the
-        # "Categorieën beheren" sheet; created directly here as a fixture).
+        # Categories are managed via a sheet, so create one directly as a fixture.
         category = LabelCategory.objects.create(name="Test Category", color="#F9DFDD")
         assert category.color == "#F9DFDD"
 
-        # Step 2: Create a label in that category
         response = self.client.post(
             reverse("label-form-create"), {"category": category.id, "name": "Test Label"}, follow=True
         )
@@ -58,7 +53,6 @@ class LabelManagementIntegrationTest(TestCase):
 
         label = Label.objects.get(name="Test Label", category=category)
 
-        # Step 3: Create a user with that label
         response = self.client.post(
             reverse("user-create"),
             {
@@ -91,14 +85,13 @@ class LabelManagementIntegrationTest(TestCase):
         assert list(user.colleague.labels.all()) == []
 
     def test_label_edit_propagates_correctly(self):
-        """Test: Editing a label name propagates to all assigned users/colleagues"""
+        """Editing a label name propagates to every colleague carrying it."""
         self.client.force_login(self.admin_user)
 
-        # Create category and label
         category = LabelCategory.objects.create(name="Brands", color="#0066CC")
         label = Label.objects.create(name="Original Name", category=category)
 
-        # Assign to colleague (linked to user) and standalone colleague
+        # One colleague linked to a user, one standalone.
         user = User.objects.create_user(email="user@rijksoverheid.nl", first_name="Test", last_name="User")
         user_colleague = Colleague.objects.create(
             user=user, name="Test User", email="user@rijksoverheid.nl", source="wies"
@@ -115,39 +108,32 @@ class LabelManagementIntegrationTest(TestCase):
         assert response.status_code == 200
         assert response["HX-Redirect"] == reverse("label-admin")
 
-        # Verify the label name changed
         label.refresh_from_db()
         assert label.name == "Updated Name"
 
-        # Verify both colleagues still have the label
         assert label in user_colleague.labels.all()
         assert label in colleague.labels.all()
 
     def test_permission_boundaries_enforced(self):
-        """Test: Users without permissions cannot access label management"""
+        """A user without permissions cannot reach label management."""
         self.client.force_login(self.regular_user)
 
-        # Attempt to view label list
         response = self.client.get(reverse("label-admin"))
         assert response.status_code == 403
 
-        # Attempt to manage categories (create/rename via the beheer sheet)
         response = self.client.get(reverse("label-category-manage"))
         assert response.status_code == 403
 
-        # Create a category as admin first
         category = LabelCategory.objects.create(name="Test", color="#111111")
 
-        # Attempt to delete as regular user
         response = self.client.post(reverse("label-category-delete", kwargs={"public_id": category.public_id}))
         assert response.status_code == 403
 
-        # Verify category still exists
         assert LabelCategory.objects.filter(id=category.id).exists()
 
     def test_category_delete_removes_its_labels(self):
-        """Deleting a category deletes its labels too (cascade), and the
-        colleagues who carried them lose them."""
+        """Deleting a category cascades to its labels and to the colleagues
+        carrying them."""
         self.client.force_login(self.admin_user)
 
         category = LabelCategory.objects.create(name="Skills", color="#00AA00")
@@ -168,7 +154,7 @@ class LabelManagementIntegrationTest(TestCase):
         assert list(colleague.labels.all()) == []
 
     def test_label_requires_a_category(self):
-        """Geen categorie gekozen: het formulier wijst de inzending af."""
+        """A label without a category is rejected by the form."""
         self.client.force_login(self.admin_user)
 
         response = self.client.post(reverse("label-form-create"), {"name": "Zwevend label"})
@@ -178,31 +164,24 @@ class LabelManagementIntegrationTest(TestCase):
         self.assertContains(response, "Dit veld is verplicht.")
 
     def test_duplicate_label_name_in_same_category_prevented(self):
-        """Test: Cannot create duplicate label names within the same category"""
+        """A duplicate label name within one category is prevented."""
         self.client.force_login(self.admin_user)
 
-        # Create category and label
         category = LabelCategory.objects.create(name="Test Category", color="#AABBCC")
         Label.objects.create(name="Duplicate Name", category=category)
 
-        # Attempt to create another label with same name in same category
         self.client.post(reverse("label-form-create"), {"category": category.id, "name": "Duplicate Name"})
 
-        # Should show error or validation failure
-        # The exact status depends on form validation - could be 200 with error message
-        # or redirect, but duplicate should not be created
         duplicate_count = Label.objects.filter(name="Duplicate Name", category=category).count()
         assert duplicate_count == 1, "Duplicate label was created when it should have been prevented"
 
     def test_same_label_name_in_different_categories_allowed(self):
-        """Test: Can create labels with same name in different categories"""
+        """The same label name is allowed in different categories."""
         self.client.force_login(self.admin_user)
 
-        # Create two categories
         category1 = LabelCategory.objects.create(name="Category 1", color="#111111")
         category2 = LabelCategory.objects.create(name="Category 2", color="#222222")
 
-        # Create label with same name in both categories
         response1 = self.client.post(
             reverse("label-form-create"),
             {"category": category1.id, "name": "Common Name"},
@@ -215,20 +194,17 @@ class LabelManagementIntegrationTest(TestCase):
         )
         assert response2.status_code == 200
 
-        # Verify both labels exist
         assert Label.objects.filter(name="Common Name", category=category1).exists()
         assert Label.objects.filter(name="Common Name", category=category2).exists()
         assert Label.objects.filter(name="Common Name").count() == 2
 
     def test_navigation_menu_visibility(self):
-        """Test: Beheer menu only visible to users with appropriate permissions"""
-        # Regular user without permissions
+        """The Beheer menu is visible only with the right permissions."""
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, "Beheer")
 
-        # Admin user with permissions
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
@@ -236,8 +212,8 @@ class LabelManagementIntegrationTest(TestCase):
 
 
 class LabelCategoryManageFormsetTest(TestCase):
-    """The "Categorieën beheren" sheet: add/remove rows and save run through the
-    single manage endpoint, which re-renders the body from the posted state."""
+    """The "Categorieen beheren" sheet routes add, remove and save through one
+    endpoint that re-renders the body from the posted state."""
 
     GREY = "#DCE3EA"
 
@@ -261,7 +237,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         }
 
     def test_plain_submit_saves(self):
-        """A plain submit (no extra_row/delete_new_row_index) saves."""
+        """A plain submit saves."""
         data = self._management(total=1, initial=0)
         data.update({"form-0-name": "Solo", "form-0-color": self.GREY})
         response = self.client.post(self.url, data)
@@ -270,14 +246,14 @@ class LabelCategoryManageFormsetTest(TestCase):
         assert set(LabelCategory.objects.values_list("name", flat=True)) == {"Solo"}
 
     def test_save_creates_multiple_new_rows_ignoring_a_gap(self):
-        """Saving with two new rows at non-contiguous indices (a removed middle
-        row leaves a gap) creates both categories and skips the gap."""
+        """Saving two new rows at non-contiguous indices creates both and skips
+        the gap left by a removed middle row."""
         data = self._management(total=3, initial=0)
         data.update(
             {
                 "form-0-name": "Alpha",
                 "form-0-color": self.GREY,
-                # index 1 intentionally absent — simulates a removed new row
+                # Index 1 is absent, simulating a removed new row.
                 "form-2-name": "Gamma",
                 "form-2-color": self.GREY,
             }
@@ -288,23 +264,20 @@ class LabelCategoryManageFormsetTest(TestCase):
         assert set(LabelCategory.objects.values_list("name", flat=True)) == {"Alpha", "Gamma"}
 
     def test_extra_row_adds_a_blank_row_and_keeps_typed_values(self):
-        """extra_row re-renders the body with one more blank row and no
-        validation errors, preserving already-typed values."""
+        """extra_row adds one blank row, keeps typed values and shows no errors."""
         data = self._management(total=1, initial=0)
         data.update({"extra_row": "1", "form-0-name": "Halfway", "form-0-color": self.GREY})
         response = self.client.post(self.url, data)
         assert response.status_code == 200
         assert not LabelCategory.objects.exists()
-        # Typed value survives and the counter grew to two rows.
         self.assertContains(response, "Halfway")
         self.assertContains(response, "form-TOTAL_FORMS")
         self.assertContains(response, 'value="2"')
-        self.assertContains(response, 'name="form-1-name"')  # the new blank row
-        self.assertNotContains(response, "verplicht")  # no premature "required"
+        self.assertContains(response, 'name="form-1-name"')
+        self.assertNotContains(response, "verplicht")  # No premature "required".
 
     def test_delete_new_row_index_removes_row_and_renumbers(self):
-        """Removing a new row drops it and renumbers the remaining new rows so no
-        blank gap row reappears; other typed values survive."""
+        """Removing a new row renumbers the rest, so no blank gap row reappears."""
         data = self._management(total=3, initial=0)
         data.update(
             {
@@ -323,15 +296,15 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, 'value="Alpha"')
         self.assertNotContains(response, 'value="Beta"')
         self.assertContains(response, 'value="Gamma"')
-        # Two rows left, contiguous — Gamma renumbered to index 1, no gap.
+        # Two contiguous rows left: Gamma renumbered to index 1.
         self.assertContains(response, "form-TOTAL_FORMS")
         self.assertContains(response, 'value="2"')
         self.assertContains(response, 'name="form-1-name" value="Gamma"')
 
     def test_delete_then_add_does_not_resurrect_the_removed_row(self):
-        """Regression: removing a middle new row then adding another must not
-        resurrect the removed row as a blank (delete renumbers contiguously)."""
-        # Delete the middle of three new rows → server returns two contiguous rows.
+        """Removing a middle new row then adding another does not resurrect the
+        removed row as a blank, because delete renumbers contiguously."""
+        # Deleting the middle of three rows returns two contiguous rows.
         data = self._management(total=3, initial=0)
         data.update(
             {
@@ -347,8 +320,8 @@ class LabelCategoryManageFormsetTest(TestCase):
         after_delete = self.client.post(self.url, data)
         self.assertContains(after_delete, 'name="form-1-name" value="Gamma"')
 
-        # Now add a row on the compacted state (2 rows). The new blank lands at
-        # index 2; there is no resurrected "Beta" and no stray empty index-1 row.
+        # Adding on the compacted state puts the blank at index 2, with no
+        # resurrected "Beta" and no stray empty index-1 row.
         add_data = self._management(total=2, initial=0)
         add_data.update(
             {
@@ -363,17 +336,17 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(after_add, 'value="Alpha"')
         self.assertContains(after_add, 'value="Gamma"')
         self.assertNotContains(after_add, 'value="Beta"')
-        # Three rows now, the third blank; no phantom blank between the two filled.
+        # Three rows, the third blank and none phantom between the filled ones.
         self.assertContains(after_add, "form-TOTAL_FORMS")
         self.assertContains(after_add, 'value="3"')
         self.assertContains(after_add, 'name="form-2-name"')
 
     def test_add_row_does_not_flash_validation_errors(self):
-        """Adding a row must not flash validation errors on other rows, even a
-        new row that duplicates an existing category — quiet until Opslaan.
+        """Adding a row flashes no validation errors, even when a new row
+        duplicates an existing category.
 
-        Regression: as_field_group() reads field.errors, which lazily triggers
-        full_clean; the view suppresses that on a re-render.
+        as_field_group() reads field.errors, which lazily triggers full_clean, so
+        the view suppresses that on a re-render.
         """
         existing = LabelCategory.objects.create(name="b", color=self.GREY)
         data = self._management(total=2, initial=1)
@@ -383,22 +356,20 @@ class LabelCategoryManageFormsetTest(TestCase):
                 "form-0-id": str(existing.pk),
                 "form-0-name": "b",
                 "form-0-color": self.GREY,
-                "form-1-name": "b",  # duplicates existing → would error on save
+                "form-1-name": "b",  # Duplicates existing, so it would error on save.
                 "form-1-color": self.GREY,
             }
         )
         response = self.client.post(self.url, data)
         assert response.status_code == 200
-        # No validation flashed while still editing.
         self.assertNotContains(response, "nldd-form-field-error-text")
         self.assertNotContains(response, "bestaat al")
-        # The typed duplicate value is preserved, and the blank new row is added.
         self.assertContains(response, 'name="form-1-name" value="b"')
         self.assertContains(response, 'name="form-2-name"')
 
     def test_save_with_blanked_existing_name_shows_error_and_does_not_save(self):
-        """Blanking a required name and saving is rejected: re-render with a
-        visible wired error, no redirect, nothing saved."""
+        """Blanking a required name and saving is rejected with a visible error
+        and no redirect."""
         category = LabelCategory.objects.create(name="Skills", color=self.GREY)
         data = self._management(total=1, initial=1)
         data.update({"form-0-id": str(category.pk), "form-0-name": "", "form-0-color": self.GREY})
@@ -411,11 +382,11 @@ class LabelCategoryManageFormsetTest(TestCase):
         assert category.name == "Skills"
 
     def test_remove_then_save_with_duplicate_name_shows_error_without_phantom_row(self):
-        """Remove a row, then save into a validation error (duplicate name): the
-        error re-render must show no phantom blank row where the removed one was."""
+        """After removing a row, a save that fails validation re-renders without a
+        phantom blank row where the removed one was."""
         existing = LabelCategory.objects.create(name="Bestaand", color=self.GREY)
 
-        # Existing row (index 0) + three new rows. Remove the middle new one.
+        # An existing row plus three new ones; remove the middle new one.
         remove = self._management(total=4, initial=1)
         remove.update(
             {
@@ -432,12 +403,11 @@ class LabelCategoryManageFormsetTest(TestCase):
             }
         )
         after_remove = self.client.post(self.url, remove)
-        # Compacted: existing at 0, Nieuw1 at 1, Nieuw3 at 2 — WegHiermee gone.
+        # Compacted: existing at 0, Nieuw1 at 1, Nieuw3 at 2.
         self.assertNotContains(after_remove, "WegHiermee")
         self.assertContains(after_remove, 'name="form-2-name" value="Nieuw3"')
 
-        # Save the compacted state, but make the last new row duplicate the
-        # existing category's name → unique validation fails.
+        # The last new row duplicates the existing name, so unique validation fails.
         save = self._management(total=3, initial=1)
         save.update(
             {
@@ -446,24 +416,22 @@ class LabelCategoryManageFormsetTest(TestCase):
                 "form-0-color": self.GREY,
                 "form-1-name": "Nieuw1",
                 "form-1-color": self.GREY,
-                "form-2-name": "Bestaand",  # duplicate → error
+                "form-2-name": "Bestaand",  # Duplicate, so this errors.
                 "form-2-color": self.GREY,
             }
         )
         response = self.client.post(self.url, save)
         content = response.content.decode()
 
-        # Nothing saved: no redirect, and no second "Bestaand" created.
         assert response.status_code == 200
         assert response.headers.get("HX-Redirect") is None
         assert LabelCategory.objects.filter(name="Bestaand").count() == 1
 
-        # The error is wired and visible on the duplicate row.
         self.assertContains(response, "nldd-form-field-error-text")
         self.assertContains(response, "invalid")
 
-        # Surviving rows keep their values, and there is NO phantom blank row:
-        # exactly three rows, contiguous, none with an empty name between filled.
+        # Surviving rows keep their values, with exactly three contiguous rows
+        # and no phantom blank between the filled ones.
         self.assertContains(response, 'value="Nieuw1"')
         self.assertContains(response, 'name="form-TOTAL_FORMS"')
         self.assertContains(response, 'value="3"')

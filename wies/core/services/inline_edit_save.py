@@ -1,8 +1,7 @@
-"""Sla een lijst editable-specs op met dezelfde audit-events als inline edit.
+"""Saving a list of editable specs with the same audit events as inline edit.
 
-Gedeeld door de child-sheet-panelen (plaatsing, opdracht) en de
-onboarding-flow, zodat opslaan buiten de HTMX-inline-edit-route byte-identiek
-audit-gedrag houdt.
+Shared by the child-sheet panels (placement, assignment) and the onboarding flow,
+so saving outside the HTMX inline-edit route audits identically.
 """
 
 from __future__ import annotations
@@ -13,11 +12,10 @@ from wies.core.inline_edit.forms import _current_value, resolve_editables, save_
 
 
 def save_edit_specs(request, specs, cleaned_data):
-    """Sla alle specs op met dezelfde audit-events als inline edit.
+    """Saves all specs with the same audit events as inline edit.
 
-    Geen eigen transactie: de aanroeper bepaalt de grens, zodat een paneel er
-    zijn eigen nazorg (zoals de plaatsingsspiegel) in dezelfde transactie bij
-    kan leggen.
+    Opens no transaction of its own: the caller sets the boundary, so a panel can
+    add its own follow-up work inside the same transaction.
     """
     for editable_set, spec, obj in specs:
         spec_editables = resolve_editables(editable_set, spec)

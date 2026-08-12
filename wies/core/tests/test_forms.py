@@ -14,16 +14,14 @@ User = get_user_model()
 
 
 class NlddUserFormRenderingTest(TestCase):
-    """Tests for NlddFormMixin functionality and form rendering via UserForm"""
+    """Tests for NlddFormMixin rendering via UserForm."""
 
     def setUp(self):
-        """Create test data"""
-        # Create test labels
+        """Creates the labels and groups the rendering tests read back."""
         self.category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
         self.label_a = Label.objects.create(name="AI", category=self.category)
         self.label_b = Label.objects.create(name="ICT", category=self.category)
 
-        # Create test groups for checkbox rendering
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name="Business Development Manager")
@@ -40,14 +38,13 @@ class NlddUserFormRenderingTest(TestCase):
         assert 'class="nldd-input"' not in rendered
 
     def test_form_displays_validation_errors_with_nldd_classes(self):
-        """Validation errors render as nldd-form-field-error-text elements.
+        """Validation errors render as wired nldd-form-field-error-text elements.
 
-        The error text must be wired to its input: nldd-form-field only reveals
-        it when the input reflects `invalid` and names the error's id in
-        `error-message`. Without that the message renders at height 0 and no
-        screen reader announces it.
+        nldd-form-field only reveals the error when the input reflects `invalid`
+        and names the error id in `error-message`; without that the message
+        renders at height 0 and no screen reader announces it.
         """
-        form = UserForm(data={})  # missing required fields
+        form = UserForm(data={})
 
         assert not form.is_valid()
 
@@ -77,10 +74,8 @@ class NlddUserFormRenderingTest(TestCase):
         assert "optional" not in email_field.group(0)
 
     def test_form_has_no_required_attribute(self):
-        """
-        Text fields do not carry the HTML required attribute (client-side
-        validation is disabled so fields aren't coloured red on first view).
-        """
+        """Text fields carry no HTML required attribute, so client-side validation
+        does not colour them red on first view."""
         form = UserForm()
         rendered = str(form)
 
@@ -95,17 +90,14 @@ class NlddUserFormRenderingTest(TestCase):
         assert "required" not in email.group(0), f"email should not have 'required'. Found: {email.group(0)}"
 
     def test_unmapped_widget_logs_warning(self):
-        """Test that using an unmapped widget logs a warning"""
+        """An unmapped widget logs a warning."""
 
-        # Create a test form with an unmapped widget (FileInput)
         class TestForm(NlddFormMixin, forms.Form):
             document = forms.FileField(label="Document")
 
-        # Create the form and check that a warning is logged
         with self.assertLogs("wies.core.form_mixins", level="WARNING") as log:
             TestForm()
 
-        # Verify the warning was logged
         assert len(log.output) == 1
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
@@ -113,13 +105,10 @@ class NlddUserFormRenderingTest(TestCase):
 
 
 class NlddChoiceWidgetErrorWiringTest(TestCase):
-    """Validation errors on choice widgets must reach the element nldd-form-field
-    inspects (_findInput() = first non-helper child), otherwise the message stays
-    hidden and no screen reader announces it.
+    """Choice widgets forward their error wiring to the element nldd-form-field
+    inspects (_findInput(), the first non-helper child).
 
-    nldd-form-field reads `invalid`/`error-message` from that element; the widget
-    templates forward them to the host that _findInput() returns. test_forms.py
-    already covers text/date widgets — these cover the choice widgets.
+    Anywhere else the message stays hidden and no screen reader announces it.
     """
 
     def _first_error_id(self, rendered):
@@ -129,7 +118,7 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
 
     def test_radioselect_error_wired_to_group(self):
         """RadioSelect: nldd-radio-button-group carries invalid + error-message."""
-        form = LabelCategoryForm(data={"name": ""})  # both name and color missing
+        form = LabelCategoryForm(data={"name": ""})
         assert not form.is_valid()
         assert "color" in form.errors
 
@@ -185,9 +174,8 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
     def test_checkbox_select_error_wired_to_first_field(self):
         """CheckboxSelectMultiple: the first nldd-checkbox-field carries the wiring.
 
-        There is no wrapping group, so _findInput() returns the first field; the
-        component reflects no `invalid` styling but still shows and announces the
-        message via the raw attributes.
+        There is no wrapping group, so _findInput() returns the first field; it
+        reflects no `invalid` styling but still announces via the raw attributes.
         """
         form = self._make_choice_form(data={})
         assert not form.is_valid()
@@ -201,16 +189,16 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
 
 
 class UserFormEmailDomainValidationTest(TestCase):
-    """Tests for email domain validation in UserForm"""
+    """Tests for email domain validation in UserForm."""
 
     def setUp(self):
-        """Create test data"""
+        """Creates the role groups UserForm renders."""
         Group.objects.get_or_create(name="Beheerder")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name="Business Development Manager")
 
     def test_valid_rijksoverheid_email(self):
-        """Test that @rijksoverheid.nl emails are accepted"""
+        """@rijksoverheid.nl addresses are accepted."""
         form = UserForm(
             data={
                 "first_name": "Test",
@@ -221,7 +209,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
 
     def test_valid_minbzk_email(self):
-        """Test that @minbzk.nl emails are accepted"""
+        """@minbzk.nl addresses are accepted."""
         form = UserForm(
             data={
                 "first_name": "Test",
@@ -232,7 +220,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
 
     def test_invalid_external_email(self):
-        """Test that external email addresses are rejected"""
+        """External addresses are rejected."""
         form = UserForm(
             data={
                 "first_name": "Test",
@@ -245,7 +233,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert "ODI e-mailadressen" in str(form.errors["email"])
 
     def test_invalid_client_email(self):
-        """Test that client email addresses are rejected"""
+        """Client addresses are rejected."""
         form = UserForm(
             data={
                 "first_name": "Test",
@@ -257,7 +245,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert "email" in form.errors
 
     def test_email_validation_case_insensitive(self):
-        """Test that email domain validation is case insensitive"""
+        """Domain validation is case insensitive."""
         form = UserForm(
             data={
                 "first_name": "Test",
@@ -268,7 +256,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert form.is_valid(), f"Form should accept uppercase domain, errors: {form.errors}"
 
     def test_edit_existing_user_with_valid_email(self):
-        """Test editing an existing user with a valid email domain"""
+        """An existing user accepts a valid email domain."""
         user = User.objects.create_user(
             email="existing@rijksoverheid.nl",
             first_name="Existing",
@@ -285,7 +273,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
 
     def test_edit_existing_user_with_invalid_email(self):
-        """Test editing an existing user with an invalid email domain is rejected"""
+        """An existing user rejects an invalid email domain."""
         user = User.objects.create_user(
             email="existing@rijksoverheid.nl",
             first_name="Existing",
@@ -304,7 +292,7 @@ class UserFormEmailDomainValidationTest(TestCase):
 
 
 class NlddFormMixinTest(TestCase):
-    """Tests that NlddFormMixin renders forms without any RVO classes."""
+    """NlddFormMixin renders forms without any RVO classes."""
 
     RVO_MARKERS = (
         "rvo-",
@@ -323,7 +311,7 @@ class NlddFormMixinTest(TestCase):
         Label.objects.create(name="Brand A", category=self.category)
 
     def _make_nldd_test_form(self, **kwargs):
-        """Create a simple test form using NlddFormMixin."""
+        """Returns a simple form built on NlddFormMixin."""
 
         class NlddTestForm(NlddFormMixin, forms.Form):
             first_name = forms.CharField(label="Voornaam", required=True)
@@ -346,7 +334,6 @@ class NlddFormMixinTest(TestCase):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
-        # Text-like fields use the real components; no hand-rolled nldd-input.
         assert "<nldd-form-field" in rendered
         assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
         assert 'class="nldd-input"' not in rendered
@@ -358,7 +345,7 @@ class NlddFormMixinTest(TestCase):
 
         for marker in self.RVO_MARKERS:
             assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
-        # Wired to its input by id, otherwise the component keeps it hidden.
+        # Wired by id, otherwise the component keeps the error hidden.
         assert re.search(r'<nldd-form-field-error-text id="[^"]+"', rendered) is not None
 
     def test_nldd_form_required_label_class(self):
@@ -379,12 +366,11 @@ class NlddFormMixinTest(TestCase):
 
 
 class ComboBoxSelectRenderingTest(TestCase):
-    """The combo box must show the current value in edit mode.
+    """The combo box shows the current value in edit mode.
 
-    Regressietest: het geselecteerde ``value`` werd in een ``{% set %}`` binnen
-    een for-loop bepaald, en zo'n set lekt in Jinja niet naar buiten — waardoor
-    de combo box (o.a. de Business Manager op het opdracht-bewerkscherm) altijd
-    leeg opende en opslaan de waarde wiste.
+    Regression: the selected ``value`` was assigned in a ``{% set %}`` inside a
+    for-loop, which does not leak outside the loop in Jinja, so the combo box
+    always opened empty and saving wiped the value.
     """
 
     def _combo_form(self, **kwargs):

@@ -91,20 +91,20 @@ class AssignmentCreateTest(TestCase):
             label="Belastingdienst",
         )
 
-    # --- Aanmaak via het zijpaneel (assignment-create-sheet) ---
-    # Zelfde opdrachtvelden als de full-page create, maar zonder rollen: die
-    # voeg je daarna in het opdrachtpaneel toe. Bij succes een 204 met
-    # HX-Location naar ?opdracht=<id>.
+    # --- Create via the side panel (assignment-create-sheet) ---
+    # Same assignment fields as the full-page create, but no roles: those are
+    # added afterwards in the assignment panel. Success is a 204 with an
+    # HX-Location to ?opdracht=<id>.
 
     def test_sheet_post_requires_add_assignment_permission(self):
-        # De aanmaak-route is POST-only; zonder recht een 403.
+        # The create route is POST-only; without the permission a 403.
         self.client.force_login(self.regular_user)
         response = self.client.post(reverse("assignment-create-sheet"), {})
         assert response.status_code == 403
 
     def test_list_sentinel_htmx_returns_create_form(self):
-        # ?nieuwe-opdracht op de lijst opent het lege aanmaakformulier als paneel.
-        # De htmx-panelrequest krijgt alleen het fragment.
+        # ?nieuwe-opdracht opens the empty create form as a panel; the htmx
+        # panel request gets only the fragment.
         self.client.force_login(self.bdm_user)
         response = self.client.get(
             reverse("assignment-list"),
@@ -116,7 +116,7 @@ class AssignmentCreateTest(TestCase):
         assert b"Voer opdracht in" in response.content
 
     def test_list_sentinel_full_page_opens_create_panel(self):
-        # Volle-pagina GET (refresh/bookmark): de hele lijst mét het aanmaakpaneel.
+        # Full-page GET (refresh/bookmark): the whole list plus the create panel.
         self.client.force_login(self.bdm_user)
         response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
         assert response.status_code == 200
@@ -124,7 +124,7 @@ class AssignmentCreateTest(TestCase):
         assert b"Voer opdracht in" in response.content
 
     def test_list_sentinel_without_permission_shows_list_no_panel(self):
-        # Zonder recht: gewone lijst, geen aanmaakpaneel — geen 403 (dit is de lijstview).
+        # Without the permission: plain list, no create panel — no 403, this is the list view.
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
         assert response.status_code == 200
@@ -142,10 +142,10 @@ class AssignmentCreateTest(TestCase):
             },
         )
         assert response.status_code == 204
-        # HX-Location stuurt de client naar het nieuwe opdrachtpaneel.
+        # HX-Location sends the client to the new assignment panel.
         assignment = Assignment.objects.get(name="Sheet Opdracht")
         assert f"opdracht={assignment.public_id}" in response["HX-Location"]
-        # Geen rollen: die komen later via het paneel.
+        # No roles: those are added later via the panel.
         assert assignment.services.count() == 0
 
     def test_sheet_post_emits_create_event(self):
@@ -174,25 +174,23 @@ class AssignmentCreateTest(TestCase):
                 "terug_url": reverse("assignment-list"),
             },
         )
-        # Ongeldig formulier: opnieuw renderen (200), geen opdracht aangemaakt.
+        # Invalid form: re-render (200), no assignment created.
         assert response.status_code == 200
         assert not Assignment.objects.filter(name="Zonder Opdrachtgever").exists()
-        # De org-fout moet GEKOPPELD renderen, anders toont nldd-form-field hem op
-        # hoogte 0 en lijkt "Aanmaken" niks te doen. De error-text draagt een id en
-        # de picker-div wijst er via error-message naar (+ invalid). Zie
-        # org_picker.html en wire_field_errors.
+        # The org error must render id-wired (error-message + invalid), or
+        # nldd-form-field shows it at height 0 and "Aanmaken" appears dead.
         html = response.content.decode()
         assert 'id="error-organizations-1"' in html
         assert 'error-message="error-organizations-1"' in html
-        # De picker-div draagt id + invalid; die staan in de template op aparte
-        # regels, dus matchen op het element in plaats van op één platte substring.
+        # The template splits the picker div's attributes over lines, so match
+        # the element rather than one flat substring.
         picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)
         assert picker is not None
         assert "invalid" in picker.group(1)
 
     def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
-        # Een protocol-relatieve terug_url in de POST-body wordt door
-        # _safe_return_path geweigerd; de HX-Location valt terug op de lijst.
+        # _safe_return_path rejects a protocol-relative terug_url, so the
+        # HX-Location falls back to the list.
         self.client.force_login(self.bdm_user)
         response = self.client.post(
             reverse("assignment-create-sheet"),
@@ -209,8 +207,10 @@ class AssignmentCreateTest(TestCase):
         assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
 
     def test_sheet_success_banner_rides_along_on_panel_load(self):
-        """De 'is aangemaakt'-banner reist als OOB-swap mee met de panel-response
-        die op de HX-Location volgt — base.html herlaadt niet bij een panel-swap.
+        """The success banner rides along as an OOB swap on the panel response.
+
+        base.html does not reload on a panel swap, so the banner cannot come
+        from there.
         """
         self.client.force_login(self.bdm_user)
         response = self.client.post(
@@ -225,7 +225,7 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 204
         assignment = Assignment.objects.get(name="Banner Opdracht")
 
-        # De vervolg-request (zoals htmx die na HX-Location doet): panel-load.
+        # The follow-up request htmx makes after HX-Location: a panel load.
         panel = self.client.get(
             reverse("assignment-list"),
             {"opdracht": assignment.public_id},
@@ -261,8 +261,8 @@ class AssignmentListButtonTest(TestCase):
         assert b"Opdracht invoeren" in response.content
 
     def test_create_button_targets_list_sentinel(self):
-        # De knop opent de aanmaak-sheet als paneel op de lijst (?nieuwe-opdracht),
-        # niet meer via de losse /invoeren/?terug=-route, en pusht de URL.
+        # The button opens the create sheet as a panel on the list
+        # (?nieuwe-opdracht) and pushes the URL, not via /invoeren/?terug=.
         self.client.force_login(self.bdm_user)
         response = self.client.get(reverse("assignment-list"))
         html = response.content.decode()

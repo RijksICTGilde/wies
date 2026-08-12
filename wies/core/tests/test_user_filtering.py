@@ -1,4 +1,4 @@
-"""Rol-tag in de gebruikerslijst en de filtersheet (rol/merk/labels) — #544."""
+"""Role tag in the user list and the filter sheet (rol/merk/labels) — #544."""
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
@@ -26,22 +26,22 @@ class UserFilterRenderTest(TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        assert 'text="Beheerder"' in html  # rol-tag in de rij
+        assert 'text="Beheerder"' in html  # role tag in the row
 
     def test_filter_sheet_renders_role_and_merk(self):
-        # De sheet staat in de pagina zelf: #filter-form erin stuurt het zoekveld
-        # en de chips aan, dus het mag niet pas na openen bestaan.
+        # The sheet lives in the page itself: its #filter-form drives the search
+        # box and the chips, so it must exist before the sheet is opened.
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
         assert "user-filter-sheet" in html
         assert 'id="filter-form"' in html
-        assert "Beheerder" in html  # rol-optie
-        assert "Merk A" in html  # merk-optie
+        assert "Beheerder" in html  # role option
+        assert "Merk A" in html  # merk option
         assert 'name="rol"' in html
         assert 'name="merk"' in html
 
     def test_filter_sheet_collapses_long_group_behind_meer(self):
-        # Genoeg merken (> top_n=3) zodat de rest achter "Meer…" valt.
+        # More merken than top_n=3, so the rest collapses behind "Meer...".
         for i in range(6):
             s = Suborganization.objects.create(name=f"Extra Merk {i}")
             u = User.objects.create_user(email=f"x{i}@rijksoverheid.nl", first_name=f"X{i}", last_name="Test")
@@ -50,13 +50,12 @@ class UserFilterRenderTest(TestCase):
             )
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        # Gedeeld filter_sidebar-patroon: top-3 + een "Meer..."-rij die de
-        # filter_options_modal opent.
+        # Shared filter_sidebar pattern: top 3 plus a "Meer..." row.
         assert "Meer..." in html
         assert "filter_modal=merk" in html
 
     def test_active_filter_renders_chip(self):
-        # De chipstrip verving de teller op de knop: die zei hoeveel, niet wat.
+        # The chip strip replaced the button counter, which said how many but not what.
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users") + f"?rol={self.beheerder.id}").content.decode()
         assert 'data-wies-dismiss="filter"' in html
@@ -67,12 +66,12 @@ class UserFilterRenderTest(TestCase):
 class UserFilterOobTest(UserFilterRenderTest):
     def test_apply_swap_carries_chips_and_oob_sheet(self):
         self.client.force_login(self.admin)
-        # Simuleer de apply-swap: filter-GET met HX-Request → #user-content fragment.
+        # Simulate the apply swap: a filter GET with HX-Request.
         html = self.client.get(
             reverse("admin-users") + f"?rol={self.beheerder.id}", headers={"hx-request": "true"}
         ).content.decode()
         assert 'data-wies-dismiss="filter"' in html
-        # Het filterpaneel reist OOB mee, zodat de sheet de nieuwe counts toont.
+        # The filter panel travels along OOB so the sheet shows the new counts.
         assert 'hx-swap-oob="outerHTML:#filter-panel"' in html
 
 
@@ -82,14 +81,13 @@ class UserFilterFlowTest(UserFilterRenderTest):
         html = self.client.get(
             reverse("admin-users") + f"?rol={self.beheerder.id}", headers={"hx-request": "true"}
         ).content.decode()
-        # #results-fragment terug, met het filterpaneel als OOB (counts bijgewerkt).
+        # The results fragment comes back with the filter panel as an OOB swap.
         assert 'id="results"' in html
         assert 'hx-swap-oob="outerHTML:#filter-panel"' in html
-        # Rol-checkbox staat aangevinkt in de meegeswapte sheet.
         assert 'id="filter-form"' in html
 
     def test_role_filter_is_multiselect(self):
-        # Twee rollen tegelijk moet werken (getlist).
+        # Two roles at once must work (getlist).
         other = Group.objects.create(name="Consultant")
         u2 = User.objects.create_user(email="c2@rijksoverheid.nl", first_name="C2", last_name="T")
         u2.groups.add(other)
@@ -102,6 +100,6 @@ class UserFilterSlotTest(UserFilterRenderTest):
     def test_sheet_filter_panel_has_no_sidebar_slot(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        # In de sheet mag het filterpaneel GEEN slot="sidebar" dragen.
+        # Inside the sheet the filter panel must not carry slot="sidebar".
         panel = html.split('id="filter-panel"')[1].split(">")[0]
         assert 'slot="sidebar"' not in panel, panel

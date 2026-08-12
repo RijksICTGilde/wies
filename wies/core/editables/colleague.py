@@ -1,6 +1,4 @@
-"""Editables for Colleague
-Permissions live in ``wies/core/permissions.py``.
-"""
+"""Editables for Colleague. Permissions live in ``wies/core/permissions.py``."""
 
 from django.db import transaction
 
@@ -12,12 +10,12 @@ LABELS_PREFIX = "labels_"
 
 
 def _suborganization_choices():
-    # Callable so the queryset evaluates per request, not at registration time.
+    # A callable so the queryset evaluates per request, not at registration time.
     return Suborganization.objects.all()
 
 
 def _save_labels_for_category(category_id):
-    """Replace labels in this category only; leave other categories untouched."""
+    """Returns a save that replaces labels in this category only."""
 
     @transaction.atomic
     def _save(colleague, selected_labels):
@@ -29,7 +27,7 @@ def _save_labels_for_category(category_id):
 
 
 def _labels_choices(category):
-    # Callable so the queryset evaluates at form-build time, not registration time.
+    # A callable so the queryset evaluates at form-build time, not registration time.
     def _get():
         return category.labels.all().order_by("name")
 
@@ -37,9 +35,9 @@ def _labels_choices(category):
 
 
 def _labels_initial_for_category(category_id):
-    # Per categorie filteren (symmetrisch met _save_labels_for_category): anders
-    # hasht het concurrency-token álle labels en maakt een save in de ene
-    # categorie de tokens van de andere stale.
+    # Filtered per category, symmetrical with _save_labels_for_category: otherwise
+    # the concurrency token hashes every label and a save in one category makes
+    # the tokens of the others stale.
     def _get(colleague):
         return list(colleague.labels.filter(category_id=category_id))
 
@@ -79,7 +77,7 @@ class ColleagueEditables(EditableSet):
 
     @classmethod
     def resolve_dynamic(cls, name):
-        # Returns None when the name doesn't match or the category isn't found → view 404s.
+        # None when the name doesn't match or the category isn't found → view 404s.
         if not name.startswith(LABELS_PREFIX):
             return None
         try:

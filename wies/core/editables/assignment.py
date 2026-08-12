@@ -21,11 +21,11 @@ from wies.core.widgets import ComboBoxSelect
 
 
 def _bdm_queryset(assignment=None):
-    # Wrapped in a callable so `choices` evaluates lazily per request.
+    # A callable so `choices` evaluates lazily per request.
     #
-    # De huidige eigenaar hoort er altijd bij, ook buiten de BDM-groep: zonder
-    # passende optie rendert de combo box leeg en wist opslaan de Business
-    # Manager. In de praktijk staan de meeste eigenaren niet in die groep.
+    # The current owner is always included, even outside the BDM group: without a
+    # matching option the combo box renders empty and saving clears the Business
+    # Manager. Most owners are in fact not in that group.
     in_group = Q(user__groups__name="Business Development Manager")
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:
@@ -34,9 +34,12 @@ def _bdm_queryset(assignment=None):
 
 
 def _owner_display_context(assignment, request) -> dict:
-    """Link + mailto for the owner display partial. Derived only from
-    ``assignment``/``request`` (not the current page's GET params) so they
-    survive an inline-edit/cancel re-render on the ``/inline-edit/`` path (#395)."""
+    """Builds the link and mailto for the owner display partial.
+
+    Derived only from ``assignment`` and ``request``, never the current page's GET
+    params, so both survive an inline-edit/cancel re-render on ``/inline-edit/``
+    (#395).
+    """
     if not assignment.owner:
         return {"owner_url": "", "owner_mailto": ""}
 
@@ -73,7 +76,7 @@ def _organizations_initial(assignment):
 
 
 def _save_organizations(assignment, value):
-    # Atomic: a partial failure rolls back, preserving the existing selection.
+    # Atomic so a partial failure rolls back, preserving the existing selection.
     with transaction.atomic():
         AssignmentOrganizationUnit.objects.filter(assignment=assignment).delete()
         for row in value:
@@ -109,17 +112,17 @@ def _skill_choices():
 
 
 def _services_initial(assignment):
-    """One row per service, vacancies first."""
+    """Returns one row per service, vacancies first."""
     from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
 
-    # Latest placement per service, fetched in one prefetch instead of a query per service.
+    # One prefetch for the latest placement per service, instead of a query each.
     services = (
         assignment.services.select_related("skill")
         .prefetch_related(
             Prefetch(
                 "placements",
-                # service__assignment so placement.start_date/end_date (which resolve
-                # through service → assignment) don't each trigger their own query.
+                # service__assignment keeps placement.start_date/end_date, which
+                # resolve through service → assignment, from querying per row.
                 queryset=Placement.objects.select_related("colleague", "service__assignment").order_by("-id"),
                 to_attr="ordered_placements",
             )
@@ -132,17 +135,15 @@ def _services_initial(assignment):
         placement = service.ordered_placements[0] if service.ordered_placements else None
         effective_start = placement.start_date if placement else service.start_date
         effective_end = placement.end_date if placement else service.end_date
-        # Checkbox renders checked ("Neem opdrachtperiode over") only when
-        # the row's effective period equals the assignment period — this
-        # also covers placements that inherit from a service which itself
-        # has pinned dates (where placement.period_source alone would lie).
+        # Compared on the effective period rather than placement.period_source,
+        # which lies for a placement inheriting from a service with pinned dates.
         inherits_assignment_period = effective_start == assignment.start_date and effective_end == assignment.end_date
         rows.append(
             {
                 "id": service.id,
                 "placement_id": placement.id if placement else None,
-                # public_ids for the panel URLs the row menu builds (opdracht=, plaatsing=);
-                # the panel resolvers look up by public_id, never the integer PK.
+                # public_ids for the panel URLs the row menu builds; the panel
+                # resolvers look up by public_id, never the integer PK.
                 "assignment_public_id": str(assignment.public_id),
                 "placement_public_id": str(placement.public_id) if placement else None,
                 "skill": str(service.skill.public_id) if service.skill_id else "",
@@ -162,11 +163,12 @@ def _services_initial(assignment):
 
 
 def visible_service_rows(assignment, request) -> list[dict]:
-    """Viewer-filtered team rows for display. ``_services_initial`` (used by the
-    formset and audit state) returns every placement; here a placement that is
-    not currently active (ended or not yet started) is hidden from unrelated
-    viewers — only the placed colleague and the BM-owner see it, flagged
-    ``historical`` with a chip label and a privacy note."""
+    """Returns viewer-filtered team rows for display.
+
+    ``_services_initial`` returns every placement; here a placement that is not
+    currently active is hidden from unrelated viewers — only the placed colleague
+    and the BM-owner see it, flagged ``historical`` with a label and privacy note.
+    """
     today = timezone.now().date()
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
@@ -201,7 +203,7 @@ def _services_display_context(assignment, request) -> dict:
 
 
 def _services_formset_factory(data=None, initial=None):
-    # prefix="service" is the formset prefix the member-edit sheet posts under.
+    # prefix="service" matches what the member-edit sheet posts under.
     from wies.core.forms import ServiceFormSet  # noqa: PLC0415 — avoids circular import
 
     kwargs = {"prefix": "service", "form_kwargs": {"skill_choices": _skill_choices()}}
@@ -211,7 +213,7 @@ def _services_formset_factory(data=None, initial=None):
 
 
 def _fmt_date(value) -> str | None:
-    """ISO string for JSON-serialisable audit state (dates aren't JSON-native)."""
+    """Returns an ISO string, since dates are not JSON-serialisable in audit state."""
     return value.isoformat() if value else None
 
 
@@ -221,7 +223,7 @@ def _service_audit_row(row: dict) -> dict:
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
         "description": row["description"] or "",
-        # Period included so a period-only edit registers as a change (#393).
+        # Included so a period-only edit registers as a change (#393).
         "has_custom_period": row["has_custom_period"],
         "start_date": _fmt_date(row["placement_start_date"]),
         "end_date": _fmt_date(row["placement_end_date"]),
@@ -233,10 +235,11 @@ def _services_audit_state(assignment) -> list[dict]:
 
 
 def placement_audit_row(placement) -> dict:
-    """Audit row for a single placement, shaped like a services-collection
-    row so the same timeline renderer applies. Lets a period edit made
-    directly on a placement (via the profile) show on the opdracht
-    timeline, not only via "Team bewerken" (#393)."""
+    """Returns an audit row for one placement, shaped like a services-collection row.
+
+    Lets a period edit made directly on a placement show on the assignment
+    timeline, not only via "Team bewerken" (#393).
+    """
     from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
 
     service = placement.service
@@ -263,15 +266,15 @@ def _period_label(row: dict) -> str:
     start = _date_nl(row.get("start_date"))
     end = _date_nl(row.get("end_date"))
     period = f"{start or '?'} t/m {end or '?'}"
-    # `has_custom_period` is inverted: truthy means inherited, not custom.
-    # Show the dates either way so the old period stays visible (#393).
+    # `has_custom_period` is inverted: truthy means inherited, not custom. The
+    # dates show either way so the old period stays visible (#393).
     if row.get("has_custom_period"):
         return f"{period} (volgt opdracht)"
     return period
 
 
 def _date_nl(iso: str | None) -> str | None:
-    """ISO yyyy-mm-dd → Dutch dd-mm-yyyy for timeline display."""
+    """Converts ISO yyyy-mm-dd to Dutch dd-mm-yyyy for timeline display."""
     if not iso:
         return None
     y, m, d = iso.split("-")
@@ -288,12 +291,12 @@ def _change_colleague_names(change: dict) -> set[str]:
 
 
 def _visible_colleague_names(assignment, request, viewer) -> set[str]:
-    """Names ``viewer`` may already see on this opdracht.
+    """Returns the names ``viewer`` may already see on this assignment.
 
-    Cached on the request, keyed by opdracht: the timeline calls this once per
-    team event and ``visible_service_rows`` costs a query each time. Keyed on
-    the request rather than the assignment instance because the answer depends
-    on the viewer, and a request has exactly one.
+    Cached on the request, keyed by assignment: the timeline calls this once per
+    team event and ``visible_service_rows`` costs a query each time. The request
+    is the cache key because the answer depends on the viewer, and a request has
+    exactly one.
     """
     if not hasattr(request, "wies_visible_colleague_names"):
         request.wies_visible_colleague_names = {}
@@ -307,33 +310,32 @@ def _visible_colleague_names(assignment, request, viewer) -> set[str]:
 
 
 def team_changes_are_restricted(assignment, request, changes: list[dict]) -> bool:
-    """Of deze teamregels namen bevatten die niet iedereen op deze opdracht ziet.
+    """Returns whether these team rows name anyone not everyone on this assignment sees.
 
-    Voor de noot bij één tijdlijnregel: de BM krijgt de ongefilterde lijst en
-    hoort te weten dat een regel voor anderen verborgen is. Getoetst tegen wat
-    een buitenstaander zou zien (viewer=None), niet tegen wat de kijker zelf mag
-    -- anders zou de eigen naam de regel altijd "zichtbaar" maken.
+    Drives the note on a timeline row: the BM gets the unfiltered list and should
+    know a row is hidden from others. Tested against what an outsider would see,
+    not against the viewer's own rights, since their own name would otherwise
+    always make the row look visible.
     """
     if not changes:
         return False
-    # visible_service_rows leest alleen request.user; een simpel object zonder
-    # user levert dus de rijen zoals een buitenstaander ze ziet.
+    # visible_service_rows only reads request.user, so a bare object without one
+    # yields the rows as an outsider sees them.
     public_rows = visible_service_rows(assignment, SimpleNamespace(user=None))
     public_names = {row["colleague"].name for row in public_rows if row["colleague"]}
     return any(not _change_colleague_names(change) <= public_names for change in changes)
 
 
 def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:
-    """Viewer-filtered team changes for the audit timeline, mirroring
-    ``visible_service_rows``: a name the team list hides must not resurface
-    here. Keyed on the colleague *name* in the snapshot, not the row id: the
-    snapshot is frozen, so a row whose placement was since removed or re-filled
-    would otherwise leak the earlier name.
+    """Returns viewer-filtered team changes for the audit timeline.
 
-    A change survives only if every name it mentions is one the viewer may
-    already see on this opdracht. Vacancies name nobody and always survive.
-    Dropped whole rather than redacted, so the timeline cannot betray that a
-    hidden placement exists (same reason ``team_count`` is filtered)."""
+    Mirrors ``visible_service_rows``: a change survives only if every name it
+    mentions is one the viewer may already see, so vacancies always survive.
+    Matched on the colleague name rather than the row id, because the snapshot is
+    frozen and a since-removed or re-filled row would leak the earlier name.
+    Changes are dropped whole rather than redacted, so the timeline cannot betray
+    that a hidden placement exists.
+    """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     if viewer is not None and assignment.owner_id == viewer.id:
         return changes
@@ -342,9 +344,9 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
 
 
 def _services_render_change(change: dict) -> dict:
-    """One clause per change, phrased to slot into the timeline's running
-    sentence ("<auteur> heeft <clause>, <clause> en <clause>."). Toelichting
-    values are quoted inline so the clause stays one natural sentence."""
+    """Returns one clause per change, phrased to slot into the timeline's running
+    sentence ("<auteur> heeft <clause>, <clause> en <clause>.").
+    """
     old, new = change.get("old"), change.get("new")
     if old is None:
         return {"text": f"{_service_row_label(new)} toegevoegd"}
@@ -368,7 +370,7 @@ def _services_render_change(change: dict) -> dict:
 
 
 def _validate_period(cleaned):
-    """Reject end-before-start. Cross-field validation for the period group."""
+    """Rejects an end date before the start date, across the period group."""
     from django.core.exceptions import ValidationError  # noqa: PLC0415
 
     start, end = cleaned.get("start_date"), cleaned.get("end_date")
@@ -378,7 +380,7 @@ def _validate_period(cleaned):
 
 
 def _save_period(assignment, cleaned):
-    """Save assignment period."""
+    """Saves the assignment period."""
     assignment.start_date = cleaned.get("start_date")
     assignment.end_date = cleaned.get("end_date")
     assignment.save(update_fields=["start_date", "end_date"])
@@ -435,11 +437,9 @@ class AssignmentEditables(EditableSet):
         display="forms/displays/organizations.html",
     )
 
-    # No form_template/save: the collection is not edited in place. The team is
-    # shown via `display` and edited through the per-member sheet
-    # (assignment_member_edit_view), which uses `formset_factory` directly and
-    # audits via apply_team_change — so audit_state/render_change/visible_changes
-    # stay. The permission (`user_can_edit_team`) still gates the member sheet.
+    # No form_template/save: the collection is not edited in place. The per-member
+    # sheet (assignment_member_edit_view) uses `formset_factory` directly and
+    # audits via apply_team_change, so the audit hooks below still apply.
     services = EditableCollection(
         label="Team",
         formset_factory=_services_formset_factory,

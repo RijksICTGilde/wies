@@ -10,15 +10,14 @@ User = get_user_model()
 
 
 def token_field_values(html, field_name):
-    """The ids inside one nldd-token-field's `values` attribute.
+    """Returns the ids inside one nldd-token-field's `values` attribute.
 
-    Read from the rendered markup rather than response.context: the pages use
-    the Jinja2 backend, which never fires the template_rendered signal, so the
-    test client has no context to inspect.
+    Read from the markup rather than response.context: the Jinja2 backend never
+    fires template_rendered, so the test client has no context to inspect.
     """
     match = re.search(rf'<nldd-token-field name="{field_name}" values="([^"]*)"', html)
     assert match, f"no token field named {field_name} in the sheet"
-    # Waarden zijn public_ids (UUID-strings), niet de interne pk.
+    # Values are public_ids (UUID strings), not the internal pk.
     return {v for v in match.group(1).split(",") if v}
 
 
@@ -50,13 +49,13 @@ class ProfileLabelsEditTest(TestCase):
 
     def test_each_field_starts_with_only_its_own_category(self):
         # Every category maps onto the same m2m, so a naive initial would put
-        # the Thema label inside the Expertise field as well.
+        # the Thema label inside the Expertise field too.
         html = self.client.get(self.url).content.decode()
         assert token_field_values(html, self._field(self.expertise)) == {str(self.ai.public_id)}
         assert token_field_values(html, self._field(self.thema)) == {str(self.veiligheid.public_id)}
 
     def test_fields_do_not_carry_the_optional_badge(self):
-        # All three are optional; repeating the badge tells the user nothing.
+        # All are optional, so repeating the badge tells the user nothing.
         html = self.client.get(self.url).content.decode()
         assert "optional" not in html
 

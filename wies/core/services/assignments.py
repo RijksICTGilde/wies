@@ -16,10 +16,10 @@ if TYPE_CHECKING:
 
 
 def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
-    """Map the submitted skill tokens to internal ids in one query.
+    """Maps the submitted skill tokens to internal ids in one query.
 
-    The rol select posts public_ids (the client never sees the pk); everything
-    downstream keys on the internal id."""
+    The rol select posts public_ids; everything downstream keys on the internal id.
+    """
     tokens = [
         f.cleaned_data.get("skill")
         for f in service_formset
@@ -32,13 +32,12 @@ def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
 
 
 def extract_services_data(service_formset) -> list[dict]:
-    """Extract services_data dicts from a validated ServiceFormSet.
+    """Extracts services_data dicts from a validated ServiceFormSet.
 
-    ``id`` and ``placement_id`` round-trip the existing Service / Placement
-    PKs on the edit path. Both are ``None`` for rows added on the create
-    form. The values come from attacker-controllable hidden inputs, so the
-    caller (apply_services_to_assignment) re-verifies ownership before
-    writing.
+    ``id`` and ``placement_id`` round-trip existing Service / Placement PKs, and
+    are ``None`` for rows added on the create form. They come from
+    attacker-controllable hidden inputs, so apply_services_to_assignment
+    re-verifies ownership before writing.
     """
     skill_ids = _skill_ids_by_public_id(service_formset)
     services_data = []
@@ -52,9 +51,8 @@ def extract_services_data(service_formset) -> list[dict]:
         if not has_skill:
             continue
         skill_id = skill_ids.get(skill_val) if skill_val and skill_val != "__new__" else None
-        # "aanvraag" means this service is a vacancy: ignore any colleague the
-        # (hidden) select still carries, so apply_services_to_assignment drops
-        # the placement and the row turns into an open aanvraag.
+        # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
+        # carries, so apply_services_to_assignment drops the placement.
         is_aanvraag = cd.get("is_filled") == "aanvraag"
         colleague = cd.get("colleague")
         services_data.append(
@@ -75,10 +73,9 @@ def extract_services_data(service_formset) -> list[dict]:
 
 
 def _resolve_skill(svc: dict) -> Skill | None:
-    """Resolve the Skill for a services_data row.
+    """Resolves the Skill for a services_data row.
 
-    ``new_skill_name`` wins (get_or_create); otherwise ``skill_id`` is
-    looked up. Missing / empty → None.
+    ``new_skill_name`` wins (get_or_create); otherwise ``skill_id`` is looked up.
     """
     if svc.get("new_skill_name"):
         skill, _ = Skill.objects.get_or_create(name=svc["new_skill_name"])
@@ -90,27 +87,17 @@ def _resolve_skill(svc: dict) -> Skill | None:
 
 @transaction.atomic
 def apply_services_to_assignment(assignment: Assignment, services_data: list[dict] | None) -> None:
-    """Sync an Assignment's Services + Placements to match ``services_data``.
+    """Syncs an Assignment's Services and Placements to match ``services_data``.
 
-    ``id`` (Service PK) and ``placement_id`` (Placement PK) on each row are
-    attacker-controllable hidden inputs. Any PK that doesn't belong to this
-    assignment raises ``ValidationError`` instead of silently creating new
-    rows — that keeps stale-form races and malicious posts equally visible.
+    ``id`` and ``placement_id`` are attacker-controllable hidden inputs; a PK not
+    belonging to this assignment raises ``ValidationError`` rather than silently
+    creating rows, keeping stale-form races and malicious posts equally visible.
 
-    Diff semantics:
+    Services: no ``id`` → created; ``id`` → updated in place; existing but not
+    submitted → deleted (cascading to its Placements).
 
-    - Row without ``id``  → new Service created.
-    - Row with ``id``     → existing Service updated in-place.
-    - Existing Service not referenced by any submitted row → deleted
-      (cascades to its Placements via FK on_delete=CASCADE).
-
-    Placement sync per row:
-
-    - ``placement_id`` + ``colleague_id`` → update that Placement's colleague
-      (preserves period_source / specific dates / source_id).
-    - ``placement_id`` + no colleague     → Placement deleted.
-    - no ``placement_id`` + ``colleague_id`` → new Placement created.
-    - neither                             → nothing.
+    Placements per row: ``placement_id`` + ``colleague_id`` → updated;
+    ``placement_id`` alone → deleted; ``colleague_id`` alone → created.
     """
     services_data = services_data or []
 
@@ -229,17 +216,12 @@ def create_assignment_from_form(
     involved_organization_ids: list[int] | None = None,
     services_data: list[dict] | None = None,
 ) -> Assignment:
-    """Create an Assignment with related Services, Placements, and organization links.
+    """Creates an Assignment with related Services, Placements and organization links.
 
-    services_data is a list of dicts with keys:
-        - description: str (required)
-        - skill_id: int | None
-        - new_skill_name: str | None (creates new Skill if set)
-        - status: str (CONCEPT/OPEN/GESLOTEN, default OPEN)
-        - colleague_id: int | None
-
-    Rows coming from the create form carry ``id`` / ``placement_id`` = None,
-    so apply_services_to_assignment takes the "create everything" branch.
+    Each ``services_data`` row holds ``description``, ``skill_id``,
+    ``new_skill_name`` (creates a Skill when set), ``status`` and ``colleague_id``.
+    Create-form rows carry no ``id`` / ``placement_id``, so
+    apply_services_to_assignment takes the create-everything branch.
     """
     assignment = Assignment.objects.create(
         name=name,
@@ -270,9 +252,9 @@ def create_assignment_from_form(
 
 
 def assignment_create_specs():
-    """De specs voor het aanmaak-formulier: dezelfde opdrachtvelden als de
-    bewerk-sheet, maar zonder object (er is nog geen Assignment) en zonder
-    per-object permissiecheck — aanmaken wordt op ``core.add_assignment`` gegate.
+    """Returns the create-form specs: the same fields as the edit sheet, but
+    without an object and without a per-object permission check — creating is
+    gated on ``core.add_assignment``.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
@@ -287,9 +269,10 @@ def assignment_create_specs():
 
 
 def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
-    """Maak een Assignment uit de cleaned_data van het gecombineerde opdracht-
-    formulier (dezelfde specs als de bewerk-sheet). Diensten/rollen komen daarna
-    via het opdrachtpaneel, dus hier nog geen services_data.
+    """Creates an Assignment from the combined assignment form's cleaned_data.
+
+    Services and roles are added afterwards via the assignment panel, so no
+    services_data is passed here.
     """
     orgs = cleaned_data.get("organizations") or []
     primary_org = next((o["organization"] for o in orgs if o["role"] == "PRIMARY"), None)
@@ -306,7 +289,7 @@ def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
 
 
 def find_duplicate_groups():
-    """Find assignments that share the same name, owner, and primary organization."""
+    """Finds assignments that share the same name, owner and primary organization."""
     qs = (
         Assignment.objects.filter(
             organization_relations__role="PRIMARY",
@@ -351,18 +334,15 @@ def find_duplicate_groups():
 
 @transaction.atomic
 def merge_group(assignments):
-    """Merge a group of duplicate assignments into the first (oldest) one.
+    """Merges duplicate assignments into the first (lowest-id) one.
 
-    Strategy:
-    - Keep the assignment with the lowest ID as the target.
-    - Move all services (and their placements) to the target, pinning explicit dates.
-    - Pick the widest date range across all assignments.
-    - Delete the now-empty duplicate assignments.
+    Services and their placements move to the target with explicit dates pinned,
+    the target's period widens to cover all of them, and the emptied duplicates
+    are deleted.
     """
     target = assignments[0]
     duplicates = assignments[1:]
 
-    # Widen the date range to cover all assignments.
     all_starts = [a.start_date for a in assignments if a.start_date]
     all_ends = [a.end_date for a in assignments if a.end_date]
     new_start = min(all_starts) if all_starts else None
@@ -394,14 +374,16 @@ def merge_group(assignments):
 
 
 def initial_row_to_services_data(row) -> dict:
-    """Een _services_initial-rij → services_data-dict, voor de rijen die een
-    teamlid-endpoint NIET aanraakt. Spiegelt ServiceForm.clean: de checkbox in
-    de rij betekent "neem opdrachtperiode over", terwijl has_custom_period in
-    apply_services_to_assignment "pin deze datums" betekent."""
+    """Converts a _services_initial row into a services_data dict, for rows a
+    member endpoint leaves untouched.
+
+    Mirrors ServiceForm.clean: the row checkbox means "inherit the assignment
+    period", while has_custom_period in apply_services_to_assignment means "pin
+    these dates".
+    """
     inherits = row["has_custom_period"]
     has_dates = bool(row["placement_start_date"] or row["placement_end_date"])
-    # ``skill`` is een public_id (de rol-select toont nooit de interne pk); resolve
-    # naar de interne id die apply_services_to_assignment verwacht.
+    # ``skill`` is a public_id; resolve it to the internal id.
     skill_id = None
     if row["skill"]:
         skill_id = Skill.objects.filter(public_id=row["skill"]).values_list("id", flat=True).first()
@@ -420,7 +402,7 @@ def initial_row_to_services_data(row) -> dict:
 
 
 def apply_team_change(request, assignment, services_data):
-    """Team-sync met dezelfde audit-events als de inline-edit-route."""
+    """Syncs the team, emitting the same audit events as the inline-edit route."""
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
 
@@ -435,10 +417,10 @@ def apply_team_change(request, assignment, services_data):
 
 
 def assignment_edit_specs(assignment, user, only=None):
-    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten.
+    """Returns the combined assignment form's specs, filtered by permission.
 
-    ``only`` (spec-naam) beperkt tot één veld: het ⋯-menu van een rij bewerkt
-    alleen dat veld, het potlood bewerkt alles.
+    ``only`` (a spec name) narrows it to one field: a row's ⋯-menu edits just that
+    field, while the pencil edits everything.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415

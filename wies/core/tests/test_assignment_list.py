@@ -20,7 +20,7 @@ User = get_user_model()
 
 
 class AssignmentListViewTest(TestCase):
-    """Tests for the assignment list (aanvragen cards) view"""
+    """Tests for the assignment list (aanvragen cards) view."""
 
     def setUp(self):
         self.client = Client()
@@ -37,7 +37,7 @@ class AssignmentListViewTest(TestCase):
         self.skill = Skill.objects.create(name="Python Developer")
         self.skill2 = Skill.objects.create(name="Data Engineer")
 
-        # Aanvraag assignment (has unfilled OPEN service → should appear)
+        # Has an unfilled OPEN service, so it should appear.
         self.vacancy = Assignment.objects.create(
             name="Open Aanvraag",
             start_date=date(2025, 1, 1),
@@ -53,7 +53,7 @@ class AssignmentListViewTest(TestCase):
             source="wies",
         )
 
-        # Filled assignment (all services have placements → should NOT appear)
+        # Every service is filled, so it should not appear.
         self.filled = Assignment.objects.create(
             name="Ingevulde Opdracht",
             source="wies",
@@ -117,8 +117,8 @@ class AssignmentListViewTest(TestCase):
         response = self.client.get(self.list_url, headers={"hx-request": "true"})
         assert response.status_code == 200
         content = response.content.decode()
-        # De partial levert de resultatenregel (het swap-doel) plus de card grid
-        # als out-of-band swap.
+        # The partial returns the results line (the swap target) plus the card
+        # grid as an out-of-band swap.
         assert 'id="results"' in content
         assert 'id="assignment-card-grid"' in content
         assert 'hx-swap-oob="outerHTML"' in content
@@ -143,7 +143,7 @@ class AssignmentListViewTest(TestCase):
         assert "side_panel" in content
 
     def test_concept_services_not_shown(self):
-        """Assignment with only CONCEPT services should NOT appear on opdrachten page"""
+        """An assignment with only CONCEPT services does not appear."""
         concept_assignment = Assignment.objects.create(name="Concept Opdracht", source="wies")
         Service.objects.create(
             assignment=concept_assignment, description="Concept Service", status="CONCEPT", source="wies"
@@ -154,22 +154,20 @@ class AssignmentListViewTest(TestCase):
         assert "Concept Opdracht" not in content
 
     def test_all_open_services_filled_not_shown(self):
-        """Assignment where all OPEN services have placements should NOT appear"""
+        """An assignment whose OPEN services are all filled does not appear."""
         self.client.force_login(self.auth_user)
         response = self.client.get(self.list_url)
         content = response.content.decode()
         assert "Ingevulde Opdracht" not in content
 
     def test_mix_of_filled_and_unfilled_services(self):
-        """Assignment with both filled and unfilled OPEN services should appear"""
+        """An assignment with both filled and unfilled OPEN services appears."""
         mix_assignment = Assignment.objects.create(name="Mix Opdracht", source="wies")
-        # One filled service
         filled_svc = Service.objects.create(
             assignment=mix_assignment, description="Filled", skill=self.skill, status="OPEN", source="wies"
         )
         colleague = Colleague.objects.create(name="Mix Col", email="mix@test.nl", source="wies")
         Placement.objects.create(colleague=colleague, service=filled_svc, source="wies")
-        # One unfilled service
         Service.objects.create(
             assignment=mix_assignment, description="Unfilled", skill=self.skill2, status="OPEN", source="wies"
         )
@@ -180,18 +178,12 @@ class AssignmentListViewTest(TestCase):
         assert "Mix Opdracht" in content
 
     def _filter_groups(self, query_params=None):
-        """Build the view's ``filter_groups`` context directly (no template render).
+        """Builds the view's ``filter_groups`` context without rendering a template.
 
-        Jinja2 doesn't populate ``response.context``, so we drive the view itself —
-        the same way ``_filter_aware_org_counts`` instantiates a bare view — and read
-        the sidebar facet counts straight from the context it builds.
-
-        Assignments loaded from fixtures (as in production) have ``created_at = None``
-        because ``auto_now_add`` does not fire on ``loaddata``. That matters: the
-        buggy ``SELECT DISTINCT organizations.id`` also carried ``created_at`` in the
-        SELECT for the ``order_by``, so distinct timestamps hid the collapse. We null
-        every assignment's ``created_at`` here to reproduce the real fixture condition
-        under which the counts collapsed.
+        Jinja2 does not populate ``response.context``, so the view is driven
+        directly. ``created_at`` is nulled to mirror fixture-loaded assignments
+        (``auto_now_add`` does not fire on ``loaddata``): distinct timestamps in
+        the ``order_by`` SELECT otherwise hid the count collapse.
         """
         Assignment.objects.update(created_at=None)
         request = RequestFactory().get(self.list_url, query_params or {})
@@ -203,7 +195,7 @@ class AssignmentListViewTest(TestCase):
         return view.get_context_data()["filter_groups"]
 
     def _org_count(self, groups, org):
-        """Pull the sidebar 'org' facet count for ``org`` out of filter_groups."""
+        """Returns the sidebar 'org' facet count for ``org``."""
         for group in groups:
             if group["name"] == "organisatie":
                 for option in group["top_options"]:
@@ -212,7 +204,7 @@ class AssignmentListViewTest(TestCase):
         return None
 
     def _rol_count(self, groups, skill):
-        """Pull the sidebar 'rol' facet count for ``skill`` out of filter_groups."""
+        """Returns the sidebar 'rol' facet count for ``skill``."""
         for group in groups:
             if group["name"] == "rol":
                 for option in group["options"]:
@@ -221,7 +213,7 @@ class AssignmentListViewTest(TestCase):
         return None
 
     def _open_aanvraag(self, name, org, skill):
-        """Create an aanvraag on ``org`` with a single unfilled OPEN service for ``skill``."""
+        """Creates an aanvraag on ``org`` with one unfilled OPEN service for ``skill``."""
         assignment = Assignment.objects.create(name=name, source="wies")
         AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
         Service.objects.create(
@@ -230,63 +222,53 @@ class AssignmentListViewTest(TestCase):
         return assignment
 
     def test_org_count_does_not_collapse_multiple_aanvragen(self):
-        """Two aanvragen on the same org must count as 2, not collapse to 1.
+        """Two aanvragen on the same org count as 2, not 1.
 
-        Regression: the count query did ``.distinct().values_list("organizations__id")``
-        → ``SELECT DISTINCT organizations.id`` collapsed both aanvragen (same org id)
-        into one row, so the sidebar showed 1 while selecting the filter returned 2.
+        Regression: ``SELECT DISTINCT organizations.id`` collapsed both aanvragen
+        into one row, so the sidebar showed 1 while the filter returned 2.
         """
-        # setUp already created self.vacancy on self.org with an unfilled OPEN service.
         self._open_aanvraag("Second Aanvraag", self.org, self.skill)
 
         groups = self._filter_groups()
         assert self._org_count(groups, self.org) == 2
 
     def test_rol_count_does_not_collapse_multiple_aanvragen(self):
-        """Two aanvragen sharing a skill must count as 2, not collapse to 1.
+        """Two aanvragen sharing a skill count as 2, not 1.
 
         Same ``SELECT DISTINCT services.skill_id`` collapse as the org count.
         """
-        # setUp's self.vacancy already has an unfilled OPEN service for self.skill.
         self._open_aanvraag("Second Aanvraag", self.org, self.skill)
 
         groups = self._filter_groups()
         assert self._rol_count(groups, self.skill) == 2
 
     def test_rol_count_only_counts_open_unfilled_services(self):
-        """A rol count must equal what selecting that rol returns.
+        """A rol count equals what selecting that rol returns.
 
-        Selecting a rol matches assignments with an OPEN *unfilled* service for that
-        skill (``_apply_filters``). So the count must ignore filled and CONCEPT
-        services: an assignment whose only unfilled OPEN service is for skill2 must
-        NOT bump the count of self.skill, even though it has (filled / CONCEPT)
-        services for self.skill.
+        Selecting a rol matches assignments with an OPEN *unfilled* service for
+        that skill, so the count must ignore filled and CONCEPT services.
         """
         assignment = self._open_aanvraag("Mixed Services", self.org2, self.skill2)
-        # A FILLED OPEN service for self.skill — selecting self.skill would not return
-        # this assignment, so it must not be counted for self.skill.
+        # Filled, so selecting self.skill would not return this assignment.
         filled_svc = Service.objects.create(
             assignment=assignment, description="filled", skill=self.skill, status="OPEN", source="wies"
         )
         colleague = Colleague.objects.create(name="Col", email="mix-col@test.nl", source="wies")
         Placement.objects.create(colleague=colleague, service=filled_svc, source="wies")
-        # A CONCEPT service for self.skill — also not selectable.
+        # CONCEPT, so also not selectable.
         Service.objects.create(
             assignment=assignment, description="concept", skill=self.skill, status="CONCEPT", source="wies"
         )
 
         groups = self._filter_groups()
-        # Only self.vacancy has an unfilled OPEN service for self.skill → count 1.
         assert self._rol_count(groups, self.skill) == 1
-        # self.vacancy has none for skill2; only the mixed assignment does → count 1.
         assert self._rol_count(groups, self.skill2) == 1
 
     def test_rol_count_counts_assignment_once_per_skill(self):
-        """An assignment with two OPEN services for the SAME skill counts once.
+        """An assignment with two OPEN services for the same skill counts once.
 
-        Selecting the rol returns that assignment a single time, so its sidebar count
-        must not be bumped per service. (An aanvraag can legitimately request two of
-        the same role.)
+        Selecting the rol returns it once, so the count must not be bumped per
+        service; an aanvraag can legitimately request two of the same role.
         """
         assignment = Assignment.objects.create(name="Two Same-Skill Services", source="wies")
         AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org2)
@@ -301,13 +283,11 @@ class AssignmentListViewTest(TestCase):
         assert self._rol_count(groups, self.skill2) == 1
 
     def test_org_count_not_inflated_by_service_fanout(self):
-        """One aanvraag with two matching services must count once per org, not twice.
+        """One aanvraag with two matching services counts once per org.
 
-        Guards against a naïve ``.distinct()`` removal: with a rol filter active,
-        ``_apply_filters(exclude_filter="org")`` joins ``services`` and fans the
-        assignment row out to 2. The count must still be 1 (one distinct aanvraag on
-        the org), which requires re-keying on distinct assignment ids — not merely
-        dropping ``.distinct()``.
+        With a rol filter active the ``services`` join fans the assignment row out
+        to 2, so the count requires re-keying on distinct assignment ids rather
+        than merely dropping ``.distinct()``.
         """
         fanout_org = OrganizationUnit.objects.create(name="Fanout Org", label="Fanout Org")
         assignment = Assignment.objects.create(name="Two Service Aanvraag", source="wies")
@@ -319,21 +299,20 @@ class AssignmentListViewTest(TestCase):
             assignment=assignment, description="svc b", skill=self.skill2, status="OPEN", source="wies"
         )
 
-        # rol filter on both skills makes _apply_filters join services and fan out the org row.
+        # A rol filter on both skills makes the services join fan out the org row.
         groups = self._filter_groups({"rol": [str(self.skill.public_id), str(self.skill2.public_id)]})
         assert self._org_count(groups, fanout_org) == 1
 
     def test_rol_count_not_inflated_by_org_fanout(self):
-        """One aanvraag on two orgs must count once per skill, not twice.
+        """One aanvraag on two orgs counts once per skill.
 
-        Guards against a naïve ``.distinct()`` removal: with an org filter active,
-        ``_apply_filters(exclude_filter="rol")`` matches the assignment via its
-        ``organizations`` join and fans the row out to 2. The rol count must stay 1.
+        With an org filter active the ``organizations`` join fans the row out to 2,
+        so the rol count must stay 1.
         """
         org_a = OrganizationUnit.objects.create(name="Fanout Org A", label="Fanout Org A")
         org_b = OrganizationUnit.objects.create(name="Fanout Org B", label="Fanout Org B")
         assignment = Assignment.objects.create(name="Two Org Aanvraag", source="wies")
-        # Only one PRIMARY org per assignment is allowed; the second is INVOLVED.
+        # Only one PRIMARY org per assignment is allowed, so the second is INVOLVED.
         AssignmentOrganizationUnit.objects.create(
             assignment=assignment, organization=org_a, role=OrganizationUnitRole.PRIMARY
         )
@@ -344,18 +323,16 @@ class AssignmentListViewTest(TestCase):
             assignment=assignment, description="svc", skill=self.skill2, status="OPEN", source="wies"
         )
 
-        # org filter on both orgs makes _apply_filters match via organizations and fan out.
+        # An org filter on both orgs matches via organizations and fans out.
         groups = self._filter_groups({"org_self": [str(org_a.public_id), str(org_b.public_id)]})
         assert self._rol_count(groups, self.skill2) == 1
 
     def _modal_org_counts(self, query_params=None):
-        """Build the org-selection modal's per-org self-count Counter directly.
+        """Builds the org modal's per-org self-count Counter directly.
 
-        The "Opdrachtgevers selecteren" tree (client_modal → _build_org_hierarchy) is
-        fed by _filter_aware_org_counts for the open_assignments mode. We call it
-        straight, the same way client_modal does. Fixture-loaded assignments have
-        created_at = None; we mirror that (see _filter_groups) so the SELECT DISTINCT
-        collapse reproduces.
+        Calls ``_filter_aware_org_counts`` the way client_modal does, with
+        ``created_at`` nulled so the SELECT DISTINCT collapse reproduces
+        (see _filter_groups).
         """
         Assignment.objects.update(created_at=None)
         request = RequestFactory().get("/client-modal/", query_params or {})
@@ -363,11 +340,10 @@ class AssignmentListViewTest(TestCase):
         return _filter_aware_org_counts(request, "open_assignments", [])
 
     def test_modal_org_count_does_not_collapse_multiple_aanvragen(self):
-        """The org modal must count every aanvraag on an org, not collapse to 1.
+        """The org modal counts every aanvraag on an org, rather than collapsing to 1.
 
         Same ``SELECT DISTINCT organizations.id`` collapse as the sidebar, in
-        _filter_aware_org_counts' open_assignments branch. setUp put self.vacancy on
-        self.org; a second aanvraag makes the true self-count 2.
+        ``_filter_aware_org_counts``' open_assignments branch.
         """
         self._open_aanvraag("Second Aanvraag", self.org, self.skill)
 
@@ -377,8 +353,8 @@ class AssignmentListViewTest(TestCase):
     def test_modal_org_count_not_inflated_by_service_fanout(self):
         """One aanvraag with two matching services counts once per org in the modal.
 
-        Guards against a naïve ``.distinct()`` removal: an active rol filter joins
-        services and would fan the org row out to 2 without re-keying on distinct ids.
+        An active rol filter joins services and would fan the org row out to 2
+        without re-keying on distinct ids.
         """
         fanout_org = OrganizationUnit.objects.create(name="Modal Fanout Org", label="Modal Fanout Org")
         assignment = Assignment.objects.create(name="Two Service Aanvraag", source="wies")
@@ -394,8 +370,7 @@ class AssignmentListViewTest(TestCase):
         assert counts[fanout_org.id] == 1
 
     def test_filter_by_rol_excludes_filled_services(self):
-        """Rol filter should only match assignments with an OPEN unfilled service for that skill"""
-        # Assignment with a filled service (skill) and an unfilled service (skill2)
+        """The rol filter matches only assignments with an OPEN unfilled service."""
         mix_assignment = Assignment.objects.create(name="Mix Opdracht", source="wies")
         filled_svc = Service.objects.create(
             assignment=mix_assignment, description="Filled", skill=self.skill, status="OPEN", source="wies"
@@ -408,12 +383,10 @@ class AssignmentListViewTest(TestCase):
 
         self.client.force_login(self.auth_user)
 
-        # Filtering by skill2 (unfilled) should show Mix Opdracht
         response = self.client.get(self.list_url, {"rol": str(self.skill2.public_id)})
         content = response.content.decode()
         assert "Mix Opdracht" in content
 
-        # Filtering by skill (filled) should NOT show Mix Opdracht
         response = self.client.get(self.list_url, {"rol": str(self.skill.public_id)})
         content = response.content.decode()
         assert "Mix Opdracht" not in content

@@ -1,7 +1,4 @@
-"""Jinja globals: ``{{ inline_edit(obj, name) }}`` en ``{{ inline_edit_form(obj, name) }}``.
-
-Beide zijn geregistreerd in ``config/jinja2.py``.
-"""
+"""Jinja globals ``inline_edit`` and ``inline_edit_form``, registered in ``config/jinja2.py``."""
 
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -17,10 +14,10 @@ from wies.core.views import _concurrency_token, _resolve_display, _spec_label
 
 @pass_context
 def inline_edit(ctx, obj, name, **extras):
-    """Render the display partial for ``obj.<name>``.
+    """Renders the display partial for ``obj.<name>``.
 
-    ``**extras`` merge into the partial context. The post-save re-render
-    does NOT carry them — design partials to degrade gracefully.
+    ``**extras`` merge into the partial context, but the post-save re-render does
+    not carry them, so partials must degrade gracefully without them.
     """
     if obj is None:
         return mark_safe("")
@@ -76,12 +73,11 @@ def inline_edit(ctx, obj, name, **extras):
 
 @pass_context
 def inline_edit_form(ctx, obj, name, **extras):
-    """Render de BEWERKmodus van ``obj.<name>`` meteen, zonder eigen knoppen.
+    """Renders ``obj.<name>`` straight in edit mode, without its own buttons.
 
-    Voor plekken waar het veld direct invulbaar hoort te zijn (de onboarding
-    vraagt om labels; daar is een potloodje een extra drempel). Het formulier
-    houdt zijn eigen hx-post, dus de consument dient het in wanneer het uitkomt
-    -- in de wizard doet "Volgende" dat.
+    For places where the field should be immediately fillable, such as onboarding.
+    The form keeps its own hx-post, so the caller submits it when it suits — in the
+    wizard that is "Volgende".
     """
     if obj is None:
         return mark_safe("")
@@ -99,8 +95,8 @@ def inline_edit_form(ctx, obj, name, **extras):
     request = ctx.get("request")
     user = getattr(request, "user", None)
     if isinstance(spec, EditableCollection) or not has_permission(Verb.UPDATE, obj, user, spec):
-        # Geen rechten (of een collectie, die een formset nodig heeft): val terug
-        # op de leesweergave in plaats van een formulier dat toch geweigerd wordt.
+        # No permission (or a collection, which needs a formset): fall back to the
+        # read view rather than a form that would be rejected on save.
         return inline_edit(ctx, obj, name, **extras)
 
     editables = resolve_editables(editable_set, spec)
@@ -113,8 +109,8 @@ def inline_edit_form(ctx, obj, name, **extras):
         "editable": spec,
         "form": form_cls(initial=initial),
         "bare": True,
-        # Zonder token weigert de save-view als conflict; de view zet het bij een
-        # gewone inline-edit, deze macro rendert het formulier zelf.
+        # Without a token the save view rejects the post as a conflict; the view
+        # sets it on a normal inline edit, but this macro renders the form itself.
         "concurrency_token": _concurrency_token(editable_set, spec, obj),
         **extras,
     }

@@ -1958,12 +1958,10 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
 
 class PrivacyNoteSurfacesTest(TestCase):
-    """De zichtbaarheidsmelding heeft overal dezelfde vorm en dezelfde bron.
+    """The visibility note has one shape and one source everywhere.
 
-    Eerder plakte het opdrachtpaneel de noot in een omhullende zin ("De
-    geplaatste teamleden zijn ...") met een kleingemaakte eerste letter, terwijl
-    de opdrachtkaarten de kale zin achter een oogicoon zetten. En de variant voor
-    een oud-opdracht stond los in views.py in plaats van bij de andere twee.
+    Regression: the panel wrapped it in a sentence with a lowercased first
+    letter, and the ended-assignment variant lived apart in views.py.
     """
 
     def setUp(self):
@@ -1996,10 +1994,10 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def test_panel_shows_the_note_as_a_chip_with_tooltip(self):
         body = self._panel()
-        # Kort op het scherm, de volledige zin in de tooltip.
+        # Short on screen, the full sentence in the tooltip.
         assert 'text="Beperkt zichtbaar"' in body
         assert f'<nldd-tooltip text="{PRIVACY_BM}" timing="instant">' in body
-        # Focusbaar, anders is de tooltip alleen met een muis te bereiken.
+        # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
         assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
 
@@ -2016,7 +2014,7 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert 'text="Beperkt zichtbaar"' in body
 
     def test_all_three_notes_live_in_one_module(self):
-        # Wie de formulering aanpast, moet ze bij elkaar vinden.
+        # Whoever rewords one must find all three together.
         assert PRIVACY_OWN.startswith("Alleen zichtbaar voor")
         assert PRIVACY_BM.startswith("Alleen zichtbaar voor")
         assert PRIVACY_TEAM.startswith("Alleen zichtbaar voor")
@@ -2024,9 +2022,10 @@ class PrivacyNoteSurfacesTest(TestCase):
 
 
 class TimelinePrivacyChipTest(TestCase):
-    """De Updates-tijdlijn laat regels over verborgen plaatsingen weg in plaats
-    van ze te redigeren. Wie ze wél ziet moet weten dat anderen dat niet doen;
-    wie ze niet ziet mag ook niet vernemen dát er iets ontbreekt.
+    """The Updates timeline omits lines about hidden placements, not redacts them.
+
+    Whoever sees such a line learns it is restricted; whoever does not may not
+    learn that anything is missing.
     """
 
     def setUp(self):
@@ -2053,7 +2052,7 @@ class TimelinePrivacyChipTest(TestCase):
         Placement.objects.create(colleague=self.consultant, service=service)
 
     def _team_event(self):
-        """Een teamregel die de verborgen consultant noemt."""
+        """Creates a team line naming the hidden consultant."""
         Event.objects.create(
             user=self.bm_user,
             user_email=self.bm_user.email,
@@ -2069,7 +2068,7 @@ class TimelinePrivacyChipTest(TestCase):
         )
 
     def _other_field_event(self):
-        """Een regel over een veld dat voor iedereen gelijk is."""
+        """Creates a line about a field that is the same for everyone."""
         Event.objects.create(
             user=self.bm_user,
             user_email=self.bm_user.email,
@@ -2091,20 +2090,20 @@ class TimelinePrivacyChipTest(TestCase):
         return response.content.decode()
 
     def test_bm_sees_the_chip_on_a_team_line(self):
-        # De BM krijgt deze regel wél en anderen niet, dus hoort de noot erbij.
+        # The BM gets this line and others do not, so the note belongs with it.
         self._team_event()
         body = self._timeline(self.bm_client)
         assert 'text="Beperkt zichtbaar"' in body
         assert PRIVACY_BM in body
 
     def test_other_fields_get_no_chip(self):
-        # De omschrijving is voor iedereen gelijk; een noot zou misleiden.
+        # The description is the same for everyone; a note would mislead.
         self._other_field_event()
         assert "Beperkt zichtbaar" not in self._timeline(self.bm_client)
 
     def test_outsider_sees_no_chip(self):
-        # De regel is voor hem al weggefilterd; een chip zou alsnog verraden
-        # dat er een verborgen plaatsing bestaat.
+        # The line is already filtered out for him; a chip would still betray
+        # that a hidden placement exists.
         self._team_event()
         body = self._timeline(self.outsider_client)
         assert "Beperkt zichtbaar" not in body
@@ -2112,7 +2111,7 @@ class TimelinePrivacyChipTest(TestCase):
         assert PRIVACY_OWN not in body
 
     def test_active_placement_gives_no_chip(self):
-        # Een lopende plaatsing is voor iedereen zichtbaar; niets te waarschuwen.
+        # An active placement is visible to everyone; nothing to warn about.
         today = timezone.now().date()
         self.assignment.start_date = today - timedelta(days=10)
         self.assignment.end_date = today + timedelta(days=10)

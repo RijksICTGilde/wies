@@ -1,9 +1,7 @@
 """Audit-event emission for Editables. See ``features/inline-editing.md``.
 
-Deze module hoort bij de andere inline-edit-primitieven (``save_spec``,
-``_current_value``): het vertaalt een voor/na-snapshot van een spec naar de
-audit-events op de tijdlijn. Los van de view-laag zodat panelen en full-page
-forms dezelfde events schrijven.
+Turns a before/after snapshot of a spec into timeline events. Kept out of the
+view layer so panels and full-page forms write identical events.
 """
 
 from __future__ import annotations

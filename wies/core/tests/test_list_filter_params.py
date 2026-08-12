@@ -9,9 +9,7 @@ User = get_user_model()
 
 
 class ListFilterInvalidLabelParamTests(TestCase):
-    """A non-numeric ``?labels=`` value must be ignored instead of raising a 500.
-    The org and rol filters already skip non-digit values; the label filter must
-    behave the same, so a hand-edited or stale URL degrades gracefully."""
+    """A non-numeric ``?labels=`` value is ignored instead of raising a 500."""
 
     def setUp(self):
         self.client = Client()
@@ -33,7 +31,7 @@ class ListFilterInvalidLabelParamTests(TestCase):
         assert response.status_code == 200
 
     def test_valid_label_param_still_works(self):
-        """A numeric value is still honoured (guards against over-filtering)."""
+        """A numeric value is still honoured, guarding against over-filtering."""
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("home"), {"labels": "999999"})
@@ -42,19 +40,13 @@ class ListFilterInvalidLabelParamTests(TestCase):
 
 
 class ActiveFilterIndicatorTests(TestCase):
-    """The active-filter indicators must reflect the filters that are actually
-    applied. A filter value that resolves to no row is not ignored: it filters
-    everything away, so it IS an active filter and must show its indicator. An
-    empty value is the opposite case, an unset filter, and must not.
+    """The active-filter indicators reflect the filters actually applied.
 
-    The chip strip's dismissable filter tokens (``data-wies-dismiss="filter"``)
-    are gated on having active filters, on the "Wie zit waar?" (home) and
-    opdrachten (assignment-list) pages.
-
-    De Gebruikers-pagina toont dezelfde chipstrip. Een waarde die nergens naar
-    resolvet krijgt geen eigen token (er is geen optie om te labelen), maar wel
-    de strip met "Wis alle filters" — anders sta je met een lege lijst zonder
-    weg terug."""
+    A value resolving to no row still filters everything away, so it counts as
+    active; an empty value is unset and must show no indicator. An unresolvable
+    value gets no token of its own, but does get "Wis alle filters" so the user
+    is not stranded on an empty list.
+    """
 
     ACTIVE_FILTER_MARKER = 'data-wies-dismiss="filter"'
     CLEAR_ALL_MARKER = "data-clear-all-filters"
@@ -82,8 +74,8 @@ class ActiveFilterIndicatorTests(TestCase):
         assert self.CLEAR_ALL_MARKER not in response.content.decode()
 
     def test_home_valid_label_shows_filter_tokens(self):
-        """Positive control: a real label id is an active filter, so a filter token
-        must render — proving the negative assertions aren't trivially green."""
+        """A real label id renders a token, proving the negative assertions above
+        are not trivially green."""
         category = LabelCategory.objects.create(name="Cat", color="#FF5733")
         label = Label.objects.create(name="Python", category=category)
         self.client.force_login(self.user)
@@ -149,9 +141,11 @@ class ActiveFilterIndicatorTests(TestCase):
 
 
 class UserAdminRoleFilterTests(TestCase):
-    """``?rol=`` on the Gebruikers page names a Group pk: Group is Django's own
-    model and has no public_id. It fails closed like every other facet, so a
-    stale or hand-edited value empties the list instead of showing everyone."""
+    """``?rol=`` names a Group pk, since Django's Group has no public_id.
+
+    It fails closed like every other facet, so a stale value empties the list
+    instead of showing everyone.
+    """
 
     TARGET = "Doelwit"
 
