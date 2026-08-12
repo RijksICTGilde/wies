@@ -37,7 +37,11 @@
     </nldd-menu-item>
   {% endif %}
   <nldd-menu-divider></nldd-menu-divider>
-  <nldd-menu-item text="Log uit" icon="logout" data-href="{{ url('logout') }}"></nldd-menu-item>
+  {# Uitloggen is POST-only (require_POST, zie rijksauth.views.logout) om
+     forced-logout via een andere site te blokkeren. Geen data-href (dat zou een
+     GET zijn → 405); menu_nav.js dient bij data-logout-url een POST-form in met
+     het csrf-token dat hieronder al gerenderd wordt. #}
+  <nldd-menu-item text="Log uit" icon="logout" data-logout-url="{{ url('logout') }}"></nldd-menu-item>
   </nldd-menu>
   </nldd-menu-bar-item>
   </nldd-menu-bar>
