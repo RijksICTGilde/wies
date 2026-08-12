@@ -1,9 +1,7 @@
-// nldd-sidebar-section derives both `top` and `max-height` from --_sticky-top,
-// but the navigation bar above it scrolls away, so they need different values.
-// No `part` on the box, hence an adopted stylesheet instead of app.css.
-// Obsolete once the navigation bar is sticky itself.
+// Keeps the sidebar box within the viewport: sticky-top feeds both `top` and
+// `max-height`, which only lines up when the bar above it is sticky too.
 
-const GAP = 16; // Matches the component's default sticky inset.
+const GAP = 16;
 
 const BOX_CSS = `
 .sidebar-section__sidebar-box {
