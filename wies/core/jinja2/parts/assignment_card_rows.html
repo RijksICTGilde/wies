@@ -6,7 +6,14 @@
   <nldd-title size="5">
   <h3>{{ assignment.name }}</h3>
   </nldd-title>
-  {% if assignment.services_with_skills %}
+  {# Zonder rollen ziet de kaart er kaal uit zonder dat je weet waarom. De
+     tekst draagt de betekenis, niet de kleur (WCAG 1.4.1). #}
+  {% if assignment.has_no_roles %}
+    <nldd-spacer size="8"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    <nldd-tag size="sm" color="neutral" text="Nog geen rollen"></nldd-tag>
+    </nldd-container>
+  {% elif assignment.services_with_skills %}
     <nldd-spacer size="8"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% for service in assignment.services_with_skills[:3] %}
@@ -33,25 +40,19 @@
     <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-text-cell size="sm" text="{{ assignment.org_breadcrumb.label }}"></nldd-text-cell>
-    {% if not has_date %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
     </nldd-list-item>
   {% endif %}
-  {% if has_date %}
-    <nldd-list-item size="sm">
-    <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
-    <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    {# djlint:off T028 #}
-    <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '' }}{%- if assignment.end_date %} – {{ assignment.end_date|datum_nl('b Y') }}{% endif -%}"></nldd-text-cell>
-    {# djlint:on #}
-    <nldd-cell>{{ chevron() }}</nldd-cell>
-    </nldd-list-item>
-  {% endif %}
-  {% if not assignment.org_breadcrumb and not has_date %}
-    <nldd-list-item size="sm">
-    <nldd-text-cell size="sm"></nldd-text-cell>
-    <nldd-cell>{{ chevron() }}</nldd-cell>
-    </nldd-list-item>
-  {% endif %}
+  {# De periode-rij staat er altijd, ook zonder datum. Liet je hem weg, dan
+     kromp de kaart en stonden de kaarten in het raster niet meer op dezelfde
+     hoogte; de chevron moest dan ook nog naar de rij erboven verhuizen. #}
+  <nldd-list-item size="sm">
+  <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  {# djlint:off T028 #}
+  <nldd-text-cell size="sm" text="{% if has_date %}{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '' }}{%- if assignment.end_date %} – {{ assignment.end_date|datum_nl('b Y') }}{% endif -%}{% else %}Geen periode opgegeven{% endif %}"></nldd-text-cell>
+  {# djlint:on #}
+  <nldd-cell>{{ chevron() }}</nldd-cell>
+  </nldd-list-item>
   </nldd-list>
   </nldd-container>
   </nldd-card>
