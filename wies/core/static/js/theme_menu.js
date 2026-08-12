@@ -26,7 +26,8 @@ document.addEventListener("select", (e) => {
   const body = new FormData();
   body.append("theme", choice);
   body.append("csrfmiddlewaretoken", token.value);
-  fetch(url, { method: "POST", body, credentials: "same-origin" }).catch(() => {
-    // The screen is already correct; a lost preference is not worth a notice.
-  });
+  // Ignored on purpose: the screen already switched, only persisting failed.
+  fetch(url, { method: "POST", body, credentials: "same-origin" }).catch(
+    () => {},
+  );
 });
