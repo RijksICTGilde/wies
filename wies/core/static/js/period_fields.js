@@ -1,7 +1,5 @@
-// Shared period block: a choice between inheriting the assignment period and
-// entering the placement's own dates, plus an "end date known" switch. Used by
-// placement_period_toggle.js and member_form.js, which differ only in where the
-// posted value goes and where the assignment dates come from.
+// Shared period block: inherit the assignment period or enter the placement's
+// own dates. Used by placement_period_toggle.js and member_form.js.
 window.WiesPeriodFields = function bindPeriodFields(options) {
   const group = options.group;
   const checkbox = options.checkbox;
@@ -28,9 +26,8 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
     return !endKnownSwitch || endKnownSwitch.hasAttribute("checked");
   }
 
-  // Remembers the last end date the user entered, so toggling the switch off
-  // and on again does not wipe it. The inherited period is not the user's own
-  // choice and is deliberately not remembered.
+  // So toggling the switch off and on does not wipe the entered date. An
+  // inherited period is not the user's own choice and is not remembered.
   let lastEndDate = endInput ? endInput.value : "";
 
   function update(inherit, knownOverride) {
@@ -38,16 +35,13 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
     if (periodHelp) periodHelp.hidden = !inherit;
     if (startField) startField.hidden = inherit;
     if (endKnownField) endKnownField.hidden = inherit;
-    // knownOverride comes from the change event, where the switch's attribute
-    // is not updated yet.
+    // knownOverride: during the change event the attribute is not updated yet.
     const known = knownOverride === undefined ? endDateKnown() : knownOverride;
     if (endField) endField.hidden = inherit || !known;
     if (inherit) {
       if (startInput) startInput.value = inheritStart;
       if (endInput) endInput.value = inheritEnd;
     } else if (endInput) {
-      // Empty means "runs on"; keep the entered date for when the switch
-      // comes back on.
       if (!known) {
         if (endInput.value) lastEndDate = endInput.value;
         endInput.value = "";

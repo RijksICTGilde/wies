@@ -1,7 +1,6 @@
 // Organisation admin: chevron toggle and search within the nldd-list tree.
-// Rows carry data-label / data-abbr (lowercased); nesting is real DOM nesting
-// (child rows sit in the parent row's slot="children"), so ancestors are found
-// by walking closest('nldd-list-item') chains.
+// Nesting is real DOM nesting (child rows sit in the parent's
+// slot="children"), so ancestors come from closest('nldd-list-item') chains.
 (function () {
   "use strict";
 
@@ -15,9 +14,8 @@
   var savedState = null; // Map<item, boolean> — expanded state before search
   var isSearching = false;
 
-  // The whole branch row is the button; it announces its state but does not
-  // toggle it, that is the consumer's job. The innermost row in the composedPath
-  // wins, so a child row does not expand its parent.
+  // nldd-list-item announces its expanded state but does not toggle it. The
+  // innermost row in the composedPath wins, so a child cannot expand its parent.
   root.addEventListener("click", function (e) {
     var row = window.wiesClosestInPath(e, "nldd-list-item[button]");
     if (!row) return;
@@ -61,8 +59,7 @@
     });
   }
 
-  // nldd-text-cell marks the match itself when `query` is set, so highlighting
-  // is a matter of handing it the search term instead of rewriting text nodes.
+  // nldd-text-cell marks the match itself when `query` is set.
   function setHighlight(query) {
     root.querySelectorAll("nldd-text-cell").forEach(function (cell) {
       if (query) {
@@ -104,8 +101,7 @@
     });
 
     setHighlight(query);
-    // With nothing left, the list shows its own empty state: it keys on every
-    // row being [hidden].
+    // With every row [hidden] the list shows its own empty state.
   }
 
   var timer = null;

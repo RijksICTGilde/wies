@@ -1,15 +1,6 @@
-/**
- * Organisation picker on the assignment form (OrgPickerWidget).
- *
- * The widget template renders only the hidden formset inputs (each carrying
- * data-org-name so the label survives a page load) and the button opening the
- * picker sheet. Everything visible is built here from those inputs alone, so a
- * fresh page, an inline-edit swap and an apply from the sheet end up in the
- * same state.
- *
- * The sheet itself lives in assignment_org_tree.js and reports what was picked
- * through the `wies:org-selection-applied` event.
- */
+// Organisation picker on the assignment form (OrgPickerWidget). The visible
+// list is built from the hidden formset inputs, so a fresh page, an inline-edit
+// swap and an apply from the sheet end up in the same state.
 (function () {
   "use strict";
 
@@ -85,8 +76,7 @@
     if (!container) return;
     container.innerHTML = "";
 
-    // Exactly one primary as long as there is a row: the backend expects it and
-    // the first one picked is the honest default.
+    // The backend expects exactly one primary.
     if (
       rows.length > 0 &&
       !rows.some(function (row) {
@@ -108,8 +98,6 @@
       var item = cell("nldd-list-item", {});
       var isPrimary = row.role === "PRIMARY";
 
-      // "Primair" belongs with the name, so it is a tag in the same cell rather
-      // than a separate control further along the row.
       var textCell = cell("nldd-text-cell", {});
       var line = document.createElement("span");
       line.textContent = row.label + " ";
@@ -133,15 +121,13 @@
         "tooltip-timing": "never",
         text: "Acties voor " + row.label,
       });
-      // Slotted into the button rather than anchored by id: the button then
-      // owns the anchoring and the open/close toggle itself.
+      // Slotted, not anchored by id: the button then owns the toggle itself.
       var menu = cell("nldd-menu", {
         slot: "popup",
         placement: "bottom-end",
       });
-      // No per-item listener: the delegated `select` listener below recognises
-      // data-org-picker-action, so server-rendered and locally built chips are
-      // identical and behave the same.
+      // No per-item listener: the delegated `select` below serves
+      // server-rendered and locally built chips alike.
       if (!isPrimary) {
         menu.appendChild(
           cell("nldd-menu-item", {
@@ -170,9 +156,7 @@
     });
 
     container.appendChild(list);
-    // The space between the list and the button below belongs to the list: in
-    // the template it would leave a 12px gap under the label while nothing is
-    // picked. Here the innerHTML reset clears it along with the list.
+    // In the list, not the template: the gap must go when nothing is picked.
     container.appendChild(
       cell("nldd-spacer", { size: "12", direction: "vertical" }),
     );
@@ -180,23 +164,13 @@
 
   function renderFromInputs() {
     if (!document.getElementById(INPUTS_ID)) return;
-    // The server already renders the chip list in the first paint and the
-    // delegated `select` listener makes it interactive, so rebuilding it here
-    // would only cost a second reflow. Build only when it is missing: full-page
-    // creation starts empty and the first apply from the sheet builds it.
+    // Only when missing: the server already renders the chip list.
     var container = document.getElementById(SELECTIONS_ID);
     if (container && container.querySelector("nldd-list")) return;
     renderSelection(rowsFromInputs());
   }
 
-  /**
-   * Wires the trigger button to request the picker sheet.
-   *
-   * htmx:configRequest sets count_mode=none so the endpoint returns the sheet
-   * without placement counts. The sheet opens empty by design: it adds to the
-   * orgs already on the assignment instead of editing the whole set.
-   * Idempotent, so it can run on page load and after every swap.
-   */
+  // count_mode=none: the picker does not need placement counts.
   function wireTriggerButton() {
     var button = document.getElementById("assignment-org-trigger-btn");
     if (!button || button.__wiesOrgPickerWired) return;
@@ -206,9 +180,7 @@
     });
   }
 
-  // Delegated actions on the chips, server-rendered and locally built alike.
-  // The rows come from the hidden inputs, the single source of truth that
-  // rebuildInputs keeps in sync, rather than from a captured rows array.
+  // Rows come from the hidden inputs, not from a captured array.
   document.addEventListener("select", function (e) {
     var item = e.composedPath().find(function (el) {
       return el instanceof Element && el.dataset && el.dataset.orgPickerAction;
@@ -232,10 +204,7 @@
   });
 
   document.addEventListener("wies:org-selection-applied", function (e) {
-    // The sheet adds to what is already on the assignment: keep the current
-    // rows with their roles, which the sheet knows nothing about, and append
-    // only orgs that are not attached yet. renderSelection promotes the first
-    // row to PRIMARY when the set has none.
+    // The sheet adds rather than replaces and knows nothing about roles.
     var rows = rowsFromInputs();
     var seen = {};
     rows.forEach(function (row) {
@@ -249,19 +218,12 @@
     renderSelection(rows);
   });
 
-  /**
-   * Opens the picker sheet once it has rendered.
-   *
-   * The sheet is fetched on demand and only exists after the swap, so show()
-   * no-ops until the element has upgraded and rendered.
-   */
+  // show() no-ops until the freshly swapped element has upgraded and rendered.
   function openSheet() {
     var sheet = document.getElementById(SHEET_ID);
     if (!sheet) return;
-    // Inside another sheet (the assignment create/edit sheet) the outer
-    // backdrop takes the opening click as a light-dismiss and the picker flashes
-    // shut, so hoist it to body to keep the modal dialogs from stacking. On the
-    // full page there is no wrapper and this is a no-op.
+    // Inside another sheet the outer backdrop takes the opening click as a
+    // light-dismiss and the picker flashes shut; hoisting avoids the stacking.
     if (sheet.closest("nldd-sheet") && sheet.parentElement !== document.body) {
       document.body.appendChild(sheet);
     }
@@ -284,15 +246,12 @@
       openSheet();
       return;
     }
-    // The widget can arrive as part of an inline-edit partial, so re-wire the
-    // trigger and rebuild the visible list from the newly inserted inputs.
     wireTriggerButton();
     renderFromInputs();
   });
 
-  // Clear the sheet once it closes, so opening it again fetches a fresh tree
-  // instead of reviving a stale one. A hoisted sheet (the nested case) is no
-  // longer in the mount and is removed separately.
+  // Clear on close, so reopening fetches a fresh tree. A hoisted sheet is no
+  // longer in the mount, hence the two branches.
   document.addEventListener(
     "close",
     function (e) {

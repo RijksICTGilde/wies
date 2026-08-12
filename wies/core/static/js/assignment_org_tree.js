@@ -9,10 +9,8 @@
 
   if (!container) return;
 
-  // An assignment is linked to concrete organisations, so the type groups
-  // (Ministeries, Agentschappen) are structure only: they open and close, they
-  // are not selectable. For the same reason a parent never collapses into a
-  // token here — picking a parent means that organisation, not its subtree.
+  // An assignment is linked to concrete organisations: type groups are
+  // structure only, and picking a parent means that org, not its subtree.
   var treeState = new TreeState(data, { collapseToParent: false });
   var tree = new WiesOrgTree({
     state: treeState,
@@ -26,11 +24,11 @@
   });
   tree.render().bindSearch(searchInput);
 
-  // Above this many the tokens stop helping: they push the CTA off-screen and
-  // nobody reads a wall of chips. The count in the button says the same thing.
+  // Above this many, the tokens push the CTA off-screen; the button's count
+  // says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
 
-  /** Group nodes carry no organisation, so they never reach the form. */
+  // Group and self nodes carry no organisation, so they never reach the form.
   function selectedOrgs() {
     var rows = [];
     treeState.explicitSelections.forEach(function (label, nodeId) {
@@ -74,9 +72,8 @@
     });
   }
 
-  // The form side (assignment_org_picker.js) owns the formset inputs and the
-  // visible list; it listens for this event. Keeping the two apart means the
-  // sheet can be swapped in and thrown away without the form losing state.
+  // assignment_org_picker.js owns the formset inputs and listens for this
+  // event, so the sheet can be thrown away without the form losing state.
   if (applyBtn) {
     applyBtn.addEventListener("click", function () {
       document.dispatchEvent(
