@@ -4043,9 +4043,7 @@ def _build_assignment_member_panel_data(assignment, request):
     else:
         # teamlid is a Service public_id (UUID string); match it against the row
         # identity. A non-matching or malformed value just misses → 404 panel.
-        initial_row = next(
-            (r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None
-        )
+        initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
         if initial_row is None:
             return None
         heading = "Teamlid bewerken"

@@ -147,9 +147,7 @@ def _apply_placement(assignment: Assignment, service: Service, svc: dict) -> Non
     colleague_id = svc.get("colleague_id")
 
     if placement_public_id:
-        placement = Placement.objects.filter(
-            public_id=placement_public_id, service__assignment=assignment
-        ).first()
+        placement = Placement.objects.filter(public_id=placement_public_id, service__assignment=assignment).first()
         if placement is None:
             msg = "Een of meer plaatsingen bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
