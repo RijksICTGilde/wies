@@ -42,6 +42,9 @@ def wire_field_errors(field) -> list[str]:
     error_ids = [f"error-{field.html_name}-{i}" for i, _ in enumerate(field.errors, start=1)]
     if error_ids:
         field.field.widget.attrs.update({"invalid": True, "error-message": " ".join(error_ids)})
+    # Forwarded to the inner input, where a screen reader announces it.
+    if field.field.required:
+        field.field.widget.attrs.setdefault("required", True)
     return error_ids
 
 

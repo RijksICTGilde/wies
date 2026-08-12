@@ -73,21 +73,20 @@ class NlddUserFormRenderingTest(TestCase):
         assert email_field is not None
         assert "optional" not in email_field.group(0)
 
-    def test_form_has_no_required_attribute(self):
-        """Text fields carry no HTML required attribute, so client-side validation
-        does not colour them red on first view."""
+    def test_required_fields_carry_the_required_attribute(self):
+        """Required fields say so programmatically; the badge only marks optional
+        ones, which leaves the requirement inaudible (WCAG 3.3.2). Browsers paint
+        an empty required field on :user-invalid, so it is not red on first view."""
         form = UserForm()
         rendered = str(form)
 
         first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
         assert first_name is not None
-        assert "required" not in first_name.group(0), (
-            f"first_name should not have 'required'. Found: {first_name.group(0)}"
-        )
+        assert "required" in first_name.group(0), f"first_name should be required. Found: {first_name.group(0)}"
 
         email = re.search(r'<nldd-text-field[^>]*name="email"[^>]*>', rendered, re.DOTALL)
         assert email is not None
-        assert "required" not in email.group(0), f"email should not have 'required'. Found: {email.group(0)}"
+        assert "required" in email.group(0), f"email should be required. Found: {email.group(0)}"
 
     def test_unmapped_widget_logs_warning(self):
         """An unmapped widget logs a warning."""
@@ -356,13 +355,13 @@ class NlddFormMixinTest(TestCase):
         assert first_name_field is not None
         assert "optional" not in first_name_field.group(0)
 
-    def test_nldd_form_no_required_attribute(self):
+    def test_nldd_form_required_attribute(self):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
         first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
         assert first_name is not None
-        assert "required" not in first_name.group(0)
+        assert "required" in first_name.group(0)
 
 
 class ComboBoxSelectRenderingTest(TestCase):
