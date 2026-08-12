@@ -8,11 +8,11 @@ both stay in sync without a shared wrapper element. #}
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
-  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
+  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
   </nldd-button>
   {# The overflow menu shows a CLONE but reports the choice back as select on this
      original, so sidebar_toggle.js listens for both events. #}
-  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines" aria-haspopup="dialog" aria-expanded="false"></nldd-menu-item>
   </nldd-toolbar-item>
   {# Sorting refreshes the list in place like the filters do; the hx-* attributes
      sit on the menu items themselves. See parts/sort_control.html. #}
