@@ -117,7 +117,10 @@
   function scan(root) {
     (root || document)
       .querySelectorAll("[data-period-choice], #placement-inherit-period")
-      .forEach(init);
+      // The team-member form has its own handler in member_form.js.
+      .forEach((el) => {
+        if (!el.closest("[data-member-form]")) init(el);
+      });
   }
 
   document.addEventListener("DOMContentLoaded", () => scan(document));

@@ -177,21 +177,6 @@
       syncPanelBackButton();
     }
 
-    document.addEventListener("click", (e) => {
-      const path = e.composedPath();
-      const btn = path.find(
-        (el) => el instanceof Element && el.dataset && el.dataset.nddAction,
-      );
-      if (!btn) return;
-      const action = btn.dataset.nddAction;
-      // Closing is not handled here: nldd-sheet closes itself on the dismiss of
-      // the panel template's nldd-top-title-bar.
-      if (action === "panel-back") {
-        e.preventDefault();
-        panelBack();
-      }
-    });
-
     // The row menu opens the dialog and passes name and action URL via data
     // attributes; only the destructive button in the dialog does the POST.
     document.addEventListener("select", (e) => {
