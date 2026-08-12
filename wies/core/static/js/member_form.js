@@ -25,12 +25,6 @@
   const assignmentStart = form.dataset.assignmentStart || "";
   const assignmentEnd = form.dataset.assignmentEnd || "";
 
-  // Hide the whole field, not just the input, or the label stays behind.
-  const fieldOf = (el) => el && (el.closest("nldd-form-field") || el);
-  const startField = fieldOf(startInput);
-  const endField = fieldOf(endInput);
-  const endKnownField = fieldOf(endKnownSwitch);
-
   if (statusGroup) {
     statusGroup.addEventListener("change", (e) => {
       // The group also relays uncheck events from the previous choice.
@@ -73,54 +67,16 @@
 
   if (!periodGroup) return;
 
-  function inherits() {
-    return periodGroup.getAttribute("value") !== "PLACEMENT";
-  }
-
-  function endDateKnown() {
-    return !endKnownSwitch || endKnownSwitch.hasAttribute("checked");
-  }
-
-  // Remember the last shown end date so toggling the switch off and on does
-  // not wipe it. The assignment-period fill on inherit is not the user's own
-  // choice, so that value is never stored.
-  let lastEndDate = endInput ? endInput.value : "";
-
-  function updatePeriod(inherit, knownOverride) {
-    if (inheritInput) inheritInput.value = inherit ? "on" : "";
-    if (periodHelp) periodHelp.hidden = !inherit;
-    if (startField) startField.hidden = inherit;
-    if (endKnownField) endKnownField.hidden = inherit;
-    // knownOverride comes from the change event: the attribute on the switch
-    // is not updated yet at that point.
-    const known = knownOverride === undefined ? endDateKnown() : knownOverride;
-    if (endField) endField.hidden = inherit || !known;
-    if (inherit) {
-      if (startInput) startInput.value = assignmentStart;
-      if (endInput) endInput.value = assignmentEnd;
-    } else if (endInput) {
-      // Empty means "loopt door"; keep the typed date for when the switch
-      // comes back on.
-      if (!known) {
-        if (endInput.value) lastEndDate = endInput.value;
-        endInput.value = "";
-      } else if (!endInput.value) {
-        endInput.value = lastEndDate;
-      }
-    }
-  }
-
-  periodGroup.addEventListener("change", (e) => {
-    const value = e.detail && e.detail.value;
-    updatePeriod(value ? value === "SERVICE" : inherits());
+  window.WiesPeriodFields({
+    group: periodGroup,
+    startInput,
+    endInput,
+    endKnownSwitch,
+    periodHelp,
+    inheritStart: assignmentStart,
+    inheritEnd: assignmentEnd,
+    writeInherit: (inherit) => {
+      if (inheritInput) inheritInput.value = inherit ? "on" : "";
+    },
   });
-
-  if (endKnownSwitch) {
-    endKnownSwitch.addEventListener("change", (e) => {
-      const known = e.detail ? e.detail.checked : endDateKnown();
-      updatePeriod(inherits(), known);
-    });
-  }
-
-  updatePeriod(inherits());
 })();
