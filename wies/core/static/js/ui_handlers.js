@@ -1,15 +1,9 @@
-// Delegated UI handlers, registered once on `document`. This file exists
-// because the CSP is script-src 'self': inline <script> and on*= attributes are
-// blocked silently, so bindings are declared in the markup as data-attributes
-// (`data-action`, `data-confirm`) and resolved here. Delegation also keeps them
-// alive across HTMX swaps. To add an interaction, give the element
-// data-action="<name>" and add an entry to CLICK_ACTIONS below;
-// test_templates_no_inline_js.py fails the build on inline JS.
+// Delegated UI handlers. The CSP is script-src 'self', so inline handlers are
+// blocked silently and bindings are declared as data-attributes and resolved
+// here; test_templates_no_inline_js.py guards that.
 //
-// The click listener sits on `document`, so htmx's element-level listeners have
-// already run. It never skips on `defaultPrevented`: htmx cancels the native
-// event on every element it drives, which would silently drop actions on
-// elements carrying both hx-* and data-action.
+// Never skips on defaultPrevented: htmx cancels the native event on every
+// element it drives, which would drop actions on elements carrying both.
 
 (function () {
   var CLICK_ACTIONS = {
@@ -48,13 +42,7 @@
   // nldd-notification announces its dismissal but does not remove itself: the
   // consumer decides. We do not keep them around.
   document.addEventListener("dismiss", function (event) {
-    var el = event.composedPath().find(function (node) {
-      return (
-        node instanceof Element &&
-        node.tagName &&
-        node.tagName.toLowerCase() === "nldd-notification"
-      );
-    });
+    var el = window.wiesClosestInPath(event, "nldd-notification");
     if (el) el.remove();
   });
 })();

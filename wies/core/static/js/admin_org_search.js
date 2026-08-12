@@ -19,13 +19,7 @@
   // toggle it, that is the consumer's job. The innermost row in the composedPath
   // wins, so a child row does not expand its parent.
   root.addEventListener("click", function (e) {
-    var row = e.composedPath().find(function (el) {
-      return (
-        el instanceof Element &&
-        el.localName === "nldd-list-item" &&
-        el.hasAttribute("button")
-      );
-    });
+    var row = window.wiesClosestInPath(e, "nldd-list-item[button]");
     if (!row) return;
     row.toggleAttribute("expanded", !row.hasAttribute("expanded"));
   });

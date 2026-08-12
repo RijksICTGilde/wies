@@ -87,9 +87,7 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
 // Back in a child sheet means closing: the sheet underneath is still open and
 // reappears.
 document.addEventListener("back", function (e) {
-  const sheet = e.composedPath().find(function (el) {
-    return el.localName === "nldd-sheet";
-  });
+  const sheet = window.wiesClosestInPath(e, "nldd-sheet");
   if (!sheet || typeof sheet.hide !== "function") return;
   // The side panel does its own back navigation through the panelStack in
   // side_panel.js, where back means a previous panel rather than closing.
@@ -102,14 +100,7 @@ document.addEventListener("back", function (e) {
 // script-src 'self' forbids. composedPath because the button may live in the
 // dialog's shadow root.
 document.addEventListener("click", function (e) {
-  const btn = e
-    .composedPath()
-    .find(
-      (el) =>
-        el instanceof Element &&
-        el.matches &&
-        el.matches("[data-dismiss-modal]"),
-    );
+  const btn = window.wiesClosestInPath(e, "[data-dismiss-modal]");
   if (!btn) return;
   const dialog = btn.closest("nldd-modal-dialog, nldd-sheet");
   if (dialog && typeof dialog.hide === "function") dialog.hide();

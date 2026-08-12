@@ -1,11 +1,6 @@
-// Drives the teamlid child sheet (assignment_member_edit_panel_content.html).
-//
-// Mirrors placement_period_toggle.js for the period block, plus the member
-// specifics: the status radio-group and the skill combo-box. The status group
-// posts its own value (nldd-radio-button-field is form-associated since design
-// system 0.8.71), so this only reacts to the choice. The period choice still
-// posts through [data-inherit-input] ("on" = neem opdrachtperiode over, "" =
-// eigen periode).
+// Drives the teamlid child sheet: the status radio-group, the skill combo-box
+// and the period block (see period_fields.js). The status group is
+// form-associated and posts its own value, so this only reacts to the choice.
 (function () {
   const form = document.querySelector("[data-member-form]");
   if (!form) return;

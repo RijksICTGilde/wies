@@ -1,15 +1,6 @@
-// Filter interactions (opdrachten/plaatsingen/gebruikers list filters).
-//
-// Filter inputs carry their own name + data-filter-input, so hx-include submits
-// their values natively. This module only covers the glue the browser cannot
-// do: nudging a re-filter with a synthetic `change` so
-// hx-trigger="change from:[data-filter-input]" fires, the search field with its
-// suggestions, token dismissal, "Wis alle filters", opdrachtgever quick options
-// and the "Meer" modal. A MutationObserver picks up nldd elements added by
-// HTMX swaps.
-//
-// There is deliberately no hx-* click forwarding for nldd elements: htmx 2
-// wires custom elements itself, so a bridge only produced a duplicate request.
+// Glue for the list filters. Deliberately no hx-* click forwarding for nldd
+// elements: htmx 2 wires custom elements itself, so a bridge only duplicated
+// the request.
 
 (function () {
   "use strict";

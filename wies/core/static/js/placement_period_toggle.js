@@ -1,14 +1,6 @@
-// Ties the period choice to the date fields, in two supported shapes:
-//   - nldd-segmented-control[data-period-choice]  (placement edit panel)
-//   - nldd-checkbox-field #placement-inherit-period (generic inline-edit form)
-//
-// Inheriting from the assignment hides the date fields and fills them with the
-// assignment period; the hidden period_source select carries the posted value.
-// The fields stay enabled so they post along — with period_source=SERVICE the
-// server uses the assignment period anyway.
-//
-// The [data-end-date-known] switch only drives the end date field (off means
-// "runs on", so an empty end date) and does not post itself.
+// Wires the period block (see period_fields.js) for the placement edit panel
+// and the generic inline-edit form. The date fields stay enabled so they post
+// along; with period_source=SERVICE the server uses the assignment period.
 (function () {
   function init(control) {
     if (!control || control.dataset.periodToggleInit) return;
