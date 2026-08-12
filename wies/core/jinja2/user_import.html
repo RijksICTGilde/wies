@@ -7,6 +7,7 @@
   <nldd-rich-text>
   <h1>Gebruikers importeren</h1>
   </nldd-rich-text>
+  <nldd-form>
   <form method="post"
         action="{{ url('user-import-csv') }}"
         enctype="multipart/form-data">
@@ -14,13 +15,8 @@
     <p>
       Upload een CSV-bestand met gebruikersgegevens. <a href="{{ static('example_users_import.csv') }}">Download het voorbeeldbestand</a> om het juiste formaat te zien.
     </p>
-    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
     <nldd-form-field label="CSV-bestand">
-    <input type="file"
-           name="csv_file"
-           id="csv_file"
-           accept=".csv"
-           class="wies-input">
+    <nldd-file-field name="csv_file" accept=".csv"></nldd-file-field>
     </nldd-form-field>
     {% if result and result.success %}
       <nldd-banner variant="success" text="Import geslaagd!" style="margin: 1rem 0;">
@@ -51,7 +47,10 @@
       {% endif %}
       </nldd-banner>
     {% endif %}
+    <nldd-form-actions>
     <nldd-button variant="primary" type="submit" text="Importeren"></nldd-button>
+    </nldd-form-actions>
   </form>
+  </nldd-form>
   </nldd-container>
 {% endblock content %}
