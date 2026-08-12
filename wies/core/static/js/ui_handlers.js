@@ -1,8 +1,5 @@
-// Delegated UI handlers. The CSP is script-src 'self', so inline handlers are
-// blocked silently and bindings are data-attributes resolved here.
-//
-// Never skips on defaultPrevented: htmx cancels the native event on every
-// element it drives, which would drop actions on elements carrying both.
+// Delegated UI handlers: the CSP blocks inline handlers. Never skips on
+// defaultPrevented — htmx cancels the native event on everything it drives.
 
 (function () {
   var CLICK_ACTIONS = {

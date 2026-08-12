@@ -1,12 +1,8 @@
-// Behaviour for inline-edit display partials: a toast on save, and the
-// "Toon meer / Toon minder" toggle on long text fields. Both use delegated
-// listeners so they survive HTMX swaps.
+// Inline-edit display partials: a toast on save and the "Toon meer" toggle.
 
 function showSavedToast(label) {
-  // nldd-notification moves itself into the shared region and runs its own
-  // timer, so where it is appended does not matter; ui_handlers.js removes it
-  // on `dismiss`. Replacing the previous one keeps a screen that saves several
-  // fields in a row from stacking identical messages, and restarts the clock.
+  // nldd-notification relocates itself and runs its own timer. Replacing the
+  // previous one stops identical messages from stacking.
   document
     .querySelectorAll("nldd-notification[data-wies-saved]")
     .forEach((el) => el.remove());

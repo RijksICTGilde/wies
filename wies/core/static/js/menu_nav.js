@@ -1,13 +1,8 @@
-// Navigation for nldd components carrying data-href: they provide no link
-// behaviour themselves, so the click is caught via composedPath (the element
-// lives in a shadow root) and navigated manually. External file rather than
-// inline <script>, so the CSP can stay script-src 'self'.
+// Logging out is a POST, so it cannot be an href; the menu item sits in a
+// shadow root and cannot be wrapped in a form.
 const HREF_CARRIERS = new Set(["nldd-menu-item", "nldd-icon-button"]);
 
-// Verstuur een POST naar de gegeven URL met het csrf-token dat al in de markup
-// staat. Voor acties die geen GET-navigatie zijn (uitloggen is @require_POST),
-// terwijl het menu-item in een shadow root zit en dus niet in een <form> te
-// wikkelen is zoals op de "Geen toegang"-pagina.
+// Posts to the URL with the csrf token already in the markup.
 function submitPost(url) {
   const token = document.querySelector(
     'input[name="csrfmiddlewaretoken"]',

@@ -1,6 +1,5 @@
-// Wires the period block (see period_fields.js) for the placement edit panel
-// and the generic inline-edit form. The date fields stay enabled so they post
-// along; with period_source=SERVICE the server uses the assignment period.
+// Wires the period block (period_fields.js) for the placement edit panel and
+// the generic inline-edit form.
 (function () {
   function init(control) {
     if (!control || control.dataset.periodToggleInit) return;
@@ -11,13 +10,9 @@
     const form = control.closest("form");
     if (!form) return;
 
-    // By name, not by data attribute: the widget templates do not pass
-    // arbitrary data-* through to the NLDD fields, so those hooks never reach
-    // the DOM.
+    // By name: widget templates drop arbitrary data-* before the DOM.
     const hiddenSelect = form.querySelector("[name=period_source]");
-    // The assignment period sits on the panel form or, for the generic
-    // inline-edit, on the [data-placement-period] body wrapper: there the form
-    // element belongs to the wrapper and carries no service data.
+    // The generic inline-edit keeps the period on a body wrapper instead.
     const periodRoot = form.querySelector("[data-placement-period]") || form;
     const serviceStart = periodRoot.dataset.serviceStart || null;
     const serviceEnd = periodRoot.dataset.serviceEnd || null;

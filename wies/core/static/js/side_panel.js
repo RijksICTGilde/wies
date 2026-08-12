@@ -75,9 +75,8 @@
     return hasParent ? parent : null;
   }
 
-  // Separate from the computation so afterSwap can call it before the first
-  // paint: setting back-text in afterSettle redraws the bar a frame later,
-  // which shows as a jumping header.
+  // Called from afterSwap, before first paint: doing it in afterSettle redraws
+  // the bar a frame later and the header visibly jumps.
   function writeBackButton(bar, section, parent) {
     if (parent)
       bar.setAttribute(

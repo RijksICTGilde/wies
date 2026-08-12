@@ -1,9 +1,5 @@
-// Opens the user list's filter sheet. The sheet is rendered server-side in
-// user_admin.html rather than lazily, because the #filter-form inside it drives
-// the search field and filter chips and must always be present. Filtering
-// itself runs through the shared filter_interactions.js, so this file only
-// opens. External file rather than inline <script>, so the CSP can stay
-// script-src 'self'.
+// Opens the user list's filter sheet. The sheet is server-rendered because the
+// #filter-form inside it drives the search field and chips.
 (function () {
   "use strict";
 
