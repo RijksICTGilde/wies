@@ -1,6 +1,4 @@
-// First-login onboarding wizard: auto-open + step navigation. Skipping and
-// "Aan de slag" both submit the same hidden form; the server answers with a
-// `closeOnboarding` trigger.
+// First-login onboarding wizard: auto-open and step navigation.
 (function () {
   "use strict";
 
@@ -151,9 +149,8 @@
     });
   }
 
-  // The bar's dismiss, not the window's `close`: nldd-window calls hide() for
-  // both, so by then Overslaan and Escape are indistinguishable (#553). Bound
-  // to the bar, because the window stops that dismiss propagating.
+  // The bar's dismiss, not the window's `close`: hide() fires for both, so
+  // Overslaan and Escape are indistinguishable there (#553).
   if (titleBar) {
     titleBar.addEventListener("dismiss", complete);
   }

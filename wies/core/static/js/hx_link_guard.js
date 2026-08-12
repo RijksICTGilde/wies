@@ -1,7 +1,5 @@
-// Stops nldd-* elements carrying both href and hx-get from navigating. The href
-// is there for link semantics, but the anchor in the shadow root navigates and
-// wins, throwing the htmx response away with the page. Capture phase, so this
-// runs first; only the default action is suppressed, so htmx still sees it.
+// Stops nldd-* elements carrying both href and hx-get from navigating: the
+// shadow-root anchor wins and throws the htmx response away with the page.
 (function () {
   "use strict";
 

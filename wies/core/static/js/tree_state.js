@@ -159,9 +159,8 @@ TreeState.prototype._cascadeUp = function (startNode) {
       return c.checked || c.indeterminate;
     });
 
-    // Without collapseToParent a parent shows as checked only when picked
-    // directly; riding along on its children reads as indeterminate.
-    // Appearance only — explicitSelections is unaffected.
+    // Appearance only: a parent riding along on its children reads as
+    // indeterminate, explicitSelections is unaffected.
     var showsAsChecked =
       this.collapseToParent || this.explicitSelections.has(parent.id);
     if (allChecked && showsAsChecked) {

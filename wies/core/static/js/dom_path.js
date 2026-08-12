@@ -1,10 +1,5 @@
-// Finds the innermost matching element in an event's composed path. Events from
-// NLDD components start inside a shadow root, where closest() stops at the
-// boundary.
-//
-// @param {Event} event The event to walk.
-// @param {string|function} test A CSS selector, or a predicate on the element.
-// @returns {Element|null} The matching element, or null.
+// Innermost element in an event's composed path; closest() stops at a shadow
+// boundary, the path does not.
 window.wiesClosestInPath = function wiesClosestInPath(event, test) {
   const path = event.composedPath();
   const matches =

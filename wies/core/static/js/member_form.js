@@ -1,6 +1,5 @@
-// Drives the teamlid child sheet: the status radio-group, the skill combo-box
-// and the period block (see period_fields.js). The status group is
-// form-associated and posts its own value, so this only reacts to the choice.
+// Teamlid child sheet: status radio-group, skill combo-box and the period
+// block (period_fields.js). The status group posts its own value.
 (function () {
   const form = document.querySelector("[data-member-form]");
   if (!form) return;
@@ -34,9 +33,8 @@
   }
 
   if (skillCombo && skillInput) {
-    // The combo itself has no name; translate its choice into the form
-    // contract: an existing option posts its id, free text posts as a new
-    // role (skill=__new__ plus the name).
+    // The combo has no name: an existing option posts its id, free text posts
+    // skill=__new__ plus the name.
     const optionValues = new Set(
       Array.from(skillCombo.querySelectorAll("nldd-menu-item")).map((item) =>
         item.getAttribute("value"),

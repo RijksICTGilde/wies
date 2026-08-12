@@ -1,6 +1,5 @@
-// Organisation picker on the assignment form (OrgPickerWidget). The visible
-// list is built from the hidden formset inputs, so a fresh page, an inline-edit
-// swap and an apply from the sheet end up in the same state.
+// Organisation picker on the assignment form. The visible list is built from
+// the hidden formset inputs, so every entry point lands in the same state.
 (function () {
   "use strict";
 

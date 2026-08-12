@@ -1,6 +1,5 @@
-// Organisation admin: chevron toggle and search within the nldd-list tree.
-// Nesting is real DOM nesting (child rows sit in the parent's
-// slot="children"), so ancestors come from closest('nldd-list-item') chains.
+// Chevron toggle and search in the organisation admin tree. Rows nest in the
+// parent's slot="children", so ancestors come from closest() chains.
 (function () {
   "use strict";
 
