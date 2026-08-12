@@ -2482,6 +2482,10 @@ def suborganization_create(request):
             return response
     else:
         form = SuborganizationForm()
+        # Cursor meteen in het naamveld: de sheet is er om iets in te typen.
+        # Alleen op de GET; bij een validatiefout hoort de focus bij het veld met
+        # de fout te blijven in plaats van naar boven te springen.
+        form.fields["name"].widget.attrs["autofocus"] = True
 
     return render(
         request,
@@ -2508,6 +2512,7 @@ def suborganization_edit(request, public_id):
 
     if request.method == "GET":
         form = SuborganizationForm(instance=suborganization)
+        form.fields["name"].widget.attrs["autofocus"] = True
         return render(
             request,
             "parts/generic_form_modal.html",
