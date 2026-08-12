@@ -2866,6 +2866,9 @@ def _onboarding_edit_groups(request, entry, data=None):
         if not service_specs:
             continue
         form_cls, initial = build_combined_form_class(service_specs)
+        # Without edit rights on the role the form omits its field, so surface the
+        # role read-only to keep the description in context.
+        skill_editable = any(spec is ServiceEditables.skill for (_, spec, _) in service_specs)
         groups.append(
             {
                 # A heading only when there is more than one role; otherwise the
@@ -2873,6 +2876,9 @@ def _onboarding_edit_groups(request, entry, data=None):
                 "title": None if len(services) == 1 else f"Rol: {service.skill.name if service.skill else 'onbekend'}",
                 "specs": service_specs,
                 "form": form_cls(data, initial=initial, prefix=f"rol-{service.id}"),
+                # None when editable (the form renders the field); otherwise the
+                # role name, or "" so the template shows its dash fallback.
+                "readonly_skill": None if skill_editable else (service.skill.name if service.skill else ""),
             }
         )
 
