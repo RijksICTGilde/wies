@@ -47,8 +47,7 @@
       dividers: "never",
       "accessible-label": this.accessibleLabel,
     });
-    // Roots only: building eagerly was ~21k DS components and made every later
-    // interaction sluggish.
+    // Children are built on expand: the full tree is ~21k components.
     for (var i = 0; i < this.state.roots.length; i++) {
       list.appendChild(this._buildRow(this.state.roots[i], 0));
     }
