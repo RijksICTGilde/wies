@@ -128,7 +128,7 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
-# ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
+# ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
 
 
@@ -155,23 +155,21 @@ def _build_close_url(request):
 
 
 def _is_side_panel_request(request):
-    """True for the HTMX requests that render a panel partial (which dereference
-    ``panel_data``). Lets a view 404 an unresolved panel target instead of
-    rendering a template with no data; a full-page load stays graceful and shows
-    the page without a panel."""
+    """True for the HTMX requests that render a panel partial.
+
+    Lets a view 404 an unresolved panel target instead of rendering a template
+    with no ``panel_data``; a full-page load stays graceful and shows no panel.
+    """
     return request.headers.get("HX-Target") in ("side-panel-content", "side-panel-container")
 
 
 def _resolve_panel_object(request, model, public_id, *, select_related=()):
-    """Look up a side-panel object (Assignment, Colleague, ...) by its public_id.
+    """Looks up a side-panel object (Assignment, Colleague, ...) by its public_id.
 
-    Like get_object_or_404 but tuned for the side panel: a miss (including an
-    unknown or malformed public_id, which simply matches no row) raises Http404
-    only for the HTMX panel request, so HTMX does not swap a broken panel. A
-    full-page load gets None and simply renders without a panel.
-
-    Only for models whose panel has no per-object visibility rule; Placement,
-    which does, keeps its own resolver (``_resolve_placement_panel``).
+    A miss (including a malformed public_id) raises Http404 only for the HTMX
+    panel request; a full-page load gets None and renders without a panel. Only
+    for models whose panel has no per-object visibility rule — Placement has one
+    and keeps ``_resolve_placement_panel``.
     """
     qs = model.objects.select_related(*select_related) if select_related else model.objects.all()
     try:
@@ -183,7 +181,7 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
 
 
 def _build_assignment_panel_data(assignment, request):
-    """Shared helper to build assignment panel context data for both views."""
+    """Builds the assignment panel context, shared by both views."""
     from wies.core.editables.assignment import (  # noqa: PLC0415
         AssignmentEditables,
         _organizations_initial,
@@ -198,14 +196,11 @@ def _build_assignment_panel_data(assignment, request):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_rows": team_rows,
-        # Same human label as the "Externe bron" row (get_source_display), so
-        # the intro says "OTYS IIR", not the raw uppercased key "OTYS_IIR".
+        # Same human label as the "Externe bron" row, so the intro says "OTYS
+        # IIR", not the raw key "OTYS_IIR".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
-        # Eén privacynoot boven de lijst in plaats van een noot per rij. De
-        # formulering komt uit placement_visibility en is al op de kijker
-        # toegesneden ("... jou en de Business Manager" / "... jou en de
-        # consultant"); hij staat onveranderd op het scherm, net als op de
-        # opdrachtkaarten.
+        # One privacy note above the list instead of one per row. The wording
+        # comes from placement_visibility, already tailored to the viewer.
         "team_privacy_note": next(
             (note for row in team_rows if (note := row.get("privacy_warning_text"))),
             "",
@@ -214,18 +209,17 @@ def _build_assignment_panel_data(assignment, request):
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
-        # Read-only weergavecontext: het paneel toont waarden direct (de per-veld
-        # inline edit is vervangen door de bewerk-child-sheet).
+        # Read-only display context: per-field inline edit was replaced by the
+        # edit child sheet, so the panel shows values directly.
         "organization_rows": _organizations_initial(assignment),
         "owner_display": _owner_display_context(assignment, request),
         "edit_panel_url": _build_panel_url(request, opdracht=assignment.public_id, bewerken=1),
         "member_add_aanvraag_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-aanvraag"),
         "member_add_ingevuld_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-ingevuld"),
     }
-    # Child sheets: ?bewerken= opent het gecombineerde opdrachtformulier,
-    # ?teamlid= het formulier van één teamlid (of een nieuw lid via
-    # nieuw-aanvraag / nieuw-ingevuld). Zonder rechten valt de parameter terug
-    # op het leespaneel.
+    # Child sheets: ?bewerken= opens the combined assignment form, ?teamlid= the
+    # form for one team member. Without the rights the param falls back to the
+    # read-only panel.
     if request.GET.get("bewerken"):
         edit_panel = _build_assignment_edit_panel_data(assignment, request)
         if edit_panel is not None:
@@ -238,15 +232,16 @@ def _build_assignment_panel_data(assignment, request):
 
 
 def _build_assignment_create_panel_data(request, form, *, parent_url=None):
-    """panel_data voor het (lege/ongeldige) aanmaakformulier — gedeeld door de
-    lijst-GET-tak (AssignmentListView, ?nieuwe-opdracht) en de POST-handler
-    (assignment_create_sheet). ``parent_url`` laat de ongeldige-POST-herrender de
-    gesaneerde ``terug_url`` meegeven, zodat het terugadres een mislukte submit
-    overleeft."""
+    """Builds panel_data for the empty or invalid create form.
+
+    Shared by the list GET branch (``?nieuwe-opdracht``) and the POST handler.
+    ``parent_url`` lets an invalid POST pass the sanitised ``terug_url`` back, so
+    the return address survives a failed submit.
+    """
     return {
         "form": form,
         "panel_content_template": "parts/assignment_create_panel_content.html",
-        "edit_url": reverse("assignment-create-sheet"),  # POST-doel
+        "edit_url": reverse("assignment-create-sheet"),  # POST target
         "parent_url": parent_url if parent_url is not None else _build_close_url(request),
         "edit_heading": "Opdracht invoeren",
         "submit_label": "Voer opdracht in",
@@ -264,11 +259,9 @@ def _merge_preview_rows(group) -> list[dict]:
     rows = []
     for assignment in group:
         keeps = assignment.id == target.id
-        # Vervoegd, niet in de gebiedende wijs: dit beschrijft wat er gebeurt,
-        # het is geen knop. "Behouden" en "Verplaatsen naar…" lazen als labels
-        # van een actie die je nog moet aanklikken. Herkomst en bestemming zitten
-        # allebei in de zin, zodat een regel op zichzelf te lezen is en er geen
-        # aparte opdracht-kolom naast hoeft.
+        # Indicative, not imperative: this describes what happens, it is not a
+        # button. Source and destination both sit in the sentence, so a row reads
+        # on its own without a separate assignment column.
         action = f"Blijft in opdracht {target.id}" if keeps else f"Van opdracht {assignment.id} naar {target.id}"
         for service in assignment.services.all():
             names = [placement.colleague.name for placement in service.placements.all()]
@@ -385,8 +378,8 @@ def _get_colleague_assignments(request, colleague, viewer):
                 )
             active_by_id[assignment_id]["tags"]["Business Manager"] = None
         elif viewer_is_colleague:
-            # user can their own ended assignments as business manager
-            # no clause for other business manager that can see this (only one)
+            # Only the colleague sees their own ended BM assignments; an
+            # assignment has exactly one business manager.
             if assignment_id not in historical_by_id:
                 historical_by_id[assignment_id] = _make_assignment_entry(
                     name,
@@ -427,7 +420,7 @@ def _get_colleague_assignments(request, colleague, viewer):
 
 
 def _build_colleague_panel_data(colleague, request):
-    """Shared helper to build colleague panel context data for both views."""
+    """Builds the colleague panel context, shared by both views."""
     viewer = getattr(request.user, "colleague", None)
 
     assignments = _get_colleague_assignments(request, colleague, viewer)
@@ -442,11 +435,12 @@ def _build_colleague_panel_data(colleague, request):
 
 
 def _build_placement_panel_data(placement, request, *, visibility=None):
-    """Build panel context for a single placement (colleague-on-assignment view).
+    """Builds the panel context for a single placement.
 
     ``visibility`` (a PlacementVisibility) flags a non-active placement so the
-    card shows the timing chip + privacy note. Access control is the caller's
-    job — see ``_resolve_placement_panel``."""
+    card shows the timing chip and privacy note. Access control is the caller's
+    job — see ``_resolve_placement_panel``.
+    """
     assignment = placement.service.assignment
     colleague = placement.colleague
     service = placement.service
@@ -485,9 +479,8 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "show_read_more": True,
     }
 
-    # De overige opdrachten van deze collega staan in hetzelfde paneel, zodat je
-    # er niet voor hoeft door te klikken naar een tweede sheet. Dezelfde
-    # zichtbaarheidsregels als het collegapaneel, want het is dezelfde bron.
+    # The colleague's other assignments live in this same panel, under the same
+    # visibility rules as the colleague panel — it is the same source.
     viewer = getattr(request.user, "colleague", None)
     other_assignments = [
         entry for entry in _get_colleague_assignments(request, colleague, viewer) if entry["id"] != assignment.id
@@ -503,28 +496,28 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "assignment_card": assignment_card,
         "other_active_assignments": [a for a in other_assignments if not a["historical"]],
         "past_assignments": [a for a in other_assignments if a["historical"]],
-        # Eén "Bewerken"-knop opent de child sheet; hij verschijnt alleen als er
-        # ook echt iets te bewerken valt.
+        # The "Bewerken" button opens the child sheet; only shown when there is
+        # something to edit.
         "user_can_edit_details": bool(placement_edit_specs(placement, request.user)),
         "edit_panel_url": _build_panel_url(request, plaatsing=placement.public_id, bewerken=1),
     }
 
 
 def _resolve_placement_panel(request, public_id):
-    """Fetch a placement for the side panel by its public_id, enforcing the same
-    rule as the team list: ended or not-yet-started placements are only shown to
-    the placed colleague and the assignment's BM-owner.
+    """Fetches a placement for the side panel, enforcing the team list's rule.
 
-    Not-found, malformed and not-visible are indistinguishable: all raise Http404
-    for the HTMX panel request (so a hidden placement's existence is never
-    revealed) and return None for a full-page load (renders without a panel)."""
+    Ended or not-yet-started placements are only shown to the placed colleague
+    and the assignment's BM-owner. Not-found, malformed and not-visible are
+    indistinguishable — all raise Http404 for the HTMX panel request, so a hidden
+    placement's existence is never revealed, and return None for a full-page load.
+    """
     try:
         placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
             public_id=public_id
         )
     except Placement.DoesNotExist, ValidationError, ValueError:
-        # A non-UUID / unknown ?plaatsing= fails the lookup; treat it the same as
-        # "not found" (anti-oracle below) rather than letting it escape as a 500.
+        # A malformed or unknown ?plaatsing= is treated as "not found" (see the
+        # anti-oracle below) rather than escaping as a 500.
         placement = None
     result = None
     if placement is not None:
@@ -546,8 +539,8 @@ def _resolve_placement_panel(request, public_id):
     panel_data = _build_placement_panel_data(placement, request, visibility=result)
     if request.GET.get("bewerken"):
         edit_panel = _build_placement_edit_panel_data(placement, request)
-        # Zonder bewerkrechten valt ?bewerken= terug op het leespaneel in plaats
-        # van een lege of verboden sheet.
+        # Without edit rights, ?bewerken= falls back to the read-only panel
+        # instead of an empty or forbidden sheet.
         if edit_panel is not None:
             panel_data.update(edit_panel)
     return panel_data
@@ -612,9 +605,7 @@ def error_detail(request, public_id):
 
 @staff_required
 def delete_error(request, public_id):
-    """
-    Confirm (GET → modal) and perform (POST) deletion of a single error.
-    """
+    """Confirms (GET → modal) and performs (POST) deletion of a single error."""
     error = get_object_or_404(ErrorEvent, public_id=public_id)
     if request.method == "GET":
         return render(
@@ -672,9 +663,9 @@ def staff_database(request):
         elif action == "reset_onboarding":
             request.user.onboarding_completed_at = None
             request.user.save(update_fields=["onboarding_completed_at"])
-            # Geen melding: de wizard staat na de redirect meteen open, en dat is
-            # het bewijs. Een notificatie zou bovendien achter de wizard vallen —
-            # die is een modal in de top layer, de notificatieregio niet.
+            # No message: the wizard reopens right after the redirect, and a
+            # notification would fall behind it — the wizard is a modal in the
+            # top layer, the notification region is not.
         elif action == "sync_organizations":
             # Check if there's already an active task
             if has_active_task("sync_organizations"):
@@ -697,13 +688,9 @@ def staff_database(request):
             from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
 
             groups = find_duplicate_groups()
-            # Ook zonder duplicaten gaat de sheet open: je hebt om een controle
-            # gevraagd, dus de uitkomst hoort op dezelfde plek te staan als het
-            # overzicht. Het lege geval wordt in de sheet zelf afgehandeld.
-            # Eén regel per plaatsing, plat: welke opdracht, welke consultant, en
-            # wat ermee gebeurt. Het samenvoegen zelf redeneert per opdracht, maar
-            # wie het controleert leest per regel — dus die vorm bouwen we hier,
-            # zodat het overzicht geen geneste lussen nodig heeft.
+            # The sheet opens even without duplicates: the empty case is handled
+            # inside it. Rows are flat (one per placement) because a reviewer
+            # reads per line, so the overview needs no nested loops.
             context["merge_groups"] = [
                 {
                     "name": group[0].name,
@@ -727,10 +714,9 @@ def staff_database(request):
                 messages.info(request, "Geen dubbele opdrachten gevonden.")
             else:
                 with transaction.atomic():
-                    # Hoeveel opdrachten erin gingen en hoeveel er overblijven.
-                    # "in 2 groep(en)" liet in het midden of dat groepen of
-                    # opdrachten waren; dit telt twee keer hetzelfde soort ding,
-                    # in dezelfde bewoording als de sheet die je net bevestigde.
+                    # Both numbers count assignments, in the same wording as the
+                    # sheet that was just confirmed; "in 2 groep(en)" left it
+                    # unclear whether groups or assignments were meant.
                     samengevoegd = sum(len(g) for g in groups)
                     overgebleven = len(groups)
                     for group in groups:
@@ -762,9 +748,8 @@ def staff_database(request):
 
 
 # Shown for a filter value that matches no row (a deleted or edited bookmark).
-# The value itself is a meaningless token to the reader, but the chip has to be
-# there: it is what tells them why the list is empty and lets them click the
-# filter away.
+# The chip has to be there: it explains why the list is empty and lets the user
+# click the filter away.
 UNKNOWN_FACET_LABELS = {
     "org": "Onbekende opdrachtgever",
     "org_self": "Onbekende opdrachtgever",
@@ -814,10 +799,9 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
 class PublicIdFacetsMixin:
     """Resolves the public_id filter params of a list view once per request.
 
-    Every facet fails closed: a param that is present but resolves to no row
-    filters everything away instead of being dropped. Such a value still counts
-    as an active filter, so the user gets a chip and the "Wis alle filters"
-    button rather than an unexplained empty list. See ``ResolvedFacet``.
+    Every facet fails closed: a param that resolves to no row filters everything
+    away instead of being dropped, and still counts as an active filter so the
+    user gets a chip rather than an unexplained empty list. See ``ResolvedFacet``.
     """
 
     @cached_property
@@ -829,11 +813,11 @@ class PublicIdFacetsMixin:
         return [x for x in self.request.GET.getlist("org_type") if x]
 
     def apply_org_filter(self, qs, lookup: str):
-        """Apply the opdrachtgever facets (``org``/``org_self``/``org_type``).
+        """Applies the opdrachtgever facets (``org``/``org_self``/``org_type``).
 
         ``lookup`` is the queryset path to the organization id, which differs per
-        list view. A selected org matches its whole subtree, ``org_self`` only the
-        org itself, and an org type every org of that type plus its subtree.
+        list view. ``org`` matches the whole subtree, ``org_self`` only the org
+        itself, ``org_type`` every org of that type plus its subtree.
         """
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
@@ -852,7 +836,7 @@ class PublicIdFacetsMixin:
         return qs.filter(**{lookup: matching_ids})
 
     def add_org_filter_context(self, context: dict, active_filters: dict) -> None:
-        """Register the opdrachtgever facets as active filters and build their chips."""
+        """Registers the opdrachtgever facets as active filters and builds their chips."""
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
         if org.active_values:
@@ -866,10 +850,9 @@ class PublicIdFacetsMixin:
     def add_unknown_filter_chips(self, context: dict, facets: dict[str, type[Model]]) -> None:
         """Chips for the values of ``facets`` that match no row.
 
-        The regular chips are rendered by matching an active value against the
-        filter group's options, so a value that no longer exists renders nothing
-        at all: an empty list with no filter in sight. The org facets build their
-        chips by hand and carry their unknown values themselves.
+        Regular chips are rendered by matching an active value against the filter
+        group's options, so a value that no longer exists would render nothing at
+        all. The org facets build their own chips and are excluded here.
         """
         context["unknown_chip_data"] = [
             {
@@ -899,7 +882,7 @@ class PublicIdFacetsMixin:
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
-    """View for placements table view with infinite scroll pagination"""
+    """Placements table with infinite scroll pagination."""
 
     model = Placement
     template_name = "placements.html"
@@ -962,7 +945,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_loopt_af_options(self, base_qs):
-        """Build 'loopt af' filter options with cumulative counts."""
+        """Builds the 'loopt af' filter options with cumulative counts."""
         today = timezone.now().date()
         filtered_qs = self._apply_filters(base_qs, exclude_filter="loopt_af").distinct()
         presets = [
@@ -981,9 +964,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return options
 
     def _apply_filters(self, qs, *, exclude_filter=None):
-        """Apply all selection filters, optionally excluding one filter type.
+        """Applies all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", "org", "merk", "loopt_af", or a category_id
+        ``exclude_filter`` is "rol", "org", "merk", "loopt_af", or a category_id
         (int) for labels.
         """
         rol = self.facets("rol", Skill)
@@ -1028,20 +1011,20 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return qs
 
     def get_queryset(self):
-        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
+        """Applies the filters to the placements queryset."""
         if self.labels_match_nothing:
             return Placement.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
     def get_template_names(self):
-        """Return appropriate template based on request type"""
+        """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
             if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
-                # panel_data kiest zijn eigen sjabloon (o.a. de bewerk-child-sheet);
-                # get_context_data heeft het hier al klaargezet.
+                # panel_data picks its own template (e.g. the edit child sheet);
+                # get_context_data has already stored it.
                 panel_data = getattr(self, "_panel_data", None)
                 if panel_data:
                     return [panel_data["panel_content_template"]]
@@ -1052,7 +1035,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return ["placements.html"]
 
     def get_context_data(self, **kwargs):
-        """Add dynamic filter options"""
+        """Adds the dynamic filter options."""
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
@@ -1168,9 +1151,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
-        # Org counts: exclude the org filter, so the numbers reflect the other
-        # active filters (rol/labels/merk/loopt_af/zoek) — same cross-filter rule
-        # as the skill/merk/label groups above.
+        # Org counts exclude the org filter, so the numbers reflect the other
+        # active filters — same cross-filter rule as the groups above.
         org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
         org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
         org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
@@ -1240,14 +1222,14 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             assignment = _resolve_panel_object(self.request, Assignment, assignment_id)
             if assignment is not None:
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-        # get_context_data draait vóór get_template_names, dus die kan hier het
-        # paneelsjabloon uit aflezen in plaats van het opnieuw af te leiden.
+        # get_context_data runs before get_template_names, which reads the panel
+        # template from here instead of deriving it again.
         self._panel_data = context.get("panel_data")
         return context
 
 
 class AssignmentListView(PublicIdFacetsMixin, ListView):
-    """View for vacancy assignments displayed as cards with infinite scroll pagination"""
+    """Vacancy assignments as cards, with infinite scroll pagination."""
 
     model = Assignment
     template_name = "assignments.html"
@@ -1316,7 +1298,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
             if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
-                # Zie PlacementListView.get_template_names.
+                # See PlacementListView.get_template_names.
                 panel_data = getattr(self, "_panel_data", None)
                 if panel_data:
                     return [panel_data["panel_content_template"]]
@@ -1383,14 +1365,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         self.add_org_filter_context(context, active_filters)
         self.add_unknown_filter_chips(context, {"rol": Skill})
 
-        # Org counts: exclude the org filter, so the numbers reflect the other
+        # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
-        # base_qs is already limited to assignments with an unfilled open service
-        # (open_assignments semantics), so counting organizations over the
-        # filtered set matches _get_org_counts's open_assignments branch.
-        # Count per DISTINCT assignment (see skill counts above): projecting
-        # organizations__id off a .distinct() queryset yields SELECT DISTINCT org_id,
-        # collapsing every assignment on the same org into one row (undercount).
+        # Re-key on distinct assignment ids first: projecting organizations__id
+        # straight off a .distinct() queryset emits SELECT DISTINCT org_id, which
+        # collapses every assignment on the same org into one row (undercount).
         org_assignment_ids = self._apply_filters(base_qs, exclude_filter="org").values_list("id", flat=True).distinct()
         org_id_values = Assignment.objects.filter(id__in=org_assignment_ids).values_list("organizations__id", flat=True)
         org_counts = Counter(oid for oid in org_id_values if oid is not None)
@@ -1437,11 +1416,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         else:
             context["next_page_url"] = None
 
-        # Primary button for assignment creation (BDM permission). Opent de
-        # aanmaak-sheet als paneel op de lijst zelf via ?nieuwe-opdracht — net als
-        # een opdrachtkaart (?opdracht=). _build_panel_url houdt de actieve filters
-        # aan; hx-push-url zet de URL in de adresbalk zodat verversen de sheet
-        # heropent (zie side_panel.js init()).
+        # Opens the create sheet as a panel on the list itself via
+        # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
+        # in the address bar so a reload reopens the sheet (see side_panel.js).
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
                 "button_text": "Opdracht invoeren",
@@ -1458,10 +1435,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        # ?nieuwe-opdracht opent het lege aanmaakformulier als paneel op de lijst.
-        # Gaat vóór de object-lookups: dit paneel hangt niet aan een bestaand
-        # object. Zonder recht valt het weg (gewone lijst, geen paneel — geen 403,
-        # dit is de lijstview).
+        # ?nieuwe-opdracht opens the empty create form as a panel on the list.
+        # Checked before the object lookups: this panel has no object. Without the
+        # permission it falls away silently — this is the list view, not a 403.
         if self.request.GET.get("nieuwe-opdracht") is not None and self.request.user.has_perm("core.add_assignment"):
             from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
                 assignment_create_specs,
@@ -1469,7 +1445,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
             specs = assignment_create_specs()
             form_cls, initial = build_combined_form_class(specs)
-            # Voorvullen: de aanmaker is doorgaans zelf de BM.
+            # Prefill: the creator is usually the BM themselves.
             if getattr(self.request.user, "colleague", None):
                 initial["owner"] = self.request.user.colleague
             context["panel_data"] = _build_assignment_create_panel_data(self.request, form_cls(initial=initial))
@@ -1486,13 +1462,13 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             if assignment is not None:
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
 
-        # Zie PlacementListView.get_context_data: get_template_names leest dit.
+        # See PlacementListView.get_context_data: get_template_names reads this.
         self._panel_data = context.get("panel_data")
         return context
 
 
 class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
-    """View for user list with filtering and infinite scroll pagination"""
+    """User list with filtering and infinite scroll pagination."""
 
     model = User
     template_name = "user_admin.html"
@@ -1528,15 +1504,15 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
     @cached_property
     def role_filter_ids(self) -> list[int]:
-        """The group the filter names, empty when it names none: like every other facet it fails closed."""
+        """The group the filter names, empty when it names none; fails closed like every facet."""
         if not self.role_filter.isdigit():
             return []
         return list(Group.objects.filter(id=self.role_filter).values_list("id", flat=True))
 
     def _apply_filters(self, qs, *, exclude_filter=None):
-        """Apply all selection filters, optionally excluding one filter type.
+        """Applies all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", "merk", or a category_id (int) for labels.
+        ``exclude_filter`` is "rol", "merk", or a category_id (int) for labels.
         """
         # Label filter: OR within category, AND between categories
         for cat_id, cat_label_ids in self.labels_by_category.items():
@@ -1548,33 +1524,31 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         if exclude_filter != "merk" and merk.requested:
             qs = qs.filter(colleague__suborganization_id__in=merk.ids)
 
-        # Rol-filter: integer Group-id (Group heeft geen public_id), multi-select.
+        # Rol filter: an integer Group id, since Group has no public_id.
         if exclude_filter != "rol" and self.role_filter:
             qs = qs.filter(groups__id__in=self.role_filter_ids)
 
         return qs
 
     def get_queryset(self):
-        """Apply filters to users queryset - exclude superusers"""
+        """Applies the filters to the users queryset."""
         if self.labels_match_nothing:
             return User.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
     def get_template_names(self):
-        """Return appropriate template based on request type"""
+        """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
-            # "Meer…"-sheet van één filtergroep (gedeeld met de lijsten).
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
-            # Paginering: alleen de extra rijen.
             if self.request.GET.get("pagina"):
                 return ["parts/user_table_rows.html"]
-            # Filterwijziging: vervang de resultatenlijst (sheet swapt OOB mee).
+            # Filter change: replace the result list (the sheet swaps OOB).
             return ["parts/user_results.html"]
         return ["user_admin.html"]
 
     def get_context_data(self, **kwargs):
-        """Add dynamic filter options"""
+        """Adds the dynamic filter options."""
         context = super().get_context_data(**kwargs)
 
         context["search_field"] = "zoek"
@@ -1595,15 +1569,14 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         if self.role_filter:
             # A list, not the bare string: the chips iterate every active_filters
-            # value, and iterating a string would walk it character by character —
-            # which silently matches nothing once a Group pk hits two digits.
+            # value, and a string would be walked character by character — which
+            # silently matches nothing once a Group pk hits two digits.
             active_filters["rol"] = [self.role_filter]
 
-        # Chips render in user_results.html, same as the other list pages: the
-        # filter panel lives in a sheet here, so without them nothing outside
-        # that sheet says WHAT is filtered — the badge only counts.
+        # Chips render in user_results.html: the filter panel is a sheet here, so
+        # nothing outside it would otherwise say WHAT is filtered.
 
-        # For each label category, count on queryset excluding that category's filter
+        # For each label category, count on a queryset excluding that category's filter.
         base_qs = self._get_base_queryset()
 
         label_filter_groups = []
@@ -1665,7 +1638,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             "selected_values": suborganization_selected_values,
         }
 
-        # Rol-groep (multi; counts sluiten het rol-filter zelf uit, zoals merk).
+        # Rol group; counts exclude the rol filter itself, like merk.
         role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
         role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
         role_id_values = role_user_qs.values_list("groups__id", flat=True)
@@ -1675,7 +1648,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         role_selected_values = []
         for group in Group.objects.all().order_by("name"):
             role_options.append({"value": str(group.id), "label": group.name, "count": role_counts.get(group.id, 0)})
-            # ?rol= is één Group-id (single-select), dus vergelijk exact.
+            # ?rol= holds a single Group id, so compare exactly.
             if str(group.id) == self.role_filter:
                 role_options[-1]["selected"] = True
                 role_selected_values.append(str(group.id))
@@ -1689,7 +1662,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         }
 
         context["active_filters"] = active_filters
-        # Doel-URL voor het filterform en de "Meer…"-sheet (zie filter_sidebar).
+        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
         context["filter_target_url"] = reverse("admin-users")
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
@@ -1698,9 +1671,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             *label_filter_groups,
             suborganization_filter_group,
         ]
-        # top_options + has_more per select-multi groep, zodat de filtersheet
-        # per groep de top-3 toont met een "Meer..."-toggle (zoals de andere
-        # lijsten). Rol (select) wordt overgeslagen; die heeft maar 3 opties.
+        # Adds top_options + has_more per select-multi group, so the filter sheet
+        # shows a top-3 with a "Meer..." toggle like the other lists.
         _finalize_filter_groups(context["filter_groups"])
 
         context["primary_button"] = {
@@ -1725,14 +1697,13 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
 @permission_required("rijksauth.add_user", raise_exception=True)
 def user_create(request):
-    """Handle user creation - GET returns form modal, POST processes creation"""
+    """Creates a user: GET returns the form modal, POST processes the creation."""
 
     form_post_url = reverse("user-create")
     modal_title = "Nieuwe gebruiker"
     element_id = "userFormModal"
 
     if request.method == "GET":
-        # Return modal HTML with empty UserForm
         form = UserForm()
         form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
@@ -1760,14 +1731,13 @@ def user_create(request):
                 suborganization=form.cleaned_data.get("suborganization"),
                 request=request,
             )
-            # For HTMX requests, use HX-Redirect header to force full page redirect
-            # For standard form posts, use normal redirect
+            # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
                 response["HX-Redirect"] = reverse("admin-users")
                 return response
             return redirect(reverse("admin-users"))
-        # Re-render form with errors (stays in modal with HTMX)
+        # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
             "parts/user_form_modal.html",
@@ -1785,14 +1755,13 @@ def user_create(request):
 
 @permission_required("rijksauth.change_user", raise_exception=True)
 def user_edit(request, public_id):
-    """Handle user editing - GET returns form modal with user data, POST processes update"""
+    """Edits a user: GET returns the populated form modal, POST processes the update."""
     edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
     form_post_url = reverse("user-edit", args=[edited_user.public_id])
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
     if request.method == "GET":
-        # Return modal HTML with UserForm populated with user data
         form = UserForm(instance=edited_user)
         return render(
             request,
@@ -1820,14 +1789,13 @@ def user_edit(request, public_id):
                 suborganization=form.cleaned_data.get("suborganization"),
                 request=request,
             )
-            # For HTMX requests, use HX-Redirect header to force full page redirect
-            # For standard form posts, use normal redirect
+            # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
                 response["HX-Redirect"] = reverse("admin-users")
                 return response
             return redirect(reverse("admin-users"))
-        # Re-render form with errors (stays in modal with HTMX)
+        # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
             "parts/user_form_modal.html",
@@ -1845,11 +1813,10 @@ def user_edit(request, public_id):
 
 @permission_required("rijksauth.delete_user", raise_exception=True)
 def user_delete(request, public_id):
-    """Handle user deletion"""
+    """Deletes a user, after the confirmation modal."""
     user = get_object_or_404(User, public_id=public_id, is_superuser=False)
 
     if request.method == "GET":
-        # Show delete confirmation modal
         return render(
             request,
             "parts/confirm_delete_modal.html",
@@ -1907,14 +1874,7 @@ def _csv_too_large(csv_file) -> bool:
 
 @permission_required("rijksauth.add_user", raise_exception=True)
 def user_import_csv(request):
-    """
-    Import users from a CSV file.
-
-    GET: Display the import main form
-    POST: Process the uploaded CSV file and create users
-
-    For expected CSV format, see create_users_from_csv function
-    """
+    """Imports users from a CSV file; see ``create_users_from_csv`` for the format."""
     if request.method == "GET":
         return render(request, "user_import.html")
     if request.method == "POST":
@@ -1952,7 +1912,6 @@ def user_import_csv(request):
 
         result = create_users_from_csv(request.user, csv_content, request=request)
 
-        # Return results in the form
         return render(request, "user_import.html", {"result": result})
     return HttpResponse(status=405)
 
@@ -1967,15 +1926,8 @@ def user_import_csv(request):
     raise_exception=True,
 )
 def assignment_import_csv(request):
-    """
-    Import assignments from a CSV file.
-
-    GET: Display the import form
-    POST: Process the uploaded CSV file and create assignments
-          (with related services, placements, colleagues, and skills)
-
-    For expected CSV format, see create_assignment_from_csv function
-    """
+    """Imports assignments from a CSV file, with their services, placements,
+    colleagues and skills; see ``create_assignments_from_csv`` for the format."""
     if request.method == "GET":
         return render(request, "assignment_import.html")
     if request.method == "POST":
@@ -2013,7 +1965,6 @@ def assignment_import_csv(request):
 
         result = create_assignments_from_csv(request.user, csv_content, request=request)
 
-        # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
 
@@ -2025,7 +1976,6 @@ def organization_admin(request):
         raise Http404
     rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
 
-    # Index all units as lightweight dicts
     today = timezone.now().date()
     units_by_id: dict[int, dict] = {}
     for row in rows:
@@ -2033,7 +1983,6 @@ def organization_admin(request):
         row["tree_children"] = []
         units_by_id[row["id"]] = row
 
-    # Build tree
     roots: list[dict] = []
     for unit in units_by_id.values():
         parent_id = unit["parent_id"]
@@ -2042,7 +1991,6 @@ def organization_admin(request):
         else:
             roots.append(unit)
 
-    # Sort children at every level
     def sort_key(u):
         return u["label"] or u["name"]
 
@@ -2050,7 +1998,7 @@ def organization_admin(request):
         unit["tree_children"].sort(key=sort_key)
     roots.sort(key=sort_key)
 
-    # Get organization types for root nodes only (via M2M through table)
+    # Organization types for the root nodes only, via the M2M through table.
     root_ids = {u["id"] for u in roots}
     type_links = (
         OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
@@ -2061,7 +2009,6 @@ def organization_admin(request):
     for unit_id, type_label in type_links:
         root_types.setdefault(unit_id, []).append(type_label)
 
-    # Group roots by organization type
     grouped: dict[str, list[dict]] = {}
     ungrouped: list[dict] = []
     for unit in roots:
@@ -2072,7 +2019,6 @@ def organization_admin(request):
         else:
             ungrouped.append(unit)
 
-    # Sort groups alphabetically, put ungrouped last
     type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
     if ungrouped:
         type_groups.append(("Overig", ungrouped))
@@ -2082,7 +2028,7 @@ def organization_admin(request):
 
 @permission_required("core.view_labelcategory", raise_exception=True)
 def label_admin(request):
-    """Main label admin pag"""
+    """Main label admin page."""
     categories = annotate_usage_counts(LabelCategory.objects.all())
     return render(request, "label_admin.html", {"categories": categories})
 
@@ -2090,12 +2036,11 @@ def label_admin(request):
 @login_required
 @require_POST
 def user_theme(request):
-    """Store the display preference of the logged-in user.
+    """Stores the display preference of the logged-in user.
 
-    The choice lives on the user's Colleague rather than in the browser, so it
-    travels to every device and base.html can render it server-side as
-    data-scheme: the screen is correct on first paint, without a flash while
-    loading.
+    The choice lives on the Colleague, not in the browser, so it travels to every
+    device and base.html can render it server-side as data-scheme — correct on
+    first paint, without a flash.
     """
     theme = request.POST.get("theme", "")
     if theme not in Colleague.Theme.values:
@@ -2108,11 +2053,10 @@ def user_theme(request):
 
 @login_required
 def profile_name_edit(request):
-    """Voor- en achternaam van de ingelogde gebruiker, in één sheet.
+    """First and last name of the logged-in user, in one sheet.
 
-    Alleen het eigen profiel: de pagina toont ``request.user``, dus er is niets
-    te kiezen. Opslaan loopt via de Editable-save van elk veld, zodat de naam op
-    de gekoppelde Colleague meebeweegt zoals bij de inline-edit.
+    Saving goes through each field's Editable save, so the name on the linked
+    Colleague follows along exactly as it does for inline edit.
     """
     from wies.core.editables.user import UserEditables  # noqa: PLC0415 — mirrors the other editable imports here
 
@@ -2145,9 +2089,8 @@ def profile_name_edit(request):
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
 
-    Onboarding asks the same question with the same token fields, but there
-    each field saves itself when the step is left. Here the three land
-    together under one "Opslaan", which is what a sheet promises.
+    Onboarding asks the same question with the same fields, but saves each one
+    when its step is left; here they land together under one "Opslaan".
     """
     colleague = getattr(request.user, "colleague", None)
     if colleague is None:
@@ -2180,18 +2123,13 @@ def profile_labels_edit(request):
 
 @permission_required("core.change_labelcategory", raise_exception=True)
 def label_category_manage(request):
-    """Alle categorieën in één sheet: hernoemen, kleur kiezen, rijen toevoegen.
+    """All categories in one sheet: rename, pick a colour, add rows.
 
-    Rij bijmaken (``extra_row``) en een nog niet opgeslagen rij weghalen
-    (``delete_new_row_index``) posten de huidige toestand terug en renderen
-    alleen de body opnieuw — zonder te valideren, zodat de al ingetypte waarden
-    blijven staan en "naam is verplicht" niet op lege rijen flitst. Weghalen
-    loopt via de server (niet puur in de browser): een gat in de indexen zou de
-    her-render bij een volgende toevoeging als lege rij terugbrengen, dus de
-    helper hernummert de nieuwe rijen aaneengesloten. Een gewone submit valideert
-    en bewaart.
-
-    Een bestaande categorie verwijderen loopt apart via ``label-category-delete``.
+    Adding a row (``extra_row``) and dropping an unsaved one
+    (``delete_new_row_index``) post the current state back and re-render only the
+    body without validating, so typed values survive and "naam is verplicht" does
+    not flash on empty rows. Deleting an existing category goes through
+    ``label-category-delete``.
     """
     queryset = LabelCategory.objects.all()
     prefix = LabelCategoryFormSet().prefix
@@ -2207,12 +2145,12 @@ def label_category_manage(request):
             else:
                 data = _drop_new_category_row(data, prefix, data.get("delete_new_row_index"))
             formset = LabelCategoryFormSet(data, queryset=queryset)
-            # Niet valideren bij een rij-mutatie: je bent nog aan het invullen.
+            # Don't validate on a row mutation: the user is still typing. Setting
+            # an empty error dict suppresses the lazy full_clean.
             for form in formset.forms:
-                # Een lege errordict zetten onderdrukt de lazy full_clean die
                 form._errors = ErrorDict(renderer=form.renderer)
             if "extra_row" in request.POST and formset.forms:
-                # Focus de zojuist toegevoegde (laatste) rij, zoals de oude JS deed.
+                # Focus the row that was just added, as the old JS did.
                 formset.forms[-1].fields["name"].widget.attrs["autofocus"] = True
             return _render_category_manage_body(request, formset)
 
@@ -2229,21 +2167,19 @@ def label_category_manage(request):
     if formset.forms:
         formset.forms[0].fields["name"].widget.attrs["autofocus"] = True
 
-    # Een fout ververst alleen de inhoud: de sheet staat al open, en de hele
-    # sheet opnieuw sturen zou er een tweede overheen zetten.
+    # On error only the body is refreshed: the sheet is already open, and
+    # re-sending the whole sheet would stack a second one on top.
     template = "parts/label_category_manage_body.html" if invalid_post else "parts/label_category_manage_sheet.html"
     return _render_category_manage_body(request, formset, template=template)
 
 
 def _drop_new_category_row(data, prefix, drop_index):
-    """Haal één nog niet opgeslagen rij uit de geposte formset-data.
+    """Drops one not-yet-saved row from the posted formset data.
 
-    Een gat in de indexen zou als lege rij terugkomen zodra de body opnieuw
-    rendert (bijvoorbeeld bij een volgende "rij toevoegen"), dus we hernummeren
-    de nieuwe rijen aaneengesloten. Bestaande (opgeslagen) rijen houden hun
-    index: een modelformset koppelt de eerste INITIAL_FORMS formulieren op
-    volgorde aan de queryset, dus een bestaande rij naar een ander slot schuiven
-    zou hem als nieuw object opslaan.
+    New rows are renumbered contiguously: a gap in the indexes would come back as
+    an empty row on the next re-render. Saved rows keep their index — a
+    modelformset binds the first INITIAL_FORMS forms to the queryset in order, so
+    moving one to another slot would save it as a new object.
     """
     try:
         drop = int(drop_index)
@@ -2253,12 +2189,12 @@ def _drop_new_category_row(data, prefix, drop_index):
     initial = int(data.get(f"{prefix}-INITIAL_FORMS", 0) or 0)
     total = int(data.get(f"{prefix}-TOTAL_FORMS", 0) or 0)
     if drop < initial:
-        # Alleen nieuwe rijen zijn zo weg te halen; negeer een rare index.
+        # Only new rows can be dropped this way; ignore a bogus index.
         return data
 
     result = data.copy()
-    # Verzamel de veldwaarden per index, laat de te verwijderen index vallen en
-    # hernummer de nieuwe rijen aaneengesloten vanaf INITIAL_FORMS.
+    # Collect the field values per index, drop the removed one, then renumber the
+    # new rows contiguously from INITIAL_FORMS.
     new_rows = []
     for i in range(initial, total):
         if i == drop:
@@ -2288,7 +2224,7 @@ def _render_category_manage_body(request, formset, template="parts/label_categor
 
 @permission_required("core.change_label", raise_exception=True)
 def label_form(request, public_id=None):
-    """Eén sheet voor toevoegen én bewerken van een label (categorie + naam)."""
+    """One sheet for both adding and editing a label (category + name)."""
     label = get_object_or_404(Label, public_id=public_id) if public_id else None
     is_edit = label is not None
 
@@ -2306,8 +2242,8 @@ def label_form(request, public_id=None):
 
     form.fields["name"].widget.attrs["autofocus"] = True
 
-    # Een fout ververst alleen de inhoud: de sheet staat al open, en de hele
-    # sheet opnieuw sturen zou er een tweede overheen zetten.
+    # On error only the body is refreshed: the sheet is already open, and
+    # re-sending the whole sheet would stack a second one on top.
     template = "parts/label_form_body.html" if invalid_post else "parts/label_form_sheet.html"
 
     return render(
@@ -2340,13 +2276,11 @@ def _category_delete_warning(category):
 
 @permission_required("core.delete_labelcategory", raise_exception=True)
 def label_category_delete(request, public_id):
-    """
-    To be used with htmx
-    """
+    """Deletes a label category, after the confirmation dialog. For use with htmx."""
     category = get_object_or_404(LabelCategory, public_id=public_id)
     if request.method == "GET":
-        # Een dialoog, geen sheet: de vraag komt uit de beheersheet en die moet
-        # zichtbaar blijven staan achter de bevestiging.
+        # A dialog, not a sheet: the question comes from the manage sheet, which
+        # has to stay visible behind the confirmation.
         return render(
             request,
             "parts/confirm_delete_modal.html",
@@ -2359,8 +2293,8 @@ def label_category_delete(request, public_id):
             },
         )
     if request.method == "POST":
-        category_name = category.name  # Store name before deleting
-        # De labels gaan mee met de categorie (cascade).
+        category_name = category.name  # Read before delete() clears the instance.
+        # The labels cascade away with the category.
         category.delete()
         messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
@@ -2371,17 +2305,14 @@ def label_category_delete(request, public_id):
 
 @permission_required("core.delete_label", raise_exception=True)
 def label_delete(request, public_id):
-    """
-    To be used with htmx
-    """
+    """Deletes a label, after the confirmation dialog. For use with htmx."""
 
     label = get_object_or_404(Label, public_id=public_id)
 
     label_use_count = label.colleagues.count()
 
     if request.method == "GET":
-        # Een gecentreerde bevestigingsdialoog (geen zijsheet), gelijk aan de
-        # categorie-verwijderdialoog en de rest van Wies.
+        # A centred confirmation dialog, not a side sheet, like the rest of Wies.
         return render(
             request,
             "parts/confirm_delete_modal.html",
@@ -2413,11 +2344,11 @@ def suborganization_admin(request):
 
 @permission_required("core.add_suborganization", raise_exception=True)
 def suborganization_create(request):
-    """Create a suborganization via the sheet (htmx).
+    """Creates a suborganization via the sheet (htmx).
 
-    GET opens the sheet; a valid POST saves and re-renders the merk list while
-    closing the sheet; an invalid POST re-renders only the sheet body so the
-    open sheet keeps standing (mirrors the label form flow).
+    GET opens the sheet, a valid POST saves and re-renders the merk list while
+    closing it, an invalid POST re-renders only the body so the sheet keeps
+    standing.
     """
     form_post_url = reverse("suborganization-create")
     modal_title = "Merk toevoegen"
@@ -2435,9 +2366,8 @@ def suborganization_create(request):
             return response
     else:
         form = SuborganizationForm()
-        # Cursor meteen in het naamveld: de sheet is er om iets in te typen.
-        # Alleen op de GET; bij een validatiefout hoort de focus bij het veld met
-        # de fout te blijven in plaats van naar boven te springen.
+        # Focus the name field on GET only; after a validation error the focus
+        # belongs with the failing field instead of jumping back to the top.
         form.fields["name"].widget.attrs["autofocus"] = True
 
     return render(
@@ -2456,7 +2386,7 @@ def suborganization_create(request):
 
 @permission_required("core.change_suborganization", raise_exception=True)
 def suborganization_edit(request, public_id):
-    """Edit a suborganization. Returns a partial for use with htmx."""
+    """Edits a suborganization. Returns a partial for use with htmx."""
     suborganization = get_object_or_404(Suborganization, public_id=public_id)
     form_post_url = reverse("suborganization-edit", kwargs={"public_id": public_id})
     modal_title = f"Bewerk merk: {suborganization.name}"
@@ -2504,13 +2434,12 @@ def suborganization_edit(request, public_id):
 
 @permission_required("core.delete_suborganization", raise_exception=True)
 def suborganization_delete(request, public_id):
-    """Delete a suborganization. For use with htmx."""
+    """Deletes a suborganization. For use with htmx."""
     suborganization = get_object_or_404(Suborganization, public_id=public_id)
     suborganization_use_count = suborganization.colleagues.count()
 
     if request.method == "GET":
-        # Een gecentreerde bevestigingsdialoog (geen zijsheet), gelijk aan de
-        # categorie-verwijderdialoog en de rest van Wies.
+        # A centred confirmation dialog, not a side sheet, like the rest of Wies.
         return render(
             request,
             "parts/confirm_delete_modal.html",
@@ -2553,10 +2482,9 @@ HET_FIELD_LABELS = {"team", "merk", "thema", "budget", "onderwerp", "contract", 
 
 
 def _field_phrase(label: str) -> str:
-    """Turn a field label into something that reads as part of a sentence:
-    "Beschrijving" -> "de beschrijving", "Team" -> "het team". A label with an
-    inner capital is a name, not a common noun ("Business Manager", "E-mail
-    (ODI)"), so its casing is left alone."""
+    """Turns a field label into a sentence fragment: "Beschrijving" -> "de
+    beschrijving", "Team" -> "het team". A label with an inner capital is a name,
+    not a common noun ("Business Manager"), so its casing is left alone."""
     if not label or label == "een veld":
         return label or "een veld"
     noun = label[: -len("(s)")].strip() + "s" if label.endswith("(s)") else label
@@ -2570,12 +2498,12 @@ def _field_phrase(label: str) -> str:
 
 
 def _attach_audit_sentence(event) -> None:
-    """Phrase the event as one running sentence, commit-message style:
-    "Bart van de Biezen heeft AI Consultant (open) toegevoegd en Process
-    Analyst (Anke Jacobs) naar Process Analyst (open) gewijzigd." Long values
-    (textarea's, toelichtingen) stay out of the sentence; the template renders
-    them as Van/Naar blocks underneath. Requires _attach_audit_render_data to
-    have run first (render_kind, formatted_old/new, diff_entries)."""
+    """Phrases the event as one running sentence, commit-message style.
+
+    Long values (textareas) stay out of the sentence; the template renders them
+    as Van/Naar blocks underneath. Requires ``_attach_audit_render_data`` to have
+    run first, for render_kind, formatted_old/new and diff_entries.
+    """
     colleague = getattr(event.user, "colleague", None) if event.user else None
     event.author_name = colleague.name if colleague else ""
     author = event.author_name or "Onbekende gebruiker"
@@ -2619,11 +2547,11 @@ def _attach_audit_sentence(event) -> None:
 
 
 def _team_event_privacy_note(assignment, request, changes) -> str:
-    """De noot bij één teamregel op de tijdlijn, of "" als er niets te melden is.
+    """The note on one team row in the timeline, or "" when there is nothing to say.
 
-    Alleen voor wie de regel ziet terwijl een ander hem niet krijgt -- in de
-    praktijk de BM. Regels die zijn weggefilterd bestaan hier niet meer en
-    kunnen dus geen noot dragen; die dekt de noot boven de lijst.
+    Only for a viewer who sees the row while others do not — in practice the BM.
+    Rows that were filtered away no longer exist here, so they cannot carry a
+    note; the note above the list covers those.
     """
     from wies.core.editables.assignment import (  # noqa: PLC0415 — avoids import cycle
         team_changes_are_restricted,
@@ -2639,14 +2567,14 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
-    """Prepare `event` for the timeline. False means the viewer may see nothing
+    """Prepares ``event`` for the timeline. False means the viewer may see nothing
     of it and it must not be rendered at all."""
     event.render_kind = "text"
     event.diff_entries = None
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
-    # Delete events are kept for the audit trail but never rendered here — a
+    # Delete events are kept for the audit trail but never rendered here: a
     # deleted opdracht has no panel to open.
     if event.action != "update":
         return True
@@ -2676,11 +2604,9 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # Wie hier méér ziet dan een buitenstaander (de BM krijgt de
-            # ongefilterde lijst) hoort te weten dat deze regel voor anderen
-            # niet zichtbaar is. Alleen op teamregels: andere velden zijn voor
-            # iedereen gelijk. Regels die wél zijn weggefilterd bestaan niet meer
-            # en kunnen dus geen chip dragen -- die dekt de noot boven de lijst.
+            # A viewer who sees more than an outsider (the BM gets the unfiltered
+            # list) should know this row is hidden from others. Team rows only:
+            # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)
             changes = visible
         if spec.render_change is not None:
@@ -2698,9 +2624,8 @@ def _attach_audit_render_data(event, obj, request) -> bool:
 
     from django import forms  # noqa: PLC0415
 
-    # Een textarea krijgt het Van/Naar-blok, behalve als hij maar één regel hoog
-    # is: dat is een gewoon tekstveld dat alleen mag doorlopen (de opdrachtnaam),
-    # en dan leest de zin "van X naar Y" prettiger dan twee blokken.
+    # A textarea gets the Van/Naar block, unless it is one row high: that is a
+    # plain text field allowed to wrap, and "van X naar Y" reads better there.
     widget = getattr(spec, "widget", None)
     is_textarea = isinstance(widget, forms.Textarea) or (
         isinstance(widget, type) and issubclass(widget, forms.Textarea)
@@ -2714,9 +2639,8 @@ def _attach_audit_render_data(event, obj, request) -> bool:
         event.formatted_old = formatter(event.context.get("old_value"))
         event.formatted_new = formatter(event.context.get("new_value"))
     except TypeError:
-        # Legacy events can have a stored shape the current render_change no
-        # longer accepts. Fall through to the raw context values set at the
-        # top of this function so the timeline row still renders.
+        # A legacy event can hold a shape the current render_change no longer
+        # accepts; fall back to the raw context values so the row still renders.
         logger.warning(
             "Audit render_change failed for Event id=%s field=%s; falling back to raw context",
             event.id,
@@ -2753,8 +2677,8 @@ def assignment_delete(request, public_id):
         assignment_pk = assignment.id
         # Snapshot related rows before they cascade away.
         context = _assignment_audit_snapshot(assignment)
-        # Atomic so a failed audit insert rolls back the delete — losing
-        # the opdracht without a trace would be the worst outcome.
+        # Atomic so a failed audit insert rolls back the delete: losing the
+        # opdracht without a trace would be the worst outcome.
         with transaction.atomic():
             assignment.delete()
             create_event(
@@ -2776,9 +2700,9 @@ def assignment_delete(request, public_id):
 def _page_url_behind_panel(request) -> str:
     """The page the side panel was opened over, with the panel params dropped.
 
-    The opdracht side panel is an overlay (``?opdracht=`` / ``?plaatsing=``)
-    on a real page, so after deleting we return there instead of jumping to
-    the opdrachten-lijst. Falls back to the list when the header is absent.
+    The panel is an overlay on a real page, so after deleting we return there
+    instead of jumping to the assignment list. Falls back to that list when the
+    HX-Current-URL header is absent.
     """
     current = request.headers.get("HX-Current-URL")
     if not current:
@@ -2790,9 +2714,8 @@ def _page_url_behind_panel(request) -> str:
 
 def _assignment_audit_snapshot(assignment) -> dict:
     """Snapshot for the create/delete audit event: every rol with who fills it
-    (``"Java (Robbert)"``) or ``"open"`` when unfilled, plus the opdrachtgevers
-    and the name. One entry per rol, so placements aren't duplicated. Empty
-    lists are left out of the audit."""
+    (``"Java (Robbert)"``) or ``"open"``, plus the opdrachtgevers and the name.
+    One entry per rol, so placements aren't duplicated."""
     services = []
     for s in assignment.services.select_related("skill").prefetch_related("placements__colleague"):
         rol = s.skill.name if s.skill_id else s.description
@@ -2835,7 +2758,6 @@ def user_profile(request):
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
-    # Build label data per category for the data list rows
     label_categories = []
     for category in LabelCategory.objects.order_by("name"):
         selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
@@ -2857,11 +2779,10 @@ def user_profile(request):
 
 @require_POST
 def onboarding_complete(request):
-    """Mark the first-login onboarding wizard as done (completed or skipped).
+    """Marks the first-login onboarding wizard as done (completed or skipped).
 
-    Sets ``onboarding_completed_at`` so the wizard no longer appears. For an
-    HTMX request, returns a 204 with a ``closeOnboarding`` trigger so the
-    dialog closes in place; otherwise redirects home.
+    An HTMX request gets a 204 with a ``closeOnboarding`` trigger so the dialog
+    closes in place; otherwise it redirects home.
     """
     user = request.user
     if user.onboarding_completed_at is None:
@@ -2875,13 +2796,13 @@ def onboarding_complete(request):
     return redirect("home")
 
 
-# Het onboarding-bewerkscherm bouwt één formulier over de opdracht plus je eigen
-# rol(len) uit dezelfde specs als inline edit, zodat save- en auditgedrag identiek
-# blijft.
+# The onboarding edit screen builds one form over the assignment plus your own
+# role(s) from the same specs as inline edit, so save and audit behaviour stay
+# identical.
 
 
 def _onboarding_entry(request, public_id):
-    """De onboarding-entry voor deze opdracht, of None als je er niet op staat."""
+    """The onboarding entry for this assignment, or None when you are not on it."""
     from wies.core.context_processors import _onboarding_assignments  # noqa: PLC0415 — avoids import cycle
 
     colleague = getattr(request.user, "colleague", None)
@@ -2892,11 +2813,11 @@ def _onboarding_entry(request, public_id):
 
 
 def _onboarding_edit_groups(request, entry, data=None):
-    """Formuliergroepen voor het bewerkscherm: de opdracht en elke eigen rol.
+    """Form groups for the edit screen: the assignment and each of your own roles.
 
-    Elke groep krijgt een prefix, zodat de rolvelden van meerdere diensten niet
-    op dezelfde namen botsen. De Business Manager zit er bewust niet bij: die is
-    hier het aanspreekpunt, niet iets wat je zelf zet.
+    Every group gets a prefix so the role fields of multiple services don't
+    collide on the same names. The Business Manager is deliberately left out:
+    here they are the contact person, not something you set yourself.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
@@ -2913,7 +2834,7 @@ def _onboarding_edit_groups(request, entry, data=None):
         form_cls, initial = build_combined_form_class(assignment_specs)
         groups.append(
             {
-                # Geen kopje: de titel van het scherm noemt de opdracht al.
+                # No heading: the screen title already names the assignment.
                 "title": None,
                 "specs": assignment_specs,
                 "form": form_cls(data, initial=initial, prefix="opdracht"),
@@ -2932,8 +2853,8 @@ def _onboarding_edit_groups(request, entry, data=None):
         form_cls, initial = build_combined_form_class(service_specs)
         groups.append(
             {
-                # Alleen een kopje als er meer dan één rol is; anders spreken de
-                # veldlabels (Rol, Omschrijving rol) voor zich.
+                # A heading only when there is more than one role; otherwise the
+                # field labels speak for themselves.
                 "title": None if len(services) == 1 else f"Rol: {service.skill.name if service.skill else 'onbekend'}",
                 "specs": service_specs,
                 "form": form_cls(data, initial=initial, prefix=f"rol-{service.id}"),
@@ -2944,7 +2865,7 @@ def _onboarding_edit_groups(request, entry, data=None):
 
 
 def onboarding_assignment_edit(request, public_id):
-    """Bewerkscherm voor één opdracht binnen de onboardingwizard."""
+    """Edit screen for one assignment inside the onboarding wizard."""
     entry = _onboarding_entry(request, public_id)
     if entry is None:
         raise Http404("Unknown assignment")
@@ -2957,8 +2878,8 @@ def onboarding_assignment_edit(request, public_id):
         with transaction.atomic():
             for group in groups:
                 save_edit_specs(request, group["specs"], group["form"].cleaned_data)
-        # De bijgewerkte box vervangt de oude in de stap; het bewerkscherm sluit
-        # zichzelf op de trigger (zie onboarding.js).
+        # The updated box replaces the old one in the step; the edit screen closes
+        # itself on the trigger (see onboarding.js).
         entry = _onboarding_entry(request, public_id)
         response = render(request, "parts/onboarding/onboarding_assignment_box.html", {"entry": entry})
         response["HX-Retarget"] = f"#onboarding-assignment-{public_id}"
@@ -3010,9 +2931,7 @@ def error_500(request):
 
 @login_not_required
 def robots_txt(request):
-    """
-    Serve robots.txt to block crawlers and AI scrapers.
-    """
+    """Serves robots.txt, blocking crawlers and AI scrapers."""
     content = """# Disallow all crawlers
 User-agent: *
 Disallow: /
@@ -3061,7 +2980,7 @@ Disallow: /
 
 
 def search_suggestions(request):
-    """Return org abbreviation suggestions for the search input (HTMX partial)."""
+    """Returns org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
     return render(
@@ -3072,11 +2991,11 @@ def search_suggestions(request):
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
-    """Return per-org self-counts based on count_mode.
+    """Returns the per-org self-counts for ``count_mode``.
 
     ``viewer`` (the viewing Colleague or None) gates the placements count through
-    ``filter_visible_placements`` so a planned/ended placement never inflates the
-    count shown to someone who may not see it, the same rule the list already applies.
+    ``filter_visible_placements``, so a planned or ended placement never inflates
+    the count for someone who may not see it.
     """
     if count_mode == "none":
         return Counter()
@@ -3103,15 +3022,13 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Cou
 
 
 def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
-    """Per-org counts that honour the list's OTHER active filters (rol/labels/
-    merk/loopt_af/zoek), so the modal tree matches the sidebar.
+    """Per-org counts honouring the list's OTHER active filters, so the modal
+    tree matches the sidebar.
 
-    Reuses the list view's own ``_apply_filters`` (excluding the org filter, the
-    same cross-filter rule the sidebar groups use) rather than re-implementing the
-    predicates here — a second copy would drift. ``_apply_filters`` and
-    ``_get_base_queryset`` depend only on ``self.request``, so a bare view
-    instance with the request attached is enough; base_qs already carries
-    visibility gating (placements) or the open-service constraint (assignments).
+    Reuses the list view's own ``_apply_filters`` rather than re-implementing the
+    predicates, which would drift. Both it and ``_get_base_queryset`` depend only
+    on ``self.request``, so a bare view instance with the request attached is
+    enough.
     """
     view_cls = AssignmentListView if count_mode == "open_assignments" else PlacementListView
     view = view_cls()
@@ -3119,10 +3036,9 @@ def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[in
     filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
 
     if count_mode == "open_assignments":
-        # Re-key on distinct assignment ids before projecting organizations__id:
-        # projecting straight off the .distinct() queryset emits SELECT DISTINCT
-        # org_id, collapsing every assignment on one org into a single row (undercount).
-        # Mirrors the sidebar org count and the placements branch below.
+        # Re-key on distinct assignment ids first: projecting organizations__id
+        # straight off the .distinct() queryset emits SELECT DISTINCT org_id,
+        # collapsing every assignment on one org into a single row (undercount).
         assignment_qs = Assignment.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
         if excluded_org_ids:
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
@@ -3146,25 +3062,19 @@ def _get_top_org_options(
     org_counts: Counter[int] | None = None,
     limit: int = 3,
 ) -> list[dict]:
-    """Return opdrachtgever quick checkbox options in a stable count/label order.
+    """Returns the opdrachtgever quick checkbox options, ordered by count then label.
 
-    Each option carries its own ``param`` (``org``, ``org_self`` or
-    ``org_type``) so the sidebar quick row stays in sync with whatever was
-    picked in the modal — including a "direct onder…" self-node (``org_self``)
-    or an org-type group (``org_type``). The ``org`` group also pads up to
-    ``limit`` with the highest-count unselected orgs; self/type only appear
-    when actually selected (they have no top-N baseline).
+    Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
+    so the sidebar quick row stays in sync with whatever was picked in the modal.
+    The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
+    self/type only appear when selected, having no top-N baseline.
 
-    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
-    like rol/labels, excluding the org filter) so the numbers reflect the other
-    active filters. When omitted, falls back to the global ``_get_org_counts``
-    baseline (used by the modal, which has no other filter context).
+    ``org_counts`` lets the caller pass filter-aware counts; when omitted this
+    falls back to the global ``_get_org_counts`` baseline, used by the modal.
 
-    A selected option is ALWAYS shown inline as a checked checkbox, even when it
-    isn't among the top-N by count (e.g. picked via the modal). The order does
-    NOT depend on selection: rows are sorted by count then label, so ticking an
-    option never makes it jump to the top — that reordering felt jarring. A pick
-    outside the top-N is appended (the list grows), it does not reshuffle.
+    A selected option is always shown, appended below the top-N when it does not
+    make the cut. The order never depends on selection — ticking an option
+    jumping to the top felt jarring.
     """
     selected_self_ids = selected_self_ids or set()
     selected_type_labels = selected_type_labels or set()
@@ -3174,11 +3084,8 @@ def _get_top_org_options(
     selected_ids = set(selected_org_ids)
     self_ids = set(selected_self_ids)
 
-    # De top-N is vast: de ``limit`` populairste orgs op (initiële) count,
-    # ongeacht de selectie. Een aanvinken verdringt dus geen zichtbare optie en
-    # laat de lijst niet van inhoud wisselen. Een selectie die buiten die top-N
-    # valt komt er onderaan bij (de lijst wordt langer) i.p.v. een top-optie te
-    # vervangen. Zo verspringt of verdwijnt er niets bij het aanvinken.
+    # The top-N is fixed on count regardless of selection, so ticking an option
+    # never displaces a visible one.
     top_n = [oid for oid, _ in org_counts.most_common(limit)]
     org_wanted = selected_ids | set(top_n)
 
@@ -3225,24 +3132,18 @@ def _get_top_org_options(
         for type_label in selected_type_labels
     )
 
-    # Stabiele volgorde op count dan label — bewust NIET op ``selected``, zodat
-    # een zojuist aangevinkte optie niet naar boven springt (dat voelde
-    # verwarrend). Een geselecteerde optie buiten de top-N is al toegevoegd via
-    # ``org_wanted``; die komt hier gewoon op zijn count/label-positie te staan.
+    # Sorted on count then label, deliberately not on ``selected``: a just-ticked
+    # option jumping to the top read as confusing.
     options.sort(key=lambda o: (-o["count"], o["label"]))
     return options
 
 
 def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
-    """Post-process select-multi groups in place for the top-N + "Meer" modal.
+    """Post-processes the select-multi groups in place for the top-N + "Meer" modal.
 
-    For each ``select-multi`` group:
-      - assigns a unique ``group_id`` (the modal opens by this key),
-      - computes ``top_options``: the ``top_n`` options by count (selected ones
-        kept visible), shown inline in the sidebar,
-      - sets ``has_more`` when there are more options than fit inline.
-    The full ``options`` list (alphabetical) is kept for the modal. Mutates the
-    given groups in place; returns nothing.
+    Each group gets a unique ``group_id`` (the key the modal opens by),
+    ``top_options`` (the ``top_n`` options by count, selected ones kept visible)
+    and ``has_more``. The full alphabetical ``options`` list is kept for the modal.
     """
     label_seq = 0
     for group in filter_groups:
@@ -3258,12 +3159,9 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
         real_options = [o for o in group["options"] if o.get("value")]
         selected = set(group.get("selected_values", []))
         by_count = sorted(real_options, key=lambda o: (-o.get("count", 0), o.get("label", "")))
-        # De top-N is vast: de ``top_n`` populairste opties op count, ongeacht de
-        # selectie. Aanvinken verdringt dus geen zichtbare optie en de rijen
-        # verspringen niet. Een selectie die buiten die top-N valt komt er
-        # onderaan bij (de lijst wordt langer) i.p.v. een top-optie te vervangen.
-        # De volgorde is puur count/label — bewust niet "selected first". Zelfde
-        # regel als _get_top_org_options voor de opdrachtgevers.
+        # The top-N is fixed on count regardless of selection; a selected option
+        # outside it is appended rather than displacing one. Same rule as
+        # _get_top_org_options.
         top = list(by_count[:top_n])
         top_values = {o["value"] for o in top}
         top.extend(o for o in by_count if o["value"] in selected and o["value"] not in top_values)
@@ -3274,7 +3172,7 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
 def _build_org_hierarchy(
     org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool
 ) -> list[dict]:
-    """Build the grouped org tree hierarchy for the client modal."""
+    """Builds the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
             "id", "public_id", "parent_id", "name", "label", "abbreviations"
@@ -3384,7 +3282,7 @@ def _build_org_hierarchy(
 
 
 def _build_current_selections(request) -> dict[str, str]:
-    """Build current selections dict from request params for state restoration."""
+    """Builds the current selections from the request params, for state restoration."""
     current_selections: dict[str, str] = {}
 
     org_public_ids = request.GET.getlist("org")
@@ -3407,14 +3305,13 @@ def _build_current_selections(request) -> dict[str, str]:
 
 
 def client_modal(request):
-    """Return the client tree selection modal (HTMX partial)."""
+    """Returns the client tree selection modal (HTMX partial)."""
     excluded_org_ids = get_excluded_org_ids()
     count_mode = request.GET.get("count_mode", "placements")
 
-    # count_mode "none" is the assignment-form org picker (not a filter list): it
-    # has no other filters, so it keeps the plain (empty) baseline. The two filter
-    # modes count over the list's other active filters, so the tree matches the
-    # sidebar. The sidebar sends those filters along via hx-include.
+    # count_mode "none" is the assignment-form org picker, not a filter list, so
+    # it keeps the plain baseline. The filter modes count over the list's other
+    # active filters (sent along via hx-include) so the tree matches the sidebar.
     if count_mode == "none":
         viewer = getattr(request.user, "colleague", None)
         org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
@@ -3466,15 +3363,14 @@ CONFLICT_VALUE_MAX_LENGTH = 120
 
 
 def _readable_current_value(obj, spec) -> str | None:
-    """A short, human-readable form of a single field's current value, to name
-    the concurrent change in the conflict warning. A group or a collection has
-    no single value to show, so this returns None and the caller falls back to
-    the generic warning."""
+    """A short, human-readable form of a single field's current value, naming the
+    concurrent change in the conflict warning. A group or collection has no single
+    value, so this returns None and the caller uses the generic warning."""
     if not isinstance(spec, Editable):
         return None
     value = _current_value(obj, spec)
-    # The audit timeline already renders this field for a human (owner → the
-    # colleague's name, not "Colleague object (3)"), so reuse that chain.
+    # The audit timeline already renders this field for a human (the colleague's
+    # name, not "Colleague object (3)"), so reuse that chain.
     if spec.audit_state:
         value = spec.audit_state(value)
     if spec.render_change:
@@ -3493,15 +3389,14 @@ def _readable_current_value(obj, spec) -> str | None:
 
 
 def _concurrency_conflict_alert(editable_set, spec, obj) -> dict:
-    """The conflict warning, naming the field and the concurrent value where we
-    can show one, so the user does not have to press Annuleren, losing their
-    own input, just to find out what changed."""
+    """The conflict warning, naming the field and the concurrent value where one
+    can be shown, so the user need not press Annuleren — losing their own input —
+    just to find out what changed."""
     concurrent = _readable_current_value(obj, spec)
     if concurrent is None:
         return CONCURRENCY_CONFLICT_ALERT
-    # Bold the field label and the concurrent value so the change stands out.
-    # ``format_html`` escapes both (the value is user content) before marking
-    # the surrounding markup safe; the alert renders its message as HTML.
+    # The alert renders its message as HTML; ``format_html`` escapes both
+    # interpolations, the value being user content.
     return {
         "kind": "warning",
         "message": format_html(
@@ -3529,7 +3424,7 @@ def _edit_state(editable_set, spec, obj):
         if isinstance(value, list):
             # Rows carry their own shape (dicts for organizations, models for
             # M2M), so let audit_state flatten them where it exists rather than
-            # leaning on repr; order-independent either way.
+            # leaning on repr. Order-independent either way.
             value = e.audit_state(value) if e.audit_state else sorted(str(getattr(i, "pk", i)) for i in value)
         elif isinstance(value, Model):
             value = value.pk
@@ -3543,10 +3438,9 @@ def _hash_state(state) -> str:
 
 
 def _concurrency_token(editable_set, spec, obj) -> str:
-    """A short hash of the values this edit is based on, embedded in the edit
-    form and re-checked (under a row lock) at save time. If the underlying
-    values changed since the form was rendered, the tokens differ and the save
-    is rejected instead of silently overwriting the other change."""
+    """A short hash of the values this edit is based on, embedded in the form and
+    re-checked under a row lock at save time. Differing tokens mean the values
+    changed since rendering, and the save is rejected instead of overwriting."""
     return _hash_state(_edit_state(editable_set, spec, obj))
 
 
@@ -3557,17 +3451,10 @@ def _submitted_token(request) -> str:
 def _has_concurrency_conflict(request, editable_set, spec, obj, *, state=None) -> bool:
     """Whether this POST was built on a stale view of ``obj``.
 
-    Call inside the transaction that holds the row lock, so the state read here
-    is the state the save writes over.
-
-    A missing token counts as a conflict. Every form this endpoint renders
-    carries one (form.html and collection_form.html own the field), so its
-    absence means the POST was not built on a form we handed out and its
-    staleness cannot be established. Letting it through would silently disable
-    the check for whichever caller omitted the field.
-
-    ``state`` reuses a snapshot the caller already read, so the collection path
-    doesn't query the whole team twice while holding the lock.
+    Call inside the transaction holding the row lock, so the state read here is
+    the state the save writes over. A missing token counts as a conflict: every
+    form this endpoint renders carries one, so its absence means staleness cannot
+    be established. ``state`` reuses a snapshot the caller already read.
     """
     submitted = _submitted_token(request)
     if not submitted:
@@ -3589,11 +3476,10 @@ def _permission_denied(
     user,
     obj,
 ) -> dict | None:
-    """Return the denial alert when the user can't UPDATE this field; None when allowed.
+    """Returns the denial alert when the user can't UPDATE this field, None when allowed.
 
-    Permission lookup goes through the registry in
-    ``wies.core.permissions``. Field-level rules win over the
-    whole-object rule for the same model.
+    Lookup goes through the registry in ``wies.core.permissions``, where
+    field-level rules win over the whole-object rule for the same model.
     """
     if not has_permission(Verb.UPDATE, obj, user, spec):
         return PERMISSION_DENIED_ALERT
@@ -3604,12 +3490,9 @@ def _resolve_display(obj, spec, editables) -> dict:
     # Returns {"template": path} to include a partial or {"text": str} for plain rendering.
     if spec.display is None:
         if isinstance(spec, EditableCollection):
-            # Collections without an explicit display fall back to a
-            # newline-joined string of the initial row dicts — rarely
-            # useful, so collections are expected to declare display.
+            # Rarely useful, so a collection is expected to declare a display.
             return {"text": str(spec.initial(obj))}
         if isinstance(spec, EditableGroup):
-            # No explicit group display — render each member's value.
             parts = []
             for e in editables:
                 v = _current_value(obj, e)
@@ -3649,10 +3532,9 @@ def _render_inline_edit_display(
     user_can_edit: bool | None = None,
     saved: bool = False,
 ) -> HttpResponse:
-    # `saved=True` triggers the toast via HX-Trigger-After-Swap; `alert` carries a denial warning.
-    # On denial, skip the value/display resolution — it can be heavy (e.g. the
-    # services collection does a per-row Placement query) and the partial
-    # gracefully handles an empty value with the alert banner.
+    # `saved=True` triggers the toast via HX-Trigger-After-Swap.
+    # On denial, skip resolving the value: it can be heavy (the services
+    # collection queries per row) and the partial handles an empty value fine.
     if alert is not None:
         display: dict = {"text": ""}
         value: object = None
@@ -3681,11 +3563,9 @@ def _render_inline_edit_display(
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
-        # Het label reist mee zodat de melding benoemt wát er is opgeslagen: een
-        # kaal "Opgeslagen" laat je raden, en in de onboarding-wizard bewaar je
-        # meerdere velden achter elkaar. Editable, EditableGroup en
-        # EditableCollection hebben alle drie een label; ontbreekt het, dan valt
-        # de melding terug op de algemene tekst.
+        # The label travels along so the toast names what was saved; in the
+        # onboarding wizard several fields are saved in a row. A missing label
+        # falls back to the generic text.
         response["HX-Trigger-After-Swap"] = json.dumps(
             {"inline-edit-saved": {"label": getattr(spec, "label", None) or ""}}
         )
@@ -3695,7 +3575,6 @@ def _render_inline_edit_display(
 def _render_inline_edit_form(
     request, editable_set, spec, editables, obj, form, *, alert: dict | None = None, token: str | None = None
 ) -> HttpResponse:
-    # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
     # form.html always owns the form element and the concurrency token; a group's
     # ``form_template`` only replaces the field body, so it cannot drop either.
     ctx = {
@@ -3729,9 +3608,9 @@ def _attach_formset_error(formset, message: str) -> None:
 
 
 def _handle_inline_edit_collection(request, editable_set, spec: EditableCollection, obj) -> HttpResponse:
-    # FormSet equivalent of the Editable/Group path in inline_edit_view.
-    # A read-only collection (no save) still renders its display, but has no
-    # editable form: saving and the edit-form GET are rejected.
+    # FormSet equivalent of the Editable/Group path in inline_edit_view. A
+    # read-only collection still renders its display, but rejects saves and the
+    # edit-form GET.
     read_only = spec.save is None
     if request.method == "POST":
         if read_only:
@@ -3753,9 +3632,8 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                             editable_set, spec, obj, before, after, request.user, request=request
                         )
             except editable_set.model.DoesNotExist:
-                # Deleted between the permission check and the lock. Same denial
-                # partial as a missing or forbidden object, so this stays
-                # indistinguishable from those.
+                # Deleted between the permission check and the lock; the same
+                # denial partial keeps this indistinguishable from a 404 or 403.
                 return _render_inline_edit_denial(request, editable_set, spec, obj.public_id)
             except ValidationError as exc:
                 for message in exc.messages:
@@ -3764,9 +3642,8 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                     request, editable_set, spec, obj, formset, token=_submitted_token(request)
                 )
             if conflict:
-                # Re-render the bound form (user's input kept) with a token for
-                # the new state: Opslaan saves anyway, Annuleren shows the
-                # changed data. Rendered after the lock is released.
+                # Re-render the bound form, keeping the user's input: Opslaan
+                # saves anyway, Annuleren adopts the changed data.
                 return _render_inline_edit_collection_form(
                     request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
                 )
@@ -3786,18 +3663,18 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 
 
 def _public_id_stub(model, public_id):
-    """An unsaved model instance carrying only ``public_id``. Enough for the
-    denial partial's target/edit_url so a missing object renders byte-identically
-    to a forbidden one, without a second DB round-trip or a real record."""
+    """An unsaved instance carrying only ``public_id``, enough for the denial
+    partial's target and edit_url. Lets a missing object render byte-identically
+    to a forbidden one without a second DB round-trip."""
     stub = model()
     stub.public_id = public_id
     return stub
 
 
 def _render_inline_edit_denial(request, editable_set, spec, public_id, obj=None, alert=None) -> HttpResponse:
-    """The denial partial for an object the user may not edit or that isn't
-    there (any more). Both render identically, so this endpoint can't be walked
-    as a 404-vs-200 existence oracle over public_ids."""
+    """The denial partial for an object the user may not edit or that is not there.
+    Both render identically, so this endpoint can't be walked as an existence
+    oracle over public_ids."""
     display_obj = obj if obj is not None else _public_id_stub(editable_set.model, public_id)
     editables_for_display: list[Editable] = (
         [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
@@ -3824,10 +3701,8 @@ def inline_edit_view(request, model_label, public_id, name):
 
     obj = editable_set.model.objects.filter(public_id=public_id).first()
 
-    # Permission ladder: a missing object and a forbidden one both return the
-    # SAME denial partial, so this endpoint can't be walked as a 404-vs-200
-    # existence oracle over sequential PKs (mirrors how the side panel returns an
-    # identical empty response for not-found and not-visible).
+    # A missing object and a forbidden one return the same denial partial, so
+    # this endpoint can't be walked as an existence oracle.
     denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
         return _render_inline_edit_denial(request, editable_set, spec, public_id, obj=obj, alert=denial)
@@ -3837,8 +3712,7 @@ def inline_edit_view(request, model_label, public_id, name):
 
     editables = resolve_editables(editable_set, spec)
 
-    # Import here to avoid circulars at module load time.
-    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
+    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415 (import not at top level) — import cycle
 
     if request.method == "POST":
         form_cls, _ = build_form_class(
@@ -3876,14 +3750,12 @@ def inline_edit_view(request, model_label, public_id, name):
                                 request=request,
                             )
             except editable_set.model.DoesNotExist:
-                # Deleted between the permission check and the lock. Same denial
-                # partial as a missing or forbidden object, so this stays
-                # indistinguishable from those.
+                # Deleted between the permission check and the lock; the same
+                # denial partial keeps this indistinguishable from a 404 or 403.
                 return _render_inline_edit_denial(request, editable_set, spec, public_id)
             if conflict:
-                # Re-render the bound form (user's input kept) with a token for
-                # the new state: Opslaan saves anyway, Annuleren shows the
-                # changed data. Rendered after the lock is released.
+                # Re-render the bound form, keeping the user's input: Opslaan
+                # saves anyway, Annuleren adopts the changed data.
                 return _render_inline_edit_form(
                     request,
                     editable_set,
@@ -3901,9 +3773,9 @@ def inline_edit_view(request, model_label, public_id, name):
                 obj,
                 saved=True,
             )
-        # Keep the token this POST was built on: recomputing it here would adopt
-        # a change made in the meantime, and the corrected resubmit would then
-        # overwrite that change without ever showing the conflict warning.
+        # Keep the token this POST was built on: recomputing it would adopt a
+        # change made meanwhile, and the corrected resubmit would overwrite it
+        # without ever showing the conflict warning.
         return _render_inline_edit_form(
             request, editable_set, spec, editables, obj, form, token=_submitted_token(request)
         )
@@ -3927,19 +3799,18 @@ def inline_edit_view(request, model_label, public_id, name):
     return _render_inline_edit_display(request, editable_set, spec, editables, obj)
 
 
-# Het plaatsingspaneel bewerkt drie dingen die over TWEE modellen verdeeld zijn:
-# Service.skill, Service.description en de Placement.period-groep. Een
-# EditableGroup kan dat niet dekken (die hoort bij één model), dus bouwen we hier
-# één formulier uit de losse specs en hergebruiken we per spec de bestaande
-# save- en audit-machinerie van inline_edit_view.
+# The placement panel edits three things spread over TWO models: Service.skill,
+# Service.description and the Placement.period group. An EditableGroup belongs to
+# one model and cannot cover that, so one form is built from the separate specs,
+# reusing inline_edit_view's save and audit machinery per spec.
 
 
 def _safe_return_path(raw: str | None, fallback: str) -> str:
-    """Alleen een pad op deze site; anders de fallback.
+    """Returns ``raw`` only when it is a path on this site, else the fallback.
 
-    De waarde komt uit een hidden input, dus hij is door de client te sturen.
-    Hij belandt in HX-Push-Url (alleen de adresbalk, geen navigatie), maar een
-    protocol-relative "//host" zou daar alsnog een vreemde origin tonen.
+    The value comes from a hidden input, so the client controls it. It ends up in
+    HX-Push-Url — the address bar only, no navigation — but a protocol-relative
+    "//host" would still display a foreign origin there.
     """
     if raw and raw.startswith("/") and not raw.startswith("//"):
         return raw
@@ -3948,29 +3819,26 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
 
 @require_POST
 def placement_edit_view(request, public_id):
-    """Sla het gecombineerde bewerkformulier van de plaatsing-child-sheet op.
+    """Saves the combined edit form of the placement child sheet.
 
-    Bij succes stuurt deze view de client via HX-Location terug naar de
-    ouder-URL; die rendert het paneel opnieuw via de gewone panel-route. Zelf het
-    ouderpaneel renderen kan niet: alle paneel-URL's worden uit ``request.path``
-    opgebouwd, en dat is hier het POST-pad. De knoppen in dat paneel wezen dan
-    naar deze endpoint, die met GET een leeg gebonden formulier opleverde — en
-    opslaan wiste vervolgens de velden.
-
-    Bij fouten komt het formulier opnieuw, met meldingen. POST-only, zodat een
-    GET nooit een leeg formulier kan tonen.
+    On success the client is sent back to the parent URL via HX-Location, which
+    re-renders the panel through the normal panel route. Rendering the parent
+    panel here is not possible: panel URLs are built from ``request.path``, which
+    is the POST path, so its buttons would point back at this endpoint. On errors
+    the form returns with messages. POST-only, so a GET can never show an empty
+    form.
     """
     placement = (
         Placement.objects.select_related("colleague", "service__assignment", "service__skill")
         .filter(public_id=public_id)
         .first()
     )
-    # _resolve_placement_panel handhaaft de zichtbaarheidsregels (en zoekt óók op public_id).
+    # _resolve_placement_panel enforces the visibility rules.
     if placement is None or _resolve_placement_panel(request, placement.public_id) is None:
         raise Http404("Unknown placement")
 
-    # ?veld= beperkt de save tot dat ene veld (het potlood van een rij), zodat
-    # een één-veld-sheet niet ongemerkt de andere velden meeneemt.
+    # ?veld= limits the save to that one field, so a single-field sheet does not
+    # silently carry the other fields along.
     only = request.GET.get("veld") or None
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
@@ -3998,14 +3866,14 @@ def placement_edit_view(request, public_id):
     return response
 
 
-# De kop van de één-veld-sheet. Niet uit de spec-labels afgeleid zoals bij de
-# opdracht: "Rol" dekt daar twee specs (rol + omschrijving), dus de eerste spec
-# zou de kop bepalen en dat leest als een halve titel.
+# Headings for the single-field sheet. Not derived from the spec labels as the
+# assignment does: "Rol" covers two specs here, so the first one would decide the
+# heading and that reads as half a title.
 PLACEMENT_FIELD_HEADINGS = {"skill": "Rol bewerken", "period": "Periode bewerken"}
 
 
 def _build_placement_edit_panel_data(placement, request):
-    """Context voor de bewerk-child-sheet, of None zonder bewerkrechten."""
+    """Context for the placement edit child sheet, or None without edit rights."""
     only = request.GET.get("veld") or None
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
@@ -4014,21 +3882,21 @@ def _build_placement_edit_panel_data(placement, request):
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "form": form_cls(initial=initial),
-        # Eén-veld-sheet: de titel noemt dat veld ("Periode bewerken").
+        # Single-field sheet: the title names that field ("Periode bewerken").
         "edit_heading": PLACEMENT_FIELD_HEADINGS.get(only) if only else None,
         "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
 
-# Zelfde patroon als de plaatsing hierboven: alle opdrachtgegevens in één
-# formulier, opgebouwd uit de bestaande specs zodat save- en audit-gedrag
-# identiek blijven aan inline edit. Het teamformulier (een formset) heeft een
-# eigen child sheet; een formset past niet in dit platte formulier.
+# Same pattern as the placement above: all assignment data in one form, built
+# from the existing specs so save and audit behaviour stay identical to inline
+# edit. The team form is a formset and does not fit in this flat form, so it has
+# its own child sheet.
 
 
 def _build_assignment_edit_panel_data(assignment, request):
-    """Context voor de opdracht-bewerk-child-sheet, of None zonder bewerkrechten."""
+    """Context for the assignment edit child sheet, or None without edit rights."""
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     only = request.GET.get("veld") or None
@@ -4039,7 +3907,7 @@ def _build_assignment_edit_panel_data(assignment, request):
     return {
         "panel_content_template": "parts/assignment_edit_panel_content.html",
         "form": form_cls(initial=initial),
-        # Eén-veld-sheet: de titel noemt dat veld ("Business Manager wijzigen").
+        # Single-field sheet: the title names that field ("Business Manager wijzigen").
         "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
         "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
@@ -4048,11 +3916,10 @@ def _build_assignment_edit_panel_data(assignment, request):
 
 @require_POST
 def assignment_edit_view(request, public_id):
-    """Sla het gecombineerde opdrachtformulier van de child sheet op.
+    """Saves the combined assignment form of the child sheet.
 
-    Zelfde contract als placement_edit_view: bij succes HX-Location terug naar
-    de ouder-URL (die het paneel opnieuw rendert), bij fouten het formulier
-    opnieuw met meldingen. POST-only.
+    Same contract as placement_edit_view: HX-Location back to the parent URL on
+    success, the form with messages on errors. POST-only.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
@@ -4060,8 +3927,8 @@ def assignment_edit_view(request, public_id):
     if assignment is None:
         raise Http404("Unknown assignment")
 
-    # ?veld= beperkt de save tot dat ene veld (het ⋯-menu van een rij), zodat
-    # een één-veld-sheet niet ongemerkt de andere velden meeneemt.
+    # ?veld= limits the save to that one field, so a single-field sheet does not
+    # silently carry the other fields along.
     only = request.GET.get("veld") or None
     specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
@@ -4093,12 +3960,10 @@ def assignment_edit_view(request, public_id):
 
 @require_POST
 def assignment_create_sheet(request):
-    """POST-doel van de aanmaak-sheet: maakt de opdracht aan en stuurt via
-    HX-Location naar het nieuwe opdrachtpaneel. Diensten/rollen voeg je daarna in
-    dat paneel toe. Het lege formulier zelf wordt gerenderd door AssignmentListView
-    (?nieuwe-opdracht), zodat het net als de object-panelen op de lijst-URL leeft
-    en verversen werkt. Alleen voor wie opdrachten mag aanmaken.
-    """
+    """Creates the assignment from the create sheet and sends the client to its
+    panel via HX-Location. Roles are added afterwards in that panel. The empty
+    form itself is rendered by AssignmentListView (?nieuwe-opdracht), so it lives
+    on the list URL like the object panels and survives a reload."""
     from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
         assignment_create_specs,
         create_assignment_from_specs,
@@ -4126,8 +3991,8 @@ def assignment_create_sheet(request):
         )
         sep = "&" if "?" in return_to else "?"
         path = f"{return_to}{sep}opdracht={assignment.public_id}"
-        # base.html herlaadt niet bij de panel-swap die op HX-Location volgt,
-        # dus assignment_panel_content.html swapt de banner apart in (OOB).
+        # base.html does not reload on the panel swap that follows HX-Location,
+        # so assignment_panel_content.html swaps the banner in separately (OOB).
         messages.success(
             request,
             f'Opdracht "{assignment.name}" is aangemaakt.',
@@ -4137,25 +4002,24 @@ def assignment_create_sheet(request):
         response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
         return response
 
-    # Ongeldig: herrender het fragment met meldingen. parent_url = het gesaneerde
-    # terugadres, zodat terug_url een mislukte submit overleeft.
+    # Invalid: re-render the fragment with messages. parent_url is the sanitised
+    # return address, so terug_url survives a failed submit.
     panel_data = _build_assignment_create_panel_data(request, form, parent_url=return_to)
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
-# De teamlijst bewerkt per LID, niet als één formset: elke rij heeft zijn eigen
-# child sheet (bewerken/toevoegen) en verwijderen gaat via een bevestigings-
-# dialoog. Server-side blijft de bestaande sync- en auditmachinerie van de
-# formset gelden: elk endpoint reconstrueert het volledige team en wijzigt
-# alleen de betrokken rij, zodat apply_services_to_assignment (dat op
-# afwezigheid verwijdert) nooit ongewild rijen ziet verdwijnen.
+# The team list is edited per MEMBER, not as one formset: every row has its own
+# child sheet. Server-side the formset's sync and audit machinery still applies,
+# so each endpoint reconstructs the full team and changes only the row involved —
+# apply_services_to_assignment deletes on absence and must never see a row vanish
+# by accident.
 
 
 def _build_assignment_member_panel_data(assignment, request):
-    """Context voor de teamlid-child-sheet, of None zonder rechten/onbekend lid.
+    """Context for the team member child sheet, or None without rights.
 
-    ``?teamlid=<service-id>`` bewerkt een bestaand lid; ``?teamlid=nieuw-aanvraag``
-    en ``?teamlid=nieuw-ingevuld`` voegen een rij toe met de status voorgekozen.
+    ``?teamlid=<service-id>`` edits an existing member; ``nieuw-aanvraag`` and
+    ``nieuw-ingevuld`` add a row with the status preselected.
     """
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
 
@@ -4189,12 +4053,11 @@ def _build_assignment_member_panel_data(assignment, request):
 
 @require_POST
 def assignment_member_edit_view(request, public_id):
-    """Sla één teamlid op uit de child sheet (bewerken of toevoegen).
+    """Saves one team member from the child sheet, editing or adding.
 
-    Het formulier post één formset-rij; de overige rijen komen uit de database,
-    zodat de sync altijd het volledige team ziet. Zelfde contract als
-    assignment_edit_view: HX-Location terug bij succes, formulier met
-    meldingen bij fouten."""
+    The form posts a single formset row; the other rows come from the database so
+    the sync always sees the full team. Same contract as assignment_edit_view.
+    """
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
     from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
 
@@ -4223,8 +4086,8 @@ def assignment_member_edit_view(request, public_id):
 
     edited = extract_services_data(formset)
     if not edited:
-        # Zonder rol slaat extract_services_data de rij over; hier zou dat het
-        # lid stilletjes VERWIJDEREN (sync op afwezigheid), dus blokkeer het.
+        # Without a rol, extract_services_data skips the row, which here would
+        # silently DELETE the member (the sync deletes on absence).
         _attach_formset_error(formset, "Kies een rol.")
         return rerender(formset)
 
@@ -4244,7 +4107,7 @@ def assignment_member_edit_view(request, public_id):
 
 @require_POST
 def assignment_member_delete_view(request, public_id, service_public_id):
-    """Verwijder één teamlid, na de bevestigingsdialoog in het paneel."""
+    """Deletes one team member, after the confirmation dialog in the panel."""
     from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
@@ -4255,8 +4118,8 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return HttpResponseForbidden()
 
-    # De service wordt binnen deze opdracht op public_id opgezocht; de row-sync
-    # hieronder vergelijkt verder op de interne service-pk (row["id"]).
+    # Looked up by public_id within this assignment; the row sync below compares
+    # on the internal service pk (row["id"]).
     service = assignment.services.filter(public_id=service_public_id).first()
     if service is None:
         raise Http404("Unknown service")
