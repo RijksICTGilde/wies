@@ -159,13 +159,13 @@ anyway; there is simply no reason for it, and real migration risk.)
   that leaks a PK reintroduces the enumeration it removed. The org picker
   was exactly such a spot: the tree emitted `public_id` while the form
   field still resolved on PK.
-- **Two spots still round-trip a pk on purpose.** The inline-edit field
-  name for a label category (`labels_<pk>`) and the hidden `id` /
-  `placement_id` on the team rows in `ServiceForm`. Both identify a row
-  the caller was already shown, and the services save re-verifies each one
-  belongs to the target Assignment before writing. They are walkable in
-  principle, but yield only which taxonomy/row ids exist, never record
-  data, and no read path accepts an integer.
+- **One spot still round-trips a pk on purpose.** The inline-edit field
+  name for a label category (`labels_<pk>`). It identifies a row the caller
+  was already shown, and the save re-verifies it belongs to the target
+  object before writing. It is walkable in principle, but yields only which
+  taxonomy ids exist, never record data, and no read path accepts an integer.
+  (The team rows in `ServiceForm` used to round-trip Service/Placement pks in
+  their hidden `id`/`placement_id` inputs; those now carry `public_id`.)
 
 ## Key files
 

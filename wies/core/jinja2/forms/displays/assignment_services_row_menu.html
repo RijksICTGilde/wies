@@ -6,7 +6,7 @@
   <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ member_name }}">
   <nldd-menu slot="popup" placement="bottom-end">
   {% if user_can_edit %}
-    <nldd-menu-item text="{{ 'Rol en periode wijzigen' if pl else 'Aanvraag wijzigen' }}" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&teamlid={{ svc.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+    <nldd-menu-item text="{{ 'Rol en periode wijzigen' if pl else 'Aanvraag wijzigen' }}" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&teamlid={{ svc.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}
   {% if pl %}
     <nldd-menu-item text="Bekijk teamlid" icon="person" hx-get="?plaatsing={{ row.placement_public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
