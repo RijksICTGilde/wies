@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- in het opdrachtpaneel loopt bewerken weer via één knop "Gegevens bewerken" bovenaan, in plaats van een potlood per rij. Per rij bewerken liet de opdrachtnaam onbereikbaar: die staat als kop boven het paneel en niet als rij in de lijst, dus naam en omschrijving waren niet samen te wijzigen. De acties die géén bewerking zijn blijven op hun rij staan ("Bekijk opdrachten", "Bekijk profiel", "E-mailen"). Daarnaast verdween de rij "Omschrijving" volledig als er nog geen omschrijving stond; die toont nu "Niet ingevuld", zoals de andere lege velden
 - het potlood bij Periode of Rol in het plaatsingpaneel opent nu alleen dat veld, in plaats van steeds het hele formulier met rol, omschrijving én periode. De kop noemt het veld ("Periode bewerken"); die stond vast op "Rol bewerken", ook boven het periodeformulier
 - de cursor staat meteen in het naamveld als je de sheet "Merk toevoegen" of "Bewerk merk" opent, zoals bij labels al gebeurde. Niet na een validatiefout: dan blijft de focus bij het veld met de fout in plaats van naar boven te springen
 - NLDD bijgewerkt naar 0.8.82: Enter in een invoerveld verstuurt het formulier nu vanuit het design system zelf, voor alle enkelregelige velden (tekst, datum, tijd, nummer, wachtwoord, combo box, token field). De tijdelijke workaround in `enter_submits.js` is daarmee weg. Het component volgt bovendien de spec-regel die de workaround niet had: zonder submit-knop verstuurt Enter alleen als het formulier één veld heeft

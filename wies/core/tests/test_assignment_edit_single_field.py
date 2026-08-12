@@ -67,15 +67,22 @@ class AssignmentEditSingleFieldTest(TestCase):
         assert self.assignment.start_date == date(2026, 1, 1)
         assert self.assignment.end_date == date(2026, 12, 31)
 
-    def test_panel_menu_links_carry_the_field(self):
+    def test_panel_has_no_per_row_edit_links(self):
+        """Bewerken loopt via "Gegevens bewerken" bovenaan.
+
+        Per rij bewerken zou de opdrachtnaam onbereikbaar laten: die staat als
+        kop boven het paneel en niet als rij in de lijst. De ?veld=-route zelf
+        blijft bestaan (zie de saves hieronder), alleen het paneel biedt hem niet
+        meer aan.
+        """
         response = self.client.get(
             f"/opdrachten/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         body = response.content.decode()
-        assert "&veld=owner" in body
-        assert "&veld=period" in body
-        assert "&veld=organizations" in body
+        assert "&veld=" not in body
+        # De knop die alles opent staat er wel.
+        assert "bewerken=1" in body
 
     def test_forbidden_without_edit_rights(self):
         self.client.force_login(self.other_user)

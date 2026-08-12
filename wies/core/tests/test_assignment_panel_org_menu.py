@@ -153,15 +153,15 @@ class AssignmentPanelSecondOrgTest(TestCase):
         assert 'text="Acties voor opdrachtgever Datafundamenten"' in body
         assert 'text="Acties voor opdrachtgever Team Inkoop"' in body
 
-    def test_every_organization_menu_offers_the_edit_action(self):
-        # Twee ⋯-knoppen naast elkaar die stilletjes verschillen zijn een
-        # raadsel: je klikt op de tweede, verwacht "wijzigen" en krijgt niets.
+    def test_menus_hold_no_edit_action(self):
+        # Bewerken loopt via "Gegevens bewerken" bovenaan; per rij zou de
+        # opdrachtnaam onbereikbaar laten, want die staat als kop en niet als rij.
         User.objects.filter(pk=self.user.pk).update(is_superuser=True, is_staff=True)
         body = self._panel_body()
-        assert body.count('text="Opdrachtgever wijzigen"') == 2
-        # Elk menu opent hetzelfde veld-formulier, dus enkelvoud in het label.
-        assert body.count("&veld=organizations") == 2
-        assert "Opdrachtgevers wijzigen" not in body
+        assert "Opdrachtgever wijzigen" not in body
+        assert "&veld=organizations" not in body
+        # Wat blijft is de niet-bewerkende actie, op elke rij.
+        assert body.count('text="Bekijk opdrachten"') == 2
 
     def test_single_organization_shows_no_role_suffix(self):
         # Bij één opdrachtgever zegt "(primair)" niets.

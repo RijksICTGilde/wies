@@ -1,15 +1,12 @@
 {% from "parts/row_actions.html" import render_row_actions %}
 {% from "parts/org_row.html" import render_org_line %}
 {% from "parts/privacy_chip.html" import privacy_chip %}
-{# Elke opdrachtgeverrij krijgt hetzelfde menu: twee ⋯-knoppen naast elkaar die
-   stilletjes verschillen zijn een raadsel. Bij meerdere rijen noemt de
-   toegankelijke naam de organisatie, anders heten alle menu's hetzelfde. #}
+{# Bewerken zit in "Gegevens bewerken" bovenaan en niet per rij; hier blijft
+   alleen "Bekijk opdrachten". Bij meerdere rijen noemt de toegankelijke naam de
+   organisatie, anders heten alle menu's hetzelfde. #}
 {% macro _org_row_actions(org_row, panel_data, base_url) %}
   {%- set multiple = panel_data.organization_rows|length > 1 -%}
   {%- set actions = [] -%}
-  {%- if panel_data.user_can_edit -%}
-    {%- set _ = actions.append({"text": "Opdrachtgever wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) -%}
-  {%- endif -%}
   {%- set _ = actions.append(get_org_levels_action(org_row.organization, base_url)) -%}
   {%- set name = org_row.organization.label or org_row.organization.name -%}
   {{ render_row_actions(actions, "Acties voor opdrachtgever " ~ name if multiple else "Acties voor opdrachtgever") }}
@@ -90,7 +87,6 @@
     ] %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
-      {% elif row_kind == "extra_info" and not panel_data.assignment.extra_info %}
       {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
       {% else %}
         <nldd-list-item>
@@ -136,23 +132,12 @@
           <nldd-cell>
           {{ _org_row_actions(panel_data.organization_rows[0], panel_data, _base_url) }}
           </nldd-cell>
-        {% elif row_kind == "extra_info" and panel_data.user_can_edit %}
-          {% set _actions = [{"text": "Omschrijving wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=extra_info" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
-          <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-cell>
-          {{ render_row_actions(_actions, "Acties voor omschrijving") }}
-          </nldd-cell>
-        {% elif row_kind == "period" and panel_data.user_can_edit %}
-          {% set _actions = [{"text": "Periode wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}] %}
-          <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-cell>
-          {{ render_row_actions(_actions, "Acties voor periode") }}
-          </nldd-cell>
         {% elif row_kind == "owner" and panel_data.assignment.owner %}
+          {# Bewerken zit in "Gegevens bewerken" bovenaan, niet per rij: de
+             opdrachtnaam staat als kop en niet als rij, dus per-rij-bewerken zou
+             juist die naam onbereikbaar laten. Wat hier blijft zijn de acties
+             die géén bewerking zijn. #}
           {% set _actions = [] %}
-          {% if panel_data.user_can_edit %}
-            {% set _ = _actions.append({"text": "Business Manager wijzigen", "icon": "edit", "attrs": 'hx-get="' ~ panel_data.edit_panel_url ~ '&veld=owner" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
-          {% endif %}
           {% if panel_data.owner_display.owner_url %}
             {% set _ = _actions.append({"text": "Bekijk profiel", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
           {% endif %}

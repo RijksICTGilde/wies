@@ -451,8 +451,8 @@ class AssignmentEditAttributeTest(TestCase):
         assert "js/inline_edit.js" in page
         # De omschrijving staat ná de opening van het gegevens-tabblad.
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
-        # En is per rij te bewerken, net als de andere velden.
-        assert "&veld=extra_info" in body
+        # Bewerken loopt via "Gegevens bewerken" bovenaan, niet per rij.
+        assert "&veld=extra_info" not in body
 
     def test_assignment_extra_info_short_text_no_toggle(self):
         """Test that short descriptions don't have toggle functionality"""
