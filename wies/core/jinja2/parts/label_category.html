@@ -1,9 +1,9 @@
-{# De toevoegrij onderaan elke categorie: opent dezelfde sheet als de knop in
-   de toolbar, met deze categorie al gekozen. #}
-{% macro add_label_row(category) %}
-  <nldd-list-item button hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-  <nldd-text-cell text="Label aan {{ category.name }} toevoegen…" color="accent"></nldd-text-cell>
-  </nldd-list-item>
+{# De toevoegknop onderaan elke categorie: opent dezelfde sheet als de knop in
+   de toolbar, met deze categorie al gekozen. Een echte knop (geen lijstregel)
+   zodat de actie niet als zoveelste label leest. #}
+{% macro add_label_button(category) %}
+  <nldd-button variant="secondary" size="sm" start-icon="plus" text="Label toevoegen" accessible-label="Label aan {{ category.name }} toevoegen" hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  </nldd-button>
 {% endmacro %}
 {# Categorieën zelf worden beheerd in de sheet achter "Categorieën beheren";
    labels lopen via de universele toevoegknop en het more-menu op de regel.
@@ -38,10 +38,9 @@
     </nldd-cell>
     </nldd-list-item>
   {% endfor %}
-  {{ add_label_row(category) }}
   </nldd-list>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {{ add_label_button(category) }}
 {% else %}
-  <nldd-list accessible-label="Labels in {{ category.name }}">
-  {{ add_label_row(category) }}
-  </nldd-list>
+  {{ add_label_button(category) }}
 {% endif %}

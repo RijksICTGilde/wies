@@ -184,7 +184,7 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
     category = forms.ModelChoiceField(
         label="Categorie",
         queryset=LabelCategory.objects.all(),
-        required=False,
+        required=True,
         empty_label=None,
         widget=forms.RadioSelect,
     )
@@ -198,21 +198,16 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
         super().__init__(*args, **kwargs)
         if category_id and not self.initial.get("category"):
             self.initial["category"] = category_id
-        # Geen keuze is een geldige keuze (het label komt dan onder het
-        # vangnet), maar dat is geen "optioneel veld" om de gebruiker mee lastig
-        # te vallen.
-        self.fields["category"].widget.attrs["hide-optional"] = True
 
     def clean(self):
         # Names are unique per category, so the check needs both fields — which
         # is why it lives here and not in clean_name().
         cleaned = super().clean()
         name = cleaned.get("name")
-        # Geen keuze gemaakt? Dan onder het vangnet, in plaats van de gebruiker
-        # dwingen iets te kiezen dat achteraf toch verhuist.
-        category = cleaned.get("category") or LabelCategory.fallback()
-        cleaned["category"] = category
-        if not name:
+        category = cleaned.get("category")
+        # Category is required; if it (or the name) is missing the field-level
+        # error already stands, so there is nothing to check for uniqueness.
+        if not name or not category:
             return cleaned
         clash = Label.objects.filter(category=category, name=name).exclude(pk=self.instance.pk)
         if clash.exists():

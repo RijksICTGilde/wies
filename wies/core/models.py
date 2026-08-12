@@ -73,12 +73,6 @@ class LabelCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=7)  # Hex color like #FF5733
 
-    #: Vangnet voor labels zonder categorie en voor labels waarvan de categorie
-    #: wordt verwijderd. Wordt pas aangemaakt als hij nodig is en is daarna een
-    #: gewone categorie: hernoembaar en verwijderbaar.
-    FALLBACK_NAME = "Overig"
-    FALLBACK_COLOR = "#DCE3EA"
-
     # Maps each stored hex (the choices offered in LabelCategoryForm) to an
     # NLDD `color` variant, which carries theme-aware category colours. The old
     # `--nldd-token-bg: <hex>` approach painted a light-only strip that showed
@@ -101,15 +95,6 @@ class LabelCategory(models.Model):
     def nldd_color(self) -> str:
         """NLDD `color` variant for this category."""
         return self._NLDD_COLOR_BY_HEX.get(self.color, "neutral")
-
-    @classmethod
-    def fallback(cls) -> LabelCategory:
-        """De vangnetcategorie, aangemaakt zodra er voor het eerst om gevraagd wordt."""
-        category, _created = cls.objects.get_or_create(
-            name=cls.FALLBACK_NAME,
-            defaults={"color": cls.FALLBACK_COLOR},
-        )
-        return category
 
 
 class Label(models.Model):

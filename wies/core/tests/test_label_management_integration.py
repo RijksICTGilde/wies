@@ -78,18 +78,17 @@ class LabelManagementIntegrationTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Test User")
 
-        # The label survives the category delete under the catch-all
+        # Deleting the category deletes its labels too (cascade).
         response = self.client.post(
             reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
         )
         assert response.status_code == 200
 
         assert not LabelCategory.objects.filter(id=category.id).exists()
-        label.refresh_from_db()
-        assert label.category.name == "Overig"
+        assert not Label.objects.filter(pk=label.pk).exists()
 
         user.refresh_from_db()
-        assert list(user.colleague.labels.all()) == [label]
+        assert list(user.colleague.labels.all()) == []
 
     def test_label_edit_propagates_correctly(self):
         """Test: Editing a label name propagates to all assigned users/colleagues"""
@@ -146,106 +145,37 @@ class LabelManagementIntegrationTest(TestCase):
         # Verify category still exists
         assert LabelCategory.objects.filter(id=category.id).exists()
 
-    def test_category_delete_moves_labels_to_fallback(self):
-        """Deleting a category re-homes its labels under "Overig" instead of
-        deleting them, so the colleagues who carry them keep them."""
-        self.client.force_login(self.admin_user)
-
-        # Create category with multiple labels
-        category = LabelCategory.objects.create(name="Skills", color="#00AA00")
-        label1 = Label.objects.create(name="Python", category=category)
-        label2 = Label.objects.create(name="Django", category=category)
-        label3 = Label.objects.create(name="JavaScript", category=category)
-
-        # Assign labels to colleagues linked to users
-        user1 = User.objects.create_user(email="user1@rijksoverheid.nl", first_name="User", last_name="One")
-        colleague1 = Colleague.objects.create(
-            user=user1, name="User One", email="user1@rijksoverheid.nl", source="wies"
-        )
-        colleague1.labels.add(label1, label2)
-
-        user2 = User.objects.create_user(email="user2@rijksoverheid.nl", first_name="User", last_name="Two")
-        colleague2 = Colleague.objects.create(
-            user=user2, name="User Two", email="user2@rijksoverheid.nl", source="wies"
-        )
-        colleague2.labels.add(label2, label3)
-
-        # Delete the category
-        response = self.client.post(
-            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
-        )
-        assert response.status_code == 200
-
-        fallback = LabelCategory.objects.get(name="Overig")
-        assert set(fallback.labels.values_list("name", flat=True)) == {"Python", "Django", "JavaScript"}
-
-        colleague1.refresh_from_db()
-        colleague2.refresh_from_db()
-        assert set(colleague1.labels.values_list("name", flat=True)) == {"Python", "Django"}
-        assert set(colleague2.labels.values_list("name", flat=True)) == {"Django", "JavaScript"}
-
-    def test_label_without_category_lands_in_fallback(self):
-        """Geen categorie gekozen: het label komt onder "Overig" te staan."""
-        self.client.force_login(self.admin_user)
-
-        response = self.client.post(reverse("label-form-create"), {"name": "Zwevend label"})
-        assert response.status_code == 200
-
-        label = Label.objects.get(name="Zwevend label")
-        assert label.category.name == "Overig"
-
-    def test_category_delete_merges_duplicate_label_names(self):
-        """A label whose name already exists in the catch-all is merged: one
-        label survives and it carries the colleagues of both."""
-        self.client.force_login(self.admin_user)
-
-        fallback = LabelCategory.objects.create(name="Overig", color="#DCE3EA")
-        kept = Label.objects.create(name="Python", category=fallback)
-        doomed_category = LabelCategory.objects.create(name="Skills", color="#00AA00")
-        duplicate = Label.objects.create(name="Python", category=doomed_category)
-
-        user = User.objects.create_user(email="dup@rijksoverheid.nl", first_name="Dup", last_name="User")
-        colleague = Colleague.objects.create(user=user, name="Dup User", email="dup@rijksoverheid.nl", source="wies")
-        colleague.labels.add(duplicate)
-
-        response = self.client.post(
-            reverse("label-category-delete", kwargs={"public_id": doomed_category.public_id}), follow=True
-        )
-        assert response.status_code == 200
-
-        assert not Label.objects.filter(pk=duplicate.pk).exists()
-        assert list(colleague.labels.all()) == [kept]
-
-    def test_category_delete_can_take_its_labels_with_it(self):
-        """De derde knop in de dialoog: categorie én labels weg, geen verhuizing."""
+    def test_category_delete_removes_its_labels(self):
+        """Deleting a category deletes its labels too (cascade), and the
+        colleagues who carried them lose them."""
         self.client.force_login(self.admin_user)
 
         category = LabelCategory.objects.create(name="Skills", color="#00AA00")
         label = Label.objects.create(name="Python", category=category)
 
+        user = User.objects.create_user(email="user1@rijksoverheid.nl", first_name="User", last_name="One")
+        colleague = Colleague.objects.create(user=user, name="User One", email="user1@rijksoverheid.nl", source="wies")
+        colleague.labels.add(label)
+
         response = self.client.post(
-            reverse("label-category-delete", kwargs={"public_id": category.public_id}),
-            {"labels_verwijderen": "1"},
-            follow=True,
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
         )
         assert response.status_code == 200
 
+        assert not LabelCategory.objects.filter(pk=category.pk).exists()
         assert not Label.objects.filter(pk=label.pk).exists()
-        assert not LabelCategory.objects.filter(name="Overig").exists()
+        colleague.refresh_from_db()
+        assert list(colleague.labels.all()) == []
 
-    def test_deleting_the_fallback_itself_removes_its_labels(self):
-        """Nothing is left to catch them, so deleting "Overig" is a real delete."""
+    def test_label_requires_a_category(self):
+        """Geen categorie gekozen: het formulier wijst de inzending af."""
         self.client.force_login(self.admin_user)
 
-        fallback = LabelCategory.objects.create(name="Overig", color="#DCE3EA")
-        label = Label.objects.create(name="Los label", category=fallback)
-
-        response = self.client.post(
-            reverse("label-category-delete", kwargs={"public_id": fallback.public_id}), follow=True
-        )
+        response = self.client.post(reverse("label-form-create"), {"name": "Zwevend label"})
         assert response.status_code == 200
 
-        assert not Label.objects.filter(pk=label.pk).exists()
+        assert not Label.objects.filter(name="Zwevend label").exists()
+        self.assertContains(response, "Dit veld is verplicht.")
 
     def test_duplicate_label_name_in_same_category_prevented(self):
         """Test: Cannot create duplicate label names within the same category"""

@@ -2327,46 +2327,14 @@ def label_form(request, public_id=None):
     )
 
 
-def _move_labels_to_fallback(category):
-    """Re-home a category's labels before it is deleted.
-
-    Returns the catch-all category, or None when there was nothing to move (or
-    the catch-all itself is being deleted). Labels are unique per category, so a
-    name that already exists in the catch-all is merged: the colleagues of the
-    duplicate move to the surviving label and the duplicate goes.
-    """
-    labels = list(category.labels.all())
-    if not labels:
-        return None
-
-    fallback = LabelCategory.fallback()
-    if fallback.pk == category.pk:
-        return None
-
-    for label in labels:
-        existing = Label.objects.filter(category=fallback, name=label.name).exclude(pk=label.pk).first()
-        if existing is None:
-            label.category = fallback
-            label.save(update_fields=["category"])
-        else:
-            existing.colleagues.add(*label.colleagues.all())
-            label.delete()
-    return fallback
-
-
 def _category_delete_warning(category):
-    """The confirmation text, which differs for the catch-all itself."""
+    """The confirmation text; the labels always go with the category."""
     count = category.labels.count()
     if count == 0:
         return f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?"
-    if category.name == LabelCategory.FALLBACK_NAME:
-        return (
-            f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen? "
-            f"De {count} labels erin worden verwijderd, ook bij de collega's die ze hebben."
-        )
     return (
         f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen? "
-        f"De {count} labels erin verhuizen naar '{LabelCategory.FALLBACK_NAME}'."
+        f"De {count} labels erin worden ook verwijderd."
     )
 
 
@@ -2379,37 +2347,22 @@ def label_category_delete(request, public_id):
     if request.method == "GET":
         # Een dialoog, geen sheet: de vraag komt uit de beheersheet en die moet
         # zichtbaar blijven staan achter de bevestiging.
-        has_labels = category.labels.exists()
-        is_fallback = category.name == LabelCategory.FALLBACK_NAME
         return render(
             request,
             "parts/confirm_delete_modal.html",
             {
                 "dialog_text": "Categorie verwijderen?",
                 "dialog_supporting": _category_delete_warning(category),
-                "confirm_label": "Verwijder categorie",
+                "confirm_label": "Verwijder categorie en labels",
                 "cancel_label": "Behoud categorie",
                 "form_post_url": reverse("label-category-delete", kwargs={"public_id": public_id}),
-                # De labels weggooien is een aparte keuze, en alleen zinnig als
-                # er labels zijn die anders zouden verhuizen.
-                "extra_confirm_label": ("Verwijder categorie en de labels" if has_labels and not is_fallback else ""),
-                "extra_confirm_vals": '{"labels_verwijderen": "1"}',
             },
         )
     if request.method == "POST":
         category_name = category.name  # Store name before deleting
-        # Zonder deze vlag verhuizen de labels naar het vangnet; met de vlag
-        # gaan ze mee met de categorie (cascade).
-        drop_labels = request.POST.get("labels_verwijderen") == "1"
-        moved_to = None if drop_labels else _move_labels_to_fallback(category)
+        # De labels gaan mee met de categorie (cascade).
         category.delete()
-        if moved_to is not None:
-            messages.success(
-                request,
-                f"Categorie '{category_name}' verwijderd; de labels staan nu onder '{moved_to.name}'",
-            )
-        else:
-            messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
+        messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("label-admin")
         return response
