@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
@@ -357,13 +358,14 @@ def merge_group(assignments):
         dupe.delete()
 
 
-def apply_member_change(request, assignment, mutate):
-    """Runs a single-service mutation, emitting one team-audit event around it.
+@contextmanager
+def member_audit_event(request, assignment):
+    """Wraps a single-service mutation, emitting one team-audit event around it.
 
-    ``mutate`` is a callable performing the actual change (e.g.
-    ``add_service_to_assignment`` or a ``service.delete()``). The before/after
-    snapshot stays whole-team, so the audit delta still reports exactly the one
-    row that changed, keyed on the internal ``service.id``.
+    The mutation (e.g. ``add_service_to_assignment`` or ``service.delete()``) is
+    written plainly inside the ``with`` block. The before/after snapshot stays
+    whole-team, so the audit delta still reports exactly the one row that
+    changed, keyed on the internal ``service.id``.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
     from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
@@ -371,7 +373,7 @@ def apply_member_change(request, assignment, mutate):
     spec = AssignmentEditables.services
     before = spec.audit_state(assignment) if spec.audit_state else None
     with transaction.atomic():
-        mutate()
+        yield
         after = spec.audit_state(assignment) if spec.audit_state else None
         emit_inline_edit_audit_event(
             AssignmentEditables, spec, assignment, before, after, request.user, request=request

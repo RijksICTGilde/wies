@@ -78,8 +78,8 @@ from .querysets import (
 )
 from .services.assignments import (
     add_service_to_assignment,
-    apply_member_change,
     assignment_edit_specs,
+    member_audit_event,
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
@@ -4100,7 +4100,8 @@ def assignment_member_edit_view(request, public_id):
         return rerender(formset)
 
     try:
-        apply_member_change(request, assignment, lambda: add_service_to_assignment(assignment, edited[0]))
+        with member_audit_event(request, assignment):
+            add_service_to_assignment(assignment, edited[0])
     except ValidationError as exc:
         for message in exc.messages:
             _attach_formset_error(formset, message)
@@ -4130,7 +4131,8 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     if service is None:
         raise Http404("Unknown service")
 
-    apply_member_change(request, assignment, service.delete)
+    with member_audit_event(request, assignment):
+        service.delete()
 
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
