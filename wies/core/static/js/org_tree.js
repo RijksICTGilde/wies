@@ -395,47 +395,6 @@
     });
   };
 
-  // Keyboard nav follows the WAI-ARIA Treeview pattern (↑/↓ visible nodes,
-  // ←/→ collapse/expand, Home/End first/last; Space toggles the row's checkbox).
-
-  OrgTree.prototype._visibleRows = function () {
-    return Array.from(this.container.querySelectorAll("nldd-list-item")).filter(
-      function (row) {
-        if (row.hidden) return false;
-        var parent =
-          row.parentElement && row.parentElement.closest("nldd-list-item");
-        while (parent) {
-          if (!parent.hasAttribute("expanded")) return false;
-          parent =
-            parent.parentElement &&
-            parent.parentElement.closest("nldd-list-item");
-        }
-        return true;
-      },
-    );
-  };
-
-  /** The button action is the control on a selectable row (a selectable branch
-   *  also has a chevron action, so match the button one); a group row IS the
-   *  control, so it takes focus itself. The action delegates focus() to its inner
-   *  control, so focusing the host reaches the button. Either way every row in
-   *  the tree is reachable. */
-  function focusRow(row) {
-    var target =
-      row.querySelector(
-        ":scope > nldd-list-item-action[button]:not([disclosure])",
-      ) ||
-      row.querySelector(":scope > nldd-list-item-action") ||
-      row;
-    if (target && target.focus) target.focus();
-  }
-
-  function hasBranch(row) {
-    return (
-      row.querySelector(':scope > nldd-list-item[slot="children"]') !== null
-    );
-  }
-
   /** The row a key event came from. Walks the composed path rather than using
    *  closest(): the focused control is a `<button>` inside a shadow root, either
    *  the segmented action's or — on a group row — the row's own, and closest()
@@ -450,61 +409,22 @@
     return null;
   }
 
+  // nldd-list[type=tree] handles the WAI-ARIA treeview keys itself. Only
+  // ArrowRight needs us: it opens what is already built, and a collapsed lazy
+  // branch has a chevron but no child rows yet.
   OrgTree.prototype._bindKeyboard = function () {
     var self = this;
-    this.container.addEventListener("keydown", function (e) {
-      var li = rowOf(e.composedPath());
-      if (!li) return;
-
-      var visible = self._visibleRows();
-      var idx = visible.indexOf(li);
-
-      switch (e.key) {
-        case "ArrowDown":
-          e.preventDefault();
-          if (idx < visible.length - 1) focusRow(visible[idx + 1]);
-          break;
-        case "ArrowUp":
-          e.preventDefault();
-          if (idx > 0) focusRow(visible[idx - 1]);
-          break;
-        case "ArrowRight":
-          e.preventDefault();
-          // Branch-ness comes from the model, not built DOM: a collapsed lazy
-          // branch has a chevron but no child rows yet. Build them on expand.
-          var node = self.state.getNode(li.dataset.nodeId);
-          if (node && node.children.length > 0) {
-            if (!li.hasAttribute("expanded")) {
-              self._ensureChildren(node);
-              li.setAttribute("expanded", "");
-            } else {
-              var firstChild = li.querySelector(
-                ':scope > nldd-list-item[slot="children"]:not([hidden])',
-              );
-              if (firstChild) focusRow(firstChild);
-            }
-          }
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          if (hasBranch(li) && li.hasAttribute("expanded")) {
-            li.removeAttribute("expanded");
-          } else {
-            var parentLi =
-              li.parentElement && li.parentElement.closest("nldd-list-item");
-            if (parentLi) focusRow(parentLi);
-          }
-          break;
-        case "Home":
-          e.preventDefault();
-          if (visible.length > 0) focusRow(visible[0]);
-          break;
-        case "End":
-          e.preventDefault();
-          if (visible.length > 0) focusRow(visible[visible.length - 1]);
-          break;
-      }
-    });
+    this.container.addEventListener(
+      "keydown",
+      function (e) {
+        if (e.key !== "ArrowRight") return;
+        var li = rowOf(e.composedPath());
+        if (!li || li.hasAttribute("expanded")) return;
+        var node = self.state.getNode(li.dataset.nodeId);
+        if (node && node.children.length > 0) self._ensureChildren(node);
+      },
+      true,
+    );
   };
 
   /** Debounced search wiring, identical in both pickers. */
