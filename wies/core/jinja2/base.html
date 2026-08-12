@@ -43,6 +43,10 @@
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
     <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
+    {# Koppelt in de filter-sidebar de plakhoogte los van de hoogteberekening;
+       zie de kop van het bestand. Global omdat elke pagina met filters dezelfde
+       sidebar-section uit deze base gebruikt. #}
+    <script src="{{ app_asset('js/sidebar_sticky.js') }}" defer></script>
   </head>
   <body>
     {# De main groeit tot de footer onderaan staat, dus de oude min-height-hack

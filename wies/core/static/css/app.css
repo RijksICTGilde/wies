@@ -238,13 +238,19 @@ a {
   margin-top: var(--primitives-space-4, 4px);
 }
 
-/* nldd-card tekent zelf geen hover-staat. Alleen href/button-kaarten krijgen er
-   een, zodat de cijferkaarten op het dashboard niet klikbaar gaan lijken.
+/* nldd-card tekent zelf geen hover-staat. Alleen klikbare kaarten krijgen er een,
+   zodat de cijferkaarten op het dashboard niet klikbaar gaan lijken.
    `--_background-color` is de interne variabele die .card uitleest; die erft het
    shadow-DOM in, dus de kaart houdt zijn eigen radius en clipping. De neutrale
    schaal loopt in licht naar donkerder en in donker naar lichter, dus één token
-   dekt beide thema's. */
-nldd-card[href]:hover,
+   dekt beide thema's.
+
+   `[href]:not([href=""])` en niet `[href]`: de component reflecteert zijn eigen
+   default (`href = ''`) naar het attribuut, dus élke kaart draagt in de DOM een
+   `href=""` — ook de kaarten die in het template geen href meekrijgen. Een
+   attribuutselector toetst op aanwezigheid, niet op inhoud, dus `[href]` matchte
+   ze allemaal en kleurden de cijferkaarten mee. */
+nldd-card[href]:not([href=""]):hover,
 nldd-card[button]:hover {
   --_background-color: var(--primitives-color-neutral-50);
 }
