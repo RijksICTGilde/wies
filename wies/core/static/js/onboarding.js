@@ -1,9 +1,8 @@
 // First-login onboarding wizard: auto-open + step navigation.
-// Het venster staat inline in base.html (niet via HTMX), dus we openen het hier
-// zelf. Overslaan (de dismiss van de title bar) en "Aan de slag" dienen beide
-// hetzelfde verborgen formulier in; de server antwoordt met een
-// `closeOnboarding`-trigger, waarop we het venster sluiten. Escape sluit het
-// venster alleen voor nu: de wizard komt bij de volgende pagina terug.
+// The window is inline in base.html rather than swapped in, so it is opened
+// here. Skipping (the title bar dismiss) and "Aan de slag" both submit the same
+// hidden form; the server answers with a `closeOnboarding` trigger. Escape only
+// closes for now — the wizard returns on the next page.
 (function () {
   "use strict";
 
@@ -19,7 +18,8 @@
   var steps = progress
     ? progress.querySelectorAll("nldd-step-indicator-item")
     : [];
-  // De korte stapnamen uit de indicator; de kop in de tekst mag langer zijn.
+  // The short step names from the indicator; the heading in the body may be
+  // longer.
   var stepTitles = Array.prototype.map.call(steps, function (step) {
     return step.getAttribute("text") || "";
   });
@@ -37,9 +37,16 @@
   var chrome = wizard.querySelectorAll("[data-onboarding-chrome]");
   var completing = false;
 
-  // Het bewerkscherm van een opdracht neemt het venster over: de stappen, de
-  // stapnavigatie en de stapindicator gaan weg zolang het openstaat (je bent
-  // dan niet in een stap), en de titelbalk krijgt de terugknop.
+  /**
+   * Shows or hides the assignment edit screen, which takes over the window.
+   *
+   * While it is open there is no current step, so the panels, the step
+   * navigation and the step indicator go away and the title bar gets a back
+   * button.
+   *
+   * @param {boolean} on True to show the edit screen; false to return to the
+   *     steps.
+   */
   function showDetail(on) {
     if (!detail) return;
     detail.hidden = !on;
@@ -49,15 +56,14 @@
     chrome.forEach(function (el) {
       el.hidden = on;
     });
-    // Zonder stapindicator bovenaan hoort de sectie zijn gewone padding te
-    // hebben; in de stappen begint hij strak tegen de indicator (padding-top 0).
+    // Without the step indicator on top the section keeps its normal padding;
+    // in a step it sits flush against the indicator.
     if (section) {
       if (on) section.removeAttribute("padding-top");
       else section.setAttribute("padding-top", "0");
     }
-    // In het bewerkscherm draagt de balk de opdrachtnaam, verankerd aan de titel
-    // in de inhoud: bovenaan zie je de terugknop met tekst, en zodra de titel
-    // onder de balk door scrolt klapt hij samen tot icoonknop plus naam.
+    // In the edit screen the bar carries the assignment name, anchored to the
+    // heading so it collapses to icon plus name once that scrolls under it.
     if (titleBar && on) {
       var detailHeading = detail.querySelector("[data-detail-title]");
       titleBar.setAttribute("back-text", "Terug");
@@ -80,21 +86,26 @@
     showDetail(false);
   }
 
+  /**
+   * Shows the given wizard step and updates the indicator, title bar and nav.
+   *
+   * @param {number} step The 1-based step number; clamped to the range.
+   */
   function show(step) {
     current = Math.min(Math.max(step, 1), TOTAL_STEPS);
     panels.forEach(function (panel) {
       panel.hidden = Number(panel.getAttribute("data-step")) !== current;
     });
     if (progress) progress.setAttribute("current", String(current));
-    // Alleen terug: een afgeronde stap is een knop, de stappen die nog komen
-    // niet. Vooruit ga je met Volgende, dat de stap ook opslaat.
+    // Backwards only: a completed step is a button, an upcoming one is not.
+    // Forward goes through Volgende, which also saves the step.
     steps.forEach(function (step, index) {
       if (index + 1 < current) step.setAttribute("button", "");
       else step.removeAttribute("button");
     });
-    // De knop zegt "Terug" en niet de naam van de vorige stap: die staat al in
-    // de stapindicator. De balk verankert aan de kop in de tekst, zodat hij bij
-    // wegscrollen samenklapt tot terugknop plus naam.
+    // The button says "Terug" rather than the previous step's name, which the
+    // indicator already shows. The bar anchors to the heading so it collapses
+    // to back button plus name when that scrolls away.
     if (titleBar) {
       var heading = wizard.querySelector(
         'section[data-step="' + current + '"] [data-step-title]',
@@ -111,8 +122,7 @@
         else titleBar.removeAttribute("collapse-anchor");
       }
     }
-    // Op de laatste stap staat "Aan de slag" waar anders "Volgende" staat:
-    // onder de inhoud van de stap die je net hebt gelezen.
+    // On the last step "Aan de slag" takes the place of "Volgende".
     var onLast = current === TOTAL_STEPS;
     if (nav) nav.hidden = onLast;
     if (finishWrap) finishWrap.hidden = !onLast;
@@ -125,10 +135,15 @@
     else completeForm.submit();
   }
 
-  // De labelvelden staan direct open (inline_edit_form), zonder eigen
-  // opslaanknop: bij het verlaten van een stap dienen we de formulieren van die
-  // stap in. Elk formulier post naar zijn eigen inline-edit-endpoint en swapt
-  // zichzelf naar de leesweergave; de wizard hoeft daar niet op te wachten.
+  /**
+   * Submits the inline-edit forms of a step when leaving it.
+   *
+   * The fields open directly (inline_edit_form) without a save button of their
+   * own. Each form posts to its own endpoint and swaps itself back to the read
+   * view, which the wizard does not wait for.
+   *
+   * @param {number} step The 1-based step number whose forms are submitted.
+   */
   function saveStep(step) {
     if (!window.htmx) return;
     panels.forEach(function (panel) {
@@ -147,7 +162,7 @@
       show(current + 1);
     });
   }
-  // De stap zelf is de knop; de klik borrelt op naar de indicator.
+  // The step itself is the button; its click bubbles up to the indicator.
   if (progress) {
     progress.addEventListener("click", function (e) {
       var item = e.target.closest("nldd-step-indicator-item");
@@ -170,11 +185,10 @@
     });
   }
 
-  // Alleen Overslaan vinkt de onboarding af; Escape sluit het venster voor nu
-  // (#553). Vandaar de dismiss van de titelbalk en niet de `close` van het
-  // venster: nldd-window roept op allebei hide() aan, dus in die `close` zijn ze
-  // niet meer te onderscheiden. De listener zit op de titelbalk zelf, want het
-  // venster stopt de propagatie van zo'n dismiss.
+  // Only Overslaan completes the onboarding; Escape closes for now (#553).
+  // Hence the title bar's dismiss and not the window's `close`: nldd-window
+  // calls hide() for both, so by then they are indistinguishable. The listener
+  // sits on the bar itself because the window stops that dismiss propagating.
   if (titleBar) {
     titleBar.addEventListener("dismiss", complete);
   }
@@ -184,14 +198,12 @@
     document.documentElement.style.overflow = "";
   });
 
-  // Het bewerkscherm is binnengeswapt → tonen. De terugknop erin en een
-  // geslaagde opslag (HX-Trigger uit de view) brengen je terug naar de stap.
+  // The edit screen was swapped in, so show it. Its back button and a
+  // successful save (HX-Trigger from the view) return to the step.
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.target === detail && detail.innerHTML.trim()) showDetail(true);
   });
   document.body.addEventListener("onboardingDetailClose", closeDetail);
-  // De terugknop van de titelbalk: alleen relevant terwijl het bewerkscherm
-  // openstaat, want anders staat hij er niet.
   wizard.addEventListener("back", function () {
     if (detail && !detail.hidden) closeDetail();
     else show(current - 1);
@@ -203,6 +215,8 @@
     document.documentElement.style.overflow = "";
   });
 
+  // show() fails silently before Lit has rendered the shadow root, so wait for
+  // updateComplete.
   customElements
     .whenDefined("nldd-window")
     .then(function () {

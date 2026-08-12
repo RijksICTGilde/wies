@@ -1,13 +1,12 @@
 // HTMX + NLDD dialog integration: auto-show sheets/modals that arrive via a swap.
 document.addEventListener("htmx:afterSwap", function (e) {
-  // show() reads the <dialog> out of the shadow root and returns silently when
-  // it isn't there yet. Right after a swap the element is upgraded but Lit has
-  // not rendered, so wait for updateComplete or the modal stays invisible.
+  // Right after a swap the element is upgraded but Lit has not rendered, so
+  // show() finds no <dialog> in the shadow root and returns silently; wait for
+  // updateComplete.
   //
-  // nldd-modal-dialog and nldd-sheet only open with an explicit
-  // data-auto-show: panel content carries closed dialogs too (the team-member
-  // confirm), and the side panel itself is an nldd-sheet that must not pop up
-  // on every swap.
+  // nldd-modal-dialog and nldd-sheet need an explicit data-auto-show: panel
+  // content also carries closed dialogs, and the side panel is itself an
+  // nldd-sheet that must not pop up on every swap.
   const selector =
     "nldd-window, nldd-modal-dialog[data-auto-show], nldd-sheet[data-auto-show]";
   e.detail.target.querySelectorAll(selector).forEach(function (dialog) {
@@ -21,14 +20,16 @@ document.addEventListener("htmx:afterSwap", function (e) {
   });
 });
 
-/** Staat er al een sheet open? Dan is de sheet die nu opent een child en hoort
- *  hij een terugknop te hebben; opent hij rechtstreeks vanaf de pagina, dan
- *  niet. Dat is niet vooraf te weten in de template: de filterzijbalk is een
- *  paneel op een breed scherm en een sheet op een smal, dus dezelfde knop opent
- *  de ene keer een child en de andere keer niet.
+/**
+ * Gives a sheet a back button when it opens on top of another one.
  *
- *  Met een terugknop mag de content niet tegen de balk aan staan: dan gaat de
- *  padding-top: 0 van de eerste sectie eraf. */
+ * The template cannot know this up front: the filter sidebar is a panel on a
+ * wide screen and a sheet on a narrow one, so the same button opens a child in
+ * one case and not in the other. With a back button the content may not sit
+ * flush against the bar, so the section loses its padding-top: 0.
+ *
+ * @param {Element} sheet The nldd-sheet that is about to open.
+ */
 window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   function isOpen(el) {
     const dlg = el && el.shadowRoot && el.shadowRoot.querySelector("dialog");
@@ -40,8 +41,8 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
       return other !== sheet && isOpen(other);
     },
   );
-  // De filterzijbalk toont zichzelf op smalle schermen als sheet in zijn eigen
-  // shadow root, dus die vind je niet met een document-query.
+  // On narrow screens the filter sidebar renders itself as a sheet inside its
+  // own shadow root, which a document query does not reach.
   let sidebarBar = null;
   Array.from(document.querySelectorAll("nldd-sidebar-section")).forEach(
     function (section) {
@@ -56,9 +57,8 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     ? parentSheet.querySelector("nldd-top-title-bar[slot='header']")
     : sidebarBar;
   const isChild = !!(parentSheet || sidebarBar);
-  // De terugknop wijst terug naar iets met een naam; die naam zegt meer dan
-  // "Terug". Alleen als de sheet eronder geen titel heeft valt het terug op het
-  // generieke woord.
+  // Name what the back button returns to; "Terug" is the fallback for a sheet
+  // underneath without a title.
   const backText =
     (parentBar && (parentBar.getAttribute("text") || parentBar.text)) ||
     "Terug";
@@ -68,15 +68,14 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     if (isChild) bar.setAttribute("back-text", backText);
     else bar.removeAttribute("back-text");
   }
-  // Alleen wanneer de balk direct boven de sectie staat. Zit er nog iets anders
-  // in de header (een zoekveld bijvoorbeeld), dan levert dat de ruimte al en
-  // houdt de sectie zijn eigen padding.
+  // Only when the bar sits directly above the section: anything else in the
+  // header (a search field, say) already provides the space.
   const extraHeader = sheet.querySelector(
     "[slot='header']:not(nldd-top-title-bar)",
   );
-  // Een sheet die met lopende tekst opent wil die ruimte juist wel: strak tegen
-  // de balk leest een alinea als een voortzetting van de titel. Formulieren en
-  // lijsten hebben er geen last van, vandaar dat dit de uitzondering is.
+  // A sheet opening with running text does want that space: flush against the
+  // bar, a paragraph reads as a continuation of the title. Forms and lists do
+  // not suffer from this, hence the exception.
   const houdtPadding = sheet.hasAttribute("data-keep-section-padding");
   const section = sheet.querySelector("nldd-simple-section");
   if (section && !extraHeader && !houdtPadding) {
@@ -85,23 +84,23 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   }
 };
 
-// Terug in een child-sheet betekent hetzelfde als sluiten — de sheet eronder
-// staat nog open en komt weer tevoorschijn.
+// Back in a child sheet means closing: the sheet underneath is still open and
+// reappears.
 document.addEventListener("back", function (e) {
   const sheet = e.composedPath().find(function (el) {
     return el.localName === "nldd-sheet";
   });
   if (!sheet || typeof sheet.hide !== "function") return;
-  // Het zijpaneel doet zijn eigen terug-navigatie (side_panel.js loopt door de
-  // panelStack); daar betekent terug een vorig paneel, niet sluiten.
+  // The side panel does its own back navigation through the panelStack in
+  // side_panel.js, where back means a previous panel rather than closing.
   if (sheet.id === "side-panel") return;
   sheet.hide();
 });
 
-// Delegated dismiss: een knop met [data-dismiss-modal] sluit de omvattende
-// nldd-modal-dialog of nldd-sheet. Vervangt een inline onclick-handler, zodat
-// de CSP script-src 'self' kan blijven (geen 'unsafe-inline'). composedPath
-// omdat de knop in de shadow root van het dialog kan zitten.
+// Delegated dismiss: [data-dismiss-modal] closes the enclosing nldd-modal-dialog
+// or nldd-sheet. It replaces an inline onclick handler, which the CSP
+// script-src 'self' forbids. composedPath because the button may live in the
+// dialog's shadow root.
 document.addEventListener("click", function (e) {
   const btn = e
     .composedPath()
@@ -116,9 +115,8 @@ document.addEventListener("click", function (e) {
   if (dialog && typeof dialog.hide === "function") dialog.hide();
 });
 
-// Listen for closeModal trigger from server
+// Server-sent closeModal trigger: close any open modal dialogs.
 document.addEventListener("closeModal", function () {
-  // Close any open modal dialogs
   const modalContainers = [
     "labelFormModal",
     "userFormModal",

@@ -1,9 +1,9 @@
-// Opent de filtersheet van de gebruikerslijst. De sheet staat server-side in de
-// pagina (user_admin.html), niet lazy: het #filter-form erin is wat het zoekveld
-// en de filterchips aansturen, en dat moet er dus altijd zijn. Het filteren zelf
-// loopt via het gedeelde filter_interactions.js (aanvinken → hidden input →
-// form-submit naar #results), dus dit bestand doet alleen openen. Extern bestand
-// i.p.v. inline <script> zodat CSP script-src 'self' blijft.
+// Opens the user list's filter sheet. The sheet is rendered server-side in
+// user_admin.html rather than lazily, because the #filter-form inside it drives
+// the search field and filter chips and must always be present. Filtering
+// itself runs through the shared filter_interactions.js, so this file only
+// opens. External file rather than inline <script>, so the CSP can stay
+// script-src 'self'.
 (function () {
   "use strict";
 
@@ -14,8 +14,8 @@
     return document.getElementById(SHEET_ID);
   }
 
-  // Lit-component: bij een vroege klik bestaat de shadow <dialog> misschien nog
-  // niet, dus show() no-opt. Wacht op updateComplete, val terug op rAF.
+  // Lit component: on an early click the shadow <dialog> may not exist yet and
+  // show() silently no-ops, so wait for updateComplete and fall back to rAF.
   function openWhenReady(el, attempt) {
     if (!el) return;
     const tryShow = () => {
@@ -33,8 +33,7 @@
   }
 
   function init() {
-    // Eén gedelegeerde listener voor de knop én het overflow-menu-item. De knop
-    // wordt niet meer OOB geswapt, maar delegatie blijft het robuustst.
+    // One delegated listener for both the button and the overflow menu item.
     document.addEventListener("click", (e) => {
       const trigger = e
         .composedPath()
@@ -44,7 +43,7 @@
       openWhenReady(sheet(), 0);
     });
 
-    // nldd-menu-item vuurt `select`, geen click, als het via het toetsenbord gaat.
+    // nldd-menu-item fires `select`, not click, when activated by keyboard.
     document.addEventListener("select", (e) => {
       const trigger = e
         .composedPath()

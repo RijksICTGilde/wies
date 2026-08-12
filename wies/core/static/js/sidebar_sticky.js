@@ -1,28 +1,20 @@
-// De filterbox van nldd-sidebar-section leidt twee dingen af uit één waarde:
-// `top: var(--_sticky-top)` (waar hij blijft plakken) en
-// `max-height: calc(100dvh - var(--_sticky-top) - var(--_sticky-bottom))`
-// (hoe hoog hij mag worden). Voor Wies moeten die twee uit elkaar.
+// nldd-sidebar-section derives both `top` and `max-height` of its filter box
+// from --_sticky-top, but Wies needs them apart: the top navigation bar above
+// the box is `position: static` and scrolls away, so the box starts below the
+// fold yet should stick near the top. One value cannot cover both — sticking at
+// GAP makes the box too tall and pushes the last filter group out of view,
+// while sizing it for the start position leaves that much empty space above
+// once the navbar is gone.
 //
-// De nldd-top-navigation-bar staat boven de box en is `position: static`, dus
-// hij scrollt weg. Bovenaan de pagina begint de box daardoor op y=188, maar hij
-// hoort te plakken op 16. Eén waarde kan dat niet dekken: op 16 wordt de box te
-// hoog en valt zijn onderkant bovenaan de pagina buiten beeld (de onderste
-// filtergroep was dan onbereikbaar zonder eerst de pagina te scrollen); op 188
-// past de hoogte, maar dan houdt hij ook 188px lege ruimte boven zich zodra de
-// navbar weg is.
+// So: pin `top` and recompute max-height per scroll position. Both properties
+// live in the shadow root and carry no `part`, which is why this is JS with an
+// adopted stylesheet rather than a rule in app.css.
 //
-// Dus: `top` vast op de plakhoogte, en de max-height per scrollpositie
-// herrekend vanaf waar de box op dat moment staat. De box vult zo altijd tot
-// GAP boven de schermrand, en groeit terwijl de navbar wegscrolt (op een
-// viewport van 800px: 596px bovenaan, 768px zodra de navbar weg is). Beide
-// zitten in de shadow root en dragen geen `part`, dus een adopted stylesheet is
-// de enige ingang; vandaar dat dit JS is en geen regel in app.css.
-//
-// Vervalt zodra de navigatiebalk zelf sticky is (of nldd-app-view de
-// scroll-context zet): dan is de starthoogte constant en volstaat het
-// sticky-top-attribuut.
+// Obsolete once the navigation bar is sticky itself (or nldd-app-view sets the
+// scroll context): the start offset is constant then, and the sticky-top
+// attribute suffices.
 
-const GAP = 16; // marge boven en onder de box, gelijk aan de default sticky-inset
+const GAP = 16; // Matches the component's default sticky inset.
 
 const BOX_CSS = `
 .sidebar-section__sidebar-box {
@@ -32,10 +24,10 @@ const BOX_CSS = `
 `;
 
 /**
- * Koppelt de plakhoogte los van de hoogteberekening op één sidebar-section, en
- * houdt de hoogte bij tijdens het scrollen.
+ * Decouples the sticky offset from the height calculation on one section, and
+ * keeps the height in sync while scrolling.
  *
- * @param {Element} section Een nldd-sidebar-section met een shadow root.
+ * @param {Element} section An nldd-sidebar-section with a shadow root.
  * @returns {void}
  */
 function applyStickyOffsets(section) {
@@ -52,9 +44,8 @@ function applyStickyOffsets(section) {
   const box = section.shadowRoot.querySelector(".sidebar-section__sidebar-box");
   if (!box) return;
 
-  // Waar de box nu staat, is precies de ruimte die boven hem verloren gaat.
-  // Zolang hij nog niet plakt zakt die waarde mee met de scroll; daarna blijft
-  // hij op GAP staan en heeft de box de volle hoogte.
+  // Where the box sits is exactly the space lost above it: that value follows
+  // the scroll until the box sticks, after which it stays at GAP.
   const syncHeight = () => {
     const top = Math.max(GAP, Math.round(box.getBoundingClientRect().top));
     section.style.setProperty("--_live-top", `${top}px`);
@@ -62,14 +53,14 @@ function applyStickyOffsets(section) {
 
   syncHeight();
 
-  // nldd-page is de scroller, niet het venster (zie app.css: html/body height 100%).
+  // nldd-page is the scroller, not the window (app.css sets html/body to 100%).
   const scroller = document.querySelector("nldd-page") ?? window;
   scroller.addEventListener("scroll", syncHeight, { passive: true });
   window.addEventListener("resize", syncHeight, { passive: true });
 }
 
 /**
- * Patcht elke sidebar-section op de pagina zodra zijn shadow root bestaat.
+ * Patches every sidebar-section on the page once its shadow root exists.
  *
  * @returns {void}
  */
@@ -78,9 +69,9 @@ function patchAll() {
     if (section.shadowRoot) {
       applyStickyOffsets(section);
     } else {
-      // Het component is nog niet ge-upgrade; probeer het opnieuw na definitie.
+      // Not upgraded yet; retry once the element is defined.
       customElements.whenDefined("nldd-sidebar-section").then(() => {
-        // updateComplete: Lit rendert zijn shadow root pas in een latere tick.
+        // Lit renders its shadow root a tick later, hence updateComplete.
         (section.updateComplete ?? Promise.resolve()).then(() =>
           applyStickyOffsets(section),
         );

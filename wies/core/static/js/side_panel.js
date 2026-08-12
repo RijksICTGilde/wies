@@ -1,5 +1,5 @@
-// NDD side panel — gebruikt nldd-sheet API (.show()/.hide()).
-// Manages: panel stack voor back-navigation, URL sync, popstate.
+// NDD side panel on the nldd-sheet API (.show()/.hide()): panel stack for back
+// navigation, URL sync and popstate.
 
 (function () {
   "use strict";
@@ -22,24 +22,22 @@
 
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
-  // Queryparams die een paneel openen (spiegelt PANEL_PARAMS in views.py, minus
-  // 'pagina' dat over de lijst gaat). 'bewerken' hangt aan 'plaatsing' en opent
-  // dus nooit op zichzelf een paneel. 'nieuwe-opdracht' opent de aanmaak-sheet.
+  // Query params that open a panel; mirrors PANEL_PARAMS in views.py minus
+  // 'pagina', which belongs to the list. 'bewerken' only qualifies 'plaatsing'.
   const PANEL_PARAMS = ["collega", "opdracht", "plaatsing", "nieuwe-opdracht"];
 
   function hasPanelParam(url) {
     return PANEL_PARAMS.some((name) => url.searchParams.has(name));
   }
 
-  // Elk item is { url, title }: de titel van het paneel dat je verlaat, zodat
-  // de terugknop hem kan tonen ("Anke Jacobs" zegt meer dan "Terug").
+  // Each entry is { url, title }: the title of the panel being left, so the back
+  // button can name it instead of just saying "Terug".
   const panelStack = [];
   let _skipNextPush = false;
   let currentPanelTitle = "";
-  // De titel van het paneel dat NET is ingeladen. afterSwap kent hem al (voor
-  // de terugknop-berekening van een volgende stap), maar currentPanelTitle mag
-  // pas na de afterSettle-push wisselen — anders komt de verkeerde titel op de
-  // stack. afterSettle zet currentPanelTitle = pendingNewTitle als laatste.
+  // Title of the panel that just loaded. afterSwap knows it already, but
+  // currentPanelTitle may only switch after the afterSettle push, or the stack
+  // records the wrong title.
   let pendingNewTitle = "";
 
   function getSheet() {
@@ -48,7 +46,7 @@
 
   function isSheetOpen(sheet) {
     if (!sheet) return false;
-    // nldd-sheet exposeert open state via shadow root <dialog open>
+    // nldd-sheet exposes its open state as <dialog open> in the shadow root.
     const dlg = sheet.shadowRoot && sheet.shadowRoot.querySelector("dialog");
     return !!(dlg && dlg.open);
   }
@@ -74,10 +72,12 @@
     if (c) c.innerHTML = "";
   }
 
-  // Bepaalt of er een terugknop hoort bij het huidige paneel: alleen als het
-  // vorige item op de stack zelf een paneel was. Niet "is de stack gevuld":
-  // bij de eerste paneelopening staat de lijst-URL erop, en teruggaan naar de
-  // lijst is gewoon sluiten.
+  /**
+   * Returns the stack entry the back button should point at, or null.
+   *
+   * A non-empty stack is not enough: the first panel opening pushes the list
+   * URL, and going back to the list is just closing.
+   */
   function parentPanel() {
     const parent = panelStack[panelStack.length - 1];
     const hasParent =
@@ -85,29 +85,34 @@
     return hasParent ? parent : null;
   }
 
-  // Schrijft de terugknop (back-text) en de bijbehorende padding op de balk en
-  // de eerste sectie. Los van de berekening zodat afterSwap dit vóór de eerste
-  // paint kan doen — zet je back-text pas in afterSettle, dan hertekent de
-  // vendor-titelbalk zich een frame later en zie je de header verspringen.
+  /**
+   * Writes the back button and matching padding onto the title bar and section.
+   *
+   * Kept separate from the computation so afterSwap can call it before the first
+   * paint: setting back-text in afterSettle makes the vendor title bar redraw a
+   * frame later, which shows as a jumping header.
+   *
+   * @param {Element} bar The panel's nldd-top-title-bar.
+   * @param {?Element} section The panel's first nldd-simple-section.
+   * @param {?{url: string, title: string}} parent The panel to go back to, or
+   *     null for no back button.
+   */
   function writeBackButton(bar, section, parent) {
-    // De template zet zelf al een back-text als hij die kent (het bewerkformulier
-    // weet van wie het is); die niet overschrijven. Anders komt hij uit de stack,
-    // en pas als beide leeg zijn wordt het "Terug".
+    // A template that knows its own back-text (the edit form knows whose it is)
+    // wins; the stack value is the fallback, "Terug" the last resort.
     if (parent)
       bar.setAttribute(
         "back-text",
         parent.title || bar.getAttribute("back-text") || "Terug",
       );
     else bar.removeAttribute("back-text");
-    // Staat er een terugknop, dan mag de content niet tegen de balk aan staan,
-    // dus dan geen padding-top: 0 op de eerste sectie.
+    // With a back button the content must not sit flush against the bar.
     if (!section) return;
     if (parent) section.removeAttribute("padding-top");
     else section.setAttribute("padding-top", "0");
   }
 
-  // Voor de server-gerenderde eerste paneelopening (init): content staat er al,
-  // dus writeBackButton schrijven na een swap is niet aan de orde.
+  // For the server-rendered first panel opening (init), where no swap happens.
   function syncPanelBackButton() {
     const content = document.getElementById(CONTENT_ID);
     if (!content) return;
@@ -157,11 +162,11 @@
   }
 
   function init() {
-    // Open sheet als content al server-side gerendered is (initial load met ?collega=N)
+    // Open the sheet when the content was server-rendered (?collega=N on load).
     const content = document.getElementById(CONTENT_ID);
     if (content && content.innerHTML.trim()) {
-      // Wacht tot nldd-sheet klaar is: alleen een shadowRoot is niet genoeg,
-      // show() vlak voor de eerste render laat de dialog dicht.
+      // A shadowRoot alone is not enough: show() before the first render leaves
+      // the dialog closed, so wait for updateComplete.
       const sheet = getSheet();
       if (sheet) {
         customElements
@@ -179,16 +184,16 @@
       );
       if (!btn) return;
       const action = btn.dataset.nddAction;
-      // Sluiten zit niet meer hier: de panel-templates gebruiken een echte
-      // nldd-top-title-bar en nldd-sheet sluit zichzelf op diens dismiss.
+      // Closing is not handled here: nldd-sheet closes itself on the dismiss of
+      // the panel template's nldd-top-title-bar.
       if (action === "panel-back") {
         e.preventDefault();
         panelBack();
       }
     });
 
-    // Het rijmenu opent de dialoog en geeft naam + actie-URL mee via data-
-    // attributen; pas de destructieve knop in de dialoog voert de POST uit.
+    // The row menu opens the dialog and passes name and action URL via data
+    // attributes; only the destructive button in the dialog does the POST.
     document.addEventListener("select", (e) => {
       const item = e
         .composedPath()
@@ -242,32 +247,25 @@
       if (dialog.hide) dialog.hide();
     });
 
-    // nldd-top-title-bar vuurt 'back' (bubbles + composed) als zijn terugknop
-    // wordt gebruikt; child panels zoals het bewerkformulier gaan zo terug naar
-    // hun ouder in de panelStack. Alleen de eigen titelbalk van het paneel telt:
-    // een balk in een geneste overlay stuurt zijn eigen 'back' omhoog.
+    // nldd-top-title-bar fires 'back' (bubbles + composed). Only the panel's own
+    // title bar counts; a bar in a nested overlay sends its 'back' up too.
     document.addEventListener("back", (e) => {
       const content = document.getElementById(CONTENT_ID);
       if (!content || e.target.parentElement !== content) return;
       panelBack();
     });
 
-    // nldd-sheet emit een 'close' event wanneer gebruiker op backdrop klikt of ESC drukt
+    // nldd-sheet fires 'close' on a backdrop click or ESC.
     const sheet = getSheet();
     if (sheet) {
-      // WORKAROUND voor een bug in het design system (@nldd/design-system 0.8.70).
-      // nldd-sheet sluit zichzelf zodra er een 'dismiss' langskomt met ergens een
-      // nldd-top-title-bar in het composed path — ongeacht of dat zijn EIGEN balk
-      // is (zie utilities/dismiss-from-title-bar.ts, waar die beperking ook staat
-      // beschreven). De datumkiezer van nldd-date-field is een popover met een
-      // eigen titelbalk, en nldd-popover stopt die dismiss niet zoals sheet en
-      // window dat wel doen. Gevolg: "Annuleer" in de datumkiezer sloot ook de
-      // zijsheet.
-      //
-      // De listener hangt op de content (bubble-fase), niet op de sheet: dan is
-      // het component zelf al klaar met het event — de datumkiezer sluit dus
-      // gewoon — en stoppen we het net voordat de sheet het ziet. Weghalen zodra
-      // de DS dit oplost.
+      // WORKAROUND for @nldd/design-system 0.8.70: nldd-sheet closes on any
+      // 'dismiss' with an nldd-top-title-bar in the composed path, even a
+      // foreign one (see utilities/dismiss-from-title-bar.ts). The date picker
+      // of nldd-date-field is a popover with its own title bar and, unlike sheet
+      // and window, nldd-popover does not stop that dismiss, so "Annuleer" in
+      // the picker also closed the side sheet. The listener sits on the content
+      // in the bubble phase, so the picker has already handled the event and we
+      // stop it just before the sheet sees it. Remove once the DS fixes this.
       const content = document.getElementById(CONTENT_ID);
       if (content) {
         content.addEventListener("dismiss", (e) => {
@@ -284,10 +282,8 @@
       }
 
       sheet.addEventListener("close", (e) => {
-        // Alleen als DEZE sheet sluit. Overlays in de inhoud (de datepicker van
-        // een nldd-date-field is zelf ook een sheet) vuren een 'close' die
-        // bubbelt; zonder deze check leegden we het paneel bij het sluiten
-        // daarvan.
+        // Only when THIS sheet closes: overlays inside the content (the date
+        // picker of an nldd-date-field is a sheet itself) bubble a 'close' too.
         if (e.target !== sheet) return;
         const url = new URL(window.location);
         if (hasPanelParam(url)) {
@@ -316,10 +312,9 @@
     });
   }
 
-  // afterSwap draait synchroon na het invoegen van de nieuwe DOM, nog vóór de
-  // browser tekent (afterSettle komt ~20ms later). De terugknop hier zetten laat
-  // de vendor-titelbalk hem in de éérste paint meenemen: geen zichtbare sprong.
-  // De stack-boekhouding blijft in afterSettle; hier alleen de zichtbare balk.
+  // afterSwap runs synchronously after the DOM insert, still before paint
+  // (afterSettle is ~20ms later), so the back button set here makes the first
+  // paint and does not visibly jump. Stack bookkeeping stays in afterSettle.
   document.addEventListener("htmx:afterSwap", (event) => {
     const targetId = event.detail.target && event.detail.target.id;
     if (targetId !== CONTENT_ID) return;
@@ -329,22 +324,19 @@
     const bar = content.querySelector(":scope > nldd-top-title-bar");
     if (!bar) return;
 
-    // De titel van het net ingeladen paneel; afterSettle zet hem straks pas op
-    // currentPanelTitle (na de push, zodat de stack de juiste titel krijgt).
     pendingNewTitle = bar.getAttribute("text") || "";
 
-    // Een POST (bewerkformulier opslaan, teamlid verwijderen) is geen stap in de
-    // stack en heeft zijn eigen server-back-text; die niet met een stack-waarde
-    // overschrijven. Ook een balk met een server-gerenderde back-text (bewerk-/
-    // aanmaakpanelen) laten we met rust.
+    // A POST (saving the edit form, removing a team member) is no step in the
+    // stack and brings its own server back-text; leave a server-rendered
+    // back-text alone as well.
     const verb = event.detail.requestConfig && event.detail.requestConfig.verb;
     if (verb && verb.toLowerCase() !== "get") return;
     if (bar.hasAttribute("back-text")) return;
 
-    // De terugknop van het NIEUWE paneel wijst naar het paneel dat we verlaten.
-    // Bij _skipNextPush (terugknop/popstate) is dat pop al gebeurd, dus wijst
-    // panelStack[last] naar de juiste ouder; anders is het het huidige paneel
-    // (currentPath/currentPanelTitle), dat afterSettle zo meteen pusht.
+    // The new panel's back button points at the panel being left. Under
+    // _skipNextPush (back button/popstate) the pop already happened, so
+    // panelStack[last] is the parent; otherwise it is the current panel, which
+    // afterSettle is about to push.
     const section = content.querySelector(":scope > nldd-simple-section");
     if (_skipNextPush) {
       writeBackButton(bar, section, parentPanel());
@@ -354,20 +346,18 @@
     const requestPath =
       (event.detail.pathInfo && event.detail.pathInfo.requestPath) ||
       (event.detail.requestConfig && event.detail.requestConfig.path);
-    // Komt het nieuwe paneel op de URL uit waar we al staan, dan zijn we
-    // teruggekeerd in plaats van dieper gegaan — zo landt het bewerkformulier na
-    // opslaan (HX-Location zet de URL zelf). "De ouder is waar we vandaan komen"
-    // klopt dan niet: currentPanelTitle is nog het formulier, en de terugknop
-    // wees naar het scherm dat je net had afgerond. De echte ouder komt van de
-    // stack, die afterSettle zo meteen tot dit punt terugknipt.
+    // Landing on the URL we are already on means we returned rather than went
+    // deeper (the edit form after saving, where HX-Location sets the URL). The
+    // parent then comes from the stack, not from currentPanelTitle, which still
+    // holds the form we just finished.
     const isReturn =
       !!requestPath &&
       new URL(requestPath, window.location.origin).pathname +
         new URL(requestPath, window.location.origin).search ===
         currentPath;
     if (isReturn) {
-      // De ouder is de stap vóór deze op de stack; staat die er niet op (we
-      // kwamen rechtstreeks van de lijst), dan hoort er geen terugknop.
+      // The parent is the step before this one on the stack; without one we
+      // came straight from the list and there is no back button.
       const backTo = panelStack.findIndex((entry) => entry.url === currentPath);
       const parentEntry = backTo > 0 ? panelStack[backTo - 1] : null;
       writeBackButton(
@@ -393,16 +383,16 @@
     const sheet = getSheet();
     if (sheet && !isSheetOpen(sheet)) openSheet();
 
-    // De zichtbare balk is al in afterSwap gezet; hier alleen de boekhouding.
+    // afterSwap already wrote the visible bar; this is bookkeeping only.
     if (_skipNextPush) {
       _skipNextPush = false;
       currentPanelTitle = pendingNewTitle;
       return;
     }
 
-    // Alleen navigeren tussen panelen is een stap in de stack. Een POST (het
-    // bewerkformulier) is dat niet: die zet zijn eigen URL via HX-Push-Url, en
-    // pushen we hier alsnog, dan blijft het POST-pad in de adresbalk staan.
+    // Only navigation between panels is a step. A POST (the edit form) sets its
+    // own URL via HX-Push-Url; pushing here would leave the POST path in the
+    // address bar.
     const verb = event.detail.requestConfig && event.detail.requestConfig.verb;
     if (verb && verb.toLowerCase() !== "get") return;
 
@@ -415,19 +405,17 @@
     const reqPath = reqUrl.pathname + reqUrl.search;
     const currentPath = window.location.pathname + window.location.search;
 
-    // Keren we terug naar een paneel dat al op de stack staat, dan is dit een
-    // stap terug en geen stap dieper: knip de stack daar af. Het bewerkformulier
-    // komt na opslaan via HX-Location op het ouderpaneel uit — dat is een GET,
-    // en die zette de bewerkstap anders als "vorige" neer. Gevolg was een
-    // terugknop naar het formulier dat je net had afgerond ("Opdrachtperiode
-    // wijzigen"). HX-Location zet de URL zelf al, dus reqPath en currentPath
-    // zijn dan gelijk en het blok hieronder slaat over — vandaar hier.
+    // Returning to a panel already on the stack is a step back, not deeper, so
+    // truncate there. The edit form lands on its parent panel via HX-Location,
+    // which is a GET that would otherwise leave the edit step as "previous" and
+    // give a back button to the form you just finished. HX-Location sets the URL
+    // itself, so reqPath equals currentPath and the block below is skipped.
     const backTo = panelStack.findIndex((entry) => entry.url === reqPath);
     if (backTo !== -1) panelStack.length = backTo;
 
     if (reqPath !== currentPath) {
-      // currentPanelTitle hoort nog bij het paneel dat we verlaten; pas ná de
-      // push wisselen naar de titel van het nieuwe paneel (pendingNewTitle).
+      // currentPanelTitle still belongs to the panel being left, so it may only
+      // switch to pendingNewTitle after this push.
       panelStack.push({ url: currentPath, title: currentPanelTitle });
       history.pushState({}, "", reqPath);
     }

@@ -1,22 +1,15 @@
 // Filter interactions (opdrachten/plaatsingen/gebruikers list filters).
-// ----------------------------------------------------------------------------
-// Filter inputs carry their own name + data-filter-input and are form-
-// associated (or plain), so hx-include submits their values natively. This
-// module only covers the interaction glue the browser can't do for us:
-//   1. Nudges a re-filter (synthetic `change` on a [data-filter-input]
-//      element) when an nldd-* field or filter checkbox changes, so
-//      hx-trigger="change from:[data-filter-input]" fires.
-//   2. nldd-search-field → #search-hidden with debounce + suggestions.
-//   3. MutationObserver picks up NDD elements added after HTMX swaps.
-//   4. Dismiss handler voor nldd-token chips → verwijdert filter.
-//   5. "Wis alle filters".
-//   6. Opdrachtgever quick-options.
-//   7. "Meer"-modal: schrijft niet-inline picks in een overflow-slot.
 //
-// The sidebar toggle that used to live here is now sidebar_toggle.js. The
-// nldd-* hx-* click forwarding is gone entirely: htmx 2 wires custom elements
-// itself, so the bridge only produced a second, duplicate request.
-// ----------------------------------------------------------------------------
+// Filter inputs carry their own name + data-filter-input, so hx-include submits
+// their values natively. This module only covers the glue the browser cannot
+// do: nudging a re-filter with a synthetic `change` so
+// hx-trigger="change from:[data-filter-input]" fires, the search field with its
+// suggestions, token dismissal, "Wis alle filters", opdrachtgever quick options
+// and the "Meer" modal. A MutationObserver picks up nldd elements added by
+// HTMX swaps.
+//
+// There is deliberately no hx-* click forwarding for nldd elements: htmx 2
+// wires custom elements itself, so a bridge only produced a duplicate request.
 
 (function () {
   "use strict";
@@ -26,26 +19,20 @@
   // must not drive the global `zoek` query.
   const NDD_SEARCH = "nldd-search-field[data-wies-search-input]";
 
-  // Filter checkboxes carry their own `name` + `data-filter-input`, so the
-  // browser submits them via hx-include and htmx's own
-  // hx-trigger="change from:[data-filter-input]" re-runs the filter — no glue
-  // needed here. Custom elements (nldd-text-field/-search-field) below aren't
-  // seen by that trigger, so they get a nudge.
-
   function dispatchFormChange(form) {
     if (!form) return;
-    // Triggert hx-trigger="change from:[data-filter-input]" op de form.
+    // Fires the form's hx-trigger="change from:[data-filter-input]".
     const sentinel = form.querySelector("[data-filter-input]");
     (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // A filter row is an nldd-list-item[checkbox]: the row carries role and
-  // state, the nldd-checkbox inside it is decorative, and a hidden native
-  // checkbox behind the list is what actually submits. These three helpers
-  // keep them in step.
-  /** Look the slot up by group id, not by position. The groups sit flat in the
-   *  form, so a plain [data-hidden-inputs] query handed EVERY group the first
-   *  slot in the form — only the topmost filter still submitted. */
+  // A filter row is an nldd-list-item[checkbox]: the row carries role and state,
+  // the nldd-checkbox inside it is decorative, and a hidden native checkbox
+  // behind the list is what submits. The helpers below keep them in step.
+
+  /** Returns the hidden-input slot of a group, looked up by group id. The groups
+   *  sit flat in the form, so a plain [data-hidden-inputs] query handed every
+   *  group the first slot and only the topmost filter still submitted. */
   function inputSlot(group) {
     const groupId = group.dataset.groupId;
     const form = group.closest("form");
@@ -79,7 +66,7 @@
     syncRowCheckbox(row);
   }
 
-  // A row toggle writes through to the hidden input that submits.
+  /** Writes a row toggle through to the hidden input that submits. */
   function setupFilterRows() {
     document.addEventListener("change", (e) => {
       const row = e.target;
@@ -104,10 +91,9 @@
     });
   }
 
-  // Both are form-associated, so their value reaches the request
-  // natively (no hidden-input mirror needed). We only have to nudge the form
-  // to re-run the filter when the value changes, since the form's hx-trigger
-  // listens for `change` from [data-filter-input] elements.
+  // Both are form-associated, so their value reaches the request natively; only
+  // the re-filter needs a nudge, since the form's hx-trigger listens for
+  // `change` from [data-filter-input] elements.
   function attachTextField(el) {
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
@@ -120,20 +106,17 @@
     el.addEventListener("input", onChange);
   }
 
-  // nldd-search-field fires: `input` (typing), `search` (Enter / search
-  // button), `change` (blur). We show live suggestions while typing and
-  // commit the search (write hidden -> run filter, hide suggestions, blur)
-  // on `search`. Committing via a suggestion click routes through here too.
+  // nldd-search-field fires `input` (typing), `search` (Enter / search button)
+  // and `change` (blur): suggestions appear while typing, `search` commits.
   function suggestionMenu() {
     return document.getElementById("search-suggestions");
   }
 
-  /** Opens the menu when it holds items, closes it when it doesn't.
-   *  Driven by a MutationObserver on the menu, not by the htmx promise: that
-   *  promise resolves before the swap settles, so syncing on it left the menu
-   *  one response behind — and an emptied menu stayed open showing nldd-menu's
-   *  "Geen opties beschikbaar". Also stays closed once the field is empty, so a
-   *  late response for an already-cleared term can't reopen it. */
+  /** Opens the menu when it holds items, closes it when it does not. Driven by a
+   *  MutationObserver on the menu, not by the htmx promise: that promise
+   *  resolves before the swap settles, leaving the menu one response behind.
+   *  Stays closed once the field is empty, so a late response for an
+   *  already-cleared term cannot reopen it. */
   function syncSuggestionMenu() {
     const menu = suggestionMenu();
     if (!menu) return;
@@ -152,14 +135,11 @@
     new MutationObserver(syncSuggestionMenu).observe(menu, { childList: true });
   }
 
-  /** Anchor the menu by element reference instead of by id.
-   *
-   * With the `anchor` ATTRIBUTE nldd-menu also treats that element as a
-   * toggle: it listens on document click and opens itself whenever the click
-   * path contains the anchor. Right for a button-anchored menu, wrong here —
-   * clicking into the search field would open an empty menu showing "Geen
-   * opties beschikbaar". Setting `anchorElement` gives the same Floating UI
-   * positioning but skips the toggle, leaving open/close entirely to us. */
+  /** Anchors the suggestion menu by element reference instead of by id. With the
+   *  `anchor` attribute nldd-menu also treats that element as a toggle and opens
+   *  itself on any click containing the anchor, so clicking into the search
+   *  field would open an empty menu. `anchorElement` gives the same positioning
+   *  without the toggle, leaving open/close to us. */
   function anchorSuggestionMenu() {
     const menu = suggestionMenu();
     const field = document.querySelector("[data-wies-search-input]");
@@ -197,8 +177,8 @@
   function attachSearchField(el) {
     if (el.__nddSearchAttached) return;
     el.__nddSearchAttached = true;
-    // Wire the menu up front: the toggle would otherwise fire on the very
-    // first click into the field, before anything has been typed.
+    // Wire the menu up front: the toggle would otherwise fire on the first
+    // click into the field, before anything has been typed.
     anchorSuggestionMenu();
     observeSuggestionMenu();
     let timer = null;
@@ -221,10 +201,9 @@
       }, 250);
     });
 
-    // The menu is variant="listbox", so it never takes focus. Forward the
-    // navigation keys to it, the same way nldd-combo-box drives its own menu.
-    // Capture phase: the search field handles Enter on its own inner input, so
-    // a bubbling listener would run too late to claim it for the menu.
+    // The menu is variant="listbox" and never takes focus, so navigation keys
+    // are forwarded to it. Capture phase: the search field handles Enter on its
+    // own inner input, so a bubbling listener would run too late.
     el.addEventListener(
       "keydown",
       (e) => {
@@ -263,7 +242,7 @@
   }
 
   // An org suggestion applies the abbreviation as an org filter and clears the
-  // typed term — you searched for a shorthand, you get the organisation.
+  // typed term: you searched for a shorthand, you get the organisation.
   function setupSearchSuggestionSelect() {
     document.addEventListener("select", (e) => {
       const item = e
@@ -322,11 +301,10 @@
       return;
     }
 
-    // Date filter: the nldd-date-field submits its own value, so clearing that
-    // value IS removing the filter. Programmatic value sets commit their form
-    // value in the component's updated() — a render later — so wait for
-    // updateComplete before serialising, or the request still carries the old
-    // date and the OOB swap puts it right back.
+    // The nldd-date-field submits its own value, so clearing it removes the
+    // filter. A programmatic set commits its form value a render later, in
+    // updated(), so wait for updateComplete before serialising or the request
+    // still carries the old date and the OOB swap puts it back.
     const dateField = form.querySelector(
       `nldd-date-field[name="${CSS.escape(name)}"]`,
     );
@@ -340,9 +318,9 @@
       return;
     }
 
-    // Multi-select: uncheck the submitting input and mirror it back onto the
-    // row. "labels" repeats per category, so several groups share
-    // data-name="labels" — search ALL of them, not just the first.
+    // Multi-select: uncheck the submitting input and mirror it onto the row.
+    // "labels" repeats per category, so several groups share
+    // data-name="labels" and all of them have to be searched.
     if (value !== null) {
       const groups = form.querySelectorAll(
         `[data-wies-fieldset][data-name="${CSS.escape(name)}"]`,
@@ -359,7 +337,7 @@
       }
     }
 
-    // Org filters (modal-managed): verwijder hidden input direct.
+    // Org filters (modal-managed): remove the hidden input directly.
     const orgContainer = document.getElementById("org-filter-inputs");
     if (orgContainer) {
       const inputs = Array.from(
@@ -372,7 +350,7 @@
     }
   }
 
-  // nldd-token "dismiss" event is composed:true (volgens NDD code)
+  // The nldd-token "dismiss" event is composed, so it can be caught here.
   function setupTokenDismiss() {
     document.addEventListener("dismiss", (e) => {
       const path = e.composedPath();
@@ -387,8 +365,8 @@
   }
 
   // The top-3 org quick options in the sidebar each carry their own param
-  // (org / org_self / org_type). Ticking one writes/removes a hidden input
-  // in #org-filter-inputs and re-runs the filter — no modal needed.
+  // (org / org_self / org_type), so ticking one writes or removes a hidden
+  // input in #org-filter-inputs and re-runs the filter without the modal.
   function setupOrgQuickOptions() {
     document.addEventListener("change", (e) => {
       const row = e.target;
@@ -426,8 +404,7 @@
 
   // A sidebar group's "Meer..." row opens filter_options_modal.html into
   // #filter-options-modal-container. Ticking there is deferred: only the CTA
-  // writes the selection back to the sidebar group and re-runs the filter.
-  // Closing (title bar / Escape) discards the changes.
+  // writes the selection back and re-runs the filter, closing discards it.
   function setupFilterOptionsModal() {
     const SHEET_ID = "filter-options-modal";
     const container = document.getElementById("filter-options-modal-container");
@@ -446,9 +423,8 @@
         .map((row) => row.dataset.value);
     }
 
-    /** Same CTA wording as the opdrachtgever-sheet: the button says what it is
-     *  about to apply, so no separate counter is needed. With nothing ticked
-     *  there is no filter to name, hence the neutral wording. */
+    /** Updates the CTA label to name what it is about to apply, so no separate
+     *  counter is needed. Neutral wording when nothing is ticked. */
     function updateApplyLabel(sheet) {
       const button = sheet.querySelector("#filter-options-apply-btn");
       if (!button) return;
@@ -459,9 +435,9 @@
       button.setAttribute("text", text);
     }
 
-    // Open the sheet once htmx swaps it in. It is a Lit component: right after
-    // the swap its shadow <dialog> may not exist yet, so show() would no-op.
-    // Wait for the element to upgrade + finish its first render, fall back to rAF.
+    // Opens the sheet once htmx swaps it in. It is a Lit component whose shadow
+    // <dialog> may not exist right after the swap, so show() would no-op: wait
+    // for the first render, falling back to rAF.
     function openWhenReady(sheet, attempt) {
       if (!sheet) return;
       const tryShow = () => {
@@ -469,9 +445,9 @@
           typeof sheet.show === "function" &&
           sheet.shadowRoot?.querySelector("dialog")
         ) {
-          // Terugknop alleen als deze sheet vanuit een andere sheet opent (de
-          // filterzijbalk is op een smal scherm zelf een sheet, op een breed
-          // scherm een paneel).
+          // Back button only when this sheet opens from another sheet: on a
+          // narrow screen the filter sidebar is itself a sheet, on a wide
+          // screen a panel.
           if (typeof window.syncSheetBackButton === "function") {
             window.syncSheetBackButton(sheet);
           }
@@ -499,14 +475,13 @@
       ) {
         const sheet = currentSheet();
         openWhenReady(sheet, 0);
-        // The server pre-ticks what is already filtered, so the CTA has to
-        // count before anything is clicked.
+        // The server pre-ticks what is already filtered, so the CTA counts
+        // before anything is clicked.
         if (sheet) updateApplyLabel(sheet);
       }
     });
 
-    // Empty the mount point once the sheet is closed, so opening it again
-    // fetches a fresh list instead of reviving a stale one.
+    // Empty the mount point on close, so reopening fetches a fresh list.
     document.addEventListener(
       "close",
       (e) => {
@@ -519,8 +494,8 @@
       true,
     );
 
-    // A row toggle inside the sheet mirrors onto its decorative checkbox and
-    // updates the CTA. Nothing submits yet — that is what the CTA is for.
+    // A row toggle inside the sheet only mirrors onto its decorative checkbox
+    // and updates the CTA; submitting is the CTA's job.
     document.addEventListener("change", (e) => {
       const row = e.target;
       if (!(row instanceof Element) || row.localName !== "nldd-list-item") {
@@ -550,9 +525,9 @@
       );
       const form = document.getElementById("filter-form");
       if (group) {
-        // The sidebar only lists the top-N, so the sheet can pick values that
-        // have no row. Rebuild the submitting inputs from the sheet selection
-        // and mirror the ones that do have a row back onto it.
+        // The sidebar only lists the top-N, so the sheet can pick values with
+        // no row: rebuild the submitting inputs from the sheet selection and
+        // mirror the ones that do have a row back onto it.
         const slot = inputSlot(group);
         const name = group.dataset.name;
         if (slot && name) {
@@ -599,7 +574,7 @@
     root.querySelectorAll(NDD_SEARCH).forEach(attachSearchField);
   }
 
-  // Leeg elk filtertype en run de filter één keer opnieuw.
+  /** Clears every filter type and re-runs the filter once. */
   function clearAllFilters() {
     const form = document.getElementById("filter-form");
     if (!form) return;
@@ -629,9 +604,8 @@
       setRowChecked(row, false);
     });
 
-    // Datumvelden committen hun waarde async (updated()), dus wacht op elke
-    // updateComplete vóór de form-change, anders zet de OOB-swap de oude datum
-    // terug (zie removeFilter).
+    // Date fields commit their value asynchronously in updated(), so wait for
+    // every updateComplete before the form change (see removeFilter).
     const dateFields = Array.from(form.querySelectorAll("nldd-date-field"));
     const pending = dateFields.map((field) => {
       try {
@@ -657,8 +631,8 @@
     });
   }
 
-  // De filterwijziging vervangt #filter-panel (slotted in nldd-page) via een
-  // OOB-swap; nldd-page reset dan zijn scrollTop en de pagina springt omhoog.
+  // A filter change replaces #filter-panel through an OOB swap, after which
+  // nldd-page resets its scrollTop and the page jumps to the top.
   function findScroller(start) {
     let el = start;
     while (el && el !== document.body) {
@@ -674,13 +648,11 @@
     return document.scrollingElement || document.documentElement;
   }
 
-  // De echte filterbar-scroller is .sidebar-section__sidebar-box IN de shadow
-  // root van nldd-sidebar-section — niet #filter-panel (dat is slotted, overflow
-  // visible) en ook niet de .sidebar-section__sidebar eromheen (die is visible).
-  // findScroller vindt hem niet: het klimt via de host-keten omhoog terwijl de
-  // scroller in de shadow root van een voorouder zit. Pak hem dus direct. Op een
-  // breed scherm scrollt deze box; op smal wordt de sidebar een sheet met een
-  // eigen scroller (fallback: findScroller).
+  /** Returns the scroller of the filter sidebar. It is
+   *  .sidebar-section__sidebar-box inside nldd-sidebar-section's shadow root,
+   *  which findScroller cannot reach: it climbs the host chain while the
+   *  scroller sits in an ancestor's shadow root. On a narrow screen the sidebar
+   *  becomes a sheet with its own scroller, hence the findScroller fallback. */
   function filterSidebarScroller() {
     const section = document.querySelector("nldd-sidebar-section");
     const box = section?.shadowRoot?.querySelector(
@@ -702,9 +674,9 @@
     function restore() {
       if (!saved) return;
       const { scroller, top } = saved;
-      // De OOB-swap van #filter-panel herbouwt de slotted inhoud; de aside reset
-      // dan zijn scrollTop naar 0. Zet hem terug, en nog eens in de volgende
-      // frame omdat die reset asynchroon na de settle kan komen.
+      // The OOB swap of #filter-panel rebuilds the slotted content and the aside
+      // resets its scrollTop to 0. Restore it again in the next frame, since
+      // that reset can land asynchronously after the settle.
       scroller.scrollTop = top;
       requestAnimationFrame(() => {
         scroller.scrollTop = top;

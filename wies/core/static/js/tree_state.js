@@ -1,19 +1,15 @@
 "use strict";
 
 /**
- * Pure tree-state manager for checkbox cascading and selection tracking.
- * No DOM dependency — operates on plain data structures.
- *
- * Input: the hierarchy JSON array from the server, e.g.:
- *   [{ id: 1, label: "Root", children: [{ id: 2, label: "Child" }] }]
- *
- * Each node may have: id, label, abbreviations, group, self, nr_of_placements, children.
+ * Manages checkbox cascading and selection tracking for a tree. Operates on the
+ * hierarchy JSON from the server, without any DOM dependency. Each node may
+ * have: id, label, abbreviations, group, self, nr_of_placements, children.
  *
  * `options.collapseToParent` (default true) decides what a parent stands for.
  * In the filter a parent means its whole subtree, so a fully checked parent
  * replaces its children as the selection. On the assignment form a parent means
- * only itself — the organisation the assignment is linked to — so collapsing
- * there would quietly drop the children the user picked.
+ * only itself, so collapsing there would quietly drop the children the user
+ * picked.
  */
 function TreeState(data, options) {
   this.nodes = new Map(); // nodeId (string) → node object
@@ -128,9 +124,8 @@ TreeState.prototype.restoreSelections = function (selections) {
     this.explicitSelections.set(String(nodeId), label);
   }
 
-  // Restored selections go through the same collapse: a stored set that adds up
-  // to a whole parent (the tree can have changed since it was saved) must show
-  // the same tokens as picking those children by hand.
+  // Restored selections go through the same collapse, so a stored set that adds
+  // up to a whole parent shows the same tokens as picking it by hand.
   var restored = Array.from(this.explicitSelections.keys());
   for (var j = 0; j < restored.length; j++) {
     var restoredNode = this.nodes.get(restored[j]);
@@ -170,15 +165,12 @@ TreeState.prototype._cascadeUp = function (startNode) {
       return c.checked || c.indeterminate;
     });
 
-    // In de filter (collapseToParent=false) is een parent alleen echt "checked"
-    // (grijze rij-fill) als de gebruiker hem ZELF koos. Staat hij aan puur doordat
-    // al zijn kinderen aanstaan, dan is dat indirect: toon een streepje
-    // (indeterminate), geen grijze achtergrond — zo is een zelf gekozen
-    // opdrachtgever te onderscheiden van een die meelift op zijn kinderen. De
-    // selectie die de filter submit (explicitSelections) blijft hetzelfde; dit
-    // raakt alleen het uiterlijk. Op het opdrachtformulier (collapseToParent=true)
-    // klapt een volle parent juist wél samen tot één checked selectie
-    // (_promoteAncestors), dus daar blijft "alle kinderen aan" = checked.
+    // In the filter (collapseToParent=false) a parent only shows as checked
+    // when the user picked it directly; checked purely because all its children
+    // are shows as indeterminate, which distinguishes a deliberate pick from
+    // one riding along on its children. Appearance only — explicitSelections is
+    // unaffected. With collapseToParent=true a full parent collapses into one
+    // checked selection instead (_promoteAncestors).
     var showsAsChecked =
       this.collapseToParent || this.explicitSelections.has(parent.id);
     if (allChecked && showsAsChecked) {
@@ -207,11 +199,10 @@ TreeState.prototype._promoteCheckedChildren = function (node) {
   }
 };
 
-/** Mirror of _demoteAncestors: a parent whose children are all checked already
- *  looks selected in the tree, so it becomes the selection and its descendants
- *  drop out. Otherwise the same state would read two ways — one checked parent
- *  in the tree, a token per child in the footer. Stops at the first parent that
- *  is only partly checked, since that one still needs its children named. */
+/** Mirror of _demoteAncestors: a parent whose children are all checked becomes
+ *  the selection and its descendants drop out, so the tree and the footer
+ *  tokens read the same. Stops at the first partly checked parent, which still
+ *  needs its children named. */
 TreeState.prototype._promoteAncestors = function (node) {
   if (!this.collapseToParent) return;
   var current = node;

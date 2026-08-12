@@ -1,16 +1,14 @@
-// Koppelt de periodekeuze aan de datumvelden.
+// Ties the period choice to the date fields, in two supported shapes:
+//   - nldd-segmented-control[data-period-choice]  (placement edit panel)
+//   - nldd-checkbox-field #placement-inherit-period (generic inline-edit form)
 //
-// Twee vormen, beide ondersteund:
-//   - nldd-segmented-control[data-period-choice]  (bewerkpaneel van de plaatsing)
-//   - nldd-checkbox-field #placement-inherit-period (generieke inline-edit form)
+// Inheriting from the assignment hides the date fields and fills them with the
+// assignment period; the hidden period_source select carries the posted value.
+// The fields stay enabled so they post along — with period_source=SERVICE the
+// server uses the assignment period anyway.
 //
-// Bij "van opdracht" verdwijnen de datumvelden en krijgen ze de periode van de
-// opdracht; de verborgen period_source-select houdt de waarde bij die het
-// formulier post. De velden blijven enabled zodat ze meeposten — met
-// period_source=SERVICE gebruikt de server de opdrachtperiode toch.
-//
-// De switch [data-end-date-known] stuurt alleen het einddatumveld aan: uit
-// betekent "loopt door", dus einddatum leeg. Hij post zelf niet mee.
+// The [data-end-date-known] switch only drives the end date field (off means
+// "runs on", so an empty end date) and does not post itself.
 (function () {
   function init(control) {
     if (!control || control.dataset.periodToggleInit) return;
@@ -21,14 +19,13 @@
     const form = control.closest("form");
     if (!form) return;
 
-    // Op name, niet op data-attributen: de widget-templates geven willekeurige
-    // data-* niet door aan de NLDD-velden, dus die hooks komen nooit in de DOM.
-    // Het form-element is sinds #483 van de generieke inline-edit-wrapper, maar
-    // dat omvat deze body, dus closest("form") vindt nog steeds het juiste form.
+    // By name, not by data attribute: the widget templates do not pass
+    // arbitrary data-* through to the NLDD fields, so those hooks never reach
+    // the DOM.
     const hiddenSelect = form.querySelector("[name=period_source]");
-    // De opdrachtperiode staat op het paneelform (data-period-choice-pad) of, bij
-    // de generieke inline-edit, op de body-wrapper [data-placement-period] — het
-    // form is daar van de wrapper en draagt de service-data niet.
+    // The assignment period sits on the panel form or, for the generic
+    // inline-edit, on the [data-placement-period] body wrapper: there the form
+    // element belongs to the wrapper and carries no service data.
     const periodRoot = form.querySelector("[data-placement-period]") || form;
     const serviceStart = periodRoot.dataset.serviceStart || null;
     const serviceEnd = periodRoot.dataset.serviceEnd || null;
@@ -37,9 +34,9 @@
     const endKnownSwitch = form.querySelector("[data-end-date-known]");
     const servicePeriodHelp = form.querySelector("[data-service-period-help]");
 
-    // Het hele veld verbergen, niet alleen de input: anders blijft het label staan.
-    // Zonder nldd-form-field (de oudere inline-edit form) valt het terug op de
-    // input zelf.
+    // Hide the whole field, not just the input, or the label stays behind.
+    // Without an nldd-form-field (the older inline-edit form) it falls back to
+    // the input itself.
     const fieldOf = (el) => el && (el.closest("nldd-form-field") || el);
     const startField = fieldOf(startInput);
     const endField = fieldOf(endInput);
@@ -54,19 +51,27 @@
       return !endKnownSwitch || endKnownSwitch.hasAttribute("checked");
     }
 
-    // Onthoudt de laatst getoonde einddatum, zodat de switch uit- en weer aanzetten
-    // hem niet wist. Bij "van opdracht" wordt het veld met de opdrachtperiode
-    // gevuld; dat is niet de keuze van de gebruiker en slaan we dus niet op.
+    // Remembers the last end date the user entered, so toggling the switch off
+    // and on again does not wipe it. The assignment period written into the
+    // field is not the user's choice and is deliberately not remembered.
     let lastEndDate = endInput ? endInput.value : "";
 
+    /**
+     * Applies a period choice to the visible fields and the posted values.
+     *
+     * @param {boolean} inherit True to take the period from the assignment;
+     *     false to use the placement's own dates.
+     * @param {boolean|undefined} knownOverride The end-date-known state to use
+     *     instead of reading the switch, or undefined to read it.
+     */
     function update(inherit, knownOverride) {
       if (hiddenSelect) hiddenSelect.value = inherit ? "SERVICE" : "PLACEMENT";
       if (servicePeriodHelp) servicePeriodHelp.hidden = !inherit;
       if (startField) startField.hidden = inherit;
       if (endKnownField) endKnownField.hidden = inherit;
-      // Einddatum verdwijnt óók als de gebruiker zegt dat er geen einddatum is.
-      // knownOverride komt uit het change-event: het attribuut op de switch is op
-      // dat moment nog niet bijgewerkt.
+      // The end date also disappears when the user says there is none.
+      // knownOverride comes from the change event, where the switch's attribute
+      // is not updated yet.
       const known =
         knownOverride === undefined ? endDateKnown() : knownOverride;
       if (endField) endField.hidden = inherit || !known;
@@ -74,8 +79,8 @@
         if (startInput) startInput.value = serviceStart ?? "";
         if (endInput) endInput.value = serviceEnd ?? "";
       } else if (endInput) {
-        // Leeg = "loopt door"; de ingevulde datum bewaren we voor als de switch
-        // weer aangaat.
+        // Empty means "runs on"; keep the entered date for when the switch
+        // comes back on.
         if (!known) {
           if (endInput.value) lastEndDate = endInput.value;
           endInput.value = "";
@@ -86,14 +91,14 @@
     }
 
     if (group) {
-      // nldd-segmented-control bubbelt een change met detail.value.
+      // nldd-segmented-control bubbles a change carrying detail.value.
       group.addEventListener("change", (e) => {
         const value = e.detail && e.detail.value;
         update(value ? value === "SERVICE" : inheritsFromService());
       });
     } else {
-      // nldd-checkbox-field bubbelt een change met detail.checked; de property
-      // is dan al bijgewerkt, dus beide lezen hetzelfde.
+      // nldd-checkbox-field bubbles a change carrying detail.checked; the
+      // property is already updated by then, so both read the same.
       checkbox.addEventListener("change", (e) =>
         update(e.detail ? e.detail.checked : checkbox.checked),
       );

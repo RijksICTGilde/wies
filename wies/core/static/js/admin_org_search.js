@@ -1,8 +1,7 @@
-// Organisatiebeheer: chevron-toggle en zoeken in de nldd-list-boom.
-//
+// Organisation admin: chevron toggle and search within the nldd-list tree.
 // Rows carry data-label / data-abbr (lowercased); nesting is real DOM nesting
-// (child rows sit in the parent row's slot="children"), so ancestors are
-// found by walking closest('nldd-list-item') chains.
+// (child rows sit in the parent row's slot="children"), so ancestors are found
+// by walking closest('nldd-list-item') chains.
 (function () {
   "use strict";
 
@@ -16,10 +15,9 @@
   var savedState = null; // Map<item, boolean> — expanded state before search
   var isSearching = false;
 
-  // De hele takrij is de knop; hij kondigt zijn staat aan maar zet hem niet om,
-  // dat is werk van de consumer (net als bij de opdrachtgever-pickers). De
-  // binnenste rij uit de composedPath wint, zodat een kindrij niet zijn ouder
-  // openklapt.
+  // The whole branch row is the button; it announces its state but does not
+  // toggle it, that is the consumer's job. The innermost row in the composedPath
+  // wins, so a child row does not expand its parent.
   root.addEventListener("click", function (e) {
     var row = e.composedPath().find(function (el) {
       return (
@@ -112,8 +110,8 @@
     });
 
     setHighlight(query);
-    // Blijft er niets over, dan toont de lijst zelf zijn lege staat: alle rijen
-    // staan op [hidden] en dat is precies waar hij op afgaat.
+    // With nothing left, the list shows its own empty state: it keys on every
+    // row being [hidden].
   }
 
   var timer = null;

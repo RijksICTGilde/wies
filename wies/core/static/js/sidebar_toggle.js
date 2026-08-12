@@ -1,8 +1,6 @@
-// Sidebar collapse toggle.
-//
-// The "Filters" button (#sidebar-toggle) drives the
-// <nldd-sidebar-section>'s own sheet: the section renders the sidebar as a
-// sticky aside on wide screens and collapses it to a left sheet when narrower.
+// Sidebar collapse toggle. The "Filters" button (#sidebar-toggle) drives the
+// <nldd-sidebar-section>'s own sheet: a sticky aside on wide screens, a left
+// sheet when narrower.
 (function () {
   "use strict";
 
@@ -28,14 +26,11 @@
     toggleSidebar();
   });
 
-  // Hetzelfde vanuit het overflowmenu van de toolbar. Dat menu toont een KLOON
-  // van het menu-item en meldt de keuze terug als select op het origineel, dus
-  // een klik bereikt dit element nooit.
-  //
-  // De kloon houdt het id, dus zonder deze check vuurt dit twee keer: eerst op
-  // de kloon in de shadow root van de toolbar, dan op het origineel. De sidebar
-  // ging dan open en meteen weer dicht. document.contains is precies het
-  // verschil: een node in een shadow root zit niet in de documentboom.
+  // Same, from the toolbar overflow menu, which shows a clone of the menu item
+  // and reports the choice as `select` on the original — a click never reaches
+  // it. The clone keeps the id, so without the document.contains check this
+  // fires twice (clone in the toolbar's shadow root, then original) and the
+  // sidebar opens and closes again.
   document.addEventListener("select", (e) => {
     const item = e
       .composedPath()
@@ -43,10 +38,8 @@
         (el) => el instanceof Element && el.id === "sidebar-toggle-menu-item",
       );
     if (!item || !document.contains(item)) return;
-    // show() en geen toggle(): een keuze uit een menu is geen schakelaar. De
-    // zichtbare Filter-knop mag togglen, want die staat ernaast en je ziet zijn
-    // staat; een menu-item kies je om het paneel te openen, en toggle() sloot
-    // het meteen weer zodra de sectie dacht dat het al openstond.
+    // show() rather than toggle(): picking a menu item means "open the panel",
+    // and toggle() closed it again whenever the section thought it was open.
     showSidebar();
   });
 })();

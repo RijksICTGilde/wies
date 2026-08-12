@@ -1,28 +1,19 @@
-// Behaviour for inline-edit display partials.
-//
-// 1. Toast notification on successful save (listens for HX-Trigger: inline-edit-saved).
-// 2. "Toon meer / Toon minder" toggle on long text fields.
-// Both use delegated listeners that survive HTMX swaps.
+// Behaviour for inline-edit display partials: a toast on save, and the
+// "Toon meer / Toon minder" toggle on long text fields. Both use delegated
+// listeners so they survive HTMX swaps.
 
 function showSavedToast(label) {
-  // nldd-notification plaatst zichzelf in de gedeelde regio en telt zelf af,
-  // met een pauze bij hover of focus — vandaar geen container, geen timers en
-  // geen top-layer-omweg meer. Waar we hem neerzetten doet er niet toe; hij
-  // verhuist toch. ui_handlers.js haalt hem weg na `dismiss`.
-  //
-  // Eén melding, niet één per opgeslagen veld. Een scherm dat meerdere velden
-  // achter elkaar bewaart (de onboarding-wizard slaat per veld en per opdracht
-  // los op) zou anders een deck van identieke "Opgeslagen"-regels opbouwen.
-  // De vorige vervangen laat de klok opnieuw lopen, zodat de laatste save de
-  // melding is die je ziet.
+  // nldd-notification moves itself into the shared region and runs its own
+  // timer, so where it is appended does not matter; ui_handlers.js removes it
+  // on `dismiss`. Replacing the previous one keeps a screen that saves several
+  // fields in a row from stacking identical messages, and restarts the clock.
   document
     .querySelectorAll("nldd-notification[data-wies-saved]")
     .forEach((el) => el.remove());
 
   const toast = document.createElement("nldd-notification");
   toast.setAttribute("variant", "success");
-  // "Rol opgeslagen" zegt meer dan "Opgeslagen". Het label komt van de Editable
-  // en begint met een hoofdletter ("Periode"), dus die blijft vooraan staan.
+  // Editable labels arrive capitalised ("Periode"), so the label leads.
   toast.setAttribute(
     "text",
     label ? `${label} opgeslagen` : "Wijziging opgeslagen",
@@ -31,7 +22,6 @@ function showSavedToast(label) {
   document.body.appendChild(toast);
 }
 
-// Show toast after successful inline-edit save.
 // The view sets HX-Trigger-After-Swap: inline-edit-saved on the response.
 document.addEventListener("inline-edit-saved", (e) =>
   showSavedToast(e.detail?.label),
@@ -43,8 +33,7 @@ document.addEventListener("click", (event) => {
 
   const wrapper = toggle.parentElement;
   if (!wrapper) return;
-  // Template uses `inline-edit-long-text__*` for the value spans; de knop zelf
-  // is een nldd-button, dus tekst en icoon gaan via attributen.
+  // The toggle is an nldd-button, so its text and icon are set via attributes.
   const truncated = wrapper.querySelector(".inline-edit-long-text__truncated");
   const full = wrapper.querySelector(".inline-edit-long-text__full");
   if (!truncated || !full) return;

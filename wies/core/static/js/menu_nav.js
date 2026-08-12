@@ -1,9 +1,7 @@
-// Navigatie voor nldd-componenten die een data-href dragen: die componenten
-// leveren zelf geen link-gedrag, dus we vangen de click (via composedPath, want
-// het element zit in een shadow root) en navigeren. Geldt voor menu-items én
-// voor een losse nldd-icon-button — een rijactie die de enige actie is, wordt
-// als knop getoond in plaats van in een menu. Extern bestand i.p.v. inline
-// <script>, zodat de CSP script-src 'self' kan blijven (geen 'unsafe-inline').
+// Navigation for nldd components carrying data-href: they provide no link
+// behaviour themselves, so the click is caught via composedPath (the element
+// lives in a shadow root) and navigated manually. External file rather than
+// inline <script>, so the CSP can stay script-src 'self'.
 const HREF_CARRIERS = new Set(["nldd-menu-item", "nldd-icon-button"]);
 
 // Verstuur een POST naar de gegeven URL met het csrf-token dat al in de markup

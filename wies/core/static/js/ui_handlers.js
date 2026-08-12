@@ -1,44 +1,36 @@
-// Delegated UI handlers, registered once on `document`.
+// Delegated UI handlers, registered once on `document`. This file exists
+// because the CSP is script-src 'self': inline <script> and on*= attributes are
+// blocked silently, so bindings are declared in the markup as data-attributes
+// (`data-action`, `data-confirm`) and resolved here. Delegation also keeps them
+// alive across HTMX swaps. To add an interaction, give the element
+// data-action="<name>" and add an entry to CLICK_ACTIONS below;
+// test_templates_no_inline_js.py fails the build on inline JS.
 //
-// Bindings are declared in the markup as data-attributes (`data-action`,
-// `data-confirm`) and resolved here, so the element still says what it does
-// without needing an inline on*= attribute — those would force 'unsafe-inline'
-// back into script-src. Delegation also keeps the bindings alive across HTMX
-// swaps (the event blocks re-render) without re-binding.
-//
-// Adding a UI interaction: give the element data-action="<name>" and add the
-// matching entry to CLICK_ACTIONS below. Never reach for on*= or inline
-// <script>; the CSP blocks those silently and test_templates_no_inline_js.py
-// fails the build.
-//
-// The click listener sits on `document`, so htmx's own element-level listeners
-// have already run by the time it fires. It therefore never calls preventDefault
-// or skips on `defaultPrevented` — htmx cancels the native event on every element
-// it drives, so treating "already cancelled" as "already handled" would silently
-// drop actions on any element that carries both hx-* and data-action.
+// The click listener sits on `document`, so htmx's element-level listeners have
+// already run. It never skips on `defaultPrevented`: htmx cancels the native
+// event on every element it drives, which would silently drop actions on
+// elements carrying both hx-* and data-action.
 
 (function () {
   var CLICK_ACTIONS = {
-    // Back button on the error pages. history.back() does nothing when the page
-    // was opened directly (a pasted URL, a bookmark), so fall back to the home
-    // page rather than leaving a button that looks broken.
+    // history.back() does nothing when the page was opened directly (pasted
+    // URL, bookmark), so fall back to the home page.
     "history-back": function () {
       if (window.history.length > 1) window.history.back();
       else window.location.assign("/");
     },
   };
 
-  // event.target is an Element for user-driven events, but not for events
-  // dispatched at document/window, so route every lookup through this.
+  // event.target is not an Element for events dispatched at document/window, so
+  // route every lookup through this.
   function closestFrom(event, selector) {
     var target = event.target;
     return target && target.closest ? target.closest(selector) : null;
   }
 
-  // Forms that confirm before submitting: <form data-confirm="..."> cancels the
-  // submit if the user declines. Plain forms only — htmx issues its request from
-  // its own submit listener, which runs before this one, so a confirm here could
-  // not call it back. Use hx-confirm on htmx-driven forms.
+  // <form data-confirm="..."> cancels the submit if the user declines. Plain
+  // forms only: htmx issues its request from its own submit listener, which runs
+  // before this one. Use hx-confirm on htmx-driven forms.
   document.addEventListener("submit", function (event) {
     var form = closestFrom(event, "form[data-confirm]");
     if (form && !window.confirm(form.getAttribute("data-confirm"))) {
@@ -53,9 +45,8 @@
     if (action) action(el);
   });
 
-  // nldd-notification meldt dat hij weg is (wegklikken, Escape, of zijn eigen
-  // klok) maar ruimt zichzelf niet op: de consument bepaalt of de melding echt
-  // verdwijnt. Wij bewaren ze niet, dus weg is weg.
+  // nldd-notification announces its dismissal but does not remove itself: the
+  // consumer decides. We do not keep them around.
   document.addEventListener("dismiss", function (event) {
     var el = event.composedPath().find(function (node) {
       return (
