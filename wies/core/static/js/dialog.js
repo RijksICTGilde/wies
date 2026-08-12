@@ -1,12 +1,8 @@
-// HTMX + NLDD dialog integration: auto-show sheets/modals that arrive via a swap.
+// Auto-show sheets/modals that arrive via a swap.
 document.addEventListener("htmx:afterSwap", function (e) {
-  // Right after a swap the element is upgraded but Lit has not rendered, so
-  // show() finds no <dialog> in the shadow root and returns silently; wait for
-  // updateComplete.
-  //
-  // nldd-modal-dialog and nldd-sheet need an explicit data-auto-show: panel
-  // content also carries closed dialogs, and the side panel is itself an
-  // nldd-sheet that must not pop up on every swap.
+  // show() returns silently before Lit renders the shadow <dialog>, hence
+  // updateComplete. data-auto-show is explicit because panel content also
+  // carries closed dialogs, and the side panel is itself an nldd-sheet.
   const selector =
     "nldd-window, nldd-modal-dialog[data-auto-show], nldd-sheet[data-auto-show]";
   e.detail.target.querySelectorAll(selector).forEach(function (dialog) {
@@ -21,14 +17,9 @@ document.addEventListener("htmx:afterSwap", function (e) {
 });
 
 /**
- * Gives a sheet a back button when it opens on top of another one.
- *
- * The template cannot know this up front: the filter sidebar is a panel on a
- * wide screen and a sheet on a narrow one, so the same button opens a child in
- * one case and not in the other. With a back button the content may not sit
- * flush against the bar, so the section loses its padding-top: 0.
- *
- * @param {Element} sheet The nldd-sheet that is about to open.
+ * Gives a sheet a back button when it opens on top of another one. The template
+ * cannot know this: the filter sidebar is a panel when wide and a sheet when
+ * narrow, so the same button opens a child in one case only.
  */
 window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   function isOpen(el) {
@@ -41,8 +32,8 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
       return other !== sheet && isOpen(other);
     },
   );
-  // On narrow screens the filter sidebar renders itself as a sheet inside its
-  // own shadow root, which a document query does not reach.
+  // The narrow-screen sidebar sheet lives in a shadow root, out of reach of a
+  // document query.
   let sidebarBar = null;
   Array.from(document.querySelectorAll("nldd-sidebar-section")).forEach(
     function (section) {
@@ -57,8 +48,6 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     ? parentSheet.querySelector("nldd-top-title-bar[slot='header']")
     : sidebarBar;
   const isChild = !!(parentSheet || sidebarBar);
-  // Name what the back button returns to; "Terug" is the fallback for a sheet
-  // underneath without a title.
   const backText =
     (parentBar && (parentBar.getAttribute("text") || parentBar.text)) ||
     "Terug";
@@ -68,14 +57,11 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     if (isChild) bar.setAttribute("back-text", backText);
     else bar.removeAttribute("back-text");
   }
-  // Only when the bar sits directly above the section: anything else in the
-  // header (a search field, say) already provides the space.
   const extraHeader = sheet.querySelector(
     "[slot='header']:not(nldd-top-title-bar)",
   );
-  // A sheet opening with running text does want that space: flush against the
-  // bar, a paragraph reads as a continuation of the title. Forms and lists do
-  // not suffer from this, hence the exception.
+  // Running text needs the space: flush against the bar a paragraph reads as a
+  // continuation of the title. Forms and lists do not.
   const houdtPadding = sheet.hasAttribute("data-keep-section-padding");
   const section = sheet.querySelector("nldd-simple-section");
   if (section && !extraHeader && !houdtPadding) {
@@ -84,44 +70,28 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   }
 };
 
-// Back in a child sheet means closing: the sheet underneath is still open and
-// reappears.
+// Back in a child sheet means closing; the sheet underneath reappears.
 document.addEventListener("back", function (e) {
-  const sheet = e.composedPath().find(function (el) {
-    return el.localName === "nldd-sheet";
-  });
+  const sheet = window.wiesClosestInPath(e, "nldd-sheet");
   if (!sheet || typeof sheet.hide !== "function") return;
-  // The side panel does its own back navigation through the panelStack in
-  // side_panel.js, where back means a previous panel rather than closing.
+  // side_panel.js handles its own back: there it means a previous panel.
   if (sheet.id === "side-panel") return;
   sheet.hide();
 });
 
-// Delegated dismiss: [data-dismiss-modal] closes the enclosing nldd-modal-dialog
-// or nldd-sheet. It replaces an inline onclick handler, which the CSP
-// script-src 'self' forbids. composedPath because the button may live in the
-// dialog's shadow root.
+// composedPath: the button may live in the dialog's shadow root.
 document.addEventListener("click", function (e) {
-  const btn = e
-    .composedPath()
-    .find(
-      (el) =>
-        el instanceof Element &&
-        el.matches &&
-        el.matches("[data-dismiss-modal]"),
-    );
+  const btn = window.wiesClosestInPath(e, "[data-dismiss-modal]");
   if (!btn) return;
   const dialog = btn.closest("nldd-modal-dialog, nldd-sheet");
   if (dialog && typeof dialog.hide === "function") dialog.hide();
 });
 
-// Server-sent closeModal trigger: close any open modal dialogs.
 document.addEventListener("closeModal", function () {
   const modalContainers = [
     "labelFormModal",
     "userFormModal",
     "suborganizationFormModal",
-    "clientModalContainer",
   ];
   modalContainers.forEach((modalId) => {
     const modalContainer = document.getElementById(modalId);

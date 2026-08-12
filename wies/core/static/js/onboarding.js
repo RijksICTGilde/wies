@@ -1,8 +1,6 @@
-// First-login onboarding wizard: auto-open + step navigation.
-// The window is inline in base.html rather than swapped in, so it is opened
-// here. Skipping (the title bar dismiss) and "Aan de slag" both submit the same
-// hidden form; the server answers with a `closeOnboarding` trigger. Escape only
-// closes for now — the wizard returns on the next page.
+// First-login onboarding wizard: auto-open + step navigation. Skipping and
+// "Aan de slag" both submit the same hidden form; the server answers with a
+// `closeOnboarding` trigger.
 (function () {
   "use strict";
 
@@ -10,7 +8,7 @@
   if (!wizard) return;
 
   var panels = wizard.querySelectorAll("section[data-step]");
-  // Derived from the rendered panels, since the opdracht step is conditional.
+  // Derived, since the opdracht step is conditional.
   var TOTAL_STEPS = panels.length;
   var current = 1;
 
@@ -18,8 +16,6 @@
   var steps = progress
     ? progress.querySelectorAll("nldd-step-indicator-item")
     : [];
-  // The short step names from the indicator; the heading in the body may be
-  // longer.
   var stepTitles = Array.prototype.map.call(steps, function (step) {
     return step.getAttribute("text") || "";
   });
@@ -37,16 +33,7 @@
   var chrome = wizard.querySelectorAll("[data-onboarding-chrome]");
   var completing = false;
 
-  /**
-   * Shows or hides the assignment edit screen, which takes over the window.
-   *
-   * While it is open there is no current step, so the panels, the step
-   * navigation and the step indicator go away and the title bar gets a back
-   * button.
-   *
-   * @param {boolean} on True to show the edit screen; false to return to the
-   *     steps.
-   */
+  // The edit screen takes over the window: while open there is no step.
   function showDetail(on) {
     if (!detail) return;
     detail.hidden = !on;
@@ -56,14 +43,11 @@
     chrome.forEach(function (el) {
       el.hidden = on;
     });
-    // Without the step indicator on top the section keeps its normal padding;
-    // in a step it sits flush against the indicator.
     if (section) {
       if (on) section.removeAttribute("padding-top");
       else section.setAttribute("padding-top", "0");
     }
-    // In the edit screen the bar carries the assignment name, anchored to the
-    // heading so it collapses to icon plus name once that scrolls under it.
+    // Anchored to the heading, so the bar collapses once it scrolls under.
     if (titleBar && on) {
       var detailHeading = detail.querySelector("[data-detail-title]");
       titleBar.setAttribute("back-text", "Terug");
@@ -86,26 +70,17 @@
     showDetail(false);
   }
 
-  /**
-   * Shows the given wizard step and updates the indicator, title bar and nav.
-   *
-   * @param {number} step The 1-based step number; clamped to the range.
-   */
   function show(step) {
     current = Math.min(Math.max(step, 1), TOTAL_STEPS);
     panels.forEach(function (panel) {
       panel.hidden = Number(panel.getAttribute("data-step")) !== current;
     });
     if (progress) progress.setAttribute("current", String(current));
-    // Backwards only: a completed step is a button, an upcoming one is not.
-    // Forward goes through Volgende, which also saves the step.
+    // Backwards only; forward goes through Volgende, which also saves.
     steps.forEach(function (step, index) {
       if (index + 1 < current) step.setAttribute("button", "");
       else step.removeAttribute("button");
     });
-    // The button says "Terug" rather than the previous step's name, which the
-    // indicator already shows. The bar anchors to the heading so it collapses
-    // to back button plus name when that scrolls away.
     if (titleBar) {
       var heading = wizard.querySelector(
         'section[data-step="' + current + '"] [data-step-title]',
@@ -122,7 +97,6 @@
         else titleBar.removeAttribute("collapse-anchor");
       }
     }
-    // On the last step "Aan de slag" takes the place of "Volgende".
     var onLast = current === TOTAL_STEPS;
     if (nav) nav.hidden = onLast;
     if (finishWrap) finishWrap.hidden = !onLast;
@@ -135,15 +109,8 @@
     else completeForm.submit();
   }
 
-  /**
-   * Submits the inline-edit forms of a step when leaving it.
-   *
-   * The fields open directly (inline_edit_form) without a save button of their
-   * own. Each form posts to its own endpoint and swaps itself back to the read
-   * view, which the wizard does not wait for.
-   *
-   * @param {number} step The 1-based step number whose forms are submitted.
-   */
+  // The inline-edit fields have no save button of their own; each form swaps
+  // itself back to the read view, which the wizard does not wait for.
   function saveStep(step) {
     if (!window.htmx) return;
     panels.forEach(function (panel) {
@@ -162,7 +129,6 @@
       show(current + 1);
     });
   }
-  // The step itself is the button; its click bubbles up to the indicator.
   if (progress) {
     progress.addEventListener("click", function (e) {
       var item = e.target.closest("nldd-step-indicator-item");
@@ -185,10 +151,9 @@
     });
   }
 
-  // Only Overslaan completes the onboarding; Escape closes for now (#553).
-  // Hence the title bar's dismiss and not the window's `close`: nldd-window
-  // calls hide() for both, so by then they are indistinguishable. The listener
-  // sits on the bar itself because the window stops that dismiss propagating.
+  // The bar's dismiss, not the window's `close`: nldd-window calls hide() for
+  // both, so by then Overslaan and Escape are indistinguishable (#553). Bound
+  // to the bar, because the window stops that dismiss propagating.
   if (titleBar) {
     titleBar.addEventListener("dismiss", complete);
   }
@@ -198,8 +163,6 @@
     document.documentElement.style.overflow = "";
   });
 
-  // The edit screen was swapped in, so show it. Its back button and a
-  // successful save (HX-Trigger from the view) return to the step.
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.target === detail && detail.innerHTML.trim()) showDetail(true);
   });
@@ -209,14 +172,12 @@
     else show(current - 1);
   });
 
-  // Server confirms completion (skip or finish) → close in place.
   document.body.addEventListener("closeOnboarding", function () {
     if (wizard.hide) wizard.hide();
     document.documentElement.style.overflow = "";
   });
 
-  // show() fails silently before Lit has rendered the shadow root, so wait for
-  // updateComplete.
+  // show() fails silently before Lit has rendered the shadow root.
   customElements
     .whenDefined("nldd-window")
     .then(function () {

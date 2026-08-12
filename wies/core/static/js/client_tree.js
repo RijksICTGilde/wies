@@ -9,10 +9,8 @@
 
   if (!container) return;
 
-  // No collapse-to-parent: clicking a child records THAT child as the selection,
-  // even when it is the only child of its parent. A parent still lights up via
-  // cascade, but the token/filter stays on what you clicked — matching the older
-  // behaviour the filter is meant to have.
+  // No collapse-to-parent: the filter stays on the node you clicked, even when
+  // it is its parent's only child.
   var treeState = new TreeState(data, { collapseToParent: false });
   var tree = new WiesOrgTree({
     state: treeState,
@@ -22,20 +20,17 @@
   });
   tree.render().bindSearch(searchInput);
 
-  /** The filter form listens with `change from:[data-filter-input]`, so the event
-   *  must originate on one of those inputs; dispatching it on the form is a no-op. */
+  // The form listens with `change from:[data-filter-input]`, so the event must
+  // originate on such an input; dispatching it on the form is a no-op.
   function dispatchFilterChange(form) {
     var sentinel = form.querySelector("[data-filter-input]");
     (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // Above this many the tokens stop helping: they push the CTA off-screen and
-  // nobody reads a wall of chips. The count in the button says the same thing.
+  // Above this many, the tokens push the CTA off-screen; the button's count
+  // says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
 
-  /** The button says what it is about to apply. With nothing selected there is
-   *  no filter to name — and "Wis filter" would be a lie when there was none to
-   *  begin with — so the neutral wording is the honest one. */
   function updateApplyLabel() {
     if (!applyBtn) return;
     var n = treeState.explicitSelections.size;
@@ -105,8 +100,6 @@
       if (sheet && sheet.hide) sheet.hide();
 
       // The sidebar quick options re-render via the filter form's OOB swap.
-      // The form listens with `change from:[data-filter-input]`, so the event has
-      // to come FROM such an element — triggering it on the form matches nothing.
       if (sidebarForm) dispatchFilterChange(sidebarForm);
     });
   }
@@ -119,8 +112,8 @@
     treeState.restoreSelections(currentSelections);
     tree.sync();
     rebuildSelectionList();
-    // Open towards what is actually selected — after the collapse in
-    // restoreSelections that can be a parent rather than the stored children.
+    // After the collapse in restoreSelections this can be a parent rather than
+    // the stored children.
     for (var entry of treeState.explicitSelections) {
       tree.expandAncestorsOf(entry[0]);
     }

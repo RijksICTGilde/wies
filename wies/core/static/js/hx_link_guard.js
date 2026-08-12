@@ -1,13 +1,7 @@
-// Stops nldd-* elements that carry BOTH href and hx-get from navigating.
-//
-// Rows like nldd-list-item keep a real href for link semantics (hover, focus,
-// middle-click, keyboard) and let htmx open a modal instead. htmx 2 issues the
-// hx-get itself, but the anchor inside the component's shadow root still
-// navigates, and the navigation wins — the modal is thrown away with the page.
-//
-// Capture phase, so this runs before the shadow anchor acts on the click.
-// Only the default action is suppressed; the event keeps propagating so htmx
-// still sees it and performs the request.
+// Stops nldd-* elements carrying both href and hx-get from navigating. The href
+// is there for link semantics, but the anchor in the shadow root navigates and
+// wins, throwing the htmx response away with the page. Capture phase, so this
+// runs first; only the default action is suppressed, so htmx still sees it.
 (function () {
   "use strict";
 
@@ -26,15 +20,13 @@
       ) {
         return;
       }
-      const host = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.tagName?.toLowerCase().startsWith("nldd-") &&
-            el.hasAttribute("href") &&
-            (el.hasAttribute("hx-get") || el.hasAttribute("hx-post")),
-        );
+      const host = window.wiesClosestInPath(
+        e,
+        (el) =>
+          el.localName.startsWith("nldd-") &&
+          el.hasAttribute("href") &&
+          (el.hasAttribute("hx-get") || el.hasAttribute("hx-post")),
+      );
       if (host) e.preventDefault();
     },
     true,

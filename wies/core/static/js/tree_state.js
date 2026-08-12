@@ -1,20 +1,16 @@
 "use strict";
 
 /**
- * Manages checkbox cascading and selection tracking for a tree. Operates on the
- * hierarchy JSON from the server, without any DOM dependency. Each node may
- * have: id, label, abbreviations, group, self, nr_of_placements, children.
+ * Checkbox cascading and selection tracking for a tree, DOM-free.
  *
- * `options.collapseToParent` (default true) decides what a parent stands for.
- * In the filter a parent means its whole subtree, so a fully checked parent
- * replaces its children as the selection. On the assignment form a parent means
- * only itself, so collapsing there would quietly drop the children the user
- * picked.
+ * `collapseToParent` (default true): a fully checked parent replaces its
+ * children as the selection. Off on the assignment form, where a parent means
+ * only itself and collapsing would drop the children the user picked.
  */
 function TreeState(data, options) {
-  this.nodes = new Map(); // nodeId (string) → node object
+  this.nodes = new Map();
   this.roots = [];
-  this.explicitSelections = new Map(); // nodeId (string) → label
+  this.explicitSelections = new Map(); // nodeId → label
   this.collapseToParent = !options || options.collapseToParent !== false;
 
   this._buildIndex(data, null);
@@ -55,7 +51,7 @@ TreeState.prototype.check = function (nodeId) {
   this._cascadeDown(node, true);
   this._cascadeUp(node);
 
-  // Descendants are now implied by this selection, so drop them.
+  // Descendants are now implied by this selection.
   this.explicitSelections.set(node.id, this._getLabel(node));
   this._forEachDescendant(
     node,
@@ -109,7 +105,6 @@ TreeState.prototype.clearAll = function () {
 };
 
 TreeState.prototype.restoreSelections = function (selections) {
-  // selections: object { nodeId: label, ... }
   var entries = Object.entries(selections);
   for (var i = 0; i < entries.length; i++) {
     var nodeId = entries[i][0];
@@ -124,8 +119,7 @@ TreeState.prototype.restoreSelections = function (selections) {
     this.explicitSelections.set(String(nodeId), label);
   }
 
-  // Restored selections go through the same collapse, so a stored set that adds
-  // up to a whole parent shows the same tokens as picking it by hand.
+  // Same collapse as a hand-made selection, so both show the same tokens.
   var restored = Array.from(this.explicitSelections.keys());
   for (var j = 0; j < restored.length; j++) {
     var restoredNode = this.nodes.get(restored[j]);
@@ -165,12 +159,9 @@ TreeState.prototype._cascadeUp = function (startNode) {
       return c.checked || c.indeterminate;
     });
 
-    // In the filter (collapseToParent=false) a parent only shows as checked
-    // when the user picked it directly; checked purely because all its children
-    // are shows as indeterminate, which distinguishes a deliberate pick from
-    // one riding along on its children. Appearance only — explicitSelections is
-    // unaffected. With collapseToParent=true a full parent collapses into one
-    // checked selection instead (_promoteAncestors).
+    // Without collapseToParent a parent shows as checked only when picked
+    // directly; riding along on its children reads as indeterminate.
+    // Appearance only — explicitSelections is unaffected.
     var showsAsChecked =
       this.collapseToParent || this.explicitSelections.has(parent.id);
     if (allChecked && showsAsChecked) {
@@ -199,10 +190,8 @@ TreeState.prototype._promoteCheckedChildren = function (node) {
   }
 };
 
-/** Mirror of _demoteAncestors: a parent whose children are all checked becomes
- *  the selection and its descendants drop out, so the tree and the footer
- *  tokens read the same. Stops at the first partly checked parent, which still
- *  needs its children named. */
+// Mirror of _demoteAncestors: stops at the first partly checked parent, which
+// still needs its children named.
 TreeState.prototype._promoteAncestors = function (node) {
   if (!this.collapseToParent) return;
   var current = node;

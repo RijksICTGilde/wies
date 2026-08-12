@@ -1243,7 +1243,14 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 placements__isnull=True,
             )
         )
-        qs = Assignment.objects.filter(has_unfilled_open_service).order_by(F("created_at").desc(nulls_last=True))
+        # Een net ingevoerde opdracht heeft nog geen rollen en zou anders meteen
+        # uit de lijst verdwijnen: aangemaakt en nergens meer terug te vinden.
+        # `~Exists` en niet `services__isnull=True`, want dat laatste is een LEFT
+        # JOIN en levert dubbele rijen zodra er ook op organisaties gezocht wordt.
+        has_no_service_yet = ~Exists(Service.objects.filter(assignment=OuterRef("pk")))
+        qs = Assignment.objects.filter(has_unfilled_open_service | has_no_service_yet).order_by(
+            F("created_at").desc(nulls_last=True)
+        )
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -1279,15 +1286,24 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
     def get_queryset(self):
         qs = self._get_base_queryset()
         qs = self._apply_filters(qs)
-        return qs.distinct().prefetch_related(
-            Prefetch(
-                "services",
-                queryset=Service.objects.filter(
-                    skill__isnull=False,
-                    status="OPEN",
-                    placements__isnull=True,
-                ).select_related("skill"),
-                to_attr="services_with_skills",
+        # `has_no_roles` en niet "services_with_skills is leeg": die prefetch laadt
+        # alleen open, onbezette rollen mét skill, dus een opdracht met een
+        # skill-loze rol zou anders ook als "nog geen rollen" op het scherm komen.
+        # Een Exists-annotatie is een subquery: geen join, dus geen wisselwerking
+        # met de distinct() hierboven.
+        return (
+            qs.distinct()
+            .annotate(has_no_roles=~Exists(Service.objects.filter(assignment=OuterRef("pk"))))
+            .prefetch_related(
+                Prefetch(
+                    "services",
+                    queryset=Service.objects.filter(
+                        skill__isnull=False,
+                        status="OPEN",
+                        placements__isnull=True,
+                    ).select_related("skill"),
+                    to_attr="services_with_skills",
+                )
             )
         )
 

@@ -37,11 +37,7 @@
   document.addEventListener(
     "close",
     (e) => {
-      const path = e.composedPath();
-      const modal = path.find(
-        (el) => el instanceof Element && el.id === MODAL_ID,
-      );
-      if (!modal) return;
+      if (!window.wiesClosestInPath(e, "#" + MODAL_ID)) return;
       const container = document.getElementById(CONTAINER_ID);
       if (container) container.innerHTML = "";
     },

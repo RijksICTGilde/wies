@@ -24,6 +24,9 @@
     {# Global htmx config; must run right after htmx, before it processes
        history (disables the history snapshot cache — see htmx_config.js). #}
     <script src="{{ app_asset('js/htmx_config.js') }}"></script>
+    {# Not deferred: scripts arriving inside an htmx-swapped partial run before
+       deferred ones and use this helper. #}
+    <script src="{{ app_asset('js/dom_path.js') }}"></script>
     <script defer src="{{ nldd_asset('nldd.min.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
@@ -41,6 +44,9 @@
        swaps. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
+    {# Before both period consumers: placement_period_toggle.js here and
+       member_form.js, which arrives with the teamlid sheet. #}
+    <script src="{{ app_asset('js/period_fields.js') }}" defer></script>
     <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
     {# Decouples the filter sidebar's sticky offset from its height calculation;
        see the file header. Global because every page with filters uses the
