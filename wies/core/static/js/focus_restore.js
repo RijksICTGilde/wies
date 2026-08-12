@@ -42,6 +42,22 @@
   // Wat een gebruiker kan bedienen. De custom elements erbij omdat de NLDD-
   // componenten hun echte control in een shadow root zetten: `nldd-button`
   // matcht geen enkele standaardselector, maar is wel een tabstop.
+  // Muis of toetsenbord? Dezelfde vraag die de browser zelf beantwoordt voor
+  // :focus-visible, maar die staat ons niet ter beschikking. Klikken is een
+  // aanwijsactie: de gebruiker weet waar hij is en heeft geen bestemming nodig.
+  // Alleen wie met het toetsenbord werkt raakt zijn plek kwijt als de focus valt.
+  let laatsteInvoer = "toetsenbord";
+  document.addEventListener(
+    "keydown",
+    () => (laatsteInvoer = "toetsenbord"),
+    true,
+  );
+  document.addEventListener(
+    "pointerdown",
+    () => (laatsteInvoer = "muis"),
+    true,
+  );
+
   const FOCUSABLE = [
     "a[href]",
     "button",
@@ -101,7 +117,7 @@
     for (let index = 0; index < trail.length; index++) {
       const element = resolve(trail[index]);
       if (!element || typeof element.focus !== "function") continue;
-      element.focus();
+      element.focus({ preventScroll: true });
       if (!focusTook(element)) continue;
       // Alles tot en met deze stap is afgehandeld; wat nieuwer was hoort bij een
       // niveau waar we net vandaan komen.
@@ -129,6 +145,12 @@
   // stond hij ergens anders dan op <body>, dan blijven we eraf.
 
   document.addEventListener("htmx:afterSettle", (event) => {
+    // Wie klikt, stoort niet: de focus verplaatsen naar een element waar de
+    // muis niet is levert die gebruiker niets op. Drukt hij daarna Tab, dan
+    // begint hij bovenaan, en dat is wat een muisgebruiker ook zonder dit
+    // script gewend is.
+    if (laatsteInvoer === "muis") return;
+
     const active = document.activeElement;
     if (
       active &&
@@ -167,6 +189,6 @@
     const firstFocusable = [...container.querySelectorAll(FOCUSABLE)].find(
       isVisible,
     );
-    if (firstFocusable) firstFocusable.focus();
+    if (firstFocusable) firstFocusable.focus({ preventScroll: true });
   });
 })();
