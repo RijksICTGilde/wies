@@ -24,6 +24,12 @@
       <h4>{{ group.title }}</h4>
       </nldd-title>
     {% endif %}
+    {% if group.get("readonly_skill") is not none %}
+      {# No edit rights on the role: show it read-only so the description below has context. #}
+      <nldd-form-field label="Rol">
+      <nldd-text-field readonly accessible-label="Rol" value="{{ group.readonly_skill or '–' }}"></nldd-text-field>
+      </nldd-form-field>
+    {% endif %}
     {% for bound in group.form %}
       {% set error_ids = wire_field_errors(bound) %}
       <nldd-form-field label="{{ bound.label }}">
