@@ -562,8 +562,8 @@ class AssignmentPanelRenderTest(TestCase):
         assert existing.id in [s.id for s in services]
 
     def test_member_post_without_skill_blocks_instead_of_deleting(self):
-        """An empty role would drop the row from the sync (= silent delete);
-        the endpoint re-renders with an error instead."""
+        """An empty role leaves nothing to save (extract drops the row); the
+        endpoint re-renders with an error instead of a silent no-op."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
@@ -1027,13 +1027,13 @@ class AssignmentServicesAuditTest(TestCase):
 
     Team editing moved from the (now read-only) ``services`` inline-edit
     collection to the per-member flow: the ``assignment-member-edit`` route
-    posts a single row (formset prefix ``service``, index 0) and reconstructs
-    the rest of the team from the database. Because a member POST only touches
+    posts a single row (formset prefix ``service``, index 0) and mutates exactly
+    that one service (``add_service_to_assignment``). Because a member POST only touches
     its own row, every save produces a one-row audit diff — which is exactly
     what these tests already assert. The endpoint routes through
-    ``apply_team_change``, the same audit machinery the old inline-edit save
-    used, so the event context (``field_name``/``field_label``/``changes``) is
-    unchanged.
+    ``apply_member_change``, which snapshots the whole team before/after around
+    the mutation, so the event context (``field_name``/``field_label``/
+    ``changes``) is unchanged.
     """
 
     def setUp(self):
@@ -1180,8 +1180,9 @@ class AssignmentServicesAuditTest(TestCase):
     def test_member_sheet_renders_pk_hidden_inputs(self):
         """The member-edit sheet must render the hidden ``service-0-id`` and
         ``service-0-placement_id`` inputs so the single-row POST round-trips
-        the PKs back to apply_services_to_assignment. Without them the save
-        would delete-and-recreate (silently dropping Placement metadata).
+        the PKs back to add_service_to_assignment, which updates that Service/Placement
+        in place. Without them the save would create a new row instead of
+        editing the existing one.
 
         Each member opens in its own single-row sheet (``?teamlid=<id>``), so
         the pks are asserted per row instead of across one combined formset."""
@@ -1241,9 +1242,9 @@ class AssignmentServicesAuditTest(TestCase):
         row's service and leaves the rest of the team untouched.
 
         The old formset-gap deletion path is gone: deletion now has a
-        dedicated ``assignment-member-delete`` endpoint that reconstructs the
-        team minus the removed row, so the "blank errored form" bug the
-        original test guarded against can no longer occur."""
+        dedicated ``assignment-member-delete`` endpoint that deletes that one
+        service directly (``service.delete()``), so the "blank errored form"
+        bug the original test guarded against can no longer occur."""
         original_vacant_id = self.vacant_service.id
         delete_url = reverse(
             "assignment-member-delete", args=[self.assignment.public_id, self.vacant_service.public_id]

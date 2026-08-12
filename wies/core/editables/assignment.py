@@ -439,7 +439,7 @@ class AssignmentEditables(EditableSet):
 
     # No form_template/save: the collection is not edited in place. The per-member
     # sheet (assignment_member_edit_view) uses `formset_factory` directly and
-    # audits via apply_team_change, so the audit hooks below still apply.
+    # audits via apply_member_change, so the audit hooks below still apply.
     services = EditableCollection(
         label="Team",
         formset_factory=_services_formset_factory,

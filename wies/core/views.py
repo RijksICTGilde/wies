@@ -77,9 +77,9 @@ from .querysets import (
     annotate_usage_counts,
 )
 from .services.assignments import (
-    apply_team_change,
+    add_service_to_assignment,
+    apply_member_change,
     assignment_edit_specs,
-    initial_row_to_services_data,
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
@@ -4023,13 +4023,6 @@ def assignment_create_sheet(request):
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
-# The team list is edited per MEMBER, not as one formset: every row has its own
-# child sheet. Server-side the formset's sync and audit machinery still applies,
-# so each endpoint reconstructs the full team and changes only the row involved —
-# apply_services_to_assignment deletes on absence and must never see a row vanish
-# by accident.
-
-
 def _build_assignment_member_panel_data(assignment, request):
     """Context for the team member child sheet, or None without rights.
 
@@ -4070,10 +4063,10 @@ def _build_assignment_member_panel_data(assignment, request):
 def assignment_member_edit_view(request, public_id):
     """Saves one team member from the child sheet, editing or adding.
 
-    The form posts a single formset row; the other rows come from the database so
-    the sync always sees the full team. Same contract as assignment_edit_view.
+    The form posts a single formset row, which mutates exactly that one service
+    (and its placement). Same contract as assignment_edit_view.
     """
-    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
     from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
@@ -4101,15 +4094,13 @@ def assignment_member_edit_view(request, public_id):
 
     edited = extract_services_data(formset)
     if not edited:
-        # Without a rol, extract_services_data skips the row, which here would
-        # silently DELETE the member (the sync deletes on absence).
+        # Without a rol, extract_services_data drops the row, leaving nothing to
+        # save; surface it rather than silently no-op.
         _attach_formset_error(formset, "Kies een rol.")
         return rerender(formset)
 
-    edited_ids = {int(row["id"]) for row in edited if row.get("id")}
-    others = [initial_row_to_services_data(row) for row in _services_initial(assignment) if row["id"] not in edited_ids]
     try:
-        apply_team_change(request, assignment, others + edited)
+        apply_member_change(request, assignment, lambda: add_service_to_assignment(assignment, edited[0]))
     except ValidationError as exc:
         for message in exc.messages:
             _attach_formset_error(formset, message)
@@ -4123,7 +4114,7 @@ def assignment_member_edit_view(request, public_id):
 @require_POST
 def assignment_member_delete_view(request, public_id, service_public_id):
     """Deletes one team member, after the confirmation dialog in the panel."""
-    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
@@ -4133,15 +4124,13 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return HttpResponseForbidden()
 
-    # Looked up by public_id within this assignment; the row sync below compares
-    # on the internal service pk (row["id"]).
+    # Resolved by public_id within this assignment, so a foreign id 404s rather
+    # than emitting a no-op audit event.
     service = assignment.services.filter(public_id=service_public_id).first()
     if service is None:
         raise Http404("Unknown service")
 
-    rows = _services_initial(assignment)
-    services_data = [initial_row_to_services_data(row) for row in rows if row["id"] != service.id]
-    apply_team_change(request, assignment, services_data)
+    apply_member_change(request, assignment, service.delete)
 
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
