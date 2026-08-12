@@ -40,6 +40,11 @@
       <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
     {% endfor %}
     </nldd-form-field>
+  {% else %}
+    {# No edit rights on the role: show it as a read-only field #}
+    <nldd-form-field label="Rol">
+    <nldd-text-field readonly accessible-label="Rol" value="{{ panel_data.service.skill.name if panel_data.service.skill else '–' }}"></nldd-text-field>
+    </nldd-form-field>
   {% endif %}
   {% if form.description %}
     {{ form.description.as_field_group() }}
