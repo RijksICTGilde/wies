@@ -1,2 +1,2 @@
-@nldd/design-system 0.8.80
+@nldd/design-system 0.8.82
 vendored via just update-vendor
