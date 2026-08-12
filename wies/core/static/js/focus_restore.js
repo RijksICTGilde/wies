@@ -39,6 +39,22 @@
   // opnieuw opgehaald paneel losgekoppeld.
   const IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href"];
 
+  // Wat een gebruiker kan bedienen. De custom elements erbij omdat de NLDD-
+  // componenten hun echte control in een shadow root zetten: `nldd-button`
+  // matcht geen enkele standaardselector, maar is wel een tabstop.
+  const FOCUSABLE = [
+    "a[href]",
+    "button",
+    "input:not([type=hidden])",
+    "select",
+    "textarea",
+    "[tabindex]:not([tabindex='-1'])",
+    "nldd-button",
+    "nldd-link",
+    "nldd-list-item[href]",
+    "nldd-search-field",
+  ].join(",");
+
   const MAX_DEPTH = 5;
 
   // Nieuwste eerst. Elk item beschrijft een element in plaats van ernaar te
@@ -132,10 +148,25 @@
 
     if (focusFromTrail()) return;
 
-    // De container is normaal niet focusbaar; -1 laat hem wel focus ontvangen
-    // zonder hem in de tabvolgorde te zetten.
-    if (!container.hasAttribute("tabindex"))
-      container.setAttribute("tabindex", "-1");
-    container.focus();
+    // Het eerste bedienbare element in de nieuwe inhoud, en uitdrukkelijk niet
+    // de container zelf.
+    //
+    // De container is een component (`nldd-page`, `nldd-sheet`) en dus een
+    // shadow host. Die is niet focusbaar (`delegatesFocus` staat op false, dus
+    // `focus()` erop doet niets), en hem focusbaar maken met tabindex="-1"
+    // heeft een prijs: bij een shadow host bepaalt de tabindex van de host of
+    // zijn inhoud meedoet in de tabvolgorde. Gemeten op het zijpaneel: mét dat
+    // attribuut loopt Tab nog één ronde en blijft daarna op <body> hangen, en
+    // Shift+Tab komt de inhoud helemaal niet meer in. Het attribuut werd ook
+    // nooit opgeruimd, dus één swap brak het paneel voor de rest van de
+    // paginalevensduur.
+    //
+    // De elementen binnen de container zijn wel gewoon focusbaar en staan al in
+    // de tabvolgorde, dus daar landen we op. Vinden we er geen, dan doen we
+    // niets: de focus op <body> laten staan is beter dan de tabvolgorde slopen.
+    const firstFocusable = [...container.querySelectorAll(FOCUSABLE)].find(
+      isVisible,
+    );
+    if (firstFocusable) firstFocusable.focus();
   });
 })();
