@@ -350,17 +350,6 @@ class ServiceForm(NlddFormMixin, forms.Form):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
-        # A content-free row (no identity and no data) skips the cross-field
-        # checks below; the required `skill` field still rejects it on its own.
-        is_empty_row = (
-            not cleaned_data.get("service_public_id")
-            and not skill_val
-            and not new_skill_name
-            and not cleaned_data.get("description")
-            and not cleaned_data.get("colleague")
-        )
-        if is_empty_row:
-            return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
         # The checkbox is inverted: checked means "inherit the assignment
