@@ -1152,10 +1152,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the groups above.
-        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
-        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
-        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+        org_counts = _org_counts_from_filtered(
+            self._apply_filters(base_qs, exclude_filter="org").distinct(),
+            Placement,
+            "service__assignment__organizations__id",
+        )
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -1169,12 +1170,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 "name": "organisatie",
                 "label": "Opdrachtgever",
                 "top_options": _get_top_org_options(
-                    "placements",
-                    get_excluded_org_ids(),
                     set(self.facets("org", OrganizationUnit).ids),
+                    org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -1251,6 +1250,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         qs = Assignment.objects.filter(has_unfilled_open_service | has_no_service_yet).order_by(
             F("created_at").desc(nulls_last=True)
         )
+        # Hide intelligence-service orgs from the list and its counts, as the
+        # placement list already does (see PlacementListView._get_base_queryset).
+        excluded_org_ids = get_excluded_org_ids()
+        if excluded_org_ids:
+            qs = qs.exclude(organizations__id__in=excluded_org_ids)
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -1382,12 +1386,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
-        # Re-key on distinct assignment ids first: projecting organizations__id
-        # straight off a .distinct() queryset emits SELECT DISTINCT org_id, which
-        # collapses every assignment on the same org into one row (undercount).
-        org_assignment_ids = self._apply_filters(base_qs, exclude_filter="org").values_list("id", flat=True).distinct()
-        org_id_values = Assignment.objects.filter(id__in=org_assignment_ids).values_list("organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+        org_counts = _org_counts_from_filtered(
+            self._apply_filters(base_qs, exclude_filter="org").distinct(),
+            Assignment,
+            "organizations__id",
+        )
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -1399,12 +1402,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "name": "organisatie",
                 "label": "Opdrachtgever",
                 "top_options": _get_top_org_options(
-                    "open_assignments",
-                    get_excluded_org_ids(),
                     set(self.facets("org", OrganizationUnit).ids),
+                    org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -3011,87 +3012,34 @@ def search_suggestions(request):
     )
 
 
-def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
-    """Returns the per-org self-counts for ``count_mode``.
+def _org_counts_from_filtered(filtered_qs, model, org_lookup: str) -> Counter[int]:
+    """Per-org counts from an already org-excluded, filter-applied queryset.
 
-    ``viewer`` (the viewing Colleague or None) gates the placements count through
-    ``filter_visible_placements``, so a planned or ended placement never inflates
-    the count for someone who may not see it.
+    Re-key on distinct row ids first: projecting the org id straight off a
+    .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
+    shared by multiple rows. The base queryset already drops excluded orgs, so
+    the exclusion is not re-applied here.
     """
-    if count_mode == "none":
-        return Counter()
-    if count_mode == "open_assignments":
-        has_unfilled_open_service = Exists(
-            Service.objects.filter(
-                assignment=OuterRef("pk"),
-                status="OPEN",
-                placements__isnull=True,
-            )
-        )
-        assignment_qs = Assignment.objects.filter(has_unfilled_open_service)
-        if excluded_org_ids:
-            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-    else:
-        visible_placements = filter_visible_placements(
-            annotate_placement_dates(Placement.objects.all()), timezone.now().date(), viewer
-        )
-        if excluded_org_ids:
-            visible_placements = visible_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = visible_placements.values_list("service__assignment__organizations__id", flat=True)
-    return Counter(org_id for org_id in org_id_list if org_id is not None)
-
-
-def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
-    """Per-org counts honouring the list's OTHER active filters, so the modal
-    tree matches the sidebar.
-
-    Reuses the list view's own ``_apply_filters`` rather than re-implementing the
-    predicates, which would drift. Both it and ``_get_base_queryset`` depend only
-    on ``self.request``, so a bare view instance with the request attached is
-    enough.
-    """
-    view_cls = AssignmentListView if count_mode == "open_assignments" else PlacementListView
-    view = view_cls()
-    view.request = request
-    filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-
-    if count_mode == "open_assignments":
-        # Re-key on distinct assignment ids first: projecting organizations__id
-        # straight off the .distinct() queryset emits SELECT DISTINCT org_id,
-        # collapsing every assignment on one org into a single row (undercount).
-        assignment_qs = Assignment.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-        if excluded_org_ids:
-            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-    else:
-        placement_qs = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-        if excluded_org_ids:
-            placement_qs = placement_qs.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = placement_qs.values_list("service__assignment__organizations__id", flat=True)
-    return Counter(org_id for org_id in org_id_list if org_id is not None)
+    rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    org_id_list = rows.values_list(org_lookup, flat=True)
+    return Counter(oid for oid in org_id_list if oid is not None)
 
 
 def _get_top_org_options(
-    count_mode: str,
-    excluded_org_ids: list[int],
     selected_org_ids: set[int],
+    org_counts: Counter[int],
     *,
-    viewer=None,
     selected_self_ids: set[int] | None = None,
     selected_type_labels: set[str] | None = None,
-    org_counts: Counter[int] | None = None,
     limit: int = 3,
 ) -> list[dict]:
-    """Returns the opdrachtgever quick checkbox options, ordered by count then label.
+    """Turns per-org ``org_counts`` + the current selections into the opdrachtgever
+    quick checkbox options, ordered by count then label.
 
     Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
     so the sidebar quick row stays in sync with whatever was picked in the modal.
     The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
     self/type only appear when selected, having no top-N baseline.
-
-    ``org_counts`` lets the caller pass filter-aware counts; when omitted this
-    falls back to the global ``_get_org_counts`` baseline, used by the modal.
 
     A selected option is always shown, appended below the top-N when it does not
     make the cut. The order never depends on selection — ticking an option
@@ -3100,8 +3048,6 @@ def _get_top_org_options(
     selected_self_ids = selected_self_ids or set()
     selected_type_labels = selected_type_labels or set()
 
-    if org_counts is None:
-        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     selected_ids = set(selected_org_ids)
     self_ids = set(selected_self_ids)
 
@@ -3328,16 +3274,28 @@ def _build_current_selections(request) -> dict[str, str]:
 def client_modal(request):
     """Returns the client tree selection modal (HTMX partial)."""
     excluded_org_ids = get_excluded_org_ids()
-    count_mode = request.GET.get("count_mode", "placements")
+    count_mode = request.GET.get("count_mode")
 
     # count_mode "none" is the assignment-form org picker, not a filter list, so
-    # it keeps the plain baseline. The filter modes count over the list's other
-    # active filters (sent along via hx-include) so the tree matches the sidebar.
+    # the tree carries no counts (the whole org tree is shown, unpruned). The
+    # filter modes count over the list's other active filters (sent along via
+    # hx-include) so the tree matches the sidebar: borrow the list view's own
+    # _apply_filters (single source of the predicates) rather than re-implementing
+    # them here, which would drift.
     if count_mode == "none":
-        viewer = getattr(request.user, "colleague", None)
-        org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
+        org_self_counts = Counter()
     else:
-        org_self_counts = _filter_aware_org_counts(request, count_mode, excluded_org_ids)
+        if count_mode == "open_assignments":
+            view = AssignmentListView()
+            model, org_lookup = Assignment, "organizations__id"
+        elif count_mode == "placements":
+            view = PlacementListView()
+            model, org_lookup = Placement, "service__assignment__organizations__id"
+        else:
+            return HttpResponseBadRequest("Onbekende count_mode")
+        view.request = request
+        filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
+        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 

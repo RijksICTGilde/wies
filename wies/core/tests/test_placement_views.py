@@ -1919,12 +1919,20 @@ class ClientModalCountModeTest(TestCase):
         content = response.content.decode()
         assert "Org B" in content
 
-    def test_default_count_mode_prunes_empty_orgs(self):
-        """Default count_mode (placements) should prune orgs with zero placements."""
+    def test_placements_count_mode_prunes_empty_orgs(self):
+        """count_mode=placements should prune orgs with zero placements."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"))
+        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
         content = response.content.decode()
         assert "Org B" not in content
+
+    def test_missing_count_mode_is_bad_request(self):
+        self.client.force_login(self.auth_user)
+        assert self.client.get(reverse("client-modal")).status_code == 400
+
+    def test_unknown_count_mode_is_bad_request(self):
+        self.client.force_login(self.auth_user)
+        assert self.client.get(reverse("client-modal"), {"count_mode": "bogus"}).status_code == 400
 
 
 def _modal_org_self_counts(response) -> dict[int, int]:
@@ -1992,7 +2000,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
     def _modal_count_for(self, user) -> int:
         self.client.force_login(user)
-        response = self.client.get(reverse("client-modal"))
+        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
         assert response.status_code == 200
         return _modal_org_self_counts(response).get(str(self.org.public_id), 0)
 

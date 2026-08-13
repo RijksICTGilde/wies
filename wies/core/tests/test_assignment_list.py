@@ -14,7 +14,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import AssignmentListView, _filter_aware_org_counts
+from wies.core.views import AssignmentListView, _org_counts_from_filtered
 
 User = get_user_model()
 
@@ -232,6 +232,28 @@ class AssignmentListViewTest(TestCase):
         groups = self._filter_groups()
         assert self._org_count(groups, self.org) == 2
 
+    def test_excluded_org_hidden_from_list_and_quick_filters(self):
+        """Intelligence-service orgs are hidden from the aanvragen list and its
+        org quick-filters, matching how the plaatsingen list already hides them.
+
+        Regression: AssignmentListView never excluded ``get_excluded_org_ids``,
+        so an excluded org could surface as a list card and a top-N quick filter.
+        """
+        aivd = OrganizationUnit.objects.create(
+            name="Algemene Inlichtingen- en Veiligheidsdienst",
+            label="AIVD",
+        )
+        self._open_aanvraag("Geheime Aanvraag", aivd, self.skill)
+
+        # Not in the rendered list.
+        self.client.force_login(self.auth_user)
+        content = self.client.get(self.list_url).content.decode()
+        assert "Geheime Aanvraag" not in content
+
+        # Not offered as an org quick-filter, and if it were it would count 0.
+        groups = self._filter_groups()
+        assert self._org_count(groups, aivd) is None
+
     def test_rol_count_does_not_collapse_multiple_aanvragen(self):
         """Two aanvragen sharing a skill count as 2, not 1.
 
@@ -328,22 +350,26 @@ class AssignmentListViewTest(TestCase):
         assert self._rol_count(groups, self.skill2) == 1
 
     def _modal_org_counts(self, query_params=None):
-        """Builds the org modal's per-org self-count Counter directly.
-
-        Calls ``_filter_aware_org_counts`` the way client_modal does, with
-        ``created_at`` nulled so the SELECT DISTINCT collapse reproduces
-        (see _filter_groups).
+        """Builds the org modal's per-org self-count Counter the way client_modal
+        does for open_assignments, with ``created_at`` nulled so the SELECT
+        DISTINCT collapse reproduces (see _filter_groups).
         """
         Assignment.objects.update(created_at=None)
         request = RequestFactory().get("/client-modal/", query_params or {})
         request.user = self.auth_user
-        return _filter_aware_org_counts(request, "open_assignments", [])
+        view = AssignmentListView()
+        view.request = request
+        # Reuse the view's own filter predicates (as client_modal does) rather than
+        # duplicating them here — the single-source-of-filters point of the helper.
+        base = view._get_base_queryset()  # noqa: SLF001 (private member) — mirrors client_modal's count path
+        filtered_qs = view._apply_filters(base, exclude_filter="org").distinct()  # noqa: SLF001 (private member) — same
+        return _org_counts_from_filtered(filtered_qs, Assignment, "organizations__id")
 
     def test_modal_org_count_does_not_collapse_multiple_aanvragen(self):
         """The org modal counts every aanvraag on an org, rather than collapsing to 1.
 
         Same ``SELECT DISTINCT organizations.id`` collapse as the sidebar, in
-        ``_filter_aware_org_counts``' open_assignments branch.
+        client_modal's open_assignments count path.
         """
         self._open_aanvraag("Second Aanvraag", self.org, self.skill)
 
