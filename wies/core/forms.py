@@ -350,9 +350,8 @@ class ServiceForm(NlddFormMixin, forms.Form):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
-        # A row removed in the UI leaves an index gap that Django re-materialises
-        # as a blank form, so skip validation for content-free rows;
-        # extract_services_data drops them before save.
+        # A content-free row (no identity and no data) skips the cross-field
+        # checks below; the required `skill` field still rejects it on its own.
         is_empty_row = (
             not cleaned_data.get("service_public_id")
             and not skill_val

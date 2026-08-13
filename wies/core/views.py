@@ -77,9 +77,9 @@ from .querysets import (
     annotate_usage_counts,
 )
 from .services.assignments import (
-    add_service_to_assignment,
     assignment_edit_specs,
     member_audit_event,
+    save_service_from_form,
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
@@ -4007,7 +4007,6 @@ def assignment_member_edit_view(request, public_id):
     """
     from wies.core.editables.assignment import AssignmentEditables, skill_choices  # noqa: PLC0415
     from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
-    from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
@@ -4032,16 +4031,9 @@ def assignment_member_edit_view(request, public_id):
     if not form.is_valid():
         return rerender(form)
 
-    edited = extract_services_data(form)
-    if not edited:
-        # Without a rol, extract_services_data drops the row, leaving nothing to
-        # save; flag the Rol field so the message renders there, not as a banner.
-        form.add_error("skill", "Kies een rol.")
-        return rerender(form)
-
     try:
         with member_audit_event(request, assignment):
-            add_service_to_assignment(assignment, edited)
+            save_service_from_form(assignment, form)
     except ValidationError as exc:
         for message in exc.messages:
             form.add_error(None, message)

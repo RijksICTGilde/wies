@@ -1032,7 +1032,7 @@ class AssignmentServicesAuditTest(TestCase):
     Team editing moved from the (now read-only) ``services`` inline-edit
     collection to the per-member flow: the ``assignment-member-edit`` route
     posts a single row (a plain, prefix-free ``ServiceForm``) and mutates exactly
-    that one service (``add_service_to_assignment``). Because a member POST only touches
+    that one service (``save_service_from_form``). Because a member POST only touches
     its own row, every save produces a one-row audit diff — which is exactly
     what these tests already assert. The endpoint routes through
     ``member_audit_event``, which snapshots the whole team before/after around
@@ -1219,7 +1219,7 @@ class AssignmentServicesAuditTest(TestCase):
     def test_member_sheet_renders_public_id_hidden_inputs(self):
         """The member-edit sheet must render the hidden ``service_public_id``
         and ``placement_public_id`` inputs so the single-row POST
-        round-trips the public_ids back to add_service_to_assignment, which
+        round-trips the public_ids back to save_service_from_form, which
         updates that Service/Placement in place. Without them the save would
         create a new row instead of editing the existing one.
 
