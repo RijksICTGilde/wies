@@ -9,7 +9,7 @@ from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 LABELS_PREFIX = "labels_"
 
 
-def _suborganization_choices():
+def _suborganization_choices(obj=None):
     # A callable so the queryset evaluates per request, not at registration time.
     return Suborganization.objects.all()
 
@@ -28,7 +28,7 @@ def _save_labels_for_category(category_id):
 
 def _labels_choices(category):
     # A callable so the queryset evaluates at form-build time, not registration time.
-    def _get():
+    def _get(obj=None):
         return category.labels.all().order_by("name")
 
     return _get

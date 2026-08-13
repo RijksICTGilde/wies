@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import inspect
 from typing import TYPE_CHECKING, Any, cast
 
 from django import forms
@@ -38,14 +37,6 @@ def use_public_id_choices(field: forms.Field) -> None:
         field.to_field_name = "public_id"
 
 
-def _takes_obj(fn: Callable) -> bool:
-    """Returns whether a choices callable wants the edited object passed in."""
-    try:
-        return len(inspect.signature(fn).parameters) >= 1
-    except TypeError, ValueError:  # Builtins and C functions have no signature.
-        return False
-
-
 def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
     # Priority: explicit form_field_factory → derive from model field → CharField fallback.
     # Overrides (label/widget/choices/validators/error_messages/empty_label) apply last.
@@ -70,12 +61,7 @@ def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Fie
     if editable.widget is not None:
         base.widget = editable.widget() if isinstance(editable.widget, type) else editable.widget
     if editable.choices is not None:
-        # A choices callable may take the edited object so it can keep the current
-        # value in the list even when the normal rules exclude it (see _bdm_queryset).
-        if callable(editable.choices):
-            opts = editable.choices(obj) if _takes_obj(editable.choices) else editable.choices()
-        else:
-            opts = editable.choices
+        opts = editable.choices(obj) if callable(editable.choices) else editable.choices
         if hasattr(base, "queryset"):
             base.queryset = opts
         else:

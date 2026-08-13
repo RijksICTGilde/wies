@@ -34,7 +34,7 @@ class Editable:
     help_text: str | None = None
     required: bool | None = None
     widget: forms.Widget | type[forms.Widget] | None = None
-    choices: Iterable | Callable[[], Iterable] | None = None
+    choices: Iterable | Callable[[Model | None], Iterable] | None = None
     validators: list[Callable] = dataclasses.field(default_factory=list)
     error_messages: dict[str, str] = dataclasses.field(default_factory=dict)
     empty_label: str | None = None  # ModelChoiceField only.
