@@ -246,21 +246,21 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
 
     def test_org_selection_is_checked_with_org_param(self):
         # Selections come in as internal ids; the rendered option value is the public_id.
-        opts = _get_top_org_options("placements", [], {self.org_a.id})
+        opts = _get_top_org_options({self.org_a.id}, Counter())
         match = [o for o in opts if o["value"] == str(self.org_a.public_id)]
         assert match, "selected org must appear as a quick option"
         assert match[0]["param"] == "org"
         assert match[0]["selected"] is True
 
     def test_self_selection_is_checked_with_org_self_param(self):
-        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
+        opts = _get_top_org_options(set(), Counter(), selected_self_ids={self.org_a.id})
         match = [o for o in opts if o["param"] == "org_self" and o["value"] == str(self.org_a.public_id)]
         assert match, "selected self-node must appear as a quick option"
         assert match[0]["selected"] is True
         assert "(direct)" in match[0]["label"]
 
     def test_type_selection_is_checked_with_org_type_param(self):
-        opts = _get_top_org_options("placements", [], set(), selected_type_labels={"Ministerie"})
+        opts = _get_top_org_options(set(), Counter(), selected_type_labels={"Ministerie"})
         match = [o for o in opts if o["param"] == "org_type" and o["value"] == "Ministerie"]
         assert match, "selected org-type must appear as a quick option"
         assert match[0]["selected"] is True
@@ -269,9 +269,8 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         # Org B has the higher count, Org A none. Selecting the low-count Org A
         # must NOT push it above Org B: the order is count/label, not "selected
         # first", so a tick never makes a row jump to the top.
-        self._create_placement("Alice", self.skill_python, org=self.org_b)
-        self._create_placement("Bob", self.skill_python, org=self.org_b)
-        opts = _get_top_org_options("placements", [], {self.org_a.id})
+        counts = Counter({self.org_b.id: 2})
+        opts = _get_top_org_options({self.org_a.id}, counts)
         values = [o["value"] for o in opts if o["param"] == "org"]
         assert values.index(str(self.org_b.public_id)) < values.index(str(self.org_a.public_id))
 
@@ -281,12 +280,12 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         counts = Counter({o.id: c for o, c in zip(orgs, [5, 4, 3, 2, 1], strict=True)})
         top = [orgs[0].id, orgs[1].id]
 
-        baseline = _get_top_org_options("placements", [], set(), org_counts=counts, limit=2)
+        baseline = _get_top_org_options(set(), counts, limit=2)
         base_ids = [o["value"] for o in baseline if o["param"] == "org"]
 
         # Selecting the lowest-count org (outside the top-2) must keep both top
         # options and append the pick — the list grows, nothing is dropped.
-        picked = _get_top_org_options("placements", [], {orgs[4].id}, org_counts=counts, limit=2)
+        picked = _get_top_org_options({orgs[4].id}, counts, limit=2)
         picked_ids = [o["value"] for o in picked if o["param"] == "org"]
 
         for top_id in top:

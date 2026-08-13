@@ -29,7 +29,6 @@ from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
-from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.inline_edit.base import (
     Editable,
     EditableCollection,
@@ -1152,10 +1151,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the groups above.
-        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
-        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
-        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+        org_counts = _org_counts_from_filtered(
+            self._apply_filters(base_qs, exclude_filter="org").distinct(),
+            Placement,
+            "service__assignment__organizations__id",
+        )
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -1169,12 +1169,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 "name": "organisatie",
                 "label": "Opdrachtgever",
                 "top_options": _get_top_org_options(
-                    "placements",
-                    get_excluded_org_ids(),
                     set(self.facets("org", OrganizationUnit).ids),
+                    org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -1251,6 +1249,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         qs = Assignment.objects.filter(has_unfilled_open_service | has_no_service_yet).order_by(
             F("created_at").desc(nulls_last=True)
         )
+        # Hide intelligence-service orgs from the list and its counts, as the
+        # placement list already does (see PlacementListView._get_base_queryset).
+        excluded_org_ids = get_excluded_org_ids()
+        if excluded_org_ids:
+            qs = qs.exclude(organizations__id__in=excluded_org_ids)
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -1382,12 +1385,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
-        # Re-key on distinct assignment ids first: projecting organizations__id
-        # straight off a .distinct() queryset emits SELECT DISTINCT org_id, which
-        # collapses every assignment on the same org into one row (undercount).
-        org_assignment_ids = self._apply_filters(base_qs, exclude_filter="org").values_list("id", flat=True).distinct()
-        org_id_values = Assignment.objects.filter(id__in=org_assignment_ids).values_list("organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+        org_counts = _org_counts_from_filtered(
+            self._apply_filters(base_qs, exclude_filter="org").distinct(),
+            Assignment,
+            "organizations__id",
+        )
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -1399,12 +1401,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "name": "organisatie",
                 "label": "Opdrachtgever",
                 "top_options": _get_top_org_options(
-                    "open_assignments",
-                    get_excluded_org_ids(),
                     set(self.facets("org", OrganizationUnit).ids),
+                    org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -2493,7 +2493,7 @@ def assignment_events_partial(request, public_id):
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-HET_FIELD_LABELS = {"team", "merk", "thema", "budget", "onderwerp", "contract", "tarief"}
+HET_FIELD_LABELS = {"team", "merk"}
 
 
 def _field_phrase(label: str) -> str:
@@ -3011,87 +3011,34 @@ def search_suggestions(request):
     )
 
 
-def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
-    """Returns the per-org self-counts for ``count_mode``.
+def _org_counts_from_filtered(filtered_qs, model, org_lookup: str) -> Counter[int]:
+    """Per-org counts from an already org-excluded, filter-applied queryset.
 
-    ``viewer`` (the viewing Colleague or None) gates the placements count through
-    ``filter_visible_placements``, so a planned or ended placement never inflates
-    the count for someone who may not see it.
+    Re-key on distinct row ids first: projecting the org id straight off a
+    .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
+    shared by multiple rows. The base queryset already drops excluded orgs, so
+    the exclusion is not re-applied here.
     """
-    if count_mode == "none":
-        return Counter()
-    if count_mode == "open_assignments":
-        has_unfilled_open_service = Exists(
-            Service.objects.filter(
-                assignment=OuterRef("pk"),
-                status="OPEN",
-                placements__isnull=True,
-            )
-        )
-        assignment_qs = Assignment.objects.filter(has_unfilled_open_service)
-        if excluded_org_ids:
-            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-    else:
-        visible_placements = filter_visible_placements(
-            annotate_placement_dates(Placement.objects.all()), timezone.now().date(), viewer
-        )
-        if excluded_org_ids:
-            visible_placements = visible_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = visible_placements.values_list("service__assignment__organizations__id", flat=True)
-    return Counter(org_id for org_id in org_id_list if org_id is not None)
-
-
-def _filter_aware_org_counts(request, count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
-    """Per-org counts honouring the list's OTHER active filters, so the modal
-    tree matches the sidebar.
-
-    Reuses the list view's own ``_apply_filters`` rather than re-implementing the
-    predicates, which would drift. Both it and ``_get_base_queryset`` depend only
-    on ``self.request``, so a bare view instance with the request attached is
-    enough.
-    """
-    view_cls = AssignmentListView if count_mode == "open_assignments" else PlacementListView
-    view = view_cls()
-    view.request = request
-    filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-
-    if count_mode == "open_assignments":
-        # Re-key on distinct assignment ids first: projecting organizations__id
-        # straight off the .distinct() queryset emits SELECT DISTINCT org_id,
-        # collapsing every assignment on one org into a single row (undercount).
-        assignment_qs = Assignment.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-        if excluded_org_ids:
-            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
-        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-    else:
-        placement_qs = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-        if excluded_org_ids:
-            placement_qs = placement_qs.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = placement_qs.values_list("service__assignment__organizations__id", flat=True)
-    return Counter(org_id for org_id in org_id_list if org_id is not None)
+    rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    org_id_list = rows.values_list(org_lookup, flat=True)
+    return Counter(oid for oid in org_id_list if oid is not None)
 
 
 def _get_top_org_options(
-    count_mode: str,
-    excluded_org_ids: list[int],
     selected_org_ids: set[int],
+    org_counts: Counter[int],
     *,
-    viewer=None,
     selected_self_ids: set[int] | None = None,
     selected_type_labels: set[str] | None = None,
-    org_counts: Counter[int] | None = None,
     limit: int = 3,
 ) -> list[dict]:
-    """Returns the opdrachtgever quick checkbox options, ordered by count then label.
+    """Turns per-org ``org_counts`` + the current selections into the opdrachtgever
+    quick checkbox options, ordered by count then label.
 
     Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
     so the sidebar quick row stays in sync with whatever was picked in the modal.
     The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
     self/type only appear when selected, having no top-N baseline.
-
-    ``org_counts`` lets the caller pass filter-aware counts; when omitted this
-    falls back to the global ``_get_org_counts`` baseline, used by the modal.
 
     A selected option is always shown, appended below the top-N when it does not
     make the cut. The order never depends on selection — ticking an option
@@ -3100,8 +3047,6 @@ def _get_top_org_options(
     selected_self_ids = selected_self_ids or set()
     selected_type_labels = selected_type_labels or set()
 
-    if org_counts is None:
-        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     selected_ids = set(selected_org_ids)
     self_ids = set(selected_self_ids)
 
@@ -3328,16 +3273,28 @@ def _build_current_selections(request) -> dict[str, str]:
 def client_modal(request):
     """Returns the client tree selection modal (HTMX partial)."""
     excluded_org_ids = get_excluded_org_ids()
-    count_mode = request.GET.get("count_mode", "placements")
+    count_mode = request.GET.get("count_mode")
 
     # count_mode "none" is the assignment-form org picker, not a filter list, so
-    # it keeps the plain baseline. The filter modes count over the list's other
-    # active filters (sent along via hx-include) so the tree matches the sidebar.
+    # the tree carries no counts (the whole org tree is shown, unpruned). The
+    # filter modes count over the list's other active filters (sent along via
+    # hx-include) so the tree matches the sidebar: borrow the list view's own
+    # _apply_filters (single source of the predicates) rather than re-implementing
+    # them here, which would drift.
     if count_mode == "none":
-        viewer = getattr(request.user, "colleague", None)
-        org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
+        org_self_counts = Counter()
     else:
-        org_self_counts = _filter_aware_org_counts(request, count_mode, excluded_org_ids)
+        if count_mode == "open_assignments":
+            view = AssignmentListView()
+            model, org_lookup = Assignment, "organizations__id"
+        elif count_mode == "placements":
+            view = PlacementListView()
+            model, org_lookup = Placement, "service__assignment__organizations__id"
+        else:
+            return HttpResponseBadRequest("Onbekende count_mode")
+        view.request = request
+        filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
+        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
@@ -3665,8 +3622,6 @@ def inline_edit_view(request, model_label, public_id, name):
 
     editables = resolve_editables(editable_set, spec)
 
-    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415 (import not at top level) — import cycle
-
     if request.method == "POST":
         form_cls, _ = build_form_class(
             editables,
@@ -3676,32 +3631,17 @@ def inline_edit_view(request, model_label, public_id, name):
         form = form_cls(request.POST)
         if form.is_valid():
             conflict = False
+            saved = False
             try:
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
                     conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
                     if not conflict:
-                        if isinstance(spec, EditableGroup):
-                            before = {e.name: _current_value(obj, e) for e in editables}
-                        else:
-                            before = _current_value(obj, spec)
+                        # Same save + audit as every other edit path, wrapped in the
+                        # set's audit_mirror like save_placement_edit does.
                         mirror = editable_set.audit_mirror
                         with mirror(obj, request.user, request) if mirror else nullcontext():
-                            save_spec(spec, editables, form.cleaned_data, obj)
-                            if isinstance(spec, EditableGroup):
-                                after = {e.name: _current_value(obj, e) for e in editables}
-                            else:
-                                after = _current_value(obj, spec)
-                            emit_inline_edit_audit_event(
-                                editable_set,
-                                spec,
-                                obj,
-                                before,
-                                after,
-                                request.user,
-                                child_editables=editables if isinstance(spec, EditableGroup) else None,
-                                request=request,
-                            )
+                            saved = save_edit_specs(request, [(editable_set, spec, obj)], form.cleaned_data)
             except editable_set.model.DoesNotExist:
                 # Deleted between the permission check and the lock; the same
                 # denial partial keeps this indistinguishable from a 404 or 403.
@@ -3726,7 +3666,7 @@ def inline_edit_view(request, model_label, public_id, name):
                 obj,
                 # The onboarding wizard submits every field on "Volgende", so an
                 # untouched one would announce a save that did not happen.
-                saved=before != after,
+                saved=saved,
             )
         # Keep the token this POST was built on: recomputing it would adopt a
         # change made meanwhile, and the corrected resubmit would overwrite it
@@ -3805,13 +3745,7 @@ def placement_edit_view(request, public_id):
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_placement_panel_data(placement, request)
-        panel_data["form"] = form
-        panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = reverse("placement-edit", args=[placement.public_id]) + (
-            f"?veld={only}" if only else ""
-        )
-        panel_data["edit_heading"] = PLACEMENT_FIELD_HEADINGS.get(only) if only else None
+        panel_data = _build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
@@ -3827,19 +3761,31 @@ def placement_edit_view(request, public_id):
 PLACEMENT_FIELD_HEADINGS = {"skill": "Rol bewerken", "period": "Periode bewerken"}
 
 
-def _build_placement_edit_panel_data(placement, request):
-    """Context for the placement edit child sheet, or None without edit rights."""
+def _build_placement_edit_panel_data(placement, request, *, form=None, parent_url=None):
+    """Context for the placement edit child sheet, or None without edit rights.
+
+    The single source for this sheet: the open-GET path merges the returned dict
+    onto the read-only panel, and the invalid-POST path renders it directly. Pass
+    the bound ``form`` (and the sanitised ``parent_url``) to re-render a submitted
+    form with its errors instead of a fresh one.
+    """
     only = request.GET.get("veld") or None
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
-    form_cls, initial = build_combined_form_class(specs)
+    if form is None:
+        form_cls, initial = build_combined_form_class(specs)
+        form = form_cls(initial=initial)
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
-        "form": form_cls(initial=initial),
+        "colleague": placement.colleague,
+        "service": placement.service,
+        "form": form,
         # Single-field sheet: the title names that field ("Periode bewerken").
         "edit_heading": PLACEMENT_FIELD_HEADINGS.get(only) if only else None,
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
@@ -3850,21 +3796,31 @@ def _build_placement_edit_panel_data(placement, request):
 # its own child sheet.
 
 
-def _build_assignment_edit_panel_data(assignment, request):
-    """Context for the assignment edit child sheet, or None without edit rights."""
+def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
+    """Context for the assignment edit child sheet, or None without edit rights.
+
+    The single source for this sheet (see ``_build_placement_edit_panel_data``):
+    pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
+    submission instead of a fresh form.
+    """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     only = request.GET.get("veld") or None
     specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return None
-    form_cls, initial = build_combined_form_class(specs)
+    if form is None:
+        form_cls, initial = build_combined_form_class(specs)
+        form = form_cls(initial=initial)
     return {
         "panel_content_template": "parts/assignment_edit_panel_content.html",
-        "form": form_cls(initial=initial),
+        "assignment": assignment,
+        "form": form,
         # Single-field sheet: the title names that field ("Business Manager wijzigen").
         "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
     }
 
@@ -3876,8 +3832,6 @@ def assignment_edit_view(request, public_id):
     Same contract as placement_edit_view: HX-Location back to the parent URL on
     success, the form with messages on errors. POST-only.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
@@ -3891,18 +3845,11 @@ def assignment_edit_view(request, public_id):
 
     fallback = _build_panel_url(request, opdracht=assignment.public_id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
-    edit_url = reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else "")
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["form"] = form
-        panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = edit_url
-        panel_data["edit_heading"] = (
-            f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken"
-        )
+        panel_data = _build_assignment_edit_panel_data(assignment, request, form=form, parent_url=return_path)
         return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
 
     with transaction.atomic():
@@ -3963,11 +3910,14 @@ def assignment_create_sheet(request):
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
-def _build_assignment_member_panel_data(assignment, request):
+def _build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):
     """Context for the team member child sheet, or None without rights.
 
-    ``?teamlid=<service public_id>`` edits an existing member; ``nieuw-aanvraag``
-    and ``nieuw-ingevuld`` add a row with the status preselected.
+    The single source for this sheet. On open (GET), ``?teamlid=<service public_id>``
+    edits an existing member and ``nieuw-aanvraag``/``nieuw-ingevuld`` add a row
+    with the status preselected — the form and heading are derived here. On an
+    invalid POST, pass the bound ``member_form`` + its ``member_heading`` +
+    sanitised ``parent_url`` to re-render; the ``teamlid`` lookup is then skipped.
     """
     from wies.core.editables.assignment import AssignmentEditables, _services_initial, skill_choices  # noqa: PLC0415
     from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
@@ -3976,24 +3926,29 @@ def _build_assignment_member_panel_data(assignment, request):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return None
 
-    teamlid = request.GET.get("teamlid", "")
-    if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
-        filled = teamlid == "nieuw-ingevuld"
-        initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
-        heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
-    else:
-        # teamlid is a Service public_id (UUID string); match it against the row
-        # identity. A non-matching or malformed value just misses → 404 panel.
-        initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
-        if initial_row is None:
-            return None
-        heading = "Teamlid bewerken"
+    if member_form is None:
+        teamlid = request.GET.get("teamlid", "")
+        if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
+            filled = teamlid == "nieuw-ingevuld"
+            initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
+            member_heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
+        else:
+            # teamlid is a Service public_id (UUID string); match it against the row
+            # identity. A non-matching or malformed value just misses → 404 panel.
+            initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
+            if initial_row is None:
+                return None
+            member_heading = "Teamlid bewerken"
+        member_form = ServiceForm(initial=initial_row, skill_choices=skill_choices())
 
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
-        "member_form": ServiceForm(initial=initial_row, skill_choices=skill_choices()),
-        "member_heading": heading,
-        "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "assignment": assignment,
+        "member_form": member_form,
+        "member_heading": member_heading,
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("teamlid",)),
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
@@ -4020,11 +3975,13 @@ def assignment_member_edit_view(request, public_id):
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
     def rerender(form):
-        panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["member_form"] = form
-        panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
-        panel_data["parent_url"] = return_path
-        panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
+        panel_data = _build_assignment_member_panel_data(
+            assignment,
+            request,
+            member_form=form,
+            member_heading=request.POST.get("member_heading") or "Teamlid bewerken",
+            parent_url=return_path,
+        )
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
     form = ServiceForm(request.POST, skill_choices=skill_choices())
