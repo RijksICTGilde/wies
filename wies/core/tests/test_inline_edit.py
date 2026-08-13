@@ -586,6 +586,10 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertContains(response, '<nldd-form-field-error-text id="error-skill-1" invalid>Dit veld is verplicht.')
         self.assertNotContains(response, 'nldd-banner variant="critical"')
         assert self.assignment.services.filter(id=service.id).exists()
+        # The re-render goes through the single-source builder, so the sheet still
+        # carries its assignment context (back button) and the member edit URL.
+        self.assertContains(response, self.assignment.name)
+        self.assertContains(response, reverse("assignment-member-edit", args=[self.assignment.public_id]))
 
     def test_member_delete_removes_only_that_service(self):
         skill = Skill.objects.create(name="Ontwerper")

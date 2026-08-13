@@ -3763,13 +3763,7 @@ def placement_edit_view(request, public_id):
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_placement_panel_data(placement, request)
-        panel_data["form"] = form
-        panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = reverse("placement-edit", args=[placement.public_id]) + (
-            f"?veld={only}" if only else ""
-        )
-        panel_data["edit_heading"] = PLACEMENT_FIELD_HEADINGS.get(only) if only else None
+        panel_data = _build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
@@ -3785,19 +3779,31 @@ def placement_edit_view(request, public_id):
 PLACEMENT_FIELD_HEADINGS = {"skill": "Rol bewerken", "period": "Periode bewerken"}
 
 
-def _build_placement_edit_panel_data(placement, request):
-    """Context for the placement edit child sheet, or None without edit rights."""
+def _build_placement_edit_panel_data(placement, request, *, form=None, parent_url=None):
+    """Context for the placement edit child sheet, or None without edit rights.
+
+    The single source for this sheet: the open-GET path merges the returned dict
+    onto the read-only panel, and the invalid-POST path renders it directly. Pass
+    the bound ``form`` (and the sanitised ``parent_url``) to re-render a submitted
+    form with its errors instead of a fresh one.
+    """
     only = request.GET.get("veld") or None
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
-    form_cls, initial = build_combined_form_class(specs)
+    if form is None:
+        form_cls, initial = build_combined_form_class(specs)
+        form = form_cls(initial=initial)
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
-        "form": form_cls(initial=initial),
+        "colleague": placement.colleague,
+        "service": placement.service,
+        "form": form,
         # Single-field sheet: the title names that field ("Periode bewerken").
         "edit_heading": PLACEMENT_FIELD_HEADINGS.get(only) if only else None,
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
@@ -3808,21 +3814,31 @@ def _build_placement_edit_panel_data(placement, request):
 # its own child sheet.
 
 
-def _build_assignment_edit_panel_data(assignment, request):
-    """Context for the assignment edit child sheet, or None without edit rights."""
+def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
+    """Context for the assignment edit child sheet, or None without edit rights.
+
+    The single source for this sheet (see ``_build_placement_edit_panel_data``):
+    pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
+    submission instead of a fresh form.
+    """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     only = request.GET.get("veld") or None
     specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return None
-    form_cls, initial = build_combined_form_class(specs)
+    if form is None:
+        form_cls, initial = build_combined_form_class(specs)
+        form = form_cls(initial=initial)
     return {
         "panel_content_template": "parts/assignment_edit_panel_content.html",
-        "form": form_cls(initial=initial),
+        "assignment": assignment,
+        "form": form,
         # Single-field sheet: the title names that field ("Business Manager wijzigen").
         "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
     }
 
@@ -3834,8 +3850,6 @@ def assignment_edit_view(request, public_id):
     Same contract as placement_edit_view: HX-Location back to the parent URL on
     success, the form with messages on errors. POST-only.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
@@ -3849,18 +3863,11 @@ def assignment_edit_view(request, public_id):
 
     fallback = _build_panel_url(request, opdracht=assignment.public_id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
-    edit_url = reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else "")
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["form"] = form
-        panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = edit_url
-        panel_data["edit_heading"] = (
-            f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken"
-        )
+        panel_data = _build_assignment_edit_panel_data(assignment, request, form=form, parent_url=return_path)
         return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
 
     with transaction.atomic():
@@ -3921,11 +3928,14 @@ def assignment_create_sheet(request):
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
-def _build_assignment_member_panel_data(assignment, request):
+def _build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):
     """Context for the team member child sheet, or None without rights.
 
-    ``?teamlid=<service public_id>`` edits an existing member; ``nieuw-aanvraag``
-    and ``nieuw-ingevuld`` add a row with the status preselected.
+    The single source for this sheet. On open (GET), ``?teamlid=<service public_id>``
+    edits an existing member and ``nieuw-aanvraag``/``nieuw-ingevuld`` add a row
+    with the status preselected — the form and heading are derived here. On an
+    invalid POST, pass the bound ``member_form`` + its ``member_heading`` +
+    sanitised ``parent_url`` to re-render; the ``teamlid`` lookup is then skipped.
     """
     from wies.core.editables.assignment import AssignmentEditables, _services_initial, skill_choices  # noqa: PLC0415
     from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
@@ -3934,24 +3944,29 @@ def _build_assignment_member_panel_data(assignment, request):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return None
 
-    teamlid = request.GET.get("teamlid", "")
-    if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
-        filled = teamlid == "nieuw-ingevuld"
-        initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
-        heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
-    else:
-        # teamlid is a Service public_id (UUID string); match it against the row
-        # identity. A non-matching or malformed value just misses → 404 panel.
-        initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
-        if initial_row is None:
-            return None
-        heading = "Teamlid bewerken"
+    if member_form is None:
+        teamlid = request.GET.get("teamlid", "")
+        if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
+            filled = teamlid == "nieuw-ingevuld"
+            initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
+            member_heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
+        else:
+            # teamlid is a Service public_id (UUID string); match it against the row
+            # identity. A non-matching or malformed value just misses → 404 panel.
+            initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
+            if initial_row is None:
+                return None
+            member_heading = "Teamlid bewerken"
+        member_form = ServiceForm(initial=initial_row, skill_choices=skill_choices())
 
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
-        "member_form": ServiceForm(initial=initial_row, skill_choices=skill_choices()),
-        "member_heading": heading,
-        "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "assignment": assignment,
+        "member_form": member_form,
+        "member_heading": member_heading,
+        "parent_url": parent_url
+        if parent_url is not None
+        else _url_drop_params(request.path, request.GET, ("teamlid",)),
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
@@ -3978,11 +3993,13 @@ def assignment_member_edit_view(request, public_id):
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
     def rerender(form):
-        panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["member_form"] = form
-        panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
-        panel_data["parent_url"] = return_path
-        panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
+        panel_data = _build_assignment_member_panel_data(
+            assignment,
+            request,
+            member_form=form,
+            member_heading=request.POST.get("member_heading") or "Teamlid bewerken",
+            parent_url=return_path,
+        )
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
     form = ServiceForm(request.POST, skill_choices=skill_choices())

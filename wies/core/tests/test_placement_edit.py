@@ -95,6 +95,25 @@ class PlacementEditViewTest(TestCase):
         assert self.placement.specific_start_date == date(2026, 3, 1)
         assert self.placement.specific_end_date == date(2026, 6, 30)
 
+    def test_invalid_post_rerenders_the_edit_sheet(self):
+        """An invalid submit returns the edit sheet (200) with the submitted
+        terug_url preserved as parent_url and the placement's colleague in context
+        — the single-source builder feeds both the open and the re-render path.
+        """
+        self.client.force_login(self.owner_user)
+        terug = f"/?plaatsing={self.placement.public_id}"
+        response = self.client.post(
+            self.url,
+            self._valid_payload(specific_start_date="2026-06-30", specific_end_date="2026-03-01", terug_url=terug),
+        )
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        # The edit template rendered (its back button names the colleague), and
+        # the sanitised return address survived the failed submit.
+        assert self.owner.name in content
+        assert f'name="terug_url" value="{terug}"' in content
+
     def test_happy_path_records_team_event_on_parent_assignment(self):
         """The audit mirror records the change as a "Team" event on the assignment."""
         self.client.force_login(self.owner_user)
