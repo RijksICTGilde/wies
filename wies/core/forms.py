@@ -352,6 +352,10 @@ class ServiceForm(NlddFormMixin, forms.Form):
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
+        # "Geplaatste consultant" without a name would silently save as a vacancy
+        # (no placement), so require the consultant the status promises.
+        if cleaned_data.get("is_filled") == "ingevuld" and not cleaned_data.get("colleague"):
+            self.add_error("colleague", "Selecteer een consultant.")
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)

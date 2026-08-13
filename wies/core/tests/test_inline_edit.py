@@ -1129,6 +1129,25 @@ class AssignmentServicesAuditTest(TestCase):
         assert resp.status_code == 204
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
+    def test_member_post_filled_without_colleague_blocks(self):
+        """Status "Geplaatste consultant" without a consultant is rejected at the
+        Consultant field, instead of silently saving as a vacancy."""
+        response = self._post_member(
+            self._member_row(
+                service=self.vacant_service,
+                skill=self.skill_java,
+                description="Vacant",
+                is_filled=True,  # ingevuld, but no colleague passed
+            )
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'error-message="error-colleague-1"')
+        self.assertContains(
+            response, '<nldd-form-field-error-text id="error-colleague-1" invalid>Selecteer een consultant.'
+        )
+        # The silent save did not happen: no placement, no colleague.
+        assert not Placement.objects.filter(service=self.vacant_service).exists()
+
     def test_services_post_emits_event_on_period_change(self):
         """A period-only edit still emits a team audit event (#393)."""
         # Filled row: drop the inherit checkbox and give a custom period.
