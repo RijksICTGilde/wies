@@ -38,3 +38,24 @@ class LabelDeleteViewTest(TestCase):
         assert response.status_code == 200
         assert not Label.objects.filter(pk=self.label.pk).exists()
         assert response["HX-Redirect"] == reverse("label-admin")
+
+    def test_label_delete_requires_delete_permission(self):
+        """Without delete_label the label survives."""
+        other = User.objects.create_user(email="nodelete@rijksoverheid.nl", first_name="No", last_name="Delete")
+        other.user_permissions.add(Permission.objects.get(codename="view_labelcategory"))
+        self.client.force_login(other)
+
+        response = self.client.post(f"/beheer/labels/{self.label.public_id}/verwijderen/")
+        assert response.status_code == 403
+        assert Label.objects.filter(pk=self.label.pk).exists()
+
+    def test_label_category_delete_requires_delete_permission(self):
+        """Without delete_labelcategory the category survives."""
+        other = User.objects.create_user(email="nocatdelete@rijksoverheid.nl", first_name="No", last_name="Cat")
+        other.user_permissions.add(Permission.objects.get(codename="view_labelcategory"))
+        self.client.force_login(other)
+
+        url = f"/beheer/labels/categorie/{self.category.public_id}/verwijderen/"
+        response = self.client.post(url)
+        assert response.status_code == 403
+        assert LabelCategory.objects.filter(pk=self.category.pk).exists()
