@@ -213,6 +213,15 @@ def _services_formset_factory(data=None, initial=None):
     return ServiceFormSet(initial=initial or [], **kwargs)
 
 
+def _services_form_factory(data=None, initial=None):
+    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
+
+    kwargs = {"skill_choices": _skill_choices()}
+    if data is not None:
+        return ServiceForm(data, **kwargs)
+    return ServiceForm(initial=initial, **kwargs)
+
+
 def _fmt_date(value) -> str | None:
     """Returns an ISO string, since dates are not JSON-serialisable in audit state."""
     return value.isoformat() if value else None
@@ -441,11 +450,12 @@ class AssignmentEditables(EditableSet):
     )
 
     # No form_template/save: the collection is not edited in place. The per-member
-    # sheet (assignment_member_edit_view) uses `formset_factory` directly and
-    # audits via apply_member_change, so the audit hooks below still apply.
+    # sheet (assignment_member_edit_view) uses `form_factory` (one row at a time)
+    # and audits via member_audit_event, so the audit hooks below still apply.
     services = EditableCollection(
         label="Team",
         formset_factory=_services_formset_factory,
+        form_factory=_services_form_factory,
         initial=_services_initial,
         audit_state=_services_audit_state,
         render_change=_services_render_change,

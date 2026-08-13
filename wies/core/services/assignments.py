@@ -8,7 +8,6 @@ from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
-from wies.core.public_id import parse_public_ids
 
 if TYPE_CHECKING:
     from datetime import date
@@ -16,63 +15,48 @@ if TYPE_CHECKING:
     from wies.core.models import Colleague
 
 
-def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
-    """Maps the submitted skill tokens to internal ids in one query.
-
-    The rol select posts public_ids; everything downstream keys on the internal id.
-    """
-    tokens = [
-        f.cleaned_data.get("skill")
-        for f in service_formset
-        if f.cleaned_data and f.cleaned_data.get("skill") not in (None, "", "__new__")
-    ]
-    if not tokens:
-        return {}
-    rows = Skill.objects.filter(public_id__in=parse_public_ids(tokens)).values_list("public_id", "id")
-    return {str(public_id): skill_id for public_id, skill_id in rows}
-
-
-def extract_services_data(service_formset) -> list[dict]:
-    """Extracts services_data dicts from a validated ServiceFormSet.
+def extract_services_data(svc_form) -> dict | None:
+    """Extracts services_data dict from a validated ServiceForm.
 
     ``service_public_id`` and ``placement_public_id`` round-trip existing
     Service / Placement public_ids (as canonical strings), and are ``None`` for a
     newly added row. They come from attacker-controllable hidden inputs, so
     add_service_to_assignment re-verifies ownership before writing.
     """
-    skill_ids = _skill_ids_by_public_id(service_formset)
-    services_data = []
-    for svc_form in service_formset:
-        if not svc_form.cleaned_data:
-            continue
-        cd = svc_form.cleaned_data
-        skill_val = cd.get("skill", "")
-        new_skill = cd.get("new_skill_name") or None
-        has_skill = (skill_val and skill_val != "__new__") or new_skill
-        if not has_skill:
-            continue
-        skill_id = skill_ids.get(skill_val) if skill_val and skill_val != "__new__" else None
-        # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
-        # carries, so add_service_to_assignment drops the placement.
-        is_aanvraag = cd.get("is_filled") == "aanvraag"
-        colleague = cd.get("colleague")
-        services_data.append(
-            {
-                # UUIDField.clean() yields a uuid.UUID; str() makes it comparable
-                # to str(public_id) and safe for filter(public_id=...).
-                "service_public_id": str(cd["service_public_id"]) if cd.get("service_public_id") else None,
-                "placement_public_id": str(cd["placement_public_id"]) if cd.get("placement_public_id") else None,
-                "description": cd.get("description", ""),
-                "skill_id": skill_id,
-                "new_skill_name": new_skill if skill_val == "__new__" else None,
-                "status": "OPEN",
-                "colleague_id": colleague.id if colleague and not is_aanvraag else None,
-                "has_custom_period": cd.get("has_custom_period", False),
-                "placement_start_date": cd.get("placement_start_date"),
-                "placement_end_date": cd.get("placement_end_date"),
-            }
-        )
-    return services_data
+
+    if not svc_form.cleaned_data:
+        return None
+
+    cd = svc_form.cleaned_data
+    skill_val = cd.get("skill", "")
+    new_skill = cd.get("new_skill_name") or None
+    has_skill = (skill_val and skill_val != "__new__") or new_skill
+
+    if not has_skill:
+        return None
+
+    # "__new__" is a sentinel, not a public_id: _resolve_skill creates/reuses the
+    # Skill from new_skill_name instead. Only resolve an existing public_id here.
+    skill_id = Skill.objects.get(public_id=skill_val).id if skill_val != "__new__" else None
+
+    # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
+    # carries, so add_service_to_assignment drops the placement.
+    is_aanvraag = cd.get("is_filled") == "aanvraag"
+    colleague = cd.get("colleague")
+    return {
+        # UUIDField.clean() yields a uuid.UUID; str() makes it comparable
+        # to str(public_id) and safe for filter(public_id=...).
+        "service_public_id": str(cd["service_public_id"]) if cd.get("service_public_id") else None,
+        "placement_public_id": str(cd["placement_public_id"]) if cd.get("placement_public_id") else None,
+        "description": cd.get("description", ""),
+        "skill_id": skill_id,
+        "new_skill_name": new_skill if skill_val == "__new__" else None,
+        "status": "OPEN",
+        "colleague_id": colleague.id if colleague and not is_aanvraag else None,
+        "has_custom_period": cd.get("has_custom_period", False),
+        "placement_start_date": cd.get("placement_start_date"),
+        "placement_end_date": cd.get("placement_end_date"),
+    }
 
 
 def _resolve_skill(svc: dict) -> Skill | None:

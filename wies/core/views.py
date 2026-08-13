@@ -4058,7 +4058,7 @@ def _build_assignment_member_panel_data(assignment, request):
 
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
-        "member_formset": spec.formset_factory(initial=[initial_row]),
+        "member_form": spec.form_factory(initial=initial_row),
         "member_heading": heading,
         "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
@@ -4086,32 +4086,33 @@ def assignment_member_edit_view(request, public_id):
     fallback = _build_panel_url(request, opdracht=assignment.public_id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
-    def rerender(formset):
+    def rerender(form):
         panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["member_formset"] = formset
+        panel_data["member_form"] = form
         panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
         panel_data["parent_url"] = return_path
         panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
-    formset = spec.formset_factory(data=request.POST)
-    if not formset.is_valid():
-        return rerender(formset)
+    # TODO: is form_factory really needed? whats benefit over normal form?
+    form = spec.form_factory(data=request.POST)
+    if not form.is_valid():
+        return rerender(form)
 
-    edited = extract_services_data(formset)
+    edited = extract_services_data(form)
     if not edited:
         # Without a rol, extract_services_data drops the row, leaving nothing to
-        # save; surface it rather than silently no-op.
-        _attach_formset_error(formset, "Kies een rol.")
-        return rerender(formset)
+        # save; flag the Rol field so the message renders there, not as a banner.
+        form.add_error("skill", "Kies een rol.")
+        return rerender(form)
 
     try:
         with member_audit_event(request, assignment):
-            add_service_to_assignment(assignment, edited[0])
+            add_service_to_assignment(assignment, edited)
     except ValidationError as exc:
         for message in exc.messages:
-            _attach_formset_error(formset, message)
-        return rerender(formset)
+            form.add_error(None, message)
+        return rerender(form)
 
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})

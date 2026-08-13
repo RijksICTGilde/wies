@@ -1,8 +1,4 @@
-{# Child sheet of the assignment panel: one team member. The form posts a single
-   formset row and the server fills in the remaining rows, so this POST can never
-   touch other members (see assignment_member_edit_view). #}
-{% set formset = panel_data.member_formset %}
-{% set svc_form = formset.forms[0] %}
+{% set svc_form = panel_data.member_form %}
 {% set obj = panel_data.assignment %}
 {% set panel_heading = panel_data.member_heading %}
 <nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ obj.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
@@ -19,10 +15,8 @@
       hx-swap="innerHTML"
       data-assignment-start="{{ obj.start_date.isoformat() if obj.start_date else '' }}"
       data-assignment-end="{{ obj.end_date.isoformat() if obj.end_date else '' }}">
-  {{ formset.management_form }}
-  {% for error in formset.non_form_errors() %}
-    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
-  {% endfor %}
+  {# Business errors (e.g. a service that no longer exists) land here as
+     non-field errors; field-level errors render at their own field below. #}
   {% for error in svc_form.non_field_errors() %}
     <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
   {% endfor %}

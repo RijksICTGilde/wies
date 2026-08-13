@@ -6,14 +6,14 @@
 
   const statusGroup = form.querySelector("[data-status-choice]");
   const colleagueField = form.querySelector("[data-colleague-field]");
-  const colleagueSelect = form.querySelector("[name$='-colleague']");
+  const colleagueSelect = form.querySelector("[name='colleague']");
   const skillCombo = form.querySelector("[data-skill-choice]");
   const skillInput = form.querySelector("[data-skill-input]");
   const newSkillInput = form.querySelector("[data-new-skill-input]");
   const periodGroup = form.querySelector("[data-period-choice]");
   const inheritInput = form.querySelector("[data-inherit-input]");
-  const startInput = form.querySelector("[name$='-placement_start_date']");
-  const endInput = form.querySelector("[name$='-placement_end_date']");
+  const startInput = form.querySelector("[name='placement_start_date']");
+  const endInput = form.querySelector("[name='placement_end_date']");
   const endKnownSwitch = form.querySelector("[data-end-date-known]");
   const periodHelp = form.querySelector("[data-assignment-period-help]");
   const assignmentStart = form.dataset.assignmentStart || "";
@@ -35,10 +35,18 @@
   if (skillCombo && skillInput) {
     // The combo has no name: an existing option posts its id, free text posts
     // skill=__new__ plus the name.
+    const items = Array.from(skillCombo.querySelectorAll("nldd-menu-item"));
+    // Selecting an option commits its value (a public_id); typing custom text
+    // commits the typed label. Map labels back to ids so a typed name that
+    // matches an existing role resolves to it instead of becoming __new__.
     const optionValues = new Set(
-      Array.from(skillCombo.querySelectorAll("nldd-menu-item")).map((item) =>
+      items.map((item) => item.getAttribute("value")),
+    );
+    const idByLabel = new Map(
+      items.map((item) => [
+        (item.getAttribute("text") || "").trim(),
         item.getAttribute("value"),
-      ),
+      ]),
     );
     skillCombo.addEventListener("change", (e) => {
       const value =
@@ -50,6 +58,9 @@
         newSkillInput.value = "";
       } else if (optionValues.has(value)) {
         skillInput.value = value;
+        newSkillInput.value = "";
+      } else if (idByLabel.has(value.trim())) {
+        skillInput.value = idByLabel.get(value.trim());
         newSkillInput.value = "";
       } else {
         skillInput.value = "__new__";
