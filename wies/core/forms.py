@@ -313,8 +313,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
 
     service_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     placement_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
-    # `skill` is added in __init__ as a plain ChoiceField so the "__new__"
-    # sentinel is a valid submitted value; see below.
+    # A plain ChoiceField (not ModelChoiceField), so the "__new__" sentinel is a
+    # valid submitted value; its choices are DB-driven and injected in __init__.
+    skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
         label="Omschrijving rol",
         max_length=500,
@@ -342,14 +343,8 @@ class ServiceForm(NlddFormMixin, forms.Form):
 
     def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
-        # A plain ChoiceField, so the sentinel "__new__" is a valid value.
-        # `skill_choices` is always supplied by the factory in editables/assignment.py.
-        self.fields["skill"] = forms.ChoiceField(
-            label="Rol",
-            choices=skill_choices,
-            required=False,
-        )
-        self._configure_field("skill")
+        # `skill_choices` is always supplied by the caller in editables/assignment.py.
+        self.fields["skill"].choices = skill_choices
 
     def clean(self):
         cleaned_data = super().clean()
@@ -369,10 +364,6 @@ class ServiceForm(NlddFormMixin, forms.Form):
             return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
-        has_skill = (skill_val and skill_val != "__new__") or new_skill_name
-        has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
-        if not has_skill and has_other_data:
-            self.add_error("skill", "Selecteer een rol.")
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
@@ -389,6 +380,3 @@ class ServiceForm(NlddFormMixin, forms.Form):
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
-
-
-ServiceFormSet = forms.formset_factory(ServiceForm, extra=0, min_num=1, validate_min=False)

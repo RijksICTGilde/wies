@@ -28,21 +28,25 @@
          name="{{ svc_form.placement_public_id.html_name }}"
          value="{{ svc_form.placement_public_id.value() or '' }}">
   {% set status_value = svc_form.is_filled.value() or "aanvraag" %}
+  {# wire_field_errors points the input at its error text by id (see forms/field.html);
+     nldd-form-field only reveals the message when invalid + error-message="<id>". #}
+  {% set is_filled_error_ids = wire_field_errors(svc_form.is_filled) %}
   <nldd-form-field label="{{ svc_form.is_filled.label }}">
-  <nldd-radio-button-group name="{{ svc_form.is_filled.html_name }}" data-status-choice>
+  <nldd-radio-button-group name="{{ svc_form.is_filled.html_name }}" data-status-choice {% if svc_form.is_filled.errors %}invalid error-message="{{ is_filled_error_ids|join(' ') }}"{% endif %}>
   <nldd-radio-button-field value="aanvraag" label="Aanvraag" {% if status_value == "aanvraag" %}checked{% endif %}></nldd-radio-button-field>
   <nldd-radio-button-field value="ingevuld" label="Geplaatste consultant" {% if status_value == "ingevuld" %}checked{% endif %}></nldd-radio-button-field>
   </nldd-radio-button-group>
   {% for error in svc_form.is_filled.errors %}
-    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    <nldd-form-field-error-text id="{{ is_filled_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
   </nldd-form-field>
   {# A combo box too: the consultant list is as long as the role list. #}
   {% set colleague_value = svc_form.colleague.value() | string if svc_form.colleague.value() else "" %}
   <div data-colleague-field
        {% if status_value != "ingevuld" %}hidden{% endif %}>
+    {% set colleague_error_ids = wire_field_errors(svc_form.colleague) %}
     <nldd-form-field label="{{ svc_form.colleague.label }}">
-    <nldd-combo-box name="{{ svc_form.colleague.html_name }}" value="{{ colleague_value }}" accessible-label="{{ svc_form.colleague.label }}" {% if svc_form.colleague.errors %}invalid{% endif %}>
+    <nldd-combo-box name="{{ svc_form.colleague.html_name }}" value="{{ colleague_value }}" accessible-label="{{ svc_form.colleague.label }}" {% if svc_form.colleague.errors %}invalid error-message="{{ colleague_error_ids|join(' ') }}"{% endif %}>
     <nldd-menu empty-text="Geen consultants gevonden">
     {% for value, label in svc_form.colleague.field.choices %}
       {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
@@ -50,7 +54,7 @@
     </nldd-menu>
     </nldd-combo-box>
     {% for error in svc_form.colleague.errors %}
-      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+      <nldd-form-field-error-text id="{{ colleague_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
     {% endfor %}
     </nldd-form-field>
   </div>
@@ -59,8 +63,9 @@
      name field below; member_form.js only toggles that field's visibility. #}
   {% set skill_value = svc_form.skill.value() | string if svc_form.skill.value() else "" %}
   {% set new_skill_value = svc_form.new_skill_name.value() or "" %}
+  {% set skill_error_ids = wire_field_errors(svc_form.skill) %}
   <nldd-form-field label="{{ svc_form.skill.label }}">
-  <nldd-combo-box name="{{ svc_form.skill.html_name }}" accessible-label="{{ svc_form.skill.label }}" data-skill-choice value="{{ skill_value }}" {% if svc_form.skill.errors %}invalid{% endif %}>
+  <nldd-combo-box name="{{ svc_form.skill.html_name }}" accessible-label="{{ svc_form.skill.label }}" data-skill-choice value="{{ skill_value }}" {% if svc_form.skill.errors %}invalid error-message="{{ skill_error_ids|join(' ') }}"{% endif %}>
   <nldd-menu empty-text="Geen rollen gevonden">
   {% for value, label in svc_form.skill.field.choices %}
     {% if value != "" %}
@@ -71,17 +76,18 @@
   </nldd-combo-box>
   <nldd-form-field-help-text>Kies een bestaande rol of maak een nieuwe aan.</nldd-form-field-help-text>
   {% for error in svc_form.skill.errors %}
-    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    <nldd-form-field-error-text id="{{ skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
   </nldd-form-field>
   {# Only for "+ Nieuwe rol": server-rendered hidden unless that option is
      already selected, so the first paint matches member_form.js's init state. #}
   <div data-new-skill-field
        {% if skill_value != "__new__" %}hidden{% endif %}>
+    {% set new_skill_error_ids = wire_field_errors(svc_form.new_skill_name) %}
     <nldd-form-field label="{{ svc_form.new_skill_name.label }}">
-    <nldd-text-field name="{{ svc_form.new_skill_name.html_name }}" accessible-label="{{ svc_form.new_skill_name.label }}" data-new-skill-input value="{{ new_skill_value }}" maxlength="30" {% if svc_form.new_skill_name.errors %}invalid{% endif %}></nldd-text-field>
+    <nldd-text-field name="{{ svc_form.new_skill_name.html_name }}" accessible-label="{{ svc_form.new_skill_name.label }}" data-new-skill-input value="{{ new_skill_value }}" maxlength="30" {% if svc_form.new_skill_name.errors %}invalid error-message="{{ new_skill_error_ids|join(' ') }}"{% endif %}></nldd-text-field>
     {% for error in svc_form.new_skill_name.errors %}
-      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+      <nldd-form-field-error-text id="{{ new_skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
     {% endfor %}
     </nldd-form-field>
   </div>

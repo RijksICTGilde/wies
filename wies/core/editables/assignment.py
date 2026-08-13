@@ -203,16 +203,6 @@ def _services_display_context(assignment, request) -> dict:
     return {"value": visible_service_rows(assignment, request)}
 
 
-def _services_formset_factory(data=None, initial=None):
-    # prefix="service" matches what the member-edit sheet posts under.
-    from wies.core.forms import ServiceFormSet  # noqa: PLC0415 — avoids circular import
-
-    kwargs = {"prefix": "service", "form_kwargs": {"skill_choices": skill_choices()}}
-    if data is not None:
-        return ServiceFormSet(data, **kwargs)
-    return ServiceFormSet(initial=initial or [], **kwargs)
-
-
 def _fmt_date(value) -> str | None:
     """Returns an ISO string, since dates are not JSON-serialisable in audit state."""
     return value.isoformat() if value else None
@@ -440,12 +430,11 @@ class AssignmentEditables(EditableSet):
         display="forms/displays/organizations.html",
     )
 
-    # No form_template/save: the collection is not edited in place. The per-member
-    # sheet (assignment_member_edit_view) builds a single-row `ServiceForm` directly
-    # and audits via member_audit_event, so the audit hooks below still apply.
+    # Read-only collection: the team is not edited in place. The per-member sheet
+    # (assignment_member_edit_view) builds a single-row `ServiceForm` directly and
+    # audits via member_audit_event, so the audit hooks below still apply.
     services = EditableCollection(
         label="Team",
-        formset_factory=_services_formset_factory,
         initial=_services_initial,
         audit_state=_services_audit_state,
         render_change=_services_render_change,

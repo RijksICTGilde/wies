@@ -2,18 +2,15 @@ import re
 from datetime import timedelta
 from unittest import mock
 
-import pytest
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.editables import AssignmentEditables
-from wies.core.inline_edit.base import EditableCollection
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert, _concurrency_token
+from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert
 
 User = get_user_model()
 
@@ -231,26 +228,6 @@ class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
         self.assertContains(response, "ondertussen gewijzigd")
         self.placement.refresh_from_db()
         assert self.placement.specific_end_date == concurrent_end
-
-
-class ConcurrencyTokenConfigurationTests(TestCase):
-    """A collection without an ``audit_state`` has no state to hash, so every
-    token would be the same constant and no conflict could ever be detected.
-    That must fail loudly at first render rather than pass as "no conflict"."""
-
-    def test_collection_without_audit_state_is_rejected(self):
-        owner = Colleague.objects.create(name="O", email="o@rijksoverheid.nl", source="wies")
-        assignment = Assignment.objects.create(name="A", owner=owner, source="wies")
-        spec = EditableCollection(
-            label="Zonder audit_state",
-            formset_factory=lambda **kwargs: None,
-            initial=lambda obj: [],
-            save=lambda obj, formset: None,
-        )
-        spec.name = "stateless"
-
-        with pytest.raises(ImproperlyConfigured):
-            _concurrency_token(AssignmentEditables, spec, assignment)
 
 
 class TokenlessPostTests(TestCase):

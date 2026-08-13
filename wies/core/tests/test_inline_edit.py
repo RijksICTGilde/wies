@@ -564,9 +564,9 @@ class AssignmentPanelRenderTest(TestCase):
         assert existing.id in [s.id for s in services]
 
     def test_member_post_without_skill_blocks_instead_of_deleting(self):
-        """An empty role leaves nothing to save (extract drops the row); the
-        endpoint re-renders with the error at the Rol field, not a top banner,
-        instead of a silent no-op."""
+        """An empty role is rejected by the required Rol field; the endpoint
+        re-renders with the error on the combo box (via its own error-message
+        attribute), not a top banner, instead of a silent no-op."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
@@ -580,8 +580,11 @@ class AssignmentPanelRenderTest(TestCase):
             },
         )
         assert response.status_code == 200
-        self.assertContains(response, "<nldd-form-field-error-text invalid>Kies een rol.")
-        self.assertNotContains(response, 'nldd-banner variant="critical" text="Kies een rol.')
+        # nldd-form-field only reveals the message when the combo reflects `invalid`
+        # and points at the error text by id via `error-message` (see forms/field.html).
+        self.assertContains(response, 'error-message="error-skill-1"')
+        self.assertContains(response, '<nldd-form-field-error-text id="error-skill-1" invalid>Dit veld is verplicht.')
+        self.assertNotContains(response, 'nldd-banner variant="critical"')
         assert self.assignment.services.filter(id=service.id).exists()
 
     def test_member_delete_removes_only_that_service(self):
