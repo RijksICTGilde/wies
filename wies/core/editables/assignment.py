@@ -106,7 +106,7 @@ def _organizations_render_change(state) -> str:
 
 
 def _skill_choices():
-    choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
+    choices = [("", " "), ("__new__", "+ Nieuwe rol")]
     choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
     return choices
 

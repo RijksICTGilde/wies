@@ -54,37 +54,37 @@
     {% endfor %}
     </nldd-form-field>
   </div>
-  {# allow-custom: a typed name that is not an existing role becomes a new one. The
-     combo box posts nothing itself; member_form.js fills the hidden inputs (id in
-     skill, or skill=__new__ with the name in new_skill_name). #}
+  {# The combo posts `skill` itself (form-associated): an existing role's
+     public_id, or the "__new__" sentinel. Picking "+ Nieuwe rol" reveals the
+     name field below; member_form.js only toggles that field's visibility. #}
   {% set skill_value = svc_form.skill.value() | string if svc_form.skill.value() else "" %}
   {% set new_skill_value = svc_form.new_skill_name.value() or "" %}
-  <input type="hidden"
-         name="{{ svc_form.skill.html_name }}"
-         value="{{ skill_value }}"
-         data-skill-input>
-  <input type="hidden"
-         name="{{ svc_form.new_skill_name.html_name }}"
-         value="{{ new_skill_value }}"
-         data-new-skill-input>
   <nldd-form-field label="{{ svc_form.skill.label }}">
-  <nldd-combo-box allow-custom accessible-label="{{ svc_form.skill.label }}" data-skill-choice {% if skill_value == "__new__" %}value="{{ new_skill_value }}" text="{{ new_skill_value }}"{% else %}value="{{ skill_value }}"{% endif %} {% if svc_form.skill.errors or svc_form.new_skill_name.errors %}invalid{% endif %}>
+  <nldd-combo-box name="{{ svc_form.skill.html_name }}" accessible-label="{{ svc_form.skill.label }}" data-skill-choice value="{{ skill_value }}" {% if svc_form.skill.errors %}invalid{% endif %}>
   <nldd-menu empty-text="Geen rollen gevonden">
   {% for value, label in svc_form.skill.field.choices %}
-    {% if value not in ("", "__new__") %}
+    {% if value != "" %}
       <nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>
     {% endif %}
   {% endfor %}
   </nldd-menu>
   </nldd-combo-box>
-  <nldd-form-field-help-text>Kies een bestaande rol of typ de naam van een nieuwe rol.</nldd-form-field-help-text>
+  <nldd-form-field-help-text>Kies een bestaande rol of maak een nieuwe aan.</nldd-form-field-help-text>
   {% for error in svc_form.skill.errors %}
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
-  {% for error in svc_form.new_skill_name.errors %}
-    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
-  {% endfor %}
   </nldd-form-field>
+  {# Only for "+ Nieuwe rol": server-rendered hidden unless that option is
+     already selected, so the first paint matches member_form.js's init state. #}
+  <div data-new-skill-field
+       {% if skill_value != "__new__" %}hidden{% endif %}>
+    <nldd-form-field label="{{ svc_form.new_skill_name.label }}">
+    <nldd-text-field name="{{ svc_form.new_skill_name.html_name }}" accessible-label="{{ svc_form.new_skill_name.label }}" data-new-skill-input value="{{ new_skill_value }}" maxlength="30" {% if svc_form.new_skill_name.errors %}invalid{% endif %}></nldd-text-field>
+    {% for error in svc_form.new_skill_name.errors %}
+      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  </div>
   {{ svc_form.description.as_field_group() }}
   {# has_custom_period is inverted: checked means inherit the assignment period. The
      segmented control does not post; the hidden input below carries the choice

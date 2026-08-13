@@ -1242,6 +1242,22 @@ class AssignmentServicesAuditTest(TestCase):
         assert hidden_value(filled_content, "service_public_id") == str(self.filled_service.public_id)
         assert hidden_value(filled_content, "placement_public_id") == str(self.placement.public_id)
 
+    def test_member_sheet_offers_new_role_option_with_hidden_input(self):
+        """The Rol combo must offer the discrete "+ Nieuwe rol" option
+        (value ``__new__``) rather than free-typing, and the name field it
+        reveals must render ``hidden`` for a row whose skill is an existing
+        role, so member_form.js only has to unhide it on selection."""
+        resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        # The discrete option is a real menu item; the combo is not allow-custom.
+        assert 'value="__new__"' in content
+        assert "allow-custom" not in content
+        # This row has an existing skill, so the new-role name field starts hidden.
+        m = re.search(r"<div data-new-skill-field\s*([^>]*)>", content)
+        assert m is not None
+        assert "hidden" in m.group(1)
+
     def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
         """Editing only the description must update the existing Service
         in place (same PK, Placement kept with its metadata) and the

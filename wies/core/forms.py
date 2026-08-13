@@ -10,7 +10,7 @@ from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
-from .models import Colleague, Label, LabelCategory, Skill, Suborganization
+from .models import Colleague, Label, LabelCategory, Suborganization
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -313,12 +313,8 @@ class ServiceForm(NlddFormMixin, forms.Form):
 
     service_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     placement_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
-    skill = forms.ModelChoiceField(
-        label="Rol",
-        queryset=Skill.objects.order_by("name"),
-        required=False,
-        empty_label=" ",
-    )
+    # `skill` is added in __init__ as a plain ChoiceField so the "__new__"
+    # sentinel is a valid submitted value; see below.
     description = forms.CharField(
         label="Omschrijving rol",
         max_length=500,
@@ -344,12 +340,10 @@ class ServiceForm(NlddFormMixin, forms.Form):
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
 
-    def __init__(self, *args, skill_choices=None, **kwargs):
+    def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
         # A plain ChoiceField, so the sentinel "__new__" is a valid value.
-        if skill_choices is None:
-            skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-            skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
+        # `skill_choices` is always supplied by the factory in editables/assignment.py.
         self.fields["skill"] = forms.ChoiceField(
             label="Rol",
             choices=skill_choices,

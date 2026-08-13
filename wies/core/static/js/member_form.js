@@ -8,7 +8,7 @@
   const colleagueField = form.querySelector("[data-colleague-field]");
   const colleagueSelect = form.querySelector("[name='colleague']");
   const skillCombo = form.querySelector("[data-skill-choice]");
-  const skillInput = form.querySelector("[data-skill-input]");
+  const newSkillField = form.querySelector("[data-new-skill-field]");
   const newSkillInput = form.querySelector("[data-new-skill-input]");
   const periodGroup = form.querySelector("[data-period-choice]");
   const inheritInput = form.querySelector("[data-inherit-input]");
@@ -32,40 +32,17 @@
     });
   }
 
-  if (skillCombo && skillInput) {
-    // The combo has no name: an existing option posts its id, free text posts
-    // skill=__new__ plus the name.
-    const items = Array.from(skillCombo.querySelectorAll("nldd-menu-item"));
-    // Selecting an option commits its value (a public_id); typing custom text
-    // commits the typed label. Map labels back to ids so a typed name that
-    // matches an existing role resolves to it instead of becoming __new__.
-    const optionValues = new Set(
-      items.map((item) => item.getAttribute("value")),
-    );
-    const idByLabel = new Map(
-      items.map((item) => [
-        (item.getAttribute("text") || "").trim(),
-        item.getAttribute("value"),
-      ]),
-    );
+  if (skillCombo && newSkillField) {
+    // The combo posts `skill` itself. "+ Nieuwe rol" (value __new__) reveals the
+    // name field; any other choice hides it and drops a leftover typed name.
     skillCombo.addEventListener("change", (e) => {
       const value =
         e.detail && e.detail.value !== undefined
           ? e.detail.value
           : skillCombo.value;
-      if (!value) {
-        skillInput.value = "";
-        newSkillInput.value = "";
-      } else if (optionValues.has(value)) {
-        skillInput.value = value;
-        newSkillInput.value = "";
-      } else if (idByLabel.has(value.trim())) {
-        skillInput.value = idByLabel.get(value.trim());
-        newSkillInput.value = "";
-      } else {
-        skillInput.value = "__new__";
-        newSkillInput.value = value;
-      }
+      const isNew = value === "__new__";
+      newSkillField.hidden = !isNew;
+      if (!isNew && newSkillInput) newSkillInput.value = "";
     });
   }
 
