@@ -184,6 +184,13 @@ class InlineEditInfrastructureTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated name"
 
+    def test_post_unchanged_value_announces_nothing(self):
+        """The onboarding wizard submits every field on "Volgende", so an
+        untouched one must not announce a save that did not happen."""
+        resp = post_inline_edit(self.client, self.url, {"name": "Original name"})
+        assert resp.status_code == 200
+        assert "HX-Trigger-After-Swap" not in resp
+
     def test_post_invalid_returns_form_with_error(self):
         # Empty string fails the required check (Assignment.name is
         # non-null + has no blank=True).

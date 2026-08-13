@@ -3792,7 +3792,9 @@ def inline_edit_view(request, model_label, public_id, name):
                 spec,
                 editables,
                 obj,
-                saved=True,
+                # The onboarding wizard submits every field on "Volgende", so an
+                # untouched one would announce a save that did not happen.
+                saved=before != after,
             )
         # Keep the token this POST was built on: recomputing it would adopt a
         # change made meanwhile, and the corrected resubmit would overwrite it
