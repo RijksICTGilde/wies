@@ -8,7 +8,6 @@ from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
-from wies.core.public_id import parse_public_ids
 
 if TYPE_CHECKING:
     from datetime import date
@@ -16,107 +15,62 @@ if TYPE_CHECKING:
     from wies.core.models import Colleague
 
 
-def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
-    """Maps the submitted skill tokens to internal ids in one query.
+def _resolve_skill_from_cleaned(cd: dict) -> Skill:
+    """Resolves the Skill for a validated ServiceForm.
 
-    The rol select posts public_ids; everything downstream keys on the internal id.
+    ``skill == "__new__"`` is a sentinel, not a public_id: the Skill is
+    created/reused from ``new_skill_name``. Otherwise the existing Skill is
+    looked up by its public_id. A valid form always carries one of the two
+    (``skill`` is required and ``clean()`` rejects ``__new__`` without a name).
     """
-    tokens = [
-        f.cleaned_data.get("skill")
-        for f in service_formset
-        if f.cleaned_data and f.cleaned_data.get("skill") not in (None, "", "__new__")
-    ]
-    if not tokens:
-        return {}
-    rows = Skill.objects.filter(public_id__in=parse_public_ids(tokens)).values_list("public_id", "id")
-    return {str(public_id): skill_id for public_id, skill_id in rows}
-
-
-def extract_services_data(service_formset) -> list[dict]:
-    """Extracts services_data dicts from a validated ServiceFormSet.
-
-    ``service_public_id`` and ``placement_public_id`` round-trip existing
-    Service / Placement public_ids (as canonical strings), and are ``None`` for a
-    newly added row. They come from attacker-controllable hidden inputs, so
-    add_service_to_assignment re-verifies ownership before writing.
-    """
-    skill_ids = _skill_ids_by_public_id(service_formset)
-    services_data = []
-    for svc_form in service_formset:
-        if not svc_form.cleaned_data:
-            continue
-        cd = svc_form.cleaned_data
-        skill_val = cd.get("skill", "")
-        new_skill = cd.get("new_skill_name") or None
-        has_skill = (skill_val and skill_val != "__new__") or new_skill
-        if not has_skill:
-            continue
-        skill_id = skill_ids.get(skill_val) if skill_val and skill_val != "__new__" else None
-        # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
-        # carries, so add_service_to_assignment drops the placement.
-        is_aanvraag = cd.get("is_filled") == "aanvraag"
-        colleague = cd.get("colleague")
-        services_data.append(
-            {
-                # UUIDField.clean() yields a uuid.UUID; str() makes it comparable
-                # to str(public_id) and safe for filter(public_id=...).
-                "service_public_id": str(cd["service_public_id"]) if cd.get("service_public_id") else None,
-                "placement_public_id": str(cd["placement_public_id"]) if cd.get("placement_public_id") else None,
-                "description": cd.get("description", ""),
-                "skill_id": skill_id,
-                "new_skill_name": new_skill if skill_val == "__new__" else None,
-                "status": "OPEN",
-                "colleague_id": colleague.id if colleague and not is_aanvraag else None,
-                "has_custom_period": cd.get("has_custom_period", False),
-                "placement_start_date": cd.get("placement_start_date"),
-                "placement_end_date": cd.get("placement_end_date"),
-            }
-        )
-    return services_data
-
-
-def _resolve_skill(svc: dict) -> Skill | None:
-    """Resolves the Skill for a services_data row.
-
-    ``new_skill_name`` wins (get_or_create); otherwise ``skill_id`` is looked up.
-    """
-    if svc.get("new_skill_name"):
-        skill, _ = Skill.objects.get_or_create(name=svc["new_skill_name"])
+    skill_val = cd.get("skill", "")
+    if skill_val == "__new__":
+        skill, _ = Skill.objects.get_or_create(name=cd["new_skill_name"].strip())
         return skill
-    if svc.get("skill_id"):
-        return Skill.objects.filter(id=svc["skill_id"]).first()
-    return None
+    return Skill.objects.get(public_id=skill_val)
 
 
 @transaction.atomic
-def add_service_to_assignment(assignment: Assignment, svc: dict) -> Service:
-    """Creates or updates a single Service (and its Placement) on ``assignment``.
+def save_service_from_form(assignment: Assignment, form) -> Service:
+    """Creates or updates a single Service (and its Placement) on ``assignment``
+    from a validated ServiceForm.
 
-    ``service_public_id`` and ``placement_public_id`` are attacker-controllable
-    hidden inputs; a public_id not belonging to this assignment raises
-    ``ValidationError`` rather than silently creating rows, keeping stale-form
-    races and malicious posts equally visible.
+    ``service_public_id`` and ``placement_public_id`` round-trip existing
+    Service / Placement public_ids from attacker-controllable hidden inputs; a
+    public_id not belonging to this assignment raises ``ValidationError`` rather
+    than silently creating rows, keeping stale-form races and malicious posts
+    equally visible.
 
-    Placement per row: ``placement_public_id`` + ``colleague_id`` → updated;
-    ``placement_public_id`` alone → deleted (filled→aanvraag); ``colleague_id``
-    alone → created.
+    Placement per row: ``placement_public_id`` + colleague → updated;
+    ``placement_public_id`` alone → deleted (filled→aanvraag); colleague alone
+    → created.
     """
-    skill = _resolve_skill(svc)
+    cd = form.cleaned_data
+    skill = _resolve_skill_from_cleaned(cd)
+    description = cd.get("description", "")
+    has_custom_period = cd.get("has_custom_period", False)
+    start = cd.get("placement_start_date")
+    end = cd.get("placement_end_date")
+    # UUIDField.clean() yields a uuid.UUID; str() makes it safe for filter(public_id=...).
+    service_public_id = str(cd["service_public_id"]) if cd.get("service_public_id") else None
+    placement_public_id = str(cd["placement_public_id"]) if cd.get("placement_public_id") else None
+    # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
+    # carries, so _apply_placement drops the placement.
+    colleague = None if cd.get("is_filled") == "aanvraag" else cd.get("colleague")
 
-    service_public_id = svc.get("service_public_id")
     if service_public_id:
         service = assignment.services.filter(public_id=service_public_id).first()
         if service is None:
             msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
-        service.description = svc.get("description", "")
+        service.description = description
         service.skill = skill
-        service.status = svc.get("status", service.status)
+        service.status = "OPEN"
         update_fields = ["description", "skill", "status"]
-        if svc.get("has_custom_period"):
+        if has_custom_period:
             service.period_source = Service.SERVICE
-            service.specific_start_date = svc.get("placement_start_date")
-            service.specific_end_date = svc.get("placement_end_date")
+            service.specific_start_date = start
+            service.specific_end_date = end
         else:
             service.period_source = Service.ASSIGNMENT
             service.specific_start_date = None
@@ -126,26 +80,34 @@ def add_service_to_assignment(assignment: Assignment, svc: dict) -> Service:
     else:
         create_kwargs = {
             "assignment": assignment,
-            "description": svc.get("description", ""),
+            "description": description,
             "skill": skill,
-            "status": svc.get("status", "OPEN"),
+            "status": "OPEN",
             "source": "wies",
         }
-        if svc.get("has_custom_period"):
+        if has_custom_period:
             create_kwargs["period_source"] = Service.SERVICE
-            create_kwargs["specific_start_date"] = svc.get("placement_start_date")
-            create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            create_kwargs["specific_start_date"] = start
+            create_kwargs["specific_end_date"] = end
         service = Service.objects.create(**create_kwargs)
 
-    _apply_placement(assignment, service, svc)
+    _apply_placement(
+        assignment, service, placement_public_id, colleague, has_custom_period=has_custom_period, start=start, end=end
+    )
     return service
 
 
-def _apply_placement(assignment: Assignment, service: Service, svc: dict) -> None:
-    """Creates, updates or deletes ``service``'s Placement from a services_data row."""
-    placement_public_id = svc.get("placement_public_id")
-    colleague_id = svc.get("colleague_id")
-
+def _apply_placement(
+    assignment: Assignment,
+    service: Service,
+    placement_public_id: str | None,
+    colleague: Colleague | None,
+    *,
+    has_custom_period: bool,
+    start: date | None,
+    end: date | None,
+) -> None:
+    """Creates, updates or deletes ``service``'s Placement from a validated row."""
     if placement_public_id:
         placement = Placement.objects.filter(public_id=placement_public_id, service__assignment=assignment).first()
         if placement is None:
@@ -156,16 +118,16 @@ def _apply_placement(assignment: Assignment, service: Service, svc: dict) -> Non
             # different service — only reachable via tampering.
             msg = "Een plaatsing verwijst naar een andere dienst. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
-        if colleague_id:
+        if colleague:
             update_fields = []
-            if placement.colleague_id != int(colleague_id):
-                placement.colleague_id = int(colleague_id)
+            if placement.colleague_id != colleague.id:
+                placement.colleague_id = colleague.id
                 update_fields.append("colleague_id")
 
-            if svc.get("has_custom_period"):
+            if has_custom_period:
                 new_source = Placement.PLACEMENT
-                new_start = svc.get("placement_start_date")
-                new_end = svc.get("placement_end_date")
+                new_start = start
+                new_end = end
             else:
                 new_source = Placement.SERVICE
                 new_start = None
@@ -185,16 +147,16 @@ def _apply_placement(assignment: Assignment, service: Service, svc: dict) -> Non
                 placement.save(update_fields=update_fields)
         else:
             placement.delete()
-    elif colleague_id:
+    elif colleague:
         create_kwargs = {
-            "colleague_id": int(colleague_id),
+            "colleague_id": colleague.id,
             "service": service,
             "source": "wies",
         }
-        if svc.get("has_custom_period"):
+        if has_custom_period:
             create_kwargs["period_source"] = Placement.PLACEMENT
-            create_kwargs["specific_start_date"] = svc.get("placement_start_date")
-            create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            create_kwargs["specific_start_date"] = start
+            create_kwargs["specific_end_date"] = end
         Placement.objects.create(**create_kwargs)
 
 
@@ -212,7 +174,7 @@ def create_assignment_from_form(
     """Creates an Assignment with its organization links.
 
     Services and roles are added afterwards, one at a time, via the assignment
-    panel (``add_service_to_assignment``), so none are created here.
+    panel (``save_service_from_form``), so none are created here.
     """
     assignment = Assignment.objects.create(
         name=name,
@@ -366,7 +328,7 @@ def merge_group(assignments):
 def member_audit_event(request, assignment):
     """Wraps a single-service mutation, emitting one team-audit event around it.
 
-    The mutation (e.g. ``add_service_to_assignment`` or ``service.delete()``) is
+    The mutation (e.g. ``save_service_from_form`` or ``service.delete()``) is
     written plainly inside the ``with`` block. The before/after snapshot stays
     whole-team, so the audit delta still reports exactly the one row that
     changed, keyed on the internal ``service.id``.

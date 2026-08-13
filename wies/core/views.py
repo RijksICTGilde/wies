@@ -14,12 +14,12 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
-from django.forms.utils import ErrorDict, ErrorList
+from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -77,9 +77,9 @@ from .querysets import (
     annotate_usage_counts,
 )
 from .services.assignments import (
-    add_service_to_assignment,
     assignment_edit_specs,
     member_audit_event,
+    save_service_from_form,
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
@@ -3431,14 +3431,11 @@ def _concurrency_conflict_alert(editable_set, spec, obj) -> dict:
 
 
 def _edit_state(editable_set, spec, obj):
-    """The values this edit is based on, in a JSON-serialisable shape."""
-    if isinstance(spec, EditableCollection):
-        if spec.audit_state is None:
-            # Every token would otherwise hash the same empty payload, so no
-            # conflict could ever be detected for this collection.
-            message = f"EditableCollection {spec.name!r} needs an audit_state to build a concurrency token"
-            raise ImproperlyConfigured(message)
-        return spec.audit_state(obj)
+    """The values this edit is based on, in a JSON-serialisable shape.
+
+    Only Editable/EditableGroup specs reach this: collections are read-only in
+    the inline-edit engine and have no save path to guard with a token.
+    """
     state = {}
     for e in resolve_editables(editable_set, spec):
         value = _current_value(obj, e)
@@ -3608,78 +3605,13 @@ def _render_inline_edit_form(
     return render(request, "parts/inline_edit/form.html", ctx)
 
 
-def _render_inline_edit_collection_form(
-    request, editable_set, spec, obj, formset, *, alert: dict | None = None, token: str | None = None
-) -> HttpResponse:
-    # Inner body from spec.form_template; receives the formset as `formset`.
-    ctx = {
-        **_inline_edit_base_ctx(editable_set, spec, obj),
-        "formset": formset,
-        "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
-        "alert": alert,
-    }
-    return render(request, "parts/inline_edit/collection_form.html", ctx)
-
-
-def _attach_formset_error(formset, message: str) -> None:
-    # FormSets lack a public API for this; _non_form_errors is the documented workaround
-    # (is_valid() uses the same internal path when clean() raises).
-    existing = list(formset.non_form_errors()) if hasattr(formset, "_non_form_errors") else []
-    formset._non_form_errors = ErrorList([*existing, message])
-
-
 def _handle_inline_edit_collection(request, editable_set, spec: EditableCollection, obj) -> HttpResponse:
-    # FormSet equivalent of the Editable/Group path in inline_edit_view. A
-    # read-only collection still renders its display, but rejects saves and the
-    # edit-form GET.
-    read_only = spec.save is None
+    # Collections are read-only in the inline-edit engine: they render their
+    # display, and their rows are edited through a dedicated flow (the team is
+    # edited one member at a time via assignment_member_edit_view), not the
+    # generic save path. A POST here is therefore never valid.
     if request.method == "POST":
-        if read_only:
-            raise Http404("Collection is not editable")
-        formset = spec.formset_factory(data=request.POST)
-        if formset.is_valid():
-            conflict = False
-            try:
-                with transaction.atomic():
-                    obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
-                    # One snapshot, used both to check the token and as the
-                    # audit event's "before"; the team query is not cheap.
-                    before = _edit_state(editable_set, spec, obj)
-                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj, state=before)
-                    if not conflict:
-                        spec.save(obj, formset)
-                        after = _edit_state(editable_set, spec, obj)
-                        emit_inline_edit_audit_event(
-                            editable_set, spec, obj, before, after, request.user, request=request
-                        )
-            except editable_set.model.DoesNotExist:
-                # Deleted between the permission check and the lock; the same
-                # denial partial keeps this indistinguishable from a 404 or 403.
-                return _render_inline_edit_denial(request, editable_set, spec, obj.public_id)
-            except ValidationError as exc:
-                for message in exc.messages:
-                    _attach_formset_error(formset, message)
-                return _render_inline_edit_collection_form(
-                    request, editable_set, spec, obj, formset, token=_submitted_token(request)
-                )
-            if conflict:
-                # Re-render the bound form, keeping the user's input: Opslaan
-                # saves anyway, Annuleren adopts the changed data.
-                return _render_inline_edit_collection_form(
-                    request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
-                )
-            return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
-        return _render_inline_edit_collection_form(
-            request, editable_set, spec, obj, formset, token=_submitted_token(request)
-        )
-
-    if request.GET.get("cancel"):
-        return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
-    if request.GET.get("edit"):
-        if read_only:
-            raise Http404("Collection is not editable")
-        formset = spec.formset_factory(initial=spec.initial(obj))
-        return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+        raise Http404("Collection is not editable")
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
 
 
@@ -4037,7 +3969,8 @@ def _build_assignment_member_panel_data(assignment, request):
     ``?teamlid=<service public_id>`` edits an existing member; ``nieuw-aanvraag``
     and ``nieuw-ingevuld`` add a row with the status preselected.
     """
-    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial, skill_choices  # noqa: PLC0415
+    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
 
     spec = AssignmentEditables.services
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
@@ -4058,7 +3991,7 @@ def _build_assignment_member_panel_data(assignment, request):
 
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
-        "member_formset": spec.formset_factory(initial=[initial_row]),
+        "member_form": ServiceForm(initial=initial_row, skill_choices=skill_choices()),
         "member_heading": heading,
         "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
@@ -4072,8 +4005,8 @@ def assignment_member_edit_view(request, public_id):
     The form posts a single formset row, which mutates exactly that one service
     (and its placement). Same contract as assignment_edit_view.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
-    from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, skill_choices  # noqa: PLC0415
+    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
@@ -4086,32 +4019,25 @@ def assignment_member_edit_view(request, public_id):
     fallback = _build_panel_url(request, opdracht=assignment.public_id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
-    def rerender(formset):
+    def rerender(form):
         panel_data = _build_assignment_panel_data(assignment, request)
-        panel_data["member_formset"] = formset
+        panel_data["member_form"] = form
         panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
         panel_data["parent_url"] = return_path
         panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
-    formset = spec.formset_factory(data=request.POST)
-    if not formset.is_valid():
-        return rerender(formset)
-
-    edited = extract_services_data(formset)
-    if not edited:
-        # Without a rol, extract_services_data drops the row, leaving nothing to
-        # save; surface it rather than silently no-op.
-        _attach_formset_error(formset, "Kies een rol.")
-        return rerender(formset)
+    form = ServiceForm(request.POST, skill_choices=skill_choices())
+    if not form.is_valid():
+        return rerender(form)
 
     try:
         with member_audit_event(request, assignment):
-            add_service_to_assignment(assignment, edited[0])
+            save_service_from_form(assignment, form)
     except ValidationError as exc:
         for message in exc.messages:
-            _attach_formset_error(formset, message)
-        return rerender(formset)
+            form.add_error(None, message)
+        return rerender(form)
 
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})

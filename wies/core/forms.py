@@ -10,7 +10,7 @@ from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
-from .models import Colleague, Label, LabelCategory, Skill, Suborganization
+from .models import Colleague, Label, LabelCategory, Suborganization
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -313,12 +313,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
 
     service_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
     placement_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
-    skill = forms.ModelChoiceField(
-        label="Rol",
-        queryset=Skill.objects.order_by("name"),
-        required=False,
-        empty_label=" ",
-    )
+    # A plain ChoiceField (not ModelChoiceField), so the "__new__" sentinel is a
+    # valid submitted value; its choices are DB-driven and injected in __init__.
+    skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
         label="Omschrijving rol",
         max_length=500,
@@ -344,41 +341,21 @@ class ServiceForm(NlddFormMixin, forms.Form):
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
 
-    def __init__(self, *args, skill_choices=None, **kwargs):
+    def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
-        # A plain ChoiceField, so the sentinel "__new__" is a valid value.
-        if skill_choices is None:
-            skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-            skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
-        self.fields["skill"] = forms.ChoiceField(
-            label="Rol",
-            choices=skill_choices,
-            required=False,
-        )
-        self._configure_field("skill")
+        # `skill_choices` is always supplied by the caller in editables/assignment.py.
+        self.fields["skill"].choices = skill_choices
 
     def clean(self):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
-        # A row removed in the UI leaves an index gap that Django re-materialises
-        # as a blank form, so skip validation for content-free rows;
-        # extract_services_data drops them before save.
-        is_empty_row = (
-            not cleaned_data.get("service_public_id")
-            and not skill_val
-            and not new_skill_name
-            and not cleaned_data.get("description")
-            and not cleaned_data.get("colleague")
-        )
-        if is_empty_row:
-            return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
-        has_skill = (skill_val and skill_val != "__new__") or new_skill_name
-        has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
-        if not has_skill and has_other_data:
-            self.add_error("skill", "Selecteer een rol.")
+        # "Geplaatste consultant" without a name would silently save as a vacancy
+        # (no placement), so require the consultant the status promises.
+        if cleaned_data.get("is_filled") == "ingevuld" and not cleaned_data.get("colleague"):
+            self.add_error("colleague", "Selecteer een consultant.")
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
@@ -395,6 +372,3 @@ class ServiceForm(NlddFormMixin, forms.Form):
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
-
-
-ServiceFormSet = forms.formset_factory(ServiceForm, extra=0, min_num=1, validate_min=False)

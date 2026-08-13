@@ -108,23 +108,14 @@ class EditableGroup:
 class EditableCollection:
     """N rows of a child object owned by the parent (e.g. services on an assignment).
 
-    The three callables bridge a Django FormSet to the parent:
-
-    - ``formset_factory(data=None, initial=None)`` → formset instance.
-    - ``initial(obj)`` → list of row dicts (prefills formset + feeds display).
-    - ``save(obj, formset)`` → persist the validated formset (diff-and-sync).
-      May raise ``ValidationError`` for stale/tampered rows.
+    Read-only in the inline-edit engine: the collection renders its ``display``,
+    and its rows are edited through a dedicated flow (the team is edited one
+    member at a time via ``assignment_member_edit_view``), not the generic save
+    path. ``initial(obj)`` returns the list of row dicts that feeds the display.
     """
 
     label: str
-    formset_factory: Callable[..., Any]
     initial: Callable[[Model], list[dict]]
-    # None for a read-only collection: shown via ``display`` and edited through a
-    # dedicated flow, so the generic inline-edit save path does not apply.
-    save: Callable[[Model, Any], None] | None = None
-    # Body template included inside collection_form.html; receives the
-    # formset as ``formset``.
-    form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
     # Same contract as ``Editable.display_context``; may override ``value`` so
     # the display can filter what ``initial`` returns (e.g. per viewer).

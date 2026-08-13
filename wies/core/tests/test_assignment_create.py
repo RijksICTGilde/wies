@@ -17,21 +17,6 @@ from wies.core.roles import setup_roles
 
 User = get_user_model()
 
-# Formset management form data for the service formset (prefix="service")
-FORMSET_MGMT_1 = {
-    "service-TOTAL_FORMS": "1",
-    "service-INITIAL_FORMS": "0",
-    "service-MIN_NUM_FORMS": "1",
-    "service-MAX_NUM_FORMS": "1000",
-}
-
-FORMSET_MGMT_2 = {
-    "service-TOTAL_FORMS": "2",
-    "service-INITIAL_FORMS": "0",
-    "service-MIN_NUM_FORMS": "1",
-    "service-MAX_NUM_FORMS": "1000",
-}
-
 
 def org_formset_data(orgs):
     """Build org formset POST data from list of (org, role) tuples."""

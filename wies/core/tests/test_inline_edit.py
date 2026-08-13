@@ -523,16 +523,15 @@ class AssignmentPanelRenderTest(TestCase):
 
     def test_teamlid_nieuw_renders_member_form(self):
         """?opdracht=<id>&teamlid=nieuw-aanvraag renders the member child sheet
-        with one preset formset row, posting to the member endpoint."""
+        with one preset row, posting to the member endpoint."""
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid=nieuw-aanvraag")
         assert response.status_code == 200
         self.assertContains(response, "Aanvraag toevoegen")
         self.assertContains(response, f"/opdracht/{self.assignment.public_id}/teamlid/")
-        self.assertContains(response, "service-TOTAL_FORMS")
         # The status radios post on their own (nldd-radio-button-field is
         # form-associated), so the group carries the field name and there is no
         # hidden-input bridge left to keep in sync.
-        self.assertContains(response, '<nldd-radio-button-group name="service-0-is_filled"')
+        self.assertContains(response, '<nldd-radio-button-group name="is_filled"')
         self.assertNotContains(response, "data-status-input")
 
     def test_teamlid_edit_renders_existing_member(self):
@@ -542,7 +541,7 @@ class AssignmentPanelRenderTest(TestCase):
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
         assert response.status_code == 200
         self.assertContains(response, "Teamlid bewerken")
-        self.assertContains(response, 'name="service-0-service_public_id"')
+        self.assertContains(response, 'name="service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
         """A member POST only touches its own row: existing services survive."""
@@ -551,15 +550,11 @@ class AssignmentPanelRenderTest(TestCase):
         response = self.client.post(
             f"/opdracht/{self.assignment.public_id}/teamlid/",
             {
-                "service-TOTAL_FORMS": "1",
-                "service-INITIAL_FORMS": "0",
-                "service-MIN_NUM_FORMS": "0",
-                "service-MAX_NUM_FORMS": "1000",
-                "service-0-service_public_id": "",
-                "service-0-placement_public_id": "",
-                "service-0-is_filled": "aanvraag",
-                "service-0-skill": str(skill.public_id),
-                "service-0-has_custom_period": "on",
+                "service_public_id": "",
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": str(skill.public_id),
+                "has_custom_period": "on",
                 "terug_url": f"/?opdracht={self.assignment.public_id}",
             },
         )
@@ -569,26 +564,27 @@ class AssignmentPanelRenderTest(TestCase):
         assert existing.id in [s.id for s in services]
 
     def test_member_post_without_skill_blocks_instead_of_deleting(self):
-        """An empty role leaves nothing to save (extract drops the row); the
-        endpoint re-renders with an error instead of a silent no-op."""
+        """An empty role is rejected by the required Rol field; the endpoint
+        re-renders with the error on the combo box (via its own error-message
+        attribute), not a top banner, instead of a silent no-op."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
             f"/opdracht/{self.assignment.public_id}/teamlid/",
             {
-                "service-TOTAL_FORMS": "1",
-                "service-INITIAL_FORMS": "0",
-                "service-MIN_NUM_FORMS": "0",
-                "service-MAX_NUM_FORMS": "1000",
-                "service-0-service_public_id": str(service.public_id),
-                "service-0-placement_public_id": "",
-                "service-0-is_filled": "aanvraag",
-                "service-0-skill": "",
-                "service-0-has_custom_period": "on",
+                "service_public_id": str(service.public_id),
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": "",
+                "has_custom_period": "on",
             },
         )
         assert response.status_code == 200
-        self.assertContains(response, "Kies een rol.")
+        # nldd-form-field only reveals the message when the combo reflects `invalid`
+        # and points at the error text by id via `error-message` (see forms/field.html).
+        self.assertContains(response, 'error-message="error-skill-1"')
+        self.assertContains(response, '<nldd-form-field-error-text id="error-skill-1" invalid>Dit veld is verplicht.')
+        self.assertNotContains(response, 'nldd-banner variant="critical"')
         assert self.assignment.services.filter(id=service.id).exists()
 
     def test_member_delete_removes_only_that_service(self):
@@ -1035,11 +1031,11 @@ class AssignmentServicesAuditTest(TestCase):
 
     Team editing moved from the (now read-only) ``services`` inline-edit
     collection to the per-member flow: the ``assignment-member-edit`` route
-    posts a single row (formset prefix ``service``, index 0) and mutates exactly
-    that one service (``add_service_to_assignment``). Because a member POST only touches
+    posts a single row (a plain, prefix-free ``ServiceForm``) and mutates exactly
+    that one service (``save_service_from_form``). Because a member POST only touches
     its own row, every save produces a one-row audit diff — which is exactly
     what these tests already assert. The endpoint routes through
-    ``apply_member_change``, which snapshots the whole team before/after around
+    ``member_audit_event``, which snapshots the whole team before/after around
     the mutation, so the event context (``field_name``/``field_label``/
     ``changes``) is unchanged.
     """
@@ -1069,13 +1065,9 @@ class AssignmentServicesAuditTest(TestCase):
 
     def _post_member(self, row):
         """POST one team-member row to the member-edit endpoint the way the
-        child sheet does: a single-row formset under the ``service`` prefix."""
+        child sheet does: a single, prefix-free ``ServiceForm``."""
         data = {
-            "service-TOTAL_FORMS": "1",
-            "service-INITIAL_FORMS": "0",
-            "service-MIN_NUM_FORMS": "0",
-            "service-MAX_NUM_FORMS": "1000",
-            **{f"service-0-{key}": value for key, value in row.items()},
+            **row,
             "terug_url": f"/?opdracht={self.assignment.public_id}",
         }
         return self.client.post(self.member_url, data)
@@ -1137,6 +1129,25 @@ class AssignmentServicesAuditTest(TestCase):
         assert resp.status_code == 204
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
+    def test_member_post_filled_without_colleague_blocks(self):
+        """Status "Geplaatste consultant" without a consultant is rejected at the
+        Consultant field, instead of silently saving as a vacancy."""
+        response = self._post_member(
+            self._member_row(
+                service=self.vacant_service,
+                skill=self.skill_java,
+                description="Vacant",
+                is_filled=True,  # ingevuld, but no colleague passed
+            )
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'error-message="error-colleague-1"')
+        self.assertContains(
+            response, '<nldd-form-field-error-text id="error-colleague-1" invalid>Selecteer een consultant.'
+        )
+        # The silent save did not happen: no placement, no colleague.
+        assert not Placement.objects.filter(service=self.vacant_service).exists()
+
     def test_services_post_emits_event_on_period_change(self):
         """A period-only edit still emits a team audit event (#393)."""
         # Filled row: drop the inherit checkbox and give a custom period.
@@ -1185,10 +1196,49 @@ class AssignmentServicesAuditTest(TestCase):
         assert self.filled_service.status == "OPEN"
         assert not self.filled_service.placements.exists()
 
+    def test_new_skill_creates_and_links_skill(self):
+        """Posting the __new__ sentinel with a name must create a Skill and
+        link it to the service. member_form.js sends skill=__new__ +
+        new_skill_name for a role typed by the user that is not an existing one."""
+        assert not Skill.objects.filter(name="Rust").exists()
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.vacant_service.public_id),
+                "skill": "__new__",
+                "new_skill_name": "Rust",
+                "description": "Vacant",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+            }
+        )
+        assert resp.status_code == 204
+        new_skill = Skill.objects.get(name="Rust")
+        self.vacant_service.refresh_from_db()
+        assert self.vacant_service.skill_id == new_skill.id
+
+    def test_new_skill_name_matching_existing_reuses_it(self):
+        """__new__ with a name that already exists must reuse the existing
+        Skill (get_or_create by unique name), not create a duplicate."""
+        before = Skill.objects.count()
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.vacant_service.public_id),
+                "skill": "__new__",
+                "new_skill_name": "Python",  # already exists (self.skill_python)
+                "description": "Vacant",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+            }
+        )
+        assert resp.status_code == 204
+        assert Skill.objects.count() == before
+        self.vacant_service.refresh_from_db()
+        assert self.vacant_service.skill_id == self.skill_python.id
+
     def test_member_sheet_renders_public_id_hidden_inputs(self):
-        """The member-edit sheet must render the hidden ``service-0-service_public_id``
-        and ``service-0-placement_public_id`` inputs so the single-row POST
-        round-trips the public_ids back to add_service_to_assignment, which
+        """The member-edit sheet must render the hidden ``service_public_id``
+        and ``placement_public_id`` inputs so the single-row POST
+        round-trips the public_ids back to save_service_from_form, which
         updates that Service/Placement in place. Without them the save would
         create a new row instead of editing the existing one.
 
@@ -1205,14 +1255,30 @@ class AssignmentServicesAuditTest(TestCase):
         vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.vacant_service.public_id}")
         assert vacant.status_code == 200
         vacant_content = vacant.content.decode()
-        assert hidden_value(vacant_content, "service-0-service_public_id") == str(self.vacant_service.public_id)
-        assert hidden_value(vacant_content, "service-0-placement_public_id") == ""
+        assert hidden_value(vacant_content, "service_public_id") == str(self.vacant_service.public_id)
+        assert hidden_value(vacant_content, "placement_public_id") == ""
 
         filled = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
         assert filled.status_code == 200
         filled_content = filled.content.decode()
-        assert hidden_value(filled_content, "service-0-service_public_id") == str(self.filled_service.public_id)
-        assert hidden_value(filled_content, "service-0-placement_public_id") == str(self.placement.public_id)
+        assert hidden_value(filled_content, "service_public_id") == str(self.filled_service.public_id)
+        assert hidden_value(filled_content, "placement_public_id") == str(self.placement.public_id)
+
+    def test_member_sheet_offers_new_role_option_with_hidden_input(self):
+        """The Rol combo must offer the discrete "+ Nieuwe rol" option
+        (value ``__new__``) rather than free-typing, and the name field it
+        reveals must render ``hidden`` for a row whose skill is an existing
+        role, so member_form.js only has to unhide it on selection."""
+        resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        # The discrete option is a real menu item; the combo is not allow-custom.
+        assert 'value="__new__"' in content
+        assert "allow-custom" not in content
+        # This row has an existing skill, so the new-role name field starts hidden.
+        m = re.search(r"<div data-new-skill-field\s*([^>]*)>", content)
+        assert m is not None
+        assert "hidden" in m.group(1)
 
     def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
         """Editing only the description must update the existing Service
@@ -1436,7 +1502,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             assert resp.status_code == 200
             content = resp.content.decode()
             hidden = re.search(
-                r'<input[^>]*name="service-0-has_custom_period"[^>]*value="([^"]*)"',
+                r'<input[^>]*name="has_custom_period"[^>]*value="([^"]*)"',
                 content,
             )
             assert hidden, f"no has_custom_period input found for service {service_public_id}"
