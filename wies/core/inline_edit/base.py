@@ -119,9 +119,6 @@ class EditableCollection:
     label: str
     formset_factory: Callable[..., Any]
     initial: Callable[[Model], list[dict]]
-    # Single-form variant for a collection edited one row at a time via a
-    # dedicated sheet (the member-edit panel), instead of the N-row formset.
-    form_factory: Callable[..., Any] | None = None
     # None for a read-only collection: shown via ``display`` and edited through a
     # dedicated flow, so the generic inline-edit save path does not apply.
     save: Callable[[Model, Any], None] | None = None

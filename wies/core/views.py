@@ -4037,7 +4037,8 @@ def _build_assignment_member_panel_data(assignment, request):
     ``?teamlid=<service public_id>`` edits an existing member; ``nieuw-aanvraag``
     and ``nieuw-ingevuld`` add a row with the status preselected.
     """
-    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial, skill_choices  # noqa: PLC0415
+    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
 
     spec = AssignmentEditables.services
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
@@ -4058,7 +4059,7 @@ def _build_assignment_member_panel_data(assignment, request):
 
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
-        "member_form": spec.form_factory(initial=initial_row),
+        "member_form": ServiceForm(initial=initial_row, skill_choices=skill_choices()),
         "member_heading": heading,
         "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
@@ -4072,7 +4073,8 @@ def assignment_member_edit_view(request, public_id):
     The form posts a single formset row, which mutates exactly that one service
     (and its placement). Same contract as assignment_edit_view.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, skill_choices  # noqa: PLC0415
+    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
     from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
@@ -4094,8 +4096,7 @@ def assignment_member_edit_view(request, public_id):
         panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.public_id])
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
-    # TODO: is form_factory really needed? whats benefit over normal form?
-    form = spec.form_factory(data=request.POST)
+    form = ServiceForm(request.POST, skill_choices=skill_choices())
     if not form.is_valid():
         return rerender(form)
 
