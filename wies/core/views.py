@@ -2493,7 +2493,7 @@ def assignment_events_partial(request, public_id):
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-HET_FIELD_LABELS = {"team", "merk", "thema", "budget", "onderwerp", "contract", "tarief"}
+HET_FIELD_LABELS = {"team", "merk"}
 
 
 def _field_phrase(label: str) -> str:
