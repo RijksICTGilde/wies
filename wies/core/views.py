@@ -29,7 +29,6 @@ from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
-from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.inline_edit.base import (
     Editable,
     EditableCollection,
@@ -3623,8 +3622,6 @@ def inline_edit_view(request, model_label, public_id, name):
 
     editables = resolve_editables(editable_set, spec)
 
-    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415 (import not at top level) — import cycle
-
     if request.method == "POST":
         form_cls, _ = build_form_class(
             editables,
@@ -3634,32 +3631,17 @@ def inline_edit_view(request, model_label, public_id, name):
         form = form_cls(request.POST)
         if form.is_valid():
             conflict = False
+            saved = False
             try:
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
                     conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
                     if not conflict:
-                        if isinstance(spec, EditableGroup):
-                            before = {e.name: _current_value(obj, e) for e in editables}
-                        else:
-                            before = _current_value(obj, spec)
+                        # Same save + audit as every other edit path, wrapped in the
+                        # set's audit_mirror like save_placement_edit does.
                         mirror = editable_set.audit_mirror
                         with mirror(obj, request.user, request) if mirror else nullcontext():
-                            save_spec(spec, editables, form.cleaned_data, obj)
-                            if isinstance(spec, EditableGroup):
-                                after = {e.name: _current_value(obj, e) for e in editables}
-                            else:
-                                after = _current_value(obj, spec)
-                            emit_inline_edit_audit_event(
-                                editable_set,
-                                spec,
-                                obj,
-                                before,
-                                after,
-                                request.user,
-                                child_editables=editables if isinstance(spec, EditableGroup) else None,
-                                request=request,
-                            )
+                            saved = save_edit_specs(request, [(editable_set, spec, obj)], form.cleaned_data)
             except editable_set.model.DoesNotExist:
                 # Deleted between the permission check and the lock; the same
                 # denial partial keeps this indistinguishable from a 404 or 403.
@@ -3684,7 +3666,7 @@ def inline_edit_view(request, model_label, public_id, name):
                 obj,
                 # The onboarding wizard submits every field on "Volgende", so an
                 # untouched one would announce a save that did not happen.
-                saved=before != after,
+                saved=saved,
             )
         # Keep the token this POST was built on: recomputing it would adopt a
         # change made meanwhile, and the corrected resubmit would overwrite it
