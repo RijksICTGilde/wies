@@ -181,7 +181,7 @@ def _build_end_session_url(request, id_token: str | None) -> str | None:
         return None
     try:
         metadata = _get_oidc().load_server_metadata()
-    except Exception:  # noqa: BLE001 - any discovery failure means local logout only
+    except Exception:
         logger.warning("OIDC discovery failed, skipping upstream logout", exc_info=True)
         return None
     end_session_endpoint = metadata.get("end_session_endpoint")
