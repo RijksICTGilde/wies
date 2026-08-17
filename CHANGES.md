@@ -4,11 +4,12 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 427: the whole interface now runs on the [NLDD Design System](https://www.npmjs.com/package/@nldd/design-system) instead of the RVO stylesheet
+- 427: the whole interface now runs on the NLDD Design System instead of ROOS, the RVO design system
 - 427: dark mode — light, dark or "system" in the user menu, stored on your profile (migration 0013_colleague_theme)
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page
-- 427: fix the counts in the opdrachtgever "Meer" sheet ignoring the other active filters, so they disagreed with the numbers in the sidebar
-- 427: fix editing an opdracht whose Business Manager is not in the BDM group: the field came up empty and saving failed on a field you never touched
+- 427: "Wie zit waar?" loads more results on a "Meer laden" click instead of on scroll, so the footer stays reachable
+- 427: fix the opdrachtgever "Meer" sheet counts ignoring the other active filters
+- 427: fix an opdracht without roles missing from `/opdrachten/`; filtering on rol or expertise still hides it
 - 525: logging in no longer dead-ends on a 500 page when the login callback fails, whatever the cause. The most common one is Keycloak having lost its authentication session (for example because the login screen was left open for too long); the login is then restarted once automatically, and if that fails as well the user gets a page explaining what happened. Any other failure gets its own page pointing at support, and is still reported to the team.
 - 525: the "geen toegang" page pointed at wies-support@rijksoverheid.nl, which does not exist; it now points at wies-odi@rijksoverheid.nl
 - 474: URLs and filters now use a uuid identifier instead of the sequential id, so records and overviews can no longer be enumerated by incrementing ids.
