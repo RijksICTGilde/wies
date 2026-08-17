@@ -35,12 +35,7 @@ def placement_timing(start, end, today) -> str:
 
 
 def evaluate_placement_visibility(start, end, placed_colleague_id, viewer, owner_id, today) -> PlacementVisibility:
-    """Decides visibility for one placement.
-
-    ``viewer`` is the viewing Colleague (or None); ``owner_id`` is the id of the
-    assignment's BM-owner. Whether the viewer is the BM is derived here, so the
-    caller passes identities and this function owns the rule.
-    """
+    """Decides visibility for one placement."""
     timing = placement_timing(start, end, today)
     if timing == "active":
         return PlacementVisibility(visible=True, timing=timing, privacy_note=None)
