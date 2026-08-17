@@ -50,8 +50,7 @@ def filter_visible_placements(queryset, today):
     The list is a current-state overview: it shows only placements that have
     started and not yet ended, for every viewer alike. Ended placements (history)
     and not-yet-started ones (planned) are shown on the colleague profile and the
-    side panels instead — see ``evaluate_placement_visibility`` — but never on
-    this list, so no viewer-specific branch is needed here.
+    side panels instead — see ``evaluate_placement_visibility``.
 
     Requires ``annotate_placement_dates`` to have been applied first.
     """
