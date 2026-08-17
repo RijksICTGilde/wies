@@ -15,7 +15,7 @@ from django.utils import timezone
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.placement_visibility import LABELS, evaluate
+from wies.core.placement_visibility import LABELS, evaluate_placement_visibility
 from wies.core.services.urls import current_page_path
 from wies.core.widgets import ComboBoxSelect
 
@@ -172,7 +172,6 @@ def visible_service_rows(assignment, request) -> list[dict]:
     """
     today = timezone.now().date()
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
 
     visible = []
     for row in _services_initial(assignment):
@@ -180,8 +179,13 @@ def visible_service_rows(assignment, request) -> list[dict]:
         if placement is None:  # vacancy → visible to everyone
             visible.append(row)
             continue
-        result = evaluate(
-            row["placement_start_date"], row["placement_end_date"], placement.colleague_id, viewer, viewer_is_bm, today
+        result = evaluate_placement_visibility(
+            row["placement_start_date"],
+            row["placement_end_date"],
+            placement.colleague_id,
+            viewer,
+            assignment.owner_id,
+            today,
         )
         if not result.visible:
             continue

@@ -21,6 +21,8 @@ from wies.core.editables import (
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
 
+from .inline_edit_helpers import post_inline_edit
+
 User = get_user_model()
 
 
@@ -255,3 +257,135 @@ class UnknownTargetReturnsFalseTest(TestCase):
         # READ on Assignment isn't registered — should deny.
         a = Assignment.objects.create(name="A", source="wies")
         assert has_permission(Verb.READ, a, u) is False
+
+
+class SaveEditSpecsHasNoInternalGateTest(_Setup):
+    """``save_edit_specs`` trusts its caller: it performs NO permission check.
+
+    Authorization for every save path is upstream — ``inline_edit_view`` checks
+    before saving, and the child-sheet views build a permission-filtered spec
+    list via ``assignment_edit_specs`` / ``placement_edit_specs``. This test pins
+    that contract down so it stays visible: it drives ``save_edit_specs`` directly
+    with a spec the placed consultant may NOT update and shows the write goes
+    through regardless — proving the gate cannot live here and any new caller must
+    pre-filter its specs (or it silently bypasses field-level permissions).
+    """
+
+    def test_save_edit_specs_writes_without_checking_permission(self):
+        from django.test import RequestFactory  # noqa: PLC0415
+
+        from wies.core.editables import ServiceEditables  # noqa: PLC0415
+        from wies.core.services.inline_edit_save import save_edit_specs  # noqa: PLC0415
+
+        # Sanity: the placed consultant genuinely cannot UPDATE the description of
+        # a service they are not placed on... but save_edit_specs does not consult
+        # that rule.
+        other_service = Service.objects.create(
+            description="Andermans rol", assignment=self.assignment, skill=self.skill, source="wies"
+        )
+        assert has_permission(Verb.UPDATE, other_service, self.placed_user, ServiceEditables.description) is False
+
+        request = RequestFactory().post("/")
+        request.user = self.placed_user
+        save_edit_specs(
+            request,
+            [(ServiceEditables, ServiceEditables.description, other_service)],
+            {"description": "Bypassed"},
+        )
+
+        other_service.refresh_from_db()
+        # The write went through: the check MUST be upstream, never here.
+        assert other_service.description == "Bypassed"
+
+
+class AssignmentMemberSheetPermissionTest(_Setup):
+    """The team-member child sheets (add/edit/delete) gate on the assignment's
+    ``services`` UPDATE rule — an unrelated user gets a 403 and no mutation.
+
+    ``placement_edit_view`` and the single-field ``assignment_edit_view`` already
+    have 403 tests; these cover the two remaining mutating child-sheet endpoints.
+    """
+
+    def test_member_edit_forbidden_for_unrelated_user(self):
+        client = Client()
+        client.force_login(self.unrelated_user)
+        url = reverse("assignment-member-edit", args=[self.assignment.public_id])
+
+        resp = client.post(url, {"skill": self.skill.public_id, "is_filled": "aanvraag"})
+
+        assert resp.status_code == 403
+        # No new service row was created behind the forbidden response.
+        assert self.assignment.services.count() == 1
+
+    def test_member_delete_forbidden_for_unrelated_user(self):
+        client = Client()
+        client.force_login(self.unrelated_user)
+        url = reverse(
+            "assignment-member-delete",
+            args=[self.assignment.public_id, self.service.public_id],
+        )
+
+        resp = client.post(url, {"terug_url": f"/?opdracht={self.assignment.public_id}"})
+
+        assert resp.status_code == 403
+        assert Service.objects.filter(pk=self.service.pk).exists()
+
+    def test_member_edit_allowed_for_owner(self):
+        # Guards against the 403 tests passing for the wrong reason (e.g. the
+        # endpoint 403-ing everyone).
+        owner_client = Client()
+        owner_client.force_login(self.owner_user)
+        url = reverse("assignment-member-edit", args=[self.assignment.public_id])
+
+        resp = owner_client.post(url, {"skill": self.skill.public_id, "is_filled": "aanvraag"})
+
+        # 204 on success, or a 200 re-render on a form error — but never 403.
+        assert resp.status_code != 403
+
+
+@override_settings(STAFF_EMAILS=["staff@x.nl"])
+class StaffCanEditServiceAndPlacementOverHttpTest(_Setup):
+    """Support staff (``STAFF_EMAILS``) can edit Service and Placement records
+    end-to-end over the inline-edit HTTP endpoint, not just at the engine level.
+
+    The engine-level equivalents live in ``StaffMemberCanEditAssignmentTest``;
+    these drive the real ``inline_edit_view`` request so the whole stack (lookup,
+    ``_permission_denied``, save) is exercised for a staff editor.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.staff_user = User.objects.create_user(email="staff@x.nl", first_name="S", last_name="T")
+        self.client = Client()
+        self.client.force_login(self.staff_user)
+
+    def test_staff_can_edit_service_description_inline(self):
+        url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
+
+        resp = post_inline_edit(self.client, url, {"description": "Staff-bewerking"})
+
+        assert resp.status_code == 200
+        self.assertNotContains(resp, "geen rechten")
+        self.service.refresh_from_db()
+        assert self.service.description == "Staff-bewerking"
+
+    def test_staff_can_edit_placement_period_inline(self):
+        # An unrelated non-staff user is refused this exact edit (see
+        # InlineEditExistenceOracleTest); staff must be able to save it.
+        url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
+
+        resp = post_inline_edit(
+            self.client,
+            url,
+            {
+                "period_source": Placement.PLACEMENT,
+                "specific_start_date": "2026-03-01",
+                "specific_end_date": "2026-06-30",
+            },
+        )
+
+        assert resp.status_code == 200
+        self.assertNotContains(resp, "geen rechten")
+        self.placement.refresh_from_db()
+        assert str(self.placement.specific_start_date) == "2026-03-01"
+        assert str(self.placement.specific_end_date) == "2026-06-30"

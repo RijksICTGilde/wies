@@ -34,17 +34,13 @@ def placement_timing(start, end, today) -> str:
     return "active"
 
 
-def evaluate(start, end, placed_colleague_id, viewer, viewer_is_bm, today) -> PlacementVisibility:
-    """Decides visibility for one placement.
-
-    ``viewer`` is the viewing Colleague (or None); ``viewer_is_bm`` whether they
-    own the assignment.
-    """
+def evaluate_placement_visibility(start, end, placed_colleague_id, viewer, owner_id, today) -> PlacementVisibility:
+    """Decides visibility for one placement."""
     timing = placement_timing(start, end, today)
     if timing == "active":
         return PlacementVisibility(visible=True, timing=timing, privacy_note=None)
     if viewer is not None and viewer.id == placed_colleague_id:
         return PlacementVisibility(visible=True, timing=timing, privacy_note=PRIVACY_OWN)
-    if viewer_is_bm:
+    if viewer is not None and owner_id is not None and viewer.id == owner_id:
         return PlacementVisibility(visible=True, timing=timing, privacy_note=PRIVACY_BM)
     return PlacementVisibility(visible=False, timing=timing, privacy_note=None)

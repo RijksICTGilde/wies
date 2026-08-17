@@ -42,7 +42,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate
+from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate_placement_visibility
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -330,12 +330,11 @@ def _get_colleague_assignments(request, colleague, viewer):
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
         owner_id = placement["service__assignment__owner_id"]
-        viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
         # visible to the placed colleague and the assignment's BM-owner.
-        result = evaluate(start, end, colleague.id, viewer, viewer_is_assignment_bd, today)
+        result = evaluate_placement_visibility(start, end, colleague.id, viewer, owner_id, today)
         if not result.visible:
             continue
 
@@ -521,13 +520,12 @@ def _resolve_placement_panel(request, public_id):
     if placement is not None:
         assignment = placement.service.assignment
         viewer = getattr(request.user, "colleague", None)
-        viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
-        result = evaluate(
+        result = evaluate_placement_visibility(
             placement.start_date,
             placement.end_date,
             placement.colleague_id,
             viewer,
-            viewer_is_bm,
+            assignment.owner_id,
             timezone.now().date(),
         )
     if result is None or not result.visible:
@@ -936,11 +934,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # Active placements are public; ended ones are hidden from everyone;
-        # not-yet-started ones only for the placed colleague and the BM-owner.
+        # The list is a current-state overview: only active placements, for every
+        # viewer alike. History and planned placements live on the profile and the
+        # side panels, not here.
         qs = annotate_placement_dates(qs)
-        viewer = getattr(self.request.user, "colleague", None)
-        return filter_visible_placements(qs, timezone.now().date(), viewer)
+        return filter_visible_placements(qs, timezone.now().date())
 
     def _get_loopt_af_options(self, base_qs):
         """Builds the 'loopt af' filter options with cumulative counts."""
