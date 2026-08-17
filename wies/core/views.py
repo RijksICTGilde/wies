@@ -42,7 +42,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate
+from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate_placement_visibility
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -330,12 +330,11 @@ def _get_colleague_assignments(request, colleague, viewer):
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
         owner_id = placement["service__assignment__owner_id"]
-        viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
         # visible to the placed colleague and the assignment's BM-owner.
-        result = evaluate(start, end, colleague.id, viewer, viewer_is_assignment_bd, today)
+        result = evaluate_placement_visibility(start, end, colleague.id, viewer, owner_id, today)
         if not result.visible:
             continue
 
@@ -521,13 +520,12 @@ def _resolve_placement_panel(request, public_id):
     if placement is not None:
         assignment = placement.service.assignment
         viewer = getattr(request.user, "colleague", None)
-        viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
-        result = evaluate(
+        result = evaluate_placement_visibility(
             placement.start_date,
             placement.end_date,
             placement.colleague_id,
             viewer,
-            viewer_is_bm,
+            assignment.owner_id,
             timezone.now().date(),
         )
     if result is None or not result.visible:
