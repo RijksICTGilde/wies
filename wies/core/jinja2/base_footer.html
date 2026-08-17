@@ -3,9 +3,13 @@
    in a narrower simple-section to keep the line length readable. #}
 {% extends "base.html" %}
 {% block header %}
-  <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">
+  {# Same wrapper as base.html: this block overrides the one that carries the
+     skip link, so without it these pages have no bypass at all (WCAG 2.4.1). #}
+  <nldd-skip-link slot="header" text="Ga naar hoofdinhoud">
+  <nldd-top-navigation-bar width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">
   {% include "parts/utility_menu.html" %}
   </nldd-top-navigation-bar>
+  </nldd-skip-link>
 {% endblock header %}
 {% block content %}
   <nldd-simple-section width="720px">

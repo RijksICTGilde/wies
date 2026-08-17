@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- the skip link now reaches the pages that extend `base_footer.html` (contact, faq, privacy, toegankelijkheid). That template overrides the header block the skip link sits in, so those four had no bypass at all (WCAG 2.4.1, level A)
 - 427: the whole interface now runs on the [NLDD Design System](https://www.npmjs.com/package/@nldd/design-system) instead of the RVO stylesheet
 - 427: dark mode — light, dark or "system" in the user menu, stored on your profile (migration 0013_colleague_theme)
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page
