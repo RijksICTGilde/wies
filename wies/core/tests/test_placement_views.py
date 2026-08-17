@@ -882,6 +882,52 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         assert assignments == []
 
+    def test_future_placement_card_renders_on_own_profile_page(self):
+        """End-to-end: Alice loads /profiel/ and her planned assignment card
+        renders (the data-builder tests above don't exercise the HTTP page)."""
+        today = timezone.now().date()
+        assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=today + timedelta(days=30),
+            specific_end_date=today + timedelta(days=120),
+            source="wies",
+        )
+        self.client.force_login(self.user_alice)
+
+        response = self.client.get(reverse("user-profile"))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Planned Opdracht")
+
+    def test_future_placement_card_hidden_on_unrelated_profile_page(self):
+        """End-to-end negative: an unrelated viewer loading Alice's data must not
+        get her planned assignment. (/profiel/ is self-only, so this checks the
+        colleague panel path an unrelated viewer can reach.)"""
+        today = timezone.now().date()
+        assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=today + timedelta(days=30),
+            specific_end_date=today + timedelta(days=120),
+            source="wies",
+        )
+        self.client.force_login(self.user_unrelated)
+
+        response = self.client.get(
+            reverse("home") + f"?collega={self.colleague_alice.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        )
+
+        assert response.status_code == 200
+        self.assertNotContains(response, "Planned Opdracht")
+
 
 class PlacementListFutureVisibilityTest(TestCase):
     """The 'Wie zit waar?' list is a current-state overview: not-yet-started
@@ -1432,6 +1478,37 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], "BM of different assignment should not see ended BM assignments"
+
+    @patch("wies.core.views.timezone")
+    def test_own_ended_bm_role_shown_to_owner_with_team_note(self, mock_timezone):
+        """A colleague who OWNS an ended assignment (but is not placed on it) sees
+        it in their own historical list with the PRIVACY_TEAM note.
+
+        This is the ``viewer_is_colleague`` BM-role branch in
+        ``_get_colleague_assignments`` — a separate path from the placement-based
+        PRIVACY_OWN/PRIVACY_BM rule, so it needs its own positive test.
+        """
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Alice owns an ended assignment and is NOT placed on it (no Placement),
+        # so only the BM-role branch can surface it.
+        assignment = Assignment.objects.create(
+            name="Alice Ended BM Assignment",
+            source="wies",
+            owner=self.colleague_alice,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 6, 14),
+        )
+
+        request = self._make_request(self.user_alice)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
+
+        historical = [a for a in assignments if a["historical"]]
+        entry = next((a for a in historical if a["id"] == assignment.id), None)
+        assert entry is not None, "Owner should see their own ended BM assignment"
+        assert entry["privacy_warning_text"] == PRIVACY_TEAM
 
 
 class OrgDescendantHelperTest(TestCase):

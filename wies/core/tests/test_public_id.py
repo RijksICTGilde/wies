@@ -263,6 +263,33 @@ class PlacementPanelParamTests(TestCase):
         assert self._panel(hidden.public_id).status_code == 404
         assert self._panel(uuid.uuid4()).status_code == 404
 
+    def test_ended_placement_shown_to_placed_colleague(self):
+        """The entitled viewer (the placed colleague) opens an ended placement's
+        panel over HTTP and sees it — the positive mirror of the 404 above."""
+        placed_user = User.objects.create_user(email="p@rijksoverheid.nl")
+        self.placed.user = placed_user
+        self.placed.save(update_fields=["user"])
+        self.client.force_login(placed_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        response = self._panel(ended.public_id)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Placed Person")
+
+    def test_ended_placement_shown_to_bm_owner(self):
+        """The BM-owner opens the same ended placement's panel over HTTP."""
+        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        self.client.force_login(owner_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        response = self._panel(ended.public_id)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Placed Person")
+
     def test_malformed_value_is_404(self):
         assert self._panel("not-a-uuid").status_code == 404
 
