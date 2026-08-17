@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 427: the whole interface now runs on the NLDD Design System instead of ROOS, the RVO design system
-- 427: dark mode — light, dark or "system" in the user menu, stored on your profile (migration 0013_colleague_theme)
+- 427: the whole interface now runs on the NLDD Design System instead of ROOS
+- 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page
 - 427: "Wie zit waar?" loads more results on a "Meer laden" click instead of on scroll, so the footer stays reachable
 - 427: fix the opdrachtgever "Meer" sheet counts ignoring the other active filters
