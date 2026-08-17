@@ -1,0 +1,29 @@
+{# Weergavekeuze voor "Wie zit waar?": kaarten per persoon of per opdracht.
+   Een segmented control en geen dropdown, omdat het er maar twee zijn en beide
+   even belangrijk: je ziet meteen wat de keuze is en wat het alternatief is.
+
+   Rijdt als OOB-fragment mee op elke htmx-swap, zodat de ingedrukte knop en de
+   URLs in de links de nieuwe filters volgen. De ouder zet view_control_oob op
+   htmx-responses; het id blijft in beide gevallen staan zodat de OOB-swap het
+   kan raken. Zelfde patroon als parts/sort_control.html. #}
+{# hx-trigger="item-change" is het DS-event van een gekozen item; het vuurt op
+   een native radio-change en dus alleen op het item dat aan gaat, niet op het
+   item dat uit gaat. Eén swap, geen dubbele request. #}
+<nldd-toolbar-item id="view-control" slot="start" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
+{# De selectie hoort op `value` van de control, niet als `selected` per item: de
+   control synct zijn items zelf (item.selected = item.value === this.value) en
+   overschrijft een per-item selected zodra de slot vult. #}
+<nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
+{% for option in view_options %}
+  <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }}" icon="{{ option.icon }}" hx-get="{{ option.url }}" hx-trigger="item-change" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-segmented-control-item>
+{% endfor %}
+</nldd-segmented-control>
+{# Dezelfde keuze als groep in het overflow-menu: een segmented control heeft
+   daar geen equivalent, de opties wel. Het DS toont een CLONE maar meldt de
+   keuze terug als select op deze originelen, waar de htmx-binding zit. #}
+<nldd-menu-group slot="overflow" text="Weergave">
+{% for option in view_options %}
+  <nldd-menu-item type="radio" text="{{ option.label }}" icon="{{ option.icon }}" {% if option.selected %}selected{% endif %} hx-get="{{ option.url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
+{% endfor %}
+</nldd-menu-group>
+</nldd-toolbar-item>

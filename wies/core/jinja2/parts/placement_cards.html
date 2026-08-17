@@ -1,0 +1,107 @@
+{# Kaarten voor "Wie zit waar?", in de weergave die de segmented control koos:
+   één kaart per persoon of één per opdracht. Elke kaart opent het bijbehorende
+   zijpaneel. `href` houdt de kaart een echte link (statusbalk, cmd/middenklik
+   opent een tab); hx_link_guard.js vangt de gewone klik zodat htmx het paneel
+   vult in plaats van te navigeren. Zelfde patroon als assignment_card_rows.html. #}
+{% macro chevron() %}
+  <span class="assignment-card__chevron" aria-hidden="true">
+    <nldd-icon size="20" name="chevron-right"></nldd-icon>
+  </span>
+{% endmacro %}
+{% for card in cards %}
+  <nldd-card background="tinted" accessible-label="{{ card.name }}" href="{{ card.panel_url }}" hx-get="{{ card.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-container padding="16">
+  {% if active_view == 'opdracht' %}
+    <nldd-title size="5">
+    <h3>{{ card.name }}</h3>
+    </nldd-title>
+    {# Het hele team van de opdracht, niet alleen wie door de filters kwam: een
+       rolfilter zou anders stilletjes een half team tonen. #}
+    {% if card.team %}
+      <nldd-spacer size="8"></nldd-spacer>
+      <nldd-container layout="wrap" gap="4">
+      {% for member in card.team[:6] %}
+        {# djlint:off T028 #}
+        <nldd-avatar size="28" name="{{ member.name }}" title="{{ member.name }}{% if member.role %} · {{ member.role }}{% endif %}" decorative></nldd-avatar>
+        {# djlint:on #}
+      {% endfor %}
+      {% if card.team|length > 6 %}
+        <nldd-tag size="sm" text="+{{ card.team|length - 6 }} meer"></nldd-tag>
+      {% endif %}
+      </nldd-container>
+    {% endif %}
+  {% else %}
+    <nldd-container layout="row" gap="12" vertical-alignment="center">
+    <nldd-avatar size="40" name="{{ card.name }}" decorative></nldd-avatar>
+    <nldd-title size="5">
+    <h3>{{ card.name }}</h3>
+    </nldd-title>
+    </nldd-container>
+    {% if card.roles %}
+      <nldd-spacer size="8"></nldd-spacer>
+      <nldd-container layout="wrap" gap="6">
+      {% for role in card.roles[:3] %}
+        <nldd-tag size="sm" text="{{ role }}"></nldd-tag>
+      {% endfor %}
+      {% if card.roles|length > 3 %}
+        <nldd-tag size="sm" text="+{{ card.roles|length - 3 }} meer"></nldd-tag>
+      {% endif %}
+      </nldd-container>
+    {% endif %}
+  {% endif %}
+  </nldd-container>
+  {# In de footer-slot, zodat opdrachtgever en datum over kaarten heen uitlijnen
+     ongeacht de lengte van de titel. Zelfde reden als bij de opdrachtkaarten. #}
+  <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+  <nldd-list variant="simple" dividers="never" accessible-label="Gegevens">
+  {% if active_view == 'opdracht' %}
+    {% if card.client %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {# djlint:off T028 #}
+      <nldd-text-cell size="sm" text="{{ card.client }}{% if card.extra_clients %} (+{{ card.extra_clients }}){% endif %}"></nldd-text-cell>
+      {# djlint:on #}
+      </nldd-list-item>
+    {% endif %}
+    {# De periode-rij staat er altijd, ook zonder datum: liet je hem weg dan kromp
+       de kaart en stonden de kaarten in het raster niet meer op gelijke hoogte. #}
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    {# djlint:off T028 #}
+    <nldd-text-cell size="sm" text="{% if card.assignment.end_date %}tot {{ card.assignment.end_date|datum_nl('b Y') }}{% else %}Geen einddatum{% endif %}"></nldd-text-cell>
+    {# djlint:on #}
+    <nldd-cell>{{ chevron() }}</nldd-cell>
+    </nldd-list-item>
+  {% else %}
+    {# Eén opdracht: toon welke, want dat is het antwoord op "wie zit waar?".
+       Meerdere: alleen het aantal, de namen passen niet op één kaart. #}
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="business-suitcase"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    {# djlint:off T028 #}
+    <nldd-text-cell size="sm" text="{% if card.assignment %}{{ card.assignment.name }}{% else %}{{ card.assignments|length }} opdrachten{% endif %}"></nldd-text-cell>
+    {# djlint:on #}
+    </nldd-list-item>
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    {# djlint:off T028 #}
+    <nldd-text-cell size="sm" text="{% if card.assignment and card.assignment.end_date %}tot {{ card.assignment.end_date|datum_nl('b Y') }}{% elif card.assignment %}Geen einddatum{% endif %}"></nldd-text-cell>
+    {# djlint:on #}
+    <nldd-cell>{{ chevron() }}</nldd-cell>
+    </nldd-list-item>
+  {% endif %}
+  </nldd-list>
+  </nldd-container>
+  </nldd-card>
+{% endfor %}
+{% if next_page_url %}
+  {# Klik in plaats van auto-laden (hx-trigger=revealed), dat zou de voettekst van
+     de pagina eindeloos buiten bereik duwen. De knop is een rastercel in de
+     nldd-collection en vervangt zichzelf door de volgende kaarten. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+  </div>
+{% endif %}

@@ -878,12 +878,45 @@ class PublicIdFacetsMixin:
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
-    """Placements table with infinite scroll pagination."""
+    """Placements as cards, grouped per person or per assignment."""
 
     model = Placement
     template_name = "placements.html"
     paginate_by = 60
     page_kwarg = "pagina"
+
+    # `value` wordt de ?weergave= queryparam.
+    VIEW_DEFAULT = "persoon"
+    VIEW_OPTIONS = [
+        {"value": "persoon", "label": "Persoon", "icon": "person"},
+        {"value": "opdracht", "label": "Opdracht", "icon": "business-suitcase"},
+    ]
+
+    # Het veld waarop gepagineerd en gegroepeerd wordt, per weergave. Paginering
+    # loopt over deze groepen en niet over plaatsingen, zodat een groep nooit over
+    # een paginagrens valt en half getoond wordt.
+    GROUP_FIELD = {
+        "persoon": "colleague_id",
+        "opdracht": "service__assignment_id",
+    }
+
+    # Sorteeropties per weergave: sorteren op collega-naam zegt niets in de
+    # opdracht-weergave, waar één kaart een heel team is. Waarden verwijzen naar
+    # order_mapping in _get_base_queryset. De standaardsortering van een weergave
+    # staat er niet bij: die is de afwezigheid van ?order= en krijgt in het menu
+    # zijn eigen optie, anders staat hij er twee keer in.
+    SORT_OPTIONS = {
+        "persoon": ["-name", "assignment", "-assignment", "end_date", "-end_date"],
+        "opdracht": ["-assignment", "end_date", "-end_date"],
+    }
+    SORT_DEFAULT = {"persoon": "colleague__name", "opdracht": "service__assignment__name"}
+
+    @property
+    def active_view(self) -> str:
+        """The requested ?weergave=, falling back to the default for unknown values."""
+        requested = self.request.GET.get("weergave") or ""
+        valid = {option["value"] for option in self.VIEW_OPTIONS}
+        return requested if requested in valid else self.VIEW_DEFAULT
 
     def _get_base_queryset(self):
         """Base queryset with search, ordering, and date filters applied."""
@@ -926,13 +959,23 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             "end_date": "service__assignment__end_date",
         }
 
+        active_view = self.active_view
+        sort_field = None
         order_param = self.request.GET.get("order")
-        if order_param:
+        # Een sortering die niet bij deze weergave hoort (of niet bestaat) valt terug
+        # op de standaard, zodat een gedeelde URL met ?order=name in de
+        # opdracht-weergave geen lege of onlogische volgorde geeft.
+        if order_param and order_param in self.SORT_OPTIONS[active_view]:
             descending = order_param.startswith("-")
-            field_name = order_param.lstrip("-")
-            order_by = order_mapping.get(field_name)
+            order_by = order_mapping.get(order_param.lstrip("-"))
             if order_by:
-                qs = qs.order_by(f"-{order_by}" if descending else order_by)
+                sort_field = f"-{order_by}" if descending else order_by
+        if sort_field is None:
+            sort_field = self.SORT_DEFAULT[active_view]
+
+        # De groep als tiebreaker houdt de plaatsingen van één persoon of opdracht
+        # bij elkaar wanneer de sortering zelf gelijke waarden oplevert.
+        qs = qs.order_by(sort_field, self.GROUP_FIELD[active_view])
 
         # The list is a current-state overview: only active placements, for every
         # viewer alike. History and planned placements live on the profile and the
@@ -1012,6 +1055,42 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             return Placement.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
+    def paginate_queryset(self, queryset, page_size):
+        """Paginate on groups (persons or assignments), not on placements.
+
+        A card shows one person or one assignment with all their placements, so
+        paginating on placements would cut a group in half at the page boundary.
+        This pages over the distinct group ids in the active sort order and then
+        returns every placement of the groups on that page.
+        """
+        group_field = self.GROUP_FIELD[self.active_view]
+        # values_list op het groepsveld erft de ORDER BY van de queryset, maar een
+        # DISTINCT daarover moet elke sorteerkolom ook selecteren. Daarom de ids in
+        # volgorde ophalen en hier ontdubbelen, met behoud van die volgorde.
+        seen: set[int] = set()
+        ordered_group_ids = [
+            group_id
+            for group_id in queryset.values_list(group_field, flat=True)
+            if group_id not in seen and not seen.add(group_id)
+        ]
+
+        paginator = self.get_paginator(
+            ordered_group_ids, page_size, orphans=self.get_paginate_orphans(), allow_empty_first_page=True
+        )
+        page = paginator.page(self._validated_page_number(paginator))
+        page_group_ids = list(page.object_list)
+        placements = list(queryset.filter(**{f"{group_field}__in": page_group_ids})) if page_group_ids else []
+        return paginator, page, placements, page.has_other_pages()
+
+    def _validated_page_number(self, paginator) -> int:
+        """The requested ?pagina=, clamped to an existing page (1 on nonsense input)."""
+        raw = self.kwargs.get(self.page_kwarg) or self.request.GET.get(self.page_kwarg) or 1
+        try:
+            number = int(raw)
+        except TypeError, ValueError:
+            return 1
+        return max(1, min(number, paginator.num_pages))
+
     def get_template_names(self):
         """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
@@ -1026,18 +1105,121 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     return [panel_data["panel_content_template"]]
                 return ["parts/placement_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/placement_table_rows.html"]
+                return ["parts/placement_cards.html"]
             return ["parts/filter_and_table_container.html"]
         return ["placements.html"]
+
+    def _view_url(self, value: str) -> str:
+        """URL for a weergave, keeping the filters and search but dropping the rest.
+
+        The sort is view-specific and the page number meaningless after a switch,
+        so both go; the default view drops the parameter to keep the URL clean.
+        """
+        params = self.request.GET.copy()
+        params.pop(self.page_kwarg, None)
+        params.pop("order", None)
+        if value == self.VIEW_DEFAULT:
+            params.pop("weergave", None)
+        else:
+            params["weergave"] = value
+        query = params.urlencode()
+        return f"{reverse('home')}?{query}" if query else reverse("home")
+
+    def _person_cards(self, placements) -> list[dict]:
+        """One card per colleague, with the assignments they are placed on.
+
+        A person on exactly one assignment opens that placement's panel; on more
+        than one there is no single placement to show, so the card opens the
+        colleague panel instead.
+        """
+        cards: dict[int, dict] = {}
+        for placement in placements:
+            card = cards.get(placement.colleague_id)
+            if card is None:
+                card = cards[placement.colleague_id] = {
+                    "colleague": placement.colleague,
+                    "name": placement.colleague.name,
+                    "assignments": [],
+                    "roles": [],
+                    "first_placement": placement,
+                }
+            assignment = placement.service.assignment
+            if assignment not in card["assignments"]:
+                card["assignments"].append(assignment)
+            role = placement.service.skill.name if placement.service.skill else None
+            if role and role not in card["roles"]:
+                card["roles"].append(role)
+
+        for card in cards.values():
+            single = card["assignments"][0] if len(card["assignments"]) == 1 else None
+            card["assignment"] = single
+            card["panel_url"] = (
+                _build_panel_url(self.request, plaatsing=card["first_placement"].public_id)
+                if single
+                else _build_panel_url(self.request, collega=card["colleague"].public_id)
+            )
+        return list(cards.values())
+
+    def _assignment_cards(self, placements) -> list[dict]:
+        """One card per assignment, showing its FULL team.
+
+        The team comes from a separate query rather than from the filtered
+        placements: a filter on role or label would otherwise silently shrink the
+        team shown on the card to the people that matched the filter.
+        """
+        cards: dict[int, dict] = {}
+        for placement in placements:
+            assignment = placement.service.assignment
+            if assignment.id not in cards:
+                clients = getattr(assignment, "sorted_clients", [])
+                cards[assignment.id] = {
+                    "assignment": assignment,
+                    "name": assignment.name,
+                    "client": (clients[0].organization.label or clients[0].organization.name) if clients else "",
+                    "extra_clients": max(len(clients) - 1, 0),
+                    "panel_url": _build_panel_url(self.request, opdracht=assignment.public_id),
+                    "team": [],
+                }
+
+        team_rows = (
+            Placement.objects.filter(service__assignment_id__in=cards)
+            .select_related("colleague", "service__skill")
+            .order_by("colleague__name")
+        )
+        seen_members: set[tuple[int, int]] = set()
+        for row in team_rows:
+            key = (row.service.assignment_id, row.colleague_id)
+            if key in seen_members:
+                continue
+            seen_members.add(key)
+            role = row.service.skill.name if row.service.skill else ""
+            cards[row.service.assignment_id]["team"].append({"name": row.colleague.name, "role": role})
+        return list(cards.values())
 
     def get_context_data(self, **kwargs):
         """Adds the dynamic filter options."""
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add panel URLs to placement objects
-        for placement in context["object_list"]:
-            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.public_id)
+        active_view = self.active_view
+        context["active_view"] = active_view
+        context["view_options"] = [
+            {**option, "url": self._view_url(option["value"]), "selected": option["value"] == active_view}
+            for option in self.VIEW_OPTIONS
+        ]
+        # Elke kaart is één groep, dus paginator.count telt de kaarten al: personen
+        # in de persoon-weergave, opdrachten in de opdracht-weergave. De templates
+        # lezen die teller rechtstreeks.
+        placements = context["object_list"]
+        if active_view == "opdracht":
+            context["cards"] = self._assignment_cards(placements)
+        else:
+            context["cards"] = self._person_cards(placements)
+
+        # De sorteeropties verschillen per weergave; sort_control.html rendert deze.
+        context["sort_options"] = self.SORT_OPTIONS[active_view]
+        order_param = self.request.GET.get("order")
+        context["active_order"] = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
