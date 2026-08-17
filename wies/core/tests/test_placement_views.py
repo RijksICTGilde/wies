@@ -2185,3 +2185,110 @@ class TimelinePrivacyChipTest(TestCase):
         self._team_event()
 
         assert "Beperkt zichtbaar" not in self._timeline(self.bm_client)
+
+
+class PanelTeamPrivacyEndToEndTest(TestCase):
+    """End-to-end HTTP guard for the side panels an *unrelated* viewer can open.
+
+    Only the placement panel enforces a per-object visibility rule; the
+    assignment (``?opdracht=``) and colleague (``?collega=``) panels are
+    reachable by any authenticated user and rely on ``visible_service_rows`` /
+    ``_get_colleague_assignments`` to strip hidden members downstream. These
+    tests drive the real request stack (not just the data builders) to confirm a
+    hidden (ended or future) teammate's name never reaches an outsider's panel,
+    while an active teammate on the same assignment still does.
+
+    Dates are real offsets from ``timezone.now()`` so every layer of the stack
+    (view + editables, which read ``timezone`` from two different modules) agrees
+    on today without patching.
+    """
+
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+
+    def setUp(self):
+        self.outsider_client = Client()
+        self.skill = Skill.objects.create(name="Python Developer")
+
+        # The outsider: an authenticated colleague neither placed nor owning.
+        self.user_outsider = User.objects.create_user(email="outsider@rijksoverheid.nl")
+        Colleague.objects.create(
+            name="Outsider", email="outsider@rijksoverheid.nl", source="wies", user=self.user_outsider
+        )
+        self.owner = Colleague.objects.create(name="Owner", email="owner@rijksoverheid.nl", source="wies")
+
+        self.active_member = Colleague.objects.create(
+            name="Active Member", email="active@rijksoverheid.nl", source="wies"
+        )
+        self.hidden_member = Colleague.objects.create(
+            name="Hidden Member", email="hidden@rijksoverheid.nl", source="wies"
+        )
+
+        today = timezone.now().date()
+        self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner, source="wies")
+        self._place(self.active_member, start=today - timedelta(days=10), end=today + timedelta(days=10))
+        self._place(self.hidden_member, start=today - timedelta(days=100), end=today - timedelta(days=10))
+
+        self.outsider_client.force_login(self.user_outsider)
+
+    def _place(self, colleague, *, start, end):
+        service = Service.objects.create(assignment=self.assignment, description="s", skill=self.skill, source="wies")
+        return Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source=Placement.PLACEMENT,
+            specific_start_date=start,
+            specific_end_date=end,
+            source="wies",
+        )
+
+    def test_assignment_panel_strips_hidden_team_member_from_outsider(self):
+        response = self.outsider_client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=self.HX)
+
+        assert response.status_code == 200
+        # The active teammate renders; the ended one is gone, name and all.
+        self.assertContains(response, "Active Member")
+        self.assertNotContains(response, "Hidden Member")
+
+    def test_colleague_panel_strips_hidden_assignment_from_outsider(self):
+        # Opening the *hidden* member's own colleague panel: the outsider may
+        # open the panel, but the ended placement (and its assignment) must not
+        # surface for them.
+        response = self.outsider_client.get(
+            reverse("home") + f"?collega={self.hidden_member.public_id}", headers=self.HX
+        )
+
+        assert response.status_code == 200
+        # Panel exists (the colleague's name titles it) but the ended assignment
+        # they were placed on is filtered out.
+        self.assertContains(response, "Hidden Member")
+        self.assertNotContains(response, "DTC4NL")
+
+    def test_bm_owner_still_sees_the_hidden_team_member(self):
+        # Guards against over-filtering: the owner must keep full visibility.
+        owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        owner_client = Client()
+        owner_client.force_login(owner_user)
+
+        response = owner_client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=self.HX)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Active Member")
+        self.assertContains(response, "Hidden Member")
+
+    def test_placed_colleague_still_sees_their_own_ended_assignment(self):
+        # The other authorized viewer besides the BM-owner: the placed colleague
+        # themselves. On their own colleague panel the ended assignment must
+        # surface (PRIVACY_OWN), even though it is hidden from the outsider.
+        member_user = User.objects.create_user(email="hidden@rijksoverheid.nl")
+        self.hidden_member.user = member_user
+        self.hidden_member.save(update_fields=["user"])
+        member_client = Client()
+        member_client.force_login(member_user)
+
+        response = member_client.get(reverse("home") + f"?collega={self.hidden_member.public_id}", headers=self.HX)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Hidden Member")
+        self.assertContains(response, "DTC4NL")
