@@ -934,11 +934,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # Active placements are public; ended ones are hidden from everyone;
-        # not-yet-started ones only for the placed colleague and the BM-owner.
+        # The list is a current-state overview: only active placements, for every
+        # viewer alike. History and planned placements live on the profile and the
+        # side panels, not here.
         qs = annotate_placement_dates(qs)
-        viewer = getattr(self.request.user, "colleague", None)
-        return filter_visible_placements(qs, timezone.now().date(), viewer)
+        return filter_visible_placements(qs, timezone.now().date())
 
     def _get_loopt_af_options(self, base_qs):
         """Builds the 'loopt af' filter options with cumulative counts."""

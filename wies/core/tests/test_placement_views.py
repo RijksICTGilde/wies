@@ -884,8 +884,10 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
 
 class PlacementListFutureVisibilityTest(TestCase):
-    """Not-yet-started placements appear on the 'Wie zit waar?' list only for the
-    placed colleague and the assignment's BM-owner, not for others."""
+    """The 'Wie zit waar?' list is a current-state overview: not-yet-started
+    (planned) placements are hidden from EVERYONE there, including the placed
+    colleague and the BM-owner. Planned placements remain visible on the colleague
+    profile and the side panels (``evaluate_placement_visibility``), not here."""
 
     def setUp(self):
         self.list_url = reverse("home")
@@ -935,14 +937,17 @@ class PlacementListFutureVisibilityTest(TestCase):
         assert pl not in self._queryset_as(user, mock_tz)
 
     @patch("wies.core.views.timezone")
-    def test_future_placement_visible_to_placed_colleague(self, mock_tz):
+    def test_future_placement_hidden_from_placed_colleague(self, mock_tz):
+        # The list is active-only: even the placed colleague does not see their
+        # own planned placement here (they see it on their profile instead).
         pl = self._future_placement(owner=self.colleague_bob)
-        assert pl in self._queryset_as(self.user_alice, mock_tz)
+        assert pl not in self._queryset_as(self.user_alice, mock_tz)
 
     @patch("wies.core.views.timezone")
-    def test_future_placement_visible_to_bm(self, mock_tz):
+    def test_future_placement_hidden_from_bm(self, mock_tz):
+        # Likewise the BM-owner: planned placements do not appear on the list.
         pl = self._future_placement(owner=self.colleague_bob)
-        assert pl in self._queryset_as(self.user_bob, mock_tz)
+        assert pl not in self._queryset_as(self.user_bob, mock_tz)
 
     @patch("wies.core.views.timezone")
     def test_active_placement_visible_to_unrelated(self, mock_tz):
@@ -1958,11 +1963,12 @@ def _modal_org_self_counts(response) -> dict[int, int]:
 
 
 class ClientModalPlacementCountVisibilityTest(TestCase):
-    """Modal per-org placement counts must honour placement_visibility.
+    """Modal per-org placement counts derive from the WZW list queryset, so they
+    follow the list's active-only rule.
 
-    A planned (not-yet-started) placement is private; the opdrachtgever
-    (client) filter modal's per-org count must not betray it to an
-    unrelated viewer, while the BM-owner's count still includes it.
+    A planned (not-yet-started) placement never appears on the list — for any
+    viewer, including the BM-owner — so it is counted for no one. Only active
+    placements contribute to the per-org counts.
     """
 
     def setUp(self):
@@ -2010,11 +2016,12 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
         assert self._modal_count_for(self.unrelated_user) == 0
 
-    def test_planned_placement_counted_for_bm_owner(self):
-        """The BM-owner may see the planned placement, so their count includes it."""
+    def test_planned_placement_not_counted_for_bm_owner(self):
+        """The list is active-only, so a planned placement is not counted even for
+        the BM-owner (they see it on the profile/panels, not on the list)."""
         self._place(start_offset_days=30, end_offset_days=120)
 
-        assert self._modal_count_for(self.owner_user) == 1
+        assert self._modal_count_for(self.owner_user) == 0
 
     def test_active_placement_counted_for_everyone(self):
         """An active placement is public; the count includes it for any viewer."""
