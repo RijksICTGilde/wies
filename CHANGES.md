@@ -4,11 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 618: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the full team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
-- XXX: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the full team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
-- 427: the whole interface now runs on the NLDD Design System instead of ROOS, the RVO design system
-- 427: dark mode — light, dark or "system" in the user menu, stored on your profile (migration 0013_colleague_theme)
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page
 - 427: "Wie zit waar?" loads more results on a "Meer laden" click instead of on scroll, so the footer stays reachable
 - 427: fix the opdrachtgever "Meer" sheet counts ignoring the other active filters

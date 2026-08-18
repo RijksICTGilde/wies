@@ -1132,69 +1132,65 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         than one there is no single placement to show, so the card opens the
         colleague panel instead.
         """
-        cards: dict[int, dict] = {}
+        grouped: dict[int, list] = {}
         for placement in placements:
-            card = cards.get(placement.colleague_id)
-            if card is None:
-                card = cards[placement.colleague_id] = {
-                    "colleague": placement.colleague,
-                    "name": placement.colleague.name,
-                    "assignments": [],
-                    "roles": [],
-                    "first_placement": placement,
-                }
-            assignment = placement.service.assignment
-            if assignment not in card["assignments"]:
-                card["assignments"].append(assignment)
-            role = placement.service.skill.name if placement.service.skill else None
-            if role and role not in card["roles"]:
-                card["roles"].append(role)
+            grouped.setdefault(placement.colleague_id, []).append(placement)
 
-        for card in cards.values():
-            single = card["assignments"][0] if len(card["assignments"]) == 1 else None
-            card["assignment"] = single
-            card["panel_url"] = (
-                _build_panel_url(self.request, plaatsing=card["first_placement"].public_id)
-                if single
-                else _build_panel_url(self.request, collega=card["colleague"].public_id)
+        cards = []
+        for rows in grouped.values():
+            assignments = list(dict.fromkeys(row.service.assignment for row in rows))
+            roles = list(dict.fromkeys(row.service.skill.name for row in rows if row.service.skill))
+            single = assignments[0] if len(assignments) == 1 else None
+            cards.append(
+                {
+                    "name": rows[0].colleague.name,
+                    "assignment": single,
+                    "assignments": assignments,
+                    "roles": roles,
+                    "panel_url": _build_panel_url(
+                        self.request,
+                        **({"plaatsing": rows[0].public_id} if single else {"collega": rows[0].colleague.public_id}),
+                    ),
+                }
             )
-        return list(cards.values())
+        return cards
 
     def _assignment_cards(self, placements) -> list[dict]:
         """One card per assignment, showing its FULL team.
 
-        The team comes from a separate query rather than from the filtered
+        The team is prefetched separately rather than read off the filtered
         placements: a filter on role or label would otherwise silently shrink the
         team shown on the card to the people that matched the filter.
         """
-        cards: dict[int, dict] = {}
-        for placement in placements:
-            assignment = placement.service.assignment
-            if assignment.id not in cards:
-                clients = getattr(assignment, "sorted_clients", [])
-                cards[assignment.id] = {
-                    "assignment": assignment,
-                    "name": assignment.name,
-                    "client": (clients[0].organization.label or clients[0].organization.name) if clients else "",
-                    "extra_clients": max(len(clients) - 1, 0),
-                    "panel_url": _build_panel_url(self.request, opdracht=assignment.public_id),
-                    "team": [],
-                }
-
+        assignments = list(dict.fromkeys(p.service.assignment for p in placements))
+        teams: dict[int, list[dict]] = {a.id: [] for a in assignments}
+        seen: set[tuple[int, int]] = set()
         team_rows = (
-            Placement.objects.filter(service__assignment_id__in=cards)
+            Placement.objects.filter(service__assignment_id__in=teams)
             .select_related("colleague", "service__skill")
             .order_by("colleague__name")
         )
-        seen_members: set[tuple[int, int]] = set()
         for row in team_rows:
             key = (row.service.assignment_id, row.colleague_id)
-            if key in seen_members:
-                continue
-            seen_members.add(key)
-            role = row.service.skill.name if row.service.skill else ""
-            cards[row.service.assignment_id]["team"].append({"name": row.colleague.name, "role": role})
-        return list(cards.values())
+            if key not in seen:
+                seen.add(key)
+                role = row.service.skill.name if row.service.skill else ""
+                teams[row.service.assignment_id].append({"name": row.colleague.name, "role": role})
+
+        cards = []
+        for assignment in assignments:
+            clients = getattr(assignment, "sorted_clients", [])
+            cards.append(
+                {
+                    "name": assignment.name,
+                    "assignment": assignment,
+                    "client": (clients[0].organization.label or clients[0].organization.name) if clients else "",
+                    "extra_clients": max(len(clients) - 1, 0),
+                    "panel_url": _build_panel_url(self.request, opdracht=assignment.public_id),
+                    "team": teams[assignment.id],
+                }
+            )
+        return cards
 
     def get_context_data(self, **kwargs):
         """Adds the dynamic filter options."""
