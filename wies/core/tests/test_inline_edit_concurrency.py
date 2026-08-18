@@ -2,18 +2,15 @@ import re
 from datetime import timedelta
 from unittest import mock
 
-import pytest
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ImproperlyConfigured
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.editables import AssignmentEditables
-from wies.core.inline_edit.base import EditableCollection
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert, _concurrency_token
+from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert
 
 User = get_user_model()
 
@@ -124,7 +121,7 @@ class InlineEditConcurrencyTests(TestCase):
 
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
-        self.assertContains(response, "<strong>Opdracht naam</strong> is ondertussen gewijzigd")
+        self.assertContains(response, "<strong>Opdrachtnaam</strong> is ondertussen gewijzigd")
         self.assertContains(response, "<strong>“Concurrent Name”</strong>")
 
     def test_conflict_says_geen_when_the_field_was_cleared(self):
@@ -168,91 +165,6 @@ class InlineEditConcurrencyTests(TestCase):
         assert response.status_code == 200
         self.assignment.refresh_from_db()
         assert self.assignment.name == "New Name"
-
-
-class InlineEditCollectionConcurrencyTokenTests(TestCase):
-    """The team (services) edit form embeds a concurrency token that reflects
-    the current team, so a save based on a stale team is caught by the same
-    check as a scalar field. This save rewrites every row at once, so an
-    undetected conflict loses the most data."""
-
-    def setUp(self):
-        self.client = Client()
-        self.user = User.objects.create_user(
-            email="svc@rijksoverheid.nl", first_name="S", last_name="v", is_superuser=True, is_staff=True
-        )
-        self.client.force_login(self.user)
-        self.owner = Colleague.objects.create(name="Owner", email="owner2@rijksoverheid.nl", source="wies")
-        self.assignment = Assignment.objects.create(name="A", owner=self.owner, source="wies")
-        self.service = Service.objects.create(
-            description="Original", assignment=self.assignment, skill=Skill.objects.create(name="Python"), source="wies"
-        )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
-
-    def _token(self):
-        response = self.client.get(self.url, {"edit": "true"})
-        match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', response.content.decode())
-        assert match, "the team edit form must embed a _concurrency_token"
-        return match.group(1)
-
-    def test_team_edit_form_embeds_token(self):
-        assert self._token()
-
-    def test_token_changes_when_team_changes(self):
-        before = self._token()
-
-        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
-
-        assert self._token() != before
-
-    def _post_data(self, token, **overrides):
-        return {
-            "service-TOTAL_FORMS": "1",
-            "service-INITIAL_FORMS": "1",
-            "service-MIN_NUM_FORMS": "1",
-            "service-MAX_NUM_FORMS": "1000",
-            "service-0-id": str(self.service.id),
-            "service-0-skill": str(self.service.skill.public_id),
-            "service-0-description": "My edit",
-            "service-0-is_filled": "aanvraag",
-            "service-0-has_custom_period": "on",
-            "_concurrency_token": token,
-            **overrides,
-        }
-
-    def test_stale_team_save_rerenders_form_with_alert(self):
-        token = self._token()
-
-        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
-
-        response = self.client.post(self.url, self._post_data(token))
-
-        assert response.status_code == 200
-        self.assertContains(response, "ondertussen gewijzigd")
-        # A list of rows has no single value worth naming, so the warning stays generic.
-        self.assertNotContains(response, "de opgeslagen waarde is nu")
-        self.service.refresh_from_db()
-        assert self.service.description == "Changed by someone else"
-
-    def test_invalid_formset_keeps_the_stale_token(self):
-        """As for a scalar field: a rejected team save must come back with the
-        token it was built on, so correcting it still hits the conflict check."""
-        token = self._token()
-
-        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
-
-        response = self.client.post(self.url, self._post_data(token, **{"service-0-skill": ""}))
-
-        content = response.content.decode()
-        match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', content)
-        assert match, "the re-rendered team form must still embed a _concurrency_token"
-        assert match.group(1) == token
-
-        response = self.client.post(self.url, self._post_data(match.group(1)))
-
-        self.assertContains(response, "ondertussen gewijzigd")
-        self.service.refresh_from_db()
-        assert self.service.description == "Changed by someone else"
 
 
 class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
@@ -316,26 +228,6 @@ class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
         self.assertContains(response, "ondertussen gewijzigd")
         self.placement.refresh_from_db()
         assert self.placement.specific_end_date == concurrent_end
-
-
-class ConcurrencyTokenConfigurationTests(TestCase):
-    """A collection without an ``audit_state`` has no state to hash, so every
-    token would be the same constant and no conflict could ever be detected.
-    That must fail loudly at first render rather than pass as "no conflict"."""
-
-    def test_collection_without_audit_state_is_rejected(self):
-        owner = Colleague.objects.create(name="O", email="o@rijksoverheid.nl", source="wies")
-        assignment = Assignment.objects.create(name="A", owner=owner, source="wies")
-        spec = EditableCollection(
-            label="Zonder audit_state",
-            formset_factory=lambda **kwargs: None,
-            initial=lambda obj: [],
-            save=lambda obj, formset: None,
-        )
-        spec.name = "stateless"
-
-        with pytest.raises(ImproperlyConfigured):
-            _concurrency_token(AssignmentEditables, spec, assignment)
 
 
 class TokenlessPostTests(TestCase):

@@ -1,4 +1,4 @@
-"""Jinja global: ``{{ inline_edit(obj, name) }}``. Registered in ``config/jinja2.py``."""
+"""Jinja globals ``inline_edit`` and ``inline_edit_form``, registered in ``config/jinja2.py``."""
 
 from django.template.loader import render_to_string
 from django.urls import reverse
@@ -7,36 +7,17 @@ from jinja2 import pass_context
 
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
-from wies.core.inline_edit.forms import _current_value, resolve_editables
+from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.views import _resolve_display, _spec_label
-
-
-def _get_external_source(obj) -> str | None:
-    """Return the governing source label if external, else None.
-
-    For Service/Placement the assignment source is authoritative (matches
-    the permission check in ``_is_wies_sourced``).
-    """
-    from wies.core.models import Placement, Service  # noqa: PLC0415
-
-    if isinstance(obj, Service):
-        src = obj.assignment.source
-    elif isinstance(obj, Placement):
-        src = obj.service.assignment.source
-    else:
-        src = getattr(obj, "source", None)
-    if src and src not in ("wies", ""):
-        return src.upper()
-    return None
+from wies.core.views import _concurrency_token, _resolve_display, _spec_label
 
 
 @pass_context
 def inline_edit(ctx, obj, name, **extras):
-    """Render the display partial for ``obj.<name>``.
+    """Renders the display partial for ``obj.<name>``.
 
-    ``**extras`` merge into the partial context. The post-save re-render
-    does NOT carry them — design partials to degrade gracefully.
+    ``**extras`` merge into the partial context, but the post-save re-render does
+    not carry them, so partials must degrade gracefully without them.
     """
     if obj is None:
         return mark_safe("")
@@ -61,9 +42,6 @@ def inline_edit(ctx, obj, name, **extras):
 
     user_can_edit = has_permission(Verb.UPDATE, obj, user, spec)
 
-    # Determine if external source prevents editing (for lock icon display).
-    external_source = _get_external_source(obj)
-
     display = _resolve_display(obj, spec, editables)
     if is_collection:
         value = spec.initial(obj)
@@ -80,7 +58,6 @@ def inline_edit(ctx, obj, name, **extras):
         "value": value,
         "display": display,
         "user_can_edit": user_can_edit,
-        "external_source": external_source,
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": None,
         "saved": False,
@@ -91,4 +68,51 @@ def inline_edit(ctx, obj, name, **extras):
     }
     # Trusted template; any user-supplied values go through Jinja's auto-escape.
     html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
+    return mark_safe(html)  # noqa: S308
+
+
+@pass_context
+def inline_edit_form(ctx, obj, name, **extras):
+    """Renders ``obj.<name>`` straight in edit mode, without its own buttons.
+
+    For places where the field should be immediately fillable, such as onboarding.
+    The form keeps its own hx-post, so the caller submits it when it suits — in the
+    wizard that is "Volgende".
+    """
+    if obj is None:
+        return mark_safe("")
+
+    model_label = obj._meta.model_name
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        raise RuntimeError(
+            f"No EditableSet registered for model '{model_label}'. Add it to wies.core.editables.REGISTRY."
+        )
+    spec = editable_set._editables.get(name) or editable_set.resolve_dynamic(name)
+    if spec is None:
+        raise RuntimeError(f"No editable '{name}' registered on {editable_set.__name__} (for model '{model_label}').")
+
+    request = ctx.get("request")
+    user = getattr(request, "user", None)
+    if isinstance(spec, EditableCollection) or not has_permission(Verb.UPDATE, obj, user, spec):
+        # No permission (or a collection, which needs a formset): fall back to the
+        # read view rather than a form that would be rejected on save.
+        return inline_edit(ctx, obj, name, **extras)
+
+    editables = resolve_editables(editable_set, spec)
+    form_cls, initial = build_form_class(editables, obj=obj, group_clean=getattr(spec, "clean", None))
+    render_ctx = {
+        "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
+        "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
+        "label": _spec_label(editable_set, spec),
+        "obj": obj,
+        "editable": spec,
+        "form": form_cls(initial=initial),
+        "bare": True,
+        # Without a token the save view rejects the post as a conflict; the view
+        # sets it on a normal inline edit, but this macro renders the form itself.
+        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        **extras,
+    }
+    html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308

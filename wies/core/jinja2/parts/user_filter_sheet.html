@@ -1,0 +1,13 @@
+{# Filter sheet for the user list, reusing the filter system of the assignment and
+   placement lists (filter_sidebar.html + filter_interactions.js). Always a sheet
+   here, because the left sidebar holds the admin navigation; user_filter.js opens
+   it. #}
+<nldd-sheet id="user-filter-sheet" placement="left" width="480px" accessible-label="Filters">
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="Filters" dismiss-text="Klaar"></nldd-top-title-bar>
+<nldd-simple-section>
+{# The section supplies the padding; the filter panel brings none. #}
+{% include "parts/filter_sidebar.html" %}
+</nldd-simple-section>
+</nldd-page>
+</nldd-sheet>

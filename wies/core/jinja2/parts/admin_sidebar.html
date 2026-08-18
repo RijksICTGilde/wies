@@ -1,72 +1,56 @@
-<div class="sidebar__content">
-  <nav class="rvo-menubar rvo-menubar--md">
-    <ul class="rvo-menubar__ul">
-      <li class="rvo-menubar__list rvo-menubar__list--vertical">
-        <ul class="rvo-menubar__group--flex rvo-menubar__group--vertical">
-          <li class="rvo-menubar__item">
-            <a href="{{ url('admin-users') }}"
-               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/gebruikers/' in request.path %}menu-item--active{% endif %}">
-              <c-icon icon="user"
-                      size="md"
-                      color="lintblauw"
-                      class="rvo-link__icon--before" />
-              Gebruikers
-            </a>
-          </li>
-          {% if DEBUG %}
-            <li class="rvo-menubar__item">
-              <a href="{{ url('organization-admin') }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/organisaties/' in request.path %}menu-item--active{% endif %}">
-                <c-icon icon="publicatie"
-                        size="md"
-                        color="lintblauw"
-                        class="rvo-link__icon--before" />
-                Opdrachtgevers
-              </a>
-            </li>
-          {% endif %}
-          <li class="rvo-menubar__item">
-            <a href="{{ url('label-admin') }}"
-               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/labels/' in request.path %}menu-item--active{% endif %}">
-              <c-icon icon="label"
-                      size="md"
-                      color="lintblauw"
-                      class="rvo-link__icon--before" />
-              Labels
-            </a>
-          </li>
-          <li class="rvo-menubar__item">
-            <a href="{{ url('suborganization-admin') }}"
-               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/merken/' in request.path %}menu-item--active{% endif %}">
-              <c-icon icon="basis-kantoorgebouw"
-                      size="md"
-                      color="lintblauw"
-                      class="rvo-link__icon--before" />
-              Merken
-            </a>
-          </li>
-          {% if is_staff_member(user) %}
-            <li class="rvo-menubar__item">
-              <a href="{{ url('staff-dashboard') }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/statistieken/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-grafiek rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="Statistieken"></span>
-                Statistieken
-              </a>
-            </li>
-            <li class="rvo-menubar__item">
-              <a href="{{ url('staff-database') }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/database/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-database rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="Database"></span>
-                Database
-              </a>
-            </li>
-          {% endif %}
-        </ul>
-      </li>
-    </ul>
-  </nav>
-</div>
+<nldd-container slot="sidebar" padding="16">
+<nldd-title size="5">
+<h2>Beheer</h2>
+</nldd-title>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+<nldd-list type="navigation" accessible-label="Beheer">
+<nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
+<nldd-icon-cell size="20">
+<nldd-icon name="users"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Gebruikers"></nldd-text-cell>
+</nldd-list-item>
+{% if DEBUG %}
+  <nldd-list-item href="{{ url('organization-admin') }}" {% if '/organisaties/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="offices"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Opdrachtgevers"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+<nldd-list-item href="{{ url('label-admin') }}" {% if '/beheer/labels/' in request.path %}selected{% endif %}>
+<nldd-icon-cell size="20">
+<nldd-icon name="labels"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Labels"></nldd-text-cell>
+</nldd-list-item>
+{% if user.has_perm('core.view_suborganization') %}
+  <nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="brand"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Merken"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+{% if is_staff_member(user) %}
+  <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="chart-x-y-axis-line"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Statistieken"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item href="{{ url('staff-database') }}" {% if '/database/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="database"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Database"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+</nldd-list>
+</nldd-container>

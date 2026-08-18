@@ -9,7 +9,7 @@ from django.core.exceptions import FieldDoesNotExist
 from django.db.models import ManyToManyField
 from django.forms.models import fields_for_model
 
-from wies.core.form_mixins import RvoFormMixin
+from wies.core.form_mixins import NlddFormMixin
 from wies.core.inline_edit.base import Editable, EditableGroup, EditableSet
 
 if TYPE_CHECKING:
@@ -27,17 +27,17 @@ def has_public_id(model: type[Model]) -> bool:
 
 
 def use_public_id_choices(field: forms.Field) -> None:
-    """Make a ModelChoiceField render and accept ``public_id`` instead of the pk.
+    """Makes a ModelChoiceField render and accept ``public_id`` instead of the pk.
 
-    Option values cross the client boundary, and Django keys them on the pk by
-    default. Models without a public_id (e.g. Group) keep the pk.
-    See ``features/public_id.md``."""
+    Option values cross the client boundary. Models without a public_id (e.g.
+    Group) keep the pk. See ``features/public_id.md``.
+    """
     queryset = getattr(field, "queryset", None)
     if queryset is not None and has_public_id(queryset.model):
         field.to_field_name = "public_id"
 
 
-def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
+def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
     # Priority: explicit form_field_factory → derive from model field → CharField fallback.
     # Overrides (label/widget/choices/validators/error_messages/empty_label) apply last.
     if editable.form_field_factory is not None:
@@ -61,7 +61,7 @@ def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — stra
     if editable.widget is not None:
         base.widget = editable.widget() if isinstance(editable.widget, type) else editable.widget
     if editable.choices is not None:
-        opts = editable.choices() if callable(editable.choices) else editable.choices
+        opts = editable.choices(obj) if callable(editable.choices) else editable.choices
         if hasattr(base, "queryset"):
             base.queryset = opts
         else:
@@ -91,15 +91,20 @@ def build_form_class(
     editables: list[Editable],
     obj: Model | None = None,
     group_clean: Callable[[dict], dict] | None = None,
+    field_objs: dict[str, Model] | None = None,
 ) -> tuple[type[forms.Form], dict[str, Any]]:
-    """Return (FormClass, initial): RvoFormMixin-enabled form with one field per Editable."""
+    """Returns (FormClass, initial): an NlddFormMixin form with one field per Editable.
+
+    ``field_objs`` maps a field name to its owning object, for forms bundling
+    several objects; without it ``obj`` applies to every field.
+    """
     form_fields: dict[str, forms.Field] = {}
     initial: dict[str, Any] = {}
     for e in editables:
         key = e.field or e.name
         if not key:
             raise ValueError(f"Editable must have a field or name: {e!r}")
-        form_fields[key] = _build_form_field(e)
+        form_fields[key] = _build_form_field(e, (field_objs or {}).get(key, obj))
         if obj is not None:
             initial[key] = _current_value(obj, e)
 
@@ -111,13 +116,13 @@ def build_form_class(
 
         attrs["clean"] = _clean
 
-    created_cls = type("InlineEditForm", (RvoFormMixin, forms.Form), attrs)
+    created_cls = type("InlineEditForm", (NlddFormMixin, forms.Form), attrs)
     form_cls = cast("type[forms.Form]", created_cls)
     return form_cls, initial
 
 
 def resolve_editables(editable_set: type[EditableSet], spec: Editable | EditableGroup) -> list[Editable]:
-    """Flatten a spec into its Editables. Groups resolve string names against the set's siblings."""
+    """Flattens a spec into its Editables. Groups resolve string names against the set's siblings."""
     if isinstance(spec, Editable):
         return [spec]
     if isinstance(spec, EditableGroup):
@@ -138,7 +143,7 @@ def resolve_editables(editable_set: type[EditableSet], spec: Editable | Editable
 
 
 def save_editables(editables: list[Editable], cleaned_data: dict, obj: Model) -> None:
-    """Persist cleaned_data. Order: scalar setattr → obj.save() → M2M .set() → custom save."""
+    """Persists cleaned_data. Order: scalar setattr → obj.save() → M2M .set() → custom save."""
     custom_save: list[Editable] = []
     m2m: list[Editable] = []
 
@@ -171,8 +176,34 @@ def save_spec(
     cleaned_data: dict,
     obj: Model,
 ) -> None:
-    """Persist a spec. Group with its own save → atomic whole-group; else per-field."""
+    """Persists a spec. A group with its own save writes atomically; else per-field."""
     if isinstance(spec, EditableGroup) and spec.save is not None:
         spec.save(obj, cleaned_data)
         return
     save_editables(editables, cleaned_data, obj)
+
+
+def build_combined_form_class(specs, *, bound_obj=None):
+    """Returns one form class spanning several specs, plus its initial values.
+
+    ``specs`` is a list of ``(editable_set, spec, obj)``. Used by the child sheets
+    that bundle fields across two models (Service + Placement); field names do not
+    collide, so they flatten into one form. A group ``clean`` still applies.
+    """
+    editables: list[Editable] = []
+    initial: dict = {}
+    # Each editable keeps its own object; `bound_obj` cannot cover that here.
+    field_objs: dict[str, Model] = {}
+    group_clean = None
+    for editable_set, spec, obj in specs:
+        spec_editables = resolve_editables(editable_set, spec)
+        editables.extend(spec_editables)
+        for e in spec_editables:
+            key = e.field or e.name
+            initial[key] = _current_value(obj, e)
+            if obj is not None:
+                field_objs[key] = obj
+        if getattr(spec, "clean", None):
+            group_clean = spec.clean
+    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean, field_objs=field_objs)
+    return form_cls, initial

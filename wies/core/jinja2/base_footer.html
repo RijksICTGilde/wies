@@ -1,0 +1,15 @@
+{# Base for the information pages behind the footer links. Two differences with
+   base.html: the global menu bar gives way to a back button, and the text sits
+   in a narrower simple-section to keep the line length readable. #}
+{% extends "base.html" %}
+{% block header %}
+  <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">
+  {% include "parts/utility_menu.html" %}
+  </nldd-top-navigation-bar>
+{% endblock header %}
+{% block content %}
+  <nldd-simple-section width="720px">
+  {% block footer_content %}
+  {% endblock footer_content %}
+  </nldd-simple-section>
+{% endblock content %}

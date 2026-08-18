@@ -2,39 +2,16 @@
 {% block title %}
   Inloggen niet gelukt - Wies
 {% endblock title %}
-{% block error_title %}
+{% block error_text %}
   Inloggen is niet gelukt
-{% endblock error_title %}
-{% block error_message %}
+{% endblock error_text %}
+{% block error_supporting_text %}
   {% if recoverable %}
     De inlogsessie is verlopen of afgebroken. Dat gebeurt bijvoorbeeld als het inlogscherm te lang open heeft gestaan.
   {% else %}
     Er is een storing in de koppeling met de inlogdienst. De beheerders van Wies hebben hier automatisch bericht van gekregen.
   {% endif %}
-{% endblock error_message %}
-{% block error_extra %}
-  <c-paragraph>
-    <c-link href="{{ url('login') }}">
-      Probeer het inloggen opnieuw
-    </c-link>
-    .
-    {% if recoverable %}
-      Blijft het misgaan? Sluit je browser volledig af en probeer het daarna nog een keer.
-    {% else %}
-      Lukt het over een tijdje nog steeds niet, laat het dan weten via
-      <c-link href="mailto:wies-odi@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
-        wies-odi@rijksoverheid.nl
-      </c-link>
-      .
-    {% endif %}
-  </c-paragraph>
-  {% if recoverable %}
-    <c-paragraph>
-      Komt dit vaker voor? Laat het weten via
-      <c-link href="mailto:wies-odi@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
-        wies-odi@rijksoverheid.nl
-      </c-link>
-      .
-    </c-paragraph>
-  {% endif %}
-{% endblock error_extra %}
+{% endblock error_supporting_text %}
+{% block error_actions %}
+  <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Probeer het inloggen opnieuw" data-href="{{ url('login') }}"></nldd-button>
+{% endblock error_actions %}

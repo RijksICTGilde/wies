@@ -1,0 +1,11 @@
+{# Display for Colleague.suborganization (a single Suborganization instance or None). Context:
+  obj      — Colleague instance
+  value    — the Suborganization instance, or None
+#}
+<nldd-container layout="wrap" gap="6">
+{% if value %}
+  <nldd-tag color="neutral">{{ value.name }}</nldd-tag>
+{% else %}
+  <span class="wies-text-secondary">Geen merk</span>
+{% endif %}
+</nldd-container>

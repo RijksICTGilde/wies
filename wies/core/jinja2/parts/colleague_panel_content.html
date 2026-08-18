@@ -1,51 +1,53 @@
-{% set colleague = panel_data.colleague %}
-<div class="rvo-layout-column rvo-layout-gap--lg">
-  <section>
-    <div class="card card--horizontal">
-      <div class="card__image">
-        <img alt="Profielfoto van {{ colleague.name }}"
-             src="{{ static('img/placeholder-avatar.svg') }}" />
-      </div>
-      <div class="card__content">
-        <c-h3 noMargins>
-          {{ colleague.name }}
-        </c-h3>
-        <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-          <c-icon icon="mail" size="md" color="hemelblauw" />
-          <c-link href="mailto:{{ colleague.email }}">
-            {{ colleague.email }}
-          </c-link>
-        </div>
-      </div>
-    </div>
-  </section>
+{% if not panel_data %}
+  {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
+  <nldd-top-title-bar slot="header" text="Persoonsgegevens" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-inline-dialog variant="alert" text="Niet gevonden" supporting-text="Dit item bestaat niet meer of je hebt er geen toegang toe."></nldd-inline-dialog>
+  </nldd-simple-section>
+{% else %}
+  {% set colleague = panel_data.colleague %}
+  {# collapse-anchor: the name appears in the bar only once it scrolls out of view. #}
+  <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-list dividers="never" accessible-label="Collega">
+  <nldd-list-item>
+  <nldd-cell>
+  <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-title-cell id="panel-title" size="3" text="{{ colleague.name }}">
+  <span slot="supporting-text">
+    {% if colleague.email %}
+      <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>
+    {% endif %}
+  </span>
+  </nldd-title-cell>
+  </nldd-list-item>
+  </nldd-list>
   {% if colleague.suborganization %}
-    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
-      <c-tag type="default" class="label-badge" style="background-color: #DCE3EA">
-        {{ colleague.suborganization.name }}
-      </c-tag>
-    </div>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+    </nldd-container>
   {% endif %}
   {% set labels = colleague.labels.all() %}
   {% if labels %}
-    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
-      {% for label in labels %}
-        <c-tag type="default"
-               class="label-badge"
-               style="background-color: {{ label.category.color }}">
-          {{ label.name }}
-        </c-tag>
-      {% endfor %}
-    </div>
-  {% else %}
-    <span class="rvo-text--italic">Geen labels toegewezen</span>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    {% for label in labels %}
+      {# TEMPORARILY colourless (#565): the same labels are uncoloured as filters.
+         To restore, set color back to label.category.nldd_color. #}
+      <nldd-tag>{{ label.name }}</nldd-tag>
+    {% endfor %}
+    </nldd-container>
   {% endif %}
-  <section>
-    <c-h2>
-      Opdrachten
-    </c-h2>
-    {% with assignments=panel_data.assignments, hx_target="#side_panel-content" %}
-      {% include "parts/colleague_assignment_cards.html" %}
-    {% endwith %}
-  </section>
-</div>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  <nldd-title size="4">
+  <h3>Opdrachten</h3>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% with assignments = panel_data.assignments, hx_target = "#side-panel-content" %}
+    {% include "parts/colleague_assignment_cards.html" %}
+  {% endwith %}
+  </nldd-simple-section>
+{% endif %}

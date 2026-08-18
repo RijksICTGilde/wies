@@ -1,26 +1,37 @@
+// Chevron toggle and search in the organisation admin tree. Rows nest in the
+// parent's slot="children", so ancestors come from closest() chains.
 (function () {
   "use strict";
 
   var input = document.getElementById("org-search");
   var root = document.getElementById("org-tree-root");
-  var emptyMsg = document.getElementById("org-search-empty");
   if (!input || !root) return;
 
-  var allItems = root.querySelectorAll(".org-tree__item");
-  var savedState = null; // Map<details, boolean> — open state before search
+  var allItems = Array.prototype.slice.call(
+    root.querySelectorAll("nldd-list-item"),
+  );
+  var savedState = null; // Map<item, boolean> — expanded state before search
   var isSearching = false;
 
-  function saveOpenState() {
+  // nldd-list-item announces its expanded state but does not toggle it. The
+  // innermost row in the composedPath wins, so a child cannot expand its parent.
+  root.addEventListener("click", function (e) {
+    var row = window.wiesClosestInPath(e, "nldd-list-item[button]");
+    if (!row) return;
+    row.toggleAttribute("expanded", !row.hasAttribute("expanded"));
+  });
+
+  function saveExpandedState() {
     savedState = new Map();
-    root.querySelectorAll("details").forEach(function (d) {
-      savedState.set(d, d.open);
+    allItems.forEach(function (item) {
+      savedState.set(item, item.hasAttribute("expanded"));
     });
   }
 
-  function restoreOpenState() {
+  function restoreExpandedState() {
     if (!savedState) return;
-    savedState.forEach(function (wasOpen, d) {
-      d.open = wasOpen;
+    savedState.forEach(function (wasExpanded, item) {
+      item.toggleAttribute("expanded", wasExpanded);
     });
     savedState = null;
   }
@@ -29,128 +40,78 @@
     var label = item.getAttribute("data-label") || "";
     if (label.indexOf(query) !== -1) return true;
     var abbr = item.getAttribute("data-abbr") || "";
-    if (abbr.indexOf(query) !== -1) return true;
-    return false;
+    return abbr.indexOf(query) !== -1;
   }
 
   function showAncestors(item) {
-    var el = item.parentElement;
-    while (el && el !== root) {
-      if (el.classList && el.classList.contains("org-tree__item")) {
-        el.classList.remove("org-tree__item--hidden");
-        // Open the details so the match is visible
-        var details = el.querySelector(":scope > .org-tree__details");
-        if (details) details.open = true;
-      }
-      el = el.parentElement;
+    var el = item.parentElement && item.parentElement.closest("nldd-list-item");
+    while (el) {
+      el.hidden = false;
+      el.setAttribute("expanded", "");
+      el = el.parentElement && el.parentElement.closest("nldd-list-item");
     }
   }
 
   function showDescendants(item) {
-    var children = item.querySelectorAll(".org-tree__item");
-    for (var i = 0; i < children.length; i++) {
-      children[i].classList.remove("org-tree__item--hidden");
-    }
+    item.querySelectorAll("nldd-list-item").forEach(function (child) {
+      child.hidden = false;
+    });
+  }
+
+  // nldd-text-cell marks the match itself when `query` is set.
+  function setHighlight(query) {
+    root.querySelectorAll("nldd-text-cell").forEach(function (cell) {
+      if (query) {
+        cell.setAttribute("query", query);
+        cell.setAttribute("query-mark-mode", "match");
+      } else {
+        cell.removeAttribute("query");
+      }
+    });
   }
 
   function filterTree(query) {
     if (!query) {
-      // Clear search: show everything, restore state
       isSearching = false;
       allItems.forEach(function (item) {
-        item.classList.remove("org-tree__item--hidden");
+        item.hidden = false;
       });
-      // Remove highlights
-      root.querySelectorAll("mark").forEach(function (m) {
-        var parent = m.parentNode;
-        parent.replaceChild(document.createTextNode(m.textContent), m);
-        parent.normalize();
-      });
-      restoreOpenState();
-      emptyMsg.style.display = "none";
-      root.style.display = "";
+      setHighlight("");
+      restoreExpandedState();
       return;
     }
 
-    // Save state on first search keystroke
     if (!isSearching) {
-      saveOpenState();
+      saveExpandedState();
       isSearching = true;
     }
 
-    // Phase 1: hide all items
     allItems.forEach(function (item) {
-      item.classList.add("org-tree__item--hidden");
+      item.hidden = true;
     });
 
-    // Phase 2: find matches and reveal them + ancestors
-    var hasMatch = false;
     allItems.forEach(function (item) {
-      if (item.classList.contains("org-tree__item--group")) return; // groups shown via ancestors
+      if (item.hasAttribute("data-org-group")) return; // groups shown via ancestors
       if (matches(item, query)) {
-        hasMatch = true;
-        item.classList.remove("org-tree__item--hidden");
+        item.hidden = false;
         showAncestors(item);
         showDescendants(item);
       }
     });
 
-    // Phase 3: highlight matching text in visible labels
-    root.querySelectorAll("mark").forEach(function (m) {
-      var parent = m.parentNode;
-      parent.replaceChild(document.createTextNode(m.textContent), m);
-      parent.normalize();
-    });
-    root
-      .querySelectorAll(
-        ".org-tree__item:not(.org-tree__item--hidden) .org-tree__label",
-      )
-      .forEach(function (label) {
-        highlightText(label, query);
-      });
-
-    // Phase 4: show/hide empty message
-    if (hasMatch) {
-      emptyMsg.style.display = "none";
-      root.style.display = "";
-    } else {
-      emptyMsg.style.display = "";
-      root.style.display = "none";
-    }
+    setHighlight(query);
+    // With every row [hidden] the list shows its own empty state.
   }
 
-  function highlightText(el, query) {
-    var text = el.textContent;
-    var lower = text.toLowerCase();
-    var idx = lower.indexOf(query);
-    if (idx === -1) return;
-
-    var frag = document.createDocumentFragment();
-    var lastIdx = 0;
-    while (idx !== -1) {
-      if (idx > lastIdx) {
-        frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
-      }
-      var mark = document.createElement("mark");
-      mark.textContent = text.slice(idx, idx + query.length);
-      frag.appendChild(mark);
-      lastIdx = idx + query.length;
-      idx = lower.indexOf(query, lastIdx);
-    }
-    if (lastIdx < text.length) {
-      frag.appendChild(document.createTextNode(text.slice(lastIdx)));
-    }
-    el.textContent = "";
-    el.appendChild(frag);
-  }
-
-  // Debounced input handler
   var timer = null;
-  input.addEventListener("input", function () {
+  input.addEventListener("input", function (e) {
     clearTimeout(timer);
     timer = setTimeout(function () {
-      var query = input.value.toLowerCase().trim();
-      filterTree(query);
+      var raw =
+        e.detail && e.detail.value !== undefined
+          ? e.detail.value
+          : input.value || "";
+      filterTree(String(raw).toLowerCase().trim());
     }, 150);
   });
 })();

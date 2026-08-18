@@ -1,0 +1,150 @@
+{% set svc_form = panel_data.member_form %}
+{% set obj = panel_data.assignment %}
+{% set panel_heading = panel_data.member_heading %}
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ obj.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form data-member-form
+      hx-post="{{ panel_data.member_edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML"
+      data-assignment-start="{{ obj.start_date.isoformat() if obj.start_date else '' }}"
+      data-assignment-end="{{ obj.end_date.isoformat() if obj.end_date else '' }}">
+  {# Business errors (e.g. a service that no longer exists) land here as
+     non-field errors; field-level errors render at their own field below. #}
+  {% for error in svc_form.non_field_errors() %}
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+  {% endfor %}
+  {# Round-trip the public_ids so add_service_to_assignment can update in place. #}
+  <input type="hidden"
+         name="{{ svc_form.service_public_id.html_name }}"
+         value="{{ svc_form.service_public_id.value() or '' }}">
+  <input type="hidden"
+         name="{{ svc_form.placement_public_id.html_name }}"
+         value="{{ svc_form.placement_public_id.value() or '' }}">
+  {% set status_value = svc_form.is_filled.value() or "aanvraag" %}
+  {# wire_field_errors points the input at its error text by id (see forms/field.html);
+     nldd-form-field only reveals the message when invalid + error-message="<id>". #}
+  {% set is_filled_error_ids = wire_field_errors(svc_form.is_filled) %}
+  <nldd-form-field label="{{ svc_form.is_filled.label }}">
+  <nldd-radio-button-group name="{{ svc_form.is_filled.html_name }}" data-status-choice {% if svc_form.is_filled.errors %}invalid error-message="{{ is_filled_error_ids|join(' ') }}"{% endif %}>
+  <nldd-radio-button-field value="aanvraag" label="Aanvraag" {% if status_value == "aanvraag" %}checked{% endif %}></nldd-radio-button-field>
+  <nldd-radio-button-field value="ingevuld" label="Geplaatste consultant" {% if status_value == "ingevuld" %}checked{% endif %}></nldd-radio-button-field>
+  </nldd-radio-button-group>
+  {% for error in svc_form.is_filled.errors %}
+    <nldd-form-field-error-text id="{{ is_filled_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# A combo box too: the consultant list is as long as the role list. #}
+  {% set colleague_value = svc_form.colleague.value() | string if svc_form.colleague.value() else "" %}
+  <div data-colleague-field
+       {% if status_value != "ingevuld" %}hidden{% endif %}>
+    {% set colleague_error_ids = wire_field_errors(svc_form.colleague) %}
+    <nldd-form-field label="{{ svc_form.colleague.label }}">
+    <nldd-combo-box name="{{ svc_form.colleague.html_name }}" value="{{ colleague_value }}" accessible-label="{{ svc_form.colleague.label }}" {% if svc_form.colleague.errors %}invalid error-message="{{ colleague_error_ids|join(' ') }}"{% endif %}>
+    <nldd-menu empty-text="Geen consultants gevonden">
+    {% for value, label in svc_form.colleague.field.choices %}
+      {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+    {% endfor %}
+    </nldd-menu>
+    </nldd-combo-box>
+    {% for error in svc_form.colleague.errors %}
+      <nldd-form-field-error-text id="{{ colleague_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  </div>
+  {# The combo posts `skill` itself (form-associated): an existing role's
+     public_id, or the "__new__" sentinel. Picking "+ Nieuwe rol" reveals the
+     name field below; member_form.js only toggles that field's visibility. #}
+  {% set skill_value = svc_form.skill.value() | string if svc_form.skill.value() else "" %}
+  {% set new_skill_value = svc_form.new_skill_name.value() or "" %}
+  {% set skill_error_ids = wire_field_errors(svc_form.skill) %}
+  <nldd-form-field label="{{ svc_form.skill.label }}">
+  <nldd-combo-box name="{{ svc_form.skill.html_name }}" accessible-label="{{ svc_form.skill.label }}" data-skill-choice value="{{ skill_value }}" {% if svc_form.skill.errors %}invalid error-message="{{ skill_error_ids|join(' ') }}"{% endif %}>
+  <nldd-menu empty-text="Geen rollen gevonden">
+  {% for value, label in svc_form.skill.field.choices %}
+    {% if value != "" %}
+      <nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>
+    {% endif %}
+  {% endfor %}
+  </nldd-menu>
+  </nldd-combo-box>
+  <nldd-form-field-help-text>Kies een bestaande rol of maak een nieuwe aan.</nldd-form-field-help-text>
+  {% for error in svc_form.skill.errors %}
+    <nldd-form-field-error-text id="{{ skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Only for "+ Nieuwe rol": server-rendered hidden unless that option is
+     already selected, so the first paint matches member_form.js's init state. #}
+  <div data-new-skill-field
+       {% if skill_value != "__new__" %}hidden{% endif %}>
+    {% set new_skill_error_ids = wire_field_errors(svc_form.new_skill_name) %}
+    <nldd-form-field label="{{ svc_form.new_skill_name.label }}">
+    <nldd-text-field name="{{ svc_form.new_skill_name.html_name }}" accessible-label="{{ svc_form.new_skill_name.label }}" data-new-skill-input value="{{ new_skill_value }}" maxlength="30" {% if svc_form.new_skill_name.errors %}invalid error-message="{{ new_skill_error_ids|join(' ') }}"{% endif %}></nldd-text-field>
+    {% for error in svc_form.new_skill_name.errors %}
+      <nldd-form-field-error-text id="{{ new_skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  </div>
+  {{ svc_form.description.as_field_group() }}
+  {# has_custom_period is inverted: checked means inherit the assignment period. The
+     segmented control does not post; the hidden input below carries the choice
+     ("on" = inherit, empty = own period). #}
+  {% set inherits = svc_form.has_custom_period.value() %}
+  <nldd-form-field label="Periode">
+  <nldd-segmented-control name="periode-keuze" width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
+  <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
+  <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
+  </nldd-segmented-control>
+  {# Only meaningful for "Van opdracht"; member_form.js hides it once you pick
+     your own period. #}
+  <nldd-form-field-help-text data-assignment-period-help>
+  De periode van de opdracht is
+  {{ obj.start_date|datum_nl if obj.start_date else "onbekend" }}
+  t/m
+  {{ obj.end_date|datum_nl if obj.end_date else "heden" }}
+  </nldd-form-field-help-text>
+  </nldd-form-field>
+  <input type="hidden"
+         name="{{ svc_form.has_custom_period.html_name }}"
+         value="{{ 'on' if inherits else '' }}"
+         data-inherit-input>
+  {# Hand-rolled instead of as_field_group(): the `hidden` must be server-rendered so
+     the first paint matches the collapsed state member_form.js sets on init, without
+     a visible-then-collapsed flash. as_field_group() renders the wrapper itself and
+     cannot pass it through, so wire_field_errors links the error message here. #}
+  {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
+  <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits %} hidden{% endif %}>
+  {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
+  {% for error in svc_form.placement_start_date.errors %}
+    <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Off means no known end date, the placement runs on. The switch does not post;
+     it only drives the end-date field. #}
+  <nldd-form-field{% if inherits %} hidden{% endif %}>
+  <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if svc_form.placement_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+  </nldd-form-field>
+  {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
+  <nldd-form-field label="{{ svc_form.placement_end_date.label }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
+  {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
+  {% for error in svc_form.placement_end_date.errors %}
+    <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Hidden inputs last: nldd-form spaces all siblings, so one at the top pushes
+     the first visible field down. #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <input type="hidden" name="member_heading" value="{{ panel_heading }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>
+<script src="{{ app_asset('js/member_form.js') }}"></script>

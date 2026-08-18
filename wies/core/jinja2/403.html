@@ -1,19 +1,14 @@
 {% extends "base_error.html" %}
 {% block title %}
-  HTTP 403 - Geen toegang - Wies
+  Geen toegang (403) · Wies
 {% endblock title %}
-{% block error_title %}
-  HTTP 403 - Geen toegang
-{% endblock error_title %}
-{% block error_message %}
-  Je hebt geen toegang tot deze pagina.
-{% endblock error_message %}
-{% block error_extra %}
-  <c-paragraph>
-    Denk je dat dit een fout is? Neem contact op via
-    <c-link href="mailto:wies-odi@rijksoverheid.nl">
-      wies-odi@rijksoverheid.nl
-    </c-link>
-    .
-  </c-paragraph>
-{% endblock error_extra %}
+{% block error_text %}
+  Je hebt geen toegang tot deze pagina
+{% endblock error_text %}
+{% block error_supporting_text %}
+  Denk je dat dit een fout is? Neem dan contact met ons op.
+{% endblock error_supporting_text %}
+{% block error_actions %}
+  <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
+  <nldd-button slot="actions" variant="secondary" start-icon="envelope" text="Stuur een e-mail" href="mailto:wies-odi@rijksoverheid.nl"></nldd-button>
+{% endblock error_actions %}

@@ -1,0 +1,7 @@
+{# Error list for a field rendered outside nldd-form-field. `invalid` is set
+   unconditionally: there is no form-field here to control visibility. #}
+{% if errors %}
+  <div class="field-errors">
+    {% for error in errors %}<nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>{% endfor %}
+  </div>
+{% endif %}

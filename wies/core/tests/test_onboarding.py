@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
@@ -5,17 +7,13 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.context_processors import onboarding
-from wies.core.models import Assignment, Colleague, Placement, Service, Skill
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill
 
 User = get_user_model()
 
 
 def _request_for(user):
-    """Minimal request stand-in.
-
-    The context processor reads ``request.user``; the owner-mailto helper also
-    calls ``build_absolute_uri`` when an assignment has an owner with an email.
-    """
+    """Returns a minimal request stand-in with ``user`` and ``build_absolute_uri``."""
 
     class _Req:
         def build_absolute_uri(self, location=""):
@@ -78,6 +76,13 @@ class OnboardingWizardRenderTest(TestCase):
         self.assertContains(response, 'data-step="2"')
         self.assertNotContains(response, 'data-step="3"')
 
+    def test_dismiss_button_says_overslaan(self):
+        # "Overslaan", not "Sluit": the button completes onboarding for good,
+        # while Escape only dismisses it for now (#553).
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("home"))
+        self.assertContains(response, 'dismiss-text="Overslaan"')
+
     def test_wizard_not_shown_after_completion(self):
         self.user.onboarding_completed_at = timezone.now()
         self.user.save(update_fields=["onboarding_completed_at"])
@@ -85,6 +90,93 @@ class OnboardingWizardRenderTest(TestCase):
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, 'id="onboardingWizard"')
+
+
+class OnboardingLabelSaveTest(TestCase):
+    """The profile step (labels) saves through the bare inline_edit_form macro.
+
+    Regression: the macro rendered no concurrency token, which the save view
+    counts as a conflict, so chosen labels never reached the profile.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="lbl@rijksoverheid.nl", first_name="Lena")
+        self.colleague = Colleague.objects.create(
+            user=self.user, name="Lena Label", email="lbl@rijksoverheid.nl", source="wies"
+        )
+        self.category = LabelCategory.objects.create(name="Merk")
+        self.label = Label.objects.create(name="Gateway review", category=self.category)
+        self.category2 = LabelCategory.objects.create(name="Expertise")
+        self.label2 = Label.objects.create(name="Data engineering", category=self.category2)
+
+    def _token_re(self):
+        return re.compile(r'name="_concurrency_token"\s+value="([^"]*)"')
+
+    def _token_for(self, category_id):
+        from wies.core.editables.colleague import ColleagueEditables  # noqa: PLC0415 — test-local
+        from wies.core.views import _concurrency_token  # noqa: PLC0415 — avoids import cycle at module load
+
+        spec = ColleagueEditables.resolve_dynamic(f"labels_{category_id}")
+        return _concurrency_token(ColleagueEditables, spec, self.colleague)
+
+    def _post_labels(self, category_id, label_id, token):
+        url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{category_id}"])
+        return self.client.post(url, {"labels": str(label_id), "_concurrency_token": token})
+
+    def test_labels_form_renders_a_valid_concurrency_token(self):
+        self.client.force_login(self.user)
+        html = self.client.get(reverse("home")).content.decode()
+        match = self._token_re().search(html)
+        assert match, "de onboarding-labels-form moet een _concurrency_token embedden"
+        token = match.group(1)
+        assert token, "het token mag niet leeg zijn"
+        assert "{{" not in token, "het token mag geen ongerenderde Jinja-expressie zijn"
+
+    def test_onboarding_label_choice_persists(self):
+        self.client.force_login(self.user)
+        # The render holds one token per label category, so grabbing the first
+        # one from the HTML would target the wrong field and fail as a conflict.
+        token = self._token_for(self.category.id)
+
+        # The widget renders name="labels", just as the browser posts it.
+        response = self._post_labels(self.category.id, self.label.public_id, token)
+        assert response.status_code == 200
+        self.colleague.refresh_from_db()
+        assert list(self.colleague.labels.values_list("id", flat=True)) == [self.label.id]
+
+    def test_missing_token_is_rejected_as_conflict(self):
+        # Proves the token was the blocker: without one, nothing is saved.
+        self.client.force_login(self.user)
+        url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{self.category.id}"])
+        self.client.post(url, {"labels": str(self.label.public_id)})
+        self.colleague.refresh_from_db()
+        assert list(self.colleague.labels.all()) == []
+
+    def test_multiple_categories_all_persist(self):
+        """Each ``labels_<cat>`` token hashes only its own category.
+
+        Onboarding submits every category serially with tokens computed on the
+        empty initial state; a shared hash made the first save stale the rest.
+        """
+        self.client.force_login(self.user)
+        token1 = self._token_for(self.category.id)
+        token2 = self._token_for(self.category2.id)
+
+        r1 = self._post_labels(self.category.id, self.label.public_id, token1)
+        # token2 was computed on the initial state, as in the wizard: a save in
+        # category 1 must not invalidate it.
+        r2 = self._post_labels(self.category2.id, self.label2.public_id, token2)
+
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        self.colleague.refresh_from_db()
+        assert set(self.colleague.labels.values_list("id", flat=True)) == {self.label.id, self.label2.id}
+
+    def test_token_is_per_category(self):
+        # A label in category 1 must not change category 2's token.
+        self.colleague.labels.add(self.label)
+        assert self._token_for(self.category.id) != self._token_for(self.category2.id)
 
 
 class OnboardingAssignmentStepTest(TestCase):
@@ -136,23 +228,89 @@ class OnboardingAssignmentStepTest(TestCase):
         assert [e["assignment"].id for e in ctx["onboarding_assignments"]] == [assignment.id]
 
     def test_wizard_renders_opdracht_step_and_bm_contact(self):
-        self._place_on(name="Datateam MinBZK", description="Data engineering")
+        assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
         self.client.force_login(self.user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "Controleer je opdracht")
         self.assertContains(response, "Datateam MinBZK")
-        # Placed consultant may edit name/omschrijving inline (pencil affordance).
-        self.assertContains(response, "extra_info")
+        # The step only displays; editing happens on the edit screen.
+        self.assertContains(response, "Wijzigen")
+        self.assertContains(response, reverse("onboarding-assignment-edit", args=[assignment.public_id]))
         # The consultant's own rol + rolomschrijving are shown.
         self.assertContains(response, "Jouw rol")
-        self.assertContains(response, "Omschrijving rol")
         self.assertContains(response, "Data engineering")
         # BM is named and mailable.
         self.assertContains(response, "Bea Manager")
         self.assertContains(response, "mailto:bm@rijksoverheid.nl")
         # Welcome + profile + opdracht = three steps.
         self.assertContains(response, 'data-step="3"')
+
+    def test_assignment_edit_screen_renders_and_saves(self):
+        assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
+        self.client.force_login(self.user)
+        url = reverse("onboarding-assignment-edit", args=[assignment.public_id])
+
+        response = self.client.get(url)
+        assert response.status_code == 200
+        self.assertContains(response, "Opdracht wijzigen")
+        self.assertContains(response, "Datateam MinBZK")
+        # Assignment fields and the own role share one form, each with a prefix.
+        self.assertContains(response, "opdracht-name")
+        self.assertContains(response, "Opdrachtomschrijving")
+
+        service = assignment.services.first()
+        response = self.client.post(
+            url,
+            {
+                "opdracht-name": "Datateam BZK",
+                "opdracht-extra_info": "Nieuwe omschrijving",
+                f"rol-{service.id}-description": "Data engineering plus",
+            },
+        )
+        assert response.status_code == 200
+        # The updated box swaps back into the step; the screen closes itself.
+        assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.public_id}"
+        assert response["HX-Trigger-After-Swap"] == "onboardingDetailClose"
+        assignment.refresh_from_db()
+        service.refresh_from_db()
+        assert assignment.name == "Datateam BZK"
+        assert assignment.extra_info == "Nieuwe omschrijving"
+        assert service.description == "Data engineering plus"
+
+    def test_saved_values_are_visible_again_right_away(self):
+        """The step and the edit screen both show the new data after a save (#619)."""
+        assignment = self._place_on(name="Oude naam", description="Oude rol")
+        self.client.force_login(self.user)
+        url = reverse("onboarding-assignment-edit", args=[assignment.public_id])
+        service = assignment.services.first()
+
+        response = self.client.post(
+            url,
+            {
+                "opdracht-name": "Nieuwe naam",
+                "opdracht-extra_info": "Nieuwe omschrijving",
+                f"rol-{service.id}-description": "Nieuwe rol",
+            },
+        )
+        assert "HX-Trigger" not in response
+        assert response["HX-Trigger-After-Swap"] == "onboardingDetailClose"
+        self.assertContains(response, "Nieuwe naam")
+        self.assertContains(response, "Nieuwe omschrijving")
+        self.assertNotContains(response, "Oude naam")
+
+        reopened = self.client.get(url)
+        self.assertContains(reopened, "Nieuwe naam")
+        self.assertContains(reopened, "Nieuwe omschrijving")
+        self.assertContains(reopened, "Nieuwe rol")
+        self.assertNotContains(reopened, "Oude naam")
+
+    def test_assignment_edit_screen_rejects_other_assignment(self):
+        # An assignment you are not placed on must not be editable.
+        other = Assignment.objects.create(name="Niet van mij", owner=self.bm, source="wies")
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("onboarding-assignment-edit", args=[other.public_id]))
+        assert response.status_code == 404
 
     def test_wizard_skips_opdracht_step_when_not_placed(self):
         self.client.force_login(self.user)

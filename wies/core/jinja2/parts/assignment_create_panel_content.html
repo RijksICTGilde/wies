@@ -1,0 +1,38 @@
+{# Create sheet: the same flat assignment form as the edit sheet, but without an
+   object. There is no parent panel yet, so the top title bar dismisses instead
+   of going back. On success the view redirects via HX-Location to the new panel.
+
+   nldd-form gets its own <form> as direct child (user-provided form mode),
+   because htmx needs its attributes on the real form. #}
+{% set form = panel_data.form %}
+<nldd-top-title-bar slot="header" text="{{ panel_data.edit_heading }}" collapse-anchor="panel-title" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_data.edit_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form hx-post="{{ panel_data.edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML">
+  {% if form.name %}{{ form.name.as_field_group() }}{% endif %}
+  {% if form.extra_info %}{{ form.extra_info.as_field_group() }}{% endif %}
+  {# as_field_group, not as_widget plus a manual error loop: it links the error
+     to the widget by id, without which nldd-form-field renders it at height 0. #}
+  {% if form.organizations %}{{ form.organizations.as_field_group() }}{% endif %}
+  {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
+  {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
+  {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
+  {% for error in form.non_field_errors() %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at the
+     top pushes the first visible field down. #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="{{ panel_data.submit_label }}"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>

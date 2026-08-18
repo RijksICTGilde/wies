@@ -1,0 +1,37 @@
+{# Full option list of one select-multi group, as a left sheet (same build-up as
+   parts/client_modal.html). Ticking does not filter directly; only the CTA
+   applies the selection, and cancelling discards it. #}
+{% set group = (filter_groups | selectattr('group_id', 'equalto', filter_modal_group_id) | list | first) %}
+<nldd-sheet id="filter-options-modal" placement="left" width="480px" accessible-label="{{ group.label if group else 'Filter' }}" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
+<nldd-page sticky-header sticky-footer>
+<nldd-top-title-bar slot="header" text="{{ group.label if group else 'Filter' }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-container slot="header" padding-inline="16">
+<nldd-search-field autofocus id="filter-options-search" placeholder="Zoeken" accessible-label="Zoeken op {{ group.label if group else '' }}">
+</nldd-search-field>
+</nldd-container>
+<nldd-simple-section>
+{# The row is the checkbox; the nldd-checkbox inside is decorative. Nothing
+   submits here — the CTA writes the selection back to the sidebar group. #}
+<nldd-list id="filter-options-list" variant="simple" dividers="never" accessible-label="{{ group.label if group else 'Filter' }}">
+{% if group %}
+  {% for option in group.options if option.value %}
+    <nldd-list-item checkbox {% if option.value in group.selected_values %}checked{% endif %} data-value="{{ option.value }}" data-option-label="{{ option.label | lower }}">
+    <nldd-cell>
+    <nldd-checkbox decorative {% if option.value in group.selected_values %}checked{% endif %}></nldd-checkbox>
+    </nldd-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    {% if option.count is defined %}
+      <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
+    {% endif %}
+    </nldd-list-item>
+  {% endfor %}
+{% endif %}
+</nldd-list>
+</nldd-simple-section>
+<nldd-container slot="footer" padding="16" padding-top="0">
+<nldd-button id="filter-options-apply-btn" variant="primary" width="full" text="Pas toe"></nldd-button>
+</nldd-container>
+</nldd-page>
+</nldd-sheet>

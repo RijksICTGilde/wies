@@ -1,127 +1,222 @@
-<div>
-  {% if panel_data.show_updates_tab %}
-    <div class="rvo-tabs rvo-tabs--md rvo-tabs--borderless">
-      <div class="rvo-tabs__tablist" role="tablist" aria-label="Tabs">
-        <button id="tab-gegevens"
-                type="button"
-                role="tab"
-                class="rvo-tabs__tab rvo-tabs__tab--active"
-                aria-selected="true"
-                aria-controls="tab-panel-gegevens"
-                tabindex="0">
-          <span class="rvo-tabs__label">Gegevens</span>
-        </button>
-        <button id="tab-updates"
-                type="button"
-                role="tab"
-                class="rvo-tabs__tab"
-                aria-selected="false"
-                aria-controls="tab-panel-updates"
-                tabindex="-1"
-                hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.public_id]) }}"
-                hx-target="#tab-panel-updates"
-                hx-swap="innerHTML">
-          <span class="rvo-tabs__label">Updates</span>
-        </button>
-      </div>
+{% from "parts/row_actions.html" import render_row_actions %}
+{% from "parts/org_row.html" import render_org_line %}
+{% from "parts/privacy_chip.html" import privacy_chip %}
+{# Editing lives in the toolbar, not per row. With multiple rows the accessible
+   name includes the organization, otherwise every menu would be named alike. #}
+{% macro _org_row_actions(org_row, panel_data, base_url) %}
+  {%- set multiple = panel_data.organization_rows|length > 1 -%}
+  {%- set actions = [] -%}
+  {%- set _ = actions.append(get_org_levels_action(org_row.organization, base_url)) -%}
+  {%- set name = org_row.organization.label or org_row.organization.name -%}
+  {{ render_row_actions(actions, "Acties voor opdrachtgever " ~ name if multiple else "Acties voor opdrachtgever") }}
+{% endmacro %}
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap. Only under htmx: a full page load already renders them in base.html. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
+{% if not panel_data %}
+  {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
+  <nldd-top-title-bar slot="header" text="Opdracht" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-inline-dialog variant="alert" text="Niet gevonden" supporting-text="Dit item bestaat niet meer of je hebt er geen toegang toe."></nldd-inline-dialog>
+  </nldd-simple-section>
+{% else %}
+  <nldd-top-title-bar slot="header" text="{{ panel_data.assignment.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  {% set _can_delete = has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
+  <nldd-title size="6">
+  <p>Opdracht</p>
+  </nldd-title>
+  <nldd-spacer size="2" direction="vertical"></nldd-spacer>
+  <nldd-title size="3">
+  <h2 id="panel-title">{{ panel_data.assignment.name }}</h2>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
+    <nldd-toolbar label="Opdracht">
+    {% if panel_data.show_updates_tab %}
+      {# Higher priority than the buttons: the tabs are this panel's navigation
+      and have no sensible equivalent in the overflow menu. #}
+      <nldd-toolbar-item slot="start" priority="1">
+      <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
+      <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
+      <nldd-tab-bar-item text="Updates" data-tab-panel="tab-panel-updates" hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.public_id]) }}" hx-target="#tab-panel-updates" hx-swap="innerHTML"></nldd-tab-bar-item>
+      </nldd-tab-bar>
+      </nldd-toolbar-item>
+    {% endif %}
+    {# Each item pairs a visible button (click) with a slot="overflow" item that
+       needs hx-trigger="select", because the overflow menu clicks a clone. #}
+    {% if panel_data.user_can_edit %}
+      <nldd-toolbar-item slot="end">
+      <nldd-icon-button icon="edit" text="Gegevens bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      <nldd-menu-item slot="overflow" text="Gegevens bewerken" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+      </nldd-toolbar-item>
+    {% endif %}
+    {% if _can_delete %}
+      {# priority="-1": delete moves to the overflow menu first, so editing (the
+         most common action) stays visible when space is tight. #}
+      <nldd-toolbar-item slot="end" priority="-1">
+      <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+      </nldd-toolbar-item>
+    {% endif %}
+    </nldd-toolbar>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}
-  <div id="tab-panel-gegevens"
-       {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
-    <div class="rvo-layout-column rvo-layout-gap--lg">
-      <section>
-        <c-h2>
-          Opdrachtgegevens
-        </c-h2>
-        <c-data-list>
-          <dt>Opdracht naam</dt>
-          <dd>
-            {{ inline_edit(panel_data.assignment, "name") }}
-          </dd>
-          <dt>Opdrachtomschrijving</dt>
-          <dd>
-            {{ inline_edit(panel_data.assignment, "extra_info") }}
-          </dd>
-          {% if panel_data.assignment.source not in ('wies', '') %}
-            <dt>Externe bron</dt>
-            <dd>
-              {% if panel_data.assignment.source_url %}
-                <c-link href="{{ panel_data.assignment.source_url }}" target="_blank">
-                  {{ panel_data.assignment.get_source_display() }}
-                  <c-icon icon="externe-link" size="xs" />
-                </c-link>
-              {% else %}
-                {{ panel_data.assignment.get_source_display() }}
-              {% endif %}
-            </dd>
+  <div id="tab-panel-gegevens">
+    {% set _base_url = current_page_path(request) %}
+    <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
+    {# The description sits in this list, not above the tabs, where a long text
+       pushed the tabs and fields out of view. Its label is shortened because
+       "Opdrachtomschrijving" wrapped in the label column. #}
+    {% set _rows = [
+      ("Externe bron", "source"),
+      ("Omschrijving", "extra_info"),
+      ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
+      ("Periode", "period"),
+      ("Plaatsingsdatum", "created_at"),
+      ("Business Manager", "owner"),
+    ] %}
+    {% for row_label, row_kind in _rows %}
+      {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
+      {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
+      {% else %}
+        <nldd-list-item>
+        <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-text-cell>
+        {% if row_kind == "source" %}
+          {% if panel_data.assignment.source_url %}
+            <a href="{{ panel_data.assignment.source_url }}" target="_blank">
+              {{ panel_data.assignment.get_source_display() }}
+              <nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>
+            </a>
+          {% else %}
+            {{ panel_data.assignment.get_source_display() }}
           {% endif %}
-          <dt>
-            {% if panel_data.organization_count > 1 %}
-              Opdrachtgevers
-            {% else %}
-              Opdrachtgever
-            {% endif %}
-          </dt>
-          <dd>
-            {{ inline_edit(panel_data.assignment, "organizations") }}
-          </dd>
-          <dt>Periode</dt>
-          <dd>
-            {{ inline_edit(panel_data.assignment, "period") }}
-          </dd>
-          {% if panel_data.assignment.created_at %}
-            <dt>Plaatsingsdatum</dt>
-            <dd>
-              {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
-            </dd>
+        {% elif row_kind == "extra_info" %}
+          {# The textarea display keeps line breaks and truncates to "Toon meer". #}
+          {% with value = panel_data.assignment.extra_info %}
+            {% include "forms/displays/textarea.html" %}
+          {% endwith %}
+        {% elif row_kind == "organizations" %}
+          {# Only the first; any others get their own list-item below. #}
+          {% if panel_data.organization_rows %}
+            {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
+          {% else %}
+            <span class="wies-text-secondary">Geen organisatie opgegeven</span>
           {% endif %}
-          <dt>Business Manager</dt>
-          <dd>
-            {{ inline_edit(panel_data.assignment, "owner") }}
-          </dd>
-        </c-data-list>
-      </section>
-      <section>
-        <div class="section-header">
-          <c-h2>
-            Team ({{ panel_data.team_count }})
-          </c-h2>
-          {% set a = panel_data.assignment %}
-          {% set ie_target = "inline-edit-assignment-" ~ a.public_id ~ "-services" %}
-          {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
-            <c-button kind="tertiary"
-                      icon="bewerken"
-                      iconPlacement="after"
-                      hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.public_id, 'services']) }}?edit=true"
-                      hx-target="#{{ ie_target }}"
-                      hx-swap="outerHTML">
-              Team bewerken
-            </c-button>
+        {% elif row_kind == "period" %}
+          {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
+          {% include "forms/displays/assignment_period.html" %}
+        {% elif row_kind == "created_at" %}
+          {{ panel_data.assignment.created_at|datum_nl }}
+        {% elif row_kind == "owner" %}
+          {% if panel_data.assignment.owner %}
+            {{ panel_data.assignment.owner.name }}
+          {% else %}
+            <span class="wies-text-secondary">Niet toegewezen</span>
           {% endif %}
-        </div>
-        {{ inline_edit(a, "services") }}
-      </section>
-      {% if has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
-        <section>
-          <c-button kind="warning-subtle"
-                    icon="verwijderen"
-                    iconPlacement="before"
-                    hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}"
-                    hx-target="#assignmentDeleteModal"
-                    hx-swap="innerHTML">
-            Verwijder opdracht
-          </c-button>
-        </section>
-        <div id="assignmentDeleteModal"></div>
+        {% endif %}
+        </nldd-text-cell>
+        {% if row_kind == "organizations" and panel_data.organization_rows %}
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-cell>
+          {{ _org_row_actions(panel_data.organization_rows[0], panel_data, _base_url) }}
+          </nldd-cell>
+        {% elif row_kind == "owner" and panel_data.assignment.owner %}
+          {# Editing lives in the toolbar, not per row: the assignment name is a
+             heading rather than a row, so per-row editing would leave exactly
+             that name unreachable. Only non-editing actions remain here. #}
+          {% set _actions = [] %}
+          {% if panel_data.owner_display.owner_url %}
+            {% set _ = _actions.append({"text": "Bekijk profiel", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
+          {% endif %}
+          {% if panel_data.assignment.owner.email %}
+            {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": 'data-href="' ~ (panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email)) ~ '"'}) %}
+          {% endif %}
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-cell>
+          {{ render_row_actions(_actions, "Acties voor Business Manager") }}
+          </nldd-cell>
+        {% endif %}
+        </nldd-list-item>
+        {# Empty label so the row aligns under the first organization. #}
+        {% if row_kind == "organizations" %}
+          {% for org_row in panel_data.organization_rows[1:] %}
+            <nldd-list-item>
+            <nldd-text-cell width="140px" text=""></nldd-text-cell>
+            <nldd-spacer-cell size="8"></nldd-spacer-cell>
+            <nldd-text-cell>
+            {{ render_org_line(org_row, _base_url, true) }}
+            </nldd-text-cell>
+            <nldd-spacer-cell size="8"></nldd-spacer-cell>
+            <nldd-cell>
+            {{ _org_row_actions(org_row, panel_data, _base_url) }}
+            </nldd-cell>
+            </nldd-list-item>
+          {% endfor %}
+        {% endif %}
       {% endif %}
-    </div>
+    {% endfor %}
+    </nldd-list>
+    <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    <nldd-title size="4">
+    <h2>Team</h2>
+    </nldd-title>
+    {% if panel_data.team_external_source %}
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      <nldd-rich-text>
+      <p>Wordt beheerd in {{ panel_data.team_external_source }}.</p>
+      </nldd-rich-text>
+    {% endif %}
+    {# Chip and "Toevoegen" share one toolbar: action left, status right. Without
+       edit rights there is no button, so the chip moves to `start` instead of
+       being pushed against the right edge on its own. #}
+    {% if panel_data.user_can_edit_team or panel_data.team_privacy_note %}
+      <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+      <nldd-toolbar label="Team" size="sm">
+      {% if panel_data.user_can_edit_team %}
+        {# size="sm" repeated on item and button: nldd-toolbar only forwards its
+           size in a deferred build (setTimeout(0)), so without this the button
+           paints at the md default and then shrinks — a visible resize flash. #}
+        <nldd-toolbar-item slot="start" size="sm">
+        <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
+        <nldd-menu slot="popup" placement="bottom-start">
+        <nldd-menu-item text="Aanvraag toevoegen" icon="add-text-document" hx-get="{{ panel_data.member_add_aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ panel_data.member_add_ingevuld_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-button>
+        </nldd-toolbar-item>
+      {% endif %}
+      {% if panel_data.team_privacy_note %}
+        <nldd-toolbar-item slot="{{ 'end' if panel_data.user_can_edit_team else 'start' }}" size="sm">
+        {{ privacy_chip(panel_data.team_privacy_note, size="sm") }}
+        </nldd-toolbar-item>
+      {% endif %}
+      </nldd-toolbar>
+    {% endif %}
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    {% set value = panel_data.team_rows %}
+    {% set user_can_edit = panel_data.user_can_edit_team %}
+    {% include "forms/displays/assignment_services.html" %}
+    {% if panel_data.user_can_edit_team %}
+      {# side_panel.js fills in name, supporting text and action URL from the
+      chosen row menu item, then opens this dialog. #}
+      <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
+      <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
+      <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
+      </nldd-modal-dialog>
+    {% endif %}
+    {% if _can_delete %}
+      <div id="assignmentDeleteModal"></div>
+    {% endif %}
   </div>
   {% if panel_data.show_updates_tab %}
-    <div id="tab-panel-updates"
-         class="rvo-tabs__panel"
-         role="tabpanel"
-         aria-labelledby="tab-updates"
-         hidden
-         tabindex="-1"></div>
-    </div>
+    <div id="tab-panel-updates" hidden></div>
   {% endif %}
-</div>
+  </nldd-simple-section>
+{% endif %}

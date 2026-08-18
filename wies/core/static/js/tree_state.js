@@ -1,25 +1,20 @@
 "use strict";
 
 /**
- * Pure tree-state manager for checkbox cascading and selection tracking.
- * No DOM dependency — operates on plain data structures.
+ * Checkbox cascading and selection tracking for a tree, DOM-free.
  *
- * Input: the hierarchy JSON array from the server, e.g.:
- *   [{ id: 1, label: "Root", children: [{ id: 2, label: "Child" }] }]
- *
- * Each node may have: id, label, abbreviations, group, self, nr_of_placements, children.
+ * `collapseToParent` (default true): a fully checked parent replaces its
+ * children as the selection. Off on the assignment form, where a parent means
+ * only itself and collapsing would drop the children the user picked.
  */
-function TreeState(data) {
-  this.nodes = new Map(); // nodeId (string) → node object
+function TreeState(data, options) {
+  this.nodes = new Map();
   this.roots = [];
-  this.explicitSelections = new Map(); // nodeId (string) → label
+  this.explicitSelections = new Map(); // nodeId → label
+  this.collapseToParent = !options || options.collapseToParent !== false;
 
   this._buildIndex(data, null);
 }
-
-// ============================================================
-// INDEX BUILDING
-// ============================================================
 
 TreeState.prototype._buildIndex = function (nodes, parent) {
   for (var i = 0; i < nodes.length; i++) {
@@ -48,10 +43,6 @@ TreeState.prototype._buildIndex = function (nodes, parent) {
   }
 };
 
-// ============================================================
-// PUBLIC API
-// ============================================================
-
 TreeState.prototype.check = function (nodeId) {
   var node = this.nodes.get(String(nodeId));
   if (!node) return;
@@ -60,7 +51,7 @@ TreeState.prototype.check = function (nodeId) {
   this._cascadeDown(node, true);
   this._cascadeUp(node);
 
-  // Add as explicit selection, remove any descendants that are now implied
+  // Descendants are now implied by this selection.
   this.explicitSelections.set(node.id, this._getLabel(node));
   this._forEachDescendant(
     node,
@@ -68,6 +59,7 @@ TreeState.prototype.check = function (nodeId) {
       this.explicitSelections.delete(desc.id);
     }.bind(this),
   );
+  this._promoteAncestors(node);
 };
 
 TreeState.prototype.uncheck = function (nodeId) {
@@ -89,12 +81,9 @@ TreeState.prototype.uncheck = function (nodeId) {
 };
 
 TreeState.prototype.removeSelection = function (nodeId) {
-  // Always remove from explicit selections, even if the node
-  // doesn't exist in the tree (e.g. pruned zero-placement orgs).
-  this.explicitSelections.delete(String(nodeId));
-
   var node = this.nodes.get(String(nodeId));
   if (!node) return;
+  this.explicitSelections.delete(node.id);
   node.checked = false;
   node.indeterminate = false;
   this._cascadeDown(node, false);
@@ -116,7 +105,6 @@ TreeState.prototype.clearAll = function () {
 };
 
 TreeState.prototype.restoreSelections = function (selections) {
-  // selections: object { nodeId: label, ... }
   var entries = Object.entries(selections);
   for (var i = 0; i < entries.length; i++) {
     var nodeId = entries[i][0];
@@ -130,6 +118,13 @@ TreeState.prototype.restoreSelections = function (selections) {
     }
     this.explicitSelections.set(String(nodeId), label);
   }
+
+  // Same collapse as a hand-made selection, so both show the same tokens.
+  var restored = Array.from(this.explicitSelections.keys());
+  for (var j = 0; j < restored.length; j++) {
+    var restoredNode = this.nodes.get(restored[j]);
+    if (restoredNode) this._promoteAncestors(restoredNode);
+  }
 };
 
 TreeState.prototype.getNode = function (nodeId) {
@@ -139,10 +134,6 @@ TreeState.prototype.getNode = function (nodeId) {
 TreeState.prototype.getExplicitSelections = function () {
   return new Map(this.explicitSelections);
 };
-
-// ============================================================
-// CASCADE
-// ============================================================
 
 TreeState.prototype._cascadeDown = function (node, checked) {
   for (var i = 0; i < node.children.length; i++) {
@@ -168,7 +159,11 @@ TreeState.prototype._cascadeUp = function (startNode) {
       return c.checked || c.indeterminate;
     });
 
-    if (allChecked) {
+    // Appearance only: a parent riding along on its children reads as
+    // indeterminate, explicitSelections is unaffected.
+    var showsAsChecked =
+      this.collapseToParent || this.explicitSelections.has(parent.id);
+    if (allChecked && showsAsChecked) {
       parent.checked = true;
       parent.indeterminate = false;
     } else if (someChecked) {
@@ -183,10 +178,6 @@ TreeState.prototype._cascadeUp = function (startNode) {
   }
 };
 
-// ============================================================
-// SELECTION PROMOTION / DEMOTION
-// ============================================================
-
 TreeState.prototype._promoteCheckedChildren = function (node) {
   for (var i = 0; i < node.children.length; i++) {
     var child = node.children[i];
@@ -195,6 +186,25 @@ TreeState.prototype._promoteCheckedChildren = function (node) {
     } else if (child.indeterminate) {
       this._promoteCheckedChildren(child);
     }
+  }
+};
+
+// Mirror of _demoteAncestors: stops at the first partly checked parent, which
+// still needs its children named.
+TreeState.prototype._promoteAncestors = function (node) {
+  if (!this.collapseToParent) return;
+  var current = node;
+  while (current.parent) {
+    var parent = current.parent;
+    if (!parent.checked || parent.indeterminate) return;
+    this.explicitSelections.set(parent.id, this._getLabel(parent));
+    this._forEachDescendant(
+      parent,
+      function (desc) {
+        this.explicitSelections.delete(desc.id);
+      }.bind(this),
+    );
+    current = parent;
   }
 };
 
@@ -210,9 +220,28 @@ TreeState.prototype._demoteAncestors = function (node) {
   }
 };
 
-// ============================================================
-// HELPERS
-// ============================================================
+TreeState.nodeMatches = function (node, q) {
+  var query = q.toLowerCase();
+  if (node.label && node.label.toLowerCase().includes(query)) return true;
+  if (node.abbreviations) {
+    for (var i = 0; i < node.abbreviations.length; i++) {
+      if (node.abbreviations[i].toLowerCase().includes(query)) return true;
+    }
+  }
+  return false;
+};
+
+TreeState.collectMatches = function (nodes, q, result) {
+  if (!result) result = [];
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    if (!node.group && !node.self && TreeState.nodeMatches(node, q)) {
+      result.push(node);
+    }
+    if (node.children) TreeState.collectMatches(node.children, q, result);
+  }
+  return result;
+};
 
 TreeState.prototype._getLabel = function (node) {
   var text = node.label;
@@ -226,10 +255,6 @@ TreeState.prototype._forEachDescendant = function (node, fn) {
     this._forEachDescendant(node.children[i], fn);
   }
 };
-
-// ============================================================
-// EXPORT
-// ============================================================
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = TreeState;

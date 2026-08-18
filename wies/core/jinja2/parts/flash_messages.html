@@ -1,12 +1,21 @@
-{% set page_messages = get_messages(request) %}
-{% if page_messages %}
-  <div class="flash-messages" id="flash-messages">
-    {% for message in page_messages %}
-      {% set link = message.extra_tags|parse_message_link %}
-      <c-alert kind="{{ 'success' if 'success' in message.tags else 'error' if 'error' in message.tags else 'info' }}">
-        {{ message }}
-        {% if link %}<c-link href="{{ link.url }}">{{ link.text }}</c-link>{% endif %}
-      </c-alert>
-    {% endfor %}
-  </div>
-{% endif %}
+{# nldd-notification moves itself into the shared region, runs its own timer and
+   stacking, and keeps `critical` messages until dismissed, so positioning,
+   timers and fade-out do not belong here or in app.css.
+
+   The wrapper is always rendered, even empty, so an htmx OOB swap always finds
+   a #flash-messages target: panel responses that do not reload base.html send
+   this block with flash_oob=True. ui_handlers.js cleans up after `dismiss`. #}
+<div id="flash-messages"
+     {% if flash_oob %}hx-swap-oob="outerHTML"{% endif %}>
+  {% for message in get_messages(request) %}
+    {% set link = message.extra_tags|parse_message_link %}
+    {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
+    {% if link %}
+      <nldd-notification variant="{{ _variant }}" text="{{ message }}">
+      <nldd-button slot="actions" size="sm" variant="inherit-tinted" text="{{ link.text }}" href="{{ link.url }}"></nldd-button>
+      </nldd-notification>
+    {% else %}
+      <nldd-notification variant="{{ _variant }}" text="{{ message }}"></nldd-notification>
+    {% endif %}
+  {% endfor %}
+</div>

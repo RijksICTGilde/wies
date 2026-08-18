@@ -1,82 +1,127 @@
 <!DOCTYPE html>
-<html lang="nl">
+<html lang="nl"
+      {% if request.user.is_authenticated and request.user.colleague and request.user.colleague.theme != 'system' %} data-scheme="{{ request.user.colleague.theme }}"{% endif %}>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>
       {% block title %}
         Wies
       {% endblock title %}
     </title>
-    {# Favicon #}
     <link rel="icon"
           type="image/png"
           href="{{ static('favicon-96x96.png') }}"
           sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/design-tokens/index.css') }}" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/component-library-css/index.css') }}" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/assets/icons/index.css') }}">
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/assets/fonts/index.css') }}">
-    <link rel="stylesheet" href="{{ static('roos/dist/roos.css') }}">
-    <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
-    <link rel="stylesheet" href="{{ static('css/base.css') }}">
-    <link rel="stylesheet" href="{{ static('css/modals.css') }}">
-    <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
-    <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
-    {% if show_onboarding %}
-      <link rel="stylesheet" href="{{ static('css/onboarding.css') }}">
-    {% endif %}
-    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    <script src="{{ static('js/htmx_config.js') }}"></script>
-    <script src="{{ static('js/filters/filters.js') }}"></script>
-    <script src="{{ static('js/show_more.js') }}"></script>
-    <script src="{{ static('js/ui_handlers.js') }}" defer></script>
-    <script src="{{ static('js/sidebar_offset.js') }}" defer></script>
-    <script src="{{ static('js/flash_messages.js') }}" defer></script>
-    {# Org-picker stack: tree_state → org_tree_base → assignment_org_tree.
-       Order matters; the later scripts reference symbols from the earlier ones. #}
-    <script src="{{ static('js/tree_state.js') }}"></script>
-    <script src="{{ static('js/org_tree_base.js') }}"></script>
-    <script src="{{ static('js/assignment_org_tree.js') }}" defer></script>
+    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="{{ nldd_asset('css/global.css') }}">
+    <link rel="stylesheet" href="{{ app_asset('css/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    {# Global htmx config; must run right after htmx, before it processes
+       history (disables the history snapshot cache — see htmx_config.js). #}
+    <script src="{{ app_asset('js/htmx_config.js') }}"></script>
+    {# Not deferred: scripts arriving inside an htmx-swapped partial run before
+       deferred ones and use this helper. #}
+    <script src="{{ app_asset('js/dom_path.js') }}"></script>
+    <script defer src="{{ nldd_asset('nldd.min.js') }}"></script>
+    {# Global: rows carrying href + hx-get exist on several pages and arrive in
+       htmx swaps too, so this cannot be opted into per page. #}
+    <script src="{{ app_asset('js/hx_link_guard.js') }}"></script>
+    {# Global: opens nldd-window/dialog content that htmx swaps into a mount, which
+       happens on every page with a panel. #}
+    <script src="{{ app_asset('js/dialog.js') }}" defer></script>
+    {# Global for the same reason: opdrachtgevers are inline-editable, so the
+       org-picker widget can be swapped into any page that shows an opdracht. #}
+    <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
+    <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
+    <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
+    {# Not just behind show_onboarding: the "Toon meer" handler is delegated on
+       document, and long texts also arrive in panels and the timeline via htmx
+       swaps. #}
+    <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
+    <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
+    {# Not deferred: member_form.js ships inside the teamlid sheet and runs
+       during parse on a direct load, before deferred scripts. #}
+    <script src="{{ app_asset('js/period_fields.js') }}"></script>
+    <script src="{{ app_asset('js/placement_period_toggle.js') }}" defer></script>
+    {# Decouples the filter sidebar's sticky offset from its height calculation;
+       see the file header. Global because every page with filters uses the
+       sidebar-section from this base. #}
+    <script src="{{ app_asset('js/sidebar_sticky.js') }}" defer></script>
   </head>
-  <body class="rvo-theme">
+  <body>
+    <nldd-page>
     {% block header %}
-      {% include "parts/header_logo.html" %}
+      {# Wraps what is skipped: focus lands on the element after it. #}
+      <nldd-skip-link slot="header" text="Ga naar hoofdinhoud">
+      <nldd-top-navigation-bar width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
+      <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
+      <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}" {% if request.path == '/' %}current{% endif %}></nldd-menu-bar-item>
+      <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}" {% if '/opdrachten/' in request.path %}current{% endif %}></nldd-menu-bar-item>
+      </nldd-menu-bar>
+      {% include "parts/utility_menu.html" %}
+      </nldd-top-navigation-bar>
+      </nldd-skip-link>
     {% endblock header %}
-    <div class="layout {% if request.GET.get('filters') == '0' %}layout--collapsed{% endif %}"
-         id="layout">
-      <div class="layout__body">
-        {% include "parts/menubar.html" %}
-        <aside class="sidebar">
-          {% block sidebar %}
-          {% endblock sidebar %}
-          {% include "parts/footer_sidebar.html" %}
-        </aside>
-        <main class="layout__main">
-          {% include "parts/flash_messages.html" %}
-          {% block content %}
-          {% endblock content %}
-        </main>
-      </div>
-    </div>
+    {% set _sidebar_content %}
+      {% block sidebar %}
+      {% endblock sidebar %}
+    {% endset %}
+    {% set _main_content %}
+      {% include "parts/flash_messages.html" %}
+      {% block content %}
+      {% endblock content %}
+    {% endset %}
+    {# The sidebar is always the filter panel; "Klaar" instead of "Sluit" because
+       filters apply live, so closing discards nothing. Without sidebar content the
+       sidebar-section is skipped: it would be an empty layer taking over the page
+       width. #}
+    {% if _sidebar_content.strip() %}
+      <nldd-sidebar-section width="1920px" sidebar-label="Filter" translations='{"components.sidebar-section.sheet-dismiss-action": "Klaar"}'>
+      {{ _sidebar_content }}
+      {{ _main_content }}
+      </nldd-sidebar-section>
+    {% else %}
+      {{ _main_content }}
+    {% endif %}
+    <nldd-page-footer slot="footer" width="1920px">
+    {# The heading sits outside nldd-rich-text on purpose: inside it an h2 gets the
+       page-title scale, which is too large here. nldd-title sets the size
+       independently of the level, so the h2 stays an h2. #}
+    <nldd-container>
+    <nldd-title size="4">
+    <h2>Over Wies</h2>
+    </nldd-title>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>Portaal voor ODI om inzicht te verschaffen over het wie, waar, wanneer en wat van collega's binnen de organisatie.</p>
+    <p>
+      <a href="https://github.com/RijksICTGilde/wies"
+         target="_blank"
+         rel="noopener">GitHub</a>
+      · <a href="{{ url('faq') }}">Veelgestelde vragen</a>
+      · <a href="{{ url('contact') }}">Contact</a>
+    </p>
+    <p class="wies-footer-version">Versie: {{ APP_VERSION }}</p>
+    </nldd-rich-text>
+    </nldd-container>
+    <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
+    </nldd-page-footer-legal-bar>
+    </nldd-page-footer>
+    </nldd-page>
     {% block panel %}
     {% endblock panel %}
     {% if show_onboarding %}
       {% include "parts/onboarding/onboarding_wizard.html" %}
-      {# inline_edit (label pickers) needs these; pages that already load them
-         are unaffected — the browser dedupes by URL. #}
-      <script src="{{ static('js/dialog.js') }}" defer></script>
-      <script src="{{ static('js/inline_edit.js') }}" defer></script>
-      <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
-      <script src="{{ static('js/onboarding.js') }}" defer></script>
+      {# inline_edit.js already loads in <head>; the label picker renders an
+         nldd-token-field from the NLDD bundle, so no multi_select.js either. #}
+      <script src="{{ app_asset('js/onboarding.js') }}" defer></script>
     {% endif %}
   </body>
 </html>

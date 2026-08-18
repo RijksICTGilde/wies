@@ -214,18 +214,19 @@ class LabelFilteringAndDisplayTest(TestCase):
         # None should be from other labels
         self.assertNotContains(response, "User Two")  # user2 has the thema-B label
 
-    def test_label_filter_dropdown_in_ui(self):
-        """Test: Label filter dropdown appears in filter bar"""
+    def test_user_list_renders_for_admin(self):
+        """Test: User list page renders correctly for authenticated admin"""
         self.client.force_login(self.auth_user)
 
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
 
-        # Should have label filter option
-        self.assertContains(response, "Label")
+        self.assertContains(response, "User One")
+        self.assertContains(response, "User Two")
+        self.assertContains(response, "User Three")
 
-        # Should show label names in dropdown format "Category: Label"
-        # This depends on implementation of filter_groups in view
+        # The label filter still lists the theme labels (now inside the NLDD
+        # filter sheet rather than a dropdown).
         self.assertContains(response, "Digitale weerbaarheid")
         self.assertContains(response, "Artificiële intelligentie")
 

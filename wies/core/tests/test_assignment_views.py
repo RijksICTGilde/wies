@@ -27,13 +27,12 @@ User = get_user_model()
 
 
 class AssignmentEditAttributeTest(TestCase):
-    """Tests for assignment inline editing feature"""
+    """Tests for assignment inline editing."""
 
     def setUp(self):
-        """Create test data"""
+        """Creates the users, colleagues and assignments used by the tests."""
         self.client = Client()
 
-        # Create users
         self.user_with_permission = User.objects.create_user(
             email="perm@rijksoverheid.nl",
             first_name="User",
@@ -60,7 +59,6 @@ class AssignmentEditAttributeTest(TestCase):
             last_name="User",
         )
 
-        # Create colleagues
         self.owner_colleague = Colleague.objects.create(
             user=self.owner_user,
             name="Owner Colleague",
@@ -75,29 +73,26 @@ class AssignmentEditAttributeTest(TestCase):
             source="wies",
         )
 
-        # Create assignment with long extra_info (>300 chars for foldable testing)
+        # extra_info must exceed the fold threshold to exercise the toggle.
         self.assignment = Assignment.objects.create(
             name="Test Assignment",
             owner=self.owner_colleague,
-            extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,  # Long text
-            source="wies",  # Editable source
+            extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,
+            source="wies",
         )
 
-        # Create external assignment (not editable)
         self.external_assignment = Assignment.objects.create(
             name="External Assignment",
             owner=self.owner_colleague,
-            source="otys_iir",  # External source - not editable
+            source="otys_iir",
         )
 
-        # Create service linked to assignment
         self.service = Service.objects.create(
             description="Test Service",
             assignment=self.assignment,
             source="wies",
         )
 
-        # Create placement (linking assigned_colleague to service)
         self.placement = Placement.objects.create(
             colleague=self.assigned_colleague,
             service=self.service,
@@ -106,13 +101,12 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== Authentication & Authorization Tests ==========
 
     def test_assignment_edit_requires_login(self):
-        """Test that unauthenticated users cannot edit assignments"""
+        """Anonymous users cannot edit assignments."""
         response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]))
-        # Should redirect to login or return 403
         assert response.status_code in [302, 403]
 
     def test_assignment_edit_with_change_assignment_permission(self):
-        """Test that user with change_assignment permission can edit"""
+        """A user holding change_assignment can edit."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -126,7 +120,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Updated Assignment Name"
 
     def test_assignment_edit_as_owner_without_permission(self):
-        """Test that assignment owner (BDM) can edit without explicit permission"""
+        """The assignment owner can edit without an explicit permission."""
         self.client.force_login(self.owner_user)
 
         response = post_inline_edit(
@@ -168,9 +162,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.extra_info == "Description by colleague"
 
     def test_assigned_colleague_cannot_edit_owner_field(self):
-        """Placed consultant is limited to name/extra_info. Attempting
-        to edit ``owner`` (a management field) returns the display
-        partial with a Dutch denial alert; DB unchanged."""
+        """A placed consultant editing ``owner`` is denied and the DB is unchanged."""
         self.client.force_login(self.assigned_user)
         other_colleague = Colleague.objects.create(
             name="Other BDM",
@@ -204,8 +196,8 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.end_date is None
 
     def test_owner_can_edit_owner_field(self):
-        """The BDM owner can edit the ``owner`` field — sanity check
-        that the field permission doesn't accidentally block owners."""
+        """The owner can edit the ``owner`` field, which the field permission
+        must not block."""
         self.client.force_login(self.owner_user)
         new_bdm_user = User.objects.create_user(
             email="new-bdm@rijksoverheid.nl",
@@ -232,8 +224,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.owner_id == new_bdm.id
 
     def test_assignment_edit_as_unrelated_user_denied(self):
-        """Unrelated users get the display partial + a Dutch denial alert
-        (never a bare 403); the DB is not modified."""
+        """An unrelated user is denied, never with a bare 403, and nothing is saved."""
         self.client.force_login(self.unrelated_user)
 
         response = self.client.post(
@@ -247,8 +238,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Test Assignment"
 
     def test_external_source_assignment_not_editable_even_with_permission(self):
-        """External-source (otys_iir) assignments are read-only — display
-        partial + denial alert, DB unchanged."""
+        """External-source (otys_iir) assignments are read-only even with permission."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
@@ -263,8 +253,7 @@ class AssignmentEditAttributeTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
     def test_staff_member_can_edit_assignment_owner(self):
-        """A user in STAFF_EMAILS can edit whole-object fields on an
-        assignment they don't own (issue #392)."""
+        """A user in STAFF_EMAILS can edit an assignment they don't own (#392)."""
         staff_user = User.objects.create_user(
             email="staff@rijksoverheid.nl",
             first_name="Staff",
@@ -297,8 +286,8 @@ class AssignmentEditAttributeTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
     def test_staff_member_cannot_edit_external_source_assignment(self):
-        """Staff still can't edit non-wies-sourced assignments — the
-        ``_is_wies_sourced`` gate runs before the staff branch."""
+        """Staff cannot edit non-wies-sourced assignments: the ``_is_wies_sourced``
+        gate runs before the staff branch."""
         staff_user = User.objects.create_user(
             email="staff@rijksoverheid.nl",
             first_name="Staff",
@@ -319,7 +308,7 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== Name Field Validation Tests ==========
 
     def test_assignment_name_edit_success(self):
-        """Test successful name edit with valid input"""
+        """A valid name is saved."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -333,7 +322,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Valid New Name"
 
     def test_assignment_name_validation(self):
-        """Test that empty name returns validation error"""
+        """An empty name returns a validation error."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
@@ -341,16 +330,15 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdracht naam is verplicht")  # Error message
+        self.assertContains(response, "Opdrachtnaam is verplicht")
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Test Assignment"  # Should not change
+        assert self.assignment.name == "Test Assignment"
 
     # ========== HTMX Workflow Tests ==========
 
     def test_assignment_edit_get_returns_edit_form(self):
-        """GET with `?edit=true` returns the edit form HTML. Plain GET
-        returns the display partial (the pencil button triggers the
-        `?edit=true` request)."""
+        """GET with ``?edit=true`` returns the edit form; a plain GET returns
+        the display partial."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
@@ -363,7 +351,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, 'name="name"')
 
     def test_assignment_edit_post_returns_display_view(self):
-        """Test that POST request with valid data returns display view"""
+        """A valid POST returns the display view."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -374,11 +362,10 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "Updated Name")
-        # Should return display template, not form
         self.assertNotContains(response, "<form")
 
     def test_assignment_edit_get_with_cancel_returns_display_view(self):
-        """Test that GET with ?cancel=true returns display view without saving"""
+        """GET with ?cancel=true returns the display view without saving."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
@@ -386,12 +373,12 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "Test Assignment")  # Original value
+        self.assertContains(response, "Test Assignment")
         # Should return display template, not form
         self.assertNotContains(response, "<input")
 
     def test_assignment_edit_validation_error_returns_form_with_errors(self):
-        """Test that POST with invalid data returns form with error messages"""
+        """An invalid POST returns the form with its error messages."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
@@ -400,15 +387,13 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        # Should return form template
         self.assertContains(response, "<form")
-        # Should contain error message
-        self.assertContains(response, "Opdracht naam is verplicht")
+        self.assertContains(response, "Opdrachtnaam is verplicht")
 
     # ========== Extra Info Client-Side Toggle Tests ==========
 
     def test_assignment_extra_info_long_text_has_toggle(self):
-        """Test that long descriptions have both truncated and full text with toggle link"""
+        """A long description renders truncated and full text plus a toggle."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
@@ -417,25 +402,41 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
 
-        # Should contain "Toon meer" toggle label for long text
         self.assertContains(response, "Toon meer")
 
-        # Truncated + full spans render with the inline-edit classes;
-        # visibility is toggled via the HTML `hidden` attribute.
+        # Visibility is toggled via the HTML `hidden` attribute.
         self.assertContains(response, 'class="inline-edit-long-text__truncated"')
         self.assertContains(response, 'class="inline-edit-long-text__full"')
 
-        # Beginning of the text appears in the truncated version.
         self.assertContains(response, "Lorem ipsum dolor sit amet")
 
-        # Full text is hidden initially (client-side toggle flips it).
         self.assertContains(response, "hidden>", count=1)
 
+    def test_panel_shows_the_description_inside_the_data_tab(self):
+        """The description renders inside the Gegevens tab.
+
+        Above the tabs, a long text pushed the tabs and every field down while
+        sitting outside the tab it belongs to (#576).
+        """
+        self.client.force_login(self.user_with_permission)
+        response = self.client.get(
+            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        body = response.content.decode()
+        assert 'text="Omschrijving"' in body
+        # "Toon meer" is bound by a delegated listener in inline_edit.js; loading
+        # that script only behind show_onboarding left the button dead here.
+        page = self.client.get("/opdrachten/").content.decode()
+        assert "js/inline_edit.js" in page
+        assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
+        # Editing runs via "Gegevens bewerken" at the top, not per row.
+        assert "&veld=extra_info" not in body
+
     def test_assignment_extra_info_short_text_no_toggle(self):
-        """Test that short descriptions don't have toggle functionality"""
+        """A short description renders without a toggle."""
         self.client.force_login(self.user_with_permission)
 
-        # Update assignment with short text
         self.assignment.extra_info = "Short description"
         self.assignment.save()
 
@@ -445,20 +446,18 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
 
-        # Should NOT contain "Toon meer" link for short text
         self.assertNotContains(response, "Toon meer")
 
-        # Should NOT contain truncated/full text classes
-        self.assertNotContains(response, "truncated-text")
-        self.assertNotContains(response, "full-text")
+        # No hidden second span and no toggle: the short text stands in full.
+        self.assertNotContains(response, "inline-edit-long-text__full")
+        self.assertNotContains(response, "inline-edit-show-more")
 
-        # Should contain the full text directly
         self.assertContains(response, "Short description")
 
     # ========== Edge Case Tests ==========
 
     def test_assignment_edit_invalid_attribute_returns_404(self):
-        """Test that invalid attribute name returns 404"""
+        """An unknown attribute name returns 404."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
@@ -481,7 +480,7 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== Event Logging Tests ==========
 
     def test_assignment_edit_creates_event(self):
-        """Test that editing an assignment creates an Assignment.update event"""
+        """Editing an assignment creates an Assignment.update event."""
         self.client.force_login(self.user_with_permission)
 
         post_inline_edit(
@@ -495,12 +494,12 @@ class AssignmentEditAttributeTest(TestCase):
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
         assert event.context["field_name"] == "name"
-        assert event.context["field_label"] == "Opdracht naam"
+        assert event.context["field_label"] == "Opdrachtnaam"
         assert event.context["old_value"] == "Test Assignment"
         assert event.context["new_value"] == "Event Test Name"
 
     def test_assignment_edit_no_change_no_event(self):
-        """Test that saving the same value does not create an event"""
+        """Saving an unchanged value creates no event."""
         self.client.force_login(self.user_with_permission)
 
         post_inline_edit(
@@ -512,7 +511,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert not Event.objects.filter(object_type="Assignment", action="update").exists()
 
     def test_assignment_edit_event_stores_user(self):
-        """Test that event stores the user FK for live lookups"""
+        """The event stores the user FK for live lookups."""
         self.client.force_login(self.owner_user)
 
         post_inline_edit(
@@ -528,7 +527,7 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== Timeline Rendering Tests ==========
 
     def test_timeline_renders_textarea_change_with_toon_meer(self):
-        """Long textarea changes render with the Toon meer pattern, not inline 'van X naar Y'"""
+        """Long textarea changes render with the Toon meer pattern, not inline."""
         self.client.force_login(self.user_with_permission)
         long_old = "a" * 500
         long_new = "b" * 500
@@ -550,15 +549,14 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdrachtomschrijving")
-        self.assertContains(response, "truncated-text")
-        self.assertContains(response, "show-more-toggle")
+        self.assertContains(response, "heeft de opdrachtomschrijving gewijzigd.")
+        self.assertContains(response, "inline-edit-long-text__truncated")
+        self.assertContains(response, "inline-edit-show-more")
         self.assertContains(response, "Toon meer")
-        # Must NOT use the inline "van ... naar ..." form for textarea
         self.assertNotContains(response, f'van "{long_old}"')
 
     def test_timeline_textarea_short_value_no_toggle(self):
-        """Short textarea values render without the Toon meer toggle"""
+        """Short textarea values render without the Toon meer toggle."""
         self.client.force_login(self.user_with_permission)
         Event.objects.create(
             user=self.user_with_permission,
@@ -580,12 +578,10 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "short old")
         self.assertContains(response, "short new")
-        self.assertNotContains(response, "show-more-toggle")
+        self.assertNotContains(response, "inline-edit-show-more")
 
     def test_timeline_renders_collection_event_as_bullets(self):
-        """A services-collection event stores per-change deltas; the
-        timeline view formats each change at render time via the spec's
-        `render_change` callable and shows them as bullets."""
+        """A services-collection event renders its per-change deltas as bullets."""
         self.client.force_login(self.user_with_permission)
         Event.objects.create(
             user=self.user_with_permission,
@@ -609,12 +605,10 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Team")
-        self.assertContains(response, "Toegevoegd: Java (open)")
-        self.assertContains(response, "rvo-list")
+        self.assertContains(response, "heeft Java (open) toegevoegd.")
 
     def test_timeline_renders_text_change_inline(self):
-        """Text field changes render inline as 'van X naar Y'"""
+        """Text field changes render inline as "van X naar Y"."""
         self.client.force_login(self.user_with_permission)
         Event.objects.create(
             user=self.user_with_permission,
@@ -625,7 +619,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Old Name",
                 "new_value": "New Name",
             },
@@ -634,12 +628,12 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
-        self.assertContains(response, 'van "Old Name"')
-        self.assertContains(response, 'naar "New Name"')
-        self.assertNotContains(response, "show-more-toggle")
+        self.assertContains(response, "van &#34;Old Name&#34;")
+        self.assertContains(response, "naar &#34;New Name&#34;")
+        self.assertNotContains(response, "inline-edit-show-more")
 
     def test_timeline_legacy_event_without_field_type_renders_inline(self):
-        """Pre-existing events missing field_type fall back to inline rendering"""
+        """Events without field_type fall back to inline rendering."""
         self.client.force_login(self.user_with_permission)
         Event.objects.create(
             user=self.user_with_permission,
@@ -650,7 +644,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Legacy Old",
                 "new_value": "Legacy New",
             },
@@ -659,28 +653,18 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
-        self.assertContains(response, 'van "Legacy Old"')
-        self.assertContains(response, 'naar "Legacy New"')
+        self.assertContains(response, "van &#34;Legacy Old&#34;")
+        self.assertContains(response, "naar &#34;Legacy New&#34;")
 
     def test_timeline_renders_legacy_organizations_string_event(self):
-        """Regression: `organizations` events created in the PR #341 release
-        window (2026-05-20 → 2026-06-08) stored ``old_value`` / ``new_value``
-        as ``str(list_of_dicts)`` — a Python repr — because the pre-#369
-        inline-edit code did ``str(old_value or "")`` on every field. The
-        current renderer (``_organizations_render_change``) was deployed in
-        the 2026-06-10 release and assumes a list of dicts; on a legacy
-        event it iterates the string character by character and crashes
-        with ``TypeError: string indices must be integers, not 'str'``.
+        """Legacy ``organizations`` events stored their values as a Python repr
+        string, which the current renderer crashes on with a ``TypeError``.
 
-        Post-fix: the runtime guard in ``_attach_audit_render_data`` catches
-        the ``TypeError``, logs a warning carrying the event id and field
-        name, and falls back to the raw context so the timeline still
-        renders."""
+        The guard in ``_attach_audit_render_data`` catches it, logs the event id
+        and field, and falls back to the raw context so the timeline renders.
+        """
         self.client.force_login(self.user_with_permission)
-        # Exact shape produced by the pre-#369 code path:
-        #     "old_value": str(old_value or "")
-        # where old_value was _current_value(obj, organizations_spec), i.e.
-        # the list returned by _organizations_initial.
+        # Exact shape produced by the pre-#369 code path: str(old_value or "").
         legacy_old = "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}]"
         legacy_new = (
             "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}, "
@@ -705,14 +689,12 @@ class AssignmentEditAttributeTest(TestCase):
             response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdrachtgever(s)")
-        # Operator can audit production logs for the event id + field name.
+        self.assertContains(response, "heeft de opdrachtgevers")
         assert any(f"id={event.id}" in m and "field=organizations" in m for m in log_ctx.output), log_ctx.output
 
     def test_migration_scrubs_legacy_organizations_event_in_place(self):
-        """The 0008 data migration replaces ``old_value``/``new_value`` with
-        ``[]`` on legacy ``organizations`` events whose values are strings,
-        and leaves valid rows + unrelated events alone."""
+        """The 0008 data migration blanks legacy string-valued ``organizations``
+        events and leaves valid and unrelated events alone."""
 
         scrub_module = importlib.import_module("wies.core.migrations.0008_scrub_legacy_organizations_events")
 
@@ -753,7 +735,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Oud",
                 "new_value": "Nieuw",
             },
@@ -803,14 +785,16 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, 'id="tab-updates"')
+        self.assertContains(response, 'data-tab-panel="tab-panel-updates"')
         self.assertContains(response, 'id="tab-panel-updates"')
 
 
 class TimelinePlacementPrivacyTests(TestCase):
-    """The updates tab must honour the placement-visibility rule the team tab
-    applies: a planned or ended placement is private to the placed colleague
-    and the BM-owner, so its colleague name must not surface in a Team event."""
+    """The updates tab honours the team tab's placement-visibility rule.
+
+    A planned or ended placement is private to the placed colleague and the
+    BM-owner, so its colleague name must not surface in a Team event.
+    """
 
     def setUp(self):
         self.client = Client()
@@ -829,7 +813,7 @@ class TimelinePlacementPrivacyTests(TestCase):
         skill = Skill.objects.create(name="Software Engineer")
         self.service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
 
-        # Not started yet -> "future" -> private to the placed colleague + BM.
+        # Not started yet, so private to the placed colleague and the BM.
         self.start = timezone.now().date() + datetime.timedelta(days=30)
         self.placement = Placement.objects.create(
             colleague=self.hidden_colleague,
@@ -876,8 +860,8 @@ class TimelinePlacementPrivacyTests(TestCase):
         self.assertNotContains(response, "Hidden Colleague")
 
     def test_event_dropped_entirely_when_all_changes_hidden(self):
-        """Dropped whole, so an empty 'wijzigde Team' cannot betray that a
-        hidden placement exists."""
+        """The event is dropped whole, so an empty "wijzigde Team" cannot betray
+        that a hidden placement exists."""
         response = self._get_timeline(self.unrelated_user)
 
         self.assertNotContains(response, "Team")
@@ -886,12 +870,12 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_bm_owner_still_sees_the_full_history(self):
         response = self._get_timeline(self.owner_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_placed_colleague_sees_their_own_placement(self):
         response = self._get_timeline(self.hidden_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_active_placement_name_stays_visible_to_everyone(self):
         """The rule hides planned/ended placements only; an active one is public."""
@@ -902,7 +886,7 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_vacancy_change_stays_visible(self):
         """A vacancy names nobody, so it has nothing to hide."""
@@ -914,13 +898,14 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, "Toegevoegd: Communicatie Medewerker (open)")
+        self.assertContains(response, "Communicatie Medewerker (open) toegevoegd")
 
     def test_filter_does_not_query_per_event(self):
-        """The visible-name set is identical for every event in one request, so
-        it must be resolved once. Asserted as "does not grow with the number of
-        events" rather than a fixed count, which would break on any unrelated
-        query change."""
+        """The visible-name set is resolved once per request, not per event.
+
+        Asserted as "does not grow with the event count" rather than a fixed
+        number, which would break on any unrelated query change.
+        """
         self.client.force_login(self.unrelated_user)
         url = reverse("assignment-events-partial", args=[self.assignment.public_id])
 
@@ -947,7 +932,7 @@ class TimelinePlacementPrivacyTests(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "UX / UI advies",
                 "new_value": "DTC4NL",
             },
@@ -955,11 +940,11 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, 'van "UX / UI advies"')
+        self.assertContains(response, "van &#34;UX / UI advies&#34;")
 
 
 class AssignmentDeleteViewTests(TestCase):
-    """Issue #313: BM-owner can delete a wies-sourced opdracht; nobody else can."""
+    """Only the BM-owner can delete a wies-sourced opdracht (#313)."""
 
     def setUp(self):
         self.client = Client()
@@ -971,8 +956,7 @@ class AssignmentDeleteViewTests(TestCase):
             user=self.owner_user, name="Owner BM", email="owner-del@rijksoverheid.nl", source="wies"
         )
 
-        # Beheerder-like: holds core.change_assignment but is NOT the owner.
-        # Locks in the literal reading of #313 (owner-only DELETE).
+        # Holds change_assignment but is not the owner: #313 is owner-only.
         self.admin_user = User.objects.create_user(
             email="admin-del@rijksoverheid.nl", first_name="Admin", last_name="User"
         )
@@ -1010,19 +994,15 @@ class AssignmentDeleteViewTests(TestCase):
 
         assert response.status_code == 200
         assert not Assignment.objects.filter(id=assignment_id).exists()
-        # Cascades from Assignment → Service → Placement.
         assert not Service.objects.filter(id=service_id).exists()
         assert not Placement.objects.filter(id=placement_id).exists()
 
     def test_delete_records_audit_event_snapshot_format(self):
-        """The delete is never shown in the UI, but the Event we persist for
-        the audit trail must capture the cascaded rows in the agreed format:
-        the opdracht name, one "rol (occupant or open)" entry per service, and
-        the org label per relation."""
+        """The audit Event captures the cascaded rows: the opdracht name, one
+        "rol (occupant or open)" entry per service, and the org label per relation."""
         self.client.force_login(self.owner_user)
         self.service.skill = Skill.objects.create(name="Java")
-        self.service.save()  # filled by self.placed_colleague
-        # A second rol that is still open (aanvraag, no placement).
+        self.service.save()
         Service.objects.create(
             description="Open", assignment=self.assignment, skill=Skill.objects.create(name="Python"), source="wies"
         )
@@ -1040,8 +1020,7 @@ class AssignmentDeleteViewTests(TestCase):
         assert "placements" not in event.context
 
     def test_delete_audit_event_omits_empty_lists(self):
-        """An opdracht with no rollen and no opdrachtgevers logs just the
-        name — no empty lists in the context."""
+        """An opdracht with no rollen or opdrachtgevers logs just the name."""
         self.client.force_login(self.owner_user)
         empty = Assignment.objects.create(name="Lege opdracht", owner=self.owner_colleague, source="wies")
         empty_id = empty.id
@@ -1052,8 +1031,8 @@ class AssignmentDeleteViewTests(TestCase):
         assert event.context == {"name": "Lege opdracht"}
 
     def test_delete_redirects_to_page_behind_panel(self):
-        """HX-Redirect returns to the page the side panel was opened over,
-        with the opdracht panel param stripped (other params preserved)."""
+        """HX-Redirect returns to the page behind the panel, stripping only the
+        opdracht param."""
         self.client.force_login(self.owner_user)
         response = self.client.post(
             self.url,
@@ -1075,8 +1054,10 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Weet je zeker dat je opdracht &#39;Te verwijderen&#39; wilt verwijderen?")
         self.assertContains(response, "Verwijderen is permanent en niet terug te draaien.")
-        self.assertContains(response, f'action="{self.url}"')
-        self.assertContains(response, "Verwijderen")
+        self.assertContains(response, "<nldd-modal-dialog")
+        self.assertContains(response, f'hx-post="{self.url}"')
+        self.assertContains(response, "Verwijder opdracht")
+        self.assertContains(response, "Behoud opdracht")
 
     def test_owner_cannot_delete_otys_iir_assignment(self):
         self.client.force_login(self.owner_user)
@@ -1104,8 +1085,7 @@ class AssignmentDeleteViewTests(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
     def test_staff_member_can_delete_wies_assignment(self):
-        """A user in STAFF_EMAILS can delete a wies-sourced assignment
-        they don't own (parallel to the staff edit permission, #392)."""
+        """A user in STAFF_EMAILS can delete an assignment they don't own (#392)."""
         staff_user = User.objects.create_user(
             email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
         )
@@ -1120,8 +1100,8 @@ class AssignmentDeleteViewTests(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
     def test_staff_member_cannot_delete_otys_iir_assignment(self):
-        """Staff still can't delete non-wies-sourced assignments — the
-        ``_is_wies_sourced`` gate runs before the staff branch."""
+        """Staff cannot delete non-wies-sourced assignments: the ``_is_wies_sourced``
+        gate runs before the staff branch."""
         staff_user = User.objects.create_user(
             email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
         )

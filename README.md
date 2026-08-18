@@ -5,7 +5,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 ## Tech Stack
 
 - **Backend**: Django 6 with PostgreSQL
-- **Templates**: Jinja2 with [jinja-roos-components](https://github.com/RijksICTGilde/jinja-roos-components)
+- **Templates**: Jinja2
 - **Styling**: [RVO Design System](https://github.com/nl-design-system/rvo) (Dutch government design system)
 - **Interactivity**: HTMX
 - **Authentication**: OIDC via Keycloak
@@ -71,7 +71,7 @@ just manage [...]   # Django manage.py commands
 just lint           # Run ruff check + format check
 just format         # Auto-fix lint issues and format code
 just pre-commit     # Run all pre-commit hooks
-just update-vendor  # Update vendor assets (htmx)
+just update-vendor  # Update vendor assets (like htmx)
 ```
 
 ### Vendor Assets
@@ -81,6 +81,7 @@ This project vendors external JavaScript instead of using a CDN. This ensures th
 **Vendored packages:**
 
 - [htmx](https://htmx.org/) - JavaScript library for AJAX/HTML
+- [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components + styles (single `nldd.min.js` bundle + `css/` + `fonts/`, fetched from the npm tarball via `npm pack`)
 
 #### Update vendor dependencies
 

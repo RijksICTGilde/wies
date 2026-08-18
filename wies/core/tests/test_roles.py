@@ -82,7 +82,7 @@ class RBACSetupTest(TestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "email": "newuser@rijksoverheid.nl",
-                "labels": [label.id],
+                "labels": [label.public_id],
             },
         )
         assert response.status_code == 302

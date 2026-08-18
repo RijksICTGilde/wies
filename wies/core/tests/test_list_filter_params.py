@@ -9,9 +9,7 @@ User = get_user_model()
 
 
 class ListFilterInvalidLabelParamTests(TestCase):
-    """A non-numeric ``?labels=`` value must be ignored instead of raising a 500.
-    The org and rol filters already skip non-digit values; the label filter must
-    behave the same, so a hand-edited or stale URL degrades gracefully."""
+    """A non-numeric ``?labels=`` value is ignored instead of raising a 500."""
 
     def setUp(self):
         self.client = Client()
@@ -33,7 +31,7 @@ class ListFilterInvalidLabelParamTests(TestCase):
         assert response.status_code == 200
 
     def test_valid_label_param_still_works(self):
-        """A numeric value is still honoured (guards against over-filtering)."""
+        """A numeric value is still honoured, guarding against over-filtering."""
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("home"), {"labels": "999999"})
@@ -42,21 +40,16 @@ class ListFilterInvalidLabelParamTests(TestCase):
 
 
 class ActiveFilterIndicatorTests(TestCase):
-    """The active-filter indicators must reflect the filters that are actually
-    applied. A filter value that resolves to no row is not ignored: it filters
-    everything away, so it IS an active filter and must show its indicator. An
-    empty value is the opposite case, an unset filter, and must not.
+    """The active-filter indicators reflect the filters actually applied.
 
-    Two indicators are gated on ``active_filter_count``:
-    - the chip strip's clear-all button (``data-clear-all-filters``), on the
-      "Wie zit waar?" (home) and opdrachten (assignment-list) pages;
-    - the compact filter bar's count badge (``filter-button--active``), on the
-      Gebruikers (admin-users) page, which renders the bar instead of the chips.
-    The modal footer holds a second, always-rendered "Wis alle filters" button, so
-    asserting on that raw text would be ambiguous."""
+    A value resolving to no row still filters everything away, so it counts as
+    active; an empty value is unset and must show no indicator. An unresolvable
+    value gets no token of its own, but does get "Wis alle filters" so the user
+    is not stranded on an empty list.
+    """
 
+    ACTIVE_FILTER_MARKER = 'data-wies-dismiss="filter"'
     CLEAR_ALL_MARKER = "data-clear-all-filters"
-    ACTIVE_BADGE_MARKER = "filter-button--active"
 
     def setUp(self):
         self.client = Client()
@@ -80,9 +73,9 @@ class ActiveFilterIndicatorTests(TestCase):
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER not in response.content.decode()
 
-    def test_home_valid_label_shows_clear_all(self):
-        """Positive control: a real label id is an active filter, so the clear-all
-        button must render — proving the negative assertions aren't trivially green."""
+    def test_home_valid_label_shows_filter_tokens(self):
+        """A real label id renders a token, proving the negative assertions above
+        are not trivially green."""
         category = LabelCategory.objects.create(name="Cat", color="#FF5733")
         label = Label.objects.create(name="Python", category=category)
         self.client.force_login(self.user)
@@ -90,27 +83,27 @@ class ActiveFilterIndicatorTests(TestCase):
         response = self.client.get(reverse("home"), {"labels": str(label.public_id)})
 
         assert response.status_code == 200
-        assert self.CLEAR_ALL_MARKER in response.content.decode()
+        assert self.ACTIVE_FILTER_MARKER in response.content.decode()
 
-    def test_admin_users_unresolvable_label_shows_active_badge(self):
+    def test_admin_users_unresolvable_label_shows_clear_all(self):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("admin-users"), {"labels": "abc"})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER in response.content.decode()
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
 
-    def test_admin_users_empty_label_hides_active_badge(self):
+    def test_admin_users_empty_label_hides_clear_all(self):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("admin-users"), {"labels": ""})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER not in response.content.decode()
+        assert self.CLEAR_ALL_MARKER not in response.content.decode()
 
-    def test_admin_users_valid_label_shows_active_badge(self):
+    def test_admin_users_valid_label_shows_clear_all(self):
         category = LabelCategory.objects.create(name="Cat", color="#FF5733")
         label = Label.objects.create(name="Python", category=category)
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
@@ -119,7 +112,7 @@ class ActiveFilterIndicatorTests(TestCase):
         response = self.client.get(reverse("admin-users"), {"labels": str(label.public_id)})
 
         assert response.status_code == 200
-        assert self.ACTIVE_BADGE_MARKER in response.content.decode()
+        assert self.CLEAR_ALL_MARKER in response.content.decode()
 
     def test_assignments_unresolvable_rol_shows_clear_all(self):
         self.client.force_login(self.user)
@@ -137,7 +130,7 @@ class ActiveFilterIndicatorTests(TestCase):
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER not in response.content.decode()
 
-    def test_assignments_valid_rol_shows_clear_all(self):
+    def test_assignments_valid_rol_shows_filter_tokens(self):
         skill = Skill.objects.create(name="Python")
         self.client.force_login(self.user)
 
@@ -148,9 +141,11 @@ class ActiveFilterIndicatorTests(TestCase):
 
 
 class UserAdminRoleFilterTests(TestCase):
-    """``?rol=`` on the Gebruikers page names a Group pk: Group is Django's own
-    model and has no public_id. It fails closed like every other facet, so a
-    stale or hand-edited value empties the list instead of showing everyone."""
+    """``?rol=`` names a Group pk, since Django's Group has no public_id.
+
+    It fails closed like every other facet, so a stale value empties the list
+    instead of showing everyone.
+    """
 
     TARGET = "Doelwit"
 

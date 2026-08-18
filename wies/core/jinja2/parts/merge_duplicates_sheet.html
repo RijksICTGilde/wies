@@ -1,0 +1,92 @@
+{# Deduplication preview as a bottom sheet: a review step before an irreversible
+   confirmation. data-auto-show lets dialog.js open it after the htmx swap.
+   Rows are flat and spell the action out in full, so each line reads as what
+   happens to whom. #}
+<nldd-sheet id="merge-preview-sheet" placement="bottom" data-auto-show data-keep-section-padding accessible-label="Dubbele opdrachten samenvoegen">
+{% if not merge_groups %}
+  {# Without duplicates there is nothing to review: the outcome is the whole
+     content, so no title bar or heading announcing an overview that is not
+     there. Success variant, because finding nothing is the good answer here. #}
+  <nldd-simple-section>
+  <nldd-inline-dialog variant="success" text="Geen dubbele opdrachten gevonden" supporting-text="Er zijn geen opdrachten die dezelfde naam, eigenaar en opdrachtgever delen.">
+  <nldd-button slot="actions" variant="primary" text="Sluit" data-dismiss-modal></nldd-button>
+  </nldd-inline-dialog>
+  </nldd-simple-section>
+{% else %}
+  <nldd-page sticky-header>
+  {# collapse-anchor must point at the heading the bar stands in for: it hides its
+     own title while that heading is visible. Anchor anything else and a screen
+     reader announces the title twice. #}
+  <nldd-top-title-bar slot="header" collapse-anchor="merge-preview-heading" text="Dubbele opdrachten samenvoegen" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section>
+  <nldd-title size="3">
+  <h2 id="merge-preview-heading">Dubbele opdrachten samenvoegen</h2>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% set _totaal = merge_groups | sum(attribute="count") %}
+  <nldd-rich-text>
+  <p>
+    {% if merge_groups | length == 1 %}
+      Eén opdracht komt meer dan eens voor: {{ _totaal }} opdrachten met dezelfde
+      naam, eigenaar en opdrachtgever worden samengevoegd tot één.
+    {% else %}
+      {{ merge_groups | length }} opdrachten komen meer dan eens voor. In totaal
+      worden {{ _totaal }} opdrachten samengevoegd, per groep tot één.
+    {% endif %}
+    Diensten en plaatsingen verhuizen mee naar de opdracht die blijft staan; de
+    rest verdwijnt. Loop het overzicht na en bevestig. Dit kan niet ongedaan
+    worden gemaakt.
+  </p>
+  </nldd-rich-text>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% for group in merge_groups %}
+    <nldd-box>
+    <nldd-container padding="16">
+    <nldd-title size="5">
+    <h3>{{ group.name }}</h3>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>
+      De volgende {{ group.count }} opdrachten van {{ group.owner }} worden
+      samengevoegd tot opdracht {{ group.target_id }}.
+    </p>
+    </nldd-rich-text>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    <nldd-list variant="simple" accessible-label="Regels van {{ group.name }}">
+    {% for row in group.rows %}
+      <nldd-list-item>
+      {# decorative: the name sits next to it as text, so the avatar must not
+       announce it again. A vacancy gets the text-document icon, which reads as a
+       request rather than a person. #}
+      <nldd-cell width="fit-content">
+      {% if row.vacant %}
+        <nldd-avatar size="24" icon="text-document" decorative></nldd-avatar>
+      {% else %}
+        <nldd-avatar size="24" name="{{ row.consultant }}" decorative></nldd-avatar>
+      {% endif %}
+      </nldd-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell text="{{ row.consultant }}"></nldd-text-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      {# Only the surviving row gets colour; moving is the normal outcome, and
+         colouring that too would make colour meaningless. #}
+      <nldd-text-cell width="fit-content" horizontal-alignment="right" {% if row.keeps %}color="success"{% endif %} text="{{ row.action }}"></nldd-text-cell>
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+    </nldd-container>
+    </nldd-box>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% endfor %}
+  {# In the flow below the lists, not a sticky footer: you confirm only after
+   reading the finite overview. #}
+  <form method="post" action="{{ url('staff-database') }}">
+    {{ get_csrf_hidden_input(request) }}
+    <input type="hidden" name="action" value="merge_duplicates_apply" />
+    <nldd-button variant="primary" type="submit" text="Voeg projecten samen"></nldd-button>
+  </form>
+  </nldd-simple-section>
+  </nldd-page>
+{% endif %}
+</nldd-sheet>

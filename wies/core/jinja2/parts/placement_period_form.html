@@ -1,34 +1,17 @@
-{# Custom body for PlacementEditables.period, included by
-   parts/inline_edit/form.html, which owns the form element, the
-   concurrency token, the non-field errors, the alert and the buttons.
-   Shows/disables the specific date fields based on a checkbox.
-   When checked ("Neem opdrachtperiode over"), dates are pre-filled from the
-   service and the inputs are disabled.
+{# Custom body for PlacementEditables.period. parts/inline_edit/form.html owns the
+   form element, concurrency token, errors and buttons, so this supplies only the
+   fields (#483). placement_period_toggle.js reads the assignment period from
+   [data-placement-period] and the fields by name.
    Context: form, obj (Placement instance). #}
 <div data-placement-period
      data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
      data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
-  <c-layout-flow gap="md">
-    {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
-    <div class="rvo-form-field">
-      <span class="rvo-label">Periode</span>
-      <label class="service-period-toggle">
-        <input type="checkbox"
-               id="placement-inherit-period"
-               {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
-        <span>Neem opdrachtperiode over</span>
-      </label>
-    </div>
-    <div class="rvo-form-field">
-      <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-      {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
-      {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    </div>
-    <div class="rvo-form-field">
-      <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-      {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
-      {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    </div>
-  </c-layout-flow>
+  {# Hidden via a parent with [hidden]: `display:none` on the select itself is
+     overridden by the bundle CSS. #}
+  <div hidden>{{ form.period_source.as_widget() }}</div>
+  <nldd-form-field label="Periode">
+  <nldd-checkbox-field id="placement-inherit-period" label="Neem opdrachtperiode over" {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>
+  </nldd-form-field>
+  {{ form.specific_start_date.as_field_group() }}
+  {{ form.specific_end_date.as_field_group() }}
 </div>
-<script src="{{ static('js/placement_period_toggle.js') }}"></script>

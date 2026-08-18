@@ -6,6 +6,7 @@ persistence behaviour. Registrations are cleaned up in tearDown to
 avoid leaking into unrelated tests.
 """
 
+import json
 import re
 import uuid
 
@@ -20,12 +21,12 @@ from wies.core.editables.assignment import AssignmentEditables, _services_render
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
-from wies.core.forms import AssignmentCreateForm
 from wies.core.inline_edit.base import (
     Editable,
     EditableGroup,
     EditableSet,
 )
+from wies.core.inline_edit.forms import build_combined_form_class
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -39,6 +40,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.widgets import OrgPickerWidget
@@ -140,7 +142,7 @@ class InlineEditInfrastructureTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "Original name")
         self.assertContains(resp, "editable-field-display")
-        self.assertContains(resp, "rvo-icon-bewerken")
+        self.assertContains(resp, "edit-icon-button__pencil")
 
     def test_only_pencil_enters_edit_mode(self):
         """The value itself is not clickable — only the pencil button opens
@@ -155,13 +157,13 @@ class InlineEditInfrastructureTest(TestCase):
         assert "edit=true" in content
         assert "edit-icon-button" in content
         # And a tooltip aiding discoverability now the value isn't clickable.
-        assert 'data-tooltip="Bewerk ' in content
+        assert 'title="Bewerk ' in content
 
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, 'name="name"')
-        self.assertContains(resp, "rvo-form-field")
+        self.assertContains(resp, "nldd-form-field")
         self.assertContains(resp, "Opslaan")
         self.assertContains(resp, "Annuleren")
 
@@ -176,17 +178,25 @@ class InlineEditInfrastructureTest(TestCase):
         resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
         assert resp.status_code == 200
         self.assertContains(resp, "Updated name")
-        # Save feedback is a toast triggered client-side via HX-Trigger.
-        assert resp["HX-Trigger-After-Swap"] == "inline-edit-saved"
+        # Save feedback is a notification triggered client-side via HX-Trigger.
+        # The label rides along so the message can name what was saved.
+        assert json.loads(resp["HX-Trigger-After-Swap"]) == {"inline-edit-saved": {"label": ""}}
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated name"
+
+    def test_post_unchanged_value_announces_nothing(self):
+        """The onboarding wizard submits every field on "Volgende", so an
+        untouched one must not announce a save that did not happen."""
+        resp = post_inline_edit(self.client, self.url, {"name": "Original name"})
+        assert resp.status_code == 200
+        assert "HX-Trigger-After-Swap" not in resp
 
     def test_post_invalid_returns_form_with_error(self):
         # Empty string fails the required check (Assignment.name is
         # non-null + has no blank=True).
         resp = self.client.post(self.url, {"name": ""})
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-form-field__error")
+        self.assertContains(resp, "nldd-form-field-error-text")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original name"
 
@@ -226,7 +236,7 @@ class InlineEditPermissionTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
         # No edit trigger rendered on a denied response.
-        self.assertNotContains(resp, "rvo-icon-bewerken")
+        self.assertNotContains(resp, "edit-icon-button__pencil")
         # And no form.
         self.assertNotContains(resp, 'name="name"')
 
@@ -468,6 +478,11 @@ class AssignmentPanelRenderTest(TestCase):
         )
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
+        # The owner field only offers BDM colleagues, so the combined edit form
+        # needs the owner to be a valid choice for itself.
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        self.user.groups.add(bdm_group)
+        self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
             owner=self.colleague,  # user is owner → can edit
@@ -475,18 +490,168 @@ class AssignmentPanelRenderTest(TestCase):
         )
 
     def test_panel_renders_edit_button_for_owner(self):
-        """Loading the home page with ?opdracht=<id> renders the panel
-        with the inline-edit pencil for name + extra_info."""
+        """Loading the home page with ?opdracht=<id> renders the panel with the
+        edit buttons that open the child sheets (per-field inline edit has been
+        replaced by one combined form)."""
         response = self.client.get(f"/?opdracht={self.assignment.public_id}")
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
-        # Edit icon present for this authorized user.
-        self.assertContains(response, "rvo-icon-bewerken")
-        # Name should be addressable at the new inline-edit URL.
-        self.assertContains(
-            response,
-            f"/inline-edit/assignment/{self.assignment.public_id}/name/",
+        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;bewerken=1")
+        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-aanvraag")
+        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-ingevuld")
+
+    def test_unresolved_panel_target_404s_for_htmx_request(self):
+        """A panel HTMX request whose opdracht can't be resolved must 404 (so
+        HTMX shows the graceful "Niet gevonden" partial) rather than returning a
+        full page that gets swapped into the slide-over. Guards the HX-Target
+        string match in _is_side_panel_request (side-panel-content, hyphens)."""
+        response = self.client.get(
+            "/?opdracht=999",  # integer, never a valid public_id
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
+        assert response.status_code == 404
+
+    def test_edit_param_renders_combined_form(self):
+        """?opdracht=<id>&bewerken=1 renders the child sheet with one form over
+        all assignment fields, posting to the assignment-edit endpoint."""
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken=1")
+        assert response.status_code == 200
+        self.assertContains(response, "Opdracht bewerken")
+        self.assertContains(response, f"/opdracht/{self.assignment.public_id}/bewerken/")
+        for field in ("name", "extra_info", "owner", "start_date", "end_date"):
+            self.assertContains(response, f'name="{field}"')
+
+    def test_teamlid_nieuw_renders_member_form(self):
+        """?opdracht=<id>&teamlid=nieuw-aanvraag renders the member child sheet
+        with one preset row, posting to the member endpoint."""
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid=nieuw-aanvraag")
+        assert response.status_code == 200
+        self.assertContains(response, "Aanvraag toevoegen")
+        self.assertContains(response, f"/opdracht/{self.assignment.public_id}/teamlid/")
+        # The status radios post on their own (nldd-radio-button-field is
+        # form-associated), so the group carries the field name and there is no
+        # hidden-input bridge left to keep in sync.
+        self.assertContains(response, '<nldd-radio-button-group name="is_filled"')
+        self.assertNotContains(response, "data-status-input")
+
+    def test_teamlid_edit_renders_existing_member(self):
+        """?teamlid=<service public_id> renders the row of that one member."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
+        assert response.status_code == 200
+        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, 'name="service_public_id"')
+
+    def test_member_post_adds_a_service_and_keeps_others(self):
+        """A member POST only touches its own row: existing services survive."""
+        skill = Skill.objects.create(name="Ontwerper")
+        existing = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
+            {
+                "service_public_id": "",
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": str(skill.public_id),
+                "has_custom_period": "on",
+                "terug_url": f"/?opdracht={self.assignment.public_id}",
+            },
+        )
+        assert response.status_code == 204
+        services = list(self.assignment.services.all())
+        assert len(services) == 2
+        assert existing.id in [s.id for s in services]
+
+    def test_member_post_without_skill_blocks_instead_of_deleting(self):
+        """An empty role is rejected by the required Rol field; the endpoint
+        re-renders with the error on the combo box (via its own error-message
+        attribute), not a top banner, instead of a silent no-op."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
+            {
+                "service_public_id": str(service.public_id),
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": "",
+                "has_custom_period": "on",
+            },
+        )
+        assert response.status_code == 200
+        # nldd-form-field only reveals the message when the combo reflects `invalid`
+        # and points at the error text by id via `error-message` (see forms/field.html).
+        self.assertContains(response, 'error-message="error-skill-1"')
+        self.assertContains(response, '<nldd-form-field-error-text id="error-skill-1" invalid>Dit veld is verplicht.')
+        self.assertNotContains(response, 'nldd-banner variant="critical"')
+        assert self.assignment.services.filter(id=service.id).exists()
+        # The re-render goes through the single-source builder, so the sheet still
+        # carries its assignment context (back button) and the member edit URL.
+        self.assertContains(response, self.assignment.name)
+        self.assertContains(response, reverse("assignment-member-edit", args=[self.assignment.public_id]))
+
+    def test_member_delete_removes_only_that_service(self):
+        skill = Skill.objects.create(name="Ontwerper")
+        keep = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        gone = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/teamlid/{gone.public_id}/verwijderen/",
+            {"terug_url": f"/?opdracht={self.assignment.public_id}"},
+        )
+        assert response.status_code == 204
+        assert "HX-Location" in response
+        ids = set(self.assignment.services.values_list("id", flat=True))
+        assert keep.id in ids
+        assert gone.id not in ids
+
+    def test_edit_post_saves_and_redirects_back(self):
+        """A valid POST saves every field and sends the client back to the
+        parent panel via HX-Location."""
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
+            {
+                "name": "Hernoemd",
+                "extra_info": "Toelichting",
+                "owner": str(self.colleague.public_id),
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.public_id),
+                "org-0-role": "PRIMARY",
+                "terug_url": f"/?opdracht={self.assignment.public_id}",
+            },
+        )
+        assert response.status_code == 204
+        assert "HX-Location" in response
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Hernoemd"
+        assert self.assignment.extra_info == "Toelichting"
+        assert str(self.assignment.start_date) == "2026-01-01"
+
+    def test_edit_post_with_errors_rerenders_form(self):
+        """An invalid POST (missing required name) re-renders the child sheet
+        with the error instead of saving."""
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
+            {
+                "name": "",
+                "owner": str(self.colleague.public_id),
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.public_id),
+                "org-0-role": "PRIMARY",
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, "Opdrachtnaam is verplicht")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Panel Assignment"
 
 
 class ProfilePageRenderTest(TestCase):
@@ -507,10 +672,8 @@ class ProfilePageRenderTest(TestCase):
     def test_profile_page_renders(self):
         response = self.client.get("/profiel/")
         assert response.status_code == 200
-        # Editable name field is present.
-        self.assertContains(response, "inline-edit-user-")
-        # Edit pencil for own profile.
-        self.assertContains(response, "rvo-icon-bewerken")
+        self.assertContains(response, "Prof Tester")
+        self.assertContains(response, reverse("profile-name-edit"))
 
 
 class AssignmentEditablesFullTest(TestCase):
@@ -610,28 +773,30 @@ class AssignmentEditablesFullTest(TestCase):
 
 
 class AssignmentCreateFormIntegrationTest(TestCase):
-    """Verify that AssignmentCreateForm composes its fields from the
-    shared AssignmentEditables declaration — labels/widgets/errors that
-    change on the Editable must flow through into the create form
-    automatically.
+    """Verify that the assignment-create sheet form composes its fields from the
+    shared AssignmentEditables declaration — labels/widgets/errors that change on
+    the Editable must flow through automatically. The form is built from
+    ``assignment_create_specs()`` (the live create-sheet flow).
     """
 
+    def _form_cls(self):
+        form_cls, _ = build_combined_form_class(assignment_create_specs())
+        return form_cls
+
     def test_labels_come_from_editables(self):
-        form = AssignmentCreateForm()
-        # Each form field's label matches the Editable's label.
+        form = self._form_cls()()
         for name in ["name", "extra_info", "start_date", "end_date", "owner"]:
-            assert form.fields[name].label == getattr(AssignmentEditables, name).label
+            assert str(form.fields[name].label) == str(getattr(AssignmentEditables, name).label)
 
     def test_owner_queryset_filtered_to_bdm_group(self):
-        # ModelChoiceField queryset is derived from Editable.choices — it
-        # includes the BDM group filter defined in the editables module.
-        form = AssignmentCreateForm()
+        # The owner queryset is derived from the Editable's choices — it includes
+        # the BDM group filter defined in the editables module.
+        form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        # The generated SQL references the BDM group name.
         assert "Business Development Manager" in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
-        form = AssignmentCreateForm(
+        form = self._form_cls()(
             data={
                 "name": "X",
                 "start_date": "2026-06-01",
@@ -769,36 +934,47 @@ class AssignmentServicesDisplayTest(TestCase):
     def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        # Renders inside an open panel, so it must swap the inner content;
-        # targeting #side_panel-container rebuilds the dialog and htmx falls
-        # back to a full page load.
-        self.assertContains(resp, 'hx-target="#side_panel-content"')
-        self.assertNotContains(resp, 'hx-target="#side_panel-container"')
+        # Renders inside the open NLDD side panel, so it swaps the inner
+        # content (#side-panel-content) rather than rebuilding the sheet.
+        self.assertContains(resp, 'hx-target="#side-panel-content"')
         self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
-        self.assertContains(resp, "rvo-item-list__item--filled")
-        self.assertContains(resp, "clickable-row")
+        filled_row = self._row_containing(resp, self.colleague.name)
+        assert "hx-get" in filled_row
+        assert "plaatsing=" in filled_row
+
+    @staticmethod
+    def _rows(resp) -> list[str]:
+        """The team rows, in render order, as raw `nldd-list-item` markup."""
+        content = resp.content.decode()
+        return [f"<nldd-list-item{part}" for part in content.split("<nldd-list-item")[1:]]
+
+    def _row_containing(self, resp, needle: str) -> str:
+        match = next((row for row in self._rows(resp) if needle in row), None)
+        assert match is not None, f"no team row containing {needle!r}"
+        return match
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-item-list__item--vacant")
         self.assertContains(resp, "Aanvraag")
-        # Vacant row should not carry an hx-target (only filled anchors do).
-        content = resp.content.decode()
-        vacant_start = content.index("rvo-item-list__item--vacant")
-        vacant_end = content.index("</div>", vacant_start)
-        assert "hx-get" not in content[vacant_start:vacant_end]
-        assert "href=" not in content[vacant_start:vacant_end]
+        # A vacancy has nothing to link to — only filled rows open a panel. The
+        # ROW must stay non-interactive; the row menu (with its own hx-gets)
+        # sits in slot="end", outside the row action, so check the open tag.
+        vacant_row = self._row_containing(resp, "Aanvraag")
+        open_tag = vacant_row.split(">", 1)[0]
+        assert "hx-get" not in open_tag
+        assert "href=" not in open_tag
+        assert "Bekijk teamlid" not in vacant_row
 
     def test_vacant_row_renders_before_filled_row(self):
         """Vacancies-first ordering (issue #331) — even though the filled
         service was created first."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        content = resp.content.decode()
-        vacant_pos = content.index("rvo-item-list__item--vacant")
-        filled_pos = content.index("rvo-item-list__item--filled")
+        rows = self._rows(resp)
+        vacant_pos = next(i for i, row in enumerate(rows) if "Aanvraag" in row)
+        filled_pos = next(i for i, row in enumerate(rows) if self.colleague.name in row)
         assert vacant_pos < filled_pos
 
     def test_display_omits_team_level_edit_button(self):
@@ -814,20 +990,59 @@ class AssignmentServicesDisplayTest(TestCase):
         # No clickable wrapper, no pencil button on the team-level
         # editable-field-display (per-row description pencils are still
         # rendered and unrelated to this check).
-        team_outer = team_wrapper.split("rvo-item-list")[0]
+        team_outer = team_wrapper.split("<nldd-list")[0]
         assert 'role="button"' not in team_outer
         assert "edit-icon-button" not in team_outer
 
+    def test_row_menu_edit_url_uses_public_id(self):
+        """The row "Aanvraag/Rol wijzigen" action must build its panel URL from
+        the assignment's public_id, not its integer PK — the panel resolver
+        looks up by public_id and a bare integer 404s ("Niet gevonden")."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        filled_row = self._row_containing(resp, self.colleague.name)
+        service = Placement.objects.get(colleague=self.colleague).service
+        assert f"opdracht={self.assignment.public_id}&teamlid={service.public_id}" in filled_row
+        # Never the integer service or assignment PK.
+        assert f"teamlid={service.id}" not in filled_row
+        assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
+
+    def test_row_menu_view_url_uses_public_id(self):
+        """ "Bekijk teamlid" must build ?plaatsing= from the placement's
+        public_id, not its integer PK."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        filled_row = self._row_containing(resp, self.colleague.name)
+        placement = Placement.objects.get(colleague=self.colleague)
+        assert f"plaatsing={placement.public_id}" in filled_row
+        assert f"plaatsing={placement.id}&" not in filled_row
+
+    def test_row_menu_edit_url_resolves_to_member_panel(self):
+        """End-to-end: the URL the row menu emits must actually open the
+        member-edit panel (HTTP 200), not the "Niet gevonden" partial."""
+        service = Placement.objects.get(colleague=self.colleague).service
+        panel = self.client.get(
+            f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert panel.status_code == 200
+        self.assertContains(panel, "Teamlid bewerken")
+
 
 class AssignmentServicesAuditTest(TestCase):
-    """Saving the services collection emits one audit event with a
-    before/after team summary."""
+    """Editing one team member via the member-edit route emits one audit
+    event with a before/after team summary.
 
-    FORMSET_MGMT_KEYS = {
-        "service-INITIAL_FORMS": "2",
-        "service-MIN_NUM_FORMS": "1",
-        "service-MAX_NUM_FORMS": "1000",
-    }
+    Team editing moved from the (now read-only) ``services`` inline-edit
+    collection to the per-member flow: the ``assignment-member-edit`` route
+    posts a single row (a plain, prefix-free ``ServiceForm``) and mutates exactly
+    that one service (``save_service_from_form``). Because a member POST only touches
+    its own row, every save produces a one-row audit diff — which is exactly
+    what these tests already assert. The endpoint routes through
+    ``member_audit_event``, which snapshots the whole team before/after around
+    the mutation, so the event context (``field_name``/``field_label``/
+    ``changes``) is unchanged.
+    """
 
     def setUp(self):
         self.client = Client()
@@ -850,48 +1065,45 @@ class AssignmentServicesAuditTest(TestCase):
         self.vacant_service = Service.objects.create(
             description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
+        self.member_url = reverse("assignment-member-edit", args=[self.assignment.public_id])
 
-    def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
+    def _post_member(self, row):
+        """POST one team-member row to the member-edit endpoint the way the
+        child sheet does: a single, prefix-free ``ServiceForm``."""
         data = {
-            f"service-{idx}-id": str(service.id),
-            f"service-{idx}-skill": str(skill.public_id),
-            f"service-{idx}-description": description,
-            f"service-{idx}-is_filled": "ingevuld" if is_filled else "aanvraag",
-            f"service-{idx}-has_custom_period": "on",  # inherit assignment period
+            **row,
+            "terug_url": f"/?opdracht={self.assignment.public_id}",
+        }
+        return self.client.post(self.member_url, data)
+
+    def _member_row(self, *, service, skill, description, is_filled=False, colleague=None):
+        row = {
+            "service_public_id": str(service.public_id),
+            "skill": str(skill.public_id),
+            "description": description,
+            "is_filled": "ingevuld" if is_filled else "aanvraag",
+            "has_custom_period": "on",  # inherit assignment period
         }
         if is_filled and colleague is not None:
-            data[f"service-{idx}-colleague"] = str(colleague.public_id)
+            row["colleague"] = str(colleague.public_id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
-                data[f"service-{idx}-placement_id"] = str(placement.id)
-        return data
+                row["placement_public_id"] = str(placement.public_id)
+        return row
 
     def test_services_post_emits_event_on_change(self):
         # Fill the previously vacant Java service with the colleague — the
         # diff should list one "Gewijzigd" line for it.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
-                service=self.filled_service,
-                skill=self.skill_python,
-                description="Filled",
-                is_filled=True,
-                colleague=self.colleague,
-            ),
-            **self._row(
-                1,
+        resp = self._post_member(
+            self._member_row(
                 service=self.vacant_service,
                 skill=self.skill_java,
                 description="Vacant",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
         event = events[0]
@@ -907,41 +1119,55 @@ class AssignmentServicesAuditTest(TestCase):
         assert change["new"]["colleague_name"] == self.colleague.name
 
     def test_services_post_no_change_no_event(self):
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
+        # Re-post the filled row exactly as it stands: no field changes, so
+        # the before/after team state is identical and no event is emitted.
+        resp = self._post_member(
+            self._member_row(
                 service=self.filled_service,
                 skill=self.skill_python,
                 description="Filled",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
+    def test_member_post_filled_without_colleague_blocks(self):
+        """Status "Geplaatste consultant" without a consultant is rejected at the
+        Consultant field, instead of silently saving as a vacancy."""
+        response = self._post_member(
+            self._member_row(
+                service=self.vacant_service,
+                skill=self.skill_java,
+                description="Vacant",
+                is_filled=True,  # ingevuld, but no colleague passed
+            )
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'error-message="error-colleague-1"')
+        self.assertContains(
+            response, '<nldd-form-field-error-text id="error-colleague-1" invalid>Selecteer een consultant.'
+        )
+        # The silent save did not happen: no placement, no colleague.
+        assert not Placement.objects.filter(service=self.vacant_service).exists()
 
     def test_services_post_emits_event_on_period_change(self):
         """A period-only edit still emits a team audit event (#393)."""
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            # Filled row: drop the inherit checkbox and give a custom period.
-            "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.public_id),
-            "service-0-description": "Filled",
-            "service-0-is_filled": "ingevuld",
-            "service-0-colleague": str(self.colleague.public_id),
-            "service-0-placement_id": str(self.placement.id),
-            "service-0-placement_start_date": "2026-01-01",
-            "service-0-placement_end_date": "2026-06-30",
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        # Filled row: drop the inherit checkbox and give a custom period.
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.filled_service.public_id),
+                "skill": str(self.skill_python.public_id),
+                "description": "Filled",
+                "is_filled": "ingevuld",
+                "colleague": str(self.colleague.public_id),
+                "placement_public_id": str(self.placement.public_id),
+                "placement_start_date": "2026-01-01",
+                "placement_end_date": "2026-06-30",
+            }
+        )
+        assert resp.status_code == 204
         self.placement.refresh_from_db()
         assert self.placement.specific_start_date is not None
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
@@ -954,49 +1180,109 @@ class AssignmentServicesAuditTest(TestCase):
         """Flipping a filled service to "aanvraag" must free the placement,
         even when the (hidden) consultant select still posts its value —
         is_filled is authoritative, not the lingering colleague."""
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            # Filled row switched to aanvraag, but colleague + placement_id
-            # still posted (JS only hides the field; this is the bug case).
-            "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.public_id),
-            "service-0-description": "Filled",
-            "service-0-is_filled": "aanvraag",
-            "service-0-has_custom_period": "on",
-            "service-0-colleague": str(self.colleague.public_id),
-            "service-0-placement_id": str(self.placement.id),
-            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        # Filled row switched to aanvraag, but colleague + placement_public_id
+        # still posted (JS only hides the field; this is the bug case).
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.filled_service.public_id),
+                "skill": str(self.skill_python.public_id),
+                "description": "Filled",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+                "colleague": str(self.colleague.public_id),
+                "placement_public_id": str(self.placement.public_id),
+            }
+        )
+        assert resp.status_code == 204
         # Placement gone, service kept as an open aanvraag.
         assert not Placement.objects.filter(id=self.placement.id).exists()
         self.filled_service.refresh_from_db()
         assert self.filled_service.status == "OPEN"
         assert not self.filled_service.placements.exists()
 
-    def test_edit_formset_renders_pk_hidden_inputs(self):
-        """The hidden ``service-N-id`` and ``service-N-placement_id``
-        inputs must render so the formset round-trips PKs back to
-        apply_services_to_assignment. Without them every save would
-        delete-and-recreate (silently dropping Placement metadata)."""
-        resp = self.client.get(self.url + "?edit=true")
-        assert resp.status_code == 200
-        content = resp.content.decode()
+    def test_new_skill_creates_and_links_skill(self):
+        """Posting the __new__ sentinel with a name must create a Skill and
+        link it to the service. member_form.js sends skill=__new__ +
+        new_skill_name for a role typed by the user that is not an existing one."""
+        assert not Skill.objects.filter(name="Rust").exists()
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.vacant_service.public_id),
+                "skill": "__new__",
+                "new_skill_name": "Rust",
+                "description": "Vacant",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+            }
+        )
+        assert resp.status_code == 204
+        new_skill = Skill.objects.get(name="Rust")
+        self.vacant_service.refresh_from_db()
+        assert self.vacant_service.skill_id == new_skill.id
 
-        def hidden_value(field_name):
+    def test_new_skill_name_matching_existing_reuses_it(self):
+        """__new__ with a name that already exists must reuse the existing
+        Skill (get_or_create by unique name), not create a duplicate."""
+        before = Skill.objects.count()
+        resp = self._post_member(
+            {
+                "service_public_id": str(self.vacant_service.public_id),
+                "skill": "__new__",
+                "new_skill_name": "Python",  # already exists (self.skill_python)
+                "description": "Vacant",
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+            }
+        )
+        assert resp.status_code == 204
+        assert Skill.objects.count() == before
+        self.vacant_service.refresh_from_db()
+        assert self.vacant_service.skill_id == self.skill_python.id
+
+    def test_member_sheet_renders_public_id_hidden_inputs(self):
+        """The member-edit sheet must render the hidden ``service_public_id``
+        and ``placement_public_id`` inputs so the single-row POST
+        round-trips the public_ids back to save_service_from_form, which
+        updates that Service/Placement in place. Without them the save would
+        create a new row instead of editing the existing one.
+
+        Each member opens in its own single-row sheet (``?teamlid=<public_id>``),
+        so the ids are asserted per row instead of across one combined formset."""
+
+        def hidden_value(content, field_name):
             m = re.search(
                 rf'<input type="hidden"\s+name="{re.escape(field_name)}"\s+value="([^"]*)"',
                 content,
             )
             return m.group(1) if m else None
 
-        # Vacancies-first sort: vacant row renders at index 0, filled at 1.
-        assert hidden_value("service-0-id") == str(self.vacant_service.id)
-        assert hidden_value("service-0-placement_id") == ""
-        assert hidden_value("service-1-id") == str(self.filled_service.id)
-        assert hidden_value("service-1-placement_id") == str(self.placement.id)
+        vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.vacant_service.public_id}")
+        assert vacant.status_code == 200
+        vacant_content = vacant.content.decode()
+        assert hidden_value(vacant_content, "service_public_id") == str(self.vacant_service.public_id)
+        assert hidden_value(vacant_content, "placement_public_id") == ""
+
+        filled = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        assert filled.status_code == 200
+        filled_content = filled.content.decode()
+        assert hidden_value(filled_content, "service_public_id") == str(self.filled_service.public_id)
+        assert hidden_value(filled_content, "placement_public_id") == str(self.placement.public_id)
+
+    def test_member_sheet_offers_new_role_option_with_hidden_input(self):
+        """The Rol combo must offer the discrete "+ Nieuwe rol" option
+        (value ``__new__``) rather than free-typing, and the name field it
+        reveals must render ``hidden`` for a row whose skill is an existing
+        role, so member_form.js only has to unhide it on selection."""
+        resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        # The discrete option is a real menu item; the combo is not allow-custom.
+        assert 'value="__new__"' in content
+        assert "allow-custom" not in content
+        # This row has an existing skill, so the new-role name field starts hidden.
+        m = re.search(r"<div data-new-skill-field\s*([^>]*)>", content)
+        assert m is not None
+        assert "hidden" in m.group(1)
 
     def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
         """Editing only the description must update the existing Service
@@ -1004,22 +1290,16 @@ class AssignmentServicesAuditTest(TestCase):
         audit event must list exactly one Toelichting line."""
         original_service_id = self.filled_service.id
         original_placement_id = self.placement.id
-        # Vacancies-first ordering: vacant row is index 0, filled at index 1.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(0, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
-            **self._row(
-                1,
+        resp = self._post_member(
+            self._member_row(
                 service=self.filled_service,
                 skill=self.skill_python,
                 description="New description",
                 is_filled=True,
                 colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+            )
+        )
+        assert resp.status_code == 204
 
         self.filled_service.refresh_from_db()
         self.placement.refresh_from_db()
@@ -1035,33 +1315,20 @@ class AssignmentServicesAuditTest(TestCase):
         assert changes[0]["old"]["description"] == "Filled"
         assert changes[0]["new"]["description"] == "New description"
 
-    def test_remove_row_via_team_bewerken_deletes_service(self):
-        """Bug: in "Team bewerken", clicking "Verwijderen" on a row and
-        then "Opslaan" must delete that row's service. The JS removes
-        the row from the DOM without renumbering or decrementing
-        ``TOTAL_FORMS``, so the server sees a gap in the form indexes.
-        Django's formset interprets the gap as an empty form, and
-        ``ServiceForm.clean()`` rejects it with "Vul een periode in...".
-        The save fails, the deleted row re-renders as a blank
-        errored form, and the user can never delete a team member."""
+    def test_remove_member_deletes_only_that_service(self):
+        """Removing a team member (its own "Verwijderen" route) deletes that
+        row's service and leaves the rest of the team untouched.
+
+        The old formset-gap deletion path is gone: deletion now has a
+        dedicated ``assignment-member-delete`` endpoint that deletes that one
+        service directly (``service.delete()``), so the "blank errored form"
+        bug the original test guarded against can no longer occur."""
         original_vacant_id = self.vacant_service.id
-        # Only submit row 0 (the filled service), simulating the user
-        # having clicked "Verwijderen" on row 1 (the vacant one).
-        # TOTAL_FORMS is unchanged — this is the production behaviour.
-        data = {
-            "service-TOTAL_FORMS": "2",
-            **self.FORMSET_MGMT_KEYS,
-            **self._row(
-                0,
-                service=self.filled_service,
-                skill=self.skill_python,
-                description="Filled",
-                is_filled=True,
-                colleague=self.colleague,
-            ),
-        }
-        resp = post_inline_edit(self.client, self.url, data)
-        assert resp.status_code == 200
+        delete_url = reverse(
+            "assignment-member-delete", args=[self.assignment.public_id, self.vacant_service.public_id]
+        )
+        resp = self.client.post(delete_url, {"terug_url": f"/?opdracht={self.assignment.public_id}"})
+        assert resp.status_code == 204
         # The removed service must actually be gone from the DB.
         assert not Service.objects.filter(id=original_vacant_id).exists()
         # And the surviving service is unchanged.
@@ -1177,11 +1444,11 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         )
 
         rows = _services_initial(self.assignment)
-        by_placement = {r["placement_id"]: r for r in rows}
+        by_placement = {r["placement_public_id"]: r for r in rows}
 
-        inherit_row = by_placement[self.placement_inherit.id]
-        custom_placement_row = by_placement[self.placement_custom.id]
-        via_service_row = by_placement[self.placement_via_service.id]
+        inherit_row = by_placement[str(self.placement_inherit.public_id)]
+        custom_placement_row = by_placement[str(self.placement_custom.public_id)]
+        via_service_row = by_placement[str(self.placement_via_service.public_id)]
 
         # Sanity: the effective dates returned to the template match the
         # screenshot (assignment range vs custom range).
@@ -1219,49 +1486,56 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             f"vs assignment {self.assignment_start} to {self.assignment_end}."
         )
 
-    def test_edit_get_renders_checkbox_state_matching_effective_period(self):
-        """End-to-end: GET ?edit on the team must render each row's
-        checkbox state matching its effective period."""
-        resp = self.client.get(self.url + "?edit=true")
-        assert resp.status_code == 200
-        content = resp.content.decode()
+    def test_member_sheet_renders_period_choice_matching_effective_period(self):
+        """End-to-end: opening a member's edit sheet (``?teamlid=<service-id>``)
+        must render that row's period choice matching its effective period.
 
-        def checkbox_html_for_placement(placement_id: int) -> str:
-            m = re.search(
-                rf'name="service-(\d+)-placement_id"\s+value="{placement_id}"',
+        Team editing moved to the per-member sheets, so each row is fetched
+        via its own single-row sheet instead of one combined ?edit render.
+        The old "Neem opdrachtperiode over" checkbox became a segmented
+        control (``data-period-choice``) backed by a hidden
+        ``has_custom_period`` input: ``value="on"`` / segment ``SERVICE`` =
+        inherit the assignment period, empty / segment ``PLACEMENT`` = custom.
+        The regression guarded is the same: a row whose effective dates differ
+        from the assignment must NOT come up as "inherit"."""
+
+        def period_state_for_service(service_public_id: str) -> tuple[str, str]:
+            """(hidden has_custom_period value, segmented-control value) for
+            the one row rendered in this member's sheet."""
+            resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service_public_id}")
+            assert resp.status_code == 200
+            content = resp.content.decode()
+            hidden = re.search(
+                r'<input[^>]*name="has_custom_period"[^>]*value="([^"]*)"',
                 content,
             )
-            assert m, f"no row found for placement_id={placement_id}"
-            idx = m.group(1)
-            cb = re.search(
-                rf'<input[^>]*name="service-{idx}-has_custom_period"[^>]*>',
-                content,
+            assert hidden, f"no has_custom_period input found for service {service_public_id}"
+            control = re.search(
+                r'<nldd-segmented-control[^>]*value="(SERVICE|PLACEMENT)"[^>]*data-period-choice', content
             )
-            assert cb, f"no has_custom_period checkbox found for row {idx}"
-            return cb.group(0)
+            assert control, f"no period-choice control found for service {service_public_id}"
+            return hidden.group(1), control.group(1)
 
-        inherit_html = checkbox_html_for_placement(self.placement_inherit.id)
-        custom_html = checkbox_html_for_placement(self.placement_custom.id)
-        via_service_html = checkbox_html_for_placement(self.placement_via_service.id)
+        inherit_value, inherit_segment = period_state_for_service(self.service_inherit.public_id)
+        custom_value, custom_segment = period_state_for_service(self.service_for_custom_placement.public_id)
+        via_value, via_segment = period_state_for_service(self.service_custom.public_id)
 
-        # Inheriting placement → checked (correct today).
-        assert "checked" in inherit_html, f"inheriting row missing checked attr: {inherit_html}"
-        # Placement with its own custom period → unchecked.
-        assert "checked" not in custom_html, (
-            "placement with period_source=PLACEMENT rendered with the "
-            '"Neem opdrachtperiode over" checkbox checked — its custom '
-            f"period is being hidden as inherited. checkbox: {custom_html}"
+        # Inheriting placement → "inherit assignment period" (correct today).
+        assert inherit_value == "on", f"inheriting row should render as inherit, got value={inherit_value!r}"
+        assert inherit_segment == "SERVICE"
+        # Placement with its own custom period → "custom".
+        assert custom_value == "", (
+            "placement with period_source=PLACEMENT rendered as inheriting the "
+            "assignment period — its custom period is being hidden."
         )
-        # Placement inheriting a custom service period → unchecked.
-        # This row appears with custom dates in the side panel, but in
-        # the team-edit form its checkbox comes up checked, contradicting
-        # the dates rendered below it.
-        assert "checked" not in via_service_html, (
-            "placement that inherits from a service with custom dates "
-            'rendered with the "Neem opdrachtperiode over" checkbox '
-            "checked — but its effective dates differ from the "
-            f"assignment period. checkbox: {via_service_html}"
+        assert custom_segment == "PLACEMENT"
+        # Placement inheriting a custom service period → "custom", because its
+        # effective dates differ from the assignment (the original bug).
+        assert via_value == "", (
+            "placement that inherits from a service with custom dates rendered "
+            "as inheriting the assignment period — but its effective dates differ."
         )
+        assert via_segment == "PLACEMENT"
 
 
 class ServicesRenderChangeUnitTests(TestCase):
@@ -1280,20 +1554,20 @@ class ServicesRenderChangeUnitTests(TestCase):
 
     def test_added(self):
         change = {"old": None, "new": self._row(2, "Java", None)}
-        assert _services_render_change(change) == {"text": "Toegevoegd: Java (open)"}
+        assert _services_render_change(change) == {"text": "Java (open) toegevoegd"}
 
     def test_removed(self):
         change = {"old": self._row(2, "Java", None), "new": None}
-        assert _services_render_change(change) == {"text": "Verwijderd: Java (open)"}
+        assert _services_render_change(change) == {"text": "Java (open) verwijderd"}
 
     def test_colleague_filled(self):
         change = {"old": self._row(1, "Java", None), "new": self._row(1, "Java", "Anna")}
-        assert _services_render_change(change) == {"text": "Gewijzigd: van Java (open) naar Java (Anna)"}
+        assert _services_render_change(change) == {"text": "Java (open) naar Java (Anna) gewijzigd"}
 
     def test_skill_changed(self):
         change = {"old": self._row(1, "Python", "Jan"), "new": self._row(1, "TypeScript", "Jan")}
         assert _services_render_change(change) == {
-            "text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)",
+            "text": "Python (Jan) naar TypeScript (Jan) gewijzigd",
         }
 
     def test_description_changed(self):
@@ -1302,9 +1576,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting gewijzigd voor Python (Jan)",
-            "old": "oud",
-            "new": "nieuw",
+            "text": 'de toelichting voor Python (Jan) van "oud" naar "nieuw" gewijzigd',
         }
 
     def test_description_added_from_empty(self):
@@ -1313,8 +1585,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting toegevoegd voor Python (Jan)",
-            "new": "nieuw",
+            "text": 'de toelichting "nieuw" voor Python (Jan) toegevoegd',
         }
 
     def test_description_removed_to_empty(self):
@@ -1323,8 +1594,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description=""),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting verwijderd voor Python (Jan)",
-            "old": "oud",
+            "text": 'de toelichting "oud" voor Python (Jan) verwijderd',
         }
 
     def test_period_custom_set(self):
@@ -1340,9 +1610,10 @@ class ServicesRenderChangeUnitTests(TestCase):
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd van Python (Jan)",
-            "old": "01-01-2026 t/m 30-06-2026 (volgt opdracht)",
-            "new": "01-01-2026 t/m 30-06-2026",
+            "text": (
+                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026"
+                " (volgt opdracht) naar 01-01-2026 t/m 30-06-2026 gewijzigd"
+            ),
         }
 
     def test_period_dates_changed(self):
@@ -1355,9 +1626,9 @@ class ServicesRenderChangeUnitTests(TestCase):
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd van Python (Jan)",
-            "old": "01-01-2026 t/m 30-06-2026",
-            "new": "01-02-2026 t/m 30-06-2026",
+            "text": (
+                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026 naar 01-02-2026 t/m 30-06-2026 gewijzigd"
+            ),
         }
 
 
@@ -1419,7 +1690,7 @@ class ServiceDescriptionPermissionTest(TestCase):
         self.client.force_login(self.placed_user)
         url = reverse("inline-edit", args=["service", self.my_service.public_id, "skill"])
         new_skill = Skill.objects.create(name="Andere rol")
-        resp = self.client.post(url, {"skill": new_skill.id})
+        resp = self.client.post(url, {"skill": new_skill.public_id})
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
         self.my_service.refresh_from_db()
@@ -1591,8 +1862,8 @@ class InlineOrganizationsEditTest(TestCase):
         assert resp.status_code == 200
         content = resp.content.decode()
         assert content.index("MinX") < content.index("DirY") < content.index("TeamZ")
-        self.assertContains(resp, 'class="org-breadcrumb__ancestor"')
-        self.assertContains(resp, 'class="org-breadcrumb__separator"')
+        self.assertContains(resp, "<nldd-link")
+        self.assertContains(resp, "\u203a")
 
 
 class ColleagueLabelsInlineEditTest(TestCase):

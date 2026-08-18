@@ -1,0 +1,14 @@
+{# Renames and additions are batched until "Opslaan"; deleting happens straight
+   after confirmation, because the labels below then move.
+
+   The body is a separate partial: on a validation error htmx replaces only
+   #categoryManageBody, so this sheet stays instead of a second one opening
+   on top of it. #}
+<nldd-sheet id="labelFormModal" data-auto-show placement="right" width="560px" accessible-label="Categorieën beheren">
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="Categorieën beheren" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<div id="categoryManageBody">{% include "parts/label_category_manage_body.html" %}</div>
+</nldd-simple-section>
+</nldd-page>
+</nldd-sheet>

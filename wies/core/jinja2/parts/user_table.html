@@ -1,15 +1,15 @@
-<c-table id="user_table" class="user-table">
-  <c-table-head>
-    <c-table-row>
-      <c-table-header>
-        Naam
-      </c-table-header>
-      <c-table-header>
-        Rollen
-      </c-table-header>
-    </c-table-row>
-  </c-table-head>
-  <c-table-body>
-    {% include "parts/user_table_rows.html" %}
-  </c-table-body>
-</c-table>
+{# A list, not a table: nldd-list-item gives native hover/focus feedback for
+these clickable rows that nldd-table-row (data display) lacks.
+
+List and empty state share one id and swap OOB themselves. No wrapper: this must
+stay a direct child of the nldd-sidebar-section, or the empty state does not fill
+the remaining height. #}
+{% set list_oob = request.headers.get("HX-Request") %}
+{% if paginator.count %}
+  <nldd-list id="user-table" variant="simple" accessible-label="Gebruikers" {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/user_table_rows.html" %}
+  </nldd-list>
+{% else %}
+  {# Not an empty list row: that reads as a result and gets a divider. #}
+  <nldd-inline-dialog id="user-table" icon="magnifier" text="Geen gebruikers gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+{% endif %}

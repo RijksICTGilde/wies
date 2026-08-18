@@ -1,0 +1,22 @@
+{# One row in the category management sheet; `row_index` is the formset index.
+   A saved category is deleted through a confirmation dialog; a new row is
+   removed server-side so the re-render does not bring back an empty row. #}
+<nldd-list-item data-category-row>
+<input type="hidden"
+       name="{{ form.add_prefix('id') }}"
+       value="{{ form.instance.pk or '' }}">
+{# as_field_group, not as_widget: it links the error by id so it becomes visible.
+   vertical-alignment="top" keeps the cells aligned when an error grows one. #}
+<nldd-cell width="full" vertical-alignment="top">{{ form.name.as_field_group() }}</nldd-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+{# Fixed column width fitting the longest color name plus chevron. #}
+<nldd-cell width="112px" vertical-alignment="top">{{ form.color.as_field_group() }}</nldd-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-cell width="fit-content" vertical-alignment="top">
+{% if form.instance.pk %}
+  <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'public_id': form.instance.public_id}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
+{% else %}
+  <nldd-icon-button variant="destructive" icon="delete" text="Nieuwe categorie verwijderen" hx-post="{{ form_post_url }}" hx-vals='{"delete_new_row_index": "{{ row_index }}"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-icon-button>
+{% endif %}
+</nldd-cell>
+</nldd-list-item>

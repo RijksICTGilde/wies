@@ -1,61 +1,66 @@
 {% for assignment in object_list %}
-  <div class="assignment-card assignment-card--clickable"
-       tabindex="0"
-       role="link"
-       aria-label="{{ assignment.name }}"
-       data-keyboard-activate
-       hx-get="{{ assignment.panel_url }}"
-       hx-target="#side_panel-container">
-    <div class="assignment-card__name">
-      <strong class="assignment-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
-    </div>
-    <div class="assignment-card__body">
-      <div class="assignment-card__info">
-        {% if assignment.org_breadcrumb %}
-          <span class="truncate" title="{{ assignment.org_breadcrumb.label }}">{{ assignment.org_breadcrumb.label }}</span>
-        {% endif %}
-        {% if assignment.start_date or assignment.end_date %}
-          <span class="icon-text-inline">
-            <c-icon icon="kalender" size="md" color="grijs-700" />
-            {{ assignment.start_date|datum_nl("N Y") }}
-            {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
-          </span>
-        {% endif %}
-      </div>
-      {% if assignment.services_with_skills %}
-        <hr class="assignment-card__divider">
-        <div class="assignment-card__tags"
-             role="list"
-             aria-label="Gezochte rollen">
-          {% for service in assignment.services_with_skills[:3] %}
-            <span role="listitem">
-              <c-tag type="info">
-                {{ service.skill.name }}
-              </c-tag>
-            </span>
-          {% endfor %}
-          {% if assignment.services_with_skills|length > 3 %}
-            <span role="listitem">
-              <c-tag type="info">
-                +{{ assignment.services_with_skills|length - 3 }} meer
-              </c-tag>
-            </span>
-          {% endif %}
-        </div>
-      {% endif %}
-    </div>
-  </div>
-{% else %}
-  <div class="assignment-card-grid__empty">
-    <span class="rvo-text--italic rvo-text--subtle">Geen aanvragen gevonden.</span>
-  </div>
+  {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
+     hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
+  <nldd-card background="tinted" accessible-label="{{ assignment.name }}" href="{{ assignment.panel_url }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-container padding="16">
+  <nldd-title size="5">
+  <h3>{{ assignment.name }}</h3>
+  </nldd-title>
+  {# Zonder rollen ziet de kaart er kaal uit zonder dat je weet waarom. De
+     tekst draagt de betekenis, niet de kleur (WCAG 1.4.1). #}
+  {% if assignment.has_no_roles %}
+    <nldd-spacer size="8"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    <nldd-tag size="sm" color="neutral" text="Nog geen rollen"></nldd-tag>
+    </nldd-container>
+  {% elif assignment.services_with_skills %}
+    <nldd-spacer size="8"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    {% for service in assignment.services_with_skills[:3] %}
+      <nldd-tag size="sm" text="{{ service.skill.name }}"></nldd-tag>
+    {% endfor %}
+    {% if assignment.services_with_skills|length > 3 %}
+      <nldd-tag size="sm" text="+{{ assignment.services_with_skills|length - 3 }} meer"></nldd-tag>
+    {% endif %}
+    </nldd-container>
+  {% endif %}
+  </nldd-container>
+  {# In the footer slot, so client and period line up across cards regardless of
+  title length. #}
+  {% set has_date = assignment.start_date or assignment.end_date %}
+  {% macro chevron() %}
+    <span class="assignment-card__chevron" aria-hidden="true">
+      <nldd-icon size="20" name="chevron-right"></nldd-icon>
+    </span>
+  {% endmacro %}
+  <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+  <nldd-list variant="simple" dividers="never" accessible-label="Opdrachtgegevens">
+  {% if assignment.org_breadcrumb %}
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-text-cell size="sm" text="{{ assignment.org_breadcrumb.label }}"></nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
+  {# De periode-rij staat er altijd, ook zonder datum. Liet je hem weg, dan
+     kromp de kaart en stonden de kaarten in het raster niet meer op dezelfde
+     hoogte; de chevron moest dan ook nog naar de rij erboven verhuizen. #}
+  <nldd-list-item size="sm">
+  <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  {# djlint:off T028 #}
+  <nldd-text-cell size="sm" text="{% if has_date %}{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '' }}{%- if assignment.end_date %} – {{ assignment.end_date|datum_nl('b Y') }}{% endif -%}{% else %}Geen periode opgegeven{% endif %}"></nldd-text-cell>
+  {# djlint:on #}
+  <nldd-cell>{{ chevron() }}</nldd-cell>
+  </nldd-list-item>
+  </nldd-list>
+  </nldd-container>
+  </nldd-card>
 {% endfor %}
 {% if next_page_url %}
-  <div hx-get="{{ next_page_url }}"
-       hx-trigger="revealed"
-       hx-swap="outerHTML">
-    <div style="text-align: center; padding: 1rem;">
-      <span class="rvo-text--subtle">Meer laden...</span>
-    </div>
+  {# Click instead of auto-load, see placement_table_rows.html. The button is a grid
+     cell in the nldd-collection and replaces itself with the next cards. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>
 {% endif %}

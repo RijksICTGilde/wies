@@ -1,0 +1,21 @@
+{# Sheet content split from the sheet itself: on a validation error the view returns
+   only this part, so the open sheet stays instead of a second one opening over it. #}
+{% set body_id = modal_element_id ~ "Body" %}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#{{ body_id }}"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {# Field by field, not {{ content }}: that would wrap the fields in a second
+     nldd-form, which in auto-wrap mode adds its own action-less <form> in the light
+     DOM. The form-associated fields then belong to that one and the POST arrives
+     empty (same class of bug as the checkbox/radio one, PR 427). #}
+  {% for field in content.visible_fields() %}{{ field.as_field_group() }}{% endfor %}
+  {% for field in content.hidden_fields() %}{{ field }}{% endfor %}
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

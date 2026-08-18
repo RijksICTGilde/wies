@@ -1,0 +1,14 @@
+{# Checkbox group of nldd-checkbox-fields, slotted straight into the surrounding
+   nldd-form-field: the field is form-associated since DS 0.8.71, so it submits
+   its own value and the DS handles label and spacing.
+
+   There is no wrapping group, so nldd-form-field._findInput() picks the FIRST
+   checkbox field — hence the error wiring only on that one. nldd-checkbox-field
+   does not reflect `invalid`, but _syncErrorText reads `invalid`/`error-message`
+   via get/hasAttribute, so the message shows and aria-describedby lands on the
+   first box. The checkbox itself never turns red; that is a component limit. #}
+{% for group, options, index in widget.optgroups %}
+  {% for option_widget in options %}
+    <nldd-checkbox-field name="{{ option_widget.name }}" value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %} {% if loop.first and index == 0 and widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %} {% for name, value in option_widget.attrs.items() %} {% if value is not sameas False and name not in ('id', 'autocomplete') %} {{ name }} {% if value is not sameas True %}="{{ value }}"{% endif %} {% endif %} {% endfor %}></nldd-checkbox-field>
+  {% endfor %}
+{% endfor %}

@@ -1,0 +1,12 @@
+{% set category = editable.category %} {% set category_labels = value |
+  selectattr("category_id", "equalto", category.id) | list %}
+<nldd-container layout="wrap" gap="6">
+{% if category_labels %}
+  {% for label in category_labels %}
+    {# TIJDELIJK kleurloos (#565), zie parts/colleague_panel_content.html. #}
+    <nldd-tag>{{ label.name }}</nldd-tag>
+  {% endfor %}
+{% else %}
+  <span class="wies-text-secondary">Geen labels</span>
+{% endif %}
+</nldd-container>

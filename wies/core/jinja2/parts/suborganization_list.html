@@ -1,51 +1,27 @@
+{# The brand list; also re-rendered by htmx after a change, so this is the only
+   markup for it. #}
 {% if suborganizations %}
-  <c-table>
-    <c-table-head>
-      <c-table-row>
-        <c-table-header>
-          Naam
-        </c-table-header>
-        <c-table-header>
-          Toegepast
-        </c-table-header>
-      </c-table-row>
-    </c-table-head>
-    <c-table-body>
-      {% for suborganization in suborganizations %}
-        <c-table-row class="clickable-row"
-                     hx-get="{{ url('suborganization-edit', kwargs={'public_id': suborganization.public_id}) }}"
-                     hx-target="#suborganizationFormModal"
-                     hx-swap="innerHTML"
-                     title="Bewerk {{ suborganization.name }}">
-          <c-table-cell>
-            <span class="rvo-badge label-badge" style="background-color: #DCE3EA">{{ suborganization.name }}</span>
-          </c-table-cell>
-          <c-table-cell>
-            <div class="table-cell-with-actions">
-              <span>{{ suborganization.usage_count|default(0) }}</span>
-              <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
-            </div>
-          </c-table-cell>
-        </c-table-row>
-      {% endfor %}
-    </c-table-body>
-  </c-table>
+  <nldd-list accessible-label="Merken">
+  {% for suborganization in suborganizations %}
+    <nldd-list-item>
+    {# The count sits inline in the name cell so a long name on a narrow screen
+       cannot push the badge and menu out of view (see label_category.html). #}
+    <nldd-text-cell>
+    <span>{{ suborganization.name }} <nldd-badge color="neutral" number="{{ suborganization.usage_count|default(0) }}" accessible-label="{{ suborganization.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
+    </nldd-text-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-cell>
+    <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ suborganization.name }}">
+    <nldd-menu slot="popup" placement="bottom-end">
+    <nldd-menu-item text="Bewerken" icon="edit" hx-get="{{ url('suborganization-edit', kwargs={'public_id': suborganization.public_id}) }}" hx-target="#suborganizationFormModal" hx-swap="innerHTML"></nldd-menu-item>
+    <nldd-menu-divider></nldd-menu-divider>
+    <nldd-menu-item text="Verwijderen" icon="delete" destructive hx-get="{{ url('suborganization-delete', kwargs={'public_id': suborganization.public_id}) }}" hx-target="#suborganizationFormModal" hx-swap="innerHTML"></nldd-menu-item>
+    </nldd-menu>
+    </nldd-icon-button>
+    </nldd-cell>
+    </nldd-list-item>
+  {% endfor %}
+  </nldd-list>
 {% else %}
-  <c-paragraph class="empty-category-message">
-    Nog geen merken. Maak een nieuw merk aan om te beginnen.
-  </c-paragraph>
+  <p>Nog geen merken. Maak een nieuw merk aan om te beginnen.</p>
 {% endif %}
-<div class="label-form-container">
-  <form class="label-form"
-        hx-post="{{ url('suborganization-create') }}"
-        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-        hx-target="#suborganization_list_container">
-    <c-input name="name" />
-    <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
-      Merk toevoegen
-    </c-button>
-  </form>
-  {% if errors and errors.name %}
-    <div class="form-error">{{ errors.name }}</div>
-  {% endif %}
-</div>

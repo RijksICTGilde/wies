@@ -1,32 +1,24 @@
 {% extends "base.html" %}
-{% block header %}
-  <!-- No header on error pages -->
-{% endblock header %}
 {% block content %}
-  <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-    <div class="rvo-layout-column rvo-layout-gap--xl rvo-layout-align-items--center"
-         style="min-height: 70vh;
-                justify-content: center">
-      <div class="rvo-max-width-layout rvo-max-width-layout--sm">
-        <c-card padding="lg">
-          <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
-            <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
-              <c-h1>
-                {% block error_title %}
-                  Fout
-                {% endblock error_title %}
-              </c-h1>
-              <c-paragraph>
-                {% block error_message %}
-                  Er is iets misgegaan.
-                {% endblock error_message %}
-              </c-paragraph>
-              {% block error_extra %}
-              {% endblock error_extra %}
-            </div>
-          </div>
-        </c-card>
-      </div>
-    </div>
-  </main>
+  {# nldd-inline-dialog rather than a custom centred box: it is the pattern the
+     rest of the app already uses for empty and not-found states. #}
+  {# Via set blocks, because text and supporting-text are attributes: a
+     {% block %} inside an attribute value trips djlint T028. #}
+  {% set error_text %}
+    {% block error_text %}
+      Er is iets misgegaan
+    {% endblock error_text %}
+  {% endset %}
+  {% set error_supporting_text %}
+    {% block error_supporting_text %}
+      Probeer het later opnieuw.
+    {% endblock error_supporting_text %}
+  {% endset %}
+  <nldd-simple-section>
+  <nldd-inline-dialog variant="alert" size="lg" heading-level="1" text="{{ error_text | trim }}" supporting-text="{{ error_supporting_text | trim }}">
+  {% block error_actions %}
+    <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
+  {% endblock error_actions %}
+  </nldd-inline-dialog>
+  </nldd-simple-section>
 {% endblock content %}

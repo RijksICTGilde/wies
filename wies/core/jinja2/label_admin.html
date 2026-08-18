@@ -1,38 +1,38 @@
 {% extends "base.html" %}
-{% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/admin_labels.css') }}">
-  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
-  <script src="{{ static('js/dialog.js') }}"></script>
-{% endblock extra_head %}
+{% block title %}
+  Labels · Wies
+{% endblock title %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <div class="rvo-layout-column rvo-layout-gap--xl">
-    <div class="admin-header">
-      <c-h1>
-        Labels
-      </c-h1>
-      <c-button kind="primary"
-                icon="plus"
-                iconPlacement="before"
-                hx-get="{{ url('label-category-create', args=()) }}"
-                hx-target="#labelFormModal"
-                hx-swap="innerHTML">
-        Categorie toevoegen
-      </c-button>
-    </div>
-    {# Categories and Labels #}
-    {% if categories %}
-      {% for category in categories %}
-        <div id="label_category_{{ category.public_id }}">{% include "parts/label_category.html" %}</div>
-      {% endfor %}
-    {% else %}
-      <c-paragraph>
-        Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.
-      </c-paragraph>
-    {% endif %}
-    {# Modal container #}
-    <div id="labelFormModal"></div>
-  </div>
+  <nldd-title size="3">
+  <h1>Labels</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# No search field on this page, so the buttons sit on the left. #}
+  <nldd-toolbar label="Labels">
+  <nldd-toolbar-item slot="start">
+  <nldd-button start-icon="plus" text="Nieuw label" hx-get="{{ url('label-form-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  </nldd-button>
+  {# The overflow menu shows a CLONE of this item and reports the choice back as
+     select on the original, so htmx listens for that and not for a click. #}
+  <nldd-menu-item slot="overflow" text="Nieuw label" icon="plus" hx-get="{{ url('label-form-create') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  </nldd-toolbar-item>
+  <nldd-toolbar-item slot="start">
+  <nldd-button variant="secondary" start-icon="categories" text="Categorieën beheren" hx-get="{{ url('label-category-manage') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  </nldd-button>
+  <nldd-menu-item slot="overflow" text="Categorieën beheren" icon="categories" hx-get="{{ url('label-category-manage') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  </nldd-toolbar-item>
+  </nldd-toolbar>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% if categories %}
+    {% for category in categories %}
+      <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
+      {% if not loop.last %}<nldd-spacer size="32" direction="vertical"></nldd-spacer>{% endif %}
+    {% endfor %}
+  {% else %}
+    <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
+  {% endif %}
+  <div id="labelFormModal"></div>
 {% endblock content %}

@@ -1,0 +1,31 @@
+{# User sheet content split from the sheet itself: on a validation error the view
+   returns only this part. Deleting lives in the row's more menu, not here. #}
+{% set body_id = modal_element_id ~ "Body" %}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#{{ body_id }}"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {% if delete_warning %}
+    <nldd-rich-text>
+    <p>{{ delete_warning }}</p>
+    </nldd-rich-text>
+  {% else %}
+    {{ content.first_name.as_field_group() }}
+    {{ content.last_name.as_field_group() }}
+    {{ content.email.as_field_group() }}
+    {{ content.groups.as_field_group() }}
+    {{ content.suborganization.as_field_group() }}
+    {% for field_name in content.fields %}
+      {% if field_name.startswith('category_') %}
+        {{ content[field_name].as_field_group() }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  <nldd-form-actions>
+  <nldd-button variant="{{ 'destructive' if warning_modal else 'primary' }}" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

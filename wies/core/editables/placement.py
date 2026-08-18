@@ -63,6 +63,6 @@ class PlacementEditables(EditableSet):
         label="Periode",
         fields=[period_source, specific_start_date, specific_end_date],
         clean=_validate_placement_period,
-        display="rvo/forms/displays/placement_period.html",
+        display="forms/displays/placement_period.html",
         form_template="parts/placement_period_form.html",
     )

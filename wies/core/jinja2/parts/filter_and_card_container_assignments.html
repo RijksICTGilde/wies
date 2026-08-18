@@ -1,0 +1,89 @@
+{# HTMX swaps the results line (#results) and OOB-swaps the grid. #}
+{% set is_htmx = request.headers.get("HX-Request") %}
+{% if not is_htmx %}
+  <nldd-toolbar label="Zoeken en filteren">
+  <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
+  <nldd-search-field id="search-input" placeholder="Opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
+  </nldd-search-field>
+  </nldd-toolbar-item>
+  <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
+  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
+  </nldd-button>
+  {# The overflow menu shows a CLONE and reports the choice back as a select on this
+     original, so sidebar_toggle.js listens for both events. #}
+  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines" aria-haspopup="dialog" aria-expanded="false"></nldd-menu-item>
+  </nldd-toolbar-item>
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end">
+    {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-toolbar>
+  {# Menu outside the toolbar: inside an nldd-toolbar-item, Floating UI measures
+  against that item's layout and the popover lands on the left. variant=listbox
+  keeps focus in the search field. #}
+  <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
+  <nldd-spacer size="16"></nldd-spacer>
+{% endif %}
+{% set has_active_filters = (org_chip_data|length > 0) or (unknown_chip_data|length > 0) or (active_filters|length > 0) %}
+<nldd-container id="results">
+{% if has_active_filters %}
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for chip in org_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {# Fail-closed unknown chip, see filter_and_table_container.html. #}
+  {% for chip in unknown_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% elif filter_group.type == 'date' %}
+      {% set value = active_filters.get(filter_group.name) %}
+      {% if value %}
+        {# Label plus date, so the token shows the mode and not just a bare date. #}
+        <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ filter_group.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ value.strftime("%d-%m-%Y") }}</nldd-token>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {# Sits with the chips: one click clears every active filter.
+     filter_interactions.js handles data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+  <nldd-spacer size="8"></nldd-spacer>
+{% endif %}
+{% if paginator.count %}
+  {% set count_label = "opdracht" if paginator.count == 1 else "opdrachten" %}
+  <nldd-rich-text spacing="flat">
+  <p>{{ paginator.count }} {{ count_label }}</p>
+  </nldd-rich-text>
+{% endif %}
+</nldd-container>
+{% if not is_htmx %}
+  <nldd-spacer size="12"></nldd-spacer>
+{% endif %}
+{# Both branches share one id, so the OOB swap can replace either with the other. #}
+{% if paginator.count %}
+  <nldd-collection id="assignment-card-grid" layout="grid" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/assignment_card_rows.html" %}
+  </nldd-collection>
+{% else %}
+  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+{% endif %}
+{% if render_filter_fields_oob %}
+  {# The form carries the oob attribute itself: a wrapping div would replace the
+  form and swallow its slot="sidebar", dropping the filters into the main column. #}
+  {% set filter_form_oob = true %}
+  {% include "parts/filter_sidebar.html" %}
+{% endif %}

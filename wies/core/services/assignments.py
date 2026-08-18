@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
@@ -7,7 +8,6 @@ from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
-from wies.core.public_id import parse_public_ids
 
 if TYPE_CHECKING:
     from datetime import date
@@ -15,206 +15,149 @@ if TYPE_CHECKING:
     from wies.core.models import Colleague
 
 
-def _skill_ids_by_public_id(service_formset) -> dict[str, int]:
-    """Map the submitted skill tokens to internal ids in one query.
+def _resolve_skill_from_cleaned(cd: dict) -> Skill:
+    """Resolves the Skill for a validated ServiceForm.
 
-    The rol select posts public_ids (the client never sees the pk); everything
-    downstream keys on the internal id."""
-    tokens = [
-        f.cleaned_data.get("skill")
-        for f in service_formset
-        if f.cleaned_data and f.cleaned_data.get("skill") not in (None, "", "__new__")
-    ]
-    if not tokens:
-        return {}
-    rows = Skill.objects.filter(public_id__in=parse_public_ids(tokens)).values_list("public_id", "id")
-    return {str(public_id): skill_id for public_id, skill_id in rows}
-
-
-def extract_services_data(service_formset) -> list[dict]:
-    """Extract services_data dicts from a validated ServiceFormSet.
-
-    ``id`` and ``placement_id`` round-trip the existing Service / Placement
-    PKs on the edit path. Both are ``None`` for rows added on the create
-    form. The values come from attacker-controllable hidden inputs, so the
-    caller (apply_services_to_assignment) re-verifies ownership before
-    writing.
+    ``skill == "__new__"`` is a sentinel, not a public_id: the Skill is
+    created/reused from ``new_skill_name``. Otherwise the existing Skill is
+    looked up by its public_id. A valid form always carries one of the two
+    (``skill`` is required and ``clean()`` rejects ``__new__`` without a name).
     """
-    skill_ids = _skill_ids_by_public_id(service_formset)
-    services_data = []
-    for svc_form in service_formset:
-        if not svc_form.cleaned_data:
-            continue
-        cd = svc_form.cleaned_data
-        skill_val = cd.get("skill", "")
-        new_skill = cd.get("new_skill_name") or None
-        has_skill = (skill_val and skill_val != "__new__") or new_skill
-        if not has_skill:
-            continue
-        skill_id = skill_ids.get(skill_val) if skill_val and skill_val != "__new__" else None
-        # "aanvraag" means this service is a vacancy: ignore any colleague the
-        # (hidden) select still carries, so apply_services_to_assignment drops
-        # the placement and the row turns into an open aanvraag.
-        is_aanvraag = cd.get("is_filled") == "aanvraag"
-        colleague = cd.get("colleague")
-        services_data.append(
-            {
-                "id": cd.get("id"),
-                "placement_id": cd.get("placement_id"),
-                "description": cd.get("description", ""),
-                "skill_id": skill_id,
-                "new_skill_name": new_skill if skill_val == "__new__" else None,
-                "status": "OPEN",
-                "colleague_id": colleague.id if colleague and not is_aanvraag else None,
-                "has_custom_period": cd.get("has_custom_period", False),
-                "placement_start_date": cd.get("placement_start_date"),
-                "placement_end_date": cd.get("placement_end_date"),
-            }
-        )
-    return services_data
-
-
-def _resolve_skill(svc: dict) -> Skill | None:
-    """Resolve the Skill for a services_data row.
-
-    ``new_skill_name`` wins (get_or_create); otherwise ``skill_id`` is
-    looked up. Missing / empty → None.
-    """
-    if svc.get("new_skill_name"):
-        skill, _ = Skill.objects.get_or_create(name=svc["new_skill_name"])
+    skill_val = cd.get("skill", "")
+    if skill_val == "__new__":
+        skill, _ = Skill.objects.get_or_create(name=cd["new_skill_name"].strip())
         return skill
-    if svc.get("skill_id"):
-        return Skill.objects.filter(id=svc["skill_id"]).first()
-    return None
+    return Skill.objects.get(public_id=skill_val)
 
 
 @transaction.atomic
-def apply_services_to_assignment(assignment: Assignment, services_data: list[dict] | None) -> None:
-    """Sync an Assignment's Services + Placements to match ``services_data``.
+def save_service_from_form(assignment: Assignment, form) -> Service:
+    """Creates or updates a single Service (and its Placement) on ``assignment``
+    from a validated ServiceForm.
 
-    ``id`` (Service PK) and ``placement_id`` (Placement PK) on each row are
-    attacker-controllable hidden inputs. Any PK that doesn't belong to this
-    assignment raises ``ValidationError`` instead of silently creating new
-    rows — that keeps stale-form races and malicious posts equally visible.
+    ``service_public_id`` and ``placement_public_id`` round-trip existing
+    Service / Placement public_ids from attacker-controllable hidden inputs; a
+    public_id not belonging to this assignment raises ``ValidationError`` rather
+    than silently creating rows, keeping stale-form races and malicious posts
+    equally visible.
 
-    Diff semantics:
-
-    - Row without ``id``  → new Service created.
-    - Row with ``id``     → existing Service updated in-place.
-    - Existing Service not referenced by any submitted row → deleted
-      (cascades to its Placements via FK on_delete=CASCADE).
-
-    Placement sync per row:
-
-    - ``placement_id`` + ``colleague_id`` → update that Placement's colleague
-      (preserves period_source / specific dates / source_id).
-    - ``placement_id`` + no colleague     → Placement deleted.
-    - no ``placement_id`` + ``colleague_id`` → new Placement created.
-    - neither                             → nothing.
+    Placement per row: ``placement_public_id`` + colleague → updated;
+    ``placement_public_id`` alone → deleted (filled→aanvraag); colleague alone
+    → created.
     """
-    services_data = services_data or []
+    cd = form.cleaned_data
+    skill = _resolve_skill_from_cleaned(cd)
+    description = cd.get("description", "")
+    has_custom_period = cd.get("has_custom_period", False)
+    start = cd.get("placement_start_date")
+    end = cd.get("placement_end_date")
+    # UUIDField.clean() yields a uuid.UUID; str() makes it safe for filter(public_id=...).
+    service_public_id = str(cd["service_public_id"]) if cd.get("service_public_id") else None
+    placement_public_id = str(cd["placement_public_id"]) if cd.get("placement_public_id") else None
+    # "aanvraag" marks a vacancy: ignore any colleague the hidden select still
+    # carries, so _apply_placement drops the placement.
+    colleague = None if cd.get("is_filled") == "aanvraag" else cd.get("colleague")
 
-    existing_service_ids = set(assignment.services.values_list("id", flat=True))
-    existing_placement_ids = set(Placement.objects.filter(service__assignment=assignment).values_list("id", flat=True))
-    submitted_service_ids = {int(s["id"]) for s in services_data if s.get("id")}
-
-    unknown_services = submitted_service_ids - existing_service_ids
-    if unknown_services:
-        msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
-        raise ValidationError(msg)
-
-    to_delete = existing_service_ids - submitted_service_ids
-    if to_delete:
-        assignment.services.filter(id__in=to_delete).delete()
-
-    for svc in services_data:
-        skill = _resolve_skill(svc)
-
-        service_id = svc.get("id")
-        if service_id:
-            service = assignment.services.get(id=int(service_id))
-            service.description = svc.get("description", "")
-            service.skill = skill
-            service.status = svc.get("status", service.status)
-            update_fields = ["description", "skill", "status"]
-            if svc.get("has_custom_period"):
-                service.period_source = Service.SERVICE
-                service.specific_start_date = svc.get("placement_start_date")
-                service.specific_end_date = svc.get("placement_end_date")
-            else:
-                service.period_source = Service.ASSIGNMENT
-                service.specific_start_date = None
-                service.specific_end_date = None
-            update_fields.extend(["period_source", "specific_start_date", "specific_end_date"])
-            service.save(update_fields=update_fields)
+    if service_public_id:
+        service = assignment.services.filter(public_id=service_public_id).first()
+        if service is None:
+            msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
+            raise ValidationError(msg)
+        service.description = description
+        service.skill = skill
+        service.status = "OPEN"
+        update_fields = ["description", "skill", "status"]
+        if has_custom_period:
+            service.period_source = Service.SERVICE
+            service.specific_start_date = start
+            service.specific_end_date = end
         else:
-            create_kwargs = {
-                "assignment": assignment,
-                "description": svc.get("description", ""),
-                "skill": skill,
-                "status": svc.get("status", "OPEN"),
-                "source": "wies",
-            }
-            if svc.get("has_custom_period"):
-                create_kwargs["period_source"] = Service.SERVICE
-                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
-                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
-            service = Service.objects.create(**create_kwargs)
+            service.period_source = Service.ASSIGNMENT
+            service.specific_start_date = None
+            service.specific_end_date = None
+        update_fields.extend(["period_source", "specific_start_date", "specific_end_date"])
+        service.save(update_fields=update_fields)
+    else:
+        create_kwargs = {
+            "assignment": assignment,
+            "description": description,
+            "skill": skill,
+            "status": "OPEN",
+            "source": "wies",
+        }
+        if has_custom_period:
+            create_kwargs["period_source"] = Service.SERVICE
+            create_kwargs["specific_start_date"] = start
+            create_kwargs["specific_end_date"] = end
+        service = Service.objects.create(**create_kwargs)
 
-        placement_id = svc.get("placement_id")
-        colleague_id = svc.get("colleague_id")
+    _apply_placement(
+        assignment, service, placement_public_id, colleague, has_custom_period=has_custom_period, start=start, end=end
+    )
+    return service
 
-        if placement_id:
-            placement_id = int(placement_id)
-            if placement_id not in existing_placement_ids:
-                msg = "Een of meer plaatsingen bestaan niet meer. Herlaad de pagina en probeer opnieuw."
-                raise ValidationError(msg)
-            placement = Placement.objects.get(id=placement_id)
-            if placement.service_id != service.id:
-                # The placement exists on this assignment but belongs to a
-                # different service — only reachable via tampering.
-                msg = "Een plaatsing verwijst naar een andere dienst. Herlaad de pagina en probeer opnieuw."
-                raise ValidationError(msg)
-            if colleague_id:
-                update_fields = []
-                if placement.colleague_id != int(colleague_id):
-                    placement.colleague_id = int(colleague_id)
-                    update_fields.append("colleague_id")
 
-                if svc.get("has_custom_period"):
-                    new_source = Placement.PLACEMENT
-                    new_start = svc.get("placement_start_date")
-                    new_end = svc.get("placement_end_date")
-                else:
-                    new_source = Placement.SERVICE
-                    new_start = None
-                    new_end = None
+def _apply_placement(
+    assignment: Assignment,
+    service: Service,
+    placement_public_id: str | None,
+    colleague: Colleague | None,
+    *,
+    has_custom_period: bool,
+    start: date | None,
+    end: date | None,
+) -> None:
+    """Creates, updates or deletes ``service``'s Placement from a validated row."""
+    if placement_public_id:
+        placement = Placement.objects.filter(public_id=placement_public_id, service__assignment=assignment).first()
+        if placement is None:
+            msg = "Een of meer plaatsingen bestaan niet meer. Herlaad de pagina en probeer opnieuw."
+            raise ValidationError(msg)
+        if placement.service_id != service.id:
+            # The placement exists on this assignment but belongs to a
+            # different service — only reachable via tampering.
+            msg = "Een plaatsing verwijst naar een andere dienst. Herlaad de pagina en probeer opnieuw."
+            raise ValidationError(msg)
+        if colleague:
+            update_fields = []
+            if placement.colleague_id != colleague.id:
+                placement.colleague_id = colleague.id
+                update_fields.append("colleague_id")
 
-                if placement.period_source != new_source:
-                    placement.period_source = new_source
-                    update_fields.append("period_source")
-                if placement.specific_start_date != new_start:
-                    placement.specific_start_date = new_start
-                    update_fields.append("specific_start_date")
-                if placement.specific_end_date != new_end:
-                    placement.specific_end_date = new_end
-                    update_fields.append("specific_end_date")
-
-                if update_fields:
-                    placement.save(update_fields=update_fields)
+            if has_custom_period:
+                new_source = Placement.PLACEMENT
+                new_start = start
+                new_end = end
             else:
-                placement.delete()
-        elif colleague_id:
-            create_kwargs = {
-                "colleague_id": int(colleague_id),
-                "service": service,
-                "source": "wies",
-            }
-            if svc.get("has_custom_period"):
-                create_kwargs["period_source"] = Placement.PLACEMENT
-                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
-                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
-            Placement.objects.create(**create_kwargs)
+                new_source = Placement.SERVICE
+                new_start = None
+                new_end = None
+
+            if placement.period_source != new_source:
+                placement.period_source = new_source
+                update_fields.append("period_source")
+            if placement.specific_start_date != new_start:
+                placement.specific_start_date = new_start
+                update_fields.append("specific_start_date")
+            if placement.specific_end_date != new_end:
+                placement.specific_end_date = new_end
+                update_fields.append("specific_end_date")
+
+            if update_fields:
+                placement.save(update_fields=update_fields)
+        else:
+            placement.delete()
+    elif colleague:
+        create_kwargs = {
+            "colleague_id": colleague.id,
+            "service": service,
+            "source": "wies",
+        }
+        if has_custom_period:
+            create_kwargs["period_source"] = Placement.PLACEMENT
+            create_kwargs["specific_start_date"] = start
+            create_kwargs["specific_end_date"] = end
+        Placement.objects.create(**create_kwargs)
 
 
 @transaction.atomic
@@ -227,19 +170,11 @@ def create_assignment_from_form(
     owner: Colleague | None = None,
     primary_organization_id: int | None = None,
     involved_organization_ids: list[int] | None = None,
-    services_data: list[dict] | None = None,
 ) -> Assignment:
-    """Create an Assignment with related Services, Placements, and organization links.
+    """Creates an Assignment with its organization links.
 
-    services_data is a list of dicts with keys:
-        - description: str (required)
-        - skill_id: int | None
-        - new_skill_name: str | None (creates new Skill if set)
-        - status: str (CONCEPT/OPEN/GESLOTEN, default OPEN)
-        - colleague_id: int | None
-
-    Rows coming from the create form carry ``id`` / ``placement_id`` = None,
-    so apply_services_to_assignment takes the "create everything" branch.
+    Services and roles are added afterwards, one at a time, via the assignment
+    panel (``save_service_from_form``), so none are created here.
     """
     assignment = Assignment.objects.create(
         name=name,
@@ -264,13 +199,48 @@ def create_assignment_from_form(
             role="INVOLVED",
         )
 
-    apply_services_to_assignment(assignment, services_data)
-
     return assignment
 
 
+def assignment_create_specs():
+    """Returns the create-form specs: the same fields as the edit sheet, but
+    without an object and without a per-object permission check — creating is
+    gated on ``core.add_assignment``.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
+    specs = [
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+    ]
+    return [(AssignmentEditables, spec, None) for spec in specs]
+
+
+def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
+    """Creates an Assignment from the combined assignment form's cleaned_data.
+
+    Services and roles are added afterwards via the assignment panel, so no
+    services_data is passed here.
+    """
+    orgs = cleaned_data.get("organizations") or []
+    primary_org = next((o["organization"] for o in orgs if o["role"] == "PRIMARY"), None)
+    involved_orgs = [o["organization"] for o in orgs if o["role"] == "INVOLVED"]
+    return create_assignment_from_form(
+        name=cleaned_data["name"],
+        extra_info=cleaned_data.get("extra_info", ""),
+        start_date=cleaned_data.get("start_date"),
+        end_date=cleaned_data.get("end_date"),
+        owner=cleaned_data.get("owner"),
+        primary_organization_id=primary_org.id if primary_org else None,
+        involved_organization_ids=[o.id for o in involved_orgs],
+    )
+
+
 def find_duplicate_groups():
-    """Find assignments that share the same name, owner, and primary organization."""
+    """Finds assignments that share the same name, owner and primary organization."""
     qs = (
         Assignment.objects.filter(
             organization_relations__role="PRIMARY",
@@ -315,18 +285,15 @@ def find_duplicate_groups():
 
 @transaction.atomic
 def merge_group(assignments):
-    """Merge a group of duplicate assignments into the first (oldest) one.
+    """Merges duplicate assignments into the first (lowest-id) one.
 
-    Strategy:
-    - Keep the assignment with the lowest ID as the target.
-    - Move all services (and their placements) to the target, pinning explicit dates.
-    - Pick the widest date range across all assignments.
-    - Delete the now-empty duplicate assignments.
+    Services and their placements move to the target with explicit dates pinned,
+    the target's period widens to cover all of them, and the emptied duplicates
+    are deleted.
     """
     target = assignments[0]
     duplicates = assignments[1:]
 
-    # Widen the date range to cover all assignments.
     all_starts = [a.start_date for a in assignments if a.start_date]
     all_ends = [a.end_date for a in assignments if a.end_date]
     new_start = min(all_starts) if all_starts else None
@@ -355,3 +322,50 @@ def merge_group(assignments):
 
         dupe.organization_relations.all().delete()
         dupe.delete()
+
+
+@contextmanager
+def member_audit_event(request, assignment):
+    """Wraps a single-service mutation, emitting one team-audit event around it.
+
+    The mutation (e.g. ``save_service_from_form`` or ``service.delete()``) is
+    written plainly inside the ``with`` block. The before/after snapshot stays
+    whole-team, so the audit delta still reports exactly the one row that
+    changed, keyed on the internal ``service.id``.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
+
+    spec = AssignmentEditables.services
+    before = spec.audit_state(assignment) if spec.audit_state else None
+    with transaction.atomic():
+        yield
+        after = spec.audit_state(assignment) if spec.audit_state else None
+        emit_inline_edit_audit_event(
+            AssignmentEditables, spec, assignment, before, after, request.user, request=request
+        )
+
+
+def assignment_edit_specs(assignment, user, only=None):
+    """Returns the combined assignment form's specs, filtered by permission.
+
+    ``only`` (a spec name) narrows it to one field: a row's ⋯-menu edits just that
+    field, while the pencil edits everything.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
+
+    candidates = [
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+    ]
+    if only is not None:
+        candidates = [spec for spec in candidates if spec.name == only]
+    return [
+        (AssignmentEditables, spec, assignment)
+        for spec in candidates
+        if has_permission(Verb.UPDATE, assignment, user, spec)
+    ]

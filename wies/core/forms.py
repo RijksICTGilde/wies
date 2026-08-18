@@ -4,45 +4,46 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
-from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.user import UserEditables
 
-from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
-from .models import Colleague, Label, LabelCategory, Skill, Suborganization
+from .form_mixins import NlddFormMixin
+from .models import Colleague, Label, LabelCategory, Suborganization
 from .services.users import validate_email_domain
-from .widgets import MultiselectDropdown
+from .widgets import ComboBoxSelect, MultiselectDropdown
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
 __all__ = [
-    "AssignmentCreateForm",
     "LabelCategoryForm",
     "LabelForm",
-    "RvoErrorList",
-    "RvoFormMixin",
-    "RvoJinja2Renderer",
     "ServiceForm",
     "SuborganizationForm",
     "UserForm",
 ]
 
 
-class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
+#: LabelCategory maps each hex to an NLDD colour variant for the tags.
+CATEGORY_COLOR_CHOICES = [
+    ("#DCE3EA", "Grijs"),
+    ("#B3D7EE", "Blauw"),
+    ("#FFE9B8", "Geel"),
+    ("#C4DBB7", "Groen"),
+    ("#F9DFDD", "Rood"),
+]
+
+
+class LabelCategoryForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating LabelCategory instances"""
 
     name = forms.CharField(label="Naam", required=True)
     color = forms.ChoiceField(
         label="Kleur label",
-        choices=[
-            ("#DCE3EA", "Grijs"),
-            ("#B3D7EE", "Blauw"),
-            ("#FFE9B8", "Geel"),
-            ("#C4DBB7", "Groen"),
-            ("#F9DFDD", "Rood"),
-        ],
+        choices=CATEGORY_COLOR_CHOICES,
         widget=forms.RadioSelect,
     )
 
@@ -51,7 +52,7 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
         fields = ["name", "color"]
 
 
-class SuborganizationForm(RvoFormMixin, forms.ModelForm):
+class SuborganizationForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating Suborganization instances"""
 
     name = forms.CharField(label="Naam", required=True)
@@ -71,45 +72,150 @@ class SuborganizationForm(RvoFormMixin, forms.ModelForm):
         return new_name
 
 
-class LabelForm(RvoFormMixin, forms.ModelForm):
-    """Form for creating and updating Label instances"""
+class ProfileNameForm(NlddFormMixin, forms.ModelForm):
+    """First and last name together, as the profile page sheet shows them.
+
+    Fields come from UserEditables so labels and messages stay identical to the
+    inline edit and the admin form.
+    """
+
+    first_name = UserEditables.first_name.form_field()
+    last_name = UserEditables.last_name.form_field()
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]
+
+
+class ProfileLabelsForm(NlddFormMixin, forms.Form):
+    """Every label category in one sheet, with the token fields from onboarding.
+
+    Categories live in the database, so fields are built per instance rather
+    than declared, each reusing its ColleagueEditables spec.
+    """
+
+    def __init__(self, *args, colleague, categories, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.colleague = colleague
+        self._specs = {}
+        for category in categories:
+            name = f"{LABELS_PREFIX}{category.id}"
+            spec = ColleagueEditables.resolve_dynamic(name)
+            field = spec.form_field()
+            # Every category maps onto the same "labels" m2m, so the generic
+            # initial would hand each field all categories at once.
+            field.initial = list(colleague.labels.filter(category=category))
+            # Every category is optional, so the badge would repeat on all of them.
+            field.widget.attrs["hide-optional"] = True
+            self.fields[name] = field
+            self._specs[name] = spec
+            # The mixin only wires fields that exist when it runs; these are added
+            # afterwards, so configure them here or they fall back to Django's templates.
+            self._configure_field(name)
+
+    @transaction.atomic
+    def save(self):
+        for name, spec in self._specs.items():
+            spec.save(self.colleague, self.cleaned_data[name])
+
+
+class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
+    """One row in the "Categorieën beheren" sheet: name plus colour."""
 
     name = forms.CharField(label="Naam", required=True)
+    color = forms.ChoiceField(label="Kleur", choices=CATEGORY_COLOR_CHOICES, widget=forms.Select)
+
+    class Meta:
+        model = LabelCategory
+        fields = ["name", "color"]
+
+    def clean_name(self):
+        name = self.cleaned_data.get("name", "")
+        qs = LabelCategory.objects.filter(name=name)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            msg = "Er bestaat al een categorie met deze naam."
+            raise ValidationError(msg)
+        return name
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Table layout has no visible label, so move it to accessible-label.
+        for field in self.fields.values():
+            field.widget.attrs.setdefault("accessible-label", str(field.label))
+            field.label = ""
+
+    def has_changed(self):
+        """Reports whether the row changed, treating a blank new row as unchanged.
+
+        Colour always posts, so without this the empty row counts as changed and
+        its "naam is verplicht" error blocks the save.
+        """
+        if not self.instance.pk and not (self.data.get(self.add_prefix("name")) or "").strip():
+            return False
+        return super().has_changed()
+
+
+#: Rows are added/removed server-side, so the formset accepts more rows than the
+#: queryset holds; empty rows are skipped on save (see has_changed).
+LabelCategoryFormSet = forms.modelformset_factory(
+    LabelCategory,
+    form=LabelCategoryRowForm,
+    extra=0,
+    can_delete=False,
+    min_num=0,
+    max_num=1000,
+)
+
+
+class LabelForm(NlddFormMixin, forms.ModelForm):
+    """Form for creating and updating Label instances.
+
+    Category is part of the form, so one sheet serves both "Label toevoegen"
+    and "Label bewerken" and a label can move category without being recreated.
+    ``category_id`` seeds the field for callers opening it within a category.
+    """
+
+    name = forms.CharField(label="Naam", required=True)
+    category = forms.ModelChoiceField(
+        label="Categorie",
+        queryset=LabelCategory.objects.all(),
+        required=True,
+        empty_label=None,
+        widget=forms.RadioSelect,
+    )
 
     class Meta:
         model = Label
-        fields = ["name"]
+        fields = ["name", "category"]
 
     def __init__(self, *args, **kwargs):
-        self.category_id = kwargs.pop("category_id", None)
+        category_id = kwargs.pop("category_id", None)
         super().__init__(*args, **kwargs)
+        if category_id and not self.initial.get("category"):
+            self.initial["category"] = category_id
 
-    def clean_name(self):
-        new_name = self.cleaned_data["name"]
-        creating_new_label = self.instance.id is None
-
-        # when creating new one, we need category for validation initiated on form instance
-        # when editing, we already have the instance for this
-        if creating_new_label:
-            if Label.objects.filter(category=self.category_id, name=new_name).exists():
-                msg = "Naam wordt al gebruikt"
-                raise ValidationError(msg)
-            return new_name
-        original_name = self.instance.name
-        if new_name == original_name:
-            return new_name
-        if Label.objects.filter(category=self.instance.category, name=new_name).exists():
-            msg = "Naam wordt al gebruikt"
-            raise ValidationError(msg)
-        return new_name
+    def clean(self):
+        # Names are unique per category, so the check needs both fields and
+        # cannot live in clean_name().
+        cleaned = super().clean()
+        name = cleaned.get("name")
+        category = cleaned.get("category")
+        # A missing field already has its own error; nothing to check here.
+        if not name or not category:
+            return cleaned
+        clash = Label.objects.filter(category=category, name=name).exclude(pk=self.instance.pk)
+        if clash.exists():
+            self.add_error("name", "Naam wordt al gebruikt in deze categorie")
+        return cleaned
 
 
-class UserForm(RvoFormMixin, forms.ModelForm):
+class UserForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating User instances.
 
-    Field configurations for first_name/last_name/email come from
-    ``UserEditables`` so the admin form stays in lockstep with the
-    inline-edit declarations on the user's own profile page.
+    Name and email fields come from ``UserEditables`` so the admin form stays
+    in lockstep with the inline-edit declarations on the profile page.
     """
 
     first_name = UserEditables.first_name.form_field()
@@ -127,6 +233,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         to_field_name="public_id",
         required=False,
         empty_label=" ",
+        widget=ComboBoxSelect,
     )
 
     # Init will create category_* fields for the different label categories
@@ -152,14 +259,13 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
         instance = kwargs.get("instance")
 
-        # Pre-select the colleague's current merk when editing an existing user
-        # (suborganization isn't in Meta.fields, so ModelForm won't populate it).
+        # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
             current_merk = instance.colleague.suborganization
             self.fields["suborganization"].initial = current_merk.public_id if current_merk else None
-        self._configure_field_for_rvo("suborganization")
+        self._configure_field("suborganization")
 
-        # Map labels stored on model to separate fields per category, which are dynamically generated
+        # Map the labels m2m onto one dynamically built field per category.
         self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
@@ -177,16 +283,15 @@ class UserForm(RvoFormMixin, forms.ModelForm):
                 widget=MultiselectDropdown(),
             )
 
-            # used in clean
             self._category_field_names.add(field_name)
 
-            # necessary because RVOForm init already ran and otherwise wrong templates are referenced
-            self._configure_field_for_rvo(field_name)
+            # Form init already ran, so configure here or the wrong templates apply.
+            self._configure_field(field_name)
 
     def clean(self):
         cleaned_data = super().clean()
 
-        # combine selected labels into single label attribute
+        # Combine the per-category selections back into one labels list.
         cleaned_data["labels"] = []
         for category_field_name in self._category_field_names:
             selected_labels = cleaned_data.pop(category_field_name, None)
@@ -196,50 +301,27 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class AssignmentCreateForm(RvoFormMixin, forms.Form):
-    """Full-page form for creating a new Assignment.
-
-    Field configurations come from ``AssignmentEditables`` so the create
-    flow stays in lockstep with the inline-edit declarations. The form
-    is a plain ``forms.Form`` (not ``ModelForm``) because the create
-    flow handles its own multi-table atomic save (Assignment +
-    AssignmentOrganizationUnit + Services + Placements).
-    """
-
-    name = AssignmentEditables.name.form_field()
-    extra_info = AssignmentEditables.extra_info.form_field()
-    start_date = AssignmentEditables.start_date.form_field()
-    end_date = AssignmentEditables.end_date.form_field()
-    owner = AssignmentEditables.owner.form_field()
-    organizations = AssignmentEditables.organizations.form_field()
-
-    def clean(self):
-        cleaned = super().clean()
-        start, end = cleaned.get("start_date"), cleaned.get("end_date")
-        if start and end and end < start:
-            raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
-        return cleaned
-
-
-class ServiceForm(RvoFormMixin, forms.Form):
+class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
-    ``id`` and ``placement_id`` are hidden round-trip identifiers used by the
-    edit-from-side-panel path to diff existing rows against submitted rows.
-    Both are empty for newly-added rows on the create form. They are
-    attacker-controllable, so the save helper must verify each points at a
-    row owned by the target Assignment before writing.
+    ``service_public_id`` and ``placement_public_id`` are hidden round-trip
+    identifiers (UUIDs) that tell the save helper which existing rows this
+    submission edits, and are empty for new rows. They are attacker-controllable,
+    so the save helper must verify each points at a row owned by the target
+    Assignment before writing.
     """
 
-    id = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    placement_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
-    skill = forms.ModelChoiceField(
-        label="Rol",
-        queryset=Skill.objects.order_by("name"),
+    service_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
+    placement_public_id = forms.UUIDField(required=False, widget=forms.HiddenInput)
+    # A plain ChoiceField (not ModelChoiceField), so the "__new__" sentinel is a
+    # valid submitted value; its choices are DB-driven and injected in __init__.
+    skill = forms.ChoiceField(label="Rol", choices=(), required=True)
+    description = forms.CharField(
+        label="Omschrijving rol",
+        max_length=500,
         required=False,
-        empty_label=" ",
+        widget=forms.Textarea(attrs={"rows": 2}),
     )
-    description = forms.CharField(label="Omschrijving rol", max_length=500, required=False)
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     is_filled = forms.ChoiceField(
         label="Status",
@@ -259,44 +341,23 @@ class ServiceForm(RvoFormMixin, forms.Form):
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
 
-    def __init__(self, *args, skill_choices=None, **kwargs):
+    def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
-        # Replace ModelChoiceField with a ChoiceField so __new__ is a valid value
-        if skill_choices is None:
-            skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-            skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
-        self.fields["skill"] = forms.ChoiceField(
-            label="Rol",
-            choices=skill_choices,
-            required=False,
-        )
-        self._configure_field_for_rvo("skill")
+        # `skill_choices` is always supplied by the caller in editables/assignment.py.
+        self.fields["skill"].choices = skill_choices
 
     def clean(self):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
-        # A row the user removed in the UI ("Verwijderen") leaves a gap
-        # in the formset indexes that Django re-materialises as a blank
-        # form. Treat any row with no identifying content as deleted and
-        # skip validation — extract_services_data drops it before save.
-        is_empty_row = (
-            not cleaned_data.get("id")
-            and not skill_val
-            and not new_skill_name
-            and not cleaned_data.get("description")
-            and not cleaned_data.get("colleague")
-        )
-        if is_empty_row:
-            return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
-        has_skill = (skill_val and skill_val != "__new__") or new_skill_name
-        has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
-        if not has_skill and has_other_data:
-            self.add_error("skill", "Selecteer een rol.")
-        # has_custom_period checkbox means "Neem opdrachtperiode over" (inverted).
-        # Checked = take from assignment = no custom period.
+        # "Geplaatste consultant" without a name would silently save as a vacancy
+        # (no placement), so require the consultant the status promises.
+        if cleaned_data.get("is_filled") == "ingevuld" and not cleaned_data.get("colleague"):
+            self.add_error("colleague", "Selecteer een consultant.")
+        # The checkbox is inverted: checked means "inherit the assignment
+        # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
         if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
@@ -311,6 +372,3 @@ class ServiceForm(RvoFormMixin, forms.Form):
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
-
-
-ServiceFormSet = forms.formset_factory(ServiceForm, extra=0, min_num=1, validate_min=False)

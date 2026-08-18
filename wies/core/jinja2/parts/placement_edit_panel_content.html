@@ -1,0 +1,108 @@
+{# Child sheet of the placement panel: one form over Service.skill,
+   Service.description and the Placement period group. The back button fires a
+   `back` event that side_panel.js handles; saving re-renders the parent panel.
+
+   nldd-form gets its own <form> as a direct child (user-provided form mode),
+   because htmx needs its attributes on the real form element. #}
+{% set colleague = panel_data.colleague %}
+{% set form = panel_data.form %}
+{# The view supplies a heading when ?veld= edits a single row; without it the
+   whole form is shown. #}
+{% set panel_heading = panel_data.edit_heading or "Plaatsing bewerken" %}
+{# collapse-anchor: the bar shows the same title only once the heading below
+   scrolls out of view. #}
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ colleague.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form hx-post="{{ panel_data.edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML"
+      data-service-start="{{ panel_data.service.start_date.isoformat() if panel_data.service.start_date else '' }}"
+      data-service-end="{{ panel_data.service.end_date.isoformat() if panel_data.service.end_date else '' }}">
+  {% if form.skill %}
+    {# Combo box instead of the select widget: the role list is long enough
+           that typing beats scrolling. #}
+    {% set skill_value = form.skill.value() | string if form.skill.value() else "" %}
+    <nldd-form-field label="{{ form.skill.label }}">
+    <nldd-combo-box name="skill" value="{{ skill_value }}" accessible-label="{{ form.skill.label }}" {% if form.skill.errors %}invalid{% endif %}>
+    <nldd-menu empty-text="Geen rollen gevonden">
+    {% for value, label in form.skill.field.choices %}
+      {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+    {% endfor %}
+    </nldd-menu>
+    </nldd-combo-box>
+    {% for error in form.skill.errors %}
+      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  {% else %}
+    {# No edit rights on the role: show it as a read-only field #}
+    <nldd-form-field label="Rol">
+    <nldd-text-field readonly accessible-label="Rol" value="{{ panel_data.service.skill.name if panel_data.service.skill else '–' }}"></nldd-text-field>
+    </nldd-form-field>
+  {% endif %}
+  {% if form.description %}
+    {{ form.description.as_field_group() }}
+  {% endif %}
+  {% if form.period_source %}
+    {# Hidden through a parent with [hidden]: a `display:none` on the select
+           itself is overruled by the bundle CSS. The control below sets the
+           value (see placement_period_toggle.js). #}
+    <div hidden>{{ form.period_source.as_widget() }}</div>
+    {% set inherits = form.period_source.value() == "SERVICE" %}
+    <nldd-form-field label="Periode">
+    <nldd-segmented-control name="periode-keuze" width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
+    <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
+    <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
+    </nldd-segmented-control>
+    {# Only meaningful for the inherited period; placement_period_toggle.js
+             hides it once an own period is chosen. #}
+    <nldd-form-field-help-text data-service-period-help>
+    De periode van de opdracht is
+    {{ panel_data.service.start_date|datum_nl if panel_data.service.start_date else "onbekend" }}
+    t/m
+    {{ panel_data.service.end_date|datum_nl if panel_data.service.end_date else "heden" }}
+    </nldd-form-field-help-text>
+    </nldd-form-field>
+    {# Written out instead of as_field_group(): the `hidden` must be there
+       server-side so the first paint already shows the collapsed state and the
+       field does not flash visible-then-hidden. as_field_group() renders the
+       wrapper itself and cannot pass it. wire_field_errors links the error
+       message here, which as_field_group() would otherwise do. #}
+    {% set start_errors = wire_field_errors(form.specific_start_date) %}
+    <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
+    {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
+    {% for error in form.specific_start_date.errors %}
+      <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+    {# Off means no known end date, the placement runs on. The switch is not
+           posted; it only drives the end date field. #}
+    <nldd-form-field{% if inherits %} hidden{% endif %}>
+    <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+    </nldd-form-field>
+    {% set end_errors = wire_field_errors(form.specific_end_date) %}
+    <nldd-form-field label="{{ form.specific_end_date.label }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
+    {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
+    {% for error in form.specific_end_date.errors %}
+      <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  {% endif %}
+  {% for error in form.non_field_errors() %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at
+         the top pushes the first visible field down. #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>

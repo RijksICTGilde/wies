@@ -298,17 +298,36 @@ class SuborganizationAdminTest(TestCase):
         response = self.client.get(reverse("suborganization-admin"))
         assert response.status_code == 200
 
+    def test_admin_page_renders_nldd_not_rvo(self):
+        Suborganization.objects.create(name="Rijks ICT Gilde")
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-admin"))
+        body = response.content.decode()
+        # Migrated to NLDD web components.
+        assert "nldd-list" in body
+        assert "nldd-button" in body
+        # The old RVO/jinja-roos markup is gone.
+        assert "c-table" not in body
+        assert "c-h1" not in body
+        assert "rvo-badge" not in body
+
     def test_beheerder_can_create_suborganization(self):
         self.client.force_login(self.admin_user)
         response = self.client.post(reverse("suborganization-create"), {"name": "Nieuw Merk"})
         assert response.status_code == 200
+        # A valid create re-renders the list and closes the sheet.
+        assert response["HX-Retarget"] == "#suborganization_list_container"
+        assert response["HX-Trigger"] == "closeModal"
         assert Suborganization.objects.filter(name="Nieuw Merk").exists()
 
     def test_create_duplicate_suborganization_rejected(self):
         Suborganization.objects.create(name="Bestaand")
         self.client.force_login(self.admin_user)
-        self.client.post(reverse("suborganization-create"), {"name": "Bestaand"})
+        response = self.client.post(reverse("suborganization-create"), {"name": "Bestaand"})
         assert Suborganization.objects.filter(name="Bestaand").count() == 1
+        # An invalid create keeps the sheet open (no close) and shows the error.
+        assert "HX-Trigger" not in response
+        self.assertContains(response, "Naam wordt al gebruikt")
 
     def test_beheerder_can_delete_suborganization(self):
         suborganization = Suborganization.objects.create(name="Weg")
@@ -381,16 +400,54 @@ class SuborganizationAdminTest(TestCase):
         colleague.refresh_from_db()
         assert colleague.suborganization_id is None
 
-    def test_create_get_not_allowed(self):
+    def test_create_get_opens_sheet(self):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-create"))
-        assert response.status_code == 405
+        assert response.status_code == 200
+        # GET now opens the "Merk toevoegen" sheet instead of returning 405.
+        self.assertContains(response, "nldd-sheet")
+        self.assertContains(response, "Merk toevoegen")
 
-    def test_delete_get_renders_modal_not_405(self):
+    def test_delete_get_renders_centered_dialog_not_sheet(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
+        # The confirmation is a centered dialog, like the rest of Wies — not a
+        # right-side sheet.
+        self.assertContains(response, "nldd-modal-dialog")
+        self.assertNotContains(response, "nldd-sheet")
+
+    def test_delete_post_redirects_to_admin(self):
+        suborganization = Suborganization.objects.create(name="Weg")
+        self.client.force_login(self.admin_user)
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]))
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("suborganization-admin")
+
+    def test_create_form_is_not_nested(self):
+        """The sheet must render exactly one <form>, with the name field inside it.
+
+        Regression: {{ content }} rendered the form via forms/form.html, which
+        wrapped the fields in a second <nldd-form>. That inner nldd-form has no
+        <form> child, so in auto-wrap mode it created its own action-less <form>
+        in the light DOM; the form-associated name field bound to *that* form and
+        never reached the POST, so nothing got created. The view tests missed
+        this because they POST raw dicts and never render the template.
+        """
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-create"))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
+
+    def test_edit_form_is_not_nested(self):
+        suborganization = Suborganization.objects.create(name="Oud")
+        self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("suborganization-edit", args=[suborganization.public_id]))
+        body = response.content.decode()
+        assert body.count("<form") == 1, "sheet must not nest a second <form>"
+        assert 'name="name"' in body, "the name field must be rendered in the sheet"
 
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):

@@ -1,0 +1,5 @@
+{# Shared primary action button. The view sets ``primary_button`` with either an
+   ``href`` (plain link) or ``attrs`` (htmx). #}
+{% if primary_button %}
+  <nldd-button variant="primary" start-icon="plus" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-button>
+{% endif %}

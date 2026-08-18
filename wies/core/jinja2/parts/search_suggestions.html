@@ -1,22 +1,5 @@
-{% if search_term %}
-  <ul class="search-suggestions" role="listbox">
-    {# Primary action: full-text search on the typed term (same as pressing Enter) #}
-    <li>
-      <button type="button" class="search-suggestion search-suggestion--search">
-        <c-icon icon="zoek" size="sm" class="search-suggestion__icon" />
-        <span>Zoeken op <strong>"{{ search_term }}"</strong></span>
-      </button>
-    </li>
-    {% if org_suggestions %}
-      <li class="search-suggestions__header">Of filter op opdrachtgever:</li>
-      {% for org in org_suggestions %}
-        <li>
-          <button type="button"
-                  class="search-suggestion"
-                  data-org-id="{{ org.public_id }}"
-                  data-org-label="{{ org.label or org.name }}">{{ org.label or org.name }}</button>
-        </li>
-      {% endfor %}
-    {% endif %}
-  </ul>
-{% endif %}
+{# Only organizations whose abbreviation matches the search term exactly. No
+match means no items, and the menu stays closed. #}
+{% for org in org_suggestions %}
+  <nldd-menu-item text="{{ org.label or org.name }}" value="{{ org.public_id }}" icon="office" data-org-id="{{ org.public_id }}" data-org-label="{{ org.label or org.name }}"></nldd-menu-item>
+{% endfor %}

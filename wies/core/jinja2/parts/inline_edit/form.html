@@ -1,57 +1,53 @@
-{# Multi-field forms (EditableGroup) show a label per field and get
-   vertical spacing between inputs. Single-field forms render the
-   widget bare — the context (panel value next to the pencil, then
-   the input when editing) is enough that a label would just be noise.
-
-   A group may replace the field loop with its own body via
-   ``form_template``. The form element, concurrency token, non-field
-   errors, alert and buttons stay here, so no custom body can omit them. #}
 {% set multi = form.fields|length > 1 %}
+{# nldd-form wraps the real form (user-provided form mode). The other way around
+   it creates its own <form>, nesting the fields in a second form so they no
+   longer belong to the htmx form and are not submitted. #}
 <div id="{{ target }}">
-  <form hx-post="{{ edit_url }}"
+  <nldd-form>
+  <form {% if bare %}data-inline-edit-form{% endif %}
+        hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
-        hx-swap="outerHTML">
+        {# In bare mode the field stays open: the surrounding flow submits on leaving the step, and going back must show the fields as they were left. #}
+        hx-swap="{{ 'none' if bare else 'outerHTML' }}">
+    {# Concurrency token (#483): the view compares it with the current values
+       under select_for_update. Missing means the POST counts as a conflict. #}
     <input type="hidden"
            name="_concurrency_token"
            value="{{ concurrency_token }}">
+    {# A group may replace the field loop via form_template; the form element,
+       token, errors, alert and buttons stay here (see #483). #}
     {% if editable.form_template %}
       {% include editable.form_template %}
     {% else %}
-      <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
-        {% for bound in form %}
-          <div class="rvo-form-field">
-            {% if multi and bound.label %}
-              <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
-            {% endif %}
-            {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
-            {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-          </div>
+      {# A single inline field needs no label; with several fields it does. #}
+      {% for bound in form %}
+        {% set error_ids = wire_field_errors(bound) %}
+        <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
+        {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+        {% for error in bound.errors %}
+          <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
         {% endfor %}
-      </c-layout-flow>
+        </nldd-form-field>
+      {% endfor %}
     {% endif %}
-    {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    {# role="alert": the form is swapped in by HTMX, so without a live region a
-       screen reader would not announce that the save was held back. #}
+    {% for error in form.non_field_errors() %}
+      <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+    {% endfor %}
+    {# role="alert": the form is swapped in by htmx, so without a live region a
+       screen reader never announces the blocked save (#483). #}
     {% if alert %}
       <div role="alert">
-        <c-alert kind="{{ alert.kind }}"
-                 class="rvo-margin-block-start--md rvo-margin-block-end--md">
-          {{ alert.message }}
-        </c-alert>
+        <nldd-banner variant="{{ alert.kind }}" text="{{ alert.message }}"></nldd-banner>
       </div>
     {% endif %}
-    <div class="field-actions">
-      <c-button type="submit" kind="primary">
-        Opslaan
-      </c-button>
-      <c-button type="button"
-                kind="secondary"
-                hx-get="{{ edit_url }}?cancel=true"
-                hx-target="#{{ target }}"
-                hx-swap="outerHTML">
-        Annuleren
-      </c-button>
-    </div>
+    {# In bare mode saving belongs to the surrounding flow, so no own buttons. #}
+    {% if not bare %}
+      <div class="field-actions">
+        <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
+        <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
+      </div>
+    {% endif %}
   </form>
+  </nldd-form>
 </div>

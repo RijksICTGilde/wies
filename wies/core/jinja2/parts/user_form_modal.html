@@ -1,77 +1,14 @@
-<dialog id="{{ modal_element_id }}"
-        class="modal-dialog modal-dialog--wide"
-        closedby="none">
-  <div class="modal-content">
-    <div class="modal-header">
-      <c-h2>
-        {{ modal_title }}
-      </c-h2>
-      <button type="button" class="close modal-close-button">×</button>
-    </div>
-    <form method="post"
-          action="{{ form_post_url }}"
-          hx-post="{{ form_post_url }}"
-          hx-target="#{{ target_element_id }}">
-      {{ get_csrf_hidden_input(request) }}
-      <div class="modal-body">
-        {% if delete_warning %}
-          <div class="modal-body__warning">
-            <c-paragraph>
-              {{ delete_warning }}
-            </c-paragraph>
-          </div>
-        {% else %}
-          <div class="user-form-layout">
-            {# Left column: Basic user info #}
-            <div class="user-form-column">
-              <c-h3>
-                Gebruikersgegevens
-              </c-h3>
-              <div>
-                {{ content.first_name.as_field_group() }}
-                {{ content.last_name.as_field_group() }}
-                {{ content.email.as_field_group() }}
-                {{ content.groups.as_field_group() }}
-              </div>
-            </div>
-            {# Vertical divider #}
-            <div class="user-form-divider"></div>
-            {# Right column: Labels #}
-            <div class="user-form-column">
-              <c-h3>
-                Labels
-              </c-h3>
-              <div>
-                {{ content.suborganization.as_field_group() }}
-                {% for field_name in content.fields %}
-                  {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}
-                {% endfor %}
-              </div>
-            </div>
-          </div>
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <div class="modal-footer-buttons">
-          <div class="close">
-            <c-button kind="{{ 'warning-subtle' if warning_modal else 'secondary' }}"
-                      type="button">
-              Annuleren
-            </c-button>
-          </div>
-          {% if delete_url %}
-            <c-button kind="warning-subtle"
-                      hx-get="{{ delete_url }}"
-                      hx-target="#{{ modal_element_id }}"
-                      hx-swap="innerHTML">
-              Verwijderen
-            </c-button>
-          {% endif %}
-        </div>
-        <c-button kind="{{ 'warning' if warning_modal else 'primary' }}" type="submit">
-          {{ form_button_label }}
-        </c-button>
-      </div>
-    </form>
-  </div>
-</dialog>
+{# A POST reaches this template only on a validation error: then only the body is
+   returned, so the open sheet stays (pattern of generic_form_modal.html). #}
+{% if request.method == "POST" %}
+  {% include "parts/user_form_body.html" %}
+{% else %}
+  <nldd-sheet id="{{ modal_element_id }}" data-auto-show placement="right" width="480px" accessible-label="{{ modal_title }}">
+  <nldd-page sticky-header>
+  <nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <div id="{{ modal_element_id }}Body">{% include "parts/user_form_body.html" %}</div>
+  </nldd-simple-section>
+  </nldd-page>
+  </nldd-sheet>
+{% endif %}

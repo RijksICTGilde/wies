@@ -1,0 +1,309 @@
+/* NLDD app-level overrides for Wies */
+
+/* Tell the browser which scheme to paint OS-rendered controls in — most
+   importantly the native <select> popup, which lives outside our CSS (and
+   shadow DOM). Without this, Chrome on Windows paints the open list with the
+   page background but not our text colour, giving white-on-white in dark mode
+   (#529). macOS masks this by always theming the popup itself, so it does not
+   reproduce there. No attribute = user chose "system" (or is logged out), so
+   defer to the OS. */
+html {
+  color-scheme: light dark;
+}
+html[data-scheme="light"] {
+  color-scheme: light;
+}
+html[data-scheme="dark"] {
+  color-scheme: dark;
+}
+
+/* Force the page scheme onto native controls themselves. Setting color-scheme on
+   <html> is not enough on Chrome/Windows: the native <select> popup keeps
+   rendering white-on-white in dark mode unless the control element itself carries
+   color-scheme — and nldd-dropdown (the <select>'s parent) resets it, so plain
+   inheritance does not reach the control. Bind it to the same data-scheme signal
+   as html so it tracks an explicit theme choice; without the attribute (system
+   default) it falls back to the OS via the base rule below (#529). */
+select,
+.wies-input,
+input,
+textarea {
+  color-scheme: light dark;
+}
+html[data-scheme="light"] :is(select, .wies-input, input, textarea) {
+  color-scheme: light;
+}
+html[data-scheme="dark"] :is(select, .wies-input, input, textarea) {
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* nldd-list sets container-type/name inline from connectedCallback, but an htmx
+   outerHTML swap replaces the element and the callback doesn't re-run, so the
+   cells' @container query loses its target and every hide-above/-below cell
+   shows at once (double rows). Pin it in CSS so the swap can't wipe it. */
+nldd-list {
+  container-type: inline-size;
+  container-name: cells-container;
+}
+
+/* nldd-page is the layout and scroller (height: 100%), so the chain up to the
+   document root must have a definite height for it to resolve against. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--primitives-font-family-body, system-ui, sans-serif);
+  color: var(--semantics-content-color, #1a1a1a);
+  background: var(--semantics-surfaces-base-background-color, #fff);
+}
+
+.wies-sidebar-heading {
+  margin: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px)
+    var(--primitives-space-4, 4px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+.wies-sidebar-heading:not(:first-child) {
+  margin-top: var(--primitives-space-16, 16px);
+}
+
+/* The "Filter" button only makes sense while the sidebar is a sheet. On lg the
+   sidebar is an always-visible aside, so hide the whole toolbar item — hiding
+   only the button would leave the item's slot taking space in the toolbar. */
+#sidebar-toggle-item {
+  display: none;
+}
+/* :not([hidden]) is load-bearing: the toolbar sets [hidden] on an item it moves
+   into the overflow menu, and a display from the document beats the browser's
+   [hidden] rule. Without it, "Filter" stayed and slid under the overflow button. */
+nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
+  display: inline-flex;
+}
+
+/* Bridges the tick in which the search field jumps from narrow to wide.
+   nldd-toolbar reads the item's width attributes only in a later tick
+   (_syncHosts), which then sets `fluid`; until then the item sits at
+   flex-basis:auto and shrinks to its intrinsic width. Not the :not(:defined)
+   FOUC case — the element is already defined. Values match the attributes on
+   the item; the rule drops out once `fluid` appears. */
+nldd-toolbar-item[width]:not([fluid]) {
+  flex: 0 1 560px;
+  min-width: 240px;
+  max-width: 560px;
+}
+nldd-toolbar-item[width]:not([fluid]) > * {
+  width: 100%;
+}
+
+a {
+  color: var(--semantics-links-color, inherit);
+}
+
+/* Colour only. A font-size here made an empty value smaller than the value that
+   could have stood there, a difference that said nothing; the surrounding
+   nldd-text-cell sets the size. */
+.wies-text-secondary {
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+/* Native inputs still rendered by hand: the date widget (nldd-date-field needs
+   a newer design-system than 0.8.66) and a few one-off inputs outside the
+   widget system (user_import, label_category). */
+.wies-input {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--semantics-input-fields-border-color, #cbd5e1);
+  border-radius: 4px;
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  color: inherit;
+  width: 100%;
+}
+.wies-input:focus {
+  outline: 2px solid var(--semantics-content-accent-color, #154273);
+  outline-offset: -1px;
+}
+
+/* Checkbox groups: an nldd-checkbox plus its <label> per option. The label is
+   ours because nldd-checkbox-field's would hide the checkbox in a shadow root,
+   where it no longer submits with the form. */
+
+.wies-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.wies-fieldset__legend {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+.wies-fieldset__hint {
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+.editable-field-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.editable-field-display__value {
+  flex: 1;
+  min-width: 0;
+}
+.edit-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: var(--semantics-content-secondary-color, #64748b);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.edit-icon-button:hover {
+  color: var(--semantics-content-accent-color, #154273);
+  background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
+}
+.edit-icon-button__pencil {
+  width: var(--primitives-space-18, 18px);
+  height: var(--primitives-space-18, 18px);
+}
+.field-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.assignment-card__chevron {
+  pointer-events: none;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+/* Above nldd-card's overlay link, which would otherwise swallow the hover and
+   keep the chip's tooltip from ever appearing. This is how the card documents
+   nested interactive content. */
+.wies-privacy-chip {
+  position: relative;
+  z-index: 1;
+}
+
+/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
+   double spaces and indentation of a pasted description should survive.
+   `:not([hidden])` is needed because inline_edit.js swaps the two spans via the
+   hidden attribute, and a display from the document beats [hidden]. */
+.inline-edit-long-text__truncated:not([hidden]),
+.inline-edit-long-text__full:not([hidden]) {
+  display: block;
+  white-space: pre-wrap;
+}
+
+/* nldd-button draws itself; only position is ours. No display on the host: the
+   component relies on its own inline-flex and blows its icon up otherwise. The
+   negative margin offsets the button padding so the label lines up with the text. */
+.inline-edit-show-more {
+  margin-top: var(--primitives-space-4, 4px);
+  margin-left: calc(-1 * var(--primitives-space-8, 8px));
+}
+
+/* A Van/Naar value below a timeline sentence, as its own block so long text does
+   not run on behind "Naar:". */
+.wies-event-value {
+  margin-top: var(--primitives-space-4, 4px);
+}
+
+/* nldd-card draws no hover state of its own; only clickable cards get one, so
+   the statistics tiles do not look clickable. `--_background-color` is the
+   variable .card reads, and it inherits into the shadow root, so the card keeps
+   its radius and clipping. The neutral scale darkens in light mode and lightens
+   in dark, so one token covers both themes.
+
+   `[href]:not([href=""])` rather than `[href]`: the component reflects its own
+   default (`href = ''`) to the attribute, so every card carries `href=""` in the
+   DOM. An attribute selector tests for presence, not content, so `[href]`
+   matched them all. */
+nldd-card[href]:not([href=""]):hover,
+nldd-card[button]:hover {
+  --_background-color: var(--primitives-color-neutral-50);
+}
+
+/* "Meer tonen" button below a list or card grid. grid-column spans every column
+   in the card grid and is ignored in a list, which is not a grid. */
+.wies-load-more {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  padding: 0.75rem 0;
+}
+
+/* Version line in the page footer's "Over Wies" column: muted and small;
+   nldd-rich-text handles the rest. */
+.wies-footer-version {
+  color: var(--semantics-content-secondary-color);
+  font-size: 0.875rem;
+}
+
+/* FAQ accordion. The design system ships no accordion, so the native
+   <details>/<summary> is styled with NLDD tokens, which also covers dark mode.
+   Scoped to .wies-faq so other <details> stay untouched. */
+.wies-faq {
+  border-top: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+}
+.wies-faq details {
+  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+}
+.wies-faq summary {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 0.5rem);
+  padding: var(--primitives-space-12, 0.75rem) var(--primitives-space-8, 0.5rem);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none; /* verberg de native driehoek (standaard) */
+}
+.wies-faq summary::-webkit-details-marker {
+  display: none; /* verberg de native driehoek (WebKit) */
+}
+.wies-faq summary::before {
+  content: "";
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid var(--semantics-content-accent-color, #007bc7);
+  border-bottom: 2px solid var(--semantics-content-accent-color, #007bc7);
+  transform: rotate(-45deg); /* chevron wijst naar rechts als gesloten */
+  transition: transform 0.15s ease;
+}
+.wies-faq details[open] > summary::before {
+  transform: rotate(45deg); /* chevron wijst naar beneden als open */
+}
+.wies-faq summary:hover {
+  color: var(--semantics-links-color, #007bc7);
+}
+.wies-faq summary:focus-visible {
+  outline: 2px solid var(--semantics-content-accent-color, #007bc7);
+  outline-offset: -2px;
+}
+.wies-faq details[open] {
+  border-left: 4px solid var(--semantics-content-accent-color, #007bc7);
+}
+.wies-faq details > *:not(summary) {
+  margin-left: calc(0.5em + var(--primitives-space-8, 0.5rem));
+  padding-right: var(--primitives-space-8, 0.5rem);
+  padding-bottom: var(--primitives-space-12, 0.75rem);
+}

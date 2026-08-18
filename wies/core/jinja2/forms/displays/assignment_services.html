@@ -1,0 +1,75 @@
+{# Display partial for the Assignment services EditableCollection. Renders the
+team list from `value` (row dicts from _services_initial, viewer-filtered and
+vacancies-first via _services_display_context). Edit mode swaps the inline-edit
+wrapper for the formset and back. Historical placements carry a privacy note for
+the placed colleague and BM owner, hidden from unrelated viewers.
+
+Rows are not clickable: every action runs through the row menu in the last cell. #}
+{% if value %}
+  <nldd-list variant="box-tinted">
+  {% for row in value %}
+    {% if row.colleague %}
+      {% set pl = row.placement %}
+      {% set svc = row.service %}
+      {% set member_name = row.colleague.name %}
+      <nldd-list-item>
+      <nldd-cell>
+      <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell divider-start>
+      <span>
+        {{ row.colleague.name }}
+        {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
+        {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
+      </span>
+      {% if pl.start_date or pl.end_date %}
+        <span slot="supporting-text">
+          {% if pl.start_date and pl.end_date %}
+            {{ pl.start_date|datum_nl }} – {{ pl.end_date|datum_nl }}
+          {% elif pl.start_date %}
+            {{ pl.start_date|datum_nl }} – heden
+          {% elif pl.end_date %}
+            t/m {{ pl.end_date|datum_nl }}
+          {% endif %}
+        </span>
+      {% endif %}
+      </nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {% include "forms/displays/assignment_services_row_menu.html" %}
+      </nldd-list-item>
+    {% else %}
+      {% set svc = row.service %}
+      {% set pl = none %}
+      {% set member_name = row.skill_name %}
+      <nldd-list-item>
+      <nldd-cell>
+      {# No name: the text-document icon reads as a request, not as a person. #}
+      <nldd-avatar size="40" icon="text-document" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell divider-start>
+      {# "Aanvraag: <rol>" reads as one sentence; a separate tag next to it did
+         that job less clearly. #}
+      <span>Aanvraag: {{ row.skill_name }}</span>
+      {% if svc and (svc.start_date or svc.end_date) %}
+        <span slot="supporting-text">
+          {% if svc.start_date and svc.end_date %}
+            {{ svc.start_date|datum_nl }} – {{ svc.end_date|datum_nl }}
+          {% elif svc.start_date %}
+            {{ svc.start_date|datum_nl }} – heden
+          {% elif svc.end_date %}
+            t/m {{ svc.end_date|datum_nl }}
+          {% endif %}
+        </span>
+      {% endif %}
+      </nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {% include "forms/displays/assignment_services_row_menu.html" %}
+      </nldd-list-item>
+    {% endif %}
+  {% endfor %}
+  </nldd-list>
+{% else %}
+  <span class="wies-text-secondary">Geen team gevonden.</span>
+{% endif %}

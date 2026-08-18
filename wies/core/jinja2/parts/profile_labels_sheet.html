@@ -1,0 +1,14 @@
+{# All label categories in one sheet, same setup as the name sheet. A POST only
+   reaches here on a validation error, and then only the body goes back. #}
+{% if request.method == "POST" %}
+  {% include "parts/profile_labels_body.html" %}
+{% else %}
+  <nldd-sheet id="profileLabelsSheet" data-auto-show placement="right" width="480px" accessible-label="Profiel wijzigen">
+  <nldd-page sticky-header>
+  <nldd-top-title-bar slot="header" text="Profiel wijzigen" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <div id="profileLabelsBody">{% include "parts/profile_labels_body.html" %}</div>
+  </nldd-simple-section>
+  </nldd-page>
+  </nldd-sheet>
+{% endif %}

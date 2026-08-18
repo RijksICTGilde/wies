@@ -1,3 +1,6 @@
+import json
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
@@ -5,7 +8,6 @@ from django.urls import reverse
 
 from wies.core.models import (
     Assignment,
-    AssignmentOrganizationUnit,
     Colleague,
     Event,
     OrganizationUnit,
@@ -14,21 +16,6 @@ from wies.core.models import (
 from wies.core.roles import setup_roles
 
 User = get_user_model()
-
-# Formset management form data for the service formset (prefix="service")
-FORMSET_MGMT_1 = {
-    "service-TOTAL_FORMS": "1",
-    "service-INITIAL_FORMS": "0",
-    "service-MIN_NUM_FORMS": "1",
-    "service-MAX_NUM_FORMS": "1000",
-}
-
-FORMSET_MGMT_2 = {
-    "service-TOTAL_FORMS": "2",
-    "service-INITIAL_FORMS": "0",
-    "service-MIN_NUM_FORMS": "1",
-    "service-MAX_NUM_FORMS": "1000",
-}
 
 
 def org_formset_data(orgs):
@@ -89,332 +76,152 @@ class AssignmentCreateTest(TestCase):
             label="Belastingdienst",
         )
 
-    def test_requires_login(self):
-        response = self.client.get(reverse("assignment-create"))
-        assert response.status_code == 302
+    # --- Create via the side panel (assignment-create-sheet) ---
+    # Same assignment fields as the full-page create, but no roles: those are
+    # added afterwards in the assignment panel. Success is a 204 with an
+    # HX-Location to ?opdracht=<id>.
 
-    def test_requires_add_assignment_permission(self):
+    def test_sheet_post_requires_add_assignment_permission(self):
+        # The create route is POST-only; without the permission a 403.
         self.client.force_login(self.regular_user)
-        response = self.client.get(reverse("assignment-create"))
+        response = self.client.post(reverse("assignment-create-sheet"), {})
         assert response.status_code == 403
 
-    def test_get_returns_form(self):
+    def test_list_sentinel_htmx_returns_create_form(self):
+        # ?nieuwe-opdracht opens the empty create form as a panel; the htmx
+        # panel request gets only the fragment.
         self.client.force_login(self.bdm_user)
-        response = self.client.get(reverse("assignment-create"))
+        response = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": ""},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
+        assert b"Voer opdracht in" in response.content
 
-    def test_post_creates_assignment_with_open_service(self):
+    def test_list_sentinel_full_page_opens_create_panel(self):
+        # Full-page GET (refresh/bookmark): the whole list plus the create panel.
+        self.client.force_login(self.bdm_user)
+        response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
+        assert response.status_code == 200
+        assert b"Opdracht invoeren" in response.content
+        assert b"Voer opdracht in" in response.content
+
+    def test_list_sentinel_without_permission_shows_list_no_panel(self):
+        # Without the permission: plain list, no create panel — no 403, this is the list view.
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
+        assert response.status_code == 200
+        assert b"Voer opdracht in" not in response.content
+
+    def test_sheet_post_creates_assignment_without_services(self):
         self.client.force_login(self.bdm_user)
         response = self.client.post(
-            reverse("assignment-create"),
+            reverse("assignment-create-sheet"),
             {
-                "name": "Test Opdracht",
+                "name": "Sheet Opdracht",
                 "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-description": "Backend ontwikkeling",
-                "service-0-skill": self.skill.public_id,
-                "service-0-has_custom_period": "on",
+                "terug_url": reverse("assignment-list"),
             },
         )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Test Opdracht")
-        assert assignment.source == "wies"
-        service = assignment.services.first()
-        assert service.description == "Backend ontwikkeling"
-        assert service.skill == self.skill
-        assert service.status == "OPEN"
-        assert service.placements.count() == 0
+        assert response.status_code == 204
+        # HX-Location sends the client to the new assignment panel.
+        assignment = Assignment.objects.get(name="Sheet Opdracht")
+        assert f"opdracht={assignment.public_id}" in response["HX-Location"]
+        # No roles: those are added later via the panel.
+        assert assignment.services.count() == 0
 
-    def test_post_creates_assignment_with_placement(self):
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Ingevulde Opdracht",
-                "owner": self.bdm_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-description": "Backend ontwikkeling",
-                "service-0-skill": self.skill.public_id,
-                "service-0-is_filled": "ingevuld",
-                "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.public_id,
-            },
-        )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Ingevulde Opdracht")
-        service = assignment.services.first()
-        assert service.status == "OPEN"
-        assert service.placements.first().colleague == self.colleague
-
-    def test_post_with_organizations(self):
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Opdracht met Org",
-                "owner": self.bdm_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
-                **FORMSET_MGMT_1,
-                "service-0-description": "Dienst",
-                "service-0-skill": self.skill.public_id,
-                "service-0-has_custom_period": "on",
-            },
-        )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Opdracht met Org")
-        primary = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="PRIMARY")
-        assert primary.organization == self.org
-        involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
-        assert involved.organization == self.org2
-
-    def test_post_emits_create_event_with_snapshot(self):
-        """The create event audits the same snapshot as delete: one
-        "rol (occupant or open)" entry per service, plus the opdrachtgevers."""
+    def test_sheet_post_emits_create_event(self):
         self.client.force_login(self.bdm_user)
         self.client.post(
-            reverse("assignment-create"),
+            reverse("assignment-create-sheet"),
             {
-                "name": "Audit Snapshot Opdracht",
+                "name": "Sheet Audit",
                 "owner": self.bdm_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
-                **FORMSET_MGMT_2,
-                "service-0-description": "Gevulde rol",
-                "service-0-skill": self.skill.public_id,
-                "service-0-is_filled": "ingevuld",
-                "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.public_id,
-                "service-1-description": "Open rol",
-                "service-1-skill": self.skill.public_id,
-                "service-1-has_custom_period": "on",
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
             },
         )
-        assignment = Assignment.objects.get(name="Audit Snapshot Opdracht")
+        assignment = Assignment.objects.get(name="Sheet Audit")
         event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
-        assert event.context["name"] == "Audit Snapshot Opdracht"
-        assert event.context["services"] == [
-            f"{self.skill.name} ({self.colleague.name})",
-            f"{self.skill.name} (open)",
-        ]
-        assert sorted(event.context["organizations"]) == sorted(
-            [self.org.label or self.org.name, self.org2.label or self.org2.name]
-        )
+        assert event.context["name"] == "Sheet Audit"
 
-    def test_post_multiple_services(self):
+    def test_sheet_post_validation_no_org_rerenders_form(self):
         self.client.force_login(self.bdm_user)
         response = self.client.post(
-            reverse("assignment-create"),
+            reverse("assignment-create-sheet"),
             {
-                "name": "Multi Service Opdracht",
+                "name": "Zonder Opdrachtgever",
+                "owner": self.bdm_colleague.public_id,
+                **org_formset_data([]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        # Invalid form: re-render (200), no assignment created.
+        assert response.status_code == 200
+        assert not Assignment.objects.filter(name="Zonder Opdrachtgever").exists()
+        # The org error must render id-wired (error-message + invalid), or
+        # nldd-form-field shows it at height 0 and "Aanmaken" appears dead.
+        html = response.content.decode()
+        assert 'id="error-organizations-1"' in html
+        assert 'error-message="error-organizations-1"' in html
+        # The template splits the picker div's attributes over lines, so match
+        # the element rather than one flat substring.
+        picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)
+        assert picker is not None
+        assert "invalid" in picker.group(1)
+
+    def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
+        # _safe_return_path rejects a protocol-relative terug_url, so the
+        # HX-Location falls back to the list.
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Onveilige Terug",
                 "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_2,
-                "service-0-description": "Frontend",
-                "service-0-skill": self.skill.public_id,
-                "service-0-has_custom_period": "on",
-                "service-1-description": "Backend",
-                "service-1-skill": self.skill.public_id,
-                "service-1-has_custom_period": "on",
+                "terug_url": "//evil.example",
             },
         )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Multi Service Opdracht")
-        assert assignment.services.count() == 2
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Onveilige Terug")
+        location = json.loads(response["HX-Location"])
+        assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
 
-    def test_post_validation_missing_name(self):
+    def test_sheet_success_banner_rides_along_on_panel_load(self):
+        """The success banner rides along as an OOB swap on the panel response.
+
+        base.html does not reload on a panel swap, so the banner cannot come
+        from there.
+        """
         self.client.force_login(self.bdm_user)
         response = self.client.post(
-            reverse("assignment-create"),
+            reverse("assignment-create-sheet"),
             {
-                "name": "",
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.public_id,
-                "service-0-description": "Dienst",
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_post_validation_no_org(self):
-        """Submitting without an org should fail validation."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Opdracht Zonder Org",
-                "owner": self.bdm_colleague.public_id,
-                "org-TOTAL_FORMS": "0",
-                "org-INITIAL_FORMS": "0",
-                "org-MIN_NUM_FORMS": "1",
-                "org-MAX_NUM_FORMS": "1000",
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.public_id,
-                "service-0-description": "Dienst",
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_post_validation_no_services(self):
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Opdracht Zonder Dienst",
-                **org_formset_data([(self.org, "PRIMARY")]),
-                "service-TOTAL_FORMS": "1",
-                "service-INITIAL_FORMS": "0",
-                "service-MIN_NUM_FORMS": "1",
-                "service-MAX_NUM_FORMS": "1000",
-                "service-0-description": "",
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_post_non_numeric_total_forms_does_not_500(self):
-        # A crafted service-TOTAL_FORMS value must not crash the view before the
-        # formset validates. int() on a non-numeric value would raise ValueError.
-        # raise_request_exception=False so an unexpected view crash surfaces as a
-        # 500 response we can assert against, rather than being re-raised.
-        client = Client(raise_request_exception=False)
-        client.force_login(self.bdm_user)
-        response = client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Opdracht Kapotte Formset",
-                **org_formset_data([(self.org, "PRIMARY")]),
-                "service-TOTAL_FORMS": "abc",
-                "service-INITIAL_FORMS": "0",
-                "service-MIN_NUM_FORMS": "1",
-                "service-MAX_NUM_FORMS": "1000",
-            },
-        )
-        # The formset management form is invalid, so the view re-renders the
-        # form (200) rather than crashing with a 500.
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_post_creates_new_skill_inline(self):
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Opdracht Nieuwe Rol",
+                "name": "Banner Opdracht",
                 "owner": self.bdm_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-description": "Nieuwe dienst",
-                "service-0-skill": "__new__",
-                "service-0-new_skill_name": "Blockchain Developer",
-                "service-0-has_custom_period": "on",
+                "terug_url": reverse("assignment-list"),
             },
         )
-        assert response.status_code == 302
-        assert Skill.objects.filter(name="Blockchain Developer").exists()
-        service = Assignment.objects.get(name="Opdracht Nieuwe Rol").services.first()
-        assert service.skill.name == "Blockchain Developer"
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Banner Opdracht")
 
-    def test_post_validation_end_before_start(self):
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Datum Opdracht",
-                "start_date": "2026-06-01",
-                "end_date": "2026-01-01",
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.public_id,
-                "service-0-description": "Dienst",
-            },
+        # The follow-up request htmx makes after HX-Location: a panel load.
+        panel = self.client.get(
+            reverse("assignment-list"),
+            {"opdracht": assignment.public_id},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_invalid_org_id_rejected(self):
-        """Non-existent org IDs should not create an assignment."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Test Opdracht",
-                "owner": self.bdm_colleague.public_id,
-                "org-TOTAL_FORMS": "1",
-                "org-INITIAL_FORMS": "0",
-                "org-MIN_NUM_FORMS": "1",
-                "org-MAX_NUM_FORMS": "1000",
-                "org-0-organization": "99999",
-                "org-0-role": "PRIMARY",
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.public_id,
-                "service-0-description": "Dienst",
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
-    def test_formset_size_capped_at_100(self):
-        """Submitting TOTAL_FORMS > 100 should not crash the server."""
-        self.client.force_login(self.bdm_user)
-        data = {
-            "name": "Test Opdracht",
-            "owner": self.bdm_colleague.public_id,
-            **org_formset_data([(self.org, "PRIMARY")]),
-            "service-TOTAL_FORMS": "9999",
-            "service-INITIAL_FORMS": "0",
-            "service-MIN_NUM_FORMS": "1",
-            "service-MAX_NUM_FORMS": "1000",
-            "service-0-skill": self.skill.public_id,
-            "service-0-description": "Dienst",
-        }
-        response = self.client.post(reverse("assignment-create"), data)
-        assert response.status_code in (200, 302)
-
-    def test_new_skill_empty_name_rejected(self):
-        """Selecting __new__ without providing a skill name should fail validation."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Test Opdracht",
-                "owner": self.bdm_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-skill": "__new__",
-                "service-0-new_skill_name": "",
-                "service-0-description": "Dienst",
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-        assert Skill.objects.filter(name="").count() == 0
-
-    def test_source_wies_on_service_and_placement(self):
-        """source='wies' is set on Service and Placement, not just Assignment."""
-        self.client.force_login(self.bdm_user)
-        self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Source Check",
-                "owner": self.bdm_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.public_id,
-                "service-0-description": "Dienst",
-                "service-0-is_filled": "ingevuld",
-                "service-0-has_custom_period": "on",
-                "service-0-colleague": self.colleague.public_id,
-            },
-        )
-        assignment = Assignment.objects.get(name="Source Check")
-        service = assignment.services.first()
-        assert service.source == "wies"
-        placement = service.placements.first()
-        assert placement.source == "wies"
+        html = panel.content.decode()
+        assert 'id="flash-messages"' in html
+        assert "hx-swap-oob" in html
+        assert "Banner Opdracht" in html
+        assert "is aangemaakt" in html
+        assert "Bekijk opdracht" in html
 
 
 class AssignmentListButtonTest(TestCase):
@@ -435,9 +242,21 @@ class AssignmentListButtonTest(TestCase):
     def test_bdm_sees_create_button(self):
         self.client.force_login(self.bdm_user)
         response = self.client.get(reverse("assignment-list"))
+        assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
+
+    def test_create_button_targets_list_sentinel(self):
+        # The button opens the create sheet as a panel on the list
+        # (?nieuwe-opdracht) and pushes the URL, not via /invoeren/?terug=.
+        self.client.force_login(self.bdm_user)
+        response = self.client.get(reverse("assignment-list"))
+        html = response.content.decode()
+        assert "nieuwe-opdracht" in html
+        assert 'hx-push-url="true"' in html
+        assert "invoeren/?terug=" not in html
 
     def test_regular_user_does_not_see_create_button(self):
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("assignment-list"))
+        assert response.status_code == 200
         assert b"Opdracht invoeren" not in response.content

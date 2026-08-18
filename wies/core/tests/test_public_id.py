@@ -1,6 +1,8 @@
-"""Tests for the unguessable public_id on URL-exposed models (defense-in-depth
-against sequential-PK enumeration). The int PK stays internal; the public_id is
-what URLs expose."""
+"""Tests for the unguessable public_id on URL-exposed models.
+
+The int PK stays internal; URLs expose the public_id, so sequential-PK
+enumeration is not possible.
+"""
 
 import datetime
 import uuid
@@ -37,7 +39,7 @@ User = get_user_model()
 
 
 def assert_is_public_id(value):
-    """A public_id is a UUIDv4 (the unguessable identifier exposed in URLs)."""
+    """Asserts that ``value`` is a UUIDv4, the identifier exposed in URLs."""
     assert isinstance(value, uuid.UUID)
     assert value.version == 4
 
@@ -58,9 +60,7 @@ class AssignmentPublicIdTests(TestCase):
         assert a.public_id == original
 
     def test_base_fixture_loads_and_every_assignment_has_a_public_id(self):
-        """`just setup` loads base_dummy_data.json; every assignment must end up
-        with a public_id (guards against a future required field the fixture
-        forgets)."""
+        """Every assignment in the committed base fixture has a public_id."""
         call_command("loaddata", "base_dummy_data.json", verbosity=0)
 
         total = Assignment.objects.count()
@@ -69,8 +69,8 @@ class AssignmentPublicIdTests(TestCase):
 
 
 class AssignmentPublicIdRoutingTests(TestCase):
-    """The dedicated assignment routes resolve by public_id, so the sequential
-    integer PK is no longer walkable in those URLs."""
+    """The assignment routes resolve by public_id, so the integer PK is not
+    walkable in those URLs."""
 
     def setUp(self):
         self.client = Client()
@@ -91,20 +91,20 @@ class AssignmentPublicIdRoutingTests(TestCase):
         self.assertContains(response, "DTC4NL")
 
     def test_routes_no_longer_accept_integer_pk(self):
-        """The old sequential-int URL form must not build or resolve."""
+        """The old integer-PK URL form neither builds nor resolves."""
         for route in ("assignment-events-partial", "assignment-delete"):
             try:
                 url = reverse(route, args=[self.assignment.pk])
             except NoReverseMatch:
-                continue  # int rejected by the <uuid:> converter, which is the point
+                continue  # Rejected by the <uuid:> converter, which is the point.
             assert self.client.get(url).status_code == 404, f"{route} still resolved an int pk"
 
 
 class AssignmentPanelParamTests(TestCase):
-    """The ?opdracht= side-panel param resolves by public_id, so an authenticated
-    user can no longer walk the integer PK space to harvest opdracht metadata."""
+    """The ?opdracht= panel param resolves by public_id, so the integer PK space
+    cannot be walked to harvest opdracht metadata."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()
@@ -123,9 +123,8 @@ class AssignmentPanelParamTests(TestCase):
         self.assertContains(response, "DTC4NL")
 
     def test_panel_request_with_integer_pk_is_404(self):
-        """An HX panel request for a non-public_id value returns 404 (HTMX won't
-        swap), instead of opening an empty or broken panel - on every surface
-        that resolves ?opdracht= (each is a different view type)."""
+        """An HX panel request for a non-public_id value returns 404 on every
+        surface that resolves ?opdracht=, instead of opening a broken panel."""
         for route in ("home", "assignment-list", "user-profile"):
             assert self._panel(route, self.assignment.pk).status_code == 404, route
 
@@ -134,8 +133,7 @@ class AssignmentPanelParamTests(TestCase):
             assert self._panel(route, "not-a-uuid").status_code == 404, route
 
     def test_full_page_with_invalid_opdracht_stays_graceful(self):
-        """A full-page load (no HX) with a bad ?opdracht= renders the page
-        without a panel, never a 404."""
+        """A full-page load with a bad ?opdracht= renders without a panel, never 404."""
         response = self.client.get(reverse("home") + f"?opdracht={self.assignment.pk}")
 
         assert response.status_code == 200
@@ -170,10 +168,10 @@ class ColleaguePublicIdTests(TestCase):
 
 
 class ColleaguePanelParamTests(TestCase):
-    """The ?collega= side-panel param resolves by public_id, so an authenticated
-    user can no longer walk the integer PK space to harvest colleague PII."""
+    """The ?collega= panel param resolves by public_id, so the integer PK space
+    cannot be walked to harvest colleague PII."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()
@@ -219,10 +217,10 @@ class PlacementPublicIdTests(TestCase):
 
 
 class PlacementPanelParamTests(TestCase):
-    """The ?plaatsing= panel resolves by public_id AND keeps placement_visibility:
-    a placement the viewer may not see is indistinguishable from a nonexistent one."""
+    """The ?plaatsing= panel resolves by public_id and keeps placement_visibility,
+    so a placement the viewer may not see looks like a nonexistent one."""
 
-    HX = {"HX-Request": "true", "HX-Target": "side_panel-content"}
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.client = Client()
@@ -258,12 +256,39 @@ class PlacementPanelParamTests(TestCase):
         self.assertContains(response, "Placed Person")
 
     def test_hidden_placement_indistinguishable_from_missing(self):
-        """Anti-oracle: an ended placement the unrelated viewer may not see returns
-        the same 404 as a nonexistent public_id, so its existence stays hidden."""
+        """A hidden placement returns the same 404 as a nonexistent public_id, so
+        its existence cannot be probed."""
         hidden = self._placement(start_offset=-30, end_offset=-10)
 
         assert self._panel(hidden.public_id).status_code == 404
         assert self._panel(uuid.uuid4()).status_code == 404
+
+    def test_ended_placement_shown_to_placed_colleague(self):
+        """The entitled viewer (the placed colleague) opens an ended placement's
+        panel over HTTP and sees it — the positive mirror of the 404 above."""
+        placed_user = User.objects.create_user(email="p@rijksoverheid.nl")
+        self.placed.user = placed_user
+        self.placed.save(update_fields=["user"])
+        self.client.force_login(placed_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        response = self._panel(ended.public_id)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Placed Person")
+
+    def test_ended_placement_shown_to_bm_owner(self):
+        """The BM-owner opens the same ended placement's panel over HTTP."""
+        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        self.client.force_login(owner_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        response = self._panel(ended.public_id)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Placed Person")
 
     def test_malformed_value_is_404(self):
         assert self._panel("not-a-uuid").status_code == 404
@@ -287,7 +312,7 @@ class UserPublicIdTests(TestCase):
 
 
 class UserAdminRoutePublicIdTests(TestCase):
-    """The beheer/gebruikers/<pk>/... routes resolve by public_id."""
+    """The beheer/gebruikers routes resolve by public_id."""
 
     def setUp(self):
         self.client = Client()
@@ -339,13 +364,11 @@ class LabelAdminRoutePublicIdTests(TestCase):
         self.client.force_login(self.admin)
 
     def test_label_edit_resolves_by_public_id(self):
-        assert self.client.get(reverse("label-edit", args=[self.label.public_id])).status_code == 200
-
-    def test_category_edit_resolves_by_public_id(self):
-        assert self.client.get(reverse("label-category-edit", args=[self.category.public_id])).status_code == 200
+        assert self.client.get(reverse("label-form-edit", args=[self.label.public_id])).status_code == 200
 
     def test_routes_no_longer_accept_integer_pk(self):
-        for route, obj in (("label-edit", self.label), ("label-category-edit", self.category)):
+        # label-category-edit was replaced by the "Categorieen beheren" sheet.
+        for route, obj in (("label-form-edit", self.label),):
             try:
                 url = reverse(route, args=[obj.pk])
             except NoReverseMatch:
@@ -354,18 +377,18 @@ class LabelAdminRoutePublicIdTests(TestCase):
 
 
 class PublicIdUniquenessTests(TestCase):
-    """The database constraint is the guarantee: a duplicate public_id never lands."""
+    """The database constraint guarantees a duplicate public_id never lands."""
 
     def test_duplicate_public_id_is_rejected(self):
         taken = uuid.UUID("00000000-0000-4000-8000-00000000000a")
         LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=taken)
-        with self.assertRaises(IntegrityError):  # noqa: PT027 (prefer pytest.raises) - TestCase assertRaises matches the rest of this file
+        with self.assertRaises(IntegrityError):  # noqa: PT027 (prefer pytest.raises) — TestCase assertRaises matches this file
             LabelCategory.objects.create(name="Cat2", color="#00FF00", public_id=taken)
 
 
 class SkillOrgPublicIdTests(TestCase):
-    """Skill and OrganizationUnit back the ?rol=/?org= filter facets; they carry
-    a public_id so those URLs stop exposing sequential ids too."""
+    """Skill and OrganizationUnit back the ?rol=/?org= facets, so they carry a
+    public_id and those URLs expose no sequential ids."""
 
     def test_skill_gets_a_unique_public_id(self):
         s1 = Skill.objects.create(name="Python")
@@ -384,9 +407,8 @@ class SkillOrgPublicIdTests(TestCase):
 
 @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
 class ErrorEventPublicIdTests(TestCase):
-    """The staff error pages are routed on the id, so ErrorEvent carries a
-    public_id too: if the staff check ever breaks, the errors (which quote
-    tracebacks and request paths) are still not walkable."""
+    """ErrorEvent carries a public_id, so even if the staff check breaks, errors
+    quoting tracebacks and request paths are not walkable."""
 
     def setUp(self):
         self.client = Client()
@@ -423,7 +445,7 @@ class SuborganizationPublicIdTests(TestCase):
 
 
 class SuborganizationAdminRoutePublicIdTests(TestCase):
-    """The beheer/merken/... routes resolve by public_id."""
+    """The beheer/merken routes resolve by public_id."""
 
     def setUp(self):
         self.client = Client()
@@ -453,9 +475,10 @@ class SuborganizationAdminRoutePublicIdTests(TestCase):
 
 
 class ChoiceFieldPublicIdTests(TestCase):
-    """A select's option values cross the client boundary too, so they carry the
-    public_id instead of Django's default pk. Models without a public_id
-    (Group) keep the pk."""
+    """A select's option values carry the public_id instead of the default pk.
+
+    Models without a public_id, such as Group, keep the pk.
+    """
 
     def test_option_values_are_public_ids_not_pks(self):
         merk = Suborganization.objects.create(name="Rijks ICT Gilde")
@@ -479,8 +502,7 @@ class ChoiceFieldPublicIdTests(TestCase):
             field.clean(str(merk.pk))
 
     def test_unparseable_value_is_a_validation_error_not_a_crash(self):
-        """A UUID lookup raises on junk, so guard the #503 class of bug: the
-        field must reject it as an invalid choice, never surface a 500."""
+        """Junk is rejected as an invalid choice, never surfacing a 500 (#503)."""
         Suborganization.objects.create(name="Rijks ICT Gilde")
         field = ColleagueEditables.suborganization.form_field()
 
@@ -490,7 +512,7 @@ class ChoiceFieldPublicIdTests(TestCase):
 
 
 class InlineEditChoicePublicIdTests(TestCase):
-    """End-to-end: the inline-edit endpoint saves on a public_id and ignores a pk."""
+    """The inline-edit endpoint saves on a public_id and ignores a pk."""
 
     def setUp(self):
         self.client = Client()
@@ -525,9 +547,8 @@ class InlineEditChoicePublicIdTests(TestCase):
 
 
 class FilterFacetFailClosedTests(TestCase):
-    """Every filter facet fails closed the same way: a value that resolves to no
-    row filters everything away instead of being dropped. A stale id in a shared
-    or bookmarked URL must never quietly widen the overview."""
+    """Every filter facet fails closed: a value resolving to no row filters
+    everything away, so a stale id in a shared URL never widens the overview."""
 
     FACETS = ("org", "org_self", "rol", "merk", "labels")
     PLACED_NAME = "Geplaatste Collega"
@@ -536,8 +557,8 @@ class FilterFacetFailClosedTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="viewer@rijksoverheid.nl", first_name="Viewer")
         Colleague.objects.create(user=self.user, name="Viewer", email="viewer@rijksoverheid.nl", source="wies")
-        # A second colleague carries the placement, so the row we look for in the
-        # response is not the viewer's own name in the header.
+        # A second colleague carries the placement, so the row we look for is
+        # not the viewer's own name in the header.
         placed = Colleague.objects.create(
             name=self.PLACED_NAME,
             email="placed@rijksoverheid.nl",
@@ -583,25 +604,26 @@ class FilterFacetFailClosedTests(TestCase):
                 assert not self._shows_placement({param: "not-a-uuid"})
 
     def test_sequential_pk_matches_nothing_for_every_facet(self):
-        """The internal pk is not a usable filter token, and it does not fall
-        back to unfiltered either."""
+        """The internal pk is not a usable filter token and does not fall back
+        to unfiltered."""
         for param in self.FACETS:
             with self.subTest(param=param):
                 assert not self._shows_placement({param: "1"})
 
     def test_empty_value_is_no_filter_at_all(self):
-        """``?org=`` is an empty select, not a selection that matched nothing.
-        Emptying the list on it would strand the user on a filter they never
-        chose."""
+        """An empty value is an unset select, not a selection that matched nothing,
+        so it must not strand the user on a filter they never chose."""
         for param in self.FACETS:
             with self.subTest(param=param):
                 assert self._shows_placement({param: ""})
 
     def test_unresolvable_value_stays_clearable(self):
-        """Failing closed must not be a dead end: the empty list still carries
-        the clear-all button, so the user can get back. Asserted on the chip
-        strip's marker, since the modal footer renders a clear-all button
-        unconditionally and its raw text would pass either way."""
+        """The emptied list still carries the clear-all button, so failing closed
+        is not a dead end.
+
+        Asserted on the chip strip's marker: the modal footer renders a clear-all
+        button unconditionally, so its raw text would pass either way.
+        """
         stranger = str(uuid.uuid4())
         for param in self.FACETS:
             with self.subTest(param=param):
@@ -610,9 +632,8 @@ class FilterFacetFailClosedTests(TestCase):
                 assert "data-clear-all-filters" in page
 
     def test_unknown_value_gets_a_named_chip_for_every_facet(self):
-        """A chip is only rendered for a value that matches an option, so an
-        unknown one needs its own label instead of dropping out of the chip row
-        and leaving an empty list with no filter in sight."""
+        """An unknown value gets its own chip label, instead of dropping out of the
+        chip row and leaving an empty list with no filter in sight."""
         chip_labels = {
             "org": "Onbekende opdrachtgever",
             "org_self": "Onbekende opdrachtgever",

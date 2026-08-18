@@ -1,66 +1,86 @@
-{# Shared assignment card list for colleague panel and profile page.
-   Expects: assignments (list), hx_target (string) #}
+{% from "parts/privacy_chip.html" import privacy_chip %}
+{# Assignment cards for the colleague panel and the profile page.
+   Expects: assignments (list), hx_target (string).
+   Client and period go in the footer slot so those lines align across the cards
+   in a row. `href` keeps it a real link; hx_link_guard.js catches the click so
+   htmx fills the panel instead of navigating. #}
 {% if assignments %}
-  <div class="rvo-layout-column rvo-layout-gap--xs">
-    {% for assignment in assignments %}
-      <a href="{{ assignment.assignment_url }}"
-         hx-get="{{ assignment.assignment_url }}"
-         hx-target="{{ hx_target }}"
-         class="assignment-card">
-        <div class="assignment-card__name">
-          <strong class="assignment-card__title">{{ assignment.name }}</strong>
-          {% if assignment.historical %}
-            <c-tag type="default" class="assignment-tag--completed">
-              {{ assignment.period_label or "Afgelopen" }}
-            </c-tag>
-          {% elif assignment.show_read_more %}
-            <span class="assignment-card__read-more">Lees meer ›</span>
-          {% elif assignment.start_date or assignment.end_date %}
-            <span class="icon-text-inline">
-              <c-icon icon="kalender" size="md" color="grijs-700" />
-              {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
-            </span>
-          {% endif %}
-        </div>
-        <div class="assignment-card__body">
-          <div class="assignment-card__info">
-            {% if assignment.organization %}
-              <span class="icon-text-inline">
-                <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
-                {{ assignment.organization }}
-              </span>
-            {% endif %}
-            {% if assignment.team_members %}
-              <div class="assignment-card__team">
-                <span class="rvo-text--subtle rvo-text--sm">Collega's op deze opdracht:</span>
-                {% for member in assignment.team_members %}
-                  <div class="user-avatar user-avatar--sm" data-tooltip="{{ member }}">{{ member|first|upper }}</div>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <div class="assignment-card__subtitle">
-              {% for tag in assignment.tags %}
-                <c-tag type="default">
-                  {{ tag.skill if tag is mapping else tag }}
-                </c-tag>
-              {% endfor %}
-            </div>
-          </div>
-          {% if assignment.privacy_warning_text %}
-            <div class="assignment-card__privacy">
-              <c-icon icon="hangslot-dicht" size="sm" color="grijs-700" />
-              <span class="rvo-text--subtle rvo-text--xs">{{ assignment.privacy_warning_text }}</span>
-            </div>
-          {% endif %}
-        </div>
-      </a>
-    {% endfor %}
-  </div>
+  {# The same grid puts cards side by side on a wide page and falls back to one
+     column in the narrow side panel. #}
+  <nldd-collection layout="grid" item-width="280px">
+  {% for assignment in assignments %}
+    <nldd-card background="tinted" href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
+    <nldd-container padding="16">
+    <nldd-title size="5">
+    <h3>{{ assignment.name }}</h3>
+    </nldd-title>
+    {% if assignment.tags or assignment.privacy_warning_text %}
+      <nldd-spacer size="8"></nldd-spacer>
+      <nldd-container layout="wrap" gap="6">
+      {% for tag in assignment.tags[:3] %}
+        <nldd-tag size="sm" text="{{ tag.skill if tag is mapping else tag }}"></nldd-tag>
+      {% endfor %}
+      {% if assignment.tags|length > 3 %}
+        <nldd-tag size="sm" text="+{{ assignment.tags|length - 3 }} meer"></nldd-tag>
+      {% endif %}
+      {# With the other tags rather than on its own line at the bottom: it stands
+         out there and sits with the assignment traits it belongs to. #}
+      {% if assignment.privacy_warning_text %}
+        {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}
+      {% endif %}
+      </nldd-container>
+    {% endif %}
+    {% if assignment.team_members %}
+      <nldd-spacer size="8"></nldd-spacer>
+      <nldd-container layout="wrap" gap="4">
+      {% for member in assignment.team_members %}
+        <nldd-avatar size="28" name="{{ member }}" title="{{ member }}" decorative></nldd-avatar>
+      {% endfor %}
+      </nldd-container>
+    {% endif %}
+    </nldd-container>
+    {% set has_period = assignment.historical or assignment.start_date or assignment.end_date %}
+    {% macro chevron() %}
+      <span class="assignment-card__chevron" aria-hidden="true">
+        <nldd-icon size="20" name="chevron-right"></nldd-icon>
+      </span>
+    {% endmacro %}
+    <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+    <nldd-list variant="simple" dividers="never" accessible-label="Opdrachtgegevens">
+    {% if assignment.organization %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.organization }}"></nldd-text-cell>
+      {% if not has_period %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
+      </nldd-list-item>
+    {% endif %}
+    {% if assignment.historical %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.period_label or 'Afgelopen' }}"></nldd-text-cell>
+      <nldd-cell>{{ chevron() }}</nldd-cell>
+      </nldd-list-item>
+    {% elif assignment.start_date or assignment.end_date %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '?' }} – {{ assignment.end_date|datum_nl('b Y') if assignment.end_date else '?' }}"></nldd-text-cell>
+      <nldd-cell>{{ chevron() }}</nldd-cell>
+      </nldd-list-item>
+    {% endif %}
+    {% if not assignment.organization and not has_period %}
+      <nldd-list-item size="sm">
+      <nldd-text-cell size="sm"></nldd-text-cell>
+      <nldd-cell>{{ chevron() }}</nldd-cell>
+      </nldd-list-item>
+    {% endif %}
+    </nldd-list>
+    </nldd-container>
+    </nldd-card>
+  {% endfor %}
+  </nldd-collection>
 {% else %}
-  <div class="rvo-card rvo-card--outline rvo-card--padding--md">
-    <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-      <c-icon icon="info" size="lg" color="grijs-700" />
-      <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden.</span>
-    </div>
-  </div>
+  <nldd-inline-dialog icon="business-suitcase" text="Geen opdrachten" supporting-text="Er staan nog geen opdrachten op deze naam."></nldd-inline-dialog>
 {% endif %}

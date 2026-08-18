@@ -1,270 +1,103 @@
-/**
- * Organization tree picker for assignment forms.
- *
- * Produces the same UI (table with radios + remove buttons) from two
- * sources:
- *   - existing hidden inputs on page load / HTMX swap, so inline edit
- *     and a re-rendered create form after validation error look the
- *     same as after a fresh "apply" from the modal;
- *   - OrgTreePicker.onApply, when the user applies a new selection in
- *     the modal.
- *
- * The widget template renders just the hidden inputs (plus a
- * data-org-name carrying the label for JS rehydration). All visible
- * selection UI lives here — one code path.
- */
 (function () {
   "use strict";
 
-  var INPUTS_ID = "assignment-org-inputs";
-  var SELECTIONS_ID = "assignment-org-selections";
-  var TRIGGER_TEXT_ID = "assignment-org-trigger-text";
+  var dataEl = document.getElementById("assignment-org-data");
+  var data = dataEl ? JSON.parse(dataEl.textContent) : [];
+  var container = document.getElementById("assignment-org-tree-container");
+  var searchInput = document.getElementById("assignment-org-search");
+  var applyBtn = document.getElementById("assignment-org-apply-btn");
 
-  function updateOrgTriggerText(rows) {
-    var triggerText = document.getElementById(TRIGGER_TEXT_ID);
-    if (!triggerText) return;
-    if (!rows || rows.length === 0) {
-      triggerText.textContent = "";
-      var ph = document.createElement("span");
-      ph.className = "org-filter-trigger__placeholder";
-      ph.textContent = "Selecteer";
-      triggerText.appendChild(ph);
-    } else if (rows.length === 1) {
-      triggerText.textContent = rows[0].label || "1 geselecteerd";
-    } else {
-      triggerText.textContent = rows.length + " geselecteerd";
-    }
-  }
+  if (!container) return;
 
-  function rowsFromInputs() {
-    var inputsContainer = document.getElementById(INPUTS_ID);
-    if (!inputsContainer) return [];
+  // An assignment is linked to concrete organisations: type groups are
+  // structure only, and picking a parent means that org, not its subtree.
+  var treeState = new TreeState(data, { collapseToParent: false });
+  var tree = new WiesOrgTree({
+    state: treeState,
+    container: container,
+    showCounts: false,
+    accessibleLabel: "Opdrachtgevers",
+    isSelectable: function (node) {
+      return !node.group;
+    },
+    onToggle: rebuildSelectionList,
+  });
+  tree.render().bindSearch(searchInput);
+
+  // Above this many, the tokens push the CTA off-screen; the button's count
+  // says the same thing.
+  var MAX_VISIBLE_TOKENS = 6;
+
+  // Group and self nodes carry no organisation, so they never reach the form.
+  function selectedOrgs() {
     var rows = [];
-    inputsContainer
-      .querySelectorAll("input[name$='-organization']")
-      .forEach(function (inp) {
-        rows.push({
-          nodeId: inp.value,
-          label: inp.dataset.orgName || inp.value,
-          role: inp.dataset.orgRole || "INVOLVED",
-        });
-      });
+    treeState.explicitSelections.forEach(function (label, nodeId) {
+      if (nodeId.indexOf("group-") === 0 || nodeId.indexOf("self-") === 0) {
+        return;
+      }
+      rows.push({ nodeId: nodeId, label: label });
+    });
     return rows;
   }
 
-  function rebuildInputs(rows) {
-    var inputsContainer = document.getElementById(INPUTS_ID);
-    if (!inputsContainer) return;
-    inputsContainer.innerHTML = "";
-
-    var mgmt = [
-      ["org-TOTAL_FORMS", String(rows.length)],
-      ["org-INITIAL_FORMS", "0"],
-      ["org-MIN_NUM_FORMS", "1"],
-      ["org-MAX_NUM_FORMS", "1000"],
-    ];
-    mgmt.forEach(function (pair) {
-      var i = document.createElement("input");
-      i.type = "hidden";
-      i.name = pair[0];
-      i.value = pair[1];
-      inputsContainer.appendChild(i);
-    });
-
-    rows.forEach(function (row, i) {
-      var orgInput = document.createElement("input");
-      orgInput.type = "hidden";
-      orgInput.name = "org-" + i + "-organization";
-      orgInput.value = row.nodeId;
-      orgInput.dataset.orgId = row.nodeId;
-      orgInput.dataset.orgName = row.label;
-      orgInput.dataset.orgRole = row.role;
-      inputsContainer.appendChild(orgInput);
-
-      var roleInput = document.createElement("input");
-      roleInput.type = "hidden";
-      roleInput.name = "org-" + i + "-role";
-      roleInput.value = row.role;
-      inputsContainer.appendChild(roleInput);
-    });
+  function updateApplyLabel(rows) {
+    if (!applyBtn) return;
+    applyBtn.setAttribute(
+      "text",
+      rows.length > 1
+        ? "Voeg " + rows.length + " opdrachtgevers toe"
+        : "Voeg toe",
+    );
   }
 
-  function renderTable(rows) {
-    var displayContainer = document.getElementById(SELECTIONS_ID);
-    if (!displayContainer) return;
-    displayContainer.innerHTML = "";
-
-    // Guarantee exactly one PRIMARY when there's at least one row.
-    if (
-      rows.length > 0 &&
-      !rows.some(function (r) {
-        return r.role === "PRIMARY";
-      })
-    ) {
-      rows[0].role = "PRIMARY";
-    }
-
-    if (rows.length === 0) {
-      rebuildInputs(rows);
-      updateOrgTriggerText(rows);
-      return;
-    }
-
-    var table = document.createElement("table");
-    table.className = "assignment-org-table";
-    var thead = document.createElement("thead");
-    var headerRow = document.createElement("tr");
-    ["Organisatie", "Primaire opdrachtgever"].forEach(function (text) {
-      var th = document.createElement("th");
-      th.textContent = text;
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
-    var tbody = document.createElement("tbody");
-
+  function rebuildSelectionList() {
+    var rows = selectedOrgs();
+    updateApplyLabel(rows);
+    var box = document.getElementById("assignment-org-selection-tokens");
+    if (!box) return;
+    box.innerHTML = "";
+    box.hidden = rows.length === 0 || rows.length > MAX_VISIBLE_TOKENS;
+    if (box.hidden) return;
     rows.forEach(function (row) {
-      var tr = document.createElement("tr");
-
-      var tdName = document.createElement("td");
-      tdName.textContent = row.label;
-      tr.appendChild(tdName);
-
-      var tdActions = document.createElement("td");
-      var actionsWrapper = document.createElement("div");
-      actionsWrapper.className = "assignment-org-table__actions";
-
-      var radioLabel = document.createElement("label");
-      radioLabel.className = "rvo-radio-button";
-      var radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "primary_org_radio";
-      radio.value = row.nodeId;
-      radio.className = "utrecht-radio-button";
-      if (row.role === "PRIMARY") radio.checked = true;
-      radio.addEventListener("change", function () {
-        rows.forEach(function (r) {
-          r.role = r.nodeId === radio.value ? "PRIMARY" : "INVOLVED";
-        });
-        rebuildInputs(rows);
+      var token = document.createElement("nldd-token");
+      token.setAttribute("control", "dismiss");
+      token.setAttribute("dismiss-text", "Verwijder " + row.label);
+      token.textContent = row.label;
+      token.addEventListener("dismiss", function () {
+        treeState.removeSelection(row.nodeId);
+        tree.sync();
+        rebuildSelectionList();
       });
-      radioLabel.appendChild(radio);
-      actionsWrapper.appendChild(radioLabel);
-
-      var removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className =
-        "assignment-org-remove rvo-button rvo-button--tertiary rvo-button--size-xs";
-      removeBtn.dataset.orgId = row.nodeId;
-      removeBtn.textContent = "Verwijderen";
-      removeBtn.setAttribute("aria-label", "Verwijder " + row.label);
-      removeBtn.addEventListener("click", function () {
-        var next = rows.filter(function (r) {
-          return r.nodeId !== row.nodeId;
-        });
-        rows.length = 0;
-        next.forEach(function (r) {
-          rows.push(r);
-        });
-        renderTable(rows);
-      });
-      actionsWrapper.appendChild(removeBtn);
-
-      tdActions.appendChild(actionsWrapper);
-      tr.appendChild(tdActions);
-      tbody.appendChild(tr);
-    });
-
-    table.appendChild(tbody);
-    displayContainer.appendChild(table);
-
-    rebuildInputs(rows);
-    updateOrgTriggerText(rows);
-  }
-
-  function renderFromInputs() {
-    if (!document.getElementById(INPUTS_ID)) return;
-    var rows = rowsFromInputs();
-    renderTable(rows);
-  }
-
-  function initModalPicker() {
-    new OrgTreePicker({
-      dataElementId: "assignment-org-data",
-      containerId: "assignment-org-tree-container",
-      selectionListId: "assignment-org-selection-list",
-      searchInputId: "assignment-org-search",
-      clearBtnId: "assignment-org-clear-btn",
-      applyBtnId: "assignment-org-apply-btn",
-      countElementId: "assignment-org-selection-count",
-      currentSelectionsId: "assignment-org-current-selections",
-      checkboxIdPrefix: "asgn-org-node-",
-      skipGroupCheckboxes: true,
-      onApply: function (treeState) {
-        // Preserve roles for orgs that were already selected.
-        var existingRoles = {};
-        rowsFromInputs().forEach(function (r) {
-          existingRoles[r.nodeId] = r.role;
-        });
-
-        var rows = [];
-        var isFirst = true;
-        treeState.explicitSelections.forEach(function (label, nodeId) {
-          if (
-            String(nodeId).startsWith("group-") ||
-            String(nodeId).startsWith("self-")
-          )
-            return;
-          rows.push({
-            nodeId: nodeId,
-            label: label,
-            role: existingRoles[nodeId] || (isFirst ? "PRIMARY" : "INVOLVED"),
-          });
-          isFirst = false;
-        });
-        renderTable(rows);
-
-        var dialog = document.getElementById("assignmentOrgPickerModal");
-        if (dialog) dialog.close();
-      },
+      box.appendChild(token);
     });
   }
 
-  // The trigger button's htmx:configRequest listener adds the params
-  // /client-modal needs (current orgs for pre-check, count_mode=none
-  // so the endpoint returns the assignment picker template). Idempotent —
-  // runs on page load AND each HTMX swap, wiring the button exactly once.
-  function wireTriggerButton() {
-    var btn = document.getElementById("assignment-org-trigger-btn");
-    if (!btn || btn.__orgTreeWired) return;
-    btn.__orgTreeWired = true;
-    btn.addEventListener("htmx:configRequest", function (e) {
-      var orgIds = [];
-      document
-        .querySelectorAll("#" + INPUTS_ID + " input[data-org-id]")
-        .forEach(function (inp) {
-          if (inp.dataset.orgId) orgIds.push(inp.dataset.orgId);
-        });
-      e.detail.parameters["count_mode"] = "none";
-      if (orgIds.length) {
-        e.detail.parameters["org"] = orgIds;
-      }
+  // assignment_org_picker.js owns the formset inputs and listens for this
+  // event, so the sheet can be thrown away without the form losing state.
+  if (applyBtn) {
+    applyBtn.addEventListener("click", function () {
+      document.dispatchEvent(
+        new CustomEvent("wies:org-selection-applied", {
+          detail: { rows: selectedOrgs() },
+        }),
+      );
+      var sheet = document.getElementById("assignment-org-modal");
+      if (sheet && sheet.hide) sheet.hide();
     });
   }
 
-  document.body.addEventListener("htmx:afterSettle", function (e) {
-    if (e.detail.target && e.detail.target.id === "assignmentOrgModal") {
-      initModalPicker();
+  var selectionsEl = document.getElementById(
+    "assignment-org-current-selections",
+  );
+  var currentSelections = selectionsEl
+    ? JSON.parse(selectionsEl.textContent)
+    : {};
+  if (Object.keys(currentSelections).length > 0) {
+    treeState.restoreSelections(currentSelections);
+    tree.sync();
+    rebuildSelectionList();
+    for (var nodeId in currentSelections) {
+      tree.expandAncestorsOf(nodeId);
     }
-    // The widget may have swapped in as part of an inline-edit
-    // partial — re-wire the trigger and rebuild the selection UI from
-    // the newly-inserted hidden inputs.
-    wireTriggerButton();
-    renderFromInputs();
-  });
-
-  // Page load: the create form ships the widget inline and inline edit
-  // relies on the htmx:afterSettle branch above.
-  wireTriggerButton();
-  renderFromInputs();
+  }
 })();

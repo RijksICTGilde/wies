@@ -1,79 +1,90 @@
-{# HTMX partial: Updates the main content area when filters change #}
-<div id="filter-and-table-container">
-  <!-- Page Header -->
-  <div class="layout__main__header">
-    <!-- Row 1: Title + Search -->
-    <div class="header-row header-row--between">
-      <c-h1 noMargins>
-        Wie zit waar?
-      </c-h1>
-      <div class="header-actions">
-        <!-- Mobile filter toggle -->
-        <c-button kind="secondary"
-                  size="md"
-                  icon="trechter"
-                  iconPlacement="before"
-                  type="button"
-                  class="mobile-filter-toggle"
-                  data-toggle-filters>
-          Filters
-        </c-button>
-        <!-- Search Field -->
-        <div class="search-field-wrapper">
-          <button type="button"
-                  class="search-icon search-submit"
-                  aria-label="Zoeken"
-                  data-search-submit>
-            <c-icon icon="zoek" color="lintblauw" size="md" />
-          </button>
-          <c-input id="search"
-                   name="zoek"
-                   placeholder="Zoeken..."
-                   aria-label="Zoeken"
-                   size
-                   value="{{ search_filter or '' }}"
-                   hx-preserve="true"
-                   hx-get="{{ url('search-suggestions') }}"
-                   hx-trigger="input delay:300ms"
-                   hx-target="#search-suggestions-container"
-                   hx-swap="innerHTML" />
-          <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
-          <div id="search-suggestions-container" hx-preserve="true"></div>
-        </div>
-      </div>
-    </div>
-    <!-- Row 2: Result count + Active Filter Chips -->
-    <div class="header-row">
-      <c-paragraph class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </c-paragraph>
-      <!-- Active Filter Chips -->
-      {% include "parts/filters/filter_chips.html" %}
-    </div>
-  </div>
-  <!-- Placement Table -->
-  <c-table id="placement_table" class="placement-table">
-    <c-table-head>
-      <c-table-row>
-        {% with field="name", label="Wie", target="#filter-and-table-container", sort_state=get_sort_state(request, "name") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-        {% with field="assignment", label="Wat & waar", target="#filter-and-table-container", sort_state=get_sort_state(request, "assignment") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-        {% with field="end_date", label="Tot", target="#filter-and-table-container", sort_state=get_sort_state(request, "end_date") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-      </c-table-row>
-    </c-table-head>
-    <c-table-body>
-      {% include "parts/placement_table_rows.html" %}
-    </c-table-body>
-  </c-table>
-</div>
-{# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
+{# HTMX swaps the results line (#results) and OOB-swaps the list separately, so
+both stay in sync without a shared wrapper element. #}
+{% set is_htmx = request.headers.get("HX-Request") %}
+{% if not is_htmx %}
+  <nldd-toolbar label="Zoeken en filteren">
+  <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
+  <nldd-search-field id="search-input" placeholder="Collega, opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
+  </nldd-search-field>
+  </nldd-toolbar-item>
+  <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
+  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
+  </nldd-button>
+  {# The overflow menu shows a CLONE but reports the choice back as select on this
+     original, so sidebar_toggle.js listens for both events. #}
+  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines" aria-haspopup="dialog" aria-expanded="false"></nldd-menu-item>
+  </nldd-toolbar-item>
+  {# Sorting refreshes the list in place like the filters do; the hx-* attributes
+     sit on the menu items themselves. See parts/sort_control.html. #}
+  {% include "parts/sort_control.html" %}
+  </nldd-toolbar>
+  {# variant=listbox keeps focus in the search field. The menu sits outside the
+  toolbar: inside an nldd-toolbar-item, Floating UI measures against that item's
+  layout and the popover lands at the left of the screen. #}
+  <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
+  <nldd-spacer size="16"></nldd-spacer>
+{% endif %}
+{% set has_active_filters = (org_chip_data|length > 0) or (unknown_chip_data|length > 0) or (active_filters|length > 0) %}
+<nldd-container id="results">
+{% if has_active_filters %}
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for chip in org_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {# Fail-closed: a facet value that matches nothing (stale or invented public_id)
+     gets an "Onbekend" chip instead of vanishing, keeping the empty list
+     explainable and clearable. See PublicIdFacetsMixin.add_unknown_filter_chips. #}
+  {% for chip in unknown_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% elif filter_group.type == 'date' %}
+      {% set value = active_filters.get(filter_group.name) %}
+      {% if value %}
+        {# Label plus date, so the token shows which mode it is and not just a
+        bare date. #}
+        <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ filter_group.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ value.strftime("%d-%m-%Y") }}</nldd-token>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {# Clearing all filters belongs with the chips; filter_interactions.js handles
+     data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+  <nldd-spacer size="8"></nldd-spacer>
+{% endif %}
+{% if paginator.count %}
+  {% set count_label = "persoon" if paginator.count == 1 else "personen" %}
+  <nldd-rich-text spacing="flat">
+  <p>{{ paginator.count }} {{ count_label }}</p>
+  </nldd-rich-text>
+{% endif %}
+</nldd-container>
+{% if not is_htmx %}
+  <nldd-spacer size="12"></nldd-spacer>
+{% endif %}
+{% include "parts/placement_table.html" %}
+{% if is_htmx %}
+  {# The sort control rides along OOB: the toolbar itself does not render in an
+     htmx response, but the button text and checked item must show the new order.
+     #sort-control stays in place and is swapped on its id. #}
+  {% set sort_control_oob = true %}
+  {% include "parts/sort_control.html" %}
+{% endif %}
 {% if render_filter_fields_oob %}
-  {% with oob=true %}
-    {% include "parts/filters/filter_fields.html" %}
-  {% endwith %}
+  {# The form carries the oob attribute itself: a wrapping div would replace the
+  form and swallow its slot="sidebar", dropping the filters into the main column. #}
+  {% set filter_form_oob = true %}
+  {% include "parts/filter_sidebar.html" %}
 {% endif %}

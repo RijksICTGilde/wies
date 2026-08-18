@@ -1,0 +1,35 @@
+{# Row actions: one action renders as a single icon button, several as a
+   more-button with a menu. `actions` is a list of dicts with `icon`, `text` and
+   `attrs` (the raw hx-*/data-* string); both branches share the same wiring.
+
+   An action may carry a `submenu` instead of `attrs`: a nested `nldd-menu`,
+   which NLDD turns into a drill-in opener. Such an action does not navigate
+   itself, and it forces the menu branch (a lone button cannot show a submenu).
+
+   Import with: {% from "parts/row_actions.html" import render_row_actions %} #}
+{% macro render_row_actions(actions, label) %}
+  {% set _has_submenu = actions|selectattr("submenu")|list|length > 0 %}
+  {% if actions|length == 1 and not _has_submenu %}
+    {% set a = actions[0] %}
+    {# A lone icon does not explain itself, so keep the default tooltip timing. #}
+    <nldd-icon-button size="sm" icon="{{ a.icon }}" text="{{ a.text }}" {{ a.attrs|safe }}></nldd-icon-button>
+  {% elif actions %}
+    {# The more-button is a known pattern and opens a labelled menu, so no
+       tooltip. #}
+    <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="{{ label }}">
+    <nldd-menu slot="popup" placement="bottom-end">
+    {% for a in actions %}
+      <nldd-menu-item text="{{ a.text }}" icon="{{ a.icon }}" {{ a.attrs|safe }}>
+      {% if a.submenu %}
+        <nldd-menu>
+        {% for sub in a.submenu %}
+          <nldd-menu-item text="{{ sub.text }}" icon="{{ sub.icon }}" {{ sub.attrs|safe }}></nldd-menu-item>
+        {% endfor %}
+        </nldd-menu>
+      {% endif %}
+      </nldd-menu-item>
+    {% endfor %}
+    </nldd-menu>
+    </nldd-icon-button>
+  {% endif %}
+{% endmacro %}

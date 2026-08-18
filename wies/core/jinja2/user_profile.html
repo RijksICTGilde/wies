@@ -1,77 +1,98 @@
 {% extends "base.html" %}
+{% block title %}
+  Mijn profiel · Wies
+{% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
-  <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
-  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
-  <link rel="stylesheet" href="{{ static('css/user_profile.css') }}">
-  <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
-  <script src="{{ static('js/dialog.js') }}" defer></script>
-  <script src="{{ static('js/side_panel.js') }}" defer></script>
-  <script src="{{ static('js/inline_edit.js') }}" defer></script>
-  <script src="{{ static('js/assignment_form.js') }}" defer></script>
+  <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
+{# No sidebar on profile page — base.html auto-hides
+empty sidebar #}
 {% block content %}
-  <div class="profile-page rvo-layout-column rvo-layout-gap--xl">
-    {# Profile info #}
-    <section class="rvo-layout-column rvo-layout-gap--md">
-      <c-grid division="1fr auto" gap="md">
-        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
-          <img alt="Profielfoto van {{ user.get_full_name() }}"
-               src="{{ static('img/placeholder-avatar.svg') }}"
-               class="profile-avatar" />
-          <c-h1 noMargins>
-            Mijn profiel
-          </c-h1>
-        </div>
-        <form method="post" action="{{ url('logout') }}">
-          {{ get_csrf_hidden_input(request) }}
-          <c-button kind="primary" type="submit">
-            Uitloggen
-          </c-button>
-        </form>
-      </c-grid>
-      <c-data-list class="profile-data-list">
-        <dt>Voornaam</dt>
-        <dd>
-          {{ inline_edit(user, "first_name") }}
-        </dd>
-        <dt>Achternaam</dt>
-        <dd>
-          {{ inline_edit(user, "last_name") }}
-        </dd>
-        <dt>E-mail</dt>
-        <dd>
-          <c-link href="mailto:{{ user.email }}">
-            {{ user.email }}
-          </c-link>
-        </dd>
-        <dt>Merk</dt>
-        <dd>
-          {{ inline_edit(colleague, "suborganization") }}
-        </dd>
-        {% for item in label_categories %}
-          <dt>{{ item.category.name }}</dt>
-          <dd>
-            {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
-          </dd>
+  <nldd-one-third-two-thirds-section>
+  {# In the header slot, not above it: this page has no sidebar, so outside the
+     section there is no horizontal margin and the heading sticks to the viewport
+     edge. #}
+  <nldd-title slot="header" size="3">
+  <h1>Mijn profiel</h1>
+  </nldd-title>
+  <div slot="left">
+    <nldd-list dividers="never" accessible-label="Profiel">
+    <nldd-list-item>
+    <nldd-cell>
+    <nldd-avatar size="48" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
+    </nldd-cell>
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-title-cell size="3" text="{{ user.get_full_name() or 'Mijn profiel' }}">
+    <span slot="supporting-text">
+      {% if user.email %}
+        <nldd-link href="mailto:{{ user.email }}" text="{{ user.email }}"></nldd-link>
+      {% endif %}
+    </span>
+    </nldd-title-cell>
+    </nldd-list-item>
+    </nldd-list>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    <nldd-button size="sm" start-icon="edit" text="Naam wijzigen" hx-get="{{ url('profile-name-edit') }}" hx-target="#profileNameModal" hx-swap="innerHTML"></nldd-button>
+    <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% if colleague and colleague.suborganization %}
+      <nldd-title size="5">
+      <h2>Merk</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      <nldd-container layout="wrap" gap="6">
+      <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+      </nldd-container>
+      <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    {% endif %}
+    {% for item in label_categories %}
+      <nldd-title size="5">
+      <h2>{{ item.category.name }}</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      {% if item.labels %}
+        <nldd-container layout="wrap" gap="6">
+        {% for label in item.labels %}
+          {# TEMPORARY: colourless (#565), see parts/colleague_panel_content.html. #}
+          <nldd-tag>{{ label.name }}</nldd-tag>
         {% endfor %}
-      </c-data-list>
-    </section>
-    {# Assignments section #}
-    <section>
-      <c-h2>
-        Opdrachten
-      </c-h2>
-      {% with assignments=assignment_list, hx_target="#side_panel-container" %}
-        {% include "parts/colleague_assignment_cards.html" %}
-      {% endwith %}
-    </section>
-  </div>
-{% endblock content %}
-{% block panel %}
-  <div id="side_panel-container">
-    {% if panel_data %}
-      {% include "parts/side_panel.html" %}
+        </nldd-container>
+      {% else %}
+        <nldd-rich-text>
+        <p>—</p>
+        </nldd-rich-text>
+      {% endif %}
+      {% if not loop.last %}
+        <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+      {% endif %}
+    {% endfor %}
+    {# Below the labels, since the button edits exactly what is above it. Only with
+       a colleague profile: without one there is nothing to hang labels on. #}
+    {% if colleague and label_categories %}
+      <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+      <nldd-button size="sm" start-icon="edit" text="Profiel wijzigen" hx-get="{{ url('profile-labels-edit') }}" hx-target="#profileLabelsMount" hx-swap="innerHTML"></nldd-button>
     {% endif %}
   </div>
+  <div slot="right">
+    <nldd-title size="4">
+    <h2>Opdrachten</h2>
+    </nldd-title>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
+      {% include "parts/colleague_assignment_cards.html" %}
+    {% endwith %}
+  </div>
+  </nldd-one-third-two-thirds-section>
+  {# Sheet mounts outside the section, so an empty div takes no column or footer
+     space. #}
+  <div id="profileNameModal"></div>
+  <div id="profileLabelsMount"></div>
+{% endblock content %}
+{% block panel %}
+  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
+  </nldd-sheet>
 {% endblock panel %}

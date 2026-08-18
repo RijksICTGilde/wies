@@ -1,0 +1,56 @@
+{# One error's content, shared by the sheet and the full detail page so the two
+   cannot drift apart.
+
+   The message is a heading plus running text rather than a list row: it is
+   often several lines, which a 100px label cell next to it would distort. The
+   sheet anchors its title bar to this heading (collapse-anchor). #}
+<nldd-title size="3">
+<h2 id="error-detail-title">{{ error.short_description }}</h2>
+</nldd-title>
+<nldd-spacer size="4" direction="vertical"></nldd-spacer>
+<nldd-rich-text>
+{% if error.exception_type %}
+  <p>{{ error.exception_message }}</p>
+{% else %}
+  <p>{{ error.message }}</p>
+{% endif %}
+</nldd-rich-text>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{# Boxed so the details and the traceback below share one frame. #}
+<nldd-list variant="box-tinted" accessible-label="Gegevens van de foutmelding">
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Tijd"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.timestamp|datetime_nl }}"></nldd-text-cell>
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Waar"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+{% if error.path %}
+  <nldd-text-cell text="{{ error.method }} {{ error.path }}"></nldd-text-cell>
+{% else %}
+  <nldd-text-cell text="{{ error.logger_name }}"></nldd-text-cell>
+{% endif %}
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Gebruiker"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.user_email or '–' }}"></nldd-text-cell>
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Versie"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.app_version or '–' }}"></nldd-text-cell>
+</nldd-list-item>
+</nldd-list>
+{% if error.traceback %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# nldd-code-viewer instead of a plain <pre>: it brings highlighting, a copy
+     button, and a scroll area that does not stretch the sheet. #}
+  <nldd-code-viewer language="python" wrap>{{ error.traceback }}</nldd-code-viewer>
+{% else %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>Geen traceback beschikbaar.</p>
+  </nldd-rich-text>
+{% endif %}

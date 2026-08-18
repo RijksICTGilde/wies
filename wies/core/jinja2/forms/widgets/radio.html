@@ -1,0 +1,17 @@
+{# One nldd-radio-button-group around all fields: the group handles keyboard
+   navigation and mutual exclusion, and the field is form-associated since
+   design system 0.8.71, so the choice reaches the POST without a bridge. Note
+   that a flat choice list gives one `optgroups` entry PER OPTION, so the group
+   must wrap the whole loop or the buttons will not deselect each other.
+
+   `invalid`/`error-message` sit on the group because nldd-form-field._findInput()
+   returns this first non-helper child and reads the error and aria from it.
+   nldd-radio-button-group does not reflect `invalid` styling, so the group does
+   not turn red, but the error is shown and announced. #}
+<nldd-radio-button-group name="{{ widget.name }}" {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option_widget in group_choices %}
+    <nldd-radio-button-field value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %}></nldd-radio-button-field>
+  {% endfor %}
+{% endfor %}
+</nldd-radio-button-group>

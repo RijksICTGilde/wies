@@ -73,11 +73,28 @@ class LabelCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=7)  # Hex color like #FF5733
 
+    # Maps each stored hex (the choices offered in LabelCategoryForm) to an
+    # NLDD `color` variant, which carries theme-aware category colours. The old
+    # `--nldd-token-bg: <hex>` approach painted a light-only strip that showed
+    # through the token in dark mode.
+    _NLDD_COLOR_BY_HEX = {
+        "#DCE3EA": "neutral",
+        "#B3D7EE": "lichtblauw",
+        "#FFE9B8": "geel",
+        "#C4DBB7": "groen",
+        "#F9DFDD": "rood",
+    }
+
     class Meta:
         ordering = ["name"]
 
     def __str__(self):
         return self.name
+
+    @property
+    def nldd_color(self) -> str:
+        """NLDD `color` variant for this category."""
+        return self._NLDD_COLOR_BY_HEX.get(self.color, "neutral")
 
 
 class Label(models.Model):
@@ -137,6 +154,16 @@ class Colleague(models.Model):
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)
     # placements via reversed relation
+
+    # Display preference for the NLDD components: rendered server-side as
+    # data-scheme on <html>, so the choice applies before first paint and
+    # travels with the account instead of the browser.
+    class Theme(models.TextChoices):
+        SYSTEM = "system", "Systeem"
+        LIGHT = "light", "Licht"
+        DARK = "dark", "Donker"
+
+    theme = models.CharField(max_length=6, choices=Theme.choices, default=Theme.SYSTEM)
 
     class Meta:
         constraints = [

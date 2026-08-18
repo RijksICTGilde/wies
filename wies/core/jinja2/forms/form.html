@@ -1,0 +1,12 @@
+{# The form body; nldd-form handles the spacing between fields.
+
+   Do NOT render this template inside an nldd-form that already has its own
+   <form>: without a <form> child the inner nldd-form auto-wraps an actionless
+   <form> in the light DOM, the form-associated fields bind to that one instead
+   of the posting outer form, and the POST arrives empty. To place fields inside
+   a sheet <form>, render them one by one with field.as_field_group() (see
+   parts/generic_form_body.html). #}
+<nldd-form>
+{% for field, field_errors in fields %}{{ field.as_field_group() }}{% endfor %}
+{% for field in hidden_fields %}{{ field }}{% endfor %}
+</nldd-form>

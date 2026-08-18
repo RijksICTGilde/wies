@@ -2,6 +2,7 @@ export COMPOSE_FILE := "docker-compose.yml"
 
 # Vendor package versies
 HTMX_VERSION := "2.0.8"
+NLDD_VERSION := "0.8.82"
 
 # Default command to list all available commands.
 default:
@@ -34,9 +35,6 @@ up:
 # Stop and remove containers
 down:
   docker compose down
-
-up-jrc:
-  docker compose run -v /Users/$USER/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8080"
 
 setup-production:
   docker build --target web -t wies .
@@ -107,9 +105,28 @@ pre-commit-install:
 
 # Download vendor packages (externe dependencies lokaal)
 update-vendor:
-  @echo "Downloading vendor packages..."
-  @mkdir -p wies/core/static/vendor/htmx
+  #!/usr/bin/env bash
+  set -euo pipefail
+  echo "Downloading vendor packages..."
+
+  # htmx: single minified file from unpkg.
+  mkdir -p wies/core/static/vendor/htmx
   curl -sL "https://unpkg.com/htmx.org@{{HTMX_VERSION}}/dist/htmx.min.js" \
     -o wies/core/static/vendor/htmx/htmx.min.js
-  @echo "Done! Vendor packages updated:"
-  @echo "  - htmx.min.js ({{HTMX_VERSION}})"
+
+  # nldd: single JS bundle + css/ + fonts/ from the npm tarball (no install/build).
+  # npm pack downloads the tarball only; we copy dist/ verbatim so the relative
+  # @import and url('../fonts/...') paths keep resolving.
+  dest="$(pwd)/wies/core/static/vendor/nldd"
+  rm -rf "$dest" && mkdir -p "$dest"
+  tmp="$(mktemp -d)"
+  ( cd "$tmp" && npm pack "@nldd/design-system@{{NLDD_VERSION}}" >/dev/null && tar xzf nldd-design-system-*.tgz )
+  cp "$tmp/package/dist/nldd.min.js" "$dest/"
+  cp -R "$tmp/package/dist/css" "$dest/css"
+  cp -R "$tmp/package/dist/fonts" "$dest/fonts"
+  printf '@nldd/design-system {{NLDD_VERSION}}\nvendored via just update-vendor\n' > "$dest/VERSION.txt"
+  rm -rf "$tmp"
+
+  echo "Done! Vendor packages updated:"
+  echo "  - htmx.min.js ({{HTMX_VERSION}})"
+  echo "  - nldd ({{NLDD_VERSION}}): nldd.min.js + css/ + fonts/"

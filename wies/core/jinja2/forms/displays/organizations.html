@@ -1,0 +1,28 @@
+{# Path segments are links to the filtered list; with `plain` (passed to inline_edit)
+   they stay text, for places where navigating away is wrong, such as onboarding. #}
+{% if value %}
+  {% set base_url = current_page_path(request) %}
+  {% for row in value %}
+    {% set org_breadcrumb = get_org_breadcrumb(row.organization, base_url) %}
+    <div>
+      {% for ancestor in org_breadcrumb.ancestors %}
+        {% if plain %}
+          <span>{{ ancestor.label }}</span>
+        {% else %}
+          <nldd-link href="{{ ancestor.url }}" text="{{ ancestor.label }}"></nldd-link>
+        {% endif %}
+        <span aria-hidden="true">›</span>
+      {% endfor %}
+      {% if plain %}
+        <span>{{ org_breadcrumb.label }}</span>
+      {% else %}
+        <nldd-link href="{{ org_breadcrumb.url }}" text="{{ org_breadcrumb.label }}"></nldd-link>
+      {% endif %}
+      {% if row.role == "PRIMARY" and value|length > 1 %}
+        <span class="wies-text-secondary">(primair)</span>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <span class="wies-text-secondary">Geen organisatie opgegeven</span>
+{% endif %}

@@ -1,0 +1,22 @@
+{# Form-associated: appends one entry per value under `name`, so Django's
+   getlist() sees the same shape as a native multi-select. Options come from a
+   slotted nldd-menu, like nldd-combo-box. #}
+{% set selected = [] %}
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option in group_choices %}
+    {% if option.selected %}
+      {% set _ = selected.append(option.value|string) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Toevoegen…') }}" {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.required %}required{% endif %} {# _findInput() returns this host; nldd-token-field reflects `invalid`, showing the error message and setting aria-describedby. #} {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+<nldd-menu variant="listbox">
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option in group_choices %}
+    {% if option.value|string %}
+      <nldd-menu-item value="{{ option.value }}" text="{{ option.label }}"></nldd-menu-item>
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+</nldd-menu>
+</nldd-token-field>

@@ -1,55 +1,78 @@
 {% extends "base.html" %}
+{% block title %}
+  Statistieken · Wies
+{% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
-  <link rel="stylesheet" href="{{ static('css/staff.css') }}">
+  <link rel="stylesheet" href="{{ app_asset('css/staff.css') }}">
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <div class="rvo-layout-column rvo-layout-gap--xl">
-    <c-h1>
-      Statistieken
-    </c-h1>
-    <div class="staff-tiles">
-      <div class="staff-tile">
-        <div class="staff-tile__value">{{ usage.mau }}</div>
-        <div class="staff-tile__label">Maandelijks Actieve Gebruikers (30 dagen)</div>
-      </div>
-      <div class="staff-tile">
-        <div class="staff-tile__value">{{ usage.wau }}</div>
-        <div class="staff-tile__label">Wekelijks Actieve Gebruikers (7 dagen)</div>
-      </div>
-      <div class="staff-tile">
-        <div class="staff-tile__value">{{ usage.total_ever }}</div>
-        <div class="staff-tile__label">Ooit ingelogd</div>
-      </div>
-      <div class="staff-tile">
-        <div class="staff-tile__value">{{ usage.total_logins_90d }}</div>
-        <div class="staff-tile__label">Totaal logins (90 dagen)</div>
-      </div>
-      <div class="staff-tile">
-        <div class="staff-tile__value">{{ usage.failures_30d }}</div>
-        <div class="staff-tile__label">Mislukte logins (30 dagen)</div>
-      </div>
-    </div>
-    <h3>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h3>
-    <div class="staff-chart">
-      {% for day, count in usage.daily_active_users %}
-        <div class="staff-chart__bar"
-             title="{{ day }}: {{ count }}"
-             style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
-      {% endfor %}
-    </div>
-    <c-h2>
-      Recente foutmeldingen
-    </c-h2>
-    <div id="error_table_container"
-         class="rvo-table-container"
-         hx-get="{{ url('error-table') }}"
-         hx-trigger="load"
-         hx-swap="innerHTML">
-      <span class="rvo-text rvo-text--subtle">Foutmeldingen laden...</span>
-    </div>
+  <nldd-title size="3">
+  <h1>Statistieken</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# The labels use a non-breaking space between number and "dagen", which
+     otherwise wrapped across two lines in a narrow tile. #}
+  {% set _tiles = [
+    (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
+    (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
+    (usage.total_ever, "Ooit ingelogd"),
+    (usage.total_logins_90d, "Totaal logins (90 dagen)"),
+    (usage.failures_30d, "Mislukte logins (30 dagen)"),
+  ] %}
+  <nldd-collection layout="grid" gap="16px">
+  {% for value, label in _tiles %}
+    <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
+    <nldd-container padding="16">
+    <nldd-title size="2">
+    <p>{{ value }}</p>
+    </nldd-title>
+    <nldd-rich-text>
+    <p>{{ label }}</p>
+    </nldd-rich-text>
+    </nldd-container>
+    </nldd-card>
+  {% endfor %}
+  </nldd-collection>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  <nldd-title size="4">
+  <h2>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h2>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {# The bars are purely visual; the table below carries the same figures for
+     screen readers and keyboard users. #}
+  <div class="staff-chart" aria-hidden="true">
+    {% for day, count in usage.daily_active_users %}
+      <div class="staff-chart__bar"
+           title="{{ day }}: {{ count }}"
+           style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
+    {% endfor %}
   </div>
+  <table class="wies-visually-hidden">
+    <caption>Dagelijks actieve gebruikers per dag over de laatste 90 dagen</caption>
+    <thead>
+      <tr>
+        <th scope="col">Datum</th>
+        <th scope="col">Actieve gebruikers</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for day, count in usage.daily_active_users %}
+        <tr>
+          <th scope="row">{{ day }}</th>
+          <td>{{ count }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  <nldd-title size="4">
+  <h2>Recente foutmeldingen</h2>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {# Rendered inline so the block arrives with the page; pagination later swaps
+     itself into this id via the error table endpoint. #}
+  <div id="error_table_container">{% include "parts/error_table.html" %}</div>
 {% endblock content %}

@@ -1,48 +1,16 @@
-<dialog id="{{ modal_element_id }}" class="modal-dialog" closedby="none">
-  <div class="modal-content">
-    <div class="modal-header">
-      <c-h2>
-        {{ modal_title }}
-      </c-h2>
-      <button type="button" class="close modal-close-button">×</button>
-    </div>
-    <form method="post"
-          action="{{ form_post_url }}"
-          hx-post="{{ form_post_url }}"
-          hx-target="#{{ target_element_id }}">
-      {{ get_csrf_hidden_input(request) }}
-      <div class="modal-body">
-        {% if delete_warning %}
-          <div class="modal-body__warning">
-            <c-paragraph>
-              {{ delete_warning }}
-            </c-paragraph>
-          </div>
-        {% else %}
-          {{ content }}
-        {% endif %}
-      </div>
-      <div class="modal-footer">
-        <div class="modal-footer-buttons">
-          <div class="close">
-            <c-button kind="{{ 'warning-subtle' if warning_modal else 'secondary' }}"
-                      type="button">
-              Annuleren
-            </c-button>
-          </div>
-          {% if delete_url %}
-            <c-button kind="warning-subtle"
-                      hx-get="{{ delete_url }}"
-                      hx-target="#{{ modal_element_id }}"
-                      hx-swap="innerHTML">
-              Verwijderen
-            </c-button>
-          {% endif %}
-        </div>
-        <c-button kind="{{ 'warning' if warning_modal else 'primary' }}" type="submit">
-          {{ form_button_label }}
-        </c-button>
-      </div>
-    </form>
-  </div>
-</dialog>
+{# Cancel lives in the top-title-bar dismiss, so there is no separate cancel
+   button; dialog.js opens the sheet after the htmx swap via data-auto-show.
+   A POST only reaches here when the form failed validation, and the sheet is
+   already open then, so only the body goes back. #}
+{% if request.method == "POST" %}
+  {% include "parts/generic_form_body.html" %}
+{% else %}
+  <nldd-sheet id="{{ modal_element_id }}" data-auto-show placement="right" width="480px" accessible-label="{{ modal_title }}">
+  <nldd-page sticky-header>
+  <nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <div id="{{ modal_element_id }}Body">{% include "parts/generic_form_body.html" %}</div>
+  </nldd-simple-section>
+  </nldd-page>
+  </nldd-sheet>
+{% endif %}

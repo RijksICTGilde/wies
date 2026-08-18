@@ -12,48 +12,29 @@ def render(markdown_source: str) -> str:
 
 
 class RenderBodyTest(SimpleTestCase):
-    def test_h2_section_is_wrapped_in_xs_div(self):
+    def test_headings_and_paragraph_use_plain_html(self):
         body = render("# Title\n\n## Section\n\nText.\n")
-        assert "<c-h1>Title</c-h1>" in body
-        assert '<div class="rvo-layout-column rvo-layout-gap--lg">' in body
-        assert '<div class="rvo-layout-column rvo-layout-gap--xs">' in body
-        assert "<c-h2>Section</c-h2>" in body
-        assert "<c-paragraph>Text.</c-paragraph>" in body
-
-    def test_intro_paragraph_is_not_wrapped_in_xs(self):
-        body = render("# Title\n\nIntro.\n\n## Section\n\nBody.\n")
-        # The intro paragraph appears before any xs wrapper opens.
-        intro_idx = body.index("<c-paragraph>Intro.</c-paragraph>")
-        xs_idx = body.index('<div class="rvo-layout-column rvo-layout-gap--xs">')
-        assert intro_idx < xs_idx
-
-    def test_consecutive_h2s_close_and_reopen_xs_wrapper(self):
-        body = render("# T\n\n## A\n\n## B\n\nBody.\n")
-        # Two xs wrappers, with a closing </div> between them.
-        first = body.index('<div class="rvo-layout-column rvo-layout-gap--xs">')
-        between = body.index("</div>", first)
-        second = body.index('<div class="rvo-layout-column rvo-layout-gap--xs">', between)
-        assert first < between < second
-
-    def test_end_of_document_closes_xs_and_lg_wrappers(self):
-        body = render("# T\n\n## A\n\nBody.\n")
-        # Should end with two closing divs (xs then lg).
-        assert body.rstrip().endswith("</div>\n</div>")
+        # nldd-rich-text styles semantic HTML directly — no RVO layout wrappers.
+        assert "<h1>Title</h1>" in body
+        assert "<h2>Section</h2>" in body
+        assert "<p>Text.</p>" in body
+        assert "rvo-layout-column" not in body
+        assert "<c-" not in body
 
     def test_external_link_gets_target_blank(self):
         body = render("# T\n\n[example](https://example.com)\n")
-        assert '<c-link href="https://example.com" target="_blank">example</c-link>' in body
+        assert '<a href="https://example.com" target="_blank">example</a>' in body
 
     def test_mailto_link_does_not_get_target_blank(self):
         body = render("# T\n\n[mail](mailto:a@b.nl)\n")
-        assert '<c-link href="mailto:a@b.nl">mail</c-link>' in body
+        assert '<a href="mailto:a@b.nl">mail</a>' in body
         assert "target=" not in body
 
     def test_list_items_emit_plain_li_without_paragraph_wrapper(self):
         body = render("# T\n\n## L\n\n- one\n- two\n")
-        # No <c-paragraph> wrapper inside the list — djlint will tidy the
+        # No <p> wrapper inside the list — djlint will tidy the
         # surrounding whitespace later.
-        assert "<c-paragraph>" not in body.split("<ul>")[1].split("</ul>")[0]
+        assert "<p>" not in body.split("<ul>")[1].split("</ul>")[0]
         assert "<li>" in body
         assert "one" in body
 
@@ -79,7 +60,7 @@ class RenderInlineTest(SimpleTestCase):
 
     def test_relative_link_does_not_get_target_blank(self):
         rendered = self._inline("[home](/home)")
-        assert rendered == '<c-link href="/home">home</c-link>'
+        assert rendered == '<a href="/home">home</a>'
 
 
 class StalenessTest(SimpleTestCase):

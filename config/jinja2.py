@@ -1,8 +1,10 @@
 from datetime import date
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
+from django.contrib.staticfiles import finders
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
@@ -10,7 +12,6 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html, json_script
 from jinja2 import Environment
-from jinja_roos_components import setup_components
 
 from wies.core.editables import (
     AssignmentEditables,
@@ -19,12 +20,13 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
-from wies.core.inline_edit.jinja import inline_edit
+from wies.core.form_mixins import wire_field_errors
+from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
-from wies.core.services.organizations import get_org_breadcrumb
-from wies.core.services.urls import current_page_path
-from wies.core.services.version import get_app_version
+from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
+from wies.core.services.urls import current_page_path, url_with_param, url_without_param
+from wies.core.services.version import get_app_version, get_nldd_version
 
 
 def parse_message_link(extra_tags: str) -> dict | None:
@@ -35,16 +37,26 @@ def parse_message_link(extra_tags: str) -> dict | None:
     """
     if not extra_tags:
         return None
-    for tag in extra_tags.split():
-        if tag.startswith("link:"):
-            parts = tag[5:].split("|", 1)
-            if len(parts) == 2:  # noqa: PLR2004
-                return {"url": parts[0], "text": parts[1]}
+    # extra_tags bevat alleen deze link-tag (het level, bv. "success", zit in
+    # message.tags). Niet op witruimte splitsen: de linktekst mag spaties bevatten
+    # ("Bekijk opdracht"), en een split() kapte die af tot "Bekijk".
+    prefix = "link:"
+    start = extra_tags.find(prefix)
+    if start == -1:
+        return None
+    url, sep, text = extra_tags[start + len(prefix) :].partition("|")
+    if sep:
+        return {"url": url, "text": text}
     return None
 
 
-def datum_nl(datum, fmt="N Y"):
-    """Format a date using Django's localization (nl-nl)"""
+def datum_nl(datum, fmt="j b Y"):
+    """THE date display for Wies, via Django's nl-nl localization.
+
+    House style: months are always three letters, lowercase ('b' → "11 nov
+    2024"). Callers only choose which parts to show (e.g. "b Y" for month +
+    year on cards); they don't restyle the month.
+    """
     if datum is None:
         return "?"
     if isinstance(datum, str):
@@ -146,12 +158,49 @@ def get_sort_state(request, field):
     return None
 
 
+def nldd_asset(filename: str) -> str:
+    """URL for a vendored design-system asset, cache-busted on its version.
+
+    The file names are fixed (nldd.min.js, css/global.css), so without this a
+    browser can keep serving the previous design system from cache after an
+    upgrade. See get_nldd_version for why production does not need it.
+    """
+    url = static(f"vendor/nldd/{filename}")
+    version = get_nldd_version()
+    return f"{url}?v={version}" if version else url
+
+
+def app_asset(filename: str) -> str:
+    """URL for one of our own static files, cache-busted on its mtime.
+
+    Same reason as nldd_asset, for the files we write ourselves: runserver
+    serves static straight from disk without Cache-Control, so a browser falls
+    back to heuristic caching and can keep running a stale ui_handlers.js or
+    app.css after an edit — the file name never changes. APP_VERSION is no use
+    as the token here: it is <branch>-<short-sha> in development and does not
+    move when you save a file.
+
+    DEBUG only. Production runs WhiteNoise's manifest storage, which content-
+    hashes the names, so the query would add nothing and the stat() per asset
+    per request would cost something. Also skipped when the file cannot be
+    found, so a typo'd path still renders (and still 404s, visibly).
+    """
+    url = static(filename)
+    if not settings.DEBUG:
+        return url
+    path = finders.find(filename)
+    if not path:
+        return url
+    return f"{url}?v={int(Path(path).stat().st_mtime)}"
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
-    setup_components(env)
     env.globals.update(
         {
             "static": static,
+            "nldd_asset": nldd_asset,
+            "app_asset": app_asset,
             "url": reverse,
             "get_csrf_token": get_token,
             "get_csrf_hidden_input": get_csrf_hidden_input,
@@ -162,8 +211,13 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "inline_edit_form": inline_edit_form,
+            "wire_field_errors": wire_field_errors,
             "get_org_breadcrumb": get_org_breadcrumb,
+            "get_org_levels_action": get_org_levels_action,
             "current_page_path": current_page_path,
+            "url_with_param": url_with_param,
+            "url_without_param": url_without_param,
             "has_permission": has_permission,
             "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,

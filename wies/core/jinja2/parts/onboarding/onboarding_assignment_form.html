@@ -1,0 +1,47 @@
+{# One prefixed form per group so field names from multiple roles do not collide.
+   Saving swaps the assignment box back (HX-Retarget in the view) and closes this
+   screen. #}
+{% set assignment = entry.assignment %}
+{# The back button lives in the window title bar; onboarding.js adds it when this
+   screen opens. #}
+<nldd-title size="6">
+<p>Opdracht wijzigen</p>
+</nldd-title>
+<nldd-spacer size="2" direction="vertical"></nldd-spacer>
+<nldd-title size="3">
+<h3 id="onboarding-detail-title" data-detail-title>{{ assignment.name }}</h3>
+</nldd-title>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form data-onboarding-detail-form
+      hx-post="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#onboarding-detail"
+      hx-swap="innerHTML">
+  {% for group in groups %}
+    {% if group.title %}
+      <nldd-title size="5">
+      <h4>{{ group.title }}</h4>
+      </nldd-title>
+    {% endif %}
+    {% if group.get("readonly_skill") is not none %}
+      {# No edit rights on the role: show it read-only so the description below has context. #}
+      <nldd-form-field label="Rol">
+      <nldd-text-field readonly accessible-label="Rol" value="{{ group.readonly_skill or '–' }}"></nldd-text-field>
+      </nldd-form-field>
+    {% endif %}
+    {% for bound in group.form %}
+      {% set error_ids = wire_field_errors(bound) %}
+      <nldd-form-field label="{{ bound.label }}">
+      {{ bound.as_widget(attrs={"autofocus": loop.first and group.form.prefix == "opdracht"}) }}
+      {% for error in bound.errors %}
+        <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      </nldd-form-field>
+    {% endfor %}
+    {% for error in group.form.non_field_errors() %}
+      <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+    {% endfor %}
+  {% endfor %}
+</form>
+</nldd-form>

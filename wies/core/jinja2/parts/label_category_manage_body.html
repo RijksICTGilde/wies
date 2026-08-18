@@ -1,0 +1,30 @@
+{# Body of the category management sheet, kept separate from the sheet: every
+   action re-renders only this part so the sheet stays open. #}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#categoryManageBody"
+      hx-swap="innerHTML"
+      data-category-manage-form>
+  {{ get_csrf_hidden_input(request) }}
+  {{ formset.management_form }}
+  <nldd-list accessible-label="Categorieën">
+  {% for form in formset %}
+    {% set row_index = loop.index0 %}
+    {% include "parts/label_category_row.html" %}
+  {% endfor %}
+  <nldd-list-item>
+  <nldd-cell width="full">
+  {# Adding a row posts the current state back with extra_row; the server renders
+     an empty row alongside it. #}
+  <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
+  </nldd-cell>
+  </nldd-list-item>
+  </nldd-list>
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+<div id="categoryDeleteModal"></div>

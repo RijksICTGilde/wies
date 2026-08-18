@@ -1,0 +1,18 @@
+{# Sheet content split from the sheet itself: on a validation error the view returns
+   only this part, so the open sheet stays. Fields come from the database (one per
+   label category), hence the loop instead of naming them. #}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#profileLabelsBody"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {% for bound in content %}
+    {{ bound.as_field_group() }}
+  {% endfor %}
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

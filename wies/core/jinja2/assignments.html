@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}
+  Aanvragen · Wies
+{% endblock title %}
+{% block extra_head %}
+  <script src="{{ app_asset('js/filter_interactions.js') }}" defer></script>
+  <script src="{{ app_asset('js/sidebar_toggle.js') }}" defer></script>
+  <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
+  <script src="{{ app_asset('js/client_modal.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {# Neither the sidebar slot nor the filter panel brings padding, so it goes
+     here. #}
+  <nldd-container slot="sidebar" padding="16">
+  {% include "parts/filter_sidebar.html" %}
+  </nldd-container>
+{% endblock sidebar %}
+{% block content %}
+  {# Outside the container: that is re-rendered on htmx requests, and the page
+     heading must not travel with it. #}
+  <nldd-title size="3">
+  <h1>Aanvragen</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% include "parts/filter_and_card_container_assignments.html" %}
+{% endblock content %}
+{% block panel %}
+  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
+  </nldd-sheet>
+  <div id="client-modal-container"></div>
+  <div id="filter-options-modal-container"></div>
+{% endblock panel %}

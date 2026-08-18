@@ -1,0 +1,49 @@
+{# User menu in the navbar utility slot; also used by base_footer.html, which
+   renders its own bar with a back button. #}
+{% if request.user.is_authenticated %}
+  <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
+  <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text" {% if request.path == url('user-profile') %}current{% endif %}>
+  <nldd-menu>
+  <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+  {# Display submenu: radio items stored per user (Colleague.theme) and rendered
+     server-side as data-scheme on <html>. The hidden csrf input feeds the fetch
+     in theme_menu.js; the cookie name differs per environment, so the token
+     comes from the markup. #}
+  <nldd-menu-item text="Weergave" icon="appearance">
+  <nldd-menu data-theme-url="{{ url('user-theme') }}">
+  <nldd-menu-item data-theme-choice="system" type="radio" text="Systeem" icon="display" {% if not request.user.colleague or request.user.colleague.theme == 'system' %}selected{% endif %}></nldd-menu-item>
+  <nldd-menu-item data-theme-choice="light" type="radio" text="Licht" icon="sun" {% if request.user.colleague and request.user.colleague.theme == 'light' %}selected{% endif %}></nldd-menu-item>
+  <nldd-menu-item data-theme-choice="dark" type="radio" text="Donker" icon="moon" {% if request.user.colleague and request.user.colleague.theme == 'dark' %}selected{% endif %}></nldd-menu-item>
+  </nldd-menu>
+  </nldd-menu-item>
+  {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+    <nldd-menu-divider></nldd-menu-divider>
+    {# Same options and conditions as the admin sidebar. #}
+    <nldd-menu-item text="Beheer" icon="user-admin">
+    <nldd-menu>
+    <nldd-menu-item text="Gebruikers" icon="users" data-href="{{ url('admin-users') }}"></nldd-menu-item>
+    {% if DEBUG %}
+      <nldd-menu-item text="Opdrachtgevers" icon="offices" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
+    {% endif %}
+    <nldd-menu-item text="Labels" icon="labels" data-href="{{ url('label-admin') }}"></nldd-menu-item>
+    {% if request.user.has_perm('core.view_suborganization') %}
+      <nldd-menu-item text="Merken" icon="brand" data-href="{{ url('suborganization-admin') }}"></nldd-menu-item>
+    {% endif %}
+    {% if is_staff_member(request.user) %}
+      <nldd-menu-item text="Statistieken" icon="chart-x-y-axis-line" data-href="{{ url('staff-dashboard') }}"></nldd-menu-item>
+      <nldd-menu-item text="Database" icon="database" data-href="{{ url('staff-database') }}"></nldd-menu-item>
+    {% endif %}
+    </nldd-menu>
+    </nldd-menu-item>
+  {% endif %}
+  <nldd-menu-divider></nldd-menu-divider>
+  {# Uitloggen is POST-only (require_POST, zie rijksauth.views.logout) om
+     forced-logout via een andere site te blokkeren. Geen data-href (dat zou een
+     GET zijn → 405); menu_nav.js dient bij data-logout-url een POST-form in met
+     het csrf-token dat hieronder al gerenderd wordt. #}
+  <nldd-menu-item text="Log uit" icon="logout" data-logout-url="{{ url('logout') }}"></nldd-menu-item>
+  </nldd-menu>
+  </nldd-menu-bar-item>
+  </nldd-menu-bar>
+  {{ get_csrf_hidden_input(request) }}
+{% endif %}
