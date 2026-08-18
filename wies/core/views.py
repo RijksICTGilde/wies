@@ -885,7 +885,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     paginate_by = 60
     page_kwarg = "pagina"
 
-    # `value` wordt de ?weergave= queryparam.
     VIEW_DEFAULT = "persoon"
     VIEW_OPTIONS = [
         {"value": "persoon", "label": "Persoon", "icon": "person"},
@@ -905,9 +904,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
         "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
     }
-    # Newest first: Placement has no created_at, so the auto-increment pk stands in
-    # for insertion order. The opdracht view has its own default, built in
-    # _get_base_queryset because it needs an annotation.
+    # No created_at on Placement, so the pk stands in for insertion order. The
+    # opdracht view has its own default; it needs an annotation.
     PERSON_SORT_DEFAULT = "-id"
 
     @property
@@ -961,8 +959,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         active_view = self.active_view
         sort_field = None
         order_param = self.request.GET.get("order")
-        # An order that does not belong to this view falls back to the default, so a
-        # shared url with ?order=name does not yield a nonsensical order.
+        # A shared url can carry an order this view does not have.
         if order_param and order_param in self.SORT_OPTIONS[active_view]:
             descending = order_param.startswith("-")
             order_by = order_mapping.get(order_param.lstrip("-"))
@@ -970,9 +967,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 sort_field = f"-{order_by}" if descending else order_by
         if sort_field is None:
             if active_view == "opdracht":
-                # Ranked by the last change to the opdracht, which lives in the audit
-                # log: the model has no modified-at. Nulls last, so an opdracht whose
-                # events aged out of retention does not lead the list.
+                # No modified-at on the model, so the audit log stands in. Nulls last:
+                # events age out of retention.
                 qs = qs.annotate(
                     last_change=Subquery(
                         Event.objects.filter(object_type="Assignment", object_id=OuterRef("service__assignment_id"))
@@ -1075,9 +1071,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         returns every placement of the groups on that page.
         """
         group_field = self.GROUP_FIELD[self.active_view]
-        # values_list op het groepsveld erft de ORDER BY van de queryset, maar een
-        # DISTINCT daarover moet elke sorteerkolom ook selecteren. Daarom de ids in
-        # volgorde ophalen en hier ontdubbelen, met behoud van die volgorde.
+        # A DISTINCT on the group field would have to select every sort column too,
+        # so dedupe here instead, keeping the queryset order.
         seen: set[int] = set()
         ordered_group_ids = [
             group_id
@@ -1123,8 +1118,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     def _view_url(self, value: str) -> str:
         """URL for a weergave, keeping the filters and search but dropping the rest.
 
-        The sort is view-specific and the page number meaningless after a switch,
-        so both go; the default view drops the parameter to keep the URL clean.
+        Not services.urls.url_with_param: that one drops "page" while this view
+        pages on "pagina", and the sort options differ per view so ?order= has to
+        go as well.
         """
         params = self.request.GET.copy()
         params.pop(self.page_kwarg, None)
@@ -1214,16 +1210,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             {**option, "url": self._view_url(option["value"]), "selected": option["value"] == active_view}
             for option in self.VIEW_OPTIONS
         ]
-        # Elke kaart is één groep, dus paginator.count telt de kaarten al: personen
-        # in de persoon-weergave, opdrachten in de opdracht-weergave. De templates
-        # lezen die teller rechtstreeks.
         placements = context["object_list"]
         if active_view == "opdracht":
             context["cards"] = self._assignment_cards(placements)
         else:
             context["cards"] = self._person_cards(placements)
 
-        # Sort options differ per view; sort_control.html renders them.
         context["sort_options"] = self.SORT_OPTIONS[active_view]
         order_param = self.request.GET.get("order")
         context["active_order"] = order_param if order_param in self.SORT_OPTIONS[active_view] else ""

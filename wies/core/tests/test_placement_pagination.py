@@ -68,8 +68,7 @@ class TestPlacementPagination:
         response1 = self.client.get(reverse("home"))
         assert response1.status_code == 200
 
-        # The page is paginated on groups (one card per person), so page_obj holds
-        # colleague ids; the placements of that page sit in object_list.
+        # page_obj holds colleague ids, object_list their placements.
         page1_ids = [p.id for p in response1.context_data["object_list"]]
 
         # Get second page

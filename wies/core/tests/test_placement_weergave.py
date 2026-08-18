@@ -101,7 +101,6 @@ class TestActiveView:
         assert "zoek=Cloud" in urls["persoon"]
         assert "order=" not in urls["persoon"]
         assert "pagina=" not in urls["persoon"]
-        # De standaardweergave laat de parameter weg om de URL schoon te houden.
         assert "weergave=" not in urls["persoon"]
         assert "weergave=opdracht" in urls["opdracht"]
 
@@ -164,7 +163,6 @@ class TestGroupPagination:
         assert len(page2_colleagues) == 1
         assert not (page1_colleagues & page2_colleagues)
 
-        # Elke collega heeft precies twee plaatsingen: beide horen op dezelfde pagina.
         for page in (page1, page2):
             counts = {}
             for placement in page.context_data["object_list"]:
@@ -380,7 +378,7 @@ class TestSortOptions:
         [
             ({"weergave": "opdracht", "order": "-name"}, "opdracht"),
             ({"order": "zzz"}, "persoon"),
-            # ?order=skill is verwijderd; een oude bookmark mag niet stukgaan.
+            # ?order=skill is gone; an old bookmark must not break.
             ({"order": "skill"}, "persoon"),
             ({"order": ""}, "persoon"),
         ],
@@ -427,7 +425,6 @@ class TestSortOptions:
             assignment = _make_assignment(name)
             made[name] = assignment
             _place(_make_colleague(f"Collega {name}"), assignment, self.skill)
-        # Oldest-created is changed last, so it has to lead.
         _log_change(made["Anonimisering"], now - timedelta(days=2))
         _log_change(made["Bouwportaal"], now - timedelta(days=1))
         _log_change(made["Chatbot"], now)
