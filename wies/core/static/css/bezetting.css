@@ -1,0 +1,279 @@
+/* "Bezetting" — business-manager occupancy timeline.
+   Colours use NLDD semantic tokens where possible so light/dark both work. */
+
+/* ── Filters (merk + label-categorieën) ───────────────────────────────────── */
+/* Each facet is an nldd-button trigger + nldd-popover; the popover supplies its
+   own panel chrome and positioning, so only the checkbox list needs styling. */
+.bezetting-filter__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+/* No max-height/overflow here: the nldd-popover already caps its own height and
+   scrolls, so adding a second scroll container gave a double scrollbar. */
+.bezetting-filter__menu {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 12rem;
+}
+
+/* ── Legenda ──────────────────────────────────────────────────────────────── */
+.bezetting-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--semantics-content-secondary-color, #4b4b4b);
+}
+
+.bezetting-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bezetting-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+/* Phase colours — shared by legend swatches and timeline bars. */
+.bezetting-swatch--active,
+.bezetting-seg--active {
+  background: #1f7a4d;
+}
+
+.bezetting-swatch--planned,
+.bezetting-seg--planned {
+  background: #7aa7d8;
+}
+
+.bezetting-swatch--completed,
+.bezetting-seg--completed {
+  background: #b8b8b8;
+}
+
+/* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
+.bezetting-timeline {
+  --bezetting-side-width: 320px;
+  --bezetting-row-height: 56px;
+  --bezetting-lane-height: 24px;
+  --bezetting-lane-gap: 4px;
+  /* Vertical breathing room above and below the lane stack within a row. */
+  --bezetting-row-padding: 8px;
+  overflow-x: auto;
+}
+
+.bezetting-timeline-head,
+.bezetting-row {
+  display: grid;
+  grid-template-columns: var(--bezetting-side-width) 1fr;
+  align-items: stretch;
+  min-width: 720px;
+}
+
+/* A row is as tall as its lane stack needs (never shorter than the base height),
+   so rows with several concurrent opdrachten grow instead of bleeding into the
+   neighbouring row. */
+.bezetting-row {
+  --bezetting-lanes: 1;
+  min-height: max(
+    var(--bezetting-row-height),
+    calc(
+      var(--bezetting-lanes) * var(--bezetting-lane-height) +
+        (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap) + 2 *
+        var(--bezetting-row-padding)
+    )
+  );
+}
+
+.bezetting-timeline-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  border-bottom: 2px solid var(--semantics-surfaces-base-border-color, #ddd);
+}
+
+.bezetting-row__side--head {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0 0.5rem 0.25rem;
+  font-weight: 700;
+}
+
+.bezetting-track {
+  position: relative;
+  height: 100%;
+  min-height: var(--bezetting-row-height);
+  border-left: 1px solid var(--semantics-surfaces-base-border-color, #e0e0e0);
+}
+
+.bezetting-track--head {
+  min-height: 2rem;
+}
+
+/* Lane stack: top-aligned within the track (offset by the row padding) so the
+   bars start next to the colleague's name and status, keeping the link between a
+   row's label and its bars clear however many lanes it stacks. */
+.bezetting-lanes {
+  position: absolute;
+  top: var(--bezetting-row-padding);
+  left: 0;
+  right: 0;
+  height: calc(
+    var(--bezetting-lanes) * var(--bezetting-lane-height) +
+      (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap)
+  );
+}
+
+/* Month gridlines + labels */
+.bezetting-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--semantics-surfaces-tinted-border-color, #eee);
+}
+
+.bezetting-gridline--year {
+  background: var(--semantics-surfaces-base-border-color, #cfcfcf);
+}
+
+.bezetting-tick {
+  position: absolute;
+  bottom: 0;
+  border-left: 1px solid var(--semantics-surfaces-base-border-color, #e0e0e0);
+  height: 0.6rem;
+}
+
+.bezetting-tick--year {
+  height: 1rem;
+}
+
+.bezetting-tick__label {
+  position: absolute;
+  bottom: 0.7rem;
+  left: 2px;
+  font-size: 0.7rem;
+  color: var(--semantics-content-secondary-color, #6b6b6b);
+  white-space: nowrap;
+}
+
+/* "Today" marker */
+.bezetting-today,
+.bezetting-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--semantics-content-critical-color, #d52b1e);
+  z-index: 2;
+}
+
+.bezetting-today__label {
+  position: absolute;
+  top: -0.1rem;
+  left: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--semantics-content-critical-color, #d52b1e);
+  white-space: nowrap;
+}
+
+/* ── Rijen ────────────────────────────────────────────────────────────────── */
+.bezetting-rows {
+  border-top: 1px solid var(--semantics-surfaces-tinted-border-color, #eee);
+}
+
+.bezetting-row {
+  position: relative;
+  /* A firmer divider than the month gridlines, so it is always clear which bars
+     belong to which colleague even when a row stacks several lanes. */
+  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #ccc);
+}
+
+.bezetting-row:hover {
+  background: var(--semantics-surfaces-tinted-background-color, #f0f4f8);
+}
+
+/* The left cell is a real anchor (focus, keyboard, right-click), but its click
+   area is stretched across the whole row via ::after — so clicking anywhere on
+   the row, including the timeline, opens the colleague panel. */
+.bezetting-row__side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.25rem;
+  border-right: 1px solid var(--semantics-surfaces-tinted-border-color, #eee);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bezetting-row__side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Above the positioned .bezetting-track (and its gridlines/today-line) so a
+     click on the timeline reaches this stretched link, not the track cell. */
+  z-index: 4;
+}
+
+.bezetting-person {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.bezetting-person__name {
+  font-weight: 700;
+}
+
+.bezetting-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+/* Timeline bars are purely visual: let clicks fall through to the stretched
+   row link so the whole row opens the colleague panel. */
+.bezetting-seg {
+  position: absolute;
+  height: var(--bezetting-lane-height);
+  min-width: 3px;
+  border-radius: 4px;
+  color: #fff;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.bezetting-seg--completed {
+  color: #333;
+}
+
+.bezetting-seg__label {
+  display: block;
+  padding: 0 0.4rem;
+  line-height: var(--bezetting-lane-height);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Emphasise the most-pressing rows with a left accent. */
+.bezetting-row--bench .bezetting-row__side {
+  box-shadow: inset 4px 0 0 var(--semantics-content-critical-color, #d52b1e);
+}
+
+@media (max-width: 800px) {
+  .bezetting-timeline {
+    --bezetting-side-width: 200px;
+  }
+}

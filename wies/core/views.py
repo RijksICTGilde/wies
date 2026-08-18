@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Lower
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -43,7 +43,7 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate_placement_visibility
-from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
+from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -69,7 +69,7 @@ from .models import (
     Skill,
     Suborganization,
 )
-from .permissions import is_staff_member
+from .permissions import is_business_manager, is_staff_member
 from .querysets import (
     annotate_placement_dates,
     annotate_suborganization_usage_counts,
@@ -82,6 +82,7 @@ from .services.assignments import (
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
+from .services.occupancy import HORIZON_AHEAD_DAYS, HORIZON_BACK_DAYS, colleague_occupancy
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -551,6 +552,140 @@ def no_access(request):
 
 def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
+
+
+def business_manager_required(view_func):
+    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
+
+
+def _bezetting_today_pct():
+    """Horizontal position of the 'today' marker within the timeline horizon."""
+    return round(HORIZON_BACK_DAYS / (HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS) * 100, 2)
+
+
+def _bezetting_month_ticks(today):
+    """First-of-month gridline labels across the horizon, as {label, month, left%}."""
+    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
+    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
+    span = (horizon_end - horizon_start).days or 1
+    ticks = []
+    year, month = horizon_start.year, horizon_start.month
+    # Advance to the first month boundary on or after the horizon start.
+    if horizon_start.day != 1:
+        month += 1
+        if month > 12:  # noqa: PLR2004 (12 = months per year)
+            month = 1
+            year += 1
+    cursor = date(year, month, 1)
+    while cursor <= horizon_end:
+        left = (cursor - horizon_start).days / span * 100
+        ticks.append({"label": cursor.strftime("%b"), "month": cursor.month, "left": round(left, 2)})
+        month += 1
+        if month > 12:  # noqa: PLR2004 (12 = months per year)
+            month = 1
+            year += 1
+        cursor = date(year, month, 1)
+    return ticks
+
+
+@business_manager_required
+def bezetting(request):
+    """ "Bezetting" — the business-manager occupancy timeline.
+
+    Rows are colleagues, sorted most-pressing first (bench → full). A row click
+    opens the shared colleague side panel via the ``collega`` param, exactly like
+    the "Wie zit waar?" table.
+    """
+    today = timezone.now().date()
+
+    # Side panel: reuse the shared machinery. A row click opens the colleague
+    # panel (?collega); links inside that panel open an opdracht (?opdracht) or
+    # plaatsing (?plaatsing) panel, exactly like on "Wie zit waar?".
+    placement_id = request.GET.get("plaatsing")
+    assignment_id = request.GET.get("opdracht")
+    colleague_id = request.GET.get("collega")
+    panel_data = None
+    if placement_id:
+        panel_data = _resolve_placement_panel(request, placement_id)
+    elif assignment_id:
+        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        if assignment is not None:
+            panel_data = _build_assignment_panel_data(assignment, request)
+    elif colleague_id:
+        colleague = _resolve_panel_object(request, Colleague, colleague_id)
+        if colleague is not None:
+            panel_data = _build_colleague_panel_data(colleague, request)
+
+    # HTMX panel requests return just the panel content, like WZW.
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Merk (suborganisation) filter: show only colleagues in the selected merken.
+    # Only merken actually assigned to at least one colleague are offered.
+    merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
+    selected_merk_ids = set(merk.public_ids)
+    merk_options = [
+        {"public_id": str(s.public_id), "name": s.name, "selected": str(s.public_id) in selected_merk_ids}
+        for s in Suborganization.objects.filter(colleagues__isnull=False).distinct()
+    ]
+
+    # Label-category filters: one dropdown per category, OR within a category and
+    # AND between categories (like "Wie zit waar?"). Only labels actually used by
+    # a colleague are offered, and a category with no such labels is dropped.
+    labels = resolve_facet(Label, request.GET.getlist("labels"))
+    labels_by_category = _labels_by_category(labels)
+    label_filter_groups = _bezetting_label_filter_groups(set(labels.public_ids))
+
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_category)
+    for row in rows:
+        row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
+
+    context = {
+        "rows": rows,
+        "panel_data": panel_data,
+        "today_pct": _bezetting_today_pct(),
+        "month_ticks": _bezetting_month_ticks(today),
+        "bench_count": sum(1 for r in rows if r.bucket == "bench"),
+        "full_count": sum(1 for r in rows if r.bucket == "full"),
+        "ends_soon_count": sum(1 for r in rows if r.ends_soon),
+        "merk_options": merk_options,
+        "merk_active": bool(selected_merk_ids),
+        "label_filter_groups": label_filter_groups,
+        "filter_active": bool(selected_merk_ids or labels.public_ids),
+    }
+    return render(request, "bezetting.html", context)
+
+
+def _labels_by_category(labels):
+    """Group a resolved ``labels`` facet's ids by their category id."""
+    by_category: dict[int, list[int]] = {}
+    for label in Label.objects.filter(id__in=labels.ids).values("id", "category_id"):
+        by_category.setdefault(label["category_id"], []).append(label["id"])
+    return by_category
+
+
+def _bezetting_label_filter_groups(selected_public_ids):
+    """One dropdown group per label-category, listing only labels used by a
+    colleague. Categories without such labels are omitted."""
+    used_labels = (
+        Label.objects.filter(colleagues__isnull=False)
+        .distinct()
+        .select_related("category")
+        .order_by("category__name", Lower("name"))
+    )
+    groups: dict[int, dict] = {}
+    for label in used_labels:
+        group = groups.setdefault(
+            label.category_id,
+            {"name": label.category.name, "options": [], "selected_count": 0},
+        )
+        is_selected = str(label.public_id) in selected_public_ids
+        group["options"].append({"public_id": str(label.public_id), "name": label.name, "selected": is_selected})
+        if is_selected:
+            group["selected_count"] += 1
+    return list(groups.values())
 
 
 ERRORS_PER_PAGE = 10

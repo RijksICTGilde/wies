@@ -76,6 +76,13 @@ def is_staff_member(user):
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
+def is_business_manager(user):
+    """Whether the user is a Business Development Manager — the role that owns the
+    "Business management" section (Bezetting).
+    """
+    return user.is_authenticated and user.groups.filter(name="Business Development Manager").exists()
+
+
 # --- Whole-object UPDATE rules ----------------------------------------------
 
 

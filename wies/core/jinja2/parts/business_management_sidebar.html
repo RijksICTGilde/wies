@@ -1,0 +1,15 @@
+<nldd-container slot="sidebar" padding="16">
+<nldd-title size="5">
+<h2>Business management</h2>
+</nldd-title>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+<nldd-list type="navigation" accessible-label="Business management">
+<nldd-list-item href="{{ url('bezetting') }}" {% if '/business-management/' in request.path %}selected{% endif %}>
+<nldd-icon-cell size="20">
+<nldd-icon name="calendar-event"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Bezetting"></nldd-text-cell>
+</nldd-list-item>
+</nldd-list>
+</nldd-container>
