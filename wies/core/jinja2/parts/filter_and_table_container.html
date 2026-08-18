@@ -3,8 +3,8 @@ both stay in sync without a shared wrapper element. #}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
   <nldd-toolbar label="Zoeken en filteren">
-  {# Vóór het zoekveld: de weergave bepaalt wát je ziet, zoeken en filteren
-     verfijnen dat pas daarna. #}
+  {# Before the search field: the view decides what you see, searching and
+     filtering refine it after that. #}
   {% include "parts/view_control.html" %}
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
   <nldd-search-field id="search-input" placeholder="Collega, opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>

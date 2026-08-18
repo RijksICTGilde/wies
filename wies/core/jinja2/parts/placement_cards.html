@@ -1,8 +1,8 @@
-{# Kaarten voor "Wie zit waar?", in de weergave die de segmented control koos:
-   één kaart per persoon of één per opdracht. Elke kaart opent het bijbehorende
-   zijpaneel. `href` houdt de kaart een echte link (statusbalk, cmd/middenklik
-   opent een tab); hx_link_guard.js vangt de gewone klik zodat htmx het paneel
-   vult in plaats van te navigeren. Zelfde patroon als assignment_card_rows.html. #}
+{# Cards for "Wie zit waar?", one per persoon or per opdracht depending on the
+   view. Each card opens its side panel. `href` keeps the card a real link
+   (status bar, cmd/middle click opens a tab); hx_link_guard.js catches the
+   plain click so htmx fills the panel instead of navigating. Same pattern as
+   assignment_card_rows.html. #}
 {% macro chevron() %}
   <span class="assignment-card__chevron" aria-hidden="true">
     <nldd-icon size="20" name="chevron-right"></nldd-icon>
@@ -15,8 +15,8 @@
     <nldd-title size="5">
     <h3>{{ card.name }}</h3>
     </nldd-title>
-    {# Het hele team van de opdracht, niet alleen wie door de filters kwam: een
-       rolfilter zou anders stilletjes een half team tonen. #}
+    {# The whole team, not just who passed the filters: a rol filter would
+       otherwise silently show half a team. #}
     {% if card.team %}
       <nldd-spacer size="8"></nldd-spacer>
       <nldd-container layout="wrap" gap="4">
@@ -50,8 +50,8 @@
     {% endif %}
   {% endif %}
   </nldd-container>
-  {# In de footer-slot, zodat opdrachtgever en datum over kaarten heen uitlijnen
-     ongeacht de lengte van de titel. Zelfde reden als bij de opdrachtkaarten. #}
+  {# In the footer slot so opdrachtgever and date line up across cards
+     regardless of title length. #}
   <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
   <nldd-list variant="simple" dividers="never" accessible-label="Gegevens">
   {% if active_view == 'opdracht' %}
@@ -64,8 +64,8 @@
       {# djlint:on #}
       </nldd-list-item>
     {% endif %}
-    {# De periode-rij staat er altijd, ook zonder datum: liet je hem weg dan kromp
-       de kaart en stonden de kaarten in het raster niet meer op gelijke hoogte. #}
+    {# The period row is always there, even without a date: dropping it shrank
+       the card and broke the even heights in the grid. #}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -75,8 +75,8 @@
     <nldd-cell>{{ chevron() }}</nldd-cell>
     </nldd-list-item>
   {% else %}
-    {# Eén opdracht: toon welke, want dat is het antwoord op "wie zit waar?".
-       Meerdere: alleen het aantal, de namen passen niet op één kaart. #}
+    {# One opdracht: name it, that is the answer to "wie zit waar?". More than
+       one: just the count, the names do not fit on a card. #}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="business-suitcase"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -98,9 +98,9 @@
   </nldd-card>
 {% endfor %}
 {% if next_page_url %}
-  {# Klik in plaats van auto-laden (hx-trigger=revealed), dat zou de voettekst van
-     de pagina eindeloos buiten bereik duwen. De knop is een rastercel in de
-     nldd-collection en vervangt zichzelf door de volgende kaarten. #}
+  {# A click instead of auto-loading (hx-trigger=revealed), which would push the
+     page footer out of reach forever. The button is a grid cell in the
+     nldd-collection and replaces itself with the next cards. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

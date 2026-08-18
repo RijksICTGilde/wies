@@ -1,6 +1,5 @@
-{# Het kaartenraster van "Wie zit waar?". Beide takken delen één id, zodat de
-   OOB-swap de ene door de andere kan vervangen. Zelfde patroon als het raster op
-   de aanvragen-pagina. #}
+{# The card grid for "Wie zit waar?". Both branches share one id so the OOB
+   swap can replace either with the other. #}
 {% if paginator.count %}
   <nldd-collection id="placement-list" layout="grid" item-width="280px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
