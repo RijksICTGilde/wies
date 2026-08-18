@@ -904,9 +904,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
         "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
     }
-    # No created_at on Placement, so the pk stands in for insertion order. The
-    # opdracht view has its own default; it needs an annotation.
-    PERSON_SORT_DEFAULT = "-id"
+    # Both view defaults need an annotation, so they are built in _get_base_queryset.
 
     @property
     def active_view(self) -> str:
@@ -952,7 +950,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         order_mapping = {
             "name": "colleague__name",
             "assignment": "service__assignment__name",
-            "skill": "service__skill__name",
             "end_date": "service__assignment__end_date",
         }
 
@@ -978,7 +975,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 )
                 sort_field = F("last_change").desc(nulls_last=True)
             else:
-                sort_field = self.PERSON_SORT_DEFAULT
+                # Nulls last: a placement without a start date says nothing about
+                # how recent it is.
+                sort_field = F("actual_start_date").desc(nulls_last=True)
+
+        # Before ordering: the persoon default sorts on actual_start_date.
+        qs = annotate_placement_dates(qs)
 
         # The group as tiebreaker keeps one person's or opdracht's placements
         # together when the sort itself ties.
@@ -987,7 +989,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         # The list is a current-state overview: only active placements, for every
         # viewer alike. History and planned placements live on the profile and the
         # side panels, not here.
-        qs = annotate_placement_dates(qs)
         return filter_visible_placements(qs, timezone.now().date())
 
     def _get_loopt_af_options(self, base_qs):

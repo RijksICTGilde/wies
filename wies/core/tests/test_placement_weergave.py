@@ -389,20 +389,48 @@ class TestSortOptions:
         assert response.context_data["active_view"] == expected_view
         assert response.context_data["active_order"] == ""
 
-    def test_person_view_defaults_to_newest_first(self):
-        for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
-            _place(_make_colleague(name), _make_assignment(f"Opdracht {name}"), self.skill)
+    def test_person_view_defaults_to_newest_start_date(self):
+        """The most recently started placement leads, whatever the entry order."""
+        today = timezone.now().date()
+        for name, days_ago in (("Carla Jansen", 5), ("Anna Bakker", 40), ("Bob Smit", 1)):
+            assignment = _make_assignment(f"Opdracht {name}")
+            assignment.start_date = today - timedelta(days=days_ago)
+            assignment.save(update_fields=["start_date"])
+            _place(_make_colleague(name), assignment, self.skill)
 
-        assert self._card_names() == ["Bob Smit", "Anna Bakker", "Carla Jansen"]
+        assert self._card_names() == ["Bob Smit", "Carla Jansen", "Anna Bakker"]
 
-    def test_a_new_placement_lifts_an_existing_person_to_the_top(self):
-        """Newest first ranks a card by its most recent placement, not its first."""
+    def test_person_without_a_start_date_sorts_last(self):
+        dated = _make_assignment("Met startdatum")
+        dated.start_date = timezone.now().date() - timedelta(days=90)
+        dated.save(update_fields=["start_date"])
+        _place(_make_colleague("Anna Bakker"), dated, self.skill)
+        undated = _make_assignment("Zonder startdatum")
+        undated.start_date = None
+        undated.save(update_fields=["start_date"])
+        _place(_make_colleague("Bob Smit"), undated, self.skill)
+
+        assert self._card_names() == ["Anna Bakker", "Bob Smit"]
+
+    def test_a_newer_placement_lifts_an_existing_person_to_the_top(self):
+        """A card ranks on its most recent placement, not on its oldest."""
+        today = timezone.now().date()
         anna = _make_colleague("Anna Bakker")
-        _place(anna, _make_assignment("Eerste opdracht"), self.skill)
-        _place(_make_colleague("Bob Smit"), _make_assignment("Opdracht Bob"), self.skill)
+        old = _make_assignment("Eerste opdracht")
+        old.start_date = today - timedelta(days=60)
+        old.save(update_fields=["start_date"])
+        _place(anna, old, self.skill)
+
+        bob_assignment = _make_assignment("Opdracht Bob")
+        bob_assignment.start_date = today - timedelta(days=30)
+        bob_assignment.save(update_fields=["start_date"])
+        _place(_make_colleague("Bob Smit"), bob_assignment, self.skill)
         assert self._card_names() == ["Bob Smit", "Anna Bakker"]
 
-        _place(anna, _make_assignment("Tweede opdracht"), self.skill)
+        recent = _make_assignment("Tweede opdracht")
+        recent.start_date = today - timedelta(days=2)
+        recent.save(update_fields=["start_date"])
+        _place(anna, recent, self.skill)
         assert self._card_names() == ["Anna Bakker", "Bob Smit"]
 
     def test_person_view_name_ascending_sorts_on_name(self):
