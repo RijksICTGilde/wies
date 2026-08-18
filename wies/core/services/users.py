@@ -93,7 +93,11 @@ def create_user(
     if suborganization is not None:
         colleague.suborganization = suborganization
         colleague.save(update_fields=["suborganization"])
-    if groups:
+    # `is not None`, mirroring update_user: an empty list is a real value ("no
+    # roles"), not an absent one. It happens to be harmless on a fresh user, but
+    # `if groups:` is the exact truthiness trap that hid the update_user bug, so
+    # don't seed the habit here.
+    if groups is not None:
         user.groups.set(groups)
 
     context = {
@@ -149,7 +153,7 @@ def update_user(
         label_names = [label.name for label in labels]
     colleague.suborganization = suborganization
     colleague.save(update_fields=["suborganization"])
-    if groups:
+    if groups is not None:
         user.groups.set(groups)
 
     context = {
