@@ -2897,13 +2897,12 @@ def onboarding_assignment_edit(request, public_id):
         with transaction.atomic():
             for group in groups:
                 save_edit_specs(request, group["specs"], group["form"].cleaned_data)
-        # The updated box replaces the old one in the step; the edit screen closes
-        # itself on the trigger (see onboarding.js).
+        # After-swap: closing re-reads the step from the DOM (see onboarding.js).
         entry = _onboarding_entry(request, public_id)
         response = render(request, "parts/onboarding/onboarding_assignment_box.html", {"entry": entry})
         response["HX-Retarget"] = f"#onboarding-assignment-{public_id}"
         response["HX-Reswap"] = "outerHTML"
-        response["HX-Trigger"] = "onboardingDetailClose"
+        response["HX-Trigger-After-Swap"] = "onboardingDetailClose"
         return response
 
     return render(

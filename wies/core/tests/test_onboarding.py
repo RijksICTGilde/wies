@@ -271,12 +271,39 @@ class OnboardingAssignmentStepTest(TestCase):
         assert response.status_code == 200
         # The updated box swaps back into the step; the screen closes itself.
         assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.public_id}"
-        assert response["HX-Trigger"] == "onboardingDetailClose"
+        assert response["HX-Trigger-After-Swap"] == "onboardingDetailClose"
         assignment.refresh_from_db()
         service.refresh_from_db()
         assert assignment.name == "Datateam BZK"
         assert assignment.extra_info == "Nieuwe omschrijving"
         assert service.description == "Data engineering plus"
+
+    def test_saved_values_are_visible_again_right_away(self):
+        """The step and the edit screen both show the new data after a save (#619)."""
+        assignment = self._place_on(name="Oude naam", description="Oude rol")
+        self.client.force_login(self.user)
+        url = reverse("onboarding-assignment-edit", args=[assignment.public_id])
+        service = assignment.services.first()
+
+        response = self.client.post(
+            url,
+            {
+                "opdracht-name": "Nieuwe naam",
+                "opdracht-extra_info": "Nieuwe omschrijving",
+                f"rol-{service.id}-description": "Nieuwe rol",
+            },
+        )
+        assert "HX-Trigger" not in response
+        assert response["HX-Trigger-After-Swap"] == "onboardingDetailClose"
+        self.assertContains(response, "Nieuwe naam")
+        self.assertContains(response, "Nieuwe omschrijving")
+        self.assertNotContains(response, "Oude naam")
+
+        reopened = self.client.get(url)
+        self.assertContains(reopened, "Nieuwe naam")
+        self.assertContains(reopened, "Nieuwe omschrijving")
+        self.assertContains(reopened, "Nieuwe rol")
+        self.assertNotContains(reopened, "Oude naam")
 
     def test_assignment_edit_screen_rejects_other_assignment(self):
         # An assignment you are not placed on must not be editable.
