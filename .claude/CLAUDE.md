@@ -46,6 +46,8 @@ Language: Dutch UI, English code.
 - Use [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components
 - Reference: https://minbzk.github.io/storybook/
 - Dutch labels and messages
+- Web components in a server-rendered app have their own pitfalls (swap
+  timing, shadow-DOM boundaries, form-error wiring): `rules/nldd-integration.md`
 
 ### Forms & Inline Editing
 
