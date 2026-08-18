@@ -10,21 +10,17 @@
   "-end_date": "Einddatum (nieuwste eerst)",
   "end_date": "Einddatum (oudste eerst)"
 } %}
-{# Alleen de opties die bij de actieve weergave passen: sorteren op collega-naam
-   zegt niets in de opdracht-weergave, waar één kaart een heel team is. De view
-   levert sort_options; active_order is leeg als de URL een optie draagt die hier
-   niet bestaat, zodat de knop dan de standaard toont in plaats van een sortering
-   die niet is toegepast. #}
+{# Sorting on colleague name says nothing in the opdracht view, where one card
+   is a whole team, so the view narrows sort_options per view. #}
 {% set current_order = active_order %}
+{# Naming the default order, so the button does not say "Sorteren" while a
+   sort order is in fact applied. #}
+{% set default_sort_label = "Laatst gewijzigd" if active_view == 'opdracht' else "Plaatsing (nieuwste eerst)" %}
 {# The default order is the absence of ?order=, so that option gets a url that
    strips the parameter. Radios, not buttons: only type radio or checkbox shows
    a selected state. Sorting refreshes the list in place (htmx swap of #results
    plus OOB of #placement-list and #sort-control); hx-replace-url keeps the
    chosen order in the address bar so a reload remembers it. #}
-{# De standaardsortering verschilt per weergave: kaarten per persoon staan op
-   naam, kaarten per opdracht op opdrachtnaam. Het label noemt die volgorde, zodat
-   de knop niet "Sorteren" zegt terwijl er wel degelijk een volgorde is. #}
-{% set default_sort_label = "Opdracht (A-Z)" if active_view == 'opdracht' else "Naam (A-Z)" %}
 {# A macro so the visible list and the overflow group share the exact same
    attributes. hx-trigger="select" is the DS event for a radio choice. #}
 {% macro sort_item(label, url, selected) -%}

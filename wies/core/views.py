@@ -17,7 +17,7 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
@@ -892,24 +892,23 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         {"value": "opdracht", "label": "Opdracht", "icon": "business-suitcase"},
     ]
 
-    # Het veld waarop gepagineerd en gegroepeerd wordt, per weergave. Paginering
-    # loopt over deze groepen en niet over plaatsingen, zodat een groep nooit over
-    # een paginagrens valt en half getoond wordt.
+    # Pagination runs over these groups, not over placements, so a group never
+    # straddles a page boundary and shows up half.
     GROUP_FIELD = {
         "persoon": "colleague_id",
         "opdracht": "service__assignment_id",
     }
 
-    # Sorteeropties per weergave: sorteren op collega-naam zegt niets in de
-    # opdracht-weergave, waar één kaart een heel team is. Waarden verwijzen naar
-    # order_mapping in _get_base_queryset. De standaardsortering van een weergave
-    # staat er niet bij: die is de afwezigheid van ?order= en krijgt in het menu
-    # zijn eigen optie, anders staat hij er twee keer in.
+    # Sorting on colleague name says nothing in the opdracht view, where one card
+    # is a whole team. Values map through order_mapping in _get_base_queryset.
     SORT_OPTIONS = {
-        "persoon": ["-name", "assignment", "-assignment", "end_date", "-end_date"],
-        "opdracht": ["-assignment", "end_date", "-end_date"],
+        "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
+        "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
     }
-    SORT_DEFAULT = {"persoon": "colleague__name", "opdracht": "service__assignment__name"}
+    # Newest first: Placement has no created_at, so the auto-increment pk stands in
+    # for insertion order. The opdracht view has its own default, built in
+    # _get_base_queryset because it needs an annotation.
+    PERSON_SORT_DEFAULT = "-id"
 
     @property
     def active_view(self) -> str:
@@ -962,19 +961,31 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         active_view = self.active_view
         sort_field = None
         order_param = self.request.GET.get("order")
-        # Een sortering die niet bij deze weergave hoort (of niet bestaat) valt terug
-        # op de standaard, zodat een gedeelde URL met ?order=name in de
-        # opdracht-weergave geen lege of onlogische volgorde geeft.
+        # An order that does not belong to this view falls back to the default, so a
+        # shared url with ?order=name does not yield a nonsensical order.
         if order_param and order_param in self.SORT_OPTIONS[active_view]:
             descending = order_param.startswith("-")
             order_by = order_mapping.get(order_param.lstrip("-"))
             if order_by:
                 sort_field = f"-{order_by}" if descending else order_by
         if sort_field is None:
-            sort_field = self.SORT_DEFAULT[active_view]
+            if active_view == "opdracht":
+                # Ranked by the last change to the opdracht, which lives in the audit
+                # log: the model has no modified-at. Nulls last, so an opdracht whose
+                # events aged out of retention does not lead the list.
+                qs = qs.annotate(
+                    last_change=Subquery(
+                        Event.objects.filter(object_type="Assignment", object_id=OuterRef("service__assignment_id"))
+                        .order_by("-timestamp")
+                        .values("timestamp")[:1]
+                    )
+                )
+                sort_field = F("last_change").desc(nulls_last=True)
+            else:
+                sort_field = self.PERSON_SORT_DEFAULT
 
-        # De groep als tiebreaker houdt de plaatsingen van één persoon of opdracht
-        # bij elkaar wanneer de sortering zelf gelijke waarden oplevert.
+        # The group as tiebreaker keeps one person's or opdracht's placements
+        # together when the sort itself ties.
         qs = qs.order_by(sort_field, self.GROUP_FIELD[active_view])
 
         # The list is a current-state overview: only active placements, for every
@@ -1212,7 +1223,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         else:
             context["cards"] = self._person_cards(placements)
 
-        # De sorteeropties verschillen per weergave; sort_control.html rendert deze.
+        # Sort options differ per view; sort_control.html renders them.
         context["sort_options"] = self.SORT_OPTIONS[active_view]
         order_param = self.request.GET.get("order")
         context["active_order"] = order_param if order_param in self.SORT_OPTIONS[active_view] else ""

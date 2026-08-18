@@ -13,7 +13,7 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Placement, Service, Skill
+from wies.core.models import Assignment, Colleague, Event, Placement, Service, Skill
 
 User = get_user_model()
 
@@ -34,6 +34,13 @@ def _make_colleague(name):
         name=name,
         email=f"{name.replace(' ', '.').lower()}@rijksoverheid.nl",
         source="wies",
+    )
+
+
+def _log_change(assignment, when):
+    """An audit event for the assignment, the source of its last-change order."""
+    return Event.objects.create(
+        timestamp=when, object_type="Assignment", object_id=assignment.id, action="update", source="ui"
     )
 
 
@@ -384,11 +391,27 @@ class TestSortOptions:
         assert response.context_data["active_view"] == expected_view
         assert response.context_data["active_order"] == ""
 
-    def test_person_view_defaults_to_colleague_name(self):
+    def test_person_view_defaults_to_newest_first(self):
         for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
             _place(_make_colleague(name), _make_assignment(f"Opdracht {name}"), self.skill)
 
-        assert self._card_names() == ["Anna Bakker", "Bob Smit", "Carla Jansen"]
+        assert self._card_names() == ["Bob Smit", "Anna Bakker", "Carla Jansen"]
+
+    def test_a_new_placement_lifts_an_existing_person_to_the_top(self):
+        """Newest first ranks a card by its most recent placement, not its first."""
+        anna = _make_colleague("Anna Bakker")
+        _place(anna, _make_assignment("Eerste opdracht"), self.skill)
+        _place(_make_colleague("Bob Smit"), _make_assignment("Opdracht Bob"), self.skill)
+        assert self._card_names() == ["Bob Smit", "Anna Bakker"]
+
+        _place(anna, _make_assignment("Tweede opdracht"), self.skill)
+        assert self._card_names() == ["Anna Bakker", "Bob Smit"]
+
+    def test_person_view_name_ascending_sorts_on_name(self):
+        for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
+            _place(_make_colleague(name), _make_assignment(f"Opdracht {name}"), self.skill)
+
+        assert self._card_names({"order": "name"}) == ["Anna Bakker", "Bob Smit", "Carla Jansen"]
 
     def test_person_view_name_descending_reverses_the_order(self):
         for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
@@ -396,19 +419,38 @@ class TestSortOptions:
 
         assert self._card_names({"order": "-name"}) == ["Carla Jansen", "Bob Smit", "Anna Bakker"]
 
-    def test_assignment_view_defaults_to_assignment_name(self):
+    def test_assignment_view_defaults_to_last_changed(self):
+        """An opdracht ranks on its last audited change, not on when it was created."""
+        now = timezone.now()
+        made = {}
         for name in ("Chatbot", "Anonimisering", "Bouwportaal"):
-            _place(_make_colleague(f"Collega {name}"), _make_assignment(name), self.skill)
+            assignment = _make_assignment(name)
+            made[name] = assignment
+            _place(_make_colleague(f"Collega {name}"), assignment, self.skill)
+        # Oldest-created is changed last, so it has to lead.
+        _log_change(made["Anonimisering"], now - timedelta(days=2))
+        _log_change(made["Bouwportaal"], now - timedelta(days=1))
+        _log_change(made["Chatbot"], now)
 
-        assert self._card_names({"weergave": "opdracht"}) == ["Anonimisering", "Bouwportaal", "Chatbot"]
+        assert self._card_names({"weergave": "opdracht"}) == ["Chatbot", "Bouwportaal", "Anonimisering"]
+
+    def test_assignment_without_audit_events_sorts_last(self):
+        """Events age out of retention; an opdracht without any must not lead."""
+        changed = _make_assignment("Met wijziging")
+        _place(_make_colleague("Collega A"), changed, self.skill)
+        silent = _make_assignment("Zonder wijziging")
+        _place(_make_colleague("Collega B"), silent, self.skill)
+        _log_change(changed, timezone.now() - timedelta(days=30))
+
+        assert self._card_names({"weergave": "opdracht"}) == ["Met wijziging", "Zonder wijziging"]
 
     def test_invalid_order_falls_back_to_the_view_default(self):
-        """?order=-name in the opdracht view sorts on assignment name, not on nothing."""
+        """?order=-name does not exist in the opdracht view, so the default applies."""
         for name in ("Chatbot", "Anonimisering", "Bouwportaal"):
             _place(_make_colleague(f"Collega {name}"), _make_assignment(name), self.skill)
 
         names = self._card_names({"weergave": "opdracht", "order": "-name"})
-        assert names == ["Anonimisering", "Bouwportaal", "Chatbot"]
+        assert names == ["Chatbot", "Anonimisering", "Bouwportaal"]
 
     def test_assignment_descending_sorts_the_assignment_cards(self):
         for name in ("Chatbot", "Anonimisering", "Bouwportaal"):
