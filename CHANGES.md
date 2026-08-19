@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 634: the back link on the information pages said "Terug naar Wies" while you were already on Wies; it now names where it goes, "Terug naar Wie zit waar?"
+- 634: the back link on the information pages said "Terug naar Wies" while you were already on Wies; it now says "Terug" and actually goes back to where you came from
+- 634: "Terug naar de vorige pagina" on the error pages landed on a blank page when the page was opened in a fresh tab
 - 634: links that open in a new tab now show an icon and say so for a screen reader
 - 634: a plaatsing without an end date now reads "Vanaf 13 mei 2026" instead of "13 mei 2026 t/m heden", which suggested it ended today
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
