@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TODO: (post-release actions) new "Business management" section with a "Bezetting" timeline showing, per colleague, who is on the bench and who is fully placed; visible only to Business Development Managers. The timeline can be filtered by merk (suborganisation) and by label categories to show only the matching colleagues
+- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page

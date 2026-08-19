@@ -21,8 +21,9 @@ Belangrijke ontwerpkeuzes en de onderbouwing daarvan:
   vandaag) of **"volledig ingezet"** (≥1 actieve plaatsing). Bewust géén
   tussenstaat ("deels vrij"), omdat we die data niet hebben en niet in deze stap
   willen introduceren.
-- **Alleen zichtbaar voor Business Development Managers.** De hele sectie zit
-  achter een role-gate op de bestaande BDM-groep. Er is bewust geen nieuwe rol
+- **Zichtbaar voor Business Development Managers en support-staff.** De hele
+  sectie zit achter `can_access_business_management` (de bestaande BDM-groep plus
+  `STAFF_EMAILS`, die overal al alles zien). Er is bewust geen nieuwe rol
   aangemaakt; de BDM-groep is de bestaande rol die deze taak past.
 - **Alleen consultants in de lijst.** De tijdlijn toont alleen collega's die de
   rol **Consultant** hebben (de gekoppelde gebruiker zit in de groep

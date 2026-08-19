@@ -69,7 +69,7 @@ from .models import (
     Skill,
     Suborganization,
 )
-from .permissions import is_business_manager, is_staff_member
+from .permissions import can_access_business_management, is_staff_member
 from .querysets import (
     annotate_placement_dates,
     annotate_suborganization_usage_counts,
@@ -561,8 +561,10 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
-def business_manager_required(view_func):
-    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
+def business_management_access_required(view_func):
+    """Gate the "Business management" section: Business Development Managers plus
+    support staff (see ``can_access_business_management``)."""
+    return user_passes_test(can_access_business_management, login_url="/geen-toegang/")(view_func)
 
 
 def _bezetting_today_pct():
@@ -595,7 +597,7 @@ def _bezetting_month_ticks(today):
     return ticks
 
 
-@business_manager_required
+@business_management_access_required
 def bezetting(request):
     """ "Bezetting" — the business-manager occupancy timeline.
 

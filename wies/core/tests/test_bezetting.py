@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -73,6 +73,16 @@ class BezettingAuthTest(TestCase):
         assert response.status_code == 200
         assert b"Bezetting" in response.content
 
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_staff_gets_page(self):
+        # Support staff (STAFF_EMAILS) may reach the business-management section too,
+        # even without the Business Development Manager role.
+        staff = User.objects.create(email="staff@rijksoverheid.nl")
+        self.client.force_login(staff)
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+        assert b"Bezetting" in response.content
+
 
 class BezettingPanelTest(TestCase):
     """The side panel opens colleague/opdracht/plaatsing details, never the full page."""
@@ -134,6 +144,13 @@ class BezettingNavVisibilityTest(TestCase):
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("home"))
         assert b"Business management" not in response.content
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_tab_visible_for_staff(self):
+        staff = User.objects.create(email="staff@rijksoverheid.nl")
+        self.client.force_login(staff)
+        response = self.client.get(reverse("home"))
+        assert b"Business management" in response.content
 
 
 class OccupancyServiceTest(TestCase):
