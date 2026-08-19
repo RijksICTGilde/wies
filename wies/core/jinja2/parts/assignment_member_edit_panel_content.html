@@ -105,9 +105,15 @@
      your own period. #}
   <nldd-form-field-help-text data-assignment-period-help>
   De periode van de opdracht is
-  {{ obj.start_date|datum_nl if obj.start_date else "onbekend" }}
-  t/m
-  {{ obj.end_date|datum_nl if obj.end_date else "heden" }}
+  {%- if obj.start_date and obj.end_date %}
+    {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
+  {%- elif obj.start_date %}
+    vanaf {{ obj.start_date|datum_nl }}
+  {%- elif obj.end_date %}
+    t/m {{ obj.end_date|datum_nl }}
+  {%- else %}
+    onbekend
+  {%- endif %}
   </nldd-form-field-help-text>
   </nldd-form-field>
   <input type="hidden"
