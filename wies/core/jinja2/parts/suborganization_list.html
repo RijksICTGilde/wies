@@ -4,10 +4,10 @@
   <nldd-list accessible-label="Merken">
   {% for suborganization in suborganizations %}
     <nldd-list-item>
-    {# The count sits inline in the name cell so a long name on a narrow screen
-       cannot push the badge and menu out of view (see label_category.html). #}
     <nldd-text-cell>
-    <span>{{ suborganization.name }} <nldd-badge color="neutral" number="{{ suborganization.usage_count|default(0) }}" accessible-label="{{ suborganization.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
+    <span>{{ suborganization.name }}</span>
+    {# The number alone did not say what it counted (#621). #}
+    <span slot="supporting-text">{{ suborganization.usage_count|default(0) }} {{ "collega" if suborganization.usage_count == 1 else "collega's" }}</span>
     </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>

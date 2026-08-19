@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 634: the number next to a merk or label now says what it counts ("7 collega's") instead of being a bare badge
 - 634: the "Kies een bestaande rol of maak een nieuwe aan" hint is gone; the dropdown already lists the roles and a "+ Nieuwe rol" option
 - 634: the back link on the information pages said "Terug naar Wies" while you were already on Wies; it now says "Terug" and actually goes back to where you came from
 - 634: "Terug naar de vorige pagina" on the error pages landed on a blank page when the page was opened in a fresh tab
