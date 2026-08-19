@@ -138,13 +138,18 @@ a > nldd-icon {
   border: 0;
 }
 
+/* The line keeps its space when empty, so showing the hint does not push the
+   results and the list down a row while you type. visibility, not display: the
+   [hidden] attribute stays the single on/off switch for the JS, and a document
+   display would beat the browser's own [hidden] rule anyway. */
 .wies-search-hint {
   margin: var(--primitives-space-4, 4px) 0 0;
   font-size: 0.8125rem;
   color: var(--semantics-content-secondary-color, #64748b);
 }
 .wies-search-hint[hidden] {
-  display: none;
+  display: block;
+  visibility: hidden;
 }
 
 /* Colour only. A font-size here made an empty value smaller than the value that
