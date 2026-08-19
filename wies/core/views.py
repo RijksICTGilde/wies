@@ -1208,15 +1208,18 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         active_view = self.active_view
         context["active_view"] = active_view
         # A count per option, so you can see how many opdrachten there are without
-        # switching view first (#405). The active view already counted its groups.
+        # switching view first (#405). The active view already counted its groups
+        # while paginating; only the other one still needs a query.
         counts = {active_view: context["paginator"].count}
+        filtered = self.get_queryset()
         context["view_options"] = [
             {
                 **option,
                 "url": self._view_url(option["value"]),
                 "selected": option["value"] == active_view,
                 "count": counts.get(option["value"])
-                or self.get_queryset().values(self.GROUP_FIELD[option["value"]]).distinct().count(),
+                if option["value"] in counts
+                else filtered.values(self.GROUP_FIELD[option["value"]]).distinct().count(),
             }
             for option in self.VIEW_OPTIONS
         ]
@@ -1268,8 +1271,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         for category in LabelCategory.objects.all():
             # Count with all filters EXCEPT this label category
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_placement_qs = Placement.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_counts = _facet_counts(cat_placement_qs, "colleague__labels__id", group_field)
+            cat_label_counts = _facet_counts(cat_filtered_qs, "colleague__labels__id", group_field)
 
             options = [{"value": "", "label": ""}]
             selected_values = []
@@ -1298,8 +1300,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Merk filter group (one merk per colleague; counts exclude the merk filter)
         suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
-        suborg_placement_qs = Placement.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
-        suborg_counts = _facet_counts(suborg_placement_qs, "colleague__suborganization_id", group_field)
+        suborg_counts = _facet_counts(suborg_filtered_qs, "colleague__suborganization_id", group_field)
 
         suborganization_options = [{"value": "", "label": ""}]
         suborganization_selected_values = []
@@ -1325,8 +1326,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Skill/role counts: exclude role filter
         skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
-        skill_counts = _facet_counts(skill_placement_qs, "service__skill__id", group_field)
+        skill_counts = _facet_counts(skill_filtered_qs, "service__skill__id", group_field)
 
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
@@ -3199,13 +3199,18 @@ def search_suggestions(request):
     )
 
 
-def _facet_counts(placement_qs, facet_lookup: str, group_field: str) -> Counter[int]:
+def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[int]:
     """Counts distinct groups per facet value, not placements.
 
     The list shows one card per colleague or per assignment, so a sidebar that
     counted placements would report a higher number than the list has cards.
+
+    Re-keys on distinct placement ids first: projecting straight off a
+    .distinct() queryset emits SELECT DISTINCT on the projected columns only,
+    which drops rows that differ elsewhere.
     """
-    pairs = placement_qs.values_list(facet_lookup, group_field).distinct()
+    rows = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    pairs = rows.values_list(facet_lookup, group_field).distinct()
     return Counter(fid for fid, _ in pairs if fid is not None)
 
 
@@ -3222,10 +3227,9 @@ def _org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: 
     per group.
     """
     rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    if group_field is None:
-        org_id_list = rows.values_list(org_lookup, flat=True)
-        return Counter(oid for oid in org_id_list if oid is not None)
-    pairs = rows.values_list(org_lookup, group_field).distinct()
+    # No group_field: the row itself is the unit, and "id" makes each row its own
+    # group, so both cases run the same pairwise count.
+    pairs = rows.values_list(org_lookup, group_field or "id").distinct()
     return Counter(oid for oid, _ in pairs if oid is not None)
 
 
