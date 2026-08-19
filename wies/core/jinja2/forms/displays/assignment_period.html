@@ -1,16 +1,12 @@
 {% if value.start_date or value.end_date %}
   <span>
-    {% if value.start_date %}
-      {{ value.start_date|datum_nl }}
-    {% else %}
-      ?
-    {% endif %}
-    –
-    {% if value.end_date %}
-      {{ value.end_date|datum_nl }}
-    {% else %}
-      ?
-    {% endif %}
+    {%- if value.start_date and value.end_date %}
+      {{ value.start_date|datum_nl }} t/m {{ value.end_date|datum_nl }}
+    {%- elif value.start_date %}
+      Vanaf {{ value.start_date|datum_nl }}
+    {%- else %}
+      t/m {{ value.end_date|datum_nl }}
+    {%- endif %}
   </span>
 {% else %}
   <span class="wies-text-secondary">Geen periode opgegeven</span>

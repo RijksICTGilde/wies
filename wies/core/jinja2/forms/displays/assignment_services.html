@@ -26,7 +26,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {% if pl.start_date or pl.end_date %}
         <span slot="supporting-text">
           {% if pl.start_date and pl.end_date %}
-            {{ pl.start_date|datum_nl }} – {{ pl.end_date|datum_nl }}
+            {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
           {% elif pl.start_date %}
             Vanaf {{ pl.start_date|datum_nl }}
           {% elif pl.end_date %}
@@ -55,7 +55,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {% if svc and (svc.start_date or svc.end_date) %}
         <span slot="supporting-text">
           {% if svc.start_date and svc.end_date %}
-            {{ svc.start_date|datum_nl }} – {{ svc.end_date|datum_nl }}
+            {{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}
           {% elif svc.start_date %}
             Vanaf {{ svc.start_date|datum_nl }}
           {% elif svc.end_date %}
