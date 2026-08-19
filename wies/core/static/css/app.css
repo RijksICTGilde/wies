@@ -138,6 +138,15 @@ a > nldd-icon {
   border: 0;
 }
 
+.wies-search-hint {
+  margin: var(--primitives-space-4, 4px) 0 0;
+  font-size: 0.8125rem;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+.wies-search-hint[hidden] {
+  display: none;
+}
+
 /* Colour only. A font-size here made an empty value smaller than the value that
    could have stood there, a difference that said nothing; the surrounding
    nldd-text-cell sets the size. */

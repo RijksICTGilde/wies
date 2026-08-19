@@ -21,6 +21,17 @@ both stay in sync without a shared wrapper element. #}
   {# variant=listbox keeps focus in the search field. The menu sits outside the
   toolbar: inside an nldd-toolbar-item, Floating UI measures against that item's
   layout and the popover lands at the left of the screen. #}
+  {# Typing does not filter; the list only updates on Enter or a suggestion. Shown
+     by filter_interactions.js while the field differs from the applied term, so it
+     says so exactly when the list below is out of date (#606). Outside the toolbar
+     item: the toolbar sizes its items from their width attributes, and a wider
+     block inside one stretches the field. aria-live, because a sighted user sees
+     the stale list and a screen reader user does not. #}
+  <p id="search-hint"
+     class="wies-search-hint"
+     role="status"
+     aria-live="polite"
+     hidden>Druk op Enter om te zoeken</p>
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
