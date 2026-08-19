@@ -101,7 +101,7 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
    the item; the rule drops out once `fluid` appears. */
 nldd-toolbar-item[width]:not([fluid]) {
   flex: 0 1 560px;
-  min-width: 240px;
+  min-width: 180px;
   max-width: 560px;
 }
 nldd-toolbar-item[width]:not([fluid]) > * {
