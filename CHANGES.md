@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 634: links that open in a new tab now show an icon and say so for a screen reader
 - 634: a plaatsing without an end date now reads "Vanaf 13 mei 2026" instead of "13 mei 2026 t/m heden", which suggested it ended today
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
