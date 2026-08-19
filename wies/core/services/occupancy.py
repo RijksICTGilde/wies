@@ -21,8 +21,8 @@ from wies.core.models import Colleague, Placement
 from wies.core.querysets import annotate_placement_dates
 
 # Timeline horizon and "pressing" threshold.
-HORIZON_BACK_DAYS = 90
-HORIZON_AHEAD_DAYS = 365
+HORIZON_BACK_DAYS = 61
+HORIZON_AHEAD_DAYS = 183
 ENDS_SOON_DAYS = 60
 
 # Only colleagues in this role appear on the Bezetting page.

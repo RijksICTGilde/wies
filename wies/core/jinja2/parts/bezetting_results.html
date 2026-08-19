@@ -66,13 +66,6 @@
   </nldd-container>
 {% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-{# Legenda #}
-<div class="bezetting-legend">
-  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--active"></span>Actief</span>
-  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--planned"></span>Gepland</span>
-  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--completed"></span>Afgerond</span>
-</div>
-<nldd-spacer size="8" direction="vertical"></nldd-spacer>
 {# Tijdlijn #}
 <div class="bezetting-timeline">
   {# Koptekst: maandmarkeringen + 'vandaag' #}
@@ -100,16 +93,11 @@
            hx-get="{{ row.colleague.panel_url }}"
            hx-target="#side-panel-content"
            hx-swap="innerHTML">
+          {# The left accent bar already signals bench vs. ingezet, so no status
+             tag here — only the "eindigt binnenkort" warning, next to the name. #}
           <div class="bezetting-person">
             <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
             <strong class="bezetting-person__name">{{ row.colleague.name }}</strong>
-          </div>
-          <div class="bezetting-status">
-            {% if row.bucket == 'bench' %}
-              <nldd-tag color="alert" text="Op de bank"></nldd-tag>
-            {% else %}
-              <nldd-tag color="success" text="Volledig ingezet"></nldd-tag>
-            {% endif %}
             {% if row.ends_soon %}
               <nldd-tag color="warning" text="Eindigt {{ row.earliest_active_end|datum_nl('j N') }}"></nldd-tag>
             {% endif %}

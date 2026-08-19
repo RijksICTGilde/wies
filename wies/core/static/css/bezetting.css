@@ -4,48 +4,23 @@
 /* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
    Bezetting-specific filter styling lives here. */
 
-/* ── Legenda ──────────────────────────────────────────────────────────────── */
-.bezetting-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  font-size: 0.85rem;
-  color: var(--semantics-content-secondary-color, #4b4b4b);
-}
-
-.bezetting-legend__item {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.bezetting-swatch {
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border-radius: 3px;
-}
-
-/* Phase colours — shared by legend swatches and timeline bars. */
-.bezetting-swatch--active,
+/* Phase colours for the timeline bars. */
 .bezetting-seg--active {
   background: #1f7a4d;
 }
 
-.bezetting-swatch--planned,
 .bezetting-seg--planned {
   background: #7aa7d8;
 }
 
-.bezetting-swatch--completed,
 .bezetting-seg--completed {
   background: #b8b8b8;
 }
 
 /* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
 .bezetting-timeline {
-  --bezetting-side-width: 320px;
-  --bezetting-row-height: 56px;
+  --bezetting-side-width: 360px;
+  --bezetting-row-height: 44px;
   --bezetting-lane-height: 24px;
   --bezetting-lane-gap: 4px;
   /* Vertical breathing room above and below the lane stack within a row. */
@@ -87,7 +62,7 @@
 .bezetting-row__side--head {
   display: flex;
   align-items: flex-end;
-  padding: 0 0 0.5rem 0.25rem;
+  padding: 0 0 0.5rem 0.75rem;
   font-weight: 700;
 }
 
@@ -191,9 +166,8 @@
    the row, including the timeline, opens the colleague panel. */
 .bezetting-row__side {
   display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  padding: 0.5rem 0.75rem 0.5rem 0.25rem;
+  align-items: center;
+  padding: 0.35rem 0.75rem;
   border-right: 1px solid var(--semantics-surfaces-tinted-border-color, #eee);
   color: inherit;
   text-decoration: none;
@@ -213,16 +187,22 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .bezetting-person__name {
   font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.bezetting-status {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
+/* flex-shrink applies to the host element as a flex item, which lives outside
+   the component's shadow root — nldd-tag can't set its own shrink behaviour
+   relative to our layout. Keep the "eindigt binnenkort" tag at full size so the
+   name (not the date) is what ellipsizes when the cell is narrow. */
+.bezetting-person nldd-tag {
+  flex-shrink: 0;
 }
 
 /* Timeline bars are purely visual: let clicks fall through to the stretched
