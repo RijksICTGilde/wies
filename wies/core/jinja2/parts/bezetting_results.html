@@ -1,0 +1,148 @@
+{# The results block: filter chips, summary cards, legend and the timeline. HTMX
+   swaps this on every filter change (hx-target="#results"); the filter sheet
+   swaps back separately as OOB so its counts and selection follow. #}
+<nldd-container id="results">
+{% set has_active_filters = active_filters|length > 0 %}
+{% if has_active_filters %}
+  {# The filter panel is a sheet, so without these tokens nothing on the page says
+     WHAT is being filtered. Same build-up as parts/user_results.html. #}
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {# filter_interactions.js handles data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{% endif %}
+{# Samenvatting #}
+<nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
+<nldd-card background="tinted" accessible-label="Op de bank">
+<nldd-container padding="16">
+<nldd-title size="2">
+<p>{{ bench_count }}</p>
+</nldd-title>
+<nldd-rich-text>
+<p>op de bank</p>
+</nldd-rich-text>
+</nldd-container>
+</nldd-card>
+<nldd-card background="tinted" accessible-label="Volledig ingezet">
+<nldd-container padding="16">
+<nldd-title size="2">
+<p>{{ full_count }}</p>
+</nldd-title>
+<nldd-rich-text>
+<p>volledig ingezet</p>
+</nldd-rich-text>
+</nldd-container>
+</nldd-card>
+<nldd-card background="tinted" accessible-label="Eindigt binnen 60 dagen">
+<nldd-container padding="16">
+<nldd-title size="2">
+<p>{{ ends_soon_count }}</p>
+</nldd-title>
+<nldd-rich-text>
+<p>eindigt binnen 60 dagen</p>
+</nldd-rich-text>
+</nldd-container>
+</nldd-card>
+</nldd-collection>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{# Filters open the left sheet (parts/bezetting_filter_sheet.html); user_filter.js
+     listens for data-user-filter-open. Placed under the summary cards so it reads
+     as "narrow this overview down". #}
+<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{# Legenda #}
+<div class="bezetting-legend">
+  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--active"></span>Actief</span>
+  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--planned"></span>Gepland</span>
+  <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--completed"></span>Afgerond</span>
+</div>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+{# Tijdlijn #}
+<div class="bezetting-timeline">
+  {# Koptekst: maandmarkeringen + 'vandaag' #}
+  <div class="bezetting-timeline-head">
+    <div class="bezetting-row__side bezetting-row__side--head">Collega</div>
+    <div class="bezetting-track bezetting-track--head">
+      {% for tick in month_ticks %}
+        <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %}"
+             style="left: {{ tick.left }}%">
+          <span class="bezetting-tick__label">{{ tick.label }}</span>
+        </div>
+      {% endfor %}
+      <div class="bezetting-today" style="left: {{ today_pct }}%">
+        <span class="bezetting-today__label">vandaag</span>
+      </div>
+    </div>
+  </div>
+  {# Rijen #}
+  <div class="bezetting-rows">
+    {% for row in rows %}
+      <div class="bezetting-row bezetting-row--{{ row.bucket }}"
+           style="--bezetting-lanes: {{ row.lane_count }}">
+        <a class="bezetting-row__side"
+           href="{{ row.colleague.panel_url }}"
+           hx-get="{{ row.colleague.panel_url }}"
+           hx-target="#side-panel-content"
+           hx-swap="innerHTML">
+          <div class="bezetting-person">
+            <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+            <strong class="bezetting-person__name">{{ row.colleague.name }}</strong>
+          </div>
+          <div class="bezetting-status">
+            {% if row.bucket == 'bench' %}
+              <nldd-tag color="alert" text="Op de bank"></nldd-tag>
+            {% else %}
+              <nldd-tag color="success" text="Volledig ingezet"></nldd-tag>
+            {% endif %}
+            {% if row.ends_soon %}
+              <nldd-tag color="warning" text="Eindigt {{ row.earliest_active_end|datum_nl('j N') }}"></nldd-tag>
+            {% endif %}
+          </div>
+        </a>
+        <div class="bezetting-track">
+          {% for tick in month_ticks %}
+            <div class="bezetting-gridline {% if tick.month == 1 %}bezetting-gridline--year{% endif %}"
+                 style="left: {{ tick.left }}%"></div>
+          {% endfor %}
+          <div class="bezetting-today-line" style="left: {{ today_pct }}%"></div>
+          {# Lane stack, vertically centred so a single bar sits mid-row. #}
+          <div class="bezetting-lanes">
+            {% for seg in row.segments %}
+              <div class="bezetting-seg bezetting-seg--{{ seg.phase }}"
+                   style="left: {{ seg.left_pct }}%;
+                          width: {{ seg.width_pct }}%;
+                          top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
+                   title="{{ seg.assignment_name }}">
+                <span class="bezetting-seg__label">{{ seg.assignment_name }}</span>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <nldd-rich-text>
+      <p>Geen collega's gevonden.</p>
+      </nldd-rich-text>
+    {% endfor %}
+  </div>
+</div>
+</nldd-container>
+{% if request.headers.get("HX-Request") %}
+  {# The sheet content, with updated counts and selection, rides along as OOB. #}
+  <div hx-swap-oob="outerHTML:#filter-panel">{% include "parts/filter_sidebar.html" %}</div>
+{% endif %}

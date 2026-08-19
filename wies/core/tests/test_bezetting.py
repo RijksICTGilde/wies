@@ -235,7 +235,8 @@ class BezettingMerkFilterViewTest(TestCase):
 
     def test_filter_bar_lists_merken(self):
         response = self.client.get(self.url)
-        assert b"data-bezetting-filter" in response.content
+        # The merk facet renders as a select-multi group in the shared filter sheet.
+        assert b'data-name="merk"' in response.content
         assert b"Digi Gilde" in response.content
         assert b"Mindful Rijk" in response.content
 

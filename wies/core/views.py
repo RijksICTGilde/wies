@@ -82,7 +82,14 @@ from .services.assignments import (
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
-from .services.occupancy import HORIZON_AHEAD_DAYS, HORIZON_BACK_DAYS, colleague_occupancy
+from .services.occupancy import (
+    CONSULTANT_GROUP as BEZETTING_CONSULTANT_GROUP,
+)
+from .services.occupancy import (
+    HORIZON_AHEAD_DAYS,
+    HORIZON_BACK_DAYS,
+    colleague_occupancy,
+)
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -622,25 +629,29 @@ def bezetting(request):
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
-    # Merk (suborganisation) filter: show only colleagues in the selected merken.
-    # Only merken actually assigned to at least one colleague are offered.
+    # Merk (suborganisation) and label-category filters, resolved from the URL.
+    # Labels are OR within a category and AND between categories (like "Wie zit
+    # waar?"); each label category becomes its own filter group under the shared
+    # ``labels`` param, and merk is its own group.
     merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
-    selected_merk_ids = set(merk.public_ids)
-    merk_options = [
-        {"public_id": str(s.public_id), "name": s.name, "selected": str(s.public_id) in selected_merk_ids}
-        for s in Suborganization.objects.filter(colleagues__isnull=False).distinct()
-    ]
-
-    # Label-category filters: one dropdown per category, OR within a category and
-    # AND between categories (like "Wie zit waar?"). Only labels actually used by
-    # a colleague are offered, and a category with no such labels is dropped.
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_category = _labels_by_category(labels)
-    label_filter_groups = _bezetting_label_filter_groups(set(labels.public_ids))
 
     rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_category)
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
+
+    # Filter sheet: one select-multi group per facet, with cross-filtered counts,
+    # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
+    # everyone on this page is a consultant.
+    filter_groups = _bezetting_filter_groups(merk, labels, labels_by_category)
+    _finalize_filter_groups(filter_groups)
+
+    active_filters = {}
+    if merk.active_values:
+        active_filters["merk"] = merk.active_values
+    if labels.active_values:
+        active_filters["labels"] = labels.active_values
 
     context = {
         "rows": rows,
@@ -650,11 +661,21 @@ def bezetting(request):
         "bench_count": sum(1 for r in rows if r.bucket == "bench"),
         "full_count": sum(1 for r in rows if r.bucket == "full"),
         "ends_soon_count": sum(1 for r in rows if r.ends_soon),
-        "merk_options": merk_options,
-        "merk_active": bool(selected_merk_ids),
-        "label_filter_groups": label_filter_groups,
-        "filter_active": bool(selected_merk_ids or labels.public_ids),
+        "filter_groups": filter_groups,
+        "active_filters": active_filters,
+        "filter_target_url": reverse("bezetting"),
+        "filter_modal_group_id": request.GET.get("filter_modal", ""),
+        "filter_active": bool(merk.active_values or labels.active_values),
     }
+
+    # HTMX filter change: return just the results block; the filter sheet swaps
+    # back OOB (see parts/bezetting_results.html). The "Meer…" sheet reuses the
+    # shared template, exactly like the user list.
+    if "HX-Request" in request.headers:
+        if request.GET.get("filter_modal"):
+            return render(request, "parts/filter_options_modal.html", context)
+        return render(request, "parts/bezetting_results.html", context)
+
     return render(request, "bezetting.html", context)
 
 
@@ -666,26 +687,100 @@ def _labels_by_category(labels):
     return by_category
 
 
-def _bezetting_label_filter_groups(selected_public_ids):
-    """One dropdown group per label-category, listing only labels used by a
-    colleague. Categories without such labels are omitted."""
+def _bezetting_consultant_colleagues():
+    """Base colleague queryset for the Bezetting page: only consultants, matching
+    the occupancy service (colleagues whose linked user is in that group)."""
+    return Colleague.objects.filter(user__groups__name=BEZETTING_CONSULTANT_GROUP)
+
+
+def _bezetting_apply_filters(qs, merk, labels_by_category, *, exclude_filter=None):
+    """Apply the merk + label filters to a consultant-colleague queryset.
+
+    ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
+    to its current selection: "merk" for the merk group, or a label ``category_id``
+    (int) for that category's group. Labels are OR within a category, AND between.
+    """
+    for cat_id, cat_label_ids in labels_by_category.items():
+        if exclude_filter != cat_id:
+            qs = qs.filter(labels__id__in=cat_label_ids)
+    if exclude_filter != "merk" and merk.ids:
+        qs = qs.filter(suborganization_id__in=merk.ids)
+    return qs.distinct()
+
+
+def _bezetting_filter_groups(merk, labels, labels_by_category):
+    """Build the select-multi filter groups for the Bezetting sheet.
+
+    One group per label category (only labels used by a consultant; empty
+    categories dropped) plus one merk group. Each option carries a cross-filtered
+    count — the number of consultants that would remain if only this value were
+    added to the other active filters — like the "Gebruikers" filter sheet.
+    """
+    base_qs = _bezetting_consultant_colleagues()
+    selected_label_ids = set(labels.public_ids)
+    selected_merk_ids = set(merk.public_ids)
+
+    groups = []
+
+    # Label categories: one group each, only labels actually used by a consultant.
     used_labels = (
-        Label.objects.filter(colleagues__isnull=False)
+        Label.objects.filter(colleagues__user__groups__name=BEZETTING_CONSULTANT_GROUP)
         .distinct()
         .select_related("category")
         .order_by("category__name", Lower("name"))
     )
-    groups: dict[int, dict] = {}
+    labels_by_cat: dict[int, list] = {}
+    category_names: dict[int, str] = {}
     for label in used_labels:
-        group = groups.setdefault(
-            label.category_id,
-            {"name": label.category.name, "options": [], "selected_count": 0},
+        labels_by_cat.setdefault(label.category_id, []).append(label)
+        category_names[label.category_id] = label.category.name
+
+    for cat_id, cat_labels in labels_by_cat.items():
+        cat_qs = _bezetting_apply_filters(base_qs, merk, labels_by_category, exclude_filter=cat_id)
+        counts = Counter(lid for lid in cat_qs.values_list("labels__id", flat=True) if lid is not None)
+        options = [{"value": "", "label": ""}]
+        selected_values = []
+        for label in cat_labels:
+            value = str(label.public_id)
+            option = {"value": value, "label": label.name, "count": counts.get(label.id, 0)}
+            if value in selected_label_ids:
+                option["selected"] = True
+                selected_values.append(value)
+            options.append(option)
+        groups.append(
+            {
+                "type": "select-multi",
+                "name": "labels",
+                "label": category_names[cat_id],
+                "options": options,
+                "selected_values": selected_values,
+            }
         )
-        is_selected = str(label.public_id) in selected_public_ids
-        group["options"].append({"public_id": str(label.public_id), "name": label.name, "selected": is_selected})
-        if is_selected:
-            group["selected_count"] += 1
-    return list(groups.values())
+
+    # Merk: only suborganisations that have at least one consultant.
+    merk_qs = _bezetting_apply_filters(base_qs, merk, labels_by_category, exclude_filter="merk")
+    merk_counts = Counter(mid for mid in merk_qs.values_list("suborganization_id", flat=True) if mid is not None)
+    merk_options = [{"value": "", "label": ""}]
+    merk_selected = []
+    used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=BEZETTING_CONSULTANT_GROUP).distinct()
+    for suborganization in used_suborgs:
+        value = str(suborganization.public_id)
+        option = {"value": value, "label": suborganization.name, "count": merk_counts.get(suborganization.id, 0)}
+        if value in selected_merk_ids:
+            option["selected"] = True
+            merk_selected.append(value)
+        merk_options.append(option)
+    groups.append(
+        {
+            "type": "select-multi",
+            "name": "merk",
+            "label": "Merk",
+            "options": merk_options,
+            "selected_values": merk_selected,
+        }
+    )
+
+    return groups
 
 
 ERRORS_PER_PAGE = 10

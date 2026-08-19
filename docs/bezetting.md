@@ -51,17 +51,16 @@ Bezetting-pagina.
 
 ## UI-details
 
-- De filters zijn `nldd-popover`-dropdowns (native Popover API): de browser sluit
-  ze bij een klik erbuiten en sluit een vorige dropdown zodra een andere opent. Je
-  kunt meerdere vinkjes zetten met de dropdown open; het filter wordt toegepast
-  zodra de dropdown sluit (één reload, alleen als er iets gewijzigd is).
-- Zonder JavaScript werkt een "Filteren"-knop als fallback.
-- CSP-veilig: geen inline JS; gedrag zit in `static/js/bezetting_filter.js`.
-
-> **Kanttekening:** de filter-UI is misschien nog niet ideaal (meerdere
-> dropdowns naast elkaar, filteren pas bij het sluiten). Dit is een eerste opzet
-> die de functionaliteit levert; feedback op de vormgeving is welkom en kan in
-> een vervolg worden aangescherpt.
+- De filters zitten in een **filtersheet** die links openschuift — hetzelfde
+  patroon als de "Gebruikers"-lijst. Een "Filters"-knop opent de sheet; per facet
+  (merk en elke label-categorie) staat een lijst met aanvinkbare opties met een
+  telling ernaast, plus een "Meer…"-sheet als er meer dan drie opties zijn.
+- Aanvinken filtert **direct** (htmx): de tijdlijn en de samenvattingskaarten
+  herladen ter plekke, de sheet blijft open en de tellingen volgen mee. Actieve
+  filters verschijnen als chips boven de tijdlijn, met "Wis alle filters".
+- Er is bewust **geen "Rol"-filter**: iedereen op deze pagina is consultant.
+- CSP-veilig: geen inline JS. De gedeelde filterlogica zit in
+  `static/js/filter_interactions.js`; `static/js/user_filter.js` opent de sheet.
 
 ## Post-release acties
 

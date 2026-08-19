@@ -1,24 +1,8 @@
 /* "Bezetting" — business-manager occupancy timeline.
    Colours use NLDD semantic tokens where possible so light/dark both work. */
 
-/* ── Filters (merk + label-categorieën) ───────────────────────────────────── */
-/* Each facet is an nldd-button trigger + nldd-popover; the popover supplies its
-   own panel chrome and positioning, so only the checkbox list needs styling. */
-.bezetting-filter__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem 0.75rem;
-}
-
-/* No max-height/overflow here: the nldd-popover already caps its own height and
-   scrolls, so adding a second scroll container gave a double scrollbar. */
-.bezetting-filter__menu {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 12rem;
-}
+/* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
+   Bezetting-specific filter styling lives here. */
 
 /* ── Legenda ──────────────────────────────────────────────────────────────── */
 .bezetting-legend {

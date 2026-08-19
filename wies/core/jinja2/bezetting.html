@@ -4,8 +4,9 @@
 {% endblock title %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ app_asset('css/bezetting.css') }}">
+  <script src="{{ app_asset('js/filter_interactions.js') }}" defer></script>
   <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
-  <script src="{{ app_asset('js/bezetting_filter.js') }}" defer></script>
+  <script src="{{ app_asset('js/user_filter.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/business_management_sidebar.html" %}
@@ -17,163 +18,21 @@
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   <nldd-rich-text>
   <p>
-    Wie heeft werk nodig? Collega's staan op volgorde van urgentie: eerst wie op de bank zit,
-    dan wie volledig is ingezet. De opdrachten die het eerst aflopen bovenaan.
+    Overzicht van alle consultants: wie zit er op de bank en wie is er ingezet. Gebruik de filters
+    om een subselectie van de consultants te tonen.
   </p>
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# Samenvatting #}
-  <nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
-  <nldd-card background="tinted" accessible-label="Op de bank">
-  <nldd-container padding="16">
-  <nldd-title size="2">
-  <p>{{ bench_count }}</p>
-  </nldd-title>
-  <nldd-rich-text>
-  <p>op de bank</p>
-  </nldd-rich-text>
-  </nldd-container>
-  </nldd-card>
-  <nldd-card background="tinted" accessible-label="Volledig ingezet">
-  <nldd-container padding="16">
-  <nldd-title size="2">
-  <p>{{ full_count }}</p>
-  </nldd-title>
-  <nldd-rich-text>
-  <p>volledig ingezet</p>
-  </nldd-rich-text>
-  </nldd-container>
-  </nldd-card>
-  <nldd-card background="tinted" accessible-label="Eindigt binnen 60 dagen">
-  <nldd-container padding="16">
-  <nldd-title size="2">
-  <p>{{ ends_soon_count }}</p>
-  </nldd-title>
-  <nldd-rich-text>
-  <p>eindigt binnen 60 dagen</p>
-  </nldd-rich-text>
-  </nldd-container>
-  </nldd-card>
-  </nldd-collection>
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# Filters: één GET-formulier met per facet een nldd-popover-dropdown. De
-     knop opent de popover (slot="popup"); de browser sluit hem bij een klik
-     erbuiten en sluit een vorige popover zodra een andere opent. De checkboxes
-     staan vrij in de popover en blijven open tijdens het aanvinken; bij het
-     sluiten van de dropdown verstuurt bezetting_filter.js het formulier één keer
-     (alleen als er iets gewijzigd is). Zonder JS werkt de "Filteren"-knop. #}
-  {# The nldd-popover is slotted into the button (slot="popup"): the button then
-     auto-anchors and toggles it on click, no id/popovertarget wiring — see the
-     button's `popup` slot docs. #}
-  {% macro filter_dropdown(legend, param, options, selected_count) %}
-    {% set button_text = legend ~ " (" ~ selected_count ~ ")" if selected_count else legend %}
-    <nldd-button variant="secondary" size="sm" expandable text="{{ button_text }}">
-    <nldd-popover slot="popup" accessible-label="Filter op {{ legend }}" placement="bottom-start">
-    <nldd-container padding="16">
-    <div class="bezetting-filter__menu">
-      {% for option in options %}
-        <nldd-checkbox-field name="{{ param }}" value="{{ option.public_id }}" label="{{ option.name }}" {% if option.selected %}checked{% endif %}></nldd-checkbox-field>
-      {% endfor %}
-    </div>
-    </nldd-container>
-    </nldd-popover>
-    </nldd-button>
-  {% endmacro %}
-  {% if merk_options or label_filter_groups %}
-    <form method="get" class="bezetting-filter" data-bezetting-filter>
-      <div class="bezetting-filter__row">
-        {% if merk_options %}
-          {{ filter_dropdown("Merk", "merk", merk_options, merk_options|selectattr('selected')|list|length) }}
-        {% endif %}
-        {% for group in label_filter_groups %}
-          {{ filter_dropdown(group.name, "labels", group.options, group.selected_count) }}
-        {% endfor %}
-        {# Fallback voor als JavaScript uitstaat; verborgen zodra JS de auto-submit
-           overneemt. #}
-        <nldd-button class="bezetting-filter__submit" type="submit" size="sm" variant="secondary" text="Filteren"></nldd-button>
-        {% if filter_active %}
-          <nldd-button size="sm" variant="subtle" text="Wis filters" href="{{ url('bezetting') }}"></nldd-button>
-        {% endif %}
-      </div>
-    </form>
-    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {% endif %}
-  {# Legenda #}
-  <div class="bezetting-legend">
-    <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--active"></span>Actief</span>
-    <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--planned"></span>Gepland</span>
-    <span class="bezetting-legend__item"><span class="bezetting-swatch bezetting-swatch--completed"></span>Afgerond</span>
-  </div>
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {# Tijdlijn #}
-  <div class="bezetting-timeline">
-    {# Koptekst: maandmarkeringen + 'vandaag' #}
-    <div class="bezetting-timeline-head">
-      <div class="bezetting-row__side bezetting-row__side--head">Collega</div>
-      <div class="bezetting-track bezetting-track--head">
-        {% for tick in month_ticks %}
-          <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %}"
-               style="left: {{ tick.left }}%">
-            <span class="bezetting-tick__label">{{ tick.label }}</span>
-          </div>
-        {% endfor %}
-        <div class="bezetting-today" style="left: {{ today_pct }}%">
-          <span class="bezetting-today__label">vandaag</span>
-        </div>
-      </div>
-    </div>
-    {# Rijen #}
-    <div class="bezetting-rows">
-      {% for row in rows %}
-        <div class="bezetting-row bezetting-row--{{ row.bucket }}"
-             style="--bezetting-lanes: {{ row.lane_count }}">
-          <a class="bezetting-row__side"
-             href="{{ row.colleague.panel_url }}"
-             hx-get="{{ row.colleague.panel_url }}"
-             hx-target="#side-panel-content"
-             hx-swap="innerHTML">
-            <div class="bezetting-person">
-              <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
-              <strong class="bezetting-person__name">{{ row.colleague.name }}</strong>
-            </div>
-            <div class="bezetting-status">
-              {% if row.bucket == 'bench' %}
-                <nldd-tag color="alert" text="Op de bank"></nldd-tag>
-              {% else %}
-                <nldd-tag color="success" text="Volledig ingezet"></nldd-tag>
-              {% endif %}
-              {% if row.ends_soon %}
-                <nldd-tag color="warning" text="Eindigt {{ row.earliest_active_end|datum_nl('j N') }}"></nldd-tag>
-              {% endif %}
-            </div>
-          </a>
-          <div class="bezetting-track">
-            {% for tick in month_ticks %}
-              <div class="bezetting-gridline {% if tick.month == 1 %}bezetting-gridline--year{% endif %}"
-                   style="left: {{ tick.left }}%"></div>
-            {% endfor %}
-            <div class="bezetting-today-line" style="left: {{ today_pct }}%"></div>
-            {# Lane stack, vertically centred so a single bar sits mid-row. #}
-            <div class="bezetting-lanes">
-              {% for seg in row.segments %}
-                <div class="bezetting-seg bezetting-seg--{{ seg.phase }}"
-                     style="left: {{ seg.left_pct }}%;
-                            width: {{ seg.width_pct }}%;
-                            top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
-                     title="{{ seg.assignment_name }}">
-                  <span class="bezetting-seg__label">{{ seg.assignment_name }}</span>
-                </div>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      {% else %}
-        <nldd-rich-text>
-        <p>Geen collega's gevonden.</p>
-        </nldd-rich-text>
-      {% endfor %}
-    </div>
-  </div>
+  {# The Filters button and results sit together in the results partial: the button
+     lives just under the summary cards (logically grouped with them) and the sheet
+     it opens drives #results via htmx. Same filter system as the "Gebruikers"
+     list. #}
+  {% include "parts/bezetting_results.html" %}
+  {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
+     #filter-form inside is what the chips drive. #}
+  {% include "parts/bezetting_filter_sheet.html" %}
+  {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
+  <div id="filter-options-modal-container"></div>
 {% endblock content %}
 {% block panel %}
   {# nldd-page must be a direct child: the sheet only stretches ::slotted(nldd-page). #}
