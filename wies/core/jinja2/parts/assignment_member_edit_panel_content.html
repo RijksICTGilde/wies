@@ -74,7 +74,6 @@
   {% endfor %}
   </nldd-menu>
   </nldd-combo-box>
-  <nldd-form-field-help-text>Kies een bestaande rol of maak een nieuwe aan.</nldd-form-field-help-text>
   {% for error in svc_form.skill.errors %}
     <nldd-form-field-error-text id="{{ skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
