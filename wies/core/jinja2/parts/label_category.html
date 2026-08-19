@@ -16,7 +16,6 @@
     <nldd-list-item>
     <nldd-text-cell>
     <span>{{ label.name }}</span>
-    {# The number alone did not say what it counted (#621). #}
     <span slot="supporting-text">{{ label.usage_count|default(0) }} {{ "collega" if label.usage_count == 1 else "collega's" }}</span>
     </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
