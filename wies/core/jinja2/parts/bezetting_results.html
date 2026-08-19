@@ -3,29 +3,6 @@
    swaps back separately as OOB so its counts and selection follow. #}
 <nldd-container id="results">
 {% set has_active_filters = active_filters|length > 0 %}
-{% if has_active_filters %}
-  {# The filter panel is a sheet, so without these tokens nothing on the page says
-     WHAT is being filtered. Same build-up as parts/user_results.html. #}
-  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
-  {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
-      {% set values = active_filters.get(filter_group.name) %}
-      {% if values %}
-        {% for selected_value in values %}
-          {% for option in filter_group.options %}
-            {% if option.value == selected_value %}
-              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
-  {# filter_interactions.js handles data-clear-all-filters. #}
-  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
-  </nldd-container>
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-{% endif %}
 {# Samenvatting #}
 <nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
 <nldd-card background="tinted" accessible-label="Op de bank">
@@ -64,6 +41,30 @@
      listens for data-user-filter-open. Placed under the summary cards so it reads
      as "narrow this overview down". #}
 <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
+{% if has_active_filters %}
+  {# Active-filter chips sit with the Filters button that manages them (not at the
+     top of the page): the filter panel is a sheet, so without these tokens nothing
+     says WHAT is being filtered. #}
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {# filter_interactions.js handles data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+{% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Legenda #}
 <div class="bezetting-legend">
