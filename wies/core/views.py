@@ -1231,8 +1231,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         context["active_order"] = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
 
         context["filter_target_url"] = reverse("home")
-        context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters: dict = {}
