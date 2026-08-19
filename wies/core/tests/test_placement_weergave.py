@@ -345,6 +345,46 @@ class TestAssignmentCards:
 
 
 @pytest.mark.django_db
+class TestFilterCounts:
+    """Sidebar counts follow the view, so every number on screen counts the same."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="counts2@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+        self.skill = Skill.objects.create(name="Data engineering")
+
+    def _rol_counts(self, params=None):
+        response = self.client.get(reverse("home"), params or {})
+        for group in response.context_data["filter_groups"]:
+            if group["name"] == "rol":
+                return {o["label"]: o["count"] for o in group["options"] if o.get("label")}
+        return {}
+
+    def test_role_count_follows_the_active_view(self):
+        """Two people on one assignment: 2 in the persoon view, 1 in the opdracht view."""
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+
+        assert self._rol_counts()["Data engineering"] == 2
+        assert self._rol_counts({"weergave": "opdracht"})["Data engineering"] == 1
+
+    def test_the_count_matches_the_cards_you_get(self):
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+        skill_id = str(self.skill.public_id)
+
+        for view, expected in (("persoon", 2), ("opdracht", 1)):
+            params = {"weergave": view} if view != "persoon" else {}
+            assert self._rol_counts(params)["Data engineering"] == expected
+            response = self.client.get(reverse("home"), {**params, "rol": skill_id})
+            assert response.context_data["paginator"].count == expected
+
+
+@pytest.mark.django_db
 class TestViewSwitch:
     """The switch carries both counts and the filter form keeps the view."""
 
