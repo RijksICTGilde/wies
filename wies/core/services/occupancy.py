@@ -31,6 +31,14 @@ CONSULTANT_GROUP = "Consultant"
 BUCKET_BENCH = "bench"  # no active placement today
 BUCKET_FULL = "full"  # at least one active placement today
 
+# Status facets exposed by the summary cards (independent OR-toggles). Not DB
+# columns: each is a derived property of an OccupancyRow, so filtering on them
+# happens in-memory on the built rows, not in the queryset.
+STATUS_BENCH = "bench"
+STATUS_FULL = "full"
+STATUS_ENDS_SOON = "ends_soon"
+STATUS_VALUES = (STATUS_BENCH, STATUS_FULL, STATUS_ENDS_SOON)
+
 
 @dataclass
 class TimelineSegment:
@@ -53,6 +61,17 @@ class OccupancyRow:
     earliest_active_end: date | None
     segments: list[TimelineSegment] = field(default_factory=list)
     lane_count: int = 1  # number of vertical lanes needed (row height scales with this)
+
+
+def row_has_status(row: OccupancyRow, status: str) -> bool:
+    """Whether an occupancy row matches a status facet from the summary cards."""
+    if status == STATUS_BENCH:
+        return row.bucket == BUCKET_BENCH
+    if status == STATUS_FULL:
+        return row.bucket == BUCKET_FULL
+    if status == STATUS_ENDS_SOON:
+        return row.ends_soon
+    return False
 
 
 def _phase(start: date | None, end: date | None, today: date) -> str:

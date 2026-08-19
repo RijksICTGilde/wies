@@ -1,40 +1,37 @@
-{# The results block: filter chips, summary cards, legend and the timeline. HTMX
-   swaps this on every filter change (hx-target="#results"); the filter sheet
-   swaps back separately as OOB so its counts and selection follow. #}
+{# The results block: filter chips, summary cards and the timeline. HTMX swaps
+   this on every filter change (hx-target="#results"); the filter sheet swaps back
+   separately as OOB so its counts and selection follow. #}
 <nldd-container id="results">
 {% set has_active_filters = active_filters|length > 0 %}
-{# Samenvatting #}
+{# Samenvatting — each card is an independent status filter (OR-toggle). The card
+   is a native <button> (keyboard-accessible for free) carrying a hidden checkbox
+   named "status" with data-filter-input; the #filter-form's hx-include picks it
+   up and filter_interactions.js re-submits on toggle. Counts stay the full
+   population within the merk/label selection, so they don't change when toggled. #}
+{% macro status_card(status, count, label) %}
+  {% set is_active = status in selected_statuses %}
+  <button type="button"
+          class="bezetting-stat"
+          data-status-card
+          data-status="{{ status }}"
+          aria-pressed="{{ 'true' if is_active else 'false' }}">
+    <nldd-card background="tinted" accessible-label="{{ label }}">
+    <nldd-container padding="16">
+    <nldd-title size="2">
+    <p>{{ count }}</p>
+    </nldd-title>
+    <nldd-rich-text>
+    <p>{{ label }}</p>
+    </nldd-rich-text>
+    </nldd-container>
+    </nldd-card>
+    <input type="checkbox" name="status" value="{{ status }}" data-filter-input hidden {% if is_active %}checked{% endif %} />
+  </button>
+{% endmacro %}
 <nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
-<nldd-card background="tinted" accessible-label="Op de bank">
-<nldd-container padding="16">
-<nldd-title size="2">
-<p>{{ bench_count }}</p>
-</nldd-title>
-<nldd-rich-text>
-<p>op de bank</p>
-</nldd-rich-text>
-</nldd-container>
-</nldd-card>
-<nldd-card background="tinted" accessible-label="Volledig ingezet">
-<nldd-container padding="16">
-<nldd-title size="2">
-<p>{{ full_count }}</p>
-</nldd-title>
-<nldd-rich-text>
-<p>volledig ingezet</p>
-</nldd-rich-text>
-</nldd-container>
-</nldd-card>
-<nldd-card background="tinted" accessible-label="Eindigt binnen 60 dagen">
-<nldd-container padding="16">
-<nldd-title size="2">
-<p>{{ ends_soon_count }}</p>
-</nldd-title>
-<nldd-rich-text>
-<p>eindigt binnen 60 dagen</p>
-</nldd-rich-text>
-</nldd-container>
-</nldd-card>
+{{ status_card('bench', bench_count, 'op de bank') }}
+{{ status_card('full', full_count, 'volledig ingezet') }}
+{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 60 dagen') }}
 </nldd-collection>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Filters open the left sheet (parts/bezetting_filter_sheet.html); user_filter.js
@@ -47,6 +44,10 @@
      says WHAT is being filtered. #}
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% set status_labels = {'bench': 'Op de bank', 'full': 'Volledig ingezet', 'ends_soon': 'Eindigt binnen 60 dagen'} %}
+  {% for status in selected_statuses %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ status_labels.get(status, status) }}" data-wies-dismiss="filter" data-filter-name="status" data-filter-value="{{ status }}">{{ status_labels.get(status, status) }}</nldd-token>
+  {% endfor %}
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'select-multi' %}
       {% set values = active_filters.get(filter_group.name) %}

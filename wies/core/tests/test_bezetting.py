@@ -1,3 +1,4 @@
+import re
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
@@ -357,3 +358,70 @@ class BezettingLabelFilterViewTest(TestCase):
         Label.objects.create(name="X", category=empty_cat)
         response = self.client.get(self.url)
         assert b"LegeCategorie" not in response.content
+
+
+class BezettingStatusFilterViewTest(TestCase):
+    """The summary cards act as status filters (bench / full / ends_soon),
+    independent OR-toggles applied in-memory on the built rows."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.today = timezone.now().date()
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
+
+        self.bench = _consultant("Bea Bank", "bea@x.nl")
+        self.full = _consultant("Fred Full", "fred@x.nl")
+        _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
+        self.ending = _consultant("Ellen Eind", "ellen@x.nl")
+        _placement(self.ending, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
+
+    def test_bench_status_shows_only_bench(self):
+        response = self.client.get(self.url, {"status": "bench"})
+        assert b"Bea Bank" in response.content
+        assert b"Fred Full" not in response.content
+        assert b"Ellen Eind" not in response.content
+
+    def test_full_status_shows_all_placed(self):
+        # ends_soon colleagues are also 'full', so both placed rows appear.
+        response = self.client.get(self.url, {"status": "full"})
+        assert b"Bea Bank" not in response.content
+        assert b"Fred Full" in response.content
+        assert b"Ellen Eind" in response.content
+
+    def test_ends_soon_status_is_subset_of_full(self):
+        response = self.client.get(self.url, {"status": "ends_soon"})
+        assert b"Ellen Eind" in response.content
+        assert b"Fred Full" not in response.content
+        assert b"Bea Bank" not in response.content
+
+    def test_statuses_compose_as_union(self):
+        # bench OR ends_soon: the bench row and the ending row, not the far-future one.
+        response = self.client.get(self.url, {"status": ["bench", "ends_soon"]})
+        assert b"Bea Bank" in response.content
+        assert b"Ellen Eind" in response.content
+        assert b"Fred Full" not in response.content
+
+    def test_counts_stay_unfiltered_when_status_active(self):
+        # Cards are a stable dashboard: the totals do not shrink to the filtered set.
+        # With only the bench row shown, the 'volledig ingezet' card must still read
+        # its full population count (2). Match the count and its label within one
+        # card, tolerating the markup between them.
+        response = self.client.get(self.url, {"status": "bench"})
+        content = response.content.decode()
+        assert re.search(r"<p>2</p>.*?volledig ingezet", content, re.DOTALL)
+        assert re.search(r"<p>1</p>.*?op de bank", content, re.DOTALL)
+
+    def test_unknown_status_ignored(self):
+        response = self.client.get(self.url, {"status": "not-a-status"})
+        assert response.status_code == 200
+        assert b"Bea Bank" in response.content
+        assert b"Fred Full" in response.content
+
+    def test_active_status_renders_dismiss_chip(self):
+        response = self.client.get(self.url, {"status": "bench"})
+        assert b'data-filter-name="status"' in response.content
+        assert b'data-filter-value="bench"' in response.content

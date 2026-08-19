@@ -88,7 +88,9 @@ from .services.occupancy import (
 from .services.occupancy import (
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
+    STATUS_VALUES,
     colleague_occupancy,
+    row_has_status,
 )
 from .services.organizations import (
     find_orgs_by_abbreviation,
@@ -643,6 +645,19 @@ def bezetting(request):
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
+    # Summary-card counts are the full population within the merk/label selection —
+    # they stay a stable dashboard regardless of which cards are toggled, so they
+    # are computed before the status filter narrows the rows.
+    bench_count = sum(1 for r in rows if r.bucket == "bench")
+    full_count = sum(1 for r in rows if r.bucket == "full")
+    ends_soon_count = sum(1 for r in rows if r.ends_soon)
+
+    # Status facet: the three summary cards, as independent OR-toggles. Derived
+    # from the built rows (not a queryset column), so it filters here in-memory.
+    selected_statuses = [s for s in request.GET.getlist("status") if s in STATUS_VALUES]
+    if selected_statuses:
+        rows = [r for r in rows if any(row_has_status(r, s) for s in selected_statuses)]
+
     # Filter sheet: one select-multi group per facet, with cross-filtered counts,
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
@@ -654,20 +669,23 @@ def bezetting(request):
         active_filters["merk"] = merk.active_values
     if labels.active_values:
         active_filters["labels"] = labels.active_values
+    if selected_statuses:
+        active_filters["status"] = selected_statuses
 
     context = {
         "rows": rows,
         "panel_data": panel_data,
         "today_pct": _bezetting_today_pct(),
         "month_ticks": _bezetting_month_ticks(today),
-        "bench_count": sum(1 for r in rows if r.bucket == "bench"),
-        "full_count": sum(1 for r in rows if r.bucket == "full"),
-        "ends_soon_count": sum(1 for r in rows if r.ends_soon),
+        "bench_count": bench_count,
+        "full_count": full_count,
+        "ends_soon_count": ends_soon_count,
+        "selected_statuses": selected_statuses,
         "filter_groups": filter_groups,
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "filter_active": bool(merk.active_values or labels.active_values),
+        "filter_active": bool(merk.active_values or labels.active_values or selected_statuses),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps

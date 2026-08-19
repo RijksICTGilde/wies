@@ -4,6 +4,44 @@
 /* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
    Bezetting-specific filter styling lives here. */
 
+/* Summary cards double as status filters. The clickable element is a native
+   <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
+   button chrome and let the card fill the grid cell. */
+.bezetting-stat {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 12px;
+}
+
+/* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
+   The ring lives on the button (outside the card's shadow root), which is the
+   only element that receives focus, so it can't be an nldd-card concern. */
+.bezetting-stat:focus-visible {
+  outline: 2px solid var(--semantics-content-accent-color, #1d70b8);
+  outline-offset: 2px;
+}
+
+.bezetting-stat nldd-card {
+  display: block;
+  height: 100%;
+}
+
+/* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
+   via the card's own --_background-color, which inherits into the shadow root so
+   the radius and clipping stay intact. One neutral token covers light and dark.
+   The active/selected state is carried by the filter chip, not the card. */
+.bezetting-stat:hover nldd-card {
+  --_background-color: var(--primitives-color-neutral-50);
+}
+
 /* Phase colours for the timeline bars. */
 .bezetting-seg--active {
   background: #1f7a4d;
