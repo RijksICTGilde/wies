@@ -307,3 +307,14 @@ nldd-card[button]:hover {
   padding-right: var(--primitives-space-8, 0.5rem);
   padding-bottom: var(--primitives-space-12, 0.75rem);
 }
+
+/* The counts in the view switch change with every filter, and its items split
+   the width evenly, so the control resizes on each swap and shifts the search
+   field beside it. A floor holds it still; 350px fits both labels up to four
+   digits. Only from md up: below that the toolbar needs the room and pushes
+   the search field into the overflow menu. */
+@media (min-width: 641px) {
+  #view-control nldd-segmented-control {
+    min-width: 350px;
+  }
+}
