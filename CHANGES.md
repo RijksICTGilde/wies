@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TODO: bump dependencies for security fixes
+- 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page
