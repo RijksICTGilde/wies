@@ -23,9 +23,15 @@ PREAMBLE = """\
 
 POSTAMBLE = "  </nldd-rich-text>\n{% endblock footer_content %}\n"
 
+EXTERNAL_LINK_AFFORDANCE = (
+    '<span class="wies-visually-hidden">, opent in nieuw tabblad</span>'
+    '<nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>'
+)
+
 
 def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
     out: list[str] = []
+    external_depth = 0
     for tok in children:
         if tok.type == "text":
             out.append(escape(tok.content, quote=False))
@@ -46,8 +52,14 @@ def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markd
             attrs = f' href="{escape(href, quote=True)}"'
             if href.startswith(("http://", "https://")):
                 attrs += ' target="_blank"'
+                external_depth += 1
             out.append(f"<a{attrs}>")
         elif tok.type == "link_close":
+            # A new tab has to be announced before it opens (#623); the icon is
+            # aria-hidden, so the words go in visually-hidden text beside it.
+            if external_depth:
+                external_depth -= 1
+                out.append(EXTERNAL_LINK_AFFORDANCE)
             out.append("</a>")
         elif tok.type == "code_inline":
             out.append(f"<code>{escape(tok.content, quote=False)}</code>")

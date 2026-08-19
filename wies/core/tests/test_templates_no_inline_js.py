@@ -142,3 +142,38 @@ class DataActionBindingsTest(TestCase):
     def test_every_handler_is_used(self):
         unused = self._registered_actions() - set(self._used_actions())
         assert not unused, f"CLICK_ACTIONS entries no longer used by any template: {sorted(unused)}"
+
+
+class ExternalLinkAffordanceTest(TestCase):
+    """A link that opens a new tab has to say so, visibly and audibly (#623).
+
+    An unannounced tab switch takes the back button away without warning, which
+    WCAG 3.2.5 treats as a change of context. The icon carries it visually; it is
+    aria-hidden, so the same words also go in visually-hidden text for a screen
+    reader.
+
+    The image link on the toegankelijkheid page is exempt: its alt text already
+    says where it goes, so an icon would only repeat it.
+    """
+
+    EXEMPT = {"toegankelijkheid.html"}
+
+    #: The <a ...> opening tag plus everything up to its </a>.
+    LINK = re.compile(r"<a\s[^>]*target=[\"']_blank[\"'][^>]*>(.*?)</a>", re.DOTALL | re.IGNORECASE)
+
+    def _external_links(self):
+        for template in _templates():
+            if template.name in self.EXEMPT:
+                continue
+            for match in self.LINK.finditer(template.read_text(encoding="utf-8")):
+                yield str(template.relative_to(TEMPLATE_DIR)), match.group(1)
+
+    def test_every_new_tab_link_shows_an_icon(self):
+        missing = [path for path, body in self._external_links() if "square-arrow-right-top" not in body]
+        assert not missing, f'target="_blank" without an external-link icon: {sorted(set(missing))}'
+
+    def test_every_new_tab_link_announces_itself(self):
+        missing = [path for path, body in self._external_links() if "opent in nieuw tabblad" not in body]
+        assert not missing, (
+            f'target="_blank" without visually-hidden text saying so (the icon is aria-hidden): {sorted(set(missing))}'
+        )

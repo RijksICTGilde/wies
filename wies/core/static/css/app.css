@@ -112,6 +112,32 @@ a {
   color: var(--semantics-links-color, inherit);
 }
 
+/* An external-link icon inside the <a> inherits its underline, which then runs
+   through the gap and under the icon. inline-block takes the icon out of the
+   text run, so the underline stops at the last word; the small gap replaces the
+   whitespace that inline-block no longer collapses. */
+a > nldd-icon {
+  display: inline-block;
+  vertical-align: -0.125em;
+  margin-inline-start: 0.25em;
+  text-decoration: none;
+}
+
+/* Off-screen but announced by screen readers, for text that an icon carries
+   visually: "opent in nieuw tabblad", the DAU chart's alternative and the merge
+   table captions. */
+.wies-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* Colour only. A font-size here made an empty value smaller than the value that
    could have stood there, a difference that said nothing; the surrounding
    nldd-text-cell sets the size. */
