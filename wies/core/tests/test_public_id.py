@@ -277,18 +277,31 @@ class PlacementPanelParamTests(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
 
-    def test_ended_placement_shown_to_bm_owner(self):
-        """The BM-owner opens the same ended placement's panel over HTTP."""
-        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
-        self.owner.user = owner_user
-        self.owner.save(update_fields=["user"])
-        self.client.force_login(owner_user)
+    def test_ended_placement_shown_to_bdm(self):
+        """A BDM (not the placed colleague, not the owner) opens the same ended
+        placement's panel over HTTP and sees it."""
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        Colleague.objects.create(user=bdm_user, name="Bdm", email="bdm@rijksoverheid.nl", source="wies")
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        bdm_user.groups.add(bdm_group)
+        self.client.force_login(bdm_user)
         ended = self._placement(start_offset=-30, end_offset=-10)
 
         response = self._panel(ended.public_id)
 
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
+
+    def test_ended_placement_hidden_from_non_bdm_owner(self):
+        """The BM-owner is no longer entitled by ownership alone: a non-BDM owner
+        gets the same 404 as any unrelated viewer."""
+        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        self.client.force_login(owner_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        assert self._panel(ended.public_id).status_code == 404
 
     def test_malformed_value_is_404(self):
         assert self._panel("not-a-uuid").status_code == 404
