@@ -97,7 +97,7 @@
     if (!menu) return;
     const field = document.querySelector("[data-wies-search-input]");
     const hasTerm = ((field && field.value) || "").trim() !== "";
-    const hasItems = menu.querySelector("nldd-menu-item") !== null;
+    const hasItems = menu.children.length > 0;
     const open = menu.matches(":popover-open");
     if (hasItems && hasTerm && !open) menu.showPopover?.();
     else if ((!hasItems || !hasTerm) && open) menu.hidePopover?.();
@@ -120,20 +120,6 @@
     menu.removeAttribute("anchor");
   }
 
-  // What the list is actually filtered on, so the hint can tell "typed" from
-  // "searched". The hidden input carries it and htmx re-renders it on every swap.
-  function appliedSearchTerm() {
-    const hidden = document.getElementById("search-hidden");
-    return ((hidden && hidden.value) || "").trim();
-  }
-
-  function syncSearchHint(el) {
-    const hint = document.getElementById("search-hint");
-    if (!hint) return;
-    const typed = ((el && el.value) || "").trim();
-    hint.hidden = typed === "" || typed === appliedSearchTerm();
-  }
-
   function hideSuggestions() {
     const menu = suggestionMenu();
     if (!menu) return;
@@ -153,7 +139,6 @@
     hidden.value = v;
     hidden.dispatchEvent(new Event("change", { bubbles: true }));
     hideSuggestions();
-    syncSearchHint(el);
     // Blur the inner input too, or the dropdown reopens on focus.
     try {
       el.blur();
@@ -170,7 +155,6 @@
 
     el.addEventListener("input", (e) => {
       const term = (e.detail?.value ?? el.value ?? "").trim();
-      syncSearchHint(el);
       clearTimeout(timer);
       if (!term) {
         hideSuggestions();

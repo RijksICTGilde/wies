@@ -138,18 +138,18 @@ a > nldd-icon {
   border: 0;
 }
 
-/* The line keeps its space when empty, so showing the hint does not push the
-   results and the list down a row while you type. visibility, not display: the
-   [hidden] attribute stays the single on/off switch for the JS, and a document
-   display would beat the browser's own [hidden] rule anyway. */
-.wies-search-hint {
-  margin: var(--primitives-space-4, 4px) 0 0;
-  font-size: 0.8125rem;
-  color: var(--semantics-content-secondary-color, #64748b);
-}
-.wies-search-hint[hidden] {
-  display: block;
-  visibility: hidden;
+/* Caption at the foot of the search suggestions. It has to be a [disabled] menu
+   item: that is the one attribute the menu skips while navigating and counts
+   while deciding it is empty. But disabled means "a choice you cannot make", and
+   the component says so by dimming the label to 30% -- 2.0:1 against the menu,
+   under the 4.5:1 that WCAG AA asks. The label sits in a nested text-cell with
+   its own shadow root, so only these custom properties reach it: the opacity
+   goes back to 1 and the muted content colour carries "not a choice" at 11.4:1. */
+.wies-search-menu-hint {
+  --primitives-opacity-disabled: 1;
+  --components-menu-item-content-color: var(
+    --semantics-content-secondary-color
+  );
 }
 
 /* Colour only. A font-size here made an empty value smaller than the value that
