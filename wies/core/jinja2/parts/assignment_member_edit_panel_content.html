@@ -49,7 +49,9 @@
     <nldd-combo-box name="{{ svc_form.colleague.html_name }}" value="{{ colleague_value }}" accessible-label="{{ svc_form.colleague.label }}" {% if svc_form.colleague.errors %}invalid error-message="{{ colleague_error_ids|join(' ') }}"{% endif %}>
     <nldd-menu empty-text="Geen consultants gevonden">
     {% for value, label in svc_form.colleague.field.choices %}
-      {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+      {% if value != "" %}
+        <nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>
+      {% endif %}
     {% endfor %}
     </nldd-menu>
     </nldd-combo-box>
@@ -68,9 +70,7 @@
   <nldd-combo-box name="{{ svc_form.skill.html_name }}" accessible-label="{{ svc_form.skill.label }}" data-skill-choice value="{{ skill_value }}" {% if svc_form.skill.errors %}invalid error-message="{{ skill_error_ids|join(' ') }}"{% endif %}>
   <nldd-menu empty-text="Geen rollen gevonden">
   {% for value, label in svc_form.skill.field.choices %}
-    {% if value != "" %}
-      <nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>
-    {% endif %}
+    {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
   {% endfor %}
   </nldd-menu>
   </nldd-combo-box>
