@@ -899,12 +899,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     }
 
     # Sorting on colleague name says nothing in the opdracht view, where one card
-    # is a whole team. Values map through order_mapping in _get_base_queryset.
+    # is a whole team.
     SORT_OPTIONS = {
         "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
         "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
     }
-    # Both view defaults need an annotation, so they are built in _get_base_queryset.
 
     @property
     def active_view(self) -> str:
@@ -979,7 +978,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 # how recent it is.
                 sort_field = F("actual_start_date").desc(nulls_last=True)
 
-        # Before ordering: the persoon default sorts on actual_start_date.
         qs = annotate_placement_dates(qs)
 
         # The group as tiebreaker keeps one person's or opdracht's placements
@@ -1068,12 +1066,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         A card shows one person or one assignment with all their placements, so
         paginating on placements would cut a group in half at the page boundary.
-        This pages over the distinct group ids in the active sort order and then
-        returns every placement of the groups on that page.
         """
         group_field = self.GROUP_FIELD[self.active_view]
-        # A DISTINCT on the group field would have to select every sort column too,
-        # so dedupe here instead, keeping the queryset order.
+        # A DISTINCT on the group field would have to select every sort column too.
         seen: set[int] = set()
         ordered_group_ids = [
             group_id
@@ -1117,11 +1112,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return ["placements.html"]
 
     def _view_url(self, value: str) -> str:
-        """URL for a weergave, keeping the filters and search but dropping the rest.
+        """URL for a weergave: keeps the filters and search, drops page and order.
 
-        Not services.urls.url_with_param: that one drops "page" while this view
-        pages on "pagina", and the sort options differ per view so ?order= has to
-        go as well.
+        The sort options differ per view, so an ?order= from the other view would
+        not resolve here.
         """
         params = self.request.GET.copy()
         params.pop(self.page_kwarg, None)
@@ -1137,8 +1131,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         """One card per colleague, with the assignments they are placed on.
 
         A person on exactly one assignment opens that placement's panel; on more
-        than one there is no single placement to show, so the card opens the
-        colleague panel instead.
+        than one the card opens the colleague panel instead.
         """
         grouped: dict[int, list] = {}
         for placement in placements:
@@ -1207,9 +1200,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         active_view = self.active_view
         context["active_view"] = active_view
-        # A count per option, so you can see how many opdrachten there are without
-        # switching view first (#405). The active view already counted its groups
-        # while paginating; only the other one still needs a query.
         counts = {active_view: context["paginator"].count}
         filtered = self.get_queryset()
         context["view_options"] = [
@@ -1262,9 +1252,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # For each filter category, count on a queryset excluding that category's filter
         base_qs = self._get_base_queryset()
-        # Count groups, not placements: the list shows one card per group, so
-        # counting rows would put a higher number in the sidebar than the list has
-        # cards, and a different one again from the counts on the view switch.
         group_field = self.GROUP_FIELD[active_view]
 
         label_filter_groups = []
@@ -1338,7 +1325,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             skill_options.append(option)
 
         # Org counts exclude the org filter, so the numbers reflect the other
-        # active filters — same cross-filter rule as the groups above.
+        # active filters.
         org_counts = _org_counts_from_filtered(
             self._apply_filters(base_qs, exclude_filter="org").distinct(),
             Placement,
@@ -3227,8 +3214,7 @@ def _org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: 
     per group.
     """
     rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    # No group_field: the row itself is the unit, and "id" makes each row its own
-    # group, so both cases run the same pairwise count.
+    # Without group_field each row is its own group, so counting is per row.
     pairs = rows.values_list(org_lookup, group_field or "id").distinct()
     return Counter(oid for oid, _ in pairs if oid is not None)
 

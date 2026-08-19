@@ -1,8 +1,5 @@
-{# Rides along as an OOB fragment on every htmx swap so the pressed button and
-   the link urls follow the new filters. The parent sets view_control_oob on
-   htmx responses; the id stays put either way so the OOB swap can target it.
-   Same pattern as parts/sort_control.html. #}
-{# Same priority as the sort menu; see parts/sort_control.html. #}
+{# Rides along as an OOB fragment on every htmx swap, so the pressed button and
+   the link urls follow the new filters. #}
 <nldd-toolbar-item id="view-control" slot="start" priority="-1" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
 {% for option in view_options %}
