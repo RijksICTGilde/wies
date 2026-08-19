@@ -25,7 +25,12 @@
     </nldd-rich-text>
     </nldd-container>
     </nldd-card>
-    <input type="checkbox" name="status" value="{{ status }}" data-filter-input hidden {% if is_active %}checked{% endif %} />
+    <input type="checkbox"
+           name="status"
+           value="{{ status }}"
+           data-filter-input
+           hidden
+           {% if is_active %}checked{% endif %} />
   </button>
 {% endmacro %}
 <nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
@@ -44,7 +49,7 @@
      says WHAT is being filtered. #}
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-container layout="wrap" gap="8" vertical-alignment="center">
-  {% set status_labels = {'bench': 'Op de bank', 'full': 'Volledig ingezet', 'ends_soon': 'Eindigt binnen 60 dagen'} %}
+  {% set status_labels = {"bench": "Op de bank", "full": "Volledig ingezet", "ends_soon": "Eindigt binnen 60 dagen"} %}
   {% for status in selected_statuses %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ status_labels.get(status, status) }}" data-wies-dismiss="filter" data-filter-name="status" data-filter-value="{{ status }}">{{ status_labels.get(status, status) }}</nldd-token>
   {% endfor %}

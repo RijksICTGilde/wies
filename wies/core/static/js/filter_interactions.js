@@ -271,7 +271,8 @@
       const card = e
         .composedPath()
         .find(
-          (el) => el instanceof Element && el.hasAttribute?.("data-status-card"),
+          (el) =>
+            el instanceof Element && el.hasAttribute?.("data-status-card"),
         );
       if (!card) return;
       const input = statusCardInput(card);
