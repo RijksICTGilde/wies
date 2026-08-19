@@ -1,8 +1,6 @@
-{# Cards for "Wie zit waar?", one per persoon or per opdracht depending on the
-   view. Each card opens its side panel. `href` keeps the card a real link
-   (status bar, cmd/middle click opens a tab); hx_link_guard.js catches the
-   plain click so htmx fills the panel instead of navigating. Same pattern as
-   assignment_card_rows.html. #}
+{# `href` keeps the card a real link (status bar, cmd/middle click opens a
+   tab); hx_link_guard.js catches the plain click so htmx fills the panel
+   instead of navigating. Same pattern as assignment_card_rows.html. #}
 {% macro chevron() %}
   <span class="assignment-card__chevron" aria-hidden="true">
     <nldd-icon size="20" name="chevron-right"></nldd-icon>
@@ -50,8 +48,6 @@
     {% endif %}
   {% endif %}
   </nldd-container>
-  {# In the footer slot so opdrachtgever and date line up across cards
-     regardless of title length. #}
   <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
   <nldd-list variant="simple" dividers="never" accessible-label="Gegevens">
   {% if active_view == 'opdracht' %}
@@ -75,8 +71,6 @@
     <nldd-cell>{{ chevron() }}</nldd-cell>
     </nldd-list-item>
   {% else %}
-    {# One opdracht: name it, that is the answer to "wie zit waar?". More than
-       one: just the count, the names do not fit on a card. #}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="business-suitcase"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>

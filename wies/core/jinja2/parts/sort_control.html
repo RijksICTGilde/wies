@@ -13,8 +13,6 @@
 {# Sorting on colleague name says nothing in the opdracht view, where one card
    is a whole team, so the view narrows sort_options per view. #}
 {% set current_order = active_order %}
-{# Naming the default order, so the button does not say "Sorteren" while a
-   sort order is in fact applied. #}
 {% set default_sort_label = "Laatst gewijzigd" if active_view == 'opdracht' else "Startdatum (nieuwste eerst)" %}
 {# The default order is the absence of ?order=, so that option gets a url that
    strips the parameter. Radios, not buttons: only type radio or checkbox shows

@@ -1,24 +1,13 @@
-{# View switch for "Wie zit waar?": cards per persoon or per opdracht. A
-   segmented control rather than a dropdown, so both options stay visible.
-
-   Rides along as an OOB fragment on every htmx swap so the pressed button and
+{# Rides along as an OOB fragment on every htmx swap so the pressed button and
    the link urls follow the new filters. The parent sets view_control_oob on
    htmx responses; the id stays put either way so the OOB swap can target it.
    Same pattern as parts/sort_control.html. #}
-{# hx-trigger="item-change" is the DS event for a chosen item: it rides a
-   native radio change, so it fires only on the item switching on, not on the
-   one switching off. One swap, not two requests. #}
 <nldd-toolbar-item id="view-control" slot="start" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
-{# The selection belongs on the control's `value`, not on a per-item
-   `selected`: the control syncs its items itself and overwrites that. #}
 <nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
 {% for option in view_options %}
   <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }}" icon="{{ option.icon }}" hx-get="{{ option.url }}" hx-trigger="item-change" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-segmented-control-item>
 {% endfor %}
 </nldd-segmented-control>
-{# The same choice as a group in the overflow menu, which has no segmented
-   control. The DS shows a CLONE but reports the choice back as select on
-   these originals, where the htmx binding sits. #}
 <nldd-menu-group slot="overflow" text="Weergave">
 {% for option in view_options %}
   <nldd-menu-item type="radio" text="{{ option.label }}" icon="{{ option.icon }}" {% if option.selected %}selected{% endif %} hx-get="{{ option.url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
