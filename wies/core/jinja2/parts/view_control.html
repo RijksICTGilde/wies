@@ -3,14 +3,17 @@
    htmx responses; the id stays put either way so the OOB swap can target it.
    Same pattern as parts/sort_control.html. #}
 <nldd-toolbar-item id="view-control" slot="start" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
-<nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
+{# Fixed width: the counts change with every filter, and the items split the
+   width evenly, so without it the control resizes on each swap and shifts the
+   search field beside it. 350px fits both labels up to four digits. #}
+<nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" width="350px" value="{{ active_view }}">
 {% for option in view_options %}
-  <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }}" icon="{{ option.icon }}" hx-get="{{ option.url }}" hx-trigger="item-change" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-segmented-control-item>
+  <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }} ({{ option.count }})" icon="{{ option.icon }}" hx-get="{{ option.url }}" hx-trigger="item-change" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-segmented-control-item>
 {% endfor %}
 </nldd-segmented-control>
 <nldd-menu-group slot="overflow" text="Weergave">
 {% for option in view_options %}
-  <nldd-menu-item type="radio" text="{{ option.label }}" icon="{{ option.icon }}" {% if option.selected %}selected{% endif %} hx-get="{{ option.url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
+  <nldd-menu-item type="radio" text="{{ option.label }} ({{ option.count }})" icon="{{ option.icon }}" {% if option.selected %}selected{% endif %} hx-get="{{ option.url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
 {% endfor %}
 </nldd-menu-group>
 </nldd-toolbar-item>

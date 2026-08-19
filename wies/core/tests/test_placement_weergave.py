@@ -346,7 +346,7 @@ class TestAssignmentCards:
 
 @pytest.mark.django_db
 class TestViewSwitch:
-    """The filter form has to carry the chosen weergave."""
+    """The switch carries both counts and the filter form keeps the view."""
 
     @pytest.fixture(autouse=True)
     def setup(self):
@@ -354,6 +354,31 @@ class TestViewSwitch:
         self.client = Client()
         self.client.force_login(self.user)
         self.skill = Skill.objects.create(name="Data engineering")
+
+    def _counts(self, params=None):
+        response = self.client.get(reverse("home"), params or {})
+        return {o["value"]: o["count"] for o in response.context_data["view_options"]}
+
+    def test_counts_group_per_view(self):
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+        _place(_make_colleague("Carla Jansen"), _make_assignment("Eigen opdracht"), self.skill)
+
+        assert self._counts() == {"persoon": 3, "opdracht": 2}
+
+    def test_counts_are_the_same_in_both_views(self):
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+
+        assert self._counts() == self._counts({"weergave": "opdracht"})
+
+    def test_counts_follow_the_filters(self):
+        _place(_make_colleague("Anna Bakker"), _make_assignment("Datateam"), self.skill)
+        _place(_make_colleague("Bob Smit"), _make_assignment("Iets anders"), self.skill)
+
+        assert self._counts({"zoek": "Datateam"}) == {"persoon": 1, "opdracht": 1}
 
     def test_the_filter_form_carries_the_active_view(self):
         """A filter change must not throw you back to the persoon view (#618)."""

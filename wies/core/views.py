@@ -1207,8 +1207,17 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         active_view = self.active_view
         context["active_view"] = active_view
+        # A count per option, so you can see how many opdrachten there are without
+        # switching view first (#405). The active view already counted its groups.
+        counts = {active_view: context["paginator"].count}
         context["view_options"] = [
-            {**option, "url": self._view_url(option["value"]), "selected": option["value"] == active_view}
+            {
+                **option,
+                "url": self._view_url(option["value"]),
+                "selected": option["value"] == active_view,
+                "count": counts.get(option["value"])
+                or self.get_queryset().values(self.GROUP_FIELD[option["value"]]).distinct().count(),
+            }
             for option in self.VIEW_OPTIONS
         ]
         placements = context["object_list"]
