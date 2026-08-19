@@ -163,15 +163,36 @@ def _services_initial(assignment):
     return rows
 
 
+def _request_viewer_is_bdm(request) -> bool:
+    """Whether the request's user holds the BDM role, resolved once per request.
+
+    Cached on the request because the timeline calls ``_services_visible_changes``
+    (and thus this) once per team event, and ``is_bdm`` costs a groups query each
+    time — the answer is the same for every event in one request.
+    """
+    # Local import: wies.core.permissions imports from wies.core.editables, so a
+    # module-level import here would be circular.
+    from wies.core.permissions import is_bdm  # noqa: PLC0415 (import not at top level) — avoids a circular import
+
+    user = getattr(request, "user", None)
+    if user is None:
+        return False
+    if not hasattr(request, "wies_viewer_is_bdm"):
+        request.wies_viewer_is_bdm = is_bdm(user)
+    return request.wies_viewer_is_bdm
+
+
 def visible_service_rows(assignment, request) -> list[dict]:
     """Returns viewer-filtered team rows for display.
 
     ``_services_initial`` returns every placement; here a placement that is not
     currently active is hidden from unrelated viewers — only the placed colleague
-    and the BM-owner see it, flagged ``historical`` with a label and privacy note.
+    and Business Managers (the BDM role) see it, flagged ``historical`` with a
+    label and privacy note.
     """
     today = timezone.now().date()
     viewer = getattr(getattr(request, "user", None), "colleague", None)
+    viewer_is_bdm = _request_viewer_is_bdm(request)
 
     visible = []
     for row in _services_initial(assignment):
@@ -184,7 +205,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             row["placement_end_date"],
             placement.colleague_id,
             viewer,
-            assignment.owner_id,
+            viewer_is_bdm,
             today,
         )
         if not result.visible:
@@ -334,7 +355,8 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if viewer is not None and assignment.owner_id == viewer.id:
+    if _request_viewer_is_bdm(request):
+        # A Business Manager sees the unfiltered list; they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)
     return [change for change in changes if _change_colleague_names(change) <= allowed]

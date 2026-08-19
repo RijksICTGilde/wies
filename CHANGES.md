@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- TODO: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) instead of only to the opdracht owner
 - 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
