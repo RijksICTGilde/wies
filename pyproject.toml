@@ -36,6 +36,10 @@ package = false
 [tool.ruff]
 target-version = "py314"
 line-length = 120
+# One-off measurement scripts for the accessibility audit. They are kept because
+# the report claims its figures can be reproduced, not because they are project
+# code: they run standalone against a live instance, not as part of the app.
+extend-exclude = ["docs/toegankelijkheid/scripts"]
 
 [tool.ruff.format]
 # ruff 0.16 formats Python code blocks inside Markdown by default; our docs
