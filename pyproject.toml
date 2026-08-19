@@ -3,7 +3,7 @@ name = "wies"
 dynamic = ["version"]
 requires-python = ">=3.14"
 dependencies = [
-  "django==6.0.7",
+  "django==6.0.8",
   "whitenoise==6.12.0",
   "gunicorn==25.3.0",
   "Authlib==1.7.2",
@@ -11,13 +11,14 @@ dependencies = [
   "urllib3>=2.7.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
   "psycopg[binary]>=3.3.4",
+  "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
 ]
 
 [dependency-groups]
 dev = [
-  "pre-commit>=4.6.0",
-  "ruff>=0.15.15",
-  "djlint>=1.40.8",
+  "pre-commit>=4.6.1",
+  "ruff>=0.16.0",
+  "djlint>=1.42.3",
   "pytest>=9.1.1",
   "pytest-django>=4.9",
   "pytest-cov>=6.0",
@@ -35,6 +36,11 @@ package = false
 [tool.ruff]
 target-version = "py314"
 line-length = 120
+
+[tool.ruff.format]
+# ruff 0.16 formats Python code blocks inside Markdown by default; our docs
+# align inline comments deliberately for readability, so leave prose untouched.
+exclude = ["*.md"]
 
 [tool.ruff.lint]
 select = [
@@ -92,6 +98,7 @@ ignore = [
   "PLR0912", # too many branches (fix later)
   "PLR0913", # too many arguments (fix later)
   "PLR0915", # too many statements (fix later)
+  "PLR0917", # too many positional arguments (fix later)
 ]
 
 [tool.ruff.lint.isort]
@@ -132,5 +139,5 @@ max_line_length = 120
 ignore = "H006,H021,H025,H030,H031"
 # H006: img width/height (fix later)
 # H021: inline styles (fix later)
-# H025: orphan tag false-positive around the djlint:off block in header_logo.html (djlint 1.42.2)
+# H025: orphan tag false-positive around the djlint:off block in header_logo.html (djlint 1.44.2)
 # H030,H031: meta description/keywords not needed for internal tool

@@ -73,7 +73,9 @@
       {% set top_options = filter_group.top_options if filter_group.top_options is defined else
       filter_group.options|selectattr('value')|list %}
       {% if top_options %}
-        {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
+        {% if ns.rendered %}
+          <nldd-spacer size="24"></nldd-spacer>
+        {% endif %}
         {% set ns.rendered = true %}
         <nldd-title size="6">
         <h3>{{ filter_group.label }}</h3>
@@ -124,9 +126,7 @@
         </span>
       {% endif %}
     {% elif filter_group.type == 'date' %}
-      {% if ns.rendered %}
-        <nldd-spacer size="24"></nldd-spacer>
-      {% endif %}
+      {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
       {% set ns.rendered = true %}
       <nldd-title size="6">
       <h3>{{ filter_group.label }}</h3>
