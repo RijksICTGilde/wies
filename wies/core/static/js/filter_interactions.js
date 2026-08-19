@@ -120,6 +120,13 @@
     menu.removeAttribute("anchor");
   }
 
+  // What the list is actually filtered on. The hidden input carries it, and htmx
+  // re-renders it on every swap.
+  function appliedSearchTerm() {
+    const hidden = document.getElementById("search-hidden");
+    return ((hidden && hidden.value) || "").trim();
+  }
+
   function hideSuggestions() {
     const menu = suggestionMenu();
     if (!menu) return;
@@ -195,6 +202,20 @@
             highlighted.select();
           }
         }
+      },
+      true,
+    );
+
+    // Commit on blur so clearing or trimming the text and clicking away syncs the
+    // results, without needing Enter (#437, was lost in the NLDD rewrite). The
+    // equality check skips unchanged blurs, including the blur() that
+    // commitSearch does itself -- which would otherwise re-enter here.
+    el.addEventListener(
+      "blur",
+      () => {
+        const typed = (el.value ?? "").trim();
+        if (typed === appliedSearchTerm()) return;
+        commitSearch(el, typed);
       },
       true,
     );

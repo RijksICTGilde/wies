@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 634: the search field commits again when you click away from it, as it did before the NLDD rewrite
 - 634: typing in the search field now shows "Druk op Enter om te zoeken" while the list below is still showing the old results
 - 634: the number next to a merk or label now says what it counts ("7 collega's") instead of being a bare badge
 - 634: the "Kies een bestaande rol of maak een nieuwe aan" hint is gone; the dropdown already lists the roles and a "+ Nieuwe rol" option
