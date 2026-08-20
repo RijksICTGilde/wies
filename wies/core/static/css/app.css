@@ -100,16 +100,21 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
    FOUC case — the element is already defined. The rule drops out once `fluid`
    appears.
 
-   Scoped to this one item by id, not to nldd-toolbar-item[width] at large:
-   three other toolbars carry the same attributes with min-width 240px, and a
-   global rule handed them 180px for that one tick. */
-#search-toolbar-item:not([fluid]) {
+   The generic rule carries the value the other three toolbars use, since the
+   attribute itself does nothing during this tick; only the item that deviates
+   from it is scoped. Dropping the generic rule instead would leave
+   organization_admin, user_admin and filter_and_card_container_assignments
+   without a bridge at all, which is the flash this rule exists to prevent. */
+nldd-toolbar-item[width]:not([fluid]) {
   flex: 0 1 560px;
-  min-width: 180px;
+  min-width: 240px;
   max-width: 560px;
 }
-#search-toolbar-item:not([fluid]) > * {
+nldd-toolbar-item[width]:not([fluid]) > * {
   width: 100%;
+}
+#search-toolbar-item:not([fluid]) {
+  min-width: 180px;
 }
 
 a {
