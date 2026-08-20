@@ -10,14 +10,16 @@
 //
 // De regel is generiek, dus geen markup per knop of per formulier:
 //
-//   0. Alleen ingrijpen als de focus echt naar <body> is gevallen. Bleef hij
-//      ergens staan (zoeken en filteren verversen de lijst terwijl je in het
-//      zoekveld staat), dan is er niets aan de hand en blijven we eraf.
-//   1. Zette de server [autofocus] in de nieuwe inhoud, dan heeft htmx die al
-//      gefocust en weet de server het beter dan wij.
-//   2. Kwam er een afgekeurd formulier terug, dan naar het veld met de fout.
+//   0. Kwam er een afgekeurd formulier terug, dan naar het veld met de fout.
 //      Daar moet de gebruiker zijn; hem op het eerste veld zetten laat hem de
-//      fout zelf zoeken.
+//      fout zelf zoeken. Als enige stap ongeacht muis of toetsenbord, en
+//      ongeacht waar de focus stond: er is iets veranderd aan waar hij moet
+//      zijn, en de fout hoeft niet in beeld te staan.
+//   1. Verder alleen ingrijpen als de focus echt naar <body> is gevallen. Bleef
+//      hij ergens staan (zoeken en filteren verversen de lijst terwijl je in
+//      het zoekveld staat), dan is er niets aan de hand en blijven we eraf.
+//   2. Zette de server [autofocus] in de nieuwe inhoud, dan heeft htmx die al
+//      gefocust en weet de server het beter dan wij.
 //   3. Terug naar het meest recente element dat een swap veroorzaakte en dat we
 //      in de huidige inhoud kunnen terugvinden.
 //   4. Anders het eerste bedienbare element in de nieuwe inhoud, zodat je
@@ -30,9 +32,9 @@
 // intern `ajax("get", ...)` aan, dus `requestConfig.elt` is `document.body`.
 // De knop waar je vandaan kwam zit dan twee stappen terug.
 //
-// Niet conditioneel op muis versus toetsenbord: :focus-visible regelt al dat een
-// muisgebruiker geen ring ziet, en een schermlezergebruiker bedient vaak juist
-// wel met de muis.
+// Stap 1 tot en met 4 gelden alleen voor toetsenbordgebruik: wie net geklikt
+// heeft weet waar hij is en heeft geen bestemming nodig. Stap 0 staat daarbuiten
+// -- een afkeuring verplaatst waar de gebruiker moet zijn, ook als hij klikte.
 (function () {
   "use strict";
 
@@ -152,10 +154,10 @@
   // weigeren (geen delegatesFocus, geen eigen focus()). Stoppen bij de eerste
   // match zou de focus stil op <body> laten staan -- precies wat dit script
   // moet voorkomen.
-  function focusFirst(elements) {
+  function focusFirst(elements, { preventScroll = true } = {}) {
     for (const element of elements) {
       if (!isVisible(element) || typeof element.focus !== "function") continue;
-      element.focus({ preventScroll: true });
+      element.focus({ preventScroll });
       if (focusTook(element)) return true;
     }
     return false;
@@ -193,6 +195,33 @@
   // stond hij ergens anders dan op <body>, dan blijven we eraf.
 
   document.addEventListener("htmx:afterSettle", (event) => {
+    const container = event.detail.target;
+    if (!container || typeof container.querySelector !== "function") return;
+
+    // Een afgekeurd formulier komt terug met de fout erin. Dan is de eerste
+    // bedienbare plek niet waar je moet zijn: je wilt naar het veld dat
+    // afgekeurd is, anders moet je de fout zelf gaan zoeken.
+    //
+    // Als enige stap ook voor de muisgebruiker, en ook als de focus nog ergens
+    // staat. De regels hieronder gaan ervan uit dat er niets veranderd is aan
+    // waar de gebruiker moet zijn -- bij een afkeuring is dat juist wel zo. De
+    // fout hoeft niet in beeld te staan: bij een langer formulier of een klein
+    // venster staat hij eronder, en dan is "wie klikt weet waar hij is" niet
+    // meer waar.
+    //
+    // `invalid` is de conventie van wire_field_errors(): elk widget zet het op
+    // het element dat nldd-form-field._findInput() teruggeeft, dus precies het
+    // element dat de fout draagt. Het component reflecteert de property naar
+    // het attribuut, en de server rendert het al als HTML, dus dit werkt ook
+    // voordat Lit is opgestart. De error-tekst krijgt `invalid` ook, maar is
+    // geen invoer en hoort de focus niet te krijgen.
+    //
+    // Wel preventScroll weglaten, anders zie je niet waar je heen gestuurd bent.
+    const invalid = container.querySelectorAll(
+      "[invalid]:not(nldd-form-field-error-text)",
+    );
+    if (invalid.length && focusFirst(invalid, { preventScroll: false })) return;
+
     // Wie klikt, stoort niet: de focus verplaatsen naar een element waar de
     // muis niet is levert die gebruiker niets op. Drukt hij daarna Tab, dan
     // begint hij bovenaan, en dat is wat een muisgebruiker ook zonder dit
@@ -207,30 +236,11 @@
     )
       return;
 
-    const container = event.detail.target;
-    if (!container || typeof container.querySelector !== "function") return;
-
     if (
       container.matches("[autofocus]") ||
       container.querySelector("[autofocus]")
     )
       return;
-
-    // Een afgekeurd formulier komt terug met de fout erin. Dan is de eerste
-    // bedienbare plek niet waar je moet zijn: je wilt naar het veld dat
-    // afgekeurd is, anders moet je de fout zelf gaan zoeken. Gaat voor het
-    // spoor, want de knop waar je vandaan kwam is hier de verkeerde plek.
-    //
-    // `invalid` is de conventie van wire_field_errors(): elk widget zet het op
-    // het element dat nldd-form-field._findInput() teruggeeft, dus precies het
-    // element dat de fout draagt. Het component reflecteert de property naar
-    // het attribuut, en de server rendert het al als HTML, dus dit werkt ook
-    // voordat Lit is opgestart. De error-tekst krijgt `invalid` ook, maar is
-    // geen invoer en hoort de focus niet te krijgen.
-    const invalid = container.querySelectorAll(
-      "[invalid]:not(nldd-form-field-error-text)",
-    );
-    if (invalid.length && focusFirst(invalid)) return;
 
     if (focusFromTrail()) return;
 
