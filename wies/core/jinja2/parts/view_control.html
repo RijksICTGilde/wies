@@ -1,5 +1,9 @@
 {# Rides along as an OOB fragment on every htmx swap, so the pressed button and
-   the link urls follow the new filters. #}
+   the link urls follow the new filters.
+
+   Outranks the sort control: persoon-or-opdracht is the primary choice on this
+   page, sorting refines it. It is the wider of the two (the counts are in the
+   labels), so it still goes before the search field. #}
 <nldd-toolbar-item id="view-control" slot="start" priority="-1" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
 {% for option in view_options %}

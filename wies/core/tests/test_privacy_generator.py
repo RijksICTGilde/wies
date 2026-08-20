@@ -23,7 +23,13 @@ class RenderBodyTest(SimpleTestCase):
 
     def test_external_link_gets_target_blank(self):
         body = render("# T\n\n[example](https://example.com)\n")
-        assert '<a href="https://example.com" target="_blank">example</a>' in body
+        assert '<a href="https://example.com" target="_blank">example' in body
+
+    def test_external_link_announces_the_new_tab(self):
+        """The icon is aria-hidden, so the words carry it for a screen reader (#623)."""
+        body = render("# T\n\n[example](https://example.com)\n")
+        assert "opent in nieuw tabblad" in body
+        assert 'name="square-arrow-right-top"' in body
 
     def test_mailto_link_does_not_get_target_blank(self):
         body = render("# T\n\n[mail](mailto:a@b.nl)\n")

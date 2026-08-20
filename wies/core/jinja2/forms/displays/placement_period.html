@@ -4,9 +4,13 @@
 {% if obj.start_date or obj.end_date %}
   <span class="icon-text-inline">
     <nldd-icon name="calendar-event" size="16"></nldd-icon>
-    {{ obj.start_date|datum_nl if obj.start_date else "–" }}
-    t/m
-    {{ obj.end_date|datum_nl if obj.end_date else "heden" }}
+    {%- if obj.start_date and obj.end_date %}
+      {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
+    {%- elif obj.start_date %}
+      Vanaf {{ obj.start_date|datum_nl }}
+    {%- else %}
+      t/m {{ obj.end_date|datum_nl }}
+    {%- endif %}
   </span>
 {% else %}
   <span class="wies-text-secondary">Geen periode ingesteld</span>
