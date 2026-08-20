@@ -1,265 +1,234 @@
-// Geeft de focus een bestemming als een htmx-swap hem laat vallen.
-//
-// Vervangt een swap het element waar de focus op stond, dan komt de focus op
-// <body> terecht en begint de volgende Tab weer bovenaan de pagina. Vooral
-// hinderlijk bij toetsenbord- en schermlezergebruik.
-//
-// htmx herstelt focus zelf, maar alleen als er na de swap een element met
-// hetzelfde id bestaat. Dat dekt een formulier dat opnieuw rendert, niet een
-// formulier dat door een leesweergave vervangen wordt.
-//
-// De regel is generiek, dus geen markup per knop of per formulier:
-//
-//   0. Kwam er een afgekeurd formulier terug, dan naar het veld met de fout.
-//      Daar moet de gebruiker zijn; hem op het eerste veld zetten laat hem de
-//      fout zelf zoeken. Als enige stap ongeacht muis of toetsenbord, en
-//      ongeacht waar de focus stond: er is iets veranderd aan waar hij moet
-//      zijn, en de fout hoeft niet in beeld te staan.
-//   1. Verder alleen ingrijpen als de focus echt naar <body> is gevallen. Bleef
-//      hij ergens staan (zoeken en filteren verversen de lijst terwijl je in
-//      het zoekveld staat), dan is er niets aan de hand en blijven we eraf.
-//   2. Zette de server [autofocus] in de nieuwe inhoud, dan heeft htmx die al
-//      gefocust en weet de server het beter dan wij.
-//   3. Terug naar het meest recente element dat een swap veroorzaakte en dat we
-//      in de huidige inhoud kunnen terugvinden.
-//   4. Anders het eerste bedienbare element in de nieuwe inhoud, zodat je
-//      bovenaan die inhoud staat in plaats van bovenaan de pagina.
-//
-// Waarom stap 3 een stapel is en niet één element: een opslag die met
-// HX-Location terugspringt levert drie swaps op. Je drukt "Periode wijzigen"
-// (swap 1), je dient het formulier in (swap 2), en htmx haalt daarna zelf het
-// paneel opnieuw op (swap 3). Die laatste heeft geen bronelement -- htmx roept
-// intern `ajax("get", ...)` aan, dus `requestConfig.elt` is `document.body`.
-// De knop waar je vandaan kwam zit dan twee stappen terug.
-//
-// Stap 1 tot en met 4 gelden alleen voor toetsenbordgebruik: wie net geklikt
-// heeft weet waar hij is en heeft geen bestemming nodig. Stap 0 staat daarbuiten
-// -- een afkeuring verplaatst waar de gebruiker moet zijn, ook als hij klikte.
-(function () {
-  "use strict";
+"use strict";
 
-  // Op volgorde van betrouwbaarheid. Een id is uniek; een URL identificeert de
-  // actie, wat voor deze panelen net zo goed werkt en niets van de templates
-  // vraagt. Een verwijzing naar de node zelf is waardeloos: die is na een
-  // opnieuw opgehaald paneel losgekoppeld.
-  const IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href"];
+/**
+ * Gives focus a destination when an htmx swap drops it.
+ *
+ * A swap that replaces the focused element leaves focus on <body>, so the next
+ * Tab starts at the top of the page. htmx restores focus itself, but only when
+ * an element with the same id survives the swap, which covers neither a form
+ * replaced by its read view nor a panel that is fetched again.
+ *
+ * DOM access goes through the injected document, so the decisions are testable
+ * without a browser; the wiring at the bottom binds an instance to htmx.
+ */
 
-  // Wat een gebruiker kan bedienen. De custom elements erbij omdat de NLDD-
-  // componenten hun echte control in een shadow root zetten: `nldd-button`
-  // matcht geen enkele standaardselector, maar is wel een tabstop.
-  // Muis of toetsenbord? Dezelfde vraag die de browser zelf beantwoordt voor
-  // :focus-visible, maar die staat ons niet ter beschikking. Klikken is een
-  // aanwijsactie: de gebruiker weet waar hij is en heeft geen bestemming nodig.
-  // Alleen wie met het toetsenbord werkt raakt zijn plek kwijt als de focus valt.
-  let laatsteInvoer = "toetsenbord";
-  document.addEventListener(
+// In order of reliability. An id is unique; a URL identifies the action, which
+// works just as well here and asks nothing of the templates. A reference to the
+// node itself is worthless: it is detached once the panel is fetched again.
+var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href"];
+
+// What a user can operate. The custom elements are listed because the NLDD
+// components put their real control in a shadow root: `nldd-button` matches no
+// standard selector but is a tab stop.
+//
+// Only components that accept focus(), through delegatesFocus or their own
+// focus() override. nldd-checkbox, nldd-radio-button, the -field variants and
+// nldd-segmented-control have neither, so focus() on them silently does
+// nothing. A selector that matches but does not focus is worse than no match:
+// it crowds out an element further along that would have taken it.
+//
+// nldd-dropdown is absent on purpose: it wraps a real <select> in light DOM,
+// which "select" already matches. The host precedes it in document order and
+// would steal that match.
+//
+// The tab bar uses a roving tabindex, so only the selected tab is the way in.
+// That tabindex sits in the shadow root where the selector cannot see it, hence
+// [selected].
+var FOCUSABLE = [
+  "a[href]",
+  "button",
+  "input:not([type=hidden])",
+  "select",
+  "textarea",
+  "[tabindex]:not([tabindex='-1'])",
+  "nldd-button",
+  "nldd-icon-button",
+  "nldd-link",
+  "nldd-list-item[href]",
+  "nldd-search-field",
+  "nldd-text-field",
+  "nldd-multi-line-text-field",
+  "nldd-date-field",
+  "nldd-number-field",
+  "nldd-password-field",
+  "nldd-combo-box",
+  "nldd-token-field",
+  "nldd-switch",
+  "nldd-tab-bar-item[selected]",
+  "nldd-menu-bar-item",
+].join(",");
+
+// A save that bounces back with HX-Location produces three swaps: the button
+// that opened the form, the submit, and htmx fetching the panel again. That
+// last one has no source element, so the button we came from sits two steps
+// back. Five leaves room for one more level; deeper than that an entry is more
+// likely to be stale than useful.
+var MAX_DEPTH = 5;
+
+function FocusRestore(doc, options) {
+  this.doc = doc;
+  this.maxDepth = (options && options.maxDepth) || MAX_DEPTH;
+  // Newest first. Each entry describes an element instead of pointing at one,
+  // so it survives a fresh render.
+  this.trail = [];
+  // Clicking is a pointing action: that user knows where they are and needs no
+  // destination. Only a keyboard user loses their place when focus drops.
+  this.lastInput = "keyboard";
+}
+
+FocusRestore.prototype.describe = function (element) {
+  if (!element || typeof element.getAttribute !== "function") return null;
+  for (var i = 0; i < IDENTIFYING_ATTRIBUTES.length; i++) {
+    var attribute = IDENTIFYING_ATTRIBUTES[i];
+    var value = element.getAttribute(attribute);
+    if (value) return { attribute: attribute, value: value };
+  }
+  return null;
+};
+
+FocusRestore.prototype.remember = function (element) {
+  var descriptor = this.describe(element);
+  if (!descriptor) return;
+  this.trail = [descriptor].concat(this.trail).slice(0, this.maxDepth);
+};
+
+FocusRestore.prototype.isVisible = function (element) {
+  return typeof element.checkVisibility === "function"
+    ? element.checkVisibility()
+    : true;
+};
+
+// The visible candidate wins: an action is often in the DOM twice, as a button
+// and as a hidden item in the overflow menu beside it.
+FocusRestore.prototype.resolve = function (descriptor) {
+  var matches = Array.prototype.slice.call(
+    this.doc.querySelectorAll("[" + descriptor.attribute + "]"),
+  );
+  for (var i = 0; i < matches.length; i++) {
+    if (matches[i].getAttribute(descriptor.attribute) !== descriptor.value)
+      continue;
+    if (this.isVisible(matches[i])) return matches[i];
+  }
+  return null;
+};
+
+// focus() on a custom element without delegatesFocus does nothing and does not
+// report that, so check whether it took instead of assuming.
+FocusRestore.prototype.focusTook = function (element) {
+  var active = this.doc.activeElement;
+  return (
+    active === element ||
+    (typeof element.contains === "function" && element.contains(active))
+  );
+};
+
+// Keep going until one takes. Stopping at the first match would leave focus on
+// <body>, which is what this module exists to prevent.
+FocusRestore.prototype.focusFirst = function (elements, options) {
+  var preventScroll = !options || options.preventScroll !== false;
+  var list = Array.prototype.slice.call(elements);
+  for (var i = 0; i < list.length; i++) {
+    var element = list[i];
+    if (!this.isVisible(element) || typeof element.focus !== "function")
+      continue;
+    element.focus({ preventScroll: preventScroll });
+    if (this.focusTook(element)) return true;
+  }
+  return false;
+};
+
+FocusRestore.prototype.focusFromTrail = function () {
+  for (var i = 0; i < this.trail.length; i++) {
+    var element = this.resolve(this.trail[i]);
+    if (!element || typeof element.focus !== "function") continue;
+    element.focus({ preventScroll: true });
+    if (!this.focusTook(element)) continue;
+    // Everything up to and including this step is dealt with; anything newer
+    // belongs to a level we just came back from.
+    this.trail = this.trail.slice(i + 1);
+    return true;
+  }
+  return false;
+};
+
+FocusRestore.prototype.handleSettle = function (container) {
+  if (!container || typeof container.querySelector !== "function") return;
+
+  // A rejected form comes back with the error in it, and then the first
+  // operable place is not where the user has to be. The one step that also
+  // applies to a mouse user and regardless of where focus is, because what
+  // changed is where the user belongs. Without preventScroll, or you cannot see
+  // where you were sent.
+  //
+  // `invalid` is the convention of wire_field_errors(): every widget puts it on
+  // the element nldd-form-field._findInput() returns. The error text carries it
+  // too but is not an input.
+  var invalid = container.querySelectorAll(
+    "[invalid]:not(nldd-form-field-error-text)",
+  );
+  if (invalid.length && this.focusFirst(invalid, { preventScroll: false }))
+    return;
+
+  if (this.lastInput === "mouse") return;
+
+  // Focus survived the swap, so nothing was lost. Filtering refreshes the list
+  // this way while the caret stays in the field. Note that searching does not
+  // land here: commitSearch() blurs the field itself, so focus is on <body> and
+  // a keyboard user is put on the first result below.
+  var active = this.doc.activeElement;
+  if (active && active !== this.doc.body && active !== this.doc.documentElement)
+    return;
+
+  // The server knows better, and htmx has already focused it.
+  if (
+    container.matches("[autofocus]") ||
+    container.querySelector("[autofocus]")
+  )
+    return;
+
+  if (this.focusFromTrail()) return;
+
+  // The first operable element inside the new content, explicitly not the
+  // container itself. That container is a component (`nldd-page`, `nldd-sheet`)
+  // and so a shadow host, where the host's tabindex decides whether its content
+  // takes part in the tab order at all, so making it focusable costs more than
+  // it gives. If nothing takes, leaving focus on <body> beats breaking the tab
+  // order.
+  this.focusFirst(container.querySelectorAll(FOCUSABLE));
+};
+
+FocusRestore.prototype.bind = function () {
+  var self = this;
+  this.doc.addEventListener(
     "keydown",
-    () => (laatsteInvoer = "toetsenbord"),
+    function () {
+      self.lastInput = "keyboard";
+    },
     true,
   );
-  document.addEventListener(
+  this.doc.addEventListener(
     "pointerdown",
-    () => (laatsteInvoer = "muis"),
+    function () {
+      self.lastInput = "mouse";
+    },
     true,
   );
-
-  const FOCUSABLE = [
-    "a[href]",
-    "button",
-    "input:not([type=hidden])",
-    "select",
-    "textarea",
-    "[tabindex]:not([tabindex='-1'])",
-    "nldd-button",
-    "nldd-icon-button",
-    "nldd-link",
-    "nldd-list-item[href]",
-    "nldd-search-field",
-    // Invoervelden staan vóór de knoppen in een formulier, maar matchten geen
-    // enkele selector hierboven: hun echte control zit in een shadow root. Zonder
-    // deze regels sloeg "eerste bedienbare element" alle velden over en landde de
-    // focus op de eerste knop, halverwege het formulier.
-    //
-    // Alleen componenten die focus() ook echt accepteren -- via delegatesFocus of
-    // een eigen focus()-override. De rest (nldd-checkbox, nldd-radio-button en de
-    // -field-varianten, nldd-segmented-control) heeft geen van beide: focus()
-    // erop doet stil niets. Die staan hier bewust niet, want een selector die
-    // matcht maar niet focust is erger dan geen match -- hij verdringt een
-    // element verderop dat het wel had gekund.
-    //
-    // nldd-dropdown ontbreekt met opzet: dat component wikkelt een echte
-    // <select> in light DOM, die "select" hierboven al matcht. De host staat er
-    // in documentvolgorde vóór en zou die match dus wegkapen.
-    "nldd-text-field",
-    "nldd-multi-line-text-field",
-    "nldd-date-field",
-    "nldd-number-field",
-    "nldd-password-field",
-    "nldd-combo-box",
-    "nldd-token-field",
-    "nldd-switch",
-    // Navigatie-items met een eigen focus()-override. Bij de tabbar geldt een
-    // roving tabindex: alleen de geselecteerde tab is de ingang, de rest staat
-    // op tabindex="-1" en hoort dus niet gefocust te worden. Die tabindex zit
-    // in de shadow root, dus de selector hierboven ziet hem niet -- vandaar
-    // [selected]. nldd-toolbar-item en nldd-segmented-control-item hebben geen
-    // override en blijven eruit.
-    "nldd-tab-bar-item[selected]",
-    "nldd-menu-bar-item",
-  ].join(",");
-
-  const MAX_DEPTH = 5;
-
-  // Nieuwste eerst. Elk item beschrijft een element in plaats van ernaar te
-  // wijzen, zodat het een verse render overleeft.
-  let trail = [];
-
-  function describe(element) {
-    if (!element || typeof element.getAttribute !== "function") return null;
-    for (const attribute of IDENTIFYING_ATTRIBUTES) {
-      const value = element.getAttribute(attribute);
-      if (value) return { attribute, value };
-    }
-    return null;
-  }
-
-  function isVisible(element) {
-    return typeof element.checkVisibility === "function"
-      ? element.checkVisibility()
-      : true;
-  }
-
-  // De zichtbare kandidaat wint: een actie staat vaak twee keer in de DOM, als
-  // knop en als verborgen item in het overflowmenu ernaast.
-  function resolve(descriptor) {
-    const candidates = [
-      ...document.querySelectorAll(`[${descriptor.attribute}]`),
-    ].filter(
-      (candidate) =>
-        candidate.getAttribute(descriptor.attribute) === descriptor.value,
-    );
-    return candidates.find(isVisible) || null;
-  }
-
-  // focus() op een custom element zonder delegatesFocus doet niets en meldt dat
-  // niet, dus controleren of het pakte in plaats van aannemen.
-  function focusTook(element) {
-    return (
-      document.activeElement === element ||
-      element.contains(document.activeElement)
-    );
-  }
-
-  // Doorlopen tot er een pakt: een component kan matchen en de focus toch
-  // weigeren (geen delegatesFocus, geen eigen focus()). Stoppen bij de eerste
-  // match zou de focus stil op <body> laten staan -- precies wat dit script
-  // moet voorkomen.
-  function focusFirst(elements, { preventScroll = true } = {}) {
-    for (const element of elements) {
-      if (!isVisible(element) || typeof element.focus !== "function") continue;
-      element.focus({ preventScroll });
-      if (focusTook(element)) return true;
-    }
-    return false;
-  }
-
-  function focusFromTrail() {
-    for (let index = 0; index < trail.length; index++) {
-      const element = resolve(trail[index]);
-      if (!element || typeof element.focus !== "function") continue;
-      element.focus({ preventScroll: true });
-      if (!focusTook(element)) continue;
-      // Alles tot en met deze stap is afgehandeld; wat nieuwer was hoort bij een
-      // niveau waar we net vandaan komen.
-      trail = trail.slice(index + 1);
-      return true;
-    }
-    return false;
-  }
-
-  document.addEventListener("htmx:beforeRequest", (event) => {
-    const descriptor = describe(event.detail.elt);
-    if (descriptor) trail = [descriptor, ...trail].slice(0, MAX_DEPTH);
+  this.doc.addEventListener("htmx:beforeRequest", function (event) {
+    self.remember(event.detail.elt);
   });
-
-  // Een terugsprong in de browsergeschiedenis is een andere context; wat we
-  // onthouden hadden gaat daar niet over.
-  document.addEventListener("htmx:historyRestore", () => {
-    trail = [];
+  // Going back in browser history is a different context; what we remembered
+  // is not about that one.
+  this.doc.addEventListener("htmx:historyRestore", function () {
+    self.trail = [];
   });
-
-  // Bewust geen "wis de stapel als de gebruiker zelf focust": htmx focust bij
-  // elke swap het eerste [autofocus]-veld, en een klik op Opslaan focust die
-  // knop. Dat zijn stappen in dezelfde flow, geen afwijkingen ervan. Dat de
-  // focus van de gebruiker gerespecteerd wordt regelt de voorwaarde hieronder:
-  // stond hij ergens anders dan op <body>, dan blijven we eraf.
-
-  document.addEventListener("htmx:afterSettle", (event) => {
-    const container = event.detail.target;
-    if (!container || typeof container.querySelector !== "function") return;
-
-    // Een afgekeurd formulier komt terug met de fout erin. Dan is de eerste
-    // bedienbare plek niet waar je moet zijn: je wilt naar het veld dat
-    // afgekeurd is, anders moet je de fout zelf gaan zoeken.
-    //
-    // Als enige stap ook voor de muisgebruiker, en ook als de focus nog ergens
-    // staat. De regels hieronder gaan ervan uit dat er niets veranderd is aan
-    // waar de gebruiker moet zijn -- bij een afkeuring is dat juist wel zo. De
-    // fout hoeft niet in beeld te staan: bij een langer formulier of een klein
-    // venster staat hij eronder, en dan is "wie klikt weet waar hij is" niet
-    // meer waar.
-    //
-    // `invalid` is de conventie van wire_field_errors(): elk widget zet het op
-    // het element dat nldd-form-field._findInput() teruggeeft, dus precies het
-    // element dat de fout draagt. Het component reflecteert de property naar
-    // het attribuut, en de server rendert het al als HTML, dus dit werkt ook
-    // voordat Lit is opgestart. De error-tekst krijgt `invalid` ook, maar is
-    // geen invoer en hoort de focus niet te krijgen.
-    //
-    // Wel preventScroll weglaten, anders zie je niet waar je heen gestuurd bent.
-    const invalid = container.querySelectorAll(
-      "[invalid]:not(nldd-form-field-error-text)",
-    );
-    if (invalid.length && focusFirst(invalid, { preventScroll: false })) return;
-
-    // Wie klikt, stoort niet: de focus verplaatsen naar een element waar de
-    // muis niet is levert die gebruiker niets op. Drukt hij daarna Tab, dan
-    // begint hij bovenaan, en dat is wat een muisgebruiker ook zonder dit
-    // script gewend is.
-    if (laatsteInvoer === "muis") return;
-
-    const active = document.activeElement;
-    if (
-      active &&
-      active !== document.body &&
-      active !== document.documentElement
-    )
-      return;
-
-    if (
-      container.matches("[autofocus]") ||
-      container.querySelector("[autofocus]")
-    )
-      return;
-
-    if (focusFromTrail()) return;
-
-    // Het eerste bedienbare element in de nieuwe inhoud, en uitdrukkelijk niet
-    // de container zelf.
-    //
-    // De container is een component (`nldd-page`, `nldd-sheet`) en dus een
-    // shadow host. Die is niet focusbaar (`delegatesFocus` staat op false, dus
-    // `focus()` erop doet niets), en hem focusbaar maken met tabindex="-1"
-    // heeft een prijs: bij een shadow host bepaalt de tabindex van de host of
-    // zijn inhoud meedoet in de tabvolgorde. Gemeten op het zijpaneel: mét dat
-    // attribuut loopt Tab nog één ronde en blijft daarna op <body> hangen, en
-    // Shift+Tab komt de inhoud helemaal niet meer in. Het attribuut werd ook
-    // nooit opgeruimd, dus één swap brak het paneel voor de rest van de
-    // paginalevensduur.
-    //
-    // De elementen binnen de container zijn wel gewoon focusbaar en staan al in
-    // de tabvolgorde, dus daar landen we op. Pakt geen enkele, dan doen we
-    // niets: de focus op <body> laten staan is beter dan de tabvolgorde slopen.
-    focusFirst(container.querySelectorAll(FOCUSABLE));
+  this.doc.addEventListener("htmx:afterSettle", function (event) {
+    self.handleSettle(event.detail.target);
   });
-})();
+};
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = FocusRestore;
+} else {
+  window.FocusRestore = FocusRestore;
+  new FocusRestore(document).bind();
+}
