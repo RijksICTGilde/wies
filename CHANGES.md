@@ -5,6 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 631: (post-release actions) fix deselecting a user's last role not being saved when editing the user
+- 618: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the whole current team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
+- 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
 - 427: creating an opdracht and editing team members happen in a sheet instead of on a separate page

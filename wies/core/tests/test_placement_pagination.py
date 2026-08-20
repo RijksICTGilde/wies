@@ -68,19 +68,15 @@ class TestPlacementPagination:
         response1 = self.client.get(reverse("home"))
         assert response1.status_code == 200
 
-        # For Jinja2 templates, context is available immediately after get()
-        page_obj = response1.context_data["page_obj"]
-
-        # Extract placement IDs from page 1 (object_list is a list of Placement objects)
-        page1_ids = [p.id for p in page_obj.object_list]
+        # page_obj holds colleague ids, object_list their placements.
+        page1_ids = [p.id for p in response1.context_data["object_list"]]
 
         # Get second page
         response2 = self.client.get(reverse("home") + "?pagina=2")
         assert response2.status_code == 200
 
         # Extract placement IDs from page 2
-        page_obj2 = response2.context_data["page_obj"]
-        page2_ids = [p.id for p in page_obj2.object_list]
+        page2_ids = [p.id for p in response2.context_data["object_list"]]
 
         # Check no duplicates between pages
         duplicates = set(page1_ids) & set(page2_ids)
@@ -139,8 +135,7 @@ class TestPlacementPagination:
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
 
-        page_obj = response.context_data["page_obj"]
-        all_placement_ids = [p.id for p in page_obj.object_list]
+        all_placement_ids = [p.id for p in response.context_data["object_list"]]
 
         # Should only see the 30 current placements
         assert len(all_placement_ids) == 30, f"Expected 30 current placements, got {len(all_placement_ids)}"
