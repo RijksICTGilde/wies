@@ -1,7 +1,14 @@
 {# The card grid for "Wie zit waar?". Both branches share one id so the OOB
-   swap can replace either with the other. #}
+   swap can replace either with the other.
+
+   item-width 260px, not 280px: with the sidebar open the content is 320px
+   narrower than the section, and just above the DS's 1008px collapse point that
+   leaves 546-576px. At 280px two columns need 584px including the 24px gap, so
+   the grid fell back to a single 576px-wide card for that stretch -- and then
+   jumped straight to three columns once the sidebar collapsed and handed the
+   room back. 260px keeps two columns across that range. #}
 {% if paginator.count %}
-  <nldd-collection id="placement-list" layout="grid" item-width="280px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  <nldd-collection id="placement-list" layout="grid" item-width="260px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
 {% else %}

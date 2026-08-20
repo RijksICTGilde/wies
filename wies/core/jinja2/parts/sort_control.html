@@ -18,9 +18,11 @@
 {%- endmacro %}
 {# The wrapper carries id + oob: hx-swap-oob needs a single element with an id,
    and nldd-toolbar-item[slot=end] is it. Same pattern as #filter-panel. #}
-{# Same priority as the view switch, so the two move into the overflow menu
-   together instead of one at a time. Both are repeated as groups there. #}
-<nldd-toolbar-item id="sort-control" slot="end" priority="-1" {% if sort_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
+{# Lower priority than the view switch: sorting refines what you already chose
+   to look at, so it is the first to give way. They shared a priority before,
+   and nldd-toolbar overflows items of equal priority together -- so both left
+   at once while there was still room for one of them. #}
+<nldd-toolbar-item id="sort-control" slot="end" priority="-2" {% if sort_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <nldd-button variant="secondary" expandable start-icon="sort" text="{{ active_sort_label }}">
 <nldd-menu slot="popup" placement="bottom-end">
 {{ sort_item(default_sort_label, url_without_param(request, 'order'), not active_order) }}

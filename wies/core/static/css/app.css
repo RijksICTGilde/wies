@@ -114,7 +114,7 @@ nldd-toolbar-item[width]:not([fluid]) > * {
   width: 100%;
 }
 #search-toolbar-item:not([fluid]) {
-  min-width: 180px;
+  min-width: 240px;
 }
 
 a {
@@ -359,10 +359,12 @@ nldd-card[button]:hover {
 
 /* Without a floor the control resizes on every filter swap, because its counts
    change and its items split the width evenly, shifting the search field beside
-   it. 350px fits both labels up to four digits. Below md the toolbar needs the
-   room for the search field. */
+   it. 326px fits both labels up to three digits, which is the size this list
+   gets; four digits cost another 19px and pushed the control out of the toolbar
+   in the stretch where the sidebar still claims its 320px. Below md the toolbar
+   needs the room for the search field. */
 @media (min-width: 641px) {
   #view-control nldd-segmented-control {
-    min-width: 350px;
+    min-width: 326px;
   }
 }
