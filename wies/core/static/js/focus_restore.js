@@ -93,6 +93,14 @@
     "nldd-combo-box",
     "nldd-token-field",
     "nldd-switch",
+    // Navigatie-items met een eigen focus()-override. Bij de tabbar geldt een
+    // roving tabindex: alleen de geselecteerde tab is de ingang, de rest staat
+    // op tabindex="-1" en hoort dus niet gefocust te worden. Die tabindex zit
+    // in de shadow root, dus de selector hierboven ziet hem niet -- vandaar
+    // [selected]. nldd-toolbar-item en nldd-segmented-control-item hebben geen
+    // override en blijven eruit.
+    "nldd-tab-bar-item[selected]",
+    "nldd-menu-bar-item",
   ].join(",");
 
   const MAX_DEPTH = 5;
