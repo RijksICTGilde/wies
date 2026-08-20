@@ -15,12 +15,15 @@
 //      zoekveld staat), dan is er niets aan de hand en blijven we eraf.
 //   1. Zette de server [autofocus] in de nieuwe inhoud, dan heeft htmx die al
 //      gefocust en weet de server het beter dan wij.
-//   2. Terug naar het meest recente element dat een swap veroorzaakte en dat we
+//   2. Kwam er een afgekeurd formulier terug, dan naar het veld met de fout.
+//      Daar moet de gebruiker zijn; hem op het eerste veld zetten laat hem de
+//      fout zelf zoeken.
+//   3. Terug naar het meest recente element dat een swap veroorzaakte en dat we
 //      in de huidige inhoud kunnen terugvinden.
-//   3. Anders naar de vervangen container zelf, zodat je bovenaan de nieuwe
-//      inhoud staat in plaats van bovenaan de pagina.
+//   4. Anders het eerste bedienbare element in de nieuwe inhoud, zodat je
+//      bovenaan die inhoud staat in plaats van bovenaan de pagina.
 //
-// Waarom stap 2 een stapel is en niet één element: een opslag die met
+// Waarom stap 3 een stapel is en niet één element: een opslag die met
 // HX-Location terugspringt levert drie swaps op. Je drukt "Periode wijzigen"
 // (swap 1), je dient het formulier in (swap 2), en htmx haalt daarna zelf het
 // paneel opnieuw op (swap 3). Die laatste heeft geen bronelement -- htmx roept
@@ -145,6 +148,19 @@
     );
   }
 
+  // Doorlopen tot er een pakt: een component kan matchen en de focus toch
+  // weigeren (geen delegatesFocus, geen eigen focus()). Stoppen bij de eerste
+  // match zou de focus stil op <body> laten staan -- precies wat dit script
+  // moet voorkomen.
+  function focusFirst(elements) {
+    for (const element of elements) {
+      if (!isVisible(element) || typeof element.focus !== "function") continue;
+      element.focus({ preventScroll: true });
+      if (focusTook(element)) return true;
+    }
+    return false;
+  }
+
   function focusFromTrail() {
     for (let index = 0; index < trail.length; index++) {
       const element = resolve(trail[index]);
@@ -200,6 +216,22 @@
     )
       return;
 
+    // Een afgekeurd formulier komt terug met de fout erin. Dan is de eerste
+    // bedienbare plek niet waar je moet zijn: je wilt naar het veld dat
+    // afgekeurd is, anders moet je de fout zelf gaan zoeken. Gaat voor het
+    // spoor, want de knop waar je vandaan kwam is hier de verkeerde plek.
+    //
+    // `invalid` is de conventie van wire_field_errors(): elk widget zet het op
+    // het element dat nldd-form-field._findInput() teruggeeft, dus precies het
+    // element dat de fout draagt. Het component reflecteert de property naar
+    // het attribuut, en de server rendert het al als HTML, dus dit werkt ook
+    // voordat Lit is opgestart. De error-tekst krijgt `invalid` ook, maar is
+    // geen invoer en hoort de focus niet te krijgen.
+    const invalid = container.querySelectorAll(
+      "[invalid]:not(nldd-form-field-error-text)",
+    );
+    if (invalid.length && focusFirst(invalid)) return;
+
     if (focusFromTrail()) return;
 
     // Het eerste bedienbare element in de nieuwe inhoud, en uitdrukkelijk niet
@@ -218,14 +250,6 @@
     // De elementen binnen de container zijn wel gewoon focusbaar en staan al in
     // de tabvolgorde, dus daar landen we op. Pakt geen enkele, dan doen we
     // niets: de focus op <body> laten staan is beter dan de tabvolgorde slopen.
-    // Doorlopen tot er een pakt, net als in focusFromTrail(): een component kan
-    // matchen en de focus toch weigeren (geen delegatesFocus, geen eigen
-    // focus()). Stoppen bij de eerste match zou de focus dan stil op <body>
-    // laten staan -- precies wat dit script moet voorkomen.
-    for (const candidate of container.querySelectorAll(FOCUSABLE)) {
-      if (!isVisible(candidate)) continue;
-      candidate.focus({ preventScroll: true });
-      if (focusTook(candidate)) return;
-    }
+    focusFirst(container.querySelectorAll(FOCUSABLE));
   });
 })();
