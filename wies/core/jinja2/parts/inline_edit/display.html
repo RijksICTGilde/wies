@@ -17,9 +17,8 @@ don't toggle layout classes on the target. #}
       {% endif %}
     </div>
     {% if user_can_edit and not hide_edit_button %}
-      {# Alleen na een opslag: dan is het formulier weggeswapt en zou de focus
-         naar <body> vallen. Bij het eerste renderen of bij annuleren zou dit
-         de focus juist afpakken. #}
+      {# Only after a save: the form is swapped away and focus would drop to
+         <body>. On a first render or a cancel this would steal focus instead. #}
       <button type="button"
               {% if saved %}autofocus{% endif %}
               class="edit-icon-button"

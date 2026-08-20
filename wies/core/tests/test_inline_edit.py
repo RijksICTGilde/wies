@@ -204,6 +204,13 @@ class InlineEditInfrastructureTest(TestCase):
         self.assertNotContains(self.client.get(self.url), "autofocus")
         self.assertNotContains(self.client.get(self.url + "?cancel=true"), "autofocus")
 
+    def test_display_context_cannot_drop_the_focus_flag(self):
+        # A spec's display_context is spread into the same context dict, so a
+        # key collision would lose focus with nothing reporting it.
+        _make_assignment_editables(name=Editable(display_context=lambda obj, request: {"saved": False}))
+        resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
+        self.assertContains(resp, "autofocus")
+
     def test_post_invalid_returns_form_with_error(self):
         # Empty string fails the required check (Assignment.name is
         # non-null + has no blank=True).
