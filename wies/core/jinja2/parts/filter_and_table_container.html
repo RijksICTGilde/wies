@@ -32,10 +32,7 @@ both stay in sync without a shared wrapper element. #}
   {# variant=listbox keeps focus in the search field. The menu sits outside the
   toolbar: inside an nldd-toolbar-item, Floating UI measures against that item's
   layout and the popover lands at the left of the screen. #}
-  {# empty-text="": the menu counts only nldd-menu-items, so with just the Enter
-     caption in it the component would add "Geen opties beschikbaar" underneath,
-     reading as a failed search. #}
-  <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px" empty-text=""></nldd-menu>
+  <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
 {% set has_active_filters = (org_chip_data|length > 0) or (unknown_chip_data|length > 0) or (active_filters|length > 0) %}

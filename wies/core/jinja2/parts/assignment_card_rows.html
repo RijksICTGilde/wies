@@ -27,7 +27,6 @@
   </nldd-container>
   {# In the footer slot, so client and period line up across cards regardless of
   title length. #}
-  {% set has_date = assignment.start_date or assignment.end_date %}
   {% macro chevron() %}
     <span class="assignment-card__chevron" aria-hidden="true">
       <nldd-icon size="20" name="chevron-right"></nldd-icon>

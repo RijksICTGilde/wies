@@ -103,15 +103,17 @@
   {# Only meaningful for "Van opdracht"; member_form.js hides it once you pick
      your own period. #}
   <nldd-form-field-help-text data-assignment-period-help>
-  De periode van de opdracht is
+  {# The verb sits in each branch: "is vanaf" and "is t/m" do not read as Dutch,
+     "loopt vanaf" and "loopt t/m" do, and the unknown case still wants "is". #}
+  De periode van de opdracht
   {%- if obj.start_date and obj.end_date %}
-    {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
+    is {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
   {%- elif obj.start_date %}
-    vanaf {{ obj.start_date|datum_nl }}
+    loopt vanaf {{ obj.start_date|datum_nl }}
   {%- elif obj.end_date %}
-    t/m {{ obj.end_date|datum_nl }}
+    loopt t/m {{ obj.end_date|datum_nl }}
   {%- else %}
-    onbekend
+    is onbekend
   {%- endif %}
   </nldd-form-field-help-text>
   </nldd-form-field>

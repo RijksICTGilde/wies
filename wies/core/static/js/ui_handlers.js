@@ -2,14 +2,16 @@
 // defaultPrevented — htmx cancels the native event on everything it drives.
 
 (function () {
-  // history.length counts entries this tab already had, so a page opened in a
-  // fresh tab still reports 2 and history.back() lands on about:blank. A
-  // same-origin referrer is the signal that there is really a page of ours to
-  // return to.
+  // Both signals are needed. A referrer alone does not distinguish "previous
+  // page in this tab" from "opener in another tab": ctrl- or middle-clicking an
+  // internal link (the footer's Veelgestelde vragen, say) gives a same-origin
+  // referrer in a tab with no history, and back() then does nothing at all. And
+  // history.length alone does not help either, since a page opened fresh still
+  // reports 2. Together they cover all three cases.
   function goBack() {
     var from = document.referrer;
-    if (from && new URL(from).origin === window.location.origin)
-      window.history.back();
+    var sameOrigin = from && new URL(from).origin === window.location.origin;
+    if (sameOrigin && window.history.length > 1) window.history.back();
     else window.location.assign("/");
   }
 

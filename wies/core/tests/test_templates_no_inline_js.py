@@ -152,24 +152,29 @@ class ExternalLinkAffordanceTest(TestCase):
     aria-hidden, so the same words also go in visually-hidden text for a screen
     reader.
 
-    The image link on the toegankelijkheid page is exempt: its alt text already
-    says where it goes, so an icon would only repeat it.
+    Image links are exempt from the icon, not from the announcement: an icon
+    beside an image is decoration on decoration, but the alt text still has to
+    name the new tab, so the assertion below reads it. Exempting a whole file
+    would let a later text link on the same page slip past unnoticed.
     """
 
-    EXEMPT = {"toegankelijkheid.html"}
+    #: A link whose only content is an <img>; its alt text carries the message.
+    IMAGE_ONLY = re.compile(r"^\s*<img\b[^>]*>\s*$", re.DOTALL | re.IGNORECASE)
 
     #: The <a ...> opening tag plus everything up to its </a>.
     LINK = re.compile(r"<a\s[^>]*target=[\"']_blank[\"'][^>]*>(.*?)</a>", re.DOTALL | re.IGNORECASE)
 
     def _external_links(self):
         for template in _templates():
-            if template.name in self.EXEMPT:
-                continue
             for match in self.LINK.finditer(template.read_text(encoding="utf-8")):
                 yield str(template.relative_to(TEMPLATE_DIR)), match.group(1)
 
     def test_every_new_tab_link_shows_an_icon(self):
-        missing = [path for path, body in self._external_links() if "square-arrow-right-top" not in body]
+        missing = [
+            path
+            for path, body in self._external_links()
+            if "square-arrow-right-top" not in body and not self.IMAGE_ONLY.match(body)
+        ]
         assert not missing, f'target="_blank" without an external-link icon: {sorted(set(missing))}'
 
     def test_every_new_tab_link_announces_itself(self):

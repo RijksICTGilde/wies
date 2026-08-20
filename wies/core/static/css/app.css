@@ -124,8 +124,11 @@ a {
 /* An external-link icon inside the <a> inherits its underline, which then runs
    through the gap and under the icon. inline-block takes the icon out of the
    text run, so the underline stops at the last word; the small gap replaces the
-   whitespace that inline-block no longer collapses. */
-a > nldd-icon {
+   whitespace that inline-block no longer collapses.
+
+   :last-child, so this stays about the trailing icon it was written for: an
+   icon placed BEFORE the link text would otherwise get a stray left margin. */
+a > nldd-icon:last-child {
   display: inline-block;
   vertical-align: -0.125em;
   margin-inline-start: 0.25em;
