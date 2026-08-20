@@ -8,7 +8,7 @@ both stay in sync without a shared wrapper element. #}
   {% include "parts/view_control.html" %}
   {# priority="1": searching outlives the other controls, which are repeated in
      the overflow menu while this field is not. #}
-  <nldd-toolbar-item slot="start" priority="1" width="560px" max-width="560px" min-width="180px">
+  <nldd-toolbar-item id="search-toolbar-item" slot="start" priority="1" width="560px" max-width="560px" min-width="180px">
   <nldd-search-field id="search-input" placeholder="" accessible-label="Zoek op collega, opdracht of opdrachtgever" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
   </nldd-search-field>
   </nldd-toolbar-item>

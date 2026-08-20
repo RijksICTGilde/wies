@@ -97,14 +97,18 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
    nldd-toolbar reads the item's width attributes only in a later tick
    (_syncHosts), which then sets `fluid`; until then the item sits at
    flex-basis:auto and shrinks to its intrinsic width. Not the :not(:defined)
-   FOUC case — the element is already defined. Values match the attributes on
-   the item; the rule drops out once `fluid` appears. */
-nldd-toolbar-item[width]:not([fluid]) {
+   FOUC case — the element is already defined. The rule drops out once `fluid`
+   appears.
+
+   Scoped to this one item by id, not to nldd-toolbar-item[width] at large:
+   three other toolbars carry the same attributes with min-width 240px, and a
+   global rule handed them 180px for that one tick. */
+#search-toolbar-item:not([fluid]) {
   flex: 0 1 560px;
   min-width: 180px;
   max-width: 560px;
 }
-nldd-toolbar-item[width]:not([fluid]) > * {
+#search-toolbar-item:not([fluid]) > * {
   width: 100%;
 }
 

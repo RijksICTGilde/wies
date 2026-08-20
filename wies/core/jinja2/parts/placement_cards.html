@@ -18,9 +18,14 @@
     {% if card.team %}
       <nldd-spacer size="8"></nldd-spacer>
       <nldd-container layout="wrap" gap="4">
+      {# No `decorative` here, unlike the person card: that hides the avatar from
+         assistive software, which is right when the name sits next to it as text
+         and wrong here, where the avatar IS the only mention of who is on the
+         team. Without it the names live in `title` alone, which keyboard and
+         touch users never get. #}
       {% for member in card.team[:6] %}
         {# djlint:off T028 #}
-        <nldd-avatar size="28" name="{{ member.name }}" title="{{ member.name }}{% if member.role %} · {{ member.role }}{% endif %}" decorative></nldd-avatar>
+        <nldd-avatar size="28" name="{{ member.name }}" accessible-label="{{ member.name }}{% if member.role %}, {{ member.role }}{% endif %}" title="{{ member.name }}{% if member.role %} · {{ member.role }}{% endif %}"></nldd-avatar>
         {# djlint:on #}
       {% endfor %}
       {% if card.team|length > 6 %}
@@ -78,11 +83,15 @@
     <nldd-text-cell size="sm" text="{% if card.assignment %}{{ card.assignment.name }}{% else %}{{ card.assignments|length }} opdrachten{% endif %}"></nldd-text-cell>
     {# djlint:on #}
     </nldd-list-item>
+    {# The row stays even on more than one assignment -- dropping it shrank the
+       card and broke the even heights in the grid -- but it says what it means:
+       there is no single period to name, so the calendar icon would otherwise
+       label an empty cell. #}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     {# djlint:off T028 #}
-    <nldd-text-cell size="sm" text="{% if card.assignment and card.assignment.end_date %}tot {{ card.assignment.end_date|datum_nl('b Y') }}{% elif card.assignment %}Geen einddatum{% endif %}"></nldd-text-cell>
+    <nldd-text-cell size="sm" text="{% if not card.assignment %}Meerdere periodes{% elif card.assignment.end_date %}tot {{ card.assignment.end_date|datum_nl('b Y') }}{% else %}Geen einddatum{% endif %}"></nldd-text-cell>
     {# djlint:on #}
     <nldd-cell>{{ chevron() }}</nldd-cell>
     </nldd-list-item>

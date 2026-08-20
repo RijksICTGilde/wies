@@ -14,7 +14,7 @@
       hx-include="[data-filter-input]">
   {# Rides along so a filter change keeps the chosen weergave; the default one
      is the absence of the parameter. #}
-  {% if active_view is defined and active_view and active_view != 'persoon' %}
+  {% if active_view is defined and active_view and active_view != default_view %}
     <input type="hidden"
            name="weergave"
            value="{{ active_view }}"
