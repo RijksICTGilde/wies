@@ -97,8 +97,14 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
    nldd-toolbar reads the item's width attributes only in a later tick
    (_syncHosts), which then sets `fluid`; until then the item sits at
    flex-basis:auto and shrinks to its intrinsic width. Not the :not(:defined)
-   FOUC case — the element is already defined. Values match the attributes on
-   the item; the rule drops out once `fluid` appears. */
+   FOUC case — the element is already defined. The rule drops out once `fluid`
+   appears.
+
+   The generic rule carries the value the other three toolbars use, since the
+   attribute itself does nothing during this tick; only the item that deviates
+   from it is scoped. Dropping the generic rule instead would leave
+   organization_admin, user_admin and filter_and_card_container_assignments
+   without a bridge at all, which is the flash this rule exists to prevent. */
 nldd-toolbar-item[width]:not([fluid]) {
   flex: 0 1 560px;
   min-width: 240px;
@@ -106,6 +112,9 @@ nldd-toolbar-item[width]:not([fluid]) {
 }
 nldd-toolbar-item[width]:not([fluid]) > * {
   width: 100%;
+}
+#search-toolbar-item:not([fluid]) {
+  min-width: 180px;
 }
 
 a {
@@ -306,4 +315,14 @@ nldd-card[button]:hover {
   margin-left: calc(0.5em + var(--primitives-space-8, 0.5rem));
   padding-right: var(--primitives-space-8, 0.5rem);
   padding-bottom: var(--primitives-space-12, 0.75rem);
+}
+
+/* Without a floor the control resizes on every filter swap, because its counts
+   change and its items split the width evenly, shifting the search field beside
+   it. 350px fits both labels up to four digits. Below md the toolbar needs the
+   room for the search field. */
+@media (min-width: 641px) {
+  #view-control nldd-segmented-control {
+    min-width: 350px;
+  }
 }

@@ -3,8 +3,13 @@ both stay in sync without a shared wrapper element. #}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
   <nldd-toolbar label="Zoeken en filteren">
-  <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
-  <nldd-search-field id="search-input" placeholder="Collega, opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
+  {# Before the search field: the view decides what you see, searching and
+     filtering refine it after that. #}
+  {% include "parts/view_control.html" %}
+  {# priority="1": searching outlives the other controls, which are repeated in
+     the overflow menu while this field is not. #}
+  <nldd-toolbar-item id="search-toolbar-item" slot="start" priority="1" width="560px" max-width="560px" min-width="180px">
+  <nldd-search-field id="search-input" placeholder="" accessible-label="Zoek op collega, opdracht of opdrachtgever" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
@@ -64,23 +69,19 @@ both stay in sync without a shared wrapper element. #}
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
-{% if paginator.count %}
-  {% set count_label = "persoon" if paginator.count == 1 else "personen" %}
-  <nldd-rich-text spacing="flat">
-  <p>{{ paginator.count }} {{ count_label }}</p>
-  </nldd-rich-text>
-{% endif %}
 </nldd-container>
 {% if not is_htmx %}
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
-{% include "parts/placement_table.html" %}
+{% include "parts/placement_card_grid.html" %}
 {% if is_htmx %}
   {# The sort control rides along OOB: the toolbar itself does not render in an
      htmx response, but the button text and checked item must show the new order.
      #sort-control stays in place and is swapped on its id. #}
   {% set sort_control_oob = true %}
   {% include "parts/sort_control.html" %}
+  {% set view_control_oob = true %}
+  {% include "parts/view_control.html" %}
 {% endif %}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the
