@@ -1,0 +1,9 @@
+{# The card grid for "Wie zit waar?". Both branches share one id so the OOB
+   swap can replace either with the other. #}
+{% if paginator.count %}
+  <nldd-collection id="placement-list" layout="grid" item-width="280px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/placement_cards.html" %}
+  </nldd-collection>
+{% else %}
+  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+{% endif %}

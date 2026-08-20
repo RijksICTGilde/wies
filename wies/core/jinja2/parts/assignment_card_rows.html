@@ -58,7 +58,7 @@
   </nldd-card>
 {% endfor %}
 {% if next_page_url %}
-  {# Click instead of auto-load, see placement_table_rows.html. The button is a grid
+  {# Click instead of auto-load, see placement_cards.html. The button is a grid
      cell in the nldd-collection and replaces itself with the next cards. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>

@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - 634: "Terug naar de vorige pagina" on the error pages landed on a blank page when the page was opened in a fresh tab
 - 634: links that open in a new tab now show an icon and say so for a screen reader
 - 634: a plaatsing without an end date now reads "Vanaf 13 mei 2026" instead of "13 mei 2026 t/m heden", which suggested it ended today
+- 618: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the whole current team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
 - 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile
