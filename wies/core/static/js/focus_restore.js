@@ -66,9 +66,33 @@
     "textarea",
     "[tabindex]:not([tabindex='-1'])",
     "nldd-button",
+    "nldd-icon-button",
     "nldd-link",
     "nldd-list-item[href]",
     "nldd-search-field",
+    // Invoervelden staan vóór de knoppen in een formulier, maar matchten geen
+    // enkele selector hierboven: hun echte control zit in een shadow root. Zonder
+    // deze regels sloeg "eerste bedienbare element" alle velden over en landde de
+    // focus op de eerste knop, halverwege het formulier.
+    //
+    // Alleen componenten die focus() ook echt accepteren -- via delegatesFocus of
+    // een eigen focus()-override. De rest (nldd-checkbox, nldd-radio-button en de
+    // -field-varianten, nldd-segmented-control) heeft geen van beide: focus()
+    // erop doet stil niets. Die staan hier bewust niet, want een selector die
+    // matcht maar niet focust is erger dan geen match -- hij verdringt een
+    // element verderop dat het wel had gekund.
+    //
+    // nldd-dropdown ontbreekt met opzet: dat component wikkelt een echte
+    // <select> in light DOM, die "select" hierboven al matcht. De host staat er
+    // in documentvolgorde vóór en zou die match dus wegkapen.
+    "nldd-text-field",
+    "nldd-multi-line-text-field",
+    "nldd-date-field",
+    "nldd-number-field",
+    "nldd-password-field",
+    "nldd-combo-box",
+    "nldd-token-field",
+    "nldd-switch",
   ].join(",");
 
   const MAX_DEPTH = 5;
@@ -184,11 +208,16 @@
     // paginalevensduur.
     //
     // De elementen binnen de container zijn wel gewoon focusbaar en staan al in
-    // de tabvolgorde, dus daar landen we op. Vinden we er geen, dan doen we
+    // de tabvolgorde, dus daar landen we op. Pakt geen enkele, dan doen we
     // niets: de focus op <body> laten staan is beter dan de tabvolgorde slopen.
-    const firstFocusable = [...container.querySelectorAll(FOCUSABLE)].find(
-      isVisible,
-    );
-    if (firstFocusable) firstFocusable.focus({ preventScroll: true });
+    // Doorlopen tot er een pakt, net als in focusFromTrail(): een component kan
+    // matchen en de focus toch weigeren (geen delegatesFocus, geen eigen
+    // focus()). Stoppen bij de eerste match zou de focus dan stil op <body>
+    // laten staan -- precies wat dit script moet voorkomen.
+    for (const candidate of container.querySelectorAll(FOCUSABLE)) {
+      if (!isVisible(candidate)) continue;
+      candidate.focus({ preventScroll: true });
+      if (focusTook(candidate)) return;
+    }
   });
 })();
