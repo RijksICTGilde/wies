@@ -820,6 +820,19 @@ Deze bevinding is bekend in de projectadministratie als issue #600.
 **Geadviseerde oplossing.** Verplaats na het vervangen van een fragment de focus
 programmatisch naar dat fragment, of naar een logisch startpunt daarbinnen.
 
+> **Status na dit onderzoek.** PR #638 voert deze oplossing uit, met één afwijking
+> van het advies hierboven: de focus gaat naar een element _binnen_ het vervangen
+> fragment en niet naar het fragment zelf. De container is een `nldd-page` en dus
+> een shadow host, en daar bepaalt de `tabindex` van de host of zijn inhoud
+> meedoet in de tabvolgorde — het fragment focusbaar maken brak de tabvolgorde
+> van het zijpaneel.
+>
+> `scripts/focus_swap.py` meet deze bevinding; `focus.py` doet dat niet, want dat
+> voert geen swaps uit. De meting geeft 9 van 9 met de wijziging en faalt zonder
+> op de flow "inline bewerken openen", waar de focus dan op `<body>` blijft.
+> Het oordeel hierboven beschrijft de stand op de onderzoeksdatum en blijft
+> daarom staan tot de wijziging op `main` staat.
+
 <div class="explain">
 
 **Uitleg van dit succescriterium**
@@ -1493,13 +1506,13 @@ foutpagina (`404.html`), die niet apart is getoetst.
 
 ### Gebruikte browsers en software
 
-| Software                 | Versie                | Gebruikt voor                                                                                                                      |
-| ------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Chromium                 | **140.0.7339.16**     | Alle metingen                                                                                                                      |
-| Playwright               | **1.55.0**            | Aansturing van de browser                                                                                                          |
-| axe-core                 | **4.10.2**            | Geautomatiseerde toetsing                                                                                                          |
-| Chrome DevTools Protocol | via Playwright 1.55.0 | Uitlezen van de accessibility tree                                                                                                 |
-| Eigen meetscripts        | —                     | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
+| Software                 | Versie                | Gebruikt voor                                                                                                                                          |
+| ------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Chromium                 | **140.0.7339.16**     | Alle metingen                                                                                                                                          |
+| Playwright               | **1.55.0**            | Aansturing van de browser                                                                                                                              |
+| axe-core                 | **4.10.2**            | Geautomatiseerde toetsing                                                                                                                              |
+| Chrome DevTools Protocol | via Playwright 1.55.0 | Uitlezen van de accessibility tree                                                                                                                     |
+| Eigen meetscripts        | —                     | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
 
 **Instellingen.** Alle metingen zijn uitgevoerd in een schone browsersessie zonder
 extensies, met een weergavekader van 1440 × 900 pixels tenzij anders vermeld.
@@ -1592,16 +1605,19 @@ getoetst.
 **5. Eén browser, één platform.** Chromium op desktop. Niet getoetst in Firefox,
 Safari of Edge, en niet op mobiele apparaten.
 
-**6. Meetfouten zijn opgetreden.** Vijf eigen metingen leverden onjuiste
-bevindingen op, die pas bij verificatie sneuvelden:
+**6. Meetfouten zijn opgetreden.** Zeven eigen metingen leverden onjuiste
+bevindingen op, die pas bij verificatie sneuvelden. De laatste twee kwamen uit de
+vervolgmeting van bevinding 2:
 
-| Onjuiste meting                         | Werkelijkheid           | Oorzaak                                                                  |
-| --------------------------------------- | ----------------------- | ------------------------------------------------------------------------ |
-| 910 contrastfouten                      | 0                       | `oklch()`-waarden als RGB gelezen                                        |
-| 8 van 10 tabstops zonder focusring      | Alle zichtbaar          | Ring wordt in de shadow root getekend                                    |
-| 192 elementen zonder toegankelijke naam | 0                       | Naam komt uit inhoud die via een slot wordt doorgegeven                  |
-| Sheet sluit de focus niet in            | Sluit wel in (9 van 12) | Detectie kon de shadow-grens niet oversteken                             |
-| 16 tabstops met bedekte focus           | Geen enkele bedekt      | `elementFromPoint` gaf het omhullende component terug, niet een bedekker |
+| Onjuiste meting                         | Werkelijkheid           | Oorzaak                                                                       |
+| --------------------------------------- | ----------------------- | ----------------------------------------------------------------------------- |
+| 910 contrastfouten                      | 0                       | `oklch()`-waarden als RGB gelezen                                             |
+| 8 van 10 tabstops zonder focusring      | Alle zichtbaar          | Ring wordt in de shadow root getekend                                         |
+| 192 elementen zonder toegankelijke naam | 0                       | Naam komt uit inhoud die via een slot wordt doorgegeven                       |
+| Sheet sluit de focus niet in            | Sluit wel in (9 van 12) | Detectie kon de shadow-grens niet oversteken                                  |
+| 16 tabstops met bedekte focus           | Geen enkele bedekt      | `elementFromPoint` gaf het omhullende component terug, niet een bedekker      |
+| Focus staat niet in het geswapte paneel | Staat er wel in         | `#side-panel-content` zit _binnen_ de sheet; de check keek een niveau te laag |
+| Updates-tab niet met Tab bereikbaar     | Werkt zoals bedoeld     | Roving tabindex: binnen een tabbar navigeer je met de pijltjes                |
 
 Dat een geautomatiseerde uitkomst een plausibele vorm heeft, betekent niet dat hij
 klopt. Elke bevinding in dit rapport is daarom tegen de werkelijkheid getoetst — via
@@ -1610,15 +1626,15 @@ lukte, staat "niet vastgesteld" in plaats van een oordeel.
 
 ### Geadviseerde vervolgstappen
 
-| Stap                                            | Waarom                                      | Prioriteit |
-| ----------------------------------------------- | ------------------------------------------- | ---------- |
-| 1. Bevinding 1 oplossen (koppenstructuur)       | Niveau A, kleine wijziging in één bestand   | Hoog       |
-| 2. Bevinding 2 oplossen (focus na bijwerken)    | Niveau A, raakt de kern van de applicatie   | Hoog       |
-| 3. Toetsing met schermlezer (NVDA en VoiceOver) | Sluit de tien openstaande criteria          | Hoog       |
-| 4. Onafhankelijk WCAG-EM-onderzoek              | Vereist voor de toegankelijkheidsverklaring | Hoog       |
-| 5. Issue #600 bijwerken                         | Het skiplink-deel is achterhaald            | Laag       |
-| 6. axe-core opnemen in de bouwstraat            | Voorkomt regressie in het gewone document   | Middel     |
-| 7. 404-pagina en processen alsnog toetsen       | Ontbraken in de steekproef                  | Middel     |
+| Stap                                            | Waarom                                              | Prioriteit |
+| ----------------------------------------------- | --------------------------------------------------- | ---------- |
+| 1. Bevinding 1 oplossen (koppenstructuur)       | Niveau A, kleine wijziging in één bestand           | Hoog       |
+| 2. Bevinding 2 oplossen (focus na bijwerken)    | Niveau A, raakt de kern van de applicatie — PR #638 | Hoog       |
+| 3. Toetsing met schermlezer (NVDA en VoiceOver) | Sluit de tien openstaande criteria                  | Hoog       |
+| 4. Onafhankelijk WCAG-EM-onderzoek              | Vereist voor de toegankelijkheidsverklaring         | Hoog       |
+| 5. Issue #600 bijwerken                         | Het skiplink-deel is achterhaald                    | Laag       |
+| 6. axe-core opnemen in de bouwstraat            | Voorkomt regressie in het gewone document           | Middel     |
+| 7. 404-pagina en processen alsnog toetsen       | Ontbraken in de steekproef                          | Middel     |
 
 ---
 

@@ -36,17 +36,37 @@ curl -sL https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js -o sc
 cd scripts && python3 scan.py              # axe-core over 11 pagina's
 ```
 
-| Script         | Meet                                                            |
-| -------------- | --------------------------------------------------------------- |
-| `scan.py`      | axe-core over de elf pagina's uit de steekproef                 |
-| `contrast2.py` | 1.4.3 contrast, inclusief shadow DOM, met canvas-kleurconversie |
-| `manual.py`    | koppenstructuur, taal, paginatitel, reflow, tabvolgorde         |
-| `names.py`     | toegankelijke namen via de accessibility tree                   |
-| `focus.py`     | 2.4.1 skiplink en 2.4.7 focuszichtbaarheid                      |
-| `extra.py`     | doelgrootte, tekstafstand, weergavestand, linkteksten           |
-| `extra2.py`    | niet-tekstueel contrast, toetsenbordval, live regions           |
-| `wcag22.py`    | de nieuwe 2.2-criteria: 2.4.11, 3.2.6, 3.3.7, 3.3.8             |
-| `parsen.py`    | dubbele ID's (4.1.1, vervallen in 2.2)                          |
+| Script          | Meet                                                            |
+| --------------- | --------------------------------------------------------------- |
+| `scan.py`       | axe-core over de elf pagina's uit de steekproef                 |
+| `contrast2.py`  | 1.4.3 contrast, inclusief shadow DOM, met canvas-kleurconversie |
+| `manual.py`     | koppenstructuur, taal, paginatitel, reflow, tabvolgorde         |
+| `names.py`      | toegankelijke namen via de accessibility tree                   |
+| `focus.py`      | 2.4.1 skiplink en 2.4.7 focuszichtbaarheid                      |
+| `focus_swap.py` | 2.4.3 focus na een htmx-swap (bevinding 2) — vereist een sessie |
+| `extra.py`      | doelgrootte, tekstafstand, weergavestand, linkteksten           |
+| `extra2.py`     | niet-tekstueel contrast, toetsenbordval, live regions           |
+| `wcag22.py`     | de nieuwe 2.2-criteria: 2.4.11, 3.2.6, 3.3.7, 3.3.8             |
+| `parsen.py`     | dubbele ID's (4.1.1, vervallen in 2.2)                          |
+
+`focus_swap.py` is de uitzondering: de panelen zitten achter OIDC, dus het heeft
+een sessie nodig. Maak er een aan en geef de sleutel mee:
+
+```bash
+docker compose run --rm django python manage.py shell -c "
+from django.contrib.auth import get_user_model
+from django.contrib.sessions.backends.db import SessionStore
+u = get_user_model().objects.filter(is_active=True).first()
+s = SessionStore()
+s['_auth_user_id'] = str(u.pk)
+s['_auth_user_backend'] = 'django.contrib.auth.backends.ModelBackend'
+s['_auth_user_hash'] = u.get_session_auth_hash()
+s.create()
+print(s.session_key)
+"
+
+python3 focus_swap.py <sessionid>
+```
 
 ## Waarom er eigen scripts zijn
 
