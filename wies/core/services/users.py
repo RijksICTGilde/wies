@@ -87,7 +87,7 @@ def create_user(
     colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
-    if labels:
+    if labels is not None:
         colleague.labels.set(labels)
         label_names = [label.name for label in labels]
     if suborganization is not None:
