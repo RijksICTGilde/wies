@@ -5,6 +5,8 @@ of placements, the card structures built per view, and the per-view sort
 options.
 """
 
+import html as html_module
+import json
 from datetime import timedelta
 
 import pytest
@@ -13,7 +15,16 @@ from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Event, Placement, Service, Skill
+from wies.core.models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    Event,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+)
 
 User = get_user_model()
 
@@ -53,6 +64,24 @@ def _place(colleague, assignment, skill=None):
         source="wies",
     )
     return Placement.objects.create(colleague=colleague, service=service, source="wies")
+
+
+def _place_for_period(colleague, assignment, start, end, skill=None):
+    """Place a colleague for a period of its own, ignoring the assignment's."""
+    service = Service.objects.create(
+        assignment=assignment,
+        description=f"Service voor {colleague.name}",
+        skill=skill,
+        source="wies",
+    )
+    return Placement.objects.create(
+        colleague=colleague,
+        service=service,
+        period_source="PLACEMENT",
+        specific_start_date=start,
+        specific_end_date=end,
+        source="wies",
+    )
 
 
 @pytest.mark.django_db
@@ -343,6 +372,34 @@ class TestAssignmentCards:
         card = self._cards()["Cloud Migratie"]
         assert f"opdracht={assignment.public_id}" in card["panel_url"]
 
+    def test_team_leaves_out_ended_and_future_placements(self):
+        """The team is the team as it stands today, like the list itself.
+
+        Sidestepping the selection filters is deliberate; sidestepping the
+        visibility filter is not. Without it the card names people who left
+        months ago or have not started yet.
+        """
+        today = timezone.now().date()
+        assignment = _make_assignment("Cloud Migratie")
+        _place(_make_colleague("Actief Persoon"), assignment, self.developer)
+        _place_for_period(
+            _make_colleague("Oud Teamlid"),
+            assignment,
+            today - timedelta(days=400),
+            today - timedelta(days=200),
+            self.developer,
+        )
+        _place_for_period(
+            _make_colleague("Toekomstig Teamlid"),
+            assignment,
+            today + timedelta(days=10),
+            today + timedelta(days=100),
+            self.developer,
+        )
+
+        team = self._cards()["Cloud Migratie"]["team"]
+        assert [member["name"] for member in team] == ["Actief Persoon"]
+
 
 @pytest.mark.django_db
 class TestFilterCounts:
@@ -381,6 +438,33 @@ class TestFilterCounts:
             params = {"weergave": view} if view != "persoon" else {}
             assert self._rol_counts(params)["Data engineering"] == expected
             response = self.client.get(reverse("home"), {**params, "rol": skill_id})
+            assert response.context_data["paginator"].count == expected
+
+    def _loopt_af_counts(self, params=None):
+        response = self.client.get(reverse("home"), params or {})
+        for group in response.context_data["filter_groups"]:
+            if group["name"] == "loopt_af":
+                return {o["label"]: o["count"] for o in group["options"] if o.get("label")}
+        return {}
+
+    def test_loopt_af_count_follows_the_active_view(self):
+        """Two people on one assignment: 2 cards in persoon, 1 in opdracht."""
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+
+        assert self._loopt_af_counts()["Binnen 3 maanden"] == 2
+        assert self._loopt_af_counts({"weergave": "opdracht"})["Binnen 3 maanden"] == 1
+
+    def test_loopt_af_count_matches_the_cards_you_get(self):
+        shared = _make_assignment("Gedeelde opdracht")
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+
+        for view, expected in (("persoon", 2), ("opdracht", 1)):
+            params = {"weergave": view} if view != "persoon" else {}
+            assert self._loopt_af_counts(params)["Binnen 3 maanden"] == expected
+            response = self.client.get(reverse("home"), {**params, "loopt_af": "3m"})
             assert response.context_data["paginator"].count == expected
 
 
@@ -448,14 +532,23 @@ class TestSortOptions:
         assert response.status_code == 200
         return [card["name"] for card in response.context_data["cards"]]
 
+    def _sort_values(self, params=None):
+        response = self.client.get(reverse("home"), params or {})
+        return [option["value"] for option in response.context_data["sort_options"]]
+
     def test_person_view_offers_name_descending(self):
-        response = self.client.get(reverse("home"))
-        assert "-name" in response.context_data["sort_options"]
+        assert "-name" in self._sort_values()
 
     def test_assignment_view_does_not_offer_name_descending(self):
         """Sorting a team card on colleague name says nothing, so the option is gone."""
-        response = self.client.get(reverse("home"), {"weergave": "opdracht"})
-        assert "-name" not in response.context_data["sort_options"]
+        assert "-name" not in self._sort_values({"weergave": "opdracht"})
+
+    def test_every_sort_option_carries_its_label(self):
+        """Value and label travel together, so the template cannot drift from the view."""
+        response = self.client.get(reverse("home"))
+        options = response.context_data["sort_options"]
+        assert all(option["label"] for option in options)
+        assert response.context_data["active_sort_label"] == response.context_data["default_sort_label"]
 
     def test_active_order_is_echoed_when_valid(self):
         response = self.client.get(reverse("home"), {"order": "-name"})
@@ -571,3 +664,52 @@ class TestSortOptions:
 
         names = self._card_names({"weergave": "opdracht", "order": "-assignment"})
         assert names == ["Chatbot", "Bouwportaal", "Anonimisering"]
+
+
+@pytest.mark.django_db
+class TestClientModalCounts:
+    """The opdrachtgever modal counts the same groups the sidebar does."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="modal@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+        self.skill = Skill.objects.create(name="Data engineering")
+        self.org = OrganizationUnit.objects.create(name="Ministerie van Testzaken")
+
+    def _org_count(self, params=None):
+        """The org's count as the modal renders it.
+
+        Read back out of the json_script payload: these templates are Jinja2, so
+        there is no response.context to inspect.
+        """
+        response = self.client.get("/client-modal/", {"count_mode": "placements", "ndd": "1", **(params or {})})
+        assert response.status_code == 200
+        html = response.content.decode()
+        raw = html.split('<script id="client-data" type="application/json">')[1].split("</script>")[0]
+
+        def walk(nodes):
+            for node in nodes:
+                if node["id"] == str(self.org.public_id):
+                    return node["nr_of_placements"]
+                found = walk(node.get("children", []))
+                if found is not None:
+                    return found
+            return None
+
+        return walk(json.loads(html_module.unescape(raw)))
+
+    def test_modal_count_follows_the_active_view(self):
+        """Two colleagues on one assignment: 2 cards in persoon, 1 in opdracht.
+
+        The modal sits next to the sidebar, which already counted groups, so a
+        modal counting placements showed a number the sidebar contradicted.
+        """
+        shared = _make_assignment("Gedeelde opdracht")
+        AssignmentOrganizationUnit.objects.create(assignment=shared, organization=self.org)
+        _place(_make_colleague("Anna Bakker"), shared, self.skill)
+        _place(_make_colleague("Bob Smit"), shared, self.skill)
+
+        assert self._org_count() == 2
+        assert self._org_count({"weergave": "opdracht"}) == 1

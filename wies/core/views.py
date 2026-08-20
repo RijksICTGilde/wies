@@ -904,6 +904,19 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
         "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
     }
+    SORT_LABELS = {
+        "name": "Naam (A-Z)",
+        "-name": "Naam (Z-A)",
+        "assignment": "Opdracht (A-Z)",
+        "-assignment": "Opdracht (Z-A)",
+        "-end_date": "Einddatum (nieuwste eerst)",
+        "end_date": "Einddatum (oudste eerst)",
+    }
+    # The default order is the absence of ?order=, so it has no value to label.
+    DEFAULT_SORT_LABEL = {
+        "persoon": "Startdatum (nieuwste eerst)",
+        "opdracht": "Laatst gewijzigd",
+    }
 
     @property
     def active_view(self) -> str:
@@ -990,9 +1003,19 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return filter_visible_placements(qs, timezone.now().date())
 
     def _get_loopt_af_options(self, base_qs):
-        """Builds the 'loopt af' filter options with cumulative counts."""
+        """Builds the 'loopt af' filter options with cumulative counts.
+
+        Counts distinct groups, not placements, so the number matches the cards
+        the list will show: two colleagues on one assignment are two cards in the
+        person view and one in the assignment view.
+        """
         today = timezone.now().date()
+        group_field = self.GROUP_FIELD[self.active_view]
         filtered_qs = self._apply_filters(base_qs, exclude_filter="loopt_af").distinct()
+
+        def group_count(qs):
+            return qs.values(group_field).distinct().count()
+
         presets = [
             ("3m", "Binnen 3 maanden", 91),
             ("6m", "Binnen 6 maanden", 182),
@@ -1000,11 +1023,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         options = [{"value": "", "label": ""}]
         for value, label, days in presets:
             end_date = today + timedelta(days=days)
-            count = filtered_qs.filter(service__assignment__end_date__lte=end_date).count()
+            count = group_count(filtered_qs.filter(service__assignment__end_date__lte=end_date))
             options.append({"value": value, "label": label, "count": count})
         # "Longer than 6 months"
         half_year = today + timedelta(days=182)
-        count_beyond = filtered_qs.filter(service__assignment__end_date__gt=half_year).count()
+        count_beyond = group_count(filtered_qs.filter(service__assignment__end_date__gt=half_year))
         options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
         return options
 
@@ -1162,12 +1185,21 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         The team is prefetched separately rather than read off the filtered
         placements: a filter on role or label would otherwise silently shrink the
         team shown on the card to the people that matched the filter.
+
+        Sidestepping the selection filters is the point here; sidestepping the
+        visibility filter is not. This page is a current-state overview, so the
+        team is the team as it stands today — the same rule the list itself
+        follows, and without it a card would name people who left months ago or
+        have not started yet.
         """
         assignments = list(dict.fromkeys(p.service.assignment for p in placements))
         teams: dict[int, list[dict]] = {a.id: [] for a in assignments}
         seen: set[tuple[int, int]] = set()
         team_rows = (
-            Placement.objects.filter(service__assignment_id__in=teams)
+            filter_visible_placements(
+                annotate_placement_dates(Placement.objects.filter(service__assignment_id__in=teams)),
+                timezone.now().date(),
+            )
             .select_related("colleague", "service__skill")
             .order_by("colleague__name")
         )
@@ -1200,6 +1232,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         active_view = self.active_view
         context["active_view"] = active_view
+        # The template compares against it rather than hardcoding the name, so
+        # changing the default does not silently break the hidden field.
+        context["default_view"] = self.VIEW_DEFAULT
         counts = {active_view: context["paginator"].count}
         filtered = self.get_queryset()
         context["view_options"] = [
@@ -1219,9 +1254,16 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         else:
             context["cards"] = self._person_cards(placements)
 
-        context["sort_options"] = self.SORT_OPTIONS[active_view]
         order_param = self.request.GET.get("order")
-        context["active_order"] = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
+        active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
+        context["active_order"] = active_order
+        # Value and label travel together: keeping the labels in the template
+        # meant maintaining the same list in two places.
+        context["sort_options"] = [
+            {"value": value, "label": self.SORT_LABELS[value]} for value in self.SORT_OPTIONS[active_view]
+        ]
+        context["default_sort_label"] = self.DEFAULT_SORT_LABEL[active_view]
+        context["active_sort_label"] = self.SORT_LABELS.get(active_order) or self.DEFAULT_SORT_LABEL[active_view]
 
         context["filter_target_url"] = reverse("home")
         context["search_filter"] = self.request.GET.get("zoek")
@@ -3479,6 +3521,7 @@ def client_modal(request):
     if count_mode == "none":
         org_self_counts = Counter()
     else:
+        group_field = None
         if count_mode == "open_assignments":
             view = AssignmentListView()
             model, org_lookup = Assignment, "organizations__id"
@@ -3488,8 +3531,13 @@ def client_modal(request):
         else:
             return HttpResponseBadRequest("Onbekende count_mode")
         view.request = request
+        # The tree counts the same groups the sidebar does, and the sidebar
+        # follows ?weergave=. Without this the modal counted placements whatever
+        # the view, so its numbers sat next to sidebar numbers that disagreed.
+        if count_mode == "placements":
+            group_field = view.GROUP_FIELD[view.active_view]
         filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup)
+        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup, group_field=group_field)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
