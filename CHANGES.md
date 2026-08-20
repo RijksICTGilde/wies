@@ -4,6 +4,13 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 634: typing in the search field now shows "Druk op Enter om te zoeken" while the list below is still showing the old results
+- 634: the number next to a merk or label now says what it counts ("7 collega's") instead of being a bare badge
+- 634: the "Kies een bestaande rol of maak een nieuwe aan" hint is gone; the dropdown already lists the roles and a "+ Nieuwe rol" option
+- 634: the back link on the information pages said "Terug naar Wies" while you were already on Wies; it now says "Terug" and actually goes back to where you came from
+- 634: links that open in a new tab now show an icon and say so for a screen reader
+- 634: a plaatsing without an end date now reads "Vanaf 13 mei 2026" instead of "13 mei 2026 t/m heden", which suggested it ended today
+- 634: "Wie zit waar?" no longer reshuffles its layout in steps as the window narrows: the filters fold away while the toolbar still has room, so the controls stay out in the open and the cards keep two columns instead of briefly dropping to one
 - 618: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the whole current team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
 - 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS

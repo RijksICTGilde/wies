@@ -1,5 +1,18 @@
-{# Only organizations whose abbreviation matches the search term exactly. No
-match means no items, and the menu stays closed. #}
+{# Organizations whose abbreviation matches the search term exactly, if any. The
+   Enter line always follows, because typing does not filter by itself: the list
+   only updates on Enter or on picking a suggestion (#606). Without it the menu
+   would open on an abbreviation match and stay shut otherwise, leaving the wait
+   unexplained in the common case. #}
 {% for org in org_suggestions %}
   <nldd-menu-item text="{{ org.label or org.name }}" value="{{ org.public_id }}" icon="office" data-org-id="{{ org.public_id }}" data-org-label="{{ org.label or org.name }}"></nldd-menu-item>
 {% endfor %}
+{% if search_term %}
+  {% if org_suggestions %}<nldd-menu-divider></nldd-menu-divider>{% endif %}
+  {# A disabled menu item, not a <p>: the menu counts only menu items when it
+     decides whether it is empty, and would print "Geen opties beschikbaar" under
+     a paragraph. [disabled] is what keeps arrow keys and Enter from landing on a
+     caption -- the component skips exactly that attribute while navigating, and
+     counts it while measuring emptiness. The dimming it also brings is undone in
+     app.css, where the contrast reason is written down. #}
+  <nldd-menu-item disabled text="Druk op Enter om te zoeken" class="wies-search-menu-hint"></nldd-menu-item>
+{% endif %}

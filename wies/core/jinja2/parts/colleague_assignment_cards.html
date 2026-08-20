@@ -66,7 +66,9 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '?' }} – {{ assignment.end_date|datum_nl('b Y') if assignment.end_date else '?' }}"></nldd-text-cell>
+      {# djlint:off T028 #}
+      <nldd-text-cell size="sm" text="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} t/m {{ assignment.end_date|datum_nl('b Y') }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}{% elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl('b Y') }}{% else %}Geen periode opgegeven{% endif %}"></nldd-text-cell>
+      {# djlint:on #}
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% endif %}

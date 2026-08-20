@@ -114,11 +114,54 @@ nldd-toolbar-item[width]:not([fluid]) > * {
   width: 100%;
 }
 #search-toolbar-item:not([fluid]) {
-  min-width: 180px;
+  min-width: 240px;
 }
 
 a {
   color: var(--semantics-links-color, inherit);
+}
+
+/* An external-link icon inside the <a> inherits its underline, which then runs
+   through the gap and under the icon. inline-block takes the icon out of the
+   text run, so the underline stops at the last word; the small gap replaces the
+   whitespace that inline-block no longer collapses.
+
+   :last-child, so this stays about the trailing icon it was written for: an
+   icon placed BEFORE the link text would otherwise get a stray left margin. */
+a > nldd-icon:last-child {
+  display: inline-block;
+  vertical-align: -0.125em;
+  margin-inline-start: 0.25em;
+  text-decoration: none;
+}
+
+/* Off-screen but announced by screen readers, for text that an icon carries
+   visually: "opent in nieuw tabblad", the DAU chart's alternative and the merge
+   table captions. */
+.wies-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Caption at the foot of the search suggestions. It has to be a [disabled] menu
+   item: that is the one attribute the menu skips while navigating and counts
+   while deciding it is empty. But disabled means "a choice you cannot make", and
+   the component says so by dimming the label to 30% -- 2.0:1 against the menu,
+   under the 4.5:1 that WCAG AA asks. The label sits in a nested text-cell with
+   its own shadow root, so only these custom properties reach it: the opacity
+   goes back to 1 and the muted content colour carries "not a choice" at 11.4:1. */
+.wies-search-menu-hint {
+  --primitives-opacity-disabled: 1;
+  --components-menu-item-content-color: var(
+    --semantics-content-secondary-color
+  );
 }
 
 /* Colour only. A font-size here made an empty value smaller than the value that
@@ -319,10 +362,12 @@ nldd-card[button]:hover {
 
 /* Without a floor the control resizes on every filter swap, because its counts
    change and its items split the width evenly, shifting the search field beside
-   it. 350px fits both labels up to four digits. Below md the toolbar needs the
-   room for the search field. */
+   it. 326px fits both labels up to three digits, which is the size this list
+   gets; four digits cost another 19px and pushed the control out of the toolbar
+   in the stretch where the sidebar still claims its 320px. Below md the toolbar
+   needs the room for the search field. */
 @media (min-width: 641px) {
   #view-control nldd-segmented-control {
-    min-width: 350px;
+    min-width: 326px;
   }
 }
