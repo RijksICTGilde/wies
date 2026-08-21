@@ -8,7 +8,11 @@
    jumped straight to three columns once the sidebar collapsed and handed the
    room back. 260px keeps two columns across that range. #}
 {% if paginator.count %}
-  <nldd-collection id="placement-list" layout="grid" item-width="260px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  {# max-items="9999": the component paginates its own slot at 24 by default and
+     hides every card past that (and the "Meer tonen" cell with them). Wies
+     paginates server-side and appends via its own button, so the built-in limit
+     has to be lifted -- the component can't know our pages accumulate. #}
+  <nldd-collection id="placement-list" layout="grid" item-width="260px" max-items="9999" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
 {% else %}
