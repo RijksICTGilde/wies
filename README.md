@@ -143,11 +143,13 @@ just manage test wies.core.tests.test_roles
 ## Release Process
 
 1. Everything in `main` branch
-2. Change "unreleased" in CHANGES to date
-3. Commit and push
-4. Tag with date: `git tag -a 2026-01-19 -m "2026-01-19"`
-5. Push tag: `git push --tags`
-6. CI produces image and deploys
+2. Make release branch
+3. Change "unreleased" in CHANGES to date
+4. Merge release branch into main
+5. Tag with date: `git tag -a 2026-01-19 -m "2026-01-19"`
+6. Push tag: `git push --tags`
+7. CI produces image and deploys
+8. (optional) execute post-release actions
 
 ## Claude Code
 
