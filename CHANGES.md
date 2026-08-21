@@ -8,7 +8,7 @@ This files lists the changes during the lifetime of this project.
 
 ## 2026-08-21_2
 
-- <PR#>: fix "Meer tonen"/pagination on the card views (Wie zit waar? and Opdrachten) and the colleague assignment cards: all loaded cards now show instead of only the first 24
+- 642: fix "Meer tonen"/pagination on the card views (Wie zit waar? and Opdrachten) and the colleague assignment cards: all loaded cards now show instead of only the first 24
 
 ## 2026-08-21
 
