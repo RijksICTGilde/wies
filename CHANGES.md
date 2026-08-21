@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-08-21
+
 - 631: (post-release actions) fix deselecting a user's last role not being saved when editing the user
 - 638: focus no longer falls back to the top of the page after an htmx swap; it moves to the element that caused the swap, or to the first control in the new content
 - 638: the skip link now also reaches the pages that extend `base_footer.html` (contact, faq, privacy, toegankelijkheid), which overrode the header block it sits in
