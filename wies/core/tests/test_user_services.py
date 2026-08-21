@@ -326,6 +326,30 @@ class UpdateUserServiceTest(TestCase):
         user.refresh_from_db()
         assert user.email == "test@rijksoverheid.nl"
 
+    def test_update_user_removing_only_role_clears_it(self):
+        """Deselecting the last remaining role must actually remove it."""
+        consultant = Group.objects.create(name="Consultant")
+        user = create_user(
+            None,
+            first_name="Sole",
+            last_name="Consultant",
+            email="sole@rijksoverheid.nl",
+            groups=[consultant],
+        )
+        assert set(user.groups.values_list("name", flat=True)) == {"Consultant"}
+
+        update_user(
+            None,
+            user=user,
+            first_name="Sole",
+            last_name="Consultant",
+            email="sole@rijksoverheid.nl",
+            groups=[],
+        )
+
+        user.refresh_from_db()
+        assert list(user.groups.all()) == []
+
 
 class EmailDomainValidationTest(TestCase):
     """Tests for is_allowed_email_domain helper function"""
