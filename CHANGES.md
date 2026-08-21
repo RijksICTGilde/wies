@@ -5,6 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 631: (post-release actions) fix deselecting a user's last role not being saved when editing the user
+- 638: focus no longer falls back to the top of the page after an htmx swap; it moves to the element that caused the swap, or to the first control in the new content
+- 638: the skip link now also reaches the pages that extend `base_footer.html` (contact, faq, privacy, toegankelijkheid), which overrode the header block it sits in
 - 634: typing in the search field now shows "Druk op Enter om te zoeken" while the list below is still showing the old results
 - 634: the number next to a merk or label now says what it counts ("7 collega's") instead of being a bare badge
 - 634: the "Kies een bestaande rol of maak een nieuwe aan" hint is gone; the dropdown already lists the roles and a "+ Nieuwe rol" option

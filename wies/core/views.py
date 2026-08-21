@@ -3778,6 +3778,12 @@ def _render_inline_edit_display(
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
         **extra,
+        # Lets display.html put `autofocus` on the pencil after a save: htmx
+        # focuses the first [autofocus] element in swapped-in content, and
+        # without it focus drops to <body> with the button that held it.
+        # After **extra, so a spec's display_context cannot override the flag
+        # and lose focus without anything reporting it.
+        "saved": saved,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:

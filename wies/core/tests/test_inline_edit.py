@@ -191,6 +191,26 @@ class InlineEditInfrastructureTest(TestCase):
         assert resp.status_code == 200
         assert "HX-Trigger-After-Swap" not in resp
 
+    def test_post_valid_marks_the_edit_button_for_focus(self):
+        # htmx focuses the first [autofocus] element in swapped-in content. The
+        # save swaps the form away, so without this the focus falls to <body>
+        # and the next Tab starts at the top of the page.
+        resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
+        self.assertContains(resp, "autofocus")
+
+    def test_display_without_a_save_does_not_steal_focus(self):
+        # The same partial renders on first load and on cancel; grabbing focus
+        # there would move the user for something they did not do.
+        self.assertNotContains(self.client.get(self.url), "autofocus")
+        self.assertNotContains(self.client.get(self.url + "?cancel=true"), "autofocus")
+
+    def test_display_context_cannot_drop_the_focus_flag(self):
+        # A spec's display_context is spread into the same context dict, so a
+        # key collision would lose focus with nothing reporting it.
+        _make_assignment_editables(name=Editable(display_context=lambda obj, request: {"saved": False}))
+        resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
+        self.assertContains(resp, "autofocus")
+
     def test_post_invalid_returns_form_with_error(self):
         # Empty string fails the required check (Assignment.name is
         # non-null + has no blank=True).
