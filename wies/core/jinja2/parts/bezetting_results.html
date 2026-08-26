@@ -127,12 +127,12 @@
                           width: {{ seg.width_pct }}%;
                           top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
                    title="{{ seg.assignment_name }}{% if seg.end %} — loopt tot {{ seg.end|datum_nl('j b Y') }}{% endif %}">
-              {# djlint:on #}
+                {# djlint:on #}
                 <span class="bezetting-seg__label">{{ seg.assignment_name }}</span>
                 {% if seg.ends_soon %}
                   {# The end date on the bar that ends, so it is unambiguous which
                      opdracht is wrapping up. #}
-                  <span class="bezetting-seg__end">tot {{ seg.end|datum_nl('j b') }}</span>
+                  <span class="bezetting-seg__end">tot {{ seg.end|datum_nl("j b") }}</span>
                 {% endif %}
               </div>
             {% endfor %}
