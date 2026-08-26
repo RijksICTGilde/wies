@@ -97,7 +97,7 @@
     if (!menu) return;
     const field = document.querySelector("[data-wies-search-input]");
     const hasTerm = ((field && field.value) || "").trim() !== "";
-    const hasItems = menu.querySelector("nldd-menu-item") !== null;
+    const hasItems = menu.children.length > 0;
     const open = menu.matches(":popover-open");
     if (hasItems && hasTerm && !open) menu.showPopover?.();
     else if ((!hasItems || !hasTerm) && open) menu.hidePopover?.();
@@ -118,6 +118,13 @@
     if (!menu || !field || menu.anchorElement) return;
     menu.anchorElement = field;
     menu.removeAttribute("anchor");
+  }
+
+  // What the list is actually filtered on. The hidden input carries it, and htmx
+  // re-renders it on every swap.
+  function appliedSearchTerm() {
+    const hidden = document.getElementById("search-hidden");
+    return ((hidden && hidden.value) || "").trim();
   }
 
   function hideSuggestions() {
@@ -195,6 +202,20 @@
             highlighted.select();
           }
         }
+      },
+      true,
+    );
+
+    // Commit on blur so clearing or trimming the text and clicking away syncs the
+    // results, without needing Enter (#437, was lost in the NLDD rewrite). The
+    // equality check skips unchanged blurs, including the blur() that
+    // commitSearch does itself -- which would otherwise re-enter here.
+    el.addEventListener(
+      "blur",
+      () => {
+        const typed = (el.value ?? "").trim();
+        if (typed === appliedSearchTerm()) return;
+        commitSearch(el, typed);
       },
       true,
     );

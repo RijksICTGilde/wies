@@ -142,3 +142,43 @@ class DataActionBindingsTest(TestCase):
     def test_every_handler_is_used(self):
         unused = self._registered_actions() - set(self._used_actions())
         assert not unused, f"CLICK_ACTIONS entries no longer used by any template: {sorted(unused)}"
+
+
+class ExternalLinkAffordanceTest(TestCase):
+    """A link that opens a new tab has to say so, visibly and audibly (#623).
+
+    An unannounced tab switch takes the back button away without warning, which
+    WCAG 3.2.5 treats as a change of context. The icon carries it visually; it is
+    aria-hidden, so the same words also go in visually-hidden text for a screen
+    reader.
+
+    Image links are exempt from the icon, not from the announcement: an icon
+    beside an image is decoration on decoration, but the alt text still has to
+    name the new tab, so the assertion below reads it. Exempting a whole file
+    would let a later text link on the same page slip past unnoticed.
+    """
+
+    #: A link whose only content is an <img>; its alt text carries the message.
+    IMAGE_ONLY = re.compile(r"^\s*<img\b[^>]*>\s*$", re.DOTALL | re.IGNORECASE)
+
+    #: The <a ...> opening tag plus everything up to its </a>.
+    LINK = re.compile(r"<a\s[^>]*target=[\"']_blank[\"'][^>]*>(.*?)</a>", re.DOTALL | re.IGNORECASE)
+
+    def _external_links(self):
+        for template in _templates():
+            for match in self.LINK.finditer(template.read_text(encoding="utf-8")):
+                yield str(template.relative_to(TEMPLATE_DIR)), match.group(1)
+
+    def test_every_new_tab_link_shows_an_icon(self):
+        missing = [
+            path
+            for path, body in self._external_links()
+            if "square-arrow-right-top" not in body and not self.IMAGE_ONLY.match(body)
+        ]
+        assert not missing, f'target="_blank" without an external-link icon: {sorted(set(missing))}'
+
+    def test_every_new_tab_link_announces_itself(self):
+        missing = [path for path, body in self._external_links() if "opent in nieuw tabblad" not in body]
+        assert not missing, (
+            f'target="_blank" without visually-hidden text saying so (the icon is aria-hidden): {sorted(set(missing))}'
+        )

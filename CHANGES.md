@@ -5,6 +5,25 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline
+- ?
+
+## 2026-08-21_2
+
+- 642: fix "Meer tonen"/pagination on the card views (Wie zit waar? and Opdrachten) and the colleague assignment cards: all loaded cards now show instead of only the first 24
+
+## 2026-08-21
+
+- 631: (post-release actions) fix deselecting a user's last role not being saved when editing the user
+- 638: focus no longer falls back to the top of the page after an htmx swap; it moves to the element that caused the swap, or to the first control in the new content
+- 638: the skip link now also reaches the pages that extend `base_footer.html` (contact, faq, privacy, toegankelijkheid), which overrode the header block it sits in
+- 634: typing in the search field now shows "Druk op Enter om te zoeken" while the list below is still showing the old results
+- 634: the number next to a merk or label now says what it counts ("7 collega's") instead of being a bare badge
+- 634: the "Kies een bestaande rol of maak een nieuwe aan" hint is gone; the dropdown already lists the roles and a "+ Nieuwe rol" option
+- 634: the back link on the information pages said "Terug naar Wies" while you were already on Wies; it now says "Terug" and actually goes back to where you came from
+- 634: links that open in a new tab now show an icon and say so for a screen reader
+- 634: a plaatsing without an end date now reads "Vanaf 13 mei 2026" instead of "13 mei 2026 t/m heden", which suggested it ended today
+- 634: "Wie zit waar?" no longer reshuffles its layout in steps as the window narrows: the filters fold away while the toolbar still has room, so the controls stay out in the open and the cards keep two columns instead of briefly dropping to one
+- 618: the "Wie zit waar?" overview now shows cards, with a segmented control to see them per persoon (default) or per opdracht; an opdracht card shows the whole current team regardless of the active filters, and the list pages on those cards so a person or opdracht is never split across a page boundary
 - 635: bump dependencies for security fixes
 - 427: the whole interface now runs on the NLDD Design System instead of ROOS
 - 427: (migration) dark mode - light, dark or "system" in the user menu, stored on your profile

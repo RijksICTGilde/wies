@@ -14,11 +14,9 @@
   <nldd-list accessible-label="Labels in {{ category.name }}">
   {% for label in category.labels.all() %}
     <nldd-list-item>
-    {# The count lives inline in the name cell. As its own cell the name needed
-       fit-content, which does not shrink: a long name pushed the badge and menu
-       off a narrow screen. #}
     <nldd-text-cell>
-    <span>{{ label.name }} <nldd-badge color="neutral" number="{{ label.usage_count|default(0) }}" accessible-label="{{ label.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
+    <span>{{ label.name }}</span>
+    <span slot="supporting-text">{{ label.usage_count|default(0) }} {{ "collega" if label.usage_count == 1 else "collega's" }}</span>
     </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>

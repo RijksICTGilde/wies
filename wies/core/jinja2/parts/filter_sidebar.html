@@ -12,6 +12,14 @@
       hx-replace-url="true"
       hx-trigger="change from:[data-filter-input], input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
+  {# Rides along so a filter change keeps the chosen weergave; the default one
+     is the absence of the parameter. #}
+  {% if active_view is defined and active_view and active_view != default_view %}
+    <input type="hidden"
+           name="weergave"
+           value="{{ active_view }}"
+           data-filter-input />
+  {% endif %}
   {# Updated by nldd-search-field through the bridge. #}
   <input type="hidden"
          name="zoek"

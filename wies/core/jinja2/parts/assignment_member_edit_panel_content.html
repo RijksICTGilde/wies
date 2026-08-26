@@ -74,7 +74,6 @@
   {% endfor %}
   </nldd-menu>
   </nldd-combo-box>
-  <nldd-form-field-help-text>Kies een bestaande rol of maak een nieuwe aan.</nldd-form-field-help-text>
   {% for error in svc_form.skill.errors %}
     <nldd-form-field-error-text id="{{ skill_error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
@@ -104,10 +103,18 @@
   {# Only meaningful for "Van opdracht"; member_form.js hides it once you pick
      your own period. #}
   <nldd-form-field-help-text data-assignment-period-help>
-  De periode van de opdracht is
-  {{ obj.start_date|datum_nl if obj.start_date else "onbekend" }}
-  t/m
-  {{ obj.end_date|datum_nl if obj.end_date else "heden" }}
+  {# The verb sits in each branch: "is vanaf" and "is t/m" do not read as Dutch,
+     "loopt vanaf" and "loopt t/m" do, and the unknown case still wants "is". #}
+  De periode van de opdracht
+  {%- if obj.start_date and obj.end_date %}
+    is {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
+  {%- elif obj.start_date %}
+    loopt vanaf {{ obj.start_date|datum_nl }}
+  {%- elif obj.end_date %}
+    loopt t/m {{ obj.end_date|datum_nl }}
+  {%- else %}
+    is onbekend
+  {%- endif %}
   </nldd-form-field-help-text>
   </nldd-form-field>
   <input type="hidden"

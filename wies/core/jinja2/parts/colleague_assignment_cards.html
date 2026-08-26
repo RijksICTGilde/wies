@@ -7,7 +7,11 @@
 {% if assignments %}
   {# The same grid puts cards side by side on a wide page and falls back to one
      column in the narrow side panel. #}
-  <nldd-collection layout="grid" item-width="280px">
+  {# max-items="9999": the component paginates its own slot at 24 by default and
+     hides every card past that. This list shows a colleague's full assignment
+     history with no server-side paging, so the built-in limit would silently
+     drop the 25th+ assignment -- lift it so all cards render. #}
+  <nldd-collection layout="grid" item-width="280px" max-items="9999">
   {% for assignment in assignments %}
     <nldd-card background="tinted" href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
     <nldd-container padding="16">
@@ -66,7 +70,9 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '?' }} – {{ assignment.end_date|datum_nl('b Y') if assignment.end_date else '?' }}"></nldd-text-cell>
+      {# djlint:off T028 #}
+      <nldd-text-cell size="sm" text="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} t/m {{ assignment.end_date|datum_nl('b Y') }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}{% elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl('b Y') }}{% else %}Geen periode opgegeven{% endif %}"></nldd-text-cell>
+      {# djlint:on #}
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% endif %}

@@ -75,7 +75,11 @@
 {% endif %}
 {# Both branches share one id, so the OOB swap can replace either with the other. #}
 {% if paginator.count %}
-  <nldd-collection id="assignment-card-grid" layout="grid" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {# max-items="9999": the component paginates its own slot at 24 by default and
+     hides every card past that (and the "Meer tonen" cell with them). Wies
+     paginates server-side and appends via its own button, so the built-in limit
+     has to be lifted -- the component can't know our pages accumulate. #}
+  <nldd-collection id="assignment-card-grid" layout="grid" max-items="9999" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}
   </nldd-collection>
 {% else %}
