@@ -51,6 +51,10 @@ class TimelineSegment:
     left_pct: float
     width_pct: float
     lane: int = 0  # vertical lane so overlapping (concurrent) placements don't stack
+    # Whether THIS placement is the one wrapping up. The row-level flag says only
+    # that something of this colleague's ends soon; on someone with several
+    # placements it named neither which, nor that the others run on.
+    ends_soon: bool = False
 
 
 @dataclass
@@ -164,6 +168,10 @@ def colleague_occupancy(
     for placement in horizon_placements:
         placements_by_colleague.setdefault(placement.colleague_id, []).append(placement)
 
+    # One cutoff for the whole build: the row flag and the per-segment flag must
+    # agree on what "soon" means.
+    soon_cutoff = today + timedelta(days=ENDS_SOON_DAYS)
+
     rows: list[OccupancyRow] = []
     for colleague in colleagues:
         placements = placements_by_colleague.get(colleague.id, [])
@@ -188,6 +196,7 @@ def colleague_occupancy(
                     phase=phase,
                     left_pct=left,
                     width_pct=width,
+                    ends_soon=(phase == "active" and end is not None and end <= soon_cutoff),
                 )
             )
         segments.sort(key=lambda s: s.start or horizon_start)
@@ -195,7 +204,7 @@ def colleague_occupancy(
 
         bucket = BUCKET_BENCH if active_count == 0 else BUCKET_FULL
         earliest_active_end = min(active_ends) if active_ends else None
-        ends_soon = earliest_active_end is not None and earliest_active_end <= today + timedelta(days=ENDS_SOON_DAYS)
+        ends_soon = earliest_active_end is not None and earliest_active_end <= soon_cutoff
 
         rows.append(
             OccupancyRow(

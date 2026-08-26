@@ -186,6 +186,28 @@ class OccupancyServiceTest(TestCase):
         rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
         assert rows[self.full.id].ends_soon is False
 
+    def test_only_the_ending_placement_is_flagged_ends_soon(self):
+        """The flag belongs to the placement, not the person.
+
+        Someone on two opdrachten can have one wrapping up while the other runs
+        on for months; a single flag beside their name claimed they were all
+        stopping.
+        """
+        _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
+        _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        flagged = {seg.assignment_name: seg.ends_soon for seg in rows[self.full.id].segments}
+        assert flagged == {"Loopt bijna af": True, "Loopt lang door": False}
+        # The row still reports that something of theirs ends soon.
+        assert rows[self.full.id].ends_soon is True
+
+    def test_a_completed_placement_is_never_flagged_ends_soon(self):
+        """Already over is not "ending soon", however recent."""
+        _placement(self.full, "Afgerond", self.today - timedelta(days=60), self.today - timedelta(days=5))
+        _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert all(seg.ends_soon is False for seg in rows[self.full.id].segments)
+
     def test_sorting_bench_before_full(self):
         _placement(self.full, "Actief", self.today - timedelta(days=10), self.today + timedelta(days=30))
         rows = colleague_occupancy(self.today)
@@ -412,8 +434,18 @@ class BezettingStatusFilterViewTest(TestCase):
         # card, tolerating the markup between them.
         response = self.client.get(self.url, {"status": "bench"})
         content = response.content.decode()
-        assert re.search(r"<p>2</p>.*?volledig ingezet", content, re.DOTALL)
-        assert re.search(r"<p>1</p>.*?op de bank", content, re.DOTALL)
+        assert re.search(r">2</span>.*?volledig ingezet", content, re.DOTALL)
+        assert re.search(r">1</span>.*?op de bank", content, re.DOTALL)
+
+    def test_empty_result_uses_the_shared_empty_state(self):
+        """An nldd-inline-dialog, like the other lists: a bare paragraph read as body copy."""
+        # bench and ends_soon are disjoint (a bench colleague has no placement to
+        # end), so asking for both at once selects nobody.
+        Placement.objects.all().delete()
+        response = self.client.get(self.url, {"status": "ends_soon"})
+        content = response.content.decode()
+        assert "<nldd-inline-dialog" in content
+        assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
 
     def test_unknown_status_ignored(self):
         response = self.client.get(self.url, {"status": "not-a-status"})

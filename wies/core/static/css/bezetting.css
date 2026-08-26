@@ -18,7 +18,9 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  border-radius: 12px;
+  /* The card's own radius token, so the focus ring keeps hugging the card edge
+     if the design system ever changes that corner. */
+  border-radius: var(--components-card-corner-radius);
 }
 
 /* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
@@ -34,6 +36,29 @@
   height: 100%;
 }
 
+/* The count and its caption. Sized from the token scale rather than borrowed
+   from nldd-title, which carries heading typography for something that is not a
+   heading. line-height 1 keeps the number tight above its caption. */
+.bezetting-stat__count {
+  display: block;
+  font-size: var(--primitives-font-size-400);
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
+  line-height: 1;
+  color: var(--semantics-content-color);
+}
+
+.bezetting-stat__label {
+  display: block;
+  color: var(--semantics-content-secondary-color);
+}
+
+/* The timeline's only column heading. Same weight as a list header, without
+   pulling in a heading component for one word. */
+.bezetting-colheading {
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
+  color: var(--semantics-content-secondary-color);
+}
+
 /* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
    via the card's own --_background-color, which inherits into the shadow root so
    the radius and clipping stay intact. One neutral token covers light and dark.
@@ -42,24 +67,46 @@
   --_background-color: var(--primitives-color-neutral-50);
 }
 
-/* Phase colours for the timeline bars. */
+/* Phase colours for the timeline bars.
+
+   Tinted, not saturated fills: a wall of solid colour across every row drowns
+   out the names and dates that the page is actually read for, and the earlier
+   fixed hexes (#1f7a4d / #7aa7d8 / #b8b8b8) kept their light-mode contrast
+   against a dark surface. A light background with dark text of the same hue is
+   how the design system's own tinted buttons and tags carry a status, and every
+   token here is a light-dark() pair, so both themes stay legible.
+
+   The border does the identifying at a glance; the fill stays quiet. */
 .bezetting-seg--active {
-  background: #1f7a4d;
+  background: var(--primitives-color-success-75);
+  border-color: var(--primitives-color-success-300);
+  color: var(--primitives-color-success-750);
 }
 
 .bezetting-seg--planned {
-  background: #7aa7d8;
+  background: var(--primitives-color-accent-75);
+  border-color: var(--primitives-color-accent-300);
+  color: var(--primitives-color-accent-750);
 }
 
+/* Completed work is history: neutral, and quieter still than the two live phases. */
 .bezetting-seg--completed {
-  background: #b8b8b8;
+  background: var(--primitives-color-neutral-75);
+  border-color: var(--primitives-color-neutral-250);
+  color: var(--semantics-content-secondary-color);
 }
 
 /* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
 .bezetting-timeline {
   --bezetting-side-width: 360px;
-  --bezetting-row-height: 44px;
-  --bezetting-lane-height: 24px;
+  /* 52px, not 44: the name cell holds a 40px avatar with 6px padding above and
+     below, so 44 was never the height a row actually took and the bars were
+     centred against a number the row did not have. */
+  --bezetting-row-height: 52px;
+  /* A single bar fills most of that height. At 24px it left more empty space
+     above and below than the bar itself occupied, on a page whose bars are the
+     content. */
+  --bezetting-lane-height: 32px;
   --bezetting-lane-gap: 4px;
   /* Vertical breathing room above and below the lane stack within a row. */
   --bezetting-row-padding: 8px;
@@ -94,33 +141,38 @@
   top: 0;
   z-index: 3;
   background: var(--semantics-surfaces-base-background-color, #fff);
-  border-bottom: 2px solid var(--semantics-surfaces-base-border-color, #ddd);
+  border-bottom: 1px solid var(--semantics-surfaces-base-border-color);
 }
 
 .bezetting-row__side--head {
   display: flex;
   align-items: flex-end;
-  padding: 0 0 0.5rem 0.75rem;
-  font-weight: 700;
+  padding: 0 0 var(--primitives-space-8) var(--primitives-space-12);
 }
 
 .bezetting-track {
   position: relative;
   height: 100%;
   min-height: var(--bezetting-row-height);
-  border-left: 1px solid var(--semantics-surfaces-base-border-color, #e0e0e0);
+  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
 }
 
+/* Tall enough for two stacked layers: the "vandaag" pill on top and the month
+   labels below it. At 2rem they shared one band and overlapped wherever today
+   fell near a month boundary. */
 .bezetting-track--head {
-  min-height: 2rem;
+  min-height: 3.25rem;
 }
 
-/* Lane stack: top-aligned within the track (offset by the row padding) so the
-   bars start next to the colleague's name and status, keeping the link between a
-   row's label and its bars clear however many lanes it stacks. */
+/* Lane stack: vertically centred in the track, so a single bar sits level with
+   the name beside it. It used to hang from a fixed 8px top offset, which centres
+   nothing: a row is as tall as its content (at least 52px for the avatar), so a
+   24px bar sat high with all the slack below it. Centring keeps a stack of
+   several lanes balanced in the row too, since the row grows with the stack. */
 .bezetting-lanes {
   position: absolute;
-  top: var(--bezetting-row-padding);
+  top: 50%;
+  transform: translateY(-50%);
   left: 0;
   right: 0;
   height: calc(
@@ -145,7 +197,7 @@
 .bezetting-tick {
   position: absolute;
   bottom: 0;
-  border-left: 1px solid var(--semantics-surfaces-base-border-color, #e0e0e0);
+  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
   height: 0.6rem;
 }
 
@@ -156,43 +208,60 @@
 .bezetting-tick__label {
   position: absolute;
   bottom: 0.7rem;
-  left: 2px;
-  font-size: 0.7rem;
-  color: var(--semantics-content-secondary-color, #6b6b6b);
+  left: var(--primitives-space-2);
+  font-size: var(--primitives-font-size-70);
+  color: var(--semantics-content-secondary-color);
   white-space: nowrap;
 }
 
-/* "Today" marker */
+/* "Today" marker.
+
+   Accent, not critical: critical is the design system's colour for errors and
+   destructive actions, and a full-height critical-red rule read as an alarm on
+   a page where today is simply the reference point. Accent marks it as the one
+   line that matters without shouting.
+
+   1px like the month gridlines it sits among; the colour, not the weight, is
+   what sets it apart. */
 .bezetting-today,
 .bezetting-today-line {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: var(--semantics-content-critical-color, #d52b1e);
+  width: 1px;
+  background: var(--semantics-content-accent-color);
   z-index: 2;
 }
 
+/* A tinted pill rather than loose bold text: the label sat at the very top of
+   the header and collided with the month name behind it. Sitting under the
+   month row, on its own background, it reads as a marker instead of a word that
+   happens to overlap. */
 .bezetting-today__label {
   position: absolute;
-  top: -0.1rem;
-  left: 4px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  color: var(--semantics-content-critical-color, #d52b1e);
+  top: 0;
+  left: var(--primitives-space-4);
+  padding: 0 var(--primitives-space-4);
+  border-radius: var(--primitives-corner-radius-xs, 4px);
+  background: var(--primitives-color-accent-75);
+  font-size: var(--primitives-font-size-70);
+  font-weight: var(--primitives-font-weight-body-semi-bold, 550);
+  color: var(--primitives-color-accent-750);
   white-space: nowrap;
 }
 
 /* ── Rijen ────────────────────────────────────────────────────────────────── */
 .bezetting-rows {
-  border-top: 1px solid var(--semantics-surfaces-tinted-border-color, #eee);
+  border-top: 1px solid var(--semantics-surfaces-tinted-border-color);
 }
 
 .bezetting-row {
   position: relative;
-  /* A firmer divider than the month gridlines, so it is always clear which bars
-     belong to which colleague even when a row stacks several lanes. */
-  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #ccc);
+  /* One line weight throughout: row dividers, the name/track split and the month
+     gridlines all use the same tinted rule. Mixing a darker divider with lighter
+     gridlines made the grid itself the loudest thing on the page. Rows stay
+     separable because each is at least a full lane tall. */
+  border-bottom: 1px solid var(--semantics-surfaces-tinted-border-color);
 }
 
 .bezetting-row:hover {
@@ -205,8 +274,8 @@
 .bezetting-row__side {
   display: flex;
   align-items: center;
-  padding: 0.35rem 0.75rem;
-  border-right: 1px solid var(--semantics-surfaces-tinted-border-color, #eee);
+  padding: var(--primitives-space-6) var(--primitives-space-12);
+  border-right: 1px solid var(--semantics-surfaces-tinted-border-color);
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -224,12 +293,12 @@
 .bezetting-person {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: var(--primitives-space-8);
   min-width: 0;
 }
 
 .bezetting-person__name {
-  font-weight: 700;
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -245,33 +314,67 @@
 
 /* Timeline bars are purely visual: let clicks fall through to the stretched
    row link so the whole row opens the colleague panel. */
+/* Radius from the token scale rather than a loose 4px, so the bars round like
+   the cards and tags around them. Each phase sets its own colours above; the
+   1px border keeps a bar's extent readable now that the fill is pale. */
 .bezetting-seg {
   position: absolute;
   height: var(--bezetting-lane-height);
   min-width: 3px;
-  border-radius: 4px;
-  color: #fff;
+  border: 1px solid transparent;
+  border-radius: var(--primitives-corner-radius-xs, 4px);
   overflow: hidden;
   pointer-events: none;
 }
 
-.bezetting-seg--completed {
-  color: #333;
+/* The bar that is wrapping up, marked on the bar itself rather than beside the
+   name: a colleague on two opdrachten may have one ending this month and
+   another running on, and a tag next to the name claimed the whole person was
+   stopping. Warning-toned so it stands out among the calm active bars. */
+.bezetting-seg--ends-soon {
+  background: var(--primitives-color-warning-75);
+  border-color: var(--primitives-color-warning-350);
+  color: var(--primitives-color-warning-750);
+}
+
+/* The end date, right-aligned in the bar so the name still starts at the left
+   edge. Hidden on bars too narrow to hold both (a container query would be
+   nicer, but each bar is absolutely positioned with an inline width). */
+.bezetting-seg__end {
+  position: absolute;
+  top: 0;
+  right: var(--primitives-space-6);
+  line-height: calc(var(--bezetting-lane-height) - 2px);
+  font-size: var(--primitives-font-size-70);
+  font-weight: var(--primitives-font-weight-body-semi-bold, 550);
+  white-space: nowrap;
+}
+
+/* Room for the date so a long assignment name does not run underneath it. */
+.bezetting-seg--ends-soon .bezetting-seg__label {
+  padding-right: var(--primitives-space-48, 3rem);
 }
 
 .bezetting-seg__label {
   display: block;
-  padding: 0 0.4rem;
-  line-height: var(--bezetting-lane-height);
-  font-size: 0.72rem;
+  padding: 0 var(--primitives-space-6);
+  /* Minus the bar's 1px border top and bottom, or the label sits low in the bar
+     (height and line-height are both the lane height, but border-box takes the
+     border out of the content area). */
+  line-height: calc(var(--bezetting-lane-height) - 2px);
+  font-size: var(--primitives-font-size-70);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-/* Emphasise the most-pressing rows with a left accent. */
+/* Bench rows carry a left accent: they are what a business manager scans for.
+   Warning, not critical — an unstaffed colleague needs attention, but critical
+   is the system's colour for errors and destructive actions, and next to the
+   now-quiet bars and rules it was the loudest thing on the page. 3px is enough
+   to read as a marker beside a 1px rule. */
 .bezetting-row--bench .bezetting-row__side {
-  box-shadow: inset 4px 0 0 var(--semantics-content-critical-color, #d52b1e);
+  box-shadow: inset 3px 0 0 var(--semantics-content-warning-color);
 }
 
 @media (max-width: 800px) {
