@@ -1,0 +1,111 @@
+{# List rows for "Wie zit waar?", the lijst counterpart of placement_cards.html.
+   It renders the same `cards` context: the view builds one entry per group
+   regardless of shape, so both shapes group, sort and paginate identically and
+   only the markup differs.
+
+   `href` keeps the row a real link (status bar, cmd/middle click); the click
+   itself is caught so htmx fills the side panel instead of navigating. Same
+   pattern as the cards. #}
+{% for card in cards %}
+  <nldd-list-item href="{{ card.panel_url }}" hx-get="{{ card.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  {% if active_view == 'opdracht' %}
+    <nldd-cell>
+    <nldd-icon size="24" name="business-suitcase"></nldd-icon>
+    </nldd-cell>
+    {# divider-start on an always-present spacer, not on a text cell: the cells
+       below swap per breakpoint and a hidden one has no position, so the divider
+       would start at 0 and run off the row. #}
+    <nldd-spacer-cell divider-start size="12"></nldd-spacer-cell>
+    {% set client_label = card.client %}
+    {% if client_label and card.extra_clients %}
+      {% set client_label = client_label ~ " (+" ~ card.extra_clients ~ ")" %}
+    {% endif %}
+    {% set end_date = card.assignment.end_date|datum_nl('b Y') if card.assignment.end_date else '' %}
+    {# A per-case preposition instead of |capitalize, which lowercases the rest of
+       the sentence and strips the capitals from organization names. Built here
+       rather than inside the attribute because a conditional in an attribute
+       value trips djlint T028. #}
+    {% set meta = "" %}
+    {% if client_label and end_date %}
+      {% set meta = "Bij " ~ client_label ~ " tot " ~ end_date %}
+    {% elif client_label %}
+      {% set meta = "Bij " ~ client_label %}
+    {% elif end_date %}
+      {% set meta = "Tot " ~ end_date %}
+    {% else %}
+      {% set meta = "Geen einddatum" %}
+    {% endif %}
+    {# No max-width, unlike the person view's first column: this is the only text
+       cell in the row, so it takes width="full" (the default) and absorbs the
+       leftover space. That is what pushes the chevron to the right edge -- a
+       capped cell leaves every following cell bunched up against it. #}
+    <nldd-text-cell text="{{ card.name }}" supporting-text="{{ meta }}"></nldd-text-cell>
+    {# The team, mirroring the opdracht card. nldd-avatar-group overlaps them into
+       one horizontal stack and gives the rest a real popover ("Nog N tonen"),
+       which a row of loose avatars in a wrap container does not. Hidden on narrow
+       screens, where the name and period already fill the row. #}
+    {% if card.team %}
+      <nldd-cell hide-below="md" horizontal-alignment="right">
+      <nldd-avatar-group size="28" max="5" accessible-label="Team van {{ card.name }}">
+      {% for member in card.team %}
+        {# djlint:off T028 #}
+        <nldd-avatar name="{{ member.name }}" accessible-label="{{ member.name }}{% if member.role %}, {{ member.role }}{% endif %}"></nldd-avatar>
+        {# djlint:on #}
+      {% endfor %}
+      </nldd-avatar-group>
+      </nldd-cell>
+    {% endif %}
+  {% else %}
+    <nldd-cell>
+    <nldd-avatar size="40" name="{{ card.name }}" decorative></nldd-avatar>
+    </nldd-cell>
+    <nldd-spacer-cell divider-start size="12"></nldd-spacer-cell>
+    {% set role_label = card.roles[0] if card.roles else '' %}
+    {% if card.roles|length > 1 %}
+      {% set role_label = role_label ~ " (+" ~ (card.roles|length - 1) ~ ")" %}
+    {% endif %}
+    {# Two columns wide, one narrow: the cell API has responsive visibility but no
+       responsive width, so each breakpoint gets its own cells and hides the
+       others. The name is capped so it does not split the row in half. #}
+    <nldd-text-cell hide-below="md" max-width="260px" text="{{ card.name }}" supporting-text="{{ role_label }}"></nldd-text-cell>
+    {# One assignment per line, each carrying its own end date. Not joined into a
+       sentence: names carry spaces and sometimes an "en" themselves, so "A en B"
+       read as one long name. The date sits on the line rather than under the
+       block, so every assignment shows its own -- a single date below two names
+       said nothing about which one it belonged to. Bracketed: set apart by
+       colour alone it read as part of the name. Soonest first. #}
+    <nldd-text-cell hide-below="md">
+    {% for line in card.assignment_lines %}
+      <span class="wies-stacked-line">{{ line.name }} <span class="wies-stacked-line__date">{{ line.period_inline }}</span></span>
+    {% endfor %}
+    {% if card.assignment_overflow %}
+      <span class="wies-stacked-line wies-stacked-line--muted">{{ card.assignment_overflow }}</span>
+    {% endif %}
+    </nldd-text-cell>
+    {# Narrow screens: one cell, since two text columns side by side squeeze to a
+       few letters per line. The role is a tag behind the name; as a second line it
+       would compete with the opdracht, which is the line people scan for. #}
+    {# Narrow screens get one line, so the soonest assignment carries the count of
+       the rest rather than stacking lines in an already cramped row. #}
+    {% set narrow_assignment = card.assignment_lines[0].name ~ " " ~ card.assignment_lines[0].period_inline %}
+    {% if card.assignments|length > 1 %}
+      {% set narrow_assignment = narrow_assignment ~ " +" ~ (card.assignments|length - 1) %}
+    {% endif %}
+    <nldd-text-cell hide-above="sm" supporting-text="{{ narrow_assignment }}">
+    <span>{{ card.name }}{% if card.roles %} <nldd-tag size="sm">{{ card.roles[0] }}</nldd-tag>{% endif %}</span>
+    </nldd-text-cell>
+  {% endif %}
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-icon-cell size="16">
+  <nldd-icon name="chevron-right"></nldd-icon>
+  </nldd-icon-cell>
+  </nldd-list-item>
+{% endfor %}
+{% if next_page_url %}
+  {# A click instead of auto-loading (hx-trigger=revealed), which would push the
+     page footer out of reach forever. A plain div, not an nldd-list-item, so the
+     row divider does not run underneath it. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+  </div>
+{% endif %}

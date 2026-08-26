@@ -1,0 +1,23 @@
+{# Card-or-list switch, the second axis next to view_control.html: weergave says
+   what a group is, this says how it is drawn. Rides along as an OOB fragment on
+   every htmx swap so the pressed button and the link urls follow the new
+   filters.
+
+   priority between the two: the view switch is the primary choice and the sort
+   control refines it, so this sits in between -- it is the cheapest of the three
+   to lose, being icon-only, but it changes more than the order does. #}
+<nldd-toolbar-item id="shape-control" slot="end" priority="-1" {% if shape_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
+{# variant=icon: the two shapes are a well-known pair and the labels would cost
+   the width the search field needs. accessible-label and each item's text keep
+   the names for assistive software. #}
+<nldd-segmented-control accessible-label="Vorm" variant="icon" size="md" value="{{ active_shape }}">
+{% for option in shape_options %}
+  <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }}" icon="{{ option.icon }}" hx-get="{{ option.url }}" hx-trigger="item-change" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-segmented-control-item>
+{% endfor %}
+</nldd-segmented-control>
+<nldd-menu-group slot="overflow" text="Vorm">
+{% for option in shape_options %}
+  <nldd-menu-item type="radio" text="{{ option.label }}" icon="{{ option.icon }}" {% if option.selected %}selected{% endif %} hx-get="{{ option.url }}" hx-trigger="select" hx-target="#results" hx-swap="outerHTML settle:0" hx-replace-url="true"></nldd-menu-item>
+{% endfor %}
+</nldd-menu-group>
+</nldd-toolbar-item>

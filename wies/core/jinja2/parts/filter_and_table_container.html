@@ -25,6 +25,9 @@ both stay in sync without a shared wrapper element. #}
      original, so sidebar_toggle.js listens for both events. #}
   <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines" aria-haspopup="dialog" aria-expanded="false"></nldd-menu-item>
   </nldd-toolbar-item>
+  {# Kaarten or lijst: the same groups in the same order, drawn differently.
+     See parts/shape_control.html. #}
+  {% include "parts/shape_control.html" %}
   {# Sorting refreshes the list in place like the filters do; the hx-* attributes
      sit on the menu items themselves. See parts/sort_control.html. #}
   {% include "parts/sort_control.html" %}
@@ -88,6 +91,8 @@ both stay in sync without a shared wrapper element. #}
   {% include "parts/sort_control.html" %}
   {% set view_control_oob = true %}
   {% include "parts/view_control.html" %}
+  {% set shape_control_oob = true %}
+  {% include "parts/shape_control.html" %}
 {% endif %}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the

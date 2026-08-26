@@ -1,5 +1,5 @@
-{# The card grid for "Wie zit waar?". Both branches share one id so the OOB
-   swap can replace either with the other.
+{# The results for "Wie zit waar?", as a card grid or as a list. All three
+   branches share one id so the OOB swap can replace any of them with any other.
 
    item-width 260px, not 280px: with the sidebar open the content is 320px
    narrower than the section, and just above the DS's 1008px collapse point that
@@ -7,10 +7,18 @@
    the grid fell back to a single 576px-wide card for that stretch -- and then
    jumped straight to three columns once the sidebar collapsed and handed the
    room back. 260px keeps two columns across that range. #}
-{% if paginator.count %}
-  <nldd-collection id="placement-list" layout="grid" item-width="260px" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+{% set is_htmx = request.headers.get("HX-Request") %}
+{% if not paginator.count %}
+  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+{% elif active_shape == 'lijst' %}
+  {# variant=simple with the default dividers: nldd-list-item gives navigable rows
+     their native hover/focus feedback, which nldd-table-row (data display) does
+     not. #}
+  <nldd-list id="placement-list" variant="simple" accessible-label="Wie zit waar" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/placement_rows.html" %}
+  </nldd-list>
+{% else %}
+  <nldd-collection id="placement-list" layout="grid" item-width="260px" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
-{% else %}
-  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}

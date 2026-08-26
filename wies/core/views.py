@@ -24,6 +24,7 @@ from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpRespo
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
@@ -877,6 +878,10 @@ class PublicIdFacetsMixin:
         return self.facets("labels", Label).requested and not self.labels_by_category
 
 
+# How many assignment names fit on one line before the rest becomes a "+N".
+NAMED_ASSIGNMENTS = 2
+
+
 class PlacementListView(PublicIdFacetsMixin, ListView):
     """Placements as cards, grouped per person or per assignment."""
 
@@ -889,6 +894,18 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     VIEW_OPTIONS = [
         {"value": "persoon", "label": "Persoon", "icon": "person"},
         {"value": "opdracht", "label": "Opdracht", "icon": "business-suitcase"},
+    ]
+
+    # The second, independent axis: weergave says what a card groups, vorm says
+    # how it is drawn. Every combination is valid.
+    SHAPE_DEFAULT = "kaarten"
+    SHAPE_PARAM = "vorm"
+    SHAPE_SESSION_KEY = "placement_shape"
+    SHAPE_OPTIONS = [
+        # Verified against the icon registry in the nldd bundle: "grid" does not
+        # exist and would have rendered nothing at all.
+        {"value": "kaarten", "label": "Kaarten", "icon": "square-grid-3x3"},
+        {"value": "lijst", "label": "Lijst", "icon": "list"},
     ]
 
     # Pagination runs over these groups, not over placements, so a group never
@@ -924,6 +941,26 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         requested = self.request.GET.get("weergave") or ""
         valid = {option["value"] for option in self.VIEW_OPTIONS}
         return requested if requested in valid else self.VIEW_DEFAULT
+
+    @property
+    def active_shape(self) -> str:
+        """The card-or-list shape: ?vorm= wins, then the session, then the default.
+
+        Unlike weergave, this is a display preference rather than part of what you
+        are looking at, so it outlives the url: an explicit choice is remembered
+        for the next visit that arrives without the parameter. A shared link still
+        wins over the recipient's own stored preference, because the parameter is
+        checked first.
+        """
+        valid = {option["value"] for option in self.SHAPE_OPTIONS}
+        requested = self.request.GET.get(self.SHAPE_PARAM) or ""
+        if requested in valid:
+            return requested
+        # getattr: the sidebar-count helpers drive this view from a bare
+        # RequestFactory request, which carries no session.
+        session = getattr(self.request, "session", None)
+        stored = (session.get(self.SHAPE_SESSION_KEY) if session is not None else "") or ""
+        return stored if stored in valid else self.SHAPE_DEFAULT
 
     def _get_base_queryset(self):
         """Base queryset with search, ordering, and date filters applied."""
@@ -1116,6 +1153,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             return 1
         return max(1, min(number, paginator.num_pages))
 
+    def _items_template(self) -> str:
+        """The fragment that renders the items themselves, per shape."""
+        return "parts/placement_rows.html" if self.active_shape == "lijst" else "parts/placement_cards.html"
+
     def get_template_names(self):
         """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
@@ -1130,7 +1171,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     return [panel_data["panel_content_template"]]
                 return ["parts/placement_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/placement_cards.html"]
+                return [self._items_template()]
             return ["parts/filter_and_table_container.html"]
         return ["placements.html"]
 
@@ -1149,6 +1190,20 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             params["weergave"] = value
         query = params.urlencode()
         return f"{reverse('home')}?{query}" if query else reverse("home")
+
+    def _shape_url(self, value: str) -> str:
+        """URL for a vorm: keeps everything else, including the weergave and order.
+
+        Card and list show the same groups in the same order, so unlike the
+        weergave switch nothing has to be dropped. The page is: the two shapes fit
+        a different number of items on screen comfortably, so paging starts over.
+        """
+        params = self.request.GET.copy()
+        params.pop(self.page_kwarg, None)
+        # An explicit parameter, also for the default: the session may hold the
+        # other shape, and without it this link would be a no-op for that visitor.
+        params[self.SHAPE_PARAM] = value
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _person_cards(self, placements) -> list[dict]:
         """One card per colleague, with the assignments they are placed on.
@@ -1170,6 +1225,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "name": rows[0].colleague.name,
                     "assignment": single,
                     "assignments": assignments,
+                    "assignment_lines": self._assignment_lines(rows),
+                    "assignment_overflow": self._assignment_overflow(assignments),
                     "roles": roles,
                     "panel_url": _build_panel_url(
                         self.request,
@@ -1178,6 +1235,56 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 }
             )
         return cards
+
+    @staticmethod
+    def _assignment_lines(rows) -> list[dict]:
+        """One line per assignment: its name and its own end date.
+
+        A bare count ("2 opdrachten") named none of them, so the panel had to be
+        opened to learn anything at all. Joining the names into one string
+        instead ("A en B") read as a single long name: they carry spaces and
+        sometimes an "en" themselves, so no word between them separates
+        reliably.
+
+        The date belongs on the line rather than under the block. A single date
+        below two names said nothing about which one it belonged to, and hid the
+        other end date entirely; carrying it per line means every assignment
+        shows its own, whatever the count.
+
+        Soonest first, so what frees up next leads. Nulls last: an assignment
+        without an end date says nothing about how soon it ends. Read from the
+        annotated actual_end_date, so a placement or service with a period of its
+        own is respected over the assignment's.
+        """
+        by_assignment: dict[int, dict] = {}
+        for row in rows:
+            assignment = row.service.assignment
+            line = by_assignment.setdefault(assignment.id, {"name": assignment.name, "end_date": row.actual_end_date})
+            # One person can hold several placements on the same assignment; the
+            # one ending first is when their work there is scheduled to stop.
+            if row.actual_end_date and (line["end_date"] is None or row.actual_end_date < line["end_date"]):
+                line["end_date"] = row.actual_end_date
+
+        lines = sorted(by_assignment.values(), key=lambda line: (line["end_date"] is None, line["end_date"]))
+        for line in lines:
+            # Two forms, because the two shapes place the date differently. The
+            # row puts it behind the name on one line, where set apart by colour
+            # alone it read as part of the sentence ("Open Data Architectuur tot
+            # jan 2027"); brackets are a hard visual break that survives a name
+            # long enough to fill the line. The card gives it a line of its own,
+            # where brackets would only be noise.
+            period = f"tot {date_format(line['end_date'], 'b Y')}" if line["end_date"] else "Geen einddatum"
+            line["period"] = period
+            line["period_inline"] = f"({period[0].lower() + period[1:]})"
+        return lines[:NAMED_ASSIGNMENTS]
+
+    @staticmethod
+    def _assignment_overflow(assignments) -> str:
+        """The "+N andere opdrachten" line, empty when everything is named."""
+        hidden = len(assignments) - NAMED_ASSIGNMENTS
+        if hidden < 1:
+            return ""
+        return f"+{hidden} andere opdracht" if hidden == 1 else f"+{hidden} andere opdrachten"
 
     def _assignment_cards(self, placements) -> list[dict]:
         """One card per assignment, showing its FULL team.
@@ -1232,6 +1339,25 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         active_view = self.active_view
         context["active_view"] = active_view
+        active_shape = self.active_shape
+        context["active_shape"] = active_shape
+        context["shape_param"] = self.SHAPE_PARAM
+        # Remember an explicit choice, so the next visit without ?vorm= opens the
+        # way this one ended. Only what the url actually asked for is stored: the
+        # fallback value would otherwise write the default back over a stored
+        # preference on the first request that omits the parameter.
+        session = getattr(self.request, "session", None)
+        explicit_shape = self.request.GET.get(self.SHAPE_PARAM) == active_shape
+        if explicit_shape and session is not None and session.get(self.SHAPE_SESSION_KEY) != active_shape:
+            session[self.SHAPE_SESSION_KEY] = active_shape
+        context["shape_options"] = [
+            {
+                **option,
+                "url": self._shape_url(option["value"]),
+                "selected": option["value"] == active_shape,
+            }
+            for option in self.SHAPE_OPTIONS
+        ]
         # The template compares against it rather than hardcoding the name, so
         # changing the default does not silently break the hidden field.
         context["default_view"] = self.VIEW_DEFAULT

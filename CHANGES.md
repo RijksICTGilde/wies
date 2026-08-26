@@ -5,6 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?
+- TBD: "Wie zit waar?" can now be shown as a list instead of cards, with a kaarten/lijst switch in the toolbar next to the persoon/opdracht switch; the choice is remembered for your next visit
+- TBD: someone on several assignments now lists those assignments by name, one per line and each with its own end date (soonest first), instead of "2 opdrachten" and "Meerdere periodes"
 
 ## 2026-08-21
 

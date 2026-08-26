@@ -20,6 +20,15 @@
            value="{{ active_view }}"
            data-filter-input />
   {% endif %}
+  {# Same for the vorm. Always sent, also for the default: the session may hold
+     the other shape, so leaving it out would let a filter change flip the list
+     back to kaarten under the user. #}
+  {% if active_shape is defined and active_shape %}
+    <input type="hidden"
+           name="{{ shape_param }}"
+           value="{{ active_shape }}"
+           data-filter-input />
+  {% endif %}
   {# Updated by nldd-search-field through the bridge. #}
   <input type="hidden"
          name="zoek"

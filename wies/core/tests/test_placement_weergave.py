@@ -7,6 +7,7 @@ options.
 
 import html as html_module
 import json
+import re
 from datetime import timedelta
 
 import pytest
@@ -14,6 +15,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 
 from wies.core.models import (
     Assignment,
@@ -713,3 +715,340 @@ class TestClientModalCounts:
 
         assert self._org_count() == 2
         assert self._org_count({"weergave": "opdracht"}) == 1
+
+
+@pytest.mark.django_db
+class TestActiveShape:
+    """The ?vorm= parameter picks kaarten or lijst, independent of the weergave."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="vorm@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+
+        self.skill = Skill.objects.create(name="Ontwikkelaar")
+        self.assignment = _make_assignment("Cloud Migratie")
+        _place(_make_colleague("Jan de Vries"), self.assignment, self.skill)
+
+    def test_default_shape_is_kaarten(self):
+        response = self.client.get(reverse("home"))
+        assert response.status_code == 200
+        assert response.context_data["active_shape"] == "kaarten"
+
+    def test_lijst_shape_is_selected(self):
+        response = self.client.get(reverse("home"), {"vorm": "lijst"})
+        assert response.status_code == 200
+        assert response.context_data["active_shape"] == "lijst"
+
+    @pytest.mark.parametrize("value", ["zzz", "", "LIJST", "list", "1"])
+    def test_unknown_vorm_falls_back_to_kaarten(self, value):
+        """An unknown ?vorm= must not 500; it renders the default shape."""
+        response = self.client.get(reverse("home"), {"vorm": value})
+        assert response.status_code == 200
+        assert response.context_data["active_shape"] == "kaarten"
+
+    def test_shape_options_mark_the_active_one_as_selected(self):
+        response = self.client.get(reverse("home"), {"vorm": "lijst"})
+        selected = [option["value"] for option in response.context_data["shape_options"] if option["selected"]]
+        assert selected == ["lijst"]
+
+    def test_shape_switch_url_keeps_view_search_and_order(self):
+        """Both shapes show the same groups in the same order, so nothing is dropped."""
+        response = self.client.get(
+            reverse("home"),
+            {"vorm": "lijst", "weergave": "opdracht", "zoek": "Cloud", "order": "-assignment", "pagina": "2"},
+        )
+        urls = {option["value"]: option["url"] for option in response.context_data["shape_options"]}
+        for url in urls.values():
+            assert "weergave=opdracht" in url
+            assert "zoek=Cloud" in url
+            assert "order=-assignment" in url
+            # The two shapes fit a different number of items, so paging restarts.
+            assert "pagina=" not in url
+        # Explicit on both, so the link is never a no-op for a visitor whose
+        # session holds the other shape.
+        assert "vorm=kaarten" in urls["kaarten"]
+        assert "vorm=lijst" in urls["lijst"]
+
+    @pytest.mark.parametrize("view", ["persoon", "opdracht"])
+    @pytest.mark.parametrize("shape", ["kaarten", "lijst"])
+    def test_every_combination_renders(self, view, shape):
+        """Weergave and vorm are independent axes: all four combinations are valid."""
+        response = self.client.get(reverse("home"), {"weergave": view, "vorm": shape})
+        assert response.status_code == 200
+        assert response.context_data["active_view"] == view
+        assert response.context_data["active_shape"] == shape
+        content = response.content.decode()
+        assert "Jan de Vries" in content or "Cloud Migratie" in content
+
+    def test_lijst_renders_a_list_and_kaarten_a_collection(self):
+        lijst = self.client.get(reverse("home"), {"vorm": "lijst"}).content.decode()
+        assert '<nldd-list id="placement-list"' in lijst
+        assert "<nldd-collection" not in lijst
+
+        kaarten = self.client.get(reverse("home"), {"vorm": "kaarten"}).content.decode()
+        assert '<nldd-collection id="placement-list"' in kaarten
+
+    def test_opdracht_row_lets_the_text_cell_take_the_leftover_width(self):
+        """A capped text cell bunches every following cell up against it.
+
+        nldd-text-cell defaults to width="full" and is the only growing cell in
+        the row, so it is what pushes the chevron to the right edge. Capping it
+        (as the person view does for its first of two text columns) left the
+        avatars and the chevron huddled in the left half of the row.
+        """
+        content = self.client.get(reverse("home"), {"vorm": "lijst", "weergave": "opdracht"}).content.decode()
+        row = re.search(r"<nldd-list-item href.*?</nldd-list-item>", content, re.S).group(0)
+        text_cell = re.search(r"<nldd-text-cell[^>]*>", row).group(0)
+        assert "max-width" not in text_cell
+
+    def test_opdracht_row_stacks_the_team_in_an_avatar_group(self):
+        """Loose avatars in a wrap container stacked vertically and blew up the row height."""
+        content = self.client.get(reverse("home"), {"vorm": "lijst", "weergave": "opdracht"}).content.decode()
+        row = re.search(r"<nldd-list-item href.*?</nldd-list-item>", content, re.S).group(0)
+        assert "<nldd-avatar-group" in row
+        # The group itself caps what it shows and gives the rest a popover, so the
+        # template must not slice the team or add a +N tag of its own.
+        assert 'max="5"' in row
+        assert "<nldd-tag" not in row
+
+    def test_opdracht_row_ends_with_the_chevron(self):
+        """The chevron is the last cell; anything after it would sit right of it."""
+        content = self.client.get(reverse("home"), {"vorm": "lijst", "weergave": "opdracht"}).content.decode()
+        row = re.search(r"<nldd-list-item href.*?</nldd-list-item>", content, re.S).group(0)
+        cells = re.findall(r"<nldd-(\w+)-cell|<nldd-(cell)", row)
+        last = [a or b for a, b in cells][-1]
+        assert last == "icon"
+
+    def test_empty_result_shows_one_inline_dialog_in_both_shapes(self):
+        """The empty state is shared: it says the same thing whatever the shape."""
+        for shape in ("kaarten", "lijst"):
+            response = self.client.get(reverse("home"), {"vorm": shape, "zoek": "bestaat-niet-xyz"})
+            content = response.content.decode()
+            assert '<nldd-inline-dialog id="placement-list"' in content
+            assert "<nldd-collection" not in content
+
+
+@pytest.mark.django_db
+class TestShapeIsRemembered:
+    """An explicit vorm outlives the url; a shared link still wins over it."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="onthoud@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+        _place(_make_colleague("Jan de Vries"), _make_assignment("Cloud Migratie"))
+
+    def test_choice_is_remembered_on_a_later_visit(self):
+        self.client.get(reverse("home"), {"vorm": "lijst"})
+        response = self.client.get(reverse("home"))
+        assert response.context_data["active_shape"] == "lijst"
+
+    def test_parameter_beats_the_stored_preference(self):
+        """A shared ?vorm= link shows what it says, not the recipient's own default."""
+        self.client.get(reverse("home"), {"vorm": "lijst"})
+        response = self.client.get(reverse("home"), {"vorm": "kaarten"})
+        assert response.context_data["active_shape"] == "kaarten"
+        # ...and that explicit choice replaces the stored one.
+        assert self.client.get(reverse("home")).context_data["active_shape"] == "kaarten"
+
+    def test_a_bare_visit_does_not_overwrite_the_stored_preference(self):
+        """The fallback value must not be written back over an explicit choice."""
+        self.client.get(reverse("home"), {"vorm": "lijst"})
+        self.client.get(reverse("home"))
+        assert self.client.get(reverse("home")).context_data["active_shape"] == "lijst"
+
+    def test_an_unknown_vorm_does_not_overwrite_the_stored_preference(self):
+        self.client.get(reverse("home"), {"vorm": "lijst"})
+        self.client.get(reverse("home"), {"vorm": "zzz"})
+        assert self.client.get(reverse("home")).context_data["active_shape"] == "lijst"
+
+    def test_the_preference_is_per_session(self):
+        """Another visitor keeps the default; the preference is not global."""
+        self.client.get(reverse("home"), {"vorm": "lijst"})
+
+        other_user = User.objects.create_user(email="ander@rijksoverheid.nl", password="testpass123")
+        other = Client()
+        other.force_login(other_user)
+        assert other.get(reverse("home")).context_data["active_shape"] == "kaarten"
+
+
+@pytest.mark.django_db
+class TestShapeHtmxFragments:
+    """The htmx paths render the right fragment and keep the controls in sync."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="htmx@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+        self.assignment = _make_assignment("Cloud Migratie")
+        _place(_make_colleague("Jan de Vries"), self.assignment)
+
+    def test_paginated_fragment_follows_the_shape(self):
+        """?pagina= returns bare rows in lijst and bare cards in kaarten."""
+        lijst = self.client.get(
+            reverse("home"), {"vorm": "lijst", "pagina": "1"}, headers={"HX-Request": "true"}
+        ).content.decode()
+        assert "<nldd-list-item" in lijst
+        assert "<nldd-card" not in lijst
+
+        kaarten = self.client.get(
+            reverse("home"), {"vorm": "kaarten", "pagina": "1"}, headers={"HX-Request": "true"}
+        ).content.decode()
+        assert "<nldd-card" in kaarten
+
+    def test_filter_swap_carries_the_shape_control_oob(self):
+        """The pressed button must follow a filter change, like the other controls."""
+        content = self.client.get(reverse("home"), {"vorm": "lijst"}, headers={"HX-Request": "true"}).content.decode()
+        assert 'id="shape-control"' in content
+        assert 'hx-swap-oob="outerHTML"' in content
+        # The list itself is swapped OOB too, so both stay in sync.
+        assert '<nldd-list id="placement-list"' in content
+
+    def test_sidebar_form_carries_the_shape_so_filtering_keeps_it(self):
+        """Always sent, also for the default: the session may hold the other shape."""
+        for shape in ("kaarten", "lijst"):
+            content = self.client.get(reverse("home"), {"vorm": shape}, headers={"HX-Request": "true"}).content.decode()
+            assert 'name="vorm"' in content
+            assert f'value="{shape}"' in content
+
+
+@pytest.mark.django_db
+class TestPersonLabels:
+    """What a person card/row says about their assignments and period."""
+
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.user = User.objects.create_user(email="labels@rijksoverheid.nl", password="testpass123")
+        self.client = Client()
+        self.client.force_login(self.user)
+        self.colleague = _make_colleague("Kevin Popov")
+
+    def _card(self, **params):
+        response = self.client.get(reverse("home"), params)
+        cards = response.context_data["cards"]
+        return next(card for card in cards if card["name"] == "Kevin Popov")
+
+    def test_one_assignment_is_named_with_its_own_end_date(self):
+        _place(self.colleague, _make_assignment("Open Data Architectuur"))
+        card = self._card()
+        assert [line["name"] for line in card["assignment_lines"]] == ["Open Data Architectuur"]
+        assert card["assignment_lines"][0]["period"].startswith("tot ")
+        assert card["assignment_overflow"] == ""
+
+    def test_two_assignments_are_both_named(self):
+        """A bare count named neither, so the panel had to be opened to learn anything."""
+        _place(self.colleague, _make_assignment("Open Data"))
+        _place(self.colleague, _make_assignment("Burgerzaken"))
+        card = self._card()
+        assert sorted(line["name"] for line in card["assignment_lines"]) == ["Burgerzaken", "Open Data"]
+        assert card["assignment_overflow"] == ""
+
+    def test_names_stay_separate_values_rather_than_one_joined_string(self):
+        """ "A en B" read as one long name: names carry spaces and their own "en"."""
+        _place(self.colleague, _make_assignment("Vergunningen en Toezicht"))
+        _place(self.colleague, _make_assignment("Open Data"))
+        names = [line["name"] for line in self._card()["assignment_lines"]]
+        assert len(names) == 2
+        assert "Vergunningen en Toezicht" in names
+
+    def test_every_assignment_carries_its_own_end_date(self):
+        """One date under two names said nothing about which one it belonged to."""
+        today = timezone.now().date()
+        early = _make_assignment("Loopt eerst af")
+        late = _make_assignment("Loopt later af")
+        _place_for_period(self.colleague, early, today - timedelta(days=10), today + timedelta(days=30))
+        _place_for_period(self.colleague, late, today - timedelta(days=10), today + timedelta(days=200))
+
+        lines = self._card()["assignment_lines"]
+        periods = {line["name"]: line["period"] for line in lines}
+        assert periods["Loopt eerst af"] == f"tot {date_format(today + timedelta(days=30), 'b Y')}"
+        assert periods["Loopt later af"] == f"tot {date_format(today + timedelta(days=200), 'b Y')}"
+
+    def test_lines_are_sorted_by_end_date_soonest_first(self):
+        """What frees up next leads."""
+        today = timezone.now().date()
+        for name, days in (("Later", 200), ("Eerder", 30), ("Middenin", 100)):
+            _place_for_period(
+                self.colleague, _make_assignment(name), today - timedelta(days=10), today + timedelta(days=days)
+            )
+        names = [line["name"] for line in self._card()["assignment_lines"]]
+        assert names == ["Eerder", "Middenin"]
+
+    def test_an_assignment_without_an_end_date_sorts_last_and_says_so(self):
+        """A missing date says nothing about how soon it ends, so it must not lead."""
+        today = timezone.now().date()
+        open_ended = _make_assignment("Zonder einde")
+        open_ended.end_date = None
+        open_ended.save()
+        _place(self.colleague, open_ended)
+        _place_for_period(
+            self.colleague, _make_assignment("Met einde"), today - timedelta(days=10), today + timedelta(days=30)
+        )
+
+        lines = self._card()["assignment_lines"]
+        assert [line["name"] for line in lines] == ["Met einde", "Zonder einde"]
+        assert lines[1]["period"] == "Geen einddatum"
+
+    def test_the_end_date_respects_a_placement_specific_period(self):
+        """actual_end_date, not assignment.end_date: a placement may end sooner."""
+        today = timezone.now().date()
+        assignment = _make_assignment("Lange opdracht")
+        assignment.end_date = today + timedelta(days=300)
+        assignment.save()
+        _place_for_period(self.colleague, assignment, today - timedelta(days=10), today + timedelta(days=20))
+
+        line = self._card()["assignment_lines"][0]
+        assert line["period"] == f"tot {date_format(today + timedelta(days=20), 'b Y')}"
+
+    def test_more_than_two_assignments_name_two_and_count_the_rest(self):
+        """The cell must not grow without bound, so only the first two are named."""
+        today = timezone.now().date()
+        for i, name in enumerate(("Alpha", "Beta", "Gamma", "Delta")):
+            _place_for_period(
+                self.colleague,
+                _make_assignment(name),
+                today - timedelta(days=10),
+                today + timedelta(days=30 + i * 10),
+            )
+        card = self._card()
+        assert len(card["assignment_lines"]) == 2
+        assert card["assignment_overflow"] == "+2 andere opdrachten"
+
+    def test_a_single_hidden_assignment_is_singular(self):
+        for name in ("Alpha", "Beta", "Gamma"):
+            _place(self.colleague, _make_assignment(name))
+        assert self._card()["assignment_overflow"] == "+1 andere opdracht"
+
+    def test_the_inline_period_is_bracketed_and_lowercased(self):
+        """Behind a name on one line, colour alone read as part of the sentence."""
+        _place(self.colleague, _make_assignment("Open Data"))
+        line = self._card()["assignment_lines"][0]
+        assert line["period"].startswith("tot ")
+        assert line["period_inline"] == f"({line['period']})"
+
+    def test_a_missing_end_date_reads_as_a_phrase_inline(self):
+        """ "(Geen einddatum)" mid-sentence would start a capital out of nowhere."""
+        assignment = _make_assignment("Zonder einde")
+        assignment.end_date = None
+        assignment.save()
+        _place(self.colleague, assignment)
+        line = self._card()["assignment_lines"][0]
+        assert line["period"] == "Geen einddatum"
+        assert line["period_inline"] == "(geen einddatum)"
+
+    @pytest.mark.parametrize("shape", ["kaarten", "lijst"])
+    def test_both_shapes_show_the_same_labels(self, shape):
+        """The labels come from the view, so a card and a row cannot drift apart."""
+        _place(self.colleague, _make_assignment("Open Data"))
+        _place(self.colleague, _make_assignment("Burgerzaken"))
+        card = self._card(vorm=shape)
+        content = self.client.get(reverse("home"), {"vorm": shape}).content.decode()
+        # The row brackets the date behind the name; the card gives it its own line.
+        key = "period_inline" if shape == "lijst" else "period"
+        for line in card["assignment_lines"]:
+            assert html_module.escape(line["name"]) in content
+            assert html_module.escape(line[key]) in content

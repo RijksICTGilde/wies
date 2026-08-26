@@ -371,3 +371,23 @@ nldd-card[button]:hover {
     min-width: 326px;
   }
 }
+
+/* Assignment names stacked one per line inside an nldd-text-cell slot. The cell
+   renders its `text` attribute as a single line; slotted content is passed
+   through as-is, so the line breaks are ours to make. Block, not <br>: the muted
+   overflow line needs to be styleable on its own. */
+.wies-stacked-line {
+  display: block;
+}
+
+.wies-stacked-line--muted {
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+/* The end date behind an assignment name on the same line. Muted so the name
+   still leads the line, and nowrap so a date never breaks across two lines while
+   its name sits on the one above. */
+.wies-stacked-line__date {
+  color: var(--semantics-content-secondary-color, #64748b);
+  white-space: nowrap;
+}
