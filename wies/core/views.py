@@ -672,8 +672,26 @@ def bezetting(request):
     if selected_statuses:
         active_filters["status"] = selected_statuses
 
+    # Bench colleagues get their own section above the placed ones, but keep a
+    # timeline row: they have nothing running today, yet they can have work
+    # already booked for next month, and "is anything lined up for this person"
+    # is the reason to look at the bench at all. The row is compact (no lane
+    # stack to make room for) and shows how long they have been free as a bar.
+    #
+    # Longest-free first, which is the order a business manager reads this in.
+    # Sorted here rather than in the template: Jinja's sort filter cannot order a
+    # list where some bench_days are None (never placed), and comparing None to an
+    # int raises. Those go last — "never placed" is not a long wait, it is a
+    # different thing.
+    bench_rows = sorted(
+        (r for r in rows if r.bucket == "bench"),
+        key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
+    )
+    timeline_rows = [r for r in rows if r.bucket != "bench"]
+
     context = {
-        "rows": rows,
+        "rows": timeline_rows,
+        "bench_rows": bench_rows,
         "panel_data": panel_data,
         "today_pct": _bezetting_today_pct(),
         "month_ticks": _bezetting_month_ticks(today),

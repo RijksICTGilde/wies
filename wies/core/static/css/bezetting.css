@@ -331,28 +331,67 @@
    name: a colleague on two opdrachten may have one ending this month and
    another running on, and a tag next to the name claimed the whole person was
    stopping. Warning-toned so it stands out among the calm active bars. */
-.bezetting-seg--ends-soon {
+/* How close an active placement is to its end, in four bands (see
+   ENDING_LEVELS in services/occupancy.py). Marked on the bar rather than beside
+   the name: a colleague on two opdrachten may have one ending this month and
+   another running on for a year, and a tag next to the name claimed the whole
+   person was stopping.
+
+   Colour ranks them at a glance, but never alone -- every non-calm bar also
+   carries its end date, because red-orange-yellow is exactly the range that
+   collapses for the most common colour blindness, and a rank nobody can read is
+   not a rank. Same tinted recipe as the phase colours. */
+.bezetting-seg--ending-critical {
+  background: var(--primitives-color-critical-75);
+  border-color: var(--primitives-color-critical-350);
+  color: var(--primitives-color-critical-750);
+}
+
+.bezetting-seg--ending-warning {
   background: var(--primitives-color-warning-75);
   border-color: var(--primitives-color-warning-350);
   color: var(--primitives-color-warning-750);
 }
 
+/* Yellow has no semantic role in the system (warning is orange), so this band
+   uses the Rijk palette's donkergeel: plain geel at the same lightness reads as
+   a highlighter next to the orange band. */
+.bezetting-seg--ending-attention {
+  background: var(--primitives-color-donkergeel-75);
+  border-color: var(--primitives-color-donkergeel-300);
+  color: var(--primitives-color-donkergeel-750);
+}
+
+/* calm keeps whatever its phase gave it: active stays green, planned blue,
+   completed neutral. */
+
 /* The end date, right-aligned in the bar so the name still starts at the left
    edge. Hidden on bars too narrow to hold both (a container query would be
    nicer, but each bar is absolutely positioned with an inline width). */
+/* Sits on top of the label's line. The label reserves room via padding-right,
+   but a bar can be narrower than that reserved space, so the date also paints
+   its own background: without it a truncated name still slid under the date on
+   the narrowest bars. */
 .bezetting-seg__end {
   position: absolute;
   top: 0;
-  right: var(--primitives-space-6);
+  right: 0;
+  padding: 0 var(--primitives-space-6);
+  background: inherit;
   line-height: calc(var(--bezetting-lane-height) - 2px);
   font-size: var(--primitives-font-size-70);
   font-weight: var(--primitives-font-weight-body-semi-bold, 550);
   white-space: nowrap;
 }
 
-/* Room for the date so a long assignment name does not run underneath it. */
-.bezetting-seg--ends-soon .bezetting-seg__label {
-  padding-right: var(--primitives-space-48, 3rem);
+/* Room for the end date so a long assignment name truncates before it reaches
+   the date instead of running underneath it. 5rem: "tot 14 sep" at this size is
+   about 4.5rem including its padding, and the date is absolutely positioned so
+   it cannot reserve the space itself. */
+.bezetting-seg--ending-critical .bezetting-seg__label,
+.bezetting-seg--ending-warning .bezetting-seg__label,
+.bezetting-seg--ending-attention .bezetting-seg__label {
+  padding-right: 5rem;
 }
 
 .bezetting-seg__label {
@@ -380,5 +419,131 @@
 @media (max-width: 800px) {
   .bezetting-timeline {
     --bezetting-side-width: 200px;
+  }
+}
+
+/* ── Op de bank ───────────────────────────────────────────────────────────── */
+
+/* Section headings inside the rows list ("Op de bank" / "Ingezet"). Sticky under
+   the month header so it stays clear which block is being read while scrolling
+   a long list. */
+.bezetting-sectionhead {
+  position: sticky;
+  top: 3.25rem;
+  z-index: 2;
+  padding: var(--primitives-space-8) var(--primitives-space-12);
+  background: var(--semantics-surfaces-tinted-background-color);
+  border-bottom: 1px solid var(--semantics-surfaces-tinted-border-color);
+  font-size: var(--primitives-font-size-70);
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
+  color: var(--semantics-content-secondary-color);
+  min-width: 720px;
+}
+
+/* A bench row differs only in its name cell: a smaller avatar, since nothing
+   runs today and the row never stacks lanes.
+
+   The bar geometry is deliberately NOT changed here. With a smaller lane height
+   the very same opdracht drew thinner on a bench row than on a placed row two
+   lines down, which read as "this one matters less" rather than "this person is
+   free". Bench rows still come out shorter, because the row height follows its
+   lane stack and a bench row only ever has one lane. */
+.bezetting-row--compact .bezetting-person {
+  gap: var(--primitives-space-6);
+}
+
+/* The role, right after the name it belongs to. Secondary and smaller so the
+   name still leads the row; it truncates before the name does, since which
+   person this is matters more than what they are called in. */
+.bezetting-person__role {
+  flex-shrink: 999;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--semantics-content-secondary-color);
+  font-size: var(--primitives-font-size-70);
+}
+
+/* Said only when there is no bar to draw, so it cannot be shown as a stretch. */
+.bezetting-person__since {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-left: var(--primitives-space-8);
+  color: var(--semantics-content-secondary-color);
+  font-size: var(--primitives-font-size-70);
+  white-space: nowrap;
+}
+
+/* The free stretch on a bench row, running up to today.
+
+   A zone, not a bar: full row height, no border of its own, so the placements
+   sit on it rather than beside it. As a bordered block it butted up against the
+   finished placement that ends exactly where it starts, and the two greys with
+   a seam between them read as one broken-up strip.
+
+   Hatched rather than filled: the diagonal texture reads as "nothing scheduled
+   here" instead of as a block in its own right, so it stays behind the
+   placement bars rather than competing with them. */
+.bezetting-free {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 9px,
+    var(--primitives-color-neutral-100) 9px,
+    var(--primitives-color-neutral-100) 10px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A soft right edge at today, so the zone stops at a line rather than a wall. */
+.bezetting-free::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--semantics-surfaces-base-border-color);
+}
+
+/* Sits on the hatched zone, so it carries a background of its own to stay
+   readable over the stripes. */
+.bezetting-free__label {
+  padding: 0 var(--primitives-space-6);
+  background: var(--semantics-surfaces-base-background-color);
+  border-radius: var(--primitives-corner-radius-xs, 4px);
+  margin-right: var(--primitives-space-6);
+  color: var(--semantics-content-secondary-color);
+  font-size: var(--primitives-font-size-70);
+  white-space: nowrap;
+}
+
+/* Merk and expertise chips on a row. They sit after the role and give way
+   before it does: the name identifies the person, the role says what they do,
+   and the chips only explain why a filtered view includes them. Hidden below md
+   — the name cell is 200px there and the chips would take all of it. */
+.bezetting-person__labels {
+  display: flex;
+  gap: var(--primitives-space-4);
+  flex-shrink: 1000;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bezetting-person__labels nldd-tag {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .bezetting-person__labels {
+    display: none;
   }
 }

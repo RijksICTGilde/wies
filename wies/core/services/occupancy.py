@@ -1,9 +1,9 @@
 """Per-colleague occupancy for the business-manager "Bezetting" page.
 
 Aggregates, per colleague, whether they currently have an active placement and a
-timeline of their placements across the demo horizon (3 months back → 1 year
-ahead) so a business manager sees at a glance who is on the bench and whose
-assignment ends soon.
+timeline of their placements across the horizon (2 months back → 4 months ahead)
+so a business manager sees at a glance who is on the bench and whose assignment
+ends soon.
 
 The app records no per-week hours, so occupancy is binary: a colleague is either
 "op de bank" (``bench`` — no active placement today) or "volledig ingezet"
@@ -20,13 +20,36 @@ from django.db.models import Q
 from wies.core.models import Colleague, Placement
 from wies.core.querysets import annotate_placement_dates
 
-# Timeline horizon and "pressing" threshold.
+# Timeline horizon and "pressing" threshold. Four months ahead, not six: the far
+# end of a six-month view was empty for almost every row, and the months that do
+# carry bars got squeezed into the left third of the track.
 HORIZON_BACK_DAYS = 61
-HORIZON_AHEAD_DAYS = 183
+HORIZON_AHEAD_DAYS = 122
 ENDS_SOON_DAYS = 60
+
+# How close an active placement is to its end, as four levels. The bar is
+# coloured by this, so a business manager sees urgency without reading dates.
+# Thresholds in days: a month is 31 here rather than 30, so "ends on the same day
+# next month" lands in the level people expect.
+ENDING_LEVELS = (
+    (31, "critical"),  # within a month
+    (62, "warning"),  # within two
+    (93, "attention"),  # within three
+)
+ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
+
+# Below this share of the horizon a bar cannot hold its own label legibly.
+NARROW_BAR_PCT = 8
 
 # Only colleagues in this role appear on the Bezetting page.
 CONSULTANT_GROUP = "Consultant"
+
+# The label category whose labels ride along on a row as chips. Its labels name
+# the gilde a colleague belongs to ("ICT", "AI"), which is the
+# subdivision this page is read by; the other categories stay in the filter sheet
+# only. Created by assign_random_labels_to_colleagues in demo data, and a
+# deliberate post-release action in production.
+GILDE_CATEGORY = "Subgroep"
 
 BUCKET_BENCH = "bench"  # no active placement today
 BUCKET_FULL = "full"  # at least one active placement today
@@ -45,16 +68,24 @@ class TimelineSegment:
     """One placement bar on a colleague's timeline, positioned within the horizon."""
 
     assignment_name: str
+    role: str  # Service.skill name, empty when the service has none
     start: date | None
     end: date | None
     phase: str  # "active" | "planned" | "completed"
     left_pct: float
     width_pct: float
     lane: int = 0  # vertical lane so overlapping (concurrent) placements don't stack
+    # Too narrow to hold its own name: the label would render as a stray "I..."
+    # next to a wider bar. The name still lives in the title attribute.
+    too_narrow: bool = False
     # Whether THIS placement is the one wrapping up. The row-level flag says only
     # that something of this colleague's ends soon; on someone with several
     # placements it named neither which, nor that the others run on.
     ends_soon: bool = False
+    # Which ENDING_LEVELS band this placement's end falls in. Only active
+    # placements carry a level: a planned or finished bar says nothing about how
+    # soon someone frees up.
+    ending_level: str = ENDING_LEVEL_CALM
 
 
 @dataclass
@@ -65,6 +96,31 @@ class OccupancyRow:
     earliest_active_end: date | None
     segments: list[TimelineSegment] = field(default_factory=list)
     lane_count: int = 1  # number of vertical lanes needed (row height scales with this)
+    # The colleague's labels in the gilde category, as (name, nldd colour) pairs.
+    # Only that category: the row has room for a chip or two, and the full
+    # expertise list would fill it, while the gilde is the subdivision this page
+    # is read by.
+    gilde_labels: list[tuple[str, str]] = field(default_factory=list)
+    # What this colleague does: the role they hold today, or — on the bench — the
+    # one from their most recent finished placement, since that is the best
+    # available answer to "what does this person do". Empty when unknown.
+    role: str = ""
+    # Whether `role` comes from a finished placement rather than a current one,
+    # so the caller can say so instead of implying it is current.
+    role_is_past: bool = False
+    # When this colleague's last placement ended, for bench rows. None means no
+    # placement on record at all, which reads differently from "free since <date>"
+    # and is left to the caller to phrase.
+    bench_since: date | None = None
+    # Whole days between bench_since and today; None when bench_since is.
+    bench_days: int | None = None
+    # The free stretch drawn on the track: (left%, width%) from bench_since (or
+    # the horizon start, whichever is later) up to today. None when there is no
+    # date to draw from.
+    bench_bar: tuple[float, float] | None = None
+    # Whether the stretch started before the horizon: the bar is clipped at the
+    # left edge, so it needs to say it runs on beyond what is shown.
+    bench_bar_clipped: bool = False
 
 
 def row_has_status(row: OccupancyRow, status: str) -> bool:
@@ -97,6 +153,22 @@ def _position(start: date | None, end: date | None, horizon_start: date, horizon
     left = (seg_start - horizon_start).days / span * 100
     width = max((seg_end - seg_start).days, 1) / span * 100
     return round(left, 2), round(width, 2)
+
+
+def _ending_level(end: date | None, phase: str, today: date) -> str:
+    """Which urgency band an active placement's end falls in.
+
+    Only active work gets a level: a planned placement has not started and a
+    finished one is already over, so neither says anything about how soon this
+    colleague frees up. No end date is calm — open-ended is not urgent.
+    """
+    if phase != "active" or end is None:
+        return ENDING_LEVEL_CALM
+    days_left = (end - today).days
+    for threshold, level in ENDING_LEVELS:
+        if days_left <= threshold:
+            return level
+    return ENDING_LEVEL_CALM
 
 
 def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> int:
@@ -147,7 +219,14 @@ def colleague_occupancy(
 
     # Only consultants: colleagues whose linked user is in the "Consultant" group.
     # Colleagues without a user (e.g. imported without an account) are excluded.
-    colleagues = Colleague.objects.filter(user__groups__name=CONSULTANT_GROUP).order_by("name")
+    # The labels and merk ride along: the row shows them as chips, and without
+    # the prefetch that is a query per colleague.
+    colleagues = (
+        Colleague.objects.filter(user__groups__name=CONSULTANT_GROUP)
+        .select_related("suborganization")
+        .prefetch_related("labels__category")
+        .order_by("name")
+    )
     if merk_ids:
         colleagues = colleagues.filter(suborganization_id__in=merk_ids)
     for label_ids in (labels_by_category or {}).values():
@@ -162,11 +241,29 @@ def colleague_occupancy(
         annotate_placement_dates(Placement.objects.all())
         .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=horizon_end))
         .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=horizon_start))
-        .select_related("service__assignment")
+        .select_related("service__assignment", "service__skill")
     )
     placements_by_colleague: dict[int, list[Placement]] = {}
     for placement in horizon_placements:
         placements_by_colleague.setdefault(placement.colleague_id, []).append(placement)
+
+    # How long each colleague has been free, which the horizon cannot answer: the
+    # placement that ended is usually older than the window the timeline draws.
+    # One aggregate over every finished placement, not a per-row query.
+    # Walked oldest-first so the last write per colleague is their most recent
+    # finished placement: one pass gives both the date and the role, where an
+    # aggregate could only give the date. select_related keeps it one query.
+    last_end_by_colleague: dict[int, date] = {}
+    last_role_by_colleague: dict[int, str] = {}
+    finished = (
+        annotate_placement_dates(Placement.objects.all())
+        .filter(actual_end_date__lt=today)
+        .select_related("service__skill")
+        .order_by("actual_end_date")
+    )
+    for placement in finished:
+        last_end_by_colleague[placement.colleague_id] = placement.actual_end_date
+        last_role_by_colleague[placement.colleague_id] = placement.service.skill.name if placement.service.skill else ""
 
     # One cutoff for the whole build: the row flag and the per-segment flag must
     # agree on what "soon" means.
@@ -191,12 +288,17 @@ def colleague_occupancy(
             segments.append(
                 TimelineSegment(
                     assignment_name=placement.service.assignment.name,
+                    role=placement.service.skill.name if placement.service.skill else "",
                     start=start,
                     end=end,
                     phase=phase,
                     left_pct=left,
                     width_pct=width,
                     ends_soon=(phase == "active" and end is not None and end <= soon_cutoff),
+                    ending_level=_ending_level(end, phase, today),
+                    # 8% of the horizon is roughly four weeks; below that the
+                    # label is all ellipsis and no word.
+                    too_narrow=width < NARROW_BAR_PCT,
                 )
             )
         segments.sort(key=lambda s: s.start or horizon_start)
@@ -206,12 +308,46 @@ def colleague_occupancy(
         earliest_active_end = min(active_ends) if active_ends else None
         ends_soon = earliest_active_end is not None and earliest_active_end <= soon_cutoff
 
+        # Only meaningful while someone is free; on a placed colleague the date of
+        # their previous placement says nothing about today.
+        bench_since = last_end_by_colleague.get(colleague.id) if bucket == BUCKET_BENCH else None
+        bench_days = (today - bench_since).days if bench_since else None
+        # The stretch as a bar on the same axis as the placements, so how long
+        # someone has been free is read off the track rather than as a third
+        # column of text. Clipped at the horizon: most people on the bench have
+        # been free longer than the axis reaches back, and a bar that simply ran
+        # to the left edge would look identical for all of them.
+        bench_bar = _position(bench_since, today, horizon_start, horizon_end) if bench_since else None
+        bench_bar_clipped = bool(bench_since and bench_since < horizon_start)
+
+        # The role they hold now. Someone on two placements can hold two roles;
+        # the first active one names what they do without turning the row into a
+        # list. On the bench there is no current role, so their last one stands in
+        # — flagged, so the template can say it is past rather than imply it holds.
+        active_roles = [seg.role for seg in segments if seg.phase == "active" and seg.role]
+        role = active_roles[0] if active_roles else ""
+        role_is_past = False
+        if not role and bucket == BUCKET_BENCH:
+            role = last_role_by_colleague.get(colleague.id, "")
+            role_is_past = bool(role)
+
         rows.append(
             OccupancyRow(
                 colleague=colleague,
+                gilde_labels=[
+                    (label.name, label.category.nldd_color)
+                    for label in colleague.labels.all()
+                    if label.category.name == GILDE_CATEGORY
+                ],
                 bucket=bucket,
                 ends_soon=ends_soon,
                 earliest_active_end=earliest_active_end,
+                role=role,
+                role_is_past=role_is_past,
+                bench_since=bench_since,
+                bench_days=bench_days,
+                bench_bar=bench_bar,
+                bench_bar_clipped=bench_bar_clipped,
                 segments=segments,
                 lane_count=lane_count,
             )

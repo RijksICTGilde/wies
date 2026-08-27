@@ -25,8 +25,8 @@ MAX_LABELS_PER_CATEGORY = 2
 # page. Kept out of DEFAULT_LABELS on purpose: in production this category is a
 # deliberate post-release action, not something that seeds automatically.
 SUBGROEP_CATEGORY = "Subgroep"
-SUBGROEP_COLOR = "#C4DBB7"
-SUBGROEP_LABELS = ("IT gilde", "Data en AI gilde")
+SUBGROEP_COLOR = "#DCE3EA"
+SUBGROEP_LABELS = ("ICT", "AI")
 
 
 class Command(BaseCommand):

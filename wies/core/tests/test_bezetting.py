@@ -3,13 +3,21 @@ from datetime import timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Suborganization
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, Suborganization
 from wies.core.roles import setup_roles
-from wies.core.services.occupancy import colleague_occupancy
+from wies.core.services.occupancy import (
+    GILDE_CATEGORY,
+    HORIZON_AHEAD_DAYS,
+    HORIZON_BACK_DAYS,
+    NARROW_BAR_PCT,
+    colleague_occupancy,
+)
 
 User = get_user_model()
 
@@ -22,10 +30,11 @@ def _consultant(name, email, **kwargs):
     return Colleague.objects.create(name=name, email=email, source="wies", user=user, **kwargs)
 
 
-def _placement(colleague, name, start, end):
+def _placement(colleague, name, start, end, role=None):
     """Create an assignment + service + placement with placement-level dates."""
     assignment = Assignment.objects.create(name=name, source="wies")
-    service = Service.objects.create(assignment=assignment, description=name, source="wies")
+    skill = Skill.objects.get_or_create(name=role)[0] if role else None
+    service = Service.objects.create(assignment=assignment, description=name, skill=skill, source="wies")
     return Placement.objects.create(
         colleague=colleague,
         service=service,
@@ -207,6 +216,129 @@ class OccupancyServiceTest(TestCase):
         _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
         rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
         assert all(seg.ends_soon is False for seg in rows[self.full.id].segments)
+
+    def test_ending_level_bands(self):
+        """Four urgency bands, so a bar's colour ranks how soon it ends."""
+        for days, expected in (
+            (5, "critical"),
+            (31, "critical"),
+            (32, "warning"),
+            (62, "warning"),
+            (63, "attention"),
+            (93, "attention"),
+            (94, "calm"),
+            (200, "calm"),
+        ):
+            colleague = _consultant(f"Eind {days}", f"eind{days}@x.nl")
+            _placement(
+                colleague, f"Opdracht {days}", self.today - timedelta(days=10), self.today + timedelta(days=days)
+            )
+            rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+            level = rows[colleague.id].segments[0].ending_level
+            assert level == expected, f"{days} dagen: {level} != {expected}"
+
+    def test_only_active_placements_carry_an_ending_level(self):
+        """A planned placement has not started and a finished one is over, so
+        neither says anything about how soon this colleague frees up."""
+        planned = _consultant("Nog Beginnen", "planned@x.nl")
+        _placement(planned, "Start later", self.today + timedelta(days=10), self.today + timedelta(days=20))
+        done = _consultant("Al Klaar", "done@x.nl")
+        _placement(done, "Afgerond", self.today - timedelta(days=40), self.today - timedelta(days=5))
+
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[planned.id].segments[0].ending_level == "calm"
+        assert rows[done.id].segments[0].ending_level == "calm"
+
+    def test_an_open_ended_placement_is_calm(self):
+        """No end date is not urgent."""
+        colleague = _consultant("Zonder Eind", "open@x.nl")
+        _placement(colleague, "Doorlopend", self.today - timedelta(days=10), None)
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[colleague.id].segments[0].ending_level == "calm"
+
+    def test_a_placed_colleague_shows_their_current_role(self):
+        _placement(
+            self.full, "Actief", self.today - timedelta(days=10), self.today + timedelta(days=30), role="Scrum Master"
+        )
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.full.id].role == "Scrum Master"
+        assert rows[self.full.id].role_is_past is False
+
+    def test_a_bench_colleague_falls_back_to_the_role_of_their_last_placement(self):
+        """No current role to show, and their last one is the best answer to
+        "what does this person do" — flagged so it is not passed off as current."""
+        _placement(
+            self.bench, "Oud", self.today - timedelta(days=100), self.today - timedelta(days=40), role="AI Consultant"
+        )
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.bench.id].role == "AI Consultant"
+        assert rows[self.bench.id].role_is_past is True
+
+    def test_the_bench_role_comes_from_the_most_recent_placement(self):
+        _placement(
+            self.bench, "Ouder", self.today - timedelta(days=300), self.today - timedelta(days=200), role="Oude Rol"
+        )
+        _placement(
+            self.bench, "Recenter", self.today - timedelta(days=100), self.today - timedelta(days=40), role="Nieuwe Rol"
+        )
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.bench.id].role == "Nieuwe Rol"
+
+    def test_a_service_without_a_skill_leaves_the_role_empty(self):
+        """Six of the demo services have no skill, so the empty role is a real
+        case, not a theoretical one."""
+        _placement(self.full, "Zonder rol", self.today - timedelta(days=10), self.today + timedelta(days=30))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.full.id].role == ""
+        assert rows[self.full.id].segments[0].role == ""
+
+    def test_bench_bar_runs_from_the_last_end_up_to_today(self):
+        """The free stretch is drawn on the same axis as the placements."""
+        _placement(self.bench, "Oud", self.today - timedelta(days=60), self.today - timedelta(days=30))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        row = rows[self.bench.id]
+        left, width = row.bench_bar
+        assert row.bench_bar_clipped is False
+        # Ends at today, which sits at the horizon's back/total ratio.
+        today_pct = HORIZON_BACK_DAYS / (HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS) * 100
+        assert abs((left + width) - today_pct) < 0.5
+
+    def test_a_stretch_older_than_the_horizon_is_clipped_at_the_left_edge(self):
+        """Most people on the bench have been free longer than the axis reaches
+        back; without clipping every one of those bars would look the same."""
+        _placement(self.bench, "Lang geleden", self.today - timedelta(days=500), self.today - timedelta(days=400))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        row = rows[self.bench.id]
+        assert row.bench_bar[0] == 0.0
+        assert row.bench_bar_clipped is True
+
+    def test_a_colleague_never_placed_gets_no_bar(self):
+        never = _consultant("Nooit", "nooit2@x.nl")
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[never.id].bench_bar is None
+        assert rows[never.id].bench_bar_clipped is False
+
+    def test_a_placed_colleague_gets_no_free_bar(self):
+        """Being free is a bench thing; a placed row has nothing to draw."""
+        _placement(self.full, "Actief", self.today - timedelta(days=10), self.today + timedelta(days=30))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.full.id].bench_bar is None
+
+    def test_a_narrow_bar_drops_its_label(self):
+        """Below the threshold the label is all ellipsis and no word, so it
+        renders a stray "I..." beside a wider bar instead of a name."""
+        # Two weeks out of a ~six month horizon: well under the threshold.
+        _placement(self.full, "Heel Kort", self.today - timedelta(days=3), self.today + timedelta(days=11))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segment = next(s for s in rows[self.full.id].segments if s.assignment_name == "Heel Kort")
+        assert segment.width_pct < NARROW_BAR_PCT
+        assert segment.too_narrow is True
+
+    def test_a_wide_bar_keeps_its_label(self):
+        _placement(self.full, "Lang Genoeg", self.today - timedelta(days=30), self.today + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segment = next(s for s in rows[self.full.id].segments if s.assignment_name == "Lang Genoeg")
+        assert segment.too_narrow is False
 
     def test_sorting_bench_before_full(self):
         _placement(self.full, "Actief", self.today - timedelta(days=10), self.today + timedelta(days=30))
@@ -446,6 +578,95 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert "<nldd-inline-dialog" in content
         assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
+
+    def test_bench_and_placed_are_separate_sections(self):
+        """Bench first: an unstaffed colleague is what this page is scanned for."""
+        response = self.client.get(self.url)
+        content = response.content.decode()
+        assert "Op de bank (1)" in content
+        assert "Ingezet (2)" in content
+        assert content.index("Op de bank") < content.index("Ingezet (")
+        # Bench rows are compact, placed rows are not.
+        assert "bezetting-row--compact" in content
+
+    def test_a_bench_colleague_still_gets_a_bar_for_work_already_booked(self):
+        """The reason bench rows keep a timeline: a list of names cannot answer
+        whether anything is lined up, which is the point of looking at the bench."""
+        _placement(
+            self.bench, "Start volgende maand", self.today + timedelta(days=30), self.today + timedelta(days=120)
+        )
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        row = rows[self.bench.id]
+        # Booked work does not make them placed today...
+        assert row.bucket == "bench"
+        # ...but it is on their row.
+        assert [s.phase for s in row.segments] == ["planned"]
+
+        content = self.client.get(self.url).content.decode()
+        assert "Start volgende maand" in content
+
+    def test_bench_strip_reports_how_long_someone_has_been_free(self):
+        _placement(self.bench, "Afgerond", self.today - timedelta(days=400), self.today - timedelta(days=200))
+        response = self.client.get(self.url)
+        content = response.content.decode()
+        assert "vrij" in content
+
+    def test_a_colleague_who_was_never_placed_does_not_claim_a_free_since_date(self):
+        """No placement on record is a different thing from a long wait, and
+        sorting a None alongside ints used to raise."""
+        never = _consultant("Nooit Ingezet", "nooit@x.nl")
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "nog niet ingezet" in content
+        assert never.name in content
+
+    def test_rows_show_only_the_gilde_category_as_chips(self):
+        """The gilde is the subdivision this page is read by; the full expertise
+        list would fill the row, so those stay in the filter sheet."""
+        gilde = LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        expertise = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
+        self.bench.labels.add(Label.objects.create(name="ICT", category=gilde))
+        self.bench.labels.add(Label.objects.create(name="Security en privacy", category=expertise))
+
+        content = self.client.get(self.url).content.decode()
+        # Category colour, not a hardcoded one: #DCE3EA maps to neutral.
+        assert 'color="neutral" text="ICT"' in content
+        # The expertise label is still offered in the filter sheet, so assert on
+        # the chip markup rather than on the bare name appearing somewhere.
+        assert 'text="Security en privacy"></nldd-tag>' not in content
+
+    def test_a_colleague_without_a_gilde_label_gets_no_chip(self):
+        LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.bench.id].gilde_labels == []
+        assert self.client.get(self.url).status_code == 200
+
+    def test_chips_do_not_cost_a_query_per_colleague(self):
+        """Labels and merk are prefetched; without that this is an N+1.
+
+        Enough colleagues that a per-row query would clearly exceed the fixed
+        set: with only a handful the N+1 hides under any round threshold.
+        """
+        category = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
+        label = Label.objects.create(name="AI", category=category)
+        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        for i in range(25):
+            colleague = _consultant(f"Chip {i}", f"chip{i}@x.nl")
+            colleague.suborganization = merk
+            colleague.save()
+            colleague.labels.add(label)
+
+        with CaptureQueriesContext(connection) as queries:
+            rows = colleague_occupancy(self.today)
+            for row in rows:
+                list(row.colleague.labels.all())
+                _ = row.colleague.suborganization
+
+        assert len(rows) >= 25
+        # A fixed handful, not one per colleague: without the prefetch this runs
+        # well past 50.
+        assert len(queries) < 15, f"{len(queries)} queries for {len(rows)} rows — prefetch lost?"
 
     def test_unknown_status_ignored(self):
         response = self.client.get(self.url, {"status": "not-a-status"})

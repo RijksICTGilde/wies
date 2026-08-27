@@ -660,8 +660,8 @@ class Command(BaseCommand):
         # ── 4b. Colleague labels ─────────────────────────────────────────
         # Demo-only "Subgroep" category (see assign_random_labels_to_colleagues):
         # kept out of DEFAULT_LABELS so production seeds it as a post-release action.
-        subgroep, _ = LabelCategory.objects.get_or_create(name="Subgroep", defaults={"color": "#C4DBB7"})
-        for label_name in ("IT gilde", "Data en AI gilde"):
+        subgroep, _ = LabelCategory.objects.get_or_create(name="Subgroep", defaults={"color": "#DCE3EA"})
+        for label_name in ("ICT", "AI"):
             Label.objects.get_or_create(name=label_name, category=subgroep)
 
         labels_by_category = {category: list(category.labels.all()) for category in LabelCategory.objects.all()}

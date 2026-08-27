@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline
+- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline. Needs a "Subgroep" label category with the labels "AI" and "ICT" (colour #DCE3EA): the timeline rows show those as chips and the filter sheet offers them
 - ?
 
 ## 2026-08-21_2
