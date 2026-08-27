@@ -69,12 +69,17 @@ class BaseDummyDataFixtureTest(TestCase):
         levels = {segment.ending_level for row in rows for segment in row.segments}
         assert {"critical", "warning", "attention", "calm"} <= levels, levels
 
-    def test_some_bench_colleagues_have_work_lined_up(self):
+    def test_some_but_not_most_bench_colleagues_have_work_lined_up(self):
         """A planned bar on a bench row is the reason those rows keep a timeline
-        at all, so the demo data has to contain the case."""
-        rows = colleague_occupancy(timezone.now().date())
-        with_plans = [row for row in rows if row.bucket == "bench" and any(s.phase == "planned" for s in row.segments)]
+        at all, so the demo data has to contain the case — but only a minority.
+
+        An earlier spread booked ahead for two thirds of the bench, which reads
+        as a team with nothing left to plan rather than one with people to place.
+        """
+        bench = [row for row in colleague_occupancy(timezone.now().date()) if row.bucket == "bench"]
+        with_plans = [row for row in bench if any(s.phase == "planned" for s in row.segments)]
         assert len(with_plans) >= 2, f"only {len(with_plans)} bench rows with planned work"
+        assert len(with_plans) < len(bench) / 2, f"{len(with_plans)} of {len(bench)} bench rows already booked"
 
     def test_every_colleague_carries_a_gilde_label(self):
         """The Bezetting rows chip that category, and the filter sheet offers it."""
