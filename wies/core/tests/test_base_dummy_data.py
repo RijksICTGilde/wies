@@ -73,11 +73,7 @@ class BaseDummyDataFixtureTest(TestCase):
         """A planned bar on a bench row is the reason those rows keep a timeline
         at all, so the demo data has to contain the case."""
         rows = colleague_occupancy(timezone.now().date())
-        with_plans = [
-            row
-            for row in rows
-            if row.bucket == "bench" and any(s.phase == "planned" for s in row.segments)
-        ]
+        with_plans = [row for row in rows if row.bucket == "bench" and any(s.phase == "planned" for s in row.segments)]
         assert len(with_plans) >= 2, f"only {len(with_plans)} bench rows with planned work"
 
     def test_every_colleague_carries_a_gilde_label(self):
