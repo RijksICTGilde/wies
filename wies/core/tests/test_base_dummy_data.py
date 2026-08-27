@@ -3,14 +3,21 @@
 `just setup` runs a chain of commands, but several environments only get as far
 as `loaddata` — a PR preview seeded through /staff/, for one. What the fixture
 alone yields is therefore what those environments show.
+
+These tests measure against today, and the fixture holds fixed dates, so they
+are what will notice when it ages: the dates were last spread around September
+2026, and once most assignments have ended these fail rather than the demo
+quietly turning into a page of empty rows. Re-spread the dates when they do.
 """
 
 from django.contrib.auth import get_user_model
 from django.core import management
 from django.test import TestCase
+from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Placement
+from wies.core.models import Assignment, Colleague, LabelCategory, Placement
 from wies.core.roles import setup_roles
+from wies.core.services.occupancy import GILDE_CATEGORY, colleague_occupancy
 
 User = get_user_model()
 
@@ -45,6 +52,46 @@ class BaseDummyDataFixtureTest(TestCase):
         placed = Placement.objects.filter(colleague__user__groups__name="Consultant").count()
         assert placed >= 20, f"only {placed} placements on consultants"
         assert Assignment.objects.count() >= 10
+
+    def test_most_consultants_are_placed(self):
+        """The fixture's dates were written once and had aged: by the time this
+        test was added, 19 of 32 assignments had ended and 62% of consultants sat
+        on the bench — the opposite of what a consultancy looks like, and a demo
+        that showed empty rows instead of a timeline."""
+        rows = colleague_occupancy(timezone.now().date())
+        placed = sum(1 for row in rows if row.bucket != "bench")
+        share = placed / len(rows)
+        assert 0.5 <= share <= 0.85, f"{placed}/{len(rows)} placed ({share:.0%})"
+
+    def test_the_timeline_shows_every_urgency_band(self):
+        """A demo that only ever renders one colour proves nothing about the rest."""
+        rows = colleague_occupancy(timezone.now().date())
+        levels = {segment.ending_level for row in rows for segment in row.segments}
+        assert {"critical", "warning", "attention", "calm"} <= levels, levels
+
+    def test_some_bench_colleagues_have_work_lined_up(self):
+        """A planned bar on a bench row is the reason those rows keep a timeline
+        at all, so the demo data has to contain the case."""
+        rows = colleague_occupancy(timezone.now().date())
+        with_plans = [
+            row
+            for row in rows
+            if row.bucket == "bench" and any(s.phase == "planned" for s in row.segments)
+        ]
+        assert len(with_plans) >= 2, f"only {len(with_plans)} bench rows with planned work"
+
+    def test_every_colleague_carries_a_gilde_label(self):
+        """The Bezetting rows chip that category, and the filter sheet offers it."""
+        assert LabelCategory.objects.filter(name=GILDE_CATEGORY).exists()
+        rows = colleague_occupancy(timezone.now().date())
+        assert all(row.gilde_labels for row in rows), "a consultant without a gilde label"
+
+    def test_the_other_label_categories_are_populated_too(self):
+        """Expertise and Thema drive the filter sheet; empty ones filter nothing."""
+        for name in ("Expertise", "Thema"):
+            category = LabelCategory.objects.filter(name=name).first()
+            assert category is not None, f"no {name} category"
+            assert category.labels.exists(), f"{name} has no labels"
 
     def test_loading_twice_does_not_fail_on_duplicate_emails(self):
         """A unique index guards email case-insensitively, and /staff/ can load
