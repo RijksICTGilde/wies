@@ -225,7 +225,9 @@
     "fields": {
       "name": "Algemene Zaken",
       "label": "Ministerie van Algemene Zaken",
-      "abbreviations": ["AZ"],
+      "abbreviations": [
+        "AZ"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
       "oin_number": "null",
       "system_id": "123",
@@ -240,7 +242,9 @@
     "fields": {
       "name": "Binnenlandse Zaken en Koninkrijksrelaties",
       "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviations": ["BZK"],
+      "abbreviations": [
+        "BZK"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
       "oin_number": "00000001003214345000",
       "system_id": "9632",
@@ -255,7 +259,9 @@
     "fields": {
       "name": "Buitenlandse Zaken",
       "label": "Ministerie van Buitenlandse Zaken",
-      "abbreviations": ["BuZa"],
+      "abbreviations": [
+        "BuZa"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
       "oin_number": "00000001003227406000",
       "system_id": "2515",
@@ -270,7 +276,9 @@
     "fields": {
       "name": "Defensie",
       "label": "Ministerie van Defensie",
-      "abbreviations": ["Def"],
+      "abbreviations": [
+        "Def"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
       "oin_number": "I0000003273709850000",
       "system_id": "4958",
@@ -285,7 +293,9 @@
     "fields": {
       "name": "Economische Zaken",
       "label": "Ministerie van Economische Zaken",
-      "abbreviations": ["EZ"],
+      "abbreviations": [
+        "EZ"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
       "oin_number": "00000001003214369000",
       "system_id": "10621",
@@ -300,7 +310,9 @@
     "fields": {
       "name": "Financiën",
       "label": "Ministerie van Financiën",
-      "abbreviations": ["FIN"],
+      "abbreviations": [
+        "FIN"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
       "oin_number": "00000001003214394000",
       "system_id": "68820",
@@ -315,7 +327,9 @@
     "fields": {
       "name": "Infrastructuur en Waterstaat",
       "label": "Ministerie van Infrastructuur en Waterstaat",
-      "abbreviations": ["IenW"],
+      "abbreviations": [
+        "IenW"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
       "oin_number": "00000001003214321000",
       "system_id": "112773",
@@ -330,7 +344,9 @@
     "fields": {
       "name": "Justitie en Veiligheid",
       "label": "Ministerie van Justitie en Veiligheid",
-      "abbreviations": ["JenV"],
+      "abbreviations": [
+        "JenV"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
       "oin_number": "00000003273808340000",
       "system_id": "11906",
@@ -345,7 +361,9 @@
     "fields": {
       "name": "Onderwijs, Cultuur en Wetenschap",
       "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
-      "abbreviations": ["OCW"],
+      "abbreviations": [
+        "OCW"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
       "oin_number": null,
       "system_id": "71852",
@@ -360,7 +378,9 @@
     "fields": {
       "name": "Sociale Zaken en Werkgelegenheid",
       "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
-      "abbreviations": ["SZW"],
+      "abbreviations": [
+        "SZW"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
       "oin_number": "00000001003227522000",
       "system_id": "19087",
@@ -375,7 +395,9 @@
     "fields": {
       "name": "Volksgezondheid, Welzijn en Sport",
       "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "abbreviations": ["VWS"],
+      "abbreviations": [
+        "VWS"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
       "oin_number": null,
       "system_id": "8591",
@@ -390,7 +412,9 @@
     "fields": {
       "name": "Directoraat-generaal Belastingdienst",
       "label": "Directoraat-generaal Belastingdienst",
-      "abbreviations": ["DGBD"],
+      "abbreviations": [
+        "DGBD"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg12368",
       "oin_number": null,
       "system_id": "68888",
@@ -405,7 +429,9 @@
     "fields": {
       "name": "Rijkswaterstaat",
       "label": "Rijkswaterstaat",
-      "abbreviations": ["RWS"],
+      "abbreviations": [
+        "RWS"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10004",
       "oin_number": "00000001821699180000",
       "system_id": "112990",
@@ -420,7 +446,9 @@
     "fields": {
       "name": "Rijksinstituut voor Volksgezondheid en Milieu",
       "label": "Rijksinstituut voor Volksgezondheid en Milieu",
-      "abbreviations": ["RIVM"],
+      "abbreviations": [
+        "RIVM"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10123",
       "oin_number": null,
       "system_id": "66101",
@@ -435,7 +463,9 @@
     "fields": {
       "name": "Dienst Justitiële Inrichtingen",
       "label": "Dienst Justitiële Inrichtingen",
-      "abbreviations": ["DJI"],
+      "abbreviations": [
+        "DJI"
+      ],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10114",
       "oin_number": null,
       "system_id": "13080",
@@ -565,15 +595,1220 @@
     }
   },
   {
+    "model": "rijksauth.user",
+    "pk": 1000,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Kees",
+      "last_name": "van den Berg",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "2b6f6755-5a7c-533a-9eae-82d4e3ad8d07",
+      "email": "kees.van.den.berg@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1001,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Stijn",
+      "last_name": "Ben Ali",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "7edbed5e-f43d-547c-b939-3e5160c84226",
+      "email": "stijn.ben.ali@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1002,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Anna",
+      "last_name": "Demir",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "c58e2266-f6cd-524d-b879-120d7d516bbe",
+      "email": "anna.demir@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1003,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Sara",
+      "last_name": "de Haan",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "5f095513-1949-55a3-8ece-6b4291ff602d",
+      "email": "sara.de.haan@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1004,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Pieter",
+      "last_name": "de Wit",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "c028122d-e299-5be2-8733-6ac565dbcf46",
+      "email": "pieter.de.wit@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1005,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Diana",
+      "last_name": "Bos",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "1cb9e77c-64c4-5eb9-990f-787f5c8fa231",
+      "email": "diana.bos@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1006,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Marieke",
+      "last_name": "Achahbar",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "b14ee709-9806-56df-bd80-1a882aa66a0b",
+      "email": "marieke.achahbar@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1007,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Rick",
+      "last_name": "Scholten",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "c2e1e78a-cb0c-5d67-837b-618165b38411",
+      "email": "rick.scholten@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1008,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Renate",
+      "last_name": "Santos",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "de32d5a5-0e23-5270-8c8e-5d38967fee26",
+      "email": "renate.santos@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1009,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Sophie",
+      "last_name": "Willems",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "0c8c5ba8-26ff-5a41-8b57-9f44487dfe79",
+      "email": "sophie.willems@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1010,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Rob",
+      "last_name": "Scholten",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "e1a87889-dc6e-5f82-bb51-bcdcf10e17c6",
+      "email": "rob.scholten@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1011,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Dirk",
+      "last_name": "Kuiper",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "25a5c1e3-ab86-55b9-9cf6-b7917d13bd5d",
+      "email": "dirk.kuiper@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1012,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Mark",
+      "last_name": "Achahbar",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "a9a17811-16e9-5d40-8f8a-723164285ace",
+      "email": "mark.achahbar@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1013,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Aisha",
+      "last_name": "Scholten",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "60bceee8-0b54-5059-adc9-bf919ee0b08b",
+      "email": "aisha.scholten@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1014,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Wendy",
+      "last_name": "Visser",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "5ca72a52-2cbd-579c-a34a-67459361cc6c",
+      "email": "wendy.visser@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1015,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Anke",
+      "last_name": "Molenaar",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "b3ff3a68-bdf5-54c6-9285-c65e6a09dae6",
+      "email": "anke.molenaar@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1016,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Anke",
+      "last_name": "Jacobs",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "4c59908e-e026-555d-8bf9-b8576f1aec79",
+      "email": "anke.jacobs@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1017,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Laura",
+      "last_name": "van Leeuwen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "f2b150f4-f13d-52a9-afc7-462a631f1748",
+      "email": "laura.van.leeuwen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1018,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Laura",
+      "last_name": "Popov",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "4ea2b308-5299-5fde-a827-609a92a5886c",
+      "email": "laura.popov@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1019,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Vincent",
+      "last_name": "Nguyen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "d676b8f6-c6e9-5cd7-9b8c-142cff526851",
+      "email": "vincent.nguyen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1020,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Kees",
+      "last_name": "Brouwer",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "f463ac0a-acb8-5cd6-8350-33d935a9f7b7",
+      "email": "kees.brouwer@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1021,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Bas",
+      "last_name": "van Vliet",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "53b73975-1acc-5053-b022-bfde667cfd3c",
+      "email": "bas.van.vliet@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1022,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Willem",
+      "last_name": "Vos",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "7a11fda1-89be-51a3-a6da-f8dcbfac505d",
+      "email": "willem.vos@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1023,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Suzanne",
+      "last_name": "Vos",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "b32e1b92-c61e-5bdb-a9d3-cf1ba99e7e8d",
+      "email": "suzanne.vos@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1024,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Laura",
+      "last_name": "Demir",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "edbbb4d0-c89e-5de0-aab0-b2b83091e79c",
+      "email": "laura.demir@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Beheerder"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1025,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Esther",
+      "last_name": "Demir",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "6335875a-51d7-51bb-8ed3-b121c89270dc",
+      "email": "esther.demir@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1026,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Carlos",
+      "last_name": "de Jong",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "77e67c1c-c38d-539c-a6d1-4ed2a01fe0da",
+      "email": "carlos.de.jong@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1027,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Renate",
+      "last_name": "Maas",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "a6badc65-95f0-59d2-bf0d-c8aa7898ebf6",
+      "email": "renate.maas@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1028,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Niels",
+      "last_name": "de Boer",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "b3d7c567-1ddd-5246-b06d-c8c114acb428",
+      "email": "niels.de.boer@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1029,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Stefan",
+      "last_name": "Hendriks",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "a96c4cf0-40a3-5f20-a8d5-317d263bb737",
+      "email": "stefan.hendriks@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1030,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Hanna",
+      "last_name": "Jacobs",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "0fa8cda4-f00e-531a-9cce-ba87be25f5d9",
+      "email": "hanna.jacobs@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1031,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Miriam",
+      "last_name": "Molenaar",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "2fd151df-e32f-59c9-89a4-d6503e66a139",
+      "email": "miriam.molenaar@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1032,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Hassan",
+      "last_name": "Peters",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "595e8827-7861-5204-b331-4d4bcdbcf62c",
+      "email": "hassan.peters@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1033,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Thomas",
+      "last_name": "Ben Ali",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "c8c7e1ee-e416-5396-a946-71750befd5c4",
+      "email": "thomas.ben.ali@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Beheerder"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1034,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Erik",
+      "last_name": "Vermeer",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "d5f8418b-feb2-5224-b150-5a9439166fdc",
+      "email": "erik.vermeer@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1035,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Mark",
+      "last_name": "Nguyen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "1345afe0-1f35-50ec-877c-3d8451fbd680",
+      "email": "mark.nguyen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1036,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Wout",
+      "last_name": "Singh",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "9e796433-cb83-5152-b3bc-9ec9bd9b4806",
+      "email": "wout.singh@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1037,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Amina",
+      "last_name": "van der Veen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "bd41c867-76ac-52a5-b900-b16341adc476",
+      "email": "amina.van.der.veen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1038,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Martijn",
+      "last_name": "Bosman",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "722e3380-67c4-58c8-90d9-318a14ce3a44",
+      "email": "martijn.bosman@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Business Development Manager"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1039,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Jeroen",
+      "last_name": "de Groot",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "2c0f0383-7926-5c31-b015-8a90b0cb2994",
+      "email": "jeroen.de.groot@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1040,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Henk",
+      "last_name": "van der Veen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "1542b308-32de-5385-b09c-d7319a398a30",
+      "email": "henk.van.der.veen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1041,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Vincent",
+      "last_name": "Hermans",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "bcc72959-e4dc-5eff-8864-805a11019cc9",
+      "email": "vincent.hermans@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1042,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Joost",
+      "last_name": "van der Heijden",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "e68ce0a9-fb46-568d-b119-3ae9296cc724",
+      "email": "joost.van.der.heijden@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1043,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Daan",
+      "last_name": "Mulder",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "8b2761dc-1fa3-5119-a8cf-0323295d89c6",
+      "email": "daan.mulder@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1044,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Mariam",
+      "last_name": "Jacobs",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "d9770b3e-9a09-5249-89ea-d64328dc3256",
+      "email": "mariam.jacobs@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1045,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Naomi",
+      "last_name": "de Bruijn",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "ccccc131-5fc1-5eec-a41e-121fd1f7bb4f",
+      "email": "naomi.de.bruijn@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1046,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Wei",
+      "last_name": "Brouwer",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "688df1ce-296f-57f0-a4e8-1b75166f535d",
+      "email": "wei.brouwer@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1047,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Marco",
+      "last_name": "Popov",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "073132b8-9af8-5b8c-9176-23d26c8965e8",
+      "email": "marco.popov@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1048,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Kevin",
+      "last_name": "Popov",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "eac4a3de-ed17-58b5-940e-51161ced5cea",
+      "email": "kevin.popov@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "rijksauth.user",
+    "pk": 1049,
+    "fields": {
+      "password": "!",
+      "last_login": null,
+      "is_superuser": false,
+      "first_name": "Marco",
+      "last_name": "Nguyen",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2026-01-01T00:00:00Z",
+      "public_id": "cc102e04-5b96-5401-90b6-df3886e2a009",
+      "email": "marco.nguyen@rijksoverheid.nl",
+      "oidc_sub": null,
+      "onboarding_completed_at": "2026-01-01T00:00:00Z",
+      "groups": [
+        [
+          "Consultant"
+        ]
+      ],
+      "user_permissions": []
+    }
+  },
+  {
     "model": "core.colleague",
     "pk": 1,
     "fields": {
       "name": "Kees van den Berg",
       "email": "kees.van.den.berg@rijksoverheid.nl",
-      "skills": [5, 8, 9],
+      "skills": [
+        5,
+        8,
+        9
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1000
     }
   },
   {
@@ -582,10 +1817,14 @@
     "fields": {
       "name": "Stijn Ben Ali",
       "email": "stijn.ben.ali@rijksoverheid.nl",
-      "skills": [1, 2],
+      "skills": [
+        1,
+        2
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1001
     }
   },
   {
@@ -594,10 +1833,15 @@
     "fields": {
       "name": "Anna Demir",
       "email": "anna.demir@rijksoverheid.nl",
-      "skills": [1, 7, 18],
+      "skills": [
+        1,
+        7,
+        18
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1002
     }
   },
   {
@@ -606,10 +1850,14 @@
     "fields": {
       "name": "Sara de Haan",
       "email": "sara.de.haan@rijksoverheid.nl",
-      "skills": [9, 19],
+      "skills": [
+        9,
+        19
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1003
     }
   },
   {
@@ -618,10 +1866,15 @@
     "fields": {
       "name": "Pieter de Wit",
       "email": "pieter.de.wit@rijksoverheid.nl",
-      "skills": [9, 11, 14],
+      "skills": [
+        9,
+        11,
+        14
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1004
     }
   },
   {
@@ -630,10 +1883,13 @@
     "fields": {
       "name": "Diana Bos",
       "email": "diana.bos@rijksoverheid.nl",
-      "skills": [13],
+      "skills": [
+        13
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1005
     }
   },
   {
@@ -642,10 +1898,14 @@
     "fields": {
       "name": "Marieke Achahbar",
       "email": "marieke.achahbar@rijksoverheid.nl",
-      "skills": [2, 27],
+      "skills": [
+        2,
+        27
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1006
     }
   },
   {
@@ -654,10 +1914,13 @@
     "fields": {
       "name": "Rick Scholten",
       "email": "rick.scholten@rijksoverheid.nl",
-      "skills": [18],
+      "skills": [
+        18
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1007
     }
   },
   {
@@ -666,10 +1929,13 @@
     "fields": {
       "name": "Renate Santos",
       "email": "renate.santos@rijksoverheid.nl",
-      "skills": [23],
+      "skills": [
+        23
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1008
     }
   },
   {
@@ -678,10 +1944,13 @@
     "fields": {
       "name": "Sophie Willems",
       "email": "sophie.willems@rijksoverheid.nl",
-      "skills": [29],
+      "skills": [
+        29
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1009
     }
   },
   {
@@ -690,10 +1959,14 @@
     "fields": {
       "name": "Rob Scholten",
       "email": "rob.scholten@rijksoverheid.nl",
-      "skills": [15, 21],
+      "skills": [
+        15,
+        21
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1010
     }
   },
   {
@@ -702,10 +1975,14 @@
     "fields": {
       "name": "Dirk Kuiper",
       "email": "dirk.kuiper@rijksoverheid.nl",
-      "skills": [7, 22],
+      "skills": [
+        7,
+        22
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1011
     }
   },
   {
@@ -714,10 +1991,15 @@
     "fields": {
       "name": "Mark Achahbar",
       "email": "mark.achahbar@rijksoverheid.nl",
-      "skills": [6, 18, 24],
+      "skills": [
+        6,
+        18,
+        24
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1012
     }
   },
   {
@@ -726,10 +2008,14 @@
     "fields": {
       "name": "Aisha Scholten",
       "email": "aisha.scholten@rijksoverheid.nl",
-      "skills": [21, 23],
+      "skills": [
+        21,
+        23
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1013
     }
   },
   {
@@ -738,10 +2024,13 @@
     "fields": {
       "name": "Wendy Visser",
       "email": "wendy.visser@rijksoverheid.nl",
-      "skills": [28],
+      "skills": [
+        28
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1014
     }
   },
   {
@@ -750,10 +2039,14 @@
     "fields": {
       "name": "Anke Molenaar",
       "email": "anke.molenaar@rijksoverheid.nl",
-      "skills": [3, 7],
+      "skills": [
+        3,
+        7
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1015
     }
   },
   {
@@ -762,10 +2055,15 @@
     "fields": {
       "name": "Anke Jacobs",
       "email": "anke.jacobs@rijksoverheid.nl",
-      "skills": [13, 16, 21],
+      "skills": [
+        13,
+        16,
+        21
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1016
     }
   },
   {
@@ -774,10 +2072,13 @@
     "fields": {
       "name": "Laura van Leeuwen",
       "email": "laura.van.leeuwen@rijksoverheid.nl",
-      "skills": [24],
+      "skills": [
+        24
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1017
     }
   },
   {
@@ -786,10 +2087,14 @@
     "fields": {
       "name": "Laura Popov",
       "email": "laura.popov@rijksoverheid.nl",
-      "skills": [13, 19],
+      "skills": [
+        13,
+        19
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1018
     }
   },
   {
@@ -798,10 +2103,14 @@
     "fields": {
       "name": "Vincent Nguyen",
       "email": "vincent.nguyen@rijksoverheid.nl",
-      "skills": [3, 25],
+      "skills": [
+        3,
+        25
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1019
     }
   },
   {
@@ -810,10 +2119,15 @@
     "fields": {
       "name": "Kees Brouwer",
       "email": "kees.brouwer@rijksoverheid.nl",
-      "skills": [6, 22, 27],
+      "skills": [
+        6,
+        22,
+        27
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1020
     }
   },
   {
@@ -822,10 +2136,14 @@
     "fields": {
       "name": "Bas van Vliet",
       "email": "bas.van.vliet@rijksoverheid.nl",
-      "skills": [15, 20],
+      "skills": [
+        15,
+        20
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1021
     }
   },
   {
@@ -834,10 +2152,15 @@
     "fields": {
       "name": "Willem Vos",
       "email": "willem.vos@rijksoverheid.nl",
-      "skills": [9, 18, 25],
+      "skills": [
+        9,
+        18,
+        25
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1022
     }
   },
   {
@@ -846,10 +2169,14 @@
     "fields": {
       "name": "Suzanne Vos",
       "email": "suzanne.vos@rijksoverheid.nl",
-      "skills": [6, 14],
+      "skills": [
+        6,
+        14
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1023
     }
   },
   {
@@ -858,10 +2185,13 @@
     "fields": {
       "name": "Laura Demir",
       "email": "laura.demir@rijksoverheid.nl",
-      "skills": [17],
+      "skills": [
+        17
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1024
     }
   },
   {
@@ -870,10 +2200,15 @@
     "fields": {
       "name": "Esther Demir",
       "email": "esther.demir@rijksoverheid.nl",
-      "skills": [5, 7, 12],
+      "skills": [
+        5,
+        7,
+        12
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1025
     }
   },
   {
@@ -882,10 +2217,15 @@
     "fields": {
       "name": "Carlos de Jong",
       "email": "carlos.de.jong@rijksoverheid.nl",
-      "skills": [1, 11, 16],
+      "skills": [
+        1,
+        11,
+        16
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1026
     }
   },
   {
@@ -894,10 +2234,13 @@
     "fields": {
       "name": "Renate Maas",
       "email": "renate.maas@rijksoverheid.nl",
-      "skills": [2],
+      "skills": [
+        2
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1027
     }
   },
   {
@@ -906,10 +2249,15 @@
     "fields": {
       "name": "Niels de Boer",
       "email": "niels.de.boer@rijksoverheid.nl",
-      "skills": [3, 16, 28],
+      "skills": [
+        3,
+        16,
+        28
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1028
     }
   },
   {
@@ -918,10 +2266,15 @@
     "fields": {
       "name": "Stefan Hendriks",
       "email": "stefan.hendriks@rijksoverheid.nl",
-      "skills": [6, 16, 18],
+      "skills": [
+        6,
+        16,
+        18
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1029
     }
   },
   {
@@ -930,10 +2283,15 @@
     "fields": {
       "name": "Hanna Jacobs",
       "email": "hanna.jacobs@rijksoverheid.nl",
-      "skills": [23, 24, 25],
+      "skills": [
+        23,
+        24,
+        25
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1030
     }
   },
   {
@@ -942,10 +2300,15 @@
     "fields": {
       "name": "Miriam Molenaar",
       "email": "miriam.molenaar@rijksoverheid.nl",
-      "skills": [12, 15, 21],
+      "skills": [
+        12,
+        15,
+        21
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1031
     }
   },
   {
@@ -954,10 +2317,13 @@
     "fields": {
       "name": "Hassan Peters",
       "email": "hassan.peters@rijksoverheid.nl",
-      "skills": [8],
+      "skills": [
+        8
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1032
     }
   },
   {
@@ -966,10 +2332,15 @@
     "fields": {
       "name": "Thomas Ben Ali",
       "email": "thomas.ben.ali@rijksoverheid.nl",
-      "skills": [1, 8, 19],
+      "skills": [
+        1,
+        8,
+        19
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1033
     }
   },
   {
@@ -978,10 +2349,13 @@
     "fields": {
       "name": "Erik Vermeer",
       "email": "erik.vermeer@rijksoverheid.nl",
-      "skills": [2],
+      "skills": [
+        2
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1034
     }
   },
   {
@@ -990,10 +2364,13 @@
     "fields": {
       "name": "Mark Nguyen",
       "email": "mark.nguyen@rijksoverheid.nl",
-      "skills": [9],
+      "skills": [
+        9
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1035
     }
   },
   {
@@ -1002,10 +2379,13 @@
     "fields": {
       "name": "Wout Singh",
       "email": "wout.singh@rijksoverheid.nl",
-      "skills": [24],
+      "skills": [
+        24
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1036
     }
   },
   {
@@ -1014,10 +2394,14 @@
     "fields": {
       "name": "Amina van der Veen",
       "email": "amina.van.der.veen@rijksoverheid.nl",
-      "skills": [14, 27],
+      "skills": [
+        14,
+        27
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1037
     }
   },
   {
@@ -1026,10 +2410,14 @@
     "fields": {
       "name": "Martijn Bosman",
       "email": "martijn.bosman@rijksoverheid.nl",
-      "skills": [14, 15],
+      "skills": [
+        14,
+        15
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1038
     }
   },
   {
@@ -1038,10 +2426,13 @@
     "fields": {
       "name": "Jeroen de Groot",
       "email": "jeroen.de.groot@rijksoverheid.nl",
-      "skills": [13],
+      "skills": [
+        13
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1039
     }
   },
   {
@@ -1050,10 +2441,13 @@
     "fields": {
       "name": "Henk van der Veen",
       "email": "henk.van.der.veen@rijksoverheid.nl",
-      "skills": [7],
+      "skills": [
+        7
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1040
     }
   },
   {
@@ -1062,10 +2456,13 @@
     "fields": {
       "name": "Vincent Hermans",
       "email": "vincent.hermans@rijksoverheid.nl",
-      "skills": [9],
+      "skills": [
+        9
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1041
     }
   },
   {
@@ -1074,10 +2471,15 @@
     "fields": {
       "name": "Joost van der Heijden",
       "email": "joost.van.der.heijden@rijksoverheid.nl",
-      "skills": [2, 4, 21],
+      "skills": [
+        2,
+        4,
+        21
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1042
     }
   },
   {
@@ -1086,10 +2488,13 @@
     "fields": {
       "name": "Daan Mulder",
       "email": "daan.mulder@rijksoverheid.nl",
-      "skills": [6],
+      "skills": [
+        6
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1043
     }
   },
   {
@@ -1098,10 +2503,14 @@
     "fields": {
       "name": "Mariam Jacobs",
       "email": "mariam.jacobs@rijksoverheid.nl",
-      "skills": [2, 6],
+      "skills": [
+        2,
+        6
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1044
     }
   },
   {
@@ -1110,10 +2519,14 @@
     "fields": {
       "name": "Naomi de Bruijn",
       "email": "naomi.de.bruijn@rijksoverheid.nl",
-      "skills": [10, 14],
+      "skills": [
+        10,
+        14
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1045
     }
   },
   {
@@ -1122,10 +2535,13 @@
     "fields": {
       "name": "Wei Brouwer",
       "email": "wei.brouwer@rijksoverheid.nl",
-      "skills": [10],
+      "skills": [
+        10
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1046
     }
   },
   {
@@ -1134,10 +2550,15 @@
     "fields": {
       "name": "Marco Popov",
       "email": "marco.popov@rijksoverheid.nl",
-      "skills": [2, 18, 24],
+      "skills": [
+        2,
+        18,
+        24
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1047
     }
   },
   {
@@ -1146,10 +2567,14 @@
     "fields": {
       "name": "Kevin Popov",
       "email": "kevin.popov@rijksoverheid.nl",
-      "skills": [17, 29],
+      "skills": [
+        17,
+        29
+      ],
       "labels": [],
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "user": 1048
     }
   },
   {
@@ -1158,10 +2583,13 @@
     "fields": {
       "name": "Marco Nguyen",
       "email": "marco.nguyen@rijksoverheid.nl",
-      "skills": [29],
+      "skills": [
+        29
+      ],
       "labels": [],
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "user": 1049
     }
   },
   {

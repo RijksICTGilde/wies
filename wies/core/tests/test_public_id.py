@@ -33,6 +33,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
+from wies.core.roles import setup_roles
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
@@ -61,6 +62,9 @@ class AssignmentPublicIdTests(TestCase):
 
     def test_base_fixture_loads_and_every_assignment_has_a_public_id(self):
         """Every assignment in the committed base fixture has a public_id."""
+        # The fixture ships a user per colleague and references their role group
+        # by name, so the groups have to exist before it loads.
+        setup_roles()
         call_command("loaddata", "base_dummy_data.json", verbosity=0)
 
         total = Assignment.objects.count()
@@ -161,6 +165,8 @@ class ColleaguePublicIdTests(TestCase):
         assert c1.public_id != c2.public_id
 
     def test_base_fixture_loads_and_every_colleague_has_a_public_id(self):
+        # See the assignment fixture test: the fixture needs the role groups.
+        setup_roles()
         call_command("loaddata", "base_dummy_data.json", verbosity=0)
 
         assert Colleague.objects.count() > 0

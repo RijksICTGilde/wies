@@ -1,11 +1,16 @@
 """Give dummy colleagues a user account and a role, so roles are represented in
 the demo data.
 
-Fixture colleagues (base_dummy_data.json) have no linked user, so none of them
-carry a Django role group. This command creates a user for each colleague that
-lacks one, links it, and assigns a role — weighted so most colleagues are
-Consultants, some are Business Development Managers and a few are Beheerders.
-The Bezetting page only lists Consultants, so without this it would be empty.
+The fixture (base_dummy_data.json) now ships a user per colleague, so a plain
+fixture load already yields the role spread this command produces — including on
+environments that only run `loaddata`, such as a PR preview seeded through
+/staff/. The Bezetting page lists Consultants only, and would be empty without
+those users.
+
+This command remains for colleagues that arrive without one: rows imported from
+OTYS, or a fixture loaded before the users were added. It skips anyone who
+already has a user, so running it after a fixture load is a no-op rather than a
+duplicate-email error.
 
 Runs after ``setup`` (which seeds the role groups) and after the fixture load;
 see the ``setup`` recipe in the justfile.
