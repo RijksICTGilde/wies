@@ -28,13 +28,13 @@ repos:
         exclude: "jinja2/"
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.30.0"
+    rev: "1.32.0"
     hooks:
       - id: django-upgrade
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
+    rev: v0.16.5
     hooks:
       - id: ruff
         args: [--fix]
