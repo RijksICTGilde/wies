@@ -15,18 +15,10 @@
   <nldd-title size="3">
   <h1>Bezetting</h1>
   </nldd-title>
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  <nldd-rich-text>
-  <p>
-    Overzicht van alle consultants: wie zit er op de bank en wie is er ingezet. Gebruik de filters
-    om een subselectie van de consultants te tonen.
-  </p>
-  </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# The Filters button and results sit together in the results partial: the button
-     lives just under the summary cards (logically grouped with them) and the sheet
-     it opens drives #results via htmx. Same filter system as the "Gebruikers"
-     list. #}
+  {# The filter row and the results live together in the results partial: the
+     Filters button sits on the row with the status cards, and the sheet it opens
+     drives #results via htmx. Same filter system as the "Gebruikers" list. #}
   {% include "parts/bezetting_results.html" %}
   {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
      #filter-form inside is what the chips drive. #}

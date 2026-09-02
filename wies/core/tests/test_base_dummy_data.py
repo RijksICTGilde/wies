@@ -63,11 +63,11 @@ class BaseDummyDataFixtureTest(TestCase):
         share = placed / len(rows)
         assert 0.5 <= share <= 0.85, f"{placed}/{len(rows)} placed ({share:.0%})"
 
-    def test_the_timeline_shows_every_urgency_band(self):
-        """A demo that only ever renders one colour proves nothing about the rest."""
+    def test_the_timeline_shows_both_urgency_bands(self):
+        """A demo that only ever renders one colour proves nothing about the other."""
         rows = colleague_occupancy(timezone.now().date())
         levels = {segment.ending_level for row in rows for segment in row.segments}
-        assert {"critical", "warning", "attention", "calm"} <= levels, levels
+        assert {"soon", "calm"} <= levels, levels
 
     def test_some_but_not_most_bench_colleagues_have_work_lined_up(self):
         """A planned bar on a bench row is the reason those rows keep a timeline

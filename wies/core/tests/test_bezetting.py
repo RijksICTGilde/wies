@@ -218,14 +218,12 @@ class OccupancyServiceTest(TestCase):
         assert all(seg.ends_soon is False for seg in rows[self.full.id].segments)
 
     def test_ending_level_bands(self):
-        """Four urgency bands, so a bar's colour ranks how soon it ends."""
+        """One band: work ending within three months is flagged, the rest is calm."""
         for days, expected in (
-            (5, "critical"),
-            (31, "critical"),
-            (32, "warning"),
-            (62, "warning"),
-            (63, "attention"),
-            (93, "attention"),
+            (5, "soon"),
+            (31, "soon"),
+            (62, "soon"),
+            (93, "soon"),
             (94, "calm"),
             (200, "calm"),
         ):
@@ -566,7 +564,7 @@ class BezettingStatusFilterViewTest(TestCase):
         # card, tolerating the markup between them.
         response = self.client.get(self.url, {"status": "bench"})
         content = response.content.decode()
-        assert re.search(r">2</span>.*?volledig ingezet", content, re.DOTALL)
+        assert re.search(r">2</span>.*?ingezet", content, re.DOTALL)
         assert re.search(r">1</span>.*?op de bank", content, re.DOTALL)
 
     def test_empty_result_uses_the_shared_empty_state(self):
@@ -579,13 +577,13 @@ class BezettingStatusFilterViewTest(TestCase):
         assert "<nldd-inline-dialog" in content
         assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
 
-    def test_bench_and_placed_are_separate_sections(self):
-        """Bench first: an unstaffed colleague is what this page is scanned for."""
+    def test_bench_rows_come_first(self):
+        """One list, bench first: an unstaffed colleague is what this page is
+        scanned for. The headings that used to split the two are gone — the
+        hatched free stretch says which rows are the empty ones."""
         response = self.client.get(self.url)
         content = response.content.decode()
-        assert "Op de bank (1)" in content
-        assert "Ingezet (2)" in content
-        assert content.index("Op de bank") < content.index("Ingezet (")
+        assert content.index(self.bench.name) < content.index(self.full.name)
         # Bench rows are compact, placed rows are not.
         assert "bezetting-row--compact" in content
 
@@ -611,15 +609,18 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert "vrij" in content
 
-    def test_a_colleague_who_was_never_placed_does_not_claim_a_free_since_date(self):
-        """No placement on record is a different thing from a long wait, and
-        sorting a None alongside ints used to raise."""
+    def test_a_colleague_who_was_never_placed_still_renders(self):
+        """No placement on record is a different thing from a long wait: there is
+        no free-since date to draw a stretch from, and sorting that None
+        alongside ints used to raise."""
         never = _consultant("Nooit Ingezet", "nooit@x.nl")
         response = self.client.get(self.url)
         assert response.status_code == 200
         content = response.content.decode()
-        assert "nog niet ingezet" in content
         assert never.name in content
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[never.id].bench_days is None
+        assert rows[never.id].bench_bar is None
 
     def test_rows_show_only_the_gilde_category_as_chips(self):
         """The gilde is the subdivision this page is read by; the full expertise
@@ -674,7 +675,10 @@ class BezettingStatusFilterViewTest(TestCase):
         assert b"Bea Bank" in response.content
         assert b"Fred Full" in response.content
 
-    def test_active_status_renders_dismiss_chip(self):
+    def test_active_status_shows_on_its_own_card(self):
+        """No chip beside the Filters button: a status says it is on by its card
+        being pressed, and repeating it as a token forced the row to wrap."""
         response = self.client.get(self.url, {"status": "bench"})
-        assert b'data-filter-name="status"' in response.content
-        assert b'data-filter-value="bench"' in response.content
+        content = response.content.decode()
+        assert re.search(r'data-status="bench"[^>]*\s+aria-pressed="true"', content, re.DOTALL)
+        assert re.search(r'data-status="full"[^>]*\s+aria-pressed="false"', content, re.DOTALL)

@@ -27,15 +27,11 @@ HORIZON_BACK_DAYS = 61
 HORIZON_AHEAD_DAYS = 122
 ENDS_SOON_DAYS = 60
 
-# How close an active placement is to its end, as four levels. The bar is
-# coloured by this, so a business manager sees urgency without reading dates.
-# Thresholds in days: a month is 31 here rather than 30, so "ends on the same day
-# next month" lands in the level people expect.
-ENDING_LEVELS = (
-    (31, "critical"),  # within a month
-    (62, "warning"),  # within two
-    (93, "attention"),  # within three
-)
+# Work wrapping up within three months is coloured, so a business manager sees
+# who frees up without reading dates. 93 days rather than 90, so "ends on the
+# same day three months out" lands inside the band people expect.
+ENDING_SOON_DAYS = 93
+ENDING_LEVEL_SOON = "soon"
 ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
 
 # Below this share of the horizon a bar cannot hold its own label legibly.
@@ -82,10 +78,14 @@ class TimelineSegment:
     # that something of this colleague's ends soon; on someone with several
     # placements it named neither which, nor that the others run on.
     ends_soon: bool = False
-    # Which ENDING_LEVELS band this placement's end falls in. Only active
+    # Whether this placement ends within ENDING_SOON_DAYS. Only active
     # placements carry a level: a planned or finished bar says nothing about how
     # soon someone frees up.
     ending_level: str = ENDING_LEVEL_CALM
+    # Whole days from today until this placement ends, for the bars that are
+    # wrapping up. None wherever ending_level is calm, so the template has
+    # nothing to render there.
+    days_left: int | None = None
 
 
 @dataclass
@@ -156,19 +156,28 @@ def _position(start: date | None, end: date | None, horizon_start: date, horizon
 
 
 def _ending_level(end: date | None, phase: str, today: date) -> str:
-    """Which urgency band an active placement's end falls in.
+    """Whether an active placement ends soon enough to flag.
 
-    Only active work gets a level: a planned placement has not started and a
+    Only active work gets flagged: a planned placement has not started and a
     finished one is already over, so neither says anything about how soon this
     colleague frees up. No end date is calm — open-ended is not urgent.
     """
     if phase != "active" or end is None:
         return ENDING_LEVEL_CALM
-    days_left = (end - today).days
-    for threshold, level in ENDING_LEVELS:
-        if days_left <= threshold:
-            return level
+    if (end - today).days <= ENDING_SOON_DAYS:
+        return ENDING_LEVEL_SOON
     return ENDING_LEVEL_CALM
+
+
+def _days_left(end: date | None, phase: str, today: date) -> int | None:
+    """Whole days until an active placement ends, or None when that says nothing.
+
+    Same rule as ``_ending_level``: only running work counts down, so a planned
+    or finished bar has no number, and neither does open-ended work.
+    """
+    if phase != "active" or end is None:
+        return None
+    return (end - today).days
 
 
 def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> int:
@@ -296,6 +305,7 @@ def colleague_occupancy(
                     width_pct=width,
                     ends_soon=(phase == "active" and end is not None and end <= soon_cutoff),
                     ending_level=_ending_level(end, phase, today),
+                    days_left=_days_left(end, phase, today),
                     # 8% of the horizon is roughly four weeks; below that the
                     # label is all ellipsis and no word.
                     too_narrow=width < NARROW_BAR_PCT,

@@ -8,21 +8,28 @@
    named "status" with data-filter-input; the #filter-form's hx-include picks it
    up and filter_interactions.js re-submits on toggle. Counts stay the full
    population within the merk/label selection, so they don't change when toggled. #}
-{% macro status_card(status, count, label) %}
+{% macro status_card(status, count, label, short=none) %}
   {% set is_active = status in selected_statuses %}
   <button type="button"
           class="bezetting-stat"
           data-status-card
           data-status="{{ status }}"
           aria-pressed="{{ 'true' if is_active else 'false' }}">
-    {# The count is the point of the card, so it carries the visual weight; the
-       label reads as its caption. nldd-title borrows heading typography for a
-       number that is not a heading, so the two lines are plain elements sized
-       from the token scale instead. #}
+    {# Count and caption on one line, so the card is button-height and the whole
+       set fits on the row with the Filters button. The count carries the visual
+       weight and the caption reads as its label; they are plain elements sized
+       from the token scale, since nldd-title would borrow heading typography for
+       a number that is not a heading. #}
     <nldd-card background="tinted" accessible-label="{{ count }} {{ label }}">
-    <nldd-container padding="16" layout="stack" gap="4">
+    <nldd-container padding="8" layout="row" gap="8" vertical-alignment="center">
     <span class="bezetting-stat__count">{{ count }}</span>
-    <span class="bezetting-stat__label">{{ label }}</span>
+    <span class="bezetting-stat__label">{{ short or label }}</span>
+    {# Same chevron as the opdracht and plaatsing cards, so a card that responds
+         to a click looks like the other cards that do. Decorative: the button
+         itself carries the accessible label and its pressed state. #}
+    <span class="bezetting-stat__chevron assignment-card__chevron" aria-hidden="true">
+      <nldd-icon size="20" name="chevron-right"></nldd-icon>
+    </span>
     </nldd-container>
     </nldd-card>
     <input type="checkbox"
@@ -33,52 +40,39 @@
            {% if is_active %}checked{% endif %} />
   </button>
 {% endmacro %}
-<nldd-collection layout="grid" gap="16px" accessible-label="Samenvatting bezetting">
-{{ status_card('bench', bench_count, 'op de bank') }}
-{{ status_card('full', full_count, 'volledig ingezet') }}
-{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 60 dagen') }}
-</nldd-collection>
-<nldd-spacer size="16" direction="vertical"></nldd-spacer>
-{# Filters open the left sheet (parts/bezetting_filter_sheet.html); user_filter.js
-     listens for data-user-filter-open. Placed under the summary cards so it reads
-     as "narrow this overview down". #}
-<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
-{% if has_active_filters %}
-  {# Active-filter chips sit with the Filters button that manages them (not at the
-     top of the page): the filter panel is a sheet, so without these tokens nothing
-     says WHAT is being filtered. #}
-  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
-  {% set status_labels = {"bench": "Op de bank", "full": "Volledig ingezet", "ends_soon": "Eindigt binnen 60 dagen"} %}
-  {% for status in selected_statuses %}
-    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ status_labels.get(status, status) }}" data-wies-dismiss="filter" data-filter-name="status" data-filter-value="{{ status }}">{{ status_labels.get(status, status) }}</nldd-token>
-  {% endfor %}
-  {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
-      {% set values = active_filters.get(filter_group.name) %}
-      {% if values %}
-        {% for selected_value in values %}
-          {% for option in filter_group.options %}
-            {% if option.value == selected_value %}
-              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
-  {# filter_interactions.js handles data-clear-all-filters. #}
-  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
-  </nldd-container>
-{% endif %}
+{# Four items on one row: the three status filters and the sheet that holds
+   every other filter. They are one set of controls, so they get one row and
+   equal treatment rather than a block of cards with a button beside it.
+
+   No chips here. What is selected lives in the sheet, and the button counts it;
+   repeating each selection as a token beside the button is what forced the row
+   to wrap the moment a filter went on. #}
+<ul class="bezetting-toolbar" aria-label="Filters">
+  {# Short captions: the row shrinks these three before anything else, and the
+     longer phrasing ("volledig ingezet", "eindigt binnen 60 dagen") truncated to
+     an unreadable stub well before a laptop's width ran out. The card's
+     accessible label still carries the full sentence for a screen reader. #}
+  <li>{{ status_card('bench', bench_count, 'op de bank') }}</li>
+  <li>{{ status_card('full', full_count, 'volledig ingezet', 'ingezet') }}</li>
+  <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 60 dagen', 'eindigt bijna') }}</li>
+  {# user_filter.js listens for data-user-filter-open; the count tells you how
+     many filters are on inside without opening it. #}
+  <li>
+    <nldd-button id="user-filter-button"
+                 variant="secondary"
+                 start-icon="filter"
+                 text="Alle filters{% if active_filter_values %} ({{ active_filter_values }}){% endif %}"
+                 data-user-filter-open></nldd-button>
+  </li>
+</ul>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Tijdlijn #}
 <div class="bezetting-timeline">
   {# Koptekst: maandmarkeringen + 'vandaag' #}
   <div class="bezetting-timeline-head">
-    <div class="bezetting-row__side bezetting-row__side--head">
-      <span class="bezetting-colheading">Collega</span>
-    </div>
+    {# No column heading: the cell below it holds names, which need no label.
+         The cell itself stays — it is what gives the name column its width. #}
+    <div class="bezetting-row__side bezetting-row__side--head"></div>
     <div class="bezetting-track bezetting-track--head">
       {% for tick in month_ticks %}
         <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %}"
@@ -87,12 +81,15 @@
         </div>
       {% endfor %}
       <div class="bezetting-today" style="left: {{ today_pct }}%">
-        <span class="bezetting-today__label">vandaag</span>
+        {# The date as well as the word: the marker says where today falls, but
+             the bars around it are read against actual dates ("tot 10 sep"), and
+             without one here the reader had to work it out from the month ticks. #}
+        <span class="bezetting-today__label">vandaag {{ today|datum_nl("j b") }}</span>
       </div>
     </div>
   </div>
-  {# One row shape for both sections: a bench row is the same row with a smaller
-     avatar and its free-since line, so the two cannot drift apart. #}
+  {# One row shape for both sections: a bench row is the same row plus its
+     free-since line, so the two cannot drift apart. #}
   {% macro timeline_row(row, compact=false) %}
     <div class="bezetting-row bezetting-row--{{ row.bucket }}{% if compact %} bezetting-row--compact{% endif %}"
          style="--bezetting-lanes: {{ row.lane_count }}">
@@ -101,29 +98,21 @@
          hx-get="{{ row.colleague.panel_url }}"
          hx-target="#side-panel-content"
          hx-swap="innerHTML">
-        {# The left accent bar already signals bench vs. ingezet, and the
-             "eindigt" date sits on the bar it belongs to: next to the name it
-             read as if the COLLEAGUE stopped, while someone on two opdrachten
-             may have one wrapping up and another running on for months. #}
+        {# The "eindigt" date sits on the bar it belongs to, not next to the
+             name: there it read as if the COLLEAGUE stopped, while someone on
+             two opdrachten may have one wrapping up and another running on for
+             months. Which section a row is in says bench vs. ingezet. #}
         <div class="bezetting-person">
-          <nldd-avatar size="{{ 28 if compact else 40 }}" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+          <nldd-avatar size="28" name="{{ row.colleague.name }}" decorative></nldd-avatar>
           {# A span, not <strong>: the weight is visual hierarchy within the
                row, not emphasis a screen reader should announce. #}
           <span class="bezetting-person__name">{{ row.colleague.name }}</span>
-          {# What this person does. On the bench there is no current role, so
-               the last one stands in — marked "laatst", because presenting a
-               finished role as the current one would be a plain untruth. #}
+          {# What this person does. On the bench this is their most recent role
+               rather than a current one; the row already sits under "Op de bank",
+               so the qualifier that used to precede it said what the section had
+               said already. #}
           {% if row.role %}
-            <span class="bezetting-person__role">
-              {%- if row.role_is_past %}laatst: {% endif -%}
-              {{ row.role }}
-            </span>
-          {% endif %}
-          {# How long someone has been free is drawn on the track as a bar, not
-               repeated here: three columns of text per row made the list hard to
-               scan. Only the case with no bar to draw keeps a word. #}
-          {% if compact and row.bench_days is none %}
-            <span class="bezetting-person__since">nog niet ingezet</span>
+            <span class="bezetting-person__role">{{ row.role }}</span>
           {% endif %}
           {# The gilde a colleague belongs to, and only that category: showing
                it on the row is what makes a filtered view explainable ("why is
@@ -153,7 +142,11 @@
                       width: {{ row.bench_bar[1] }}%"
                title="{{ row.bench_days|bankduur }}, sinds {{ row.bench_since|datum_nl('j b Y') }}">
             {# djlint:on #}
-            <span class="bezetting-free__label">{{ row.bench_days|bankduur }}</span>
+            {# Plain days, not the rounded "5 maanden" of bankduur: on a
+                 timeline the bar's own length already says roughly how long,
+                 and what it cannot say is the exact number. The title keeps
+                 the rounded phrasing plus the date it started. #}
+            <span class="bezetting-free__label">{{ row.bench_days }} {{ "dag" if row.bench_days == 1 else "dagen" }} vrij</span>
           </div>
         {% endif %}
         {# Lane stack, vertically centred so a single bar sits mid-row. #}
@@ -172,10 +165,14 @@
                 <span class="bezetting-seg__label">{{ seg.assignment_name }}</span>
               {% endif %}
               {% if seg.ending_level != "calm" %}
-                {# The end date on the bar that ends, so it is unambiguous which
-                     opdracht is wrapping up — and so the level is not carried by
-                     colour alone, which no colour-blind reader can rank. #}
-                <span class="bezetting-seg__end">tot {{ seg.end|datum_nl("j b") }}</span>
+                {# Days remaining rather than the end date: how soon someone
+                     frees up is the question this page is read for, and a date
+                     makes the reader subtract it from today themselves. On the
+                     bar that ends, so it is unambiguous which opdracht is
+                     wrapping up — and so the level is not carried by colour
+                     alone, which no colour-blind reader can rank. The exact
+                     date stays in the title. #}
+                <span class="bezetting-seg__end">nog {{ seg.days_left }} {{ "dag" if seg.days_left == 1 else "dagen" }}</span>
               {% endif %}
             </div>
           {% endfor %}
@@ -184,17 +181,13 @@
     </div>
   {% endmacro %}
   <div class="bezetting-rows">
-    {# Bench first: an unstaffed colleague is what this page is scanned for, and
-       their row shows whether anything is already booked — the thing a list of
-       names could not answer. #}
-    {% if bench_rows %}
-      <div class="bezetting-sectionhead">Op de bank ({{ bench_rows|length }})</div>
-      {% for row in bench_rows %}{{ timeline_row(row, compact=true) }}{% endfor %}
-    {% endif %}
-    {% if rows %}
-      <div class="bezetting-sectionhead">Ingezet ({{ rows|length }})</div>
-      {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
-    {% endif %}
+    {# One list, bench rows first: an unstaffed colleague is what this page is
+       scanned for, and their row shows whether anything is already booked — the
+       thing a list of names could not answer. No headings between the two: the
+       hatched free stretch already says which rows are the empty ones, and the
+       counts they carried are on the cards above. #}
+    {% for row in bench_rows %}{{ timeline_row(row, compact=true) }}{% endfor %}
+    {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
     {% if not bench_rows and not rows %}
       {# nldd-inline-dialog is the empty state across the app (see
          parts/placement_card_grid.html); a bare paragraph reads as body copy. #}

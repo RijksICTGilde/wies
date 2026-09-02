@@ -4,9 +4,50 @@
 /* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
    Bezetting-specific filter styling lives here. */
 
+/* The filter row: three status toggles and the sheet that holds the rest. The
+   cards ARE filters (each is an OR-toggle on a status), so they sit on the row
+   with the Filters button rather than reading as a passive header above it.
+
+   A single flex row of four. It does not wrap: the cards give up width first
+   (they carry a short count and a caption that can ellipsis), while the button
+   keeps its full label, because "Alle filters" is the way back to everything the
+   row cannot show. */
+.bezetting-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The three cards share the free space and shrink together; min-width: 0 lets
+   them go below their content width so the caption ellipsises instead of
+   pushing the button off the row. */
+.bezetting-toolbar > li {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  /* The height nldd-button resolves to. The cards are the same kind of control
+     as the button beside them, so they match it rather than sizing themselves
+     from their own padding. */
+  height: 44px;
+}
+
+/* The button is the one item that must stay readable at every width: it is how
+   you reach the filters that do not fit on the row. */
+.bezetting-toolbar > li:last-child {
+  flex: 0 0 auto;
+}
+
 /* Summary cards double as status filters. The clickable element is a native
    <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
-   button chrome and let the card fill the grid cell. */
+   button chrome and let the card size the control.
+
+   No height: 100% here. It made sense while the cards sat in a collection's grid
+   cells, which have a height to fill; on a plain list item there is nothing to
+   resolve the percentage against, so the button collapsed to zero and took the
+   visible card with it. */
 .bezetting-stat {
   display: block;
   width: 100%;
@@ -31,32 +72,39 @@
   outline-offset: 2px;
 }
 
-.bezetting-stat nldd-card {
-  display: block;
-  height: 100%;
-}
-
 /* The count and its caption. Sized from the token scale rather than borrowed
    from nldd-title, which carries heading typography for something that is not a
    heading. line-height 1 keeps the number tight above its caption. */
+/* Still the weight of the card, but sized to sit beside its caption rather than
+   above it: at font-size-400 the number set the card's height on its own. */
 .bezetting-stat__count {
-  display: block;
-  font-size: var(--primitives-font-size-400);
   font-weight: var(--primitives-font-weight-body-extra-bold, 700);
-  line-height: 1;
   color: var(--semantics-content-color);
 }
 
+/* Truncates rather than wraps when the row runs out of room: the cards shrink
+   together, and a caption that wrapped would break the row's single-line
+   height. The full text stays available as the card's accessible label. */
 .bezetting-stat__label {
-  display: block;
   color: var(--semantics-content-secondary-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
-/* The timeline's only column heading. Same weight as a list header, without
-   pulling in a heading component for one word. */
-.bezetting-colheading {
-  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
-  color: var(--semantics-content-secondary-color);
+/* The count never truncates — it is the point of the card. */
+.bezetting-stat__count {
+  flex: 0 0 auto;
+}
+
+/* Pushes the chevron to the card's right edge: the count/label column takes the
+   slack, so the arrow sits where it does on the opdracht cards regardless of how
+   long the caption is. Colour and pointer-events come from
+   .assignment-card__chevron in app.css, which this element also carries. */
+.bezetting-stat__chevron {
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
@@ -83,10 +131,13 @@
   color: var(--primitives-color-success-750);
 }
 
+/* Planned work is drawn exactly like active work: both say "this person is
+   booked", and where the bar sits relative to today already says which is
+   which. A separate hue for it added a third colour that carried no decision. */
 .bezetting-seg--planned {
-  background: var(--primitives-color-accent-75);
-  border-color: var(--primitives-color-accent-300);
-  color: var(--primitives-color-accent-750);
+  background: var(--primitives-color-success-75);
+  border-color: var(--primitives-color-success-300);
+  color: var(--primitives-color-success-750);
 }
 
 /* Completed work is history: neutral, and quieter still than the two live phases. */
@@ -99,9 +150,8 @@
 /* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
 .bezetting-timeline {
   --bezetting-side-width: 360px;
-  /* 52px, not 44: the name cell holds a 40px avatar with 6px padding above and
-     below, so 44 was never the height a row actually took and the bars were
-     centred against a number the row did not have. */
+  /* The row is taller than its 28px avatar: the bars are the content, and a
+     row squeezed to avatar height left them no room to breathe. */
   --bezetting-row-height: 52px;
   /* A single bar fills most of that height. At 24px it left more empty space
      above and below than the bar itself occupied, on a page whose bars are the
@@ -327,42 +377,31 @@
   pointer-events: none;
 }
 
-/* The bar that is wrapping up, marked on the bar itself rather than beside the
-   name: a colleague on two opdrachten may have one ending this month and
-   another running on, and a tag next to the name claimed the whole person was
-   stopping. Warning-toned so it stands out among the calm active bars. */
-/* How close an active placement is to its end, in four bands (see
-   ENDING_LEVELS in services/occupancy.py). Marked on the bar rather than beside
-   the name: a colleague on two opdrachten may have one ending this month and
-   another running on for a year, and a tag next to the name claimed the whole
-   person was stopping.
+/* Work that ends within three months (ENDING_SOON_DAYS in
+   services/occupancy.py). Marked on the bar rather than beside the name: a
+   colleague on two opdrachten may have one ending this month and another
+   running on for a year, and a tag next to the name claimed the whole person
+   was stopping.
 
-   Colour ranks them at a glance, but never alone -- every non-calm bar also
-   carries its end date, because red-orange-yellow is exactly the range that
-   collapses for the most common colour blindness, and a rank nobody can read is
-   not a rank. Same tinted recipe as the phase colours. */
-.bezetting-seg--ending-critical {
-  background: var(--primitives-color-critical-75);
-  border-color: var(--primitives-color-critical-350);
-  color: var(--primitives-color-critical-750);
-}
+   One band, not a red-orange-yellow ranking: that range is exactly what
+   collapses for the most common colour blindness, so the rank was unreadable
+   for the people it excluded and needed its end date to be legible for
+   everyone else -- at which point the date was doing the work. The bar still
+   carries that date.
 
-.bezetting-seg--ending-warning {
+   The border matches the fill instead of taking the phase colours' -300 step.
+   The step numbers are not comparable across hues: at -300 warning is far
+   darker relative to its -75 fill than success is to its own, so the same
+   number that reads as a quiet edge on a green bar drew a hard outline around
+   an orange one. Matching the fill keeps the bar a shape, not an outline,
+   while the 1px border still holds the geometry the other bars have. */
+.bezetting-seg--ending-soon {
   background: var(--primitives-color-warning-75);
-  border-color: var(--primitives-color-warning-350);
+  border-color: var(--primitives-color-warning-75);
   color: var(--primitives-color-warning-750);
 }
 
-/* Yellow has no semantic role in the system (warning is orange), so this band
-   uses the Rijk palette's donkergeel: plain geel at the same lightness reads as
-   a highlighter next to the orange band. */
-.bezetting-seg--ending-attention {
-  background: var(--primitives-color-donkergeel-75);
-  border-color: var(--primitives-color-donkergeel-300);
-  color: var(--primitives-color-donkergeel-750);
-}
-
-/* calm keeps whatever its phase gave it: active stays green, planned blue,
+/* calm keeps whatever its phase gave it: active and planned stay green,
    completed neutral. */
 
 /* The end date, right-aligned in the bar so the name still starts at the left
@@ -384,14 +423,12 @@
   white-space: nowrap;
 }
 
-/* Room for the end date so a long assignment name truncates before it reaches
-   the date instead of running underneath it. 5rem: "tot 14 sep" at this size is
-   about 4.5rem including its padding, and the date is absolutely positioned so
-   it cannot reserve the space itself. */
-.bezetting-seg--ending-critical .bezetting-seg__label,
-.bezetting-seg--ending-warning .bezetting-seg__label,
-.bezetting-seg--ending-attention .bezetting-seg__label {
-  padding-right: 5rem;
+/* Room for the countdown so a long assignment name truncates before it reaches
+   it instead of running underneath. 6rem: "nog 93 dagen", the widest this gets
+   at ENDING_SOON_DAYS, is about 5.5rem including its padding, and the countdown
+   is absolutely positioned so it cannot reserve the space itself. */
+.bezetting-seg--ending-soon .bezetting-seg__label {
+  padding-right: 6rem;
 }
 
 .bezetting-seg__label {
@@ -407,15 +444,6 @@
   text-overflow: ellipsis;
 }
 
-/* Bench rows carry a left accent: they are what a business manager scans for.
-   Warning, not critical — an unstaffed colleague needs attention, but critical
-   is the system's colour for errors and destructive actions, and next to the
-   now-quiet bars and rules it was the loudest thing on the page. 3px is enough
-   to read as a marker beside a 1px rule. */
-.bezetting-row--bench .bezetting-row__side {
-  box-shadow: inset 3px 0 0 var(--semantics-content-warning-color);
-}
-
 @media (max-width: 800px) {
   .bezetting-timeline {
     --bezetting-side-width: 200px;
@@ -423,22 +451,6 @@
 }
 
 /* ── Op de bank ───────────────────────────────────────────────────────────── */
-
-/* Section headings inside the rows list ("Op de bank" / "Ingezet"). Sticky under
-   the month header so it stays clear which block is being read while scrolling
-   a long list. */
-.bezetting-sectionhead {
-  position: sticky;
-  top: 3.25rem;
-  z-index: 2;
-  padding: var(--primitives-space-8) var(--primitives-space-12);
-  background: var(--semantics-surfaces-tinted-background-color);
-  border-bottom: 1px solid var(--semantics-surfaces-tinted-border-color);
-  font-size: var(--primitives-font-size-70);
-  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
-  color: var(--semantics-content-secondary-color);
-  min-width: 720px;
-}
 
 /* A bench row differs only in its name cell: a smaller avatar, since nothing
    runs today and the row never stacks lanes.
@@ -465,26 +477,21 @@
   font-size: var(--primitives-font-size-70);
 }
 
-/* Said only when there is no bar to draw, so it cannot be shown as a stretch. */
-.bezetting-person__since {
-  margin-left: auto;
-  flex-shrink: 0;
-  padding-left: var(--primitives-space-8);
-  color: var(--semantics-content-secondary-color);
-  font-size: var(--primitives-font-size-70);
-  white-space: nowrap;
-}
-
 /* The free stretch on a bench row, running up to today.
 
    A zone, not a bar: full row height, no border of its own, so the placements
    sit on it rather than beside it. As a bordered block it butted up against the
-   finished placement that ends exactly where it starts, and the two greys with
-   a seam between them read as one broken-up strip.
+   finished placement that ends exactly where it starts, and the seam between
+   them read as one broken-up strip.
 
    Hatched rather than filled: the diagonal texture reads as "nothing scheduled
    here" instead of as a block in its own right, so it stays behind the
-   placement bars rather than competing with them. */
+   placement bars rather than competing with them.
+
+   Critical-toned, not neutral: unsold time is the one thing on this page that
+   costs money, and in grey it read as background the eye skips. Kept at -100,
+   the palest step, because it stripes a full row -- a stronger red turns every
+   bench row into an alarm and drowns out the bars it sits behind. */
 .bezetting-free {
   position: absolute;
   top: 0;
@@ -493,8 +500,8 @@
     -45deg,
     transparent,
     transparent 9px,
-    var(--primitives-color-neutral-100) 9px,
-    var(--primitives-color-neutral-100) 10px
+    var(--primitives-color-critical-100) 9px,
+    var(--primitives-color-critical-100) 10px
   );
   display: flex;
   align-items: center;

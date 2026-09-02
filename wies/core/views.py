@@ -694,6 +694,7 @@ def bezetting(request):
         "bench_rows": bench_rows,
         "panel_data": panel_data,
         "today_pct": _bezetting_today_pct(),
+        "today": today,
         "month_ticks": _bezetting_month_ticks(today),
         "bench_count": bench_count,
         "full_count": full_count,
@@ -704,6 +705,13 @@ def bezetting(request):
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "filter_active": bool(merk.active_values or labels.active_values or selected_statuses),
+        # What the "Alle filters" button counts: the facets that live inside the
+        # sheet, not the status cards. A status shows it is on by the card being
+        # pressed, so counting it here made the button claim a filter the user
+        # could already see was applied — and read as "(1)" over an untouched
+        # sheet. Values, not groups: two labels from one group are two filters
+        # to the reader.
+        "active_filter_values": len(merk.active_values) + len(labels.active_values),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
