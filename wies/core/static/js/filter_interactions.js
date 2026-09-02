@@ -270,9 +270,51 @@
     });
   }
 
+  // The status cards (Bezetting summary) live in #results, not the filter form,
+  // but their hidden checkboxes carry data-filter-input so hx-include submits
+  // them. Toggling one flips the checkbox + aria-pressed and re-filters.
+  function statusCardInput(card) {
+    return card.querySelector('input[name="status"]');
+  }
+
+  function setStatusCard(card, active) {
+    const input = statusCardInput(card);
+    if (input) {
+      input.checked = active;
+      if (active) input.setAttribute("checked", "");
+      else input.removeAttribute("checked");
+    }
+    card.setAttribute("aria-pressed", active ? "true" : "false");
+  }
+
+  function setupStatusCards() {
+    document.addEventListener("click", (e) => {
+      const card = e
+        .composedPath()
+        .find(
+          (el) =>
+            el instanceof Element && el.hasAttribute?.("data-status-card"),
+        );
+      if (!card) return;
+      const input = statusCardInput(card);
+      setStatusCard(card, input ? !input.checked : true);
+      dispatchFormChange(document.getElementById("filter-form"));
+    });
+  }
+
   function removeFilter(name, value) {
     const form = document.getElementById("filter-form");
     if (!form) return;
+
+    // Status cards sit outside the form (in #results); untick by card, not input.
+    if (name === "status") {
+      const card = document.querySelector(
+        `[data-status-card][data-status="${CSS.escape(value)}"]`,
+      );
+      if (card) setStatusCard(card, false);
+      dispatchFormChange(form);
+      return;
+    }
 
     if (name === "zoek") {
       const hidden = document.getElementById("search-hidden");
@@ -555,6 +597,11 @@
     const orgContainer = document.getElementById("org-filter-inputs");
     if (orgContainer) orgContainer.innerHTML = "";
 
+    // Status cards live in #results, outside the form; reset them separately.
+    document
+      .querySelectorAll("[data-status-card]")
+      .forEach((card) => setStatusCard(card, false));
+
     form
       .querySelectorAll(
         "[data-filter-input]:checked, [data-filter-input][checked]",
@@ -661,6 +708,7 @@
 
     setupTokenDismiss();
     setupClearAllFilters();
+    setupStatusCards();
     setupFilterScrollPreserve();
     setupFilterRows();
     setupOrgQuickOptions();

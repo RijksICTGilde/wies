@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}
+  Bezetting · Wies
+{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ app_asset('css/bezetting.css') }}">
+  <script src="{{ app_asset('js/filter_interactions.js') }}" defer></script>
+  <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
+  <script src="{{ app_asset('js/user_filter.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/business_management_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <nldd-title size="3">
+  <h1>Bezetting</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# The filter row and the results live together in the results partial: the
+     Filters button sits on the row with the status cards, and the sheet it opens
+     drives #results via htmx. Same filter system as the "Gebruikers" list. #}
+  {% include "parts/bezetting_results.html" %}
+  {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
+     #filter-form inside is what the chips drive. #}
+  {% include "parts/bezetting_filter_sheet.html" %}
+  {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
+  <div id="filter-options-modal-container"></div>
+{% endblock content %}
+{% block panel %}
+  {# nldd-page must be a direct child: the sheet only stretches ::slotted(nldd-page). #}
+  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
+  </nldd-sheet>
+{% endblock panel %}

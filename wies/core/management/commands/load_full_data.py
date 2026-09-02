@@ -13,12 +13,15 @@ import random
 import re
 from datetime import UTC, date, datetime, timedelta
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Label,
     LabelCategory,
     OrganizationType,
     OrganizationUnit,
@@ -41,6 +44,8 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
+# Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
@@ -592,6 +597,11 @@ class Command(BaseCommand):
         rng = random.Random(42)  # noqa: S311
         today = datetime.now(tz=UTC).date()
 
+        # Role groups are needed in step 4d; seed them if this runs standalone.
+        from wies.core.roles import setup_roles  # noqa: PLC0415 — local import avoids a heavy import at module load
+
+        setup_roles()
+
         # ── 0. Clean up existing dummy data ──────────────────────────────
         self.stdout.write("Cleaning up existing data...")
         Placement.objects.all().delete()
@@ -648,6 +658,12 @@ class Command(BaseCommand):
         self.stdout.write(f"Colleagues: {len(colleagues)}")
 
         # ── 4b. Colleague labels ─────────────────────────────────────────
+        # Demo-only "Subgroep" category (see assign_random_labels_to_colleagues):
+        # kept out of DEFAULT_LABELS so production seeds it as a post-release action.
+        subgroep, _ = LabelCategory.objects.get_or_create(name="Subgroep", defaults={"color": "#DCE3EA"})
+        for label_name in ("ICT", "AI"):
+            Label.objects.get_or_create(name=label_name, category=subgroep)
+
         labels_by_category = {category: list(category.labels.all()) for category in LabelCategory.objects.all()}
         labels_by_category = {k: v for k, v in labels_by_category.items() if v}
 
@@ -668,6 +684,24 @@ class Command(BaseCommand):
                 colleague.suborganization = rng.choice(suborganizations)
                 colleague.save(update_fields=["suborganization"])
             self.stdout.write("Colleague suborganizations assigned")
+
+        # ── 4d. Colleague user + role (most consultants, some BDM, few beheerder) ──
+        user_model = get_user_model()
+        role_groups = {name: Group.objects.get(name=name) for name in ROLE_WEIGHTS}
+        role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
+        for colleague in colleagues:
+            first_name, _, last_name = colleague.name.partition(" ")
+            # A previous run may have left a user with this email (colleagues are
+            # deleted and recreated, users are not); reuse it instead of colliding.
+            user, _ = user_model.objects.get_or_create(
+                email=colleague.email, defaults={"first_name": first_name, "last_name": last_name}
+            )
+            colleague.user = user
+            colleague.save(update_fields=["user"])
+            role = weighted_choice(rng, ROLE_WEIGHTS)
+            user.groups.add(role_groups[role])
+            role_counts[role] += 1
+        self.stdout.write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []

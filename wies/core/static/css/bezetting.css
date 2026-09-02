@@ -1,0 +1,556 @@
+/* "Bezetting" — business-manager occupancy timeline.
+   Colours use NLDD semantic tokens where possible so light/dark both work. */
+
+/* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
+   Bezetting-specific filter styling lives here. */
+
+/* The filter row: three status toggles and the sheet that holds the rest. The
+   cards ARE filters (each is an OR-toggle on a status), so they sit on the row
+   with the Filters button rather than reading as a passive header above it.
+
+   A single flex row of four. It does not wrap: the cards give up width first
+   (they carry a short count and a caption that can ellipsis), while the button
+   keeps its full label, because "Alle filters" is the way back to everything the
+   row cannot show. */
+.bezetting-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The three cards share the free space and shrink together; min-width: 0 lets
+   them go below their content width so the caption ellipsises instead of
+   pushing the button off the row. */
+.bezetting-toolbar > li {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  /* The height nldd-button resolves to. The cards are the same kind of control
+     as the button beside them, so they match it rather than sizing themselves
+     from their own padding. */
+  height: 44px;
+}
+
+/* The button is the one item that must stay readable at every width: it is how
+   you reach the filters that do not fit on the row. */
+.bezetting-toolbar > li:last-child {
+  flex: 0 0 auto;
+}
+
+/* Summary cards double as status filters. The clickable element is a native
+   <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
+   button chrome and let the card size the control.
+
+   No height: 100% here. It made sense while the cards sat in a collection's grid
+   cells, which have a height to fill; on a plain list item there is nothing to
+   resolve the percentage against, so the button collapsed to zero and took the
+   visible card with it. */
+.bezetting-stat {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* The card's own radius token, so the focus ring keeps hugging the card edge
+     if the design system ever changes that corner. */
+  border-radius: var(--components-card-corner-radius);
+}
+
+/* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
+   The ring lives on the button (outside the card's shadow root), which is the
+   only element that receives focus, so it can't be an nldd-card concern. */
+.bezetting-stat:focus-visible {
+  outline: 2px solid var(--semantics-content-accent-color, #1d70b8);
+  outline-offset: 2px;
+}
+
+/* The count and its caption. Sized from the token scale rather than borrowed
+   from nldd-title, which carries heading typography for something that is not a
+   heading. line-height 1 keeps the number tight above its caption. */
+/* Still the weight of the card, but sized to sit beside its caption rather than
+   above it: at font-size-400 the number set the card's height on its own. */
+.bezetting-stat__count {
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
+  color: var(--semantics-content-color);
+}
+
+/* Truncates rather than wraps when the row runs out of room: the cards shrink
+   together, and a caption that wrapped would break the row's single-line
+   height. The full text stays available as the card's accessible label. */
+.bezetting-stat__label {
+  color: var(--semantics-content-secondary-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* The count never truncates — it is the point of the card. */
+.bezetting-stat__count {
+  flex: 0 0 auto;
+}
+
+/* Pushes the chevron to the card's right edge: the count/label column takes the
+   slack, so the arrow sits where it does on the opdracht cards regardless of how
+   long the caption is. Colour and pointer-events come from
+   .assignment-card__chevron in app.css, which this element also carries. */
+.bezetting-stat__chevron {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
+   via the card's own --_background-color, which inherits into the shadow root so
+   the radius and clipping stay intact. One neutral token covers light and dark.
+   The active/selected state is carried by the filter chip, not the card. */
+.bezetting-stat:hover nldd-card {
+  --_background-color: var(--primitives-color-neutral-50);
+}
+
+/* Phase colours for the timeline bars.
+
+   Tinted, not saturated fills: a wall of solid colour across every row drowns
+   out the names and dates that the page is actually read for, and the earlier
+   fixed hexes (#1f7a4d / #7aa7d8 / #b8b8b8) kept their light-mode contrast
+   against a dark surface. A light background with dark text of the same hue is
+   how the design system's own tinted buttons and tags carry a status, and every
+   token here is a light-dark() pair, so both themes stay legible.
+
+   The border does the identifying at a glance; the fill stays quiet. */
+.bezetting-seg--active {
+  background: var(--primitives-color-success-75);
+  border-color: var(--primitives-color-success-300);
+  color: var(--primitives-color-success-750);
+}
+
+/* Planned work is drawn exactly like active work: both say "this person is
+   booked", and where the bar sits relative to today already says which is
+   which. A separate hue for it added a third colour that carried no decision. */
+.bezetting-seg--planned {
+  background: var(--primitives-color-success-75);
+  border-color: var(--primitives-color-success-300);
+  color: var(--primitives-color-success-750);
+}
+
+/* Completed work is history: neutral, and quieter still than the two live phases. */
+.bezetting-seg--completed {
+  background: var(--primitives-color-neutral-75);
+  border-color: var(--primitives-color-neutral-250);
+  color: var(--semantics-content-secondary-color);
+}
+
+/* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
+.bezetting-timeline {
+  --bezetting-side-width: 360px;
+  /* The row is taller than its 28px avatar: the bars are the content, and a
+     row squeezed to avatar height left them no room to breathe. */
+  --bezetting-row-height: 52px;
+  /* A single bar fills most of that height. At 24px it left more empty space
+     above and below than the bar itself occupied, on a page whose bars are the
+     content. */
+  --bezetting-lane-height: 32px;
+  --bezetting-lane-gap: 4px;
+  /* Vertical breathing room above and below the lane stack within a row. */
+  --bezetting-row-padding: 8px;
+  overflow-x: auto;
+}
+
+.bezetting-timeline-head,
+.bezetting-row {
+  display: grid;
+  grid-template-columns: var(--bezetting-side-width) 1fr;
+  align-items: stretch;
+  min-width: 720px;
+}
+
+/* A row is as tall as its lane stack needs (never shorter than the base height),
+   so rows with several concurrent opdrachten grow instead of bleeding into the
+   neighbouring row. */
+.bezetting-row {
+  --bezetting-lanes: 1;
+  min-height: max(
+    var(--bezetting-row-height),
+    calc(
+      var(--bezetting-lanes) * var(--bezetting-lane-height) +
+        (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap) + 2 *
+        var(--bezetting-row-padding)
+    )
+  );
+}
+
+.bezetting-timeline-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  border-bottom: 1px solid var(--semantics-surfaces-base-border-color);
+}
+
+.bezetting-row__side--head {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0 var(--primitives-space-8) var(--primitives-space-12);
+}
+
+.bezetting-track {
+  position: relative;
+  height: 100%;
+  min-height: var(--bezetting-row-height);
+  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
+}
+
+/* Tall enough for two stacked layers: the "vandaag" pill on top and the month
+   labels below it. At 2rem they shared one band and overlapped wherever today
+   fell near a month boundary. */
+.bezetting-track--head {
+  min-height: 3.25rem;
+}
+
+/* Lane stack: vertically centred in the track, so a single bar sits level with
+   the name beside it. It used to hang from a fixed 8px top offset, which centres
+   nothing: a row is as tall as its content (at least 52px for the avatar), so a
+   24px bar sat high with all the slack below it. Centring keeps a stack of
+   several lanes balanced in the row too, since the row grows with the stack. */
+.bezetting-lanes {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  right: 0;
+  height: calc(
+    var(--bezetting-lanes) * var(--bezetting-lane-height) +
+      (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap)
+  );
+}
+
+/* Month gridlines + labels */
+.bezetting-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--semantics-surfaces-tinted-border-color, #eee);
+}
+
+.bezetting-gridline--year {
+  background: var(--semantics-surfaces-base-border-color, #cfcfcf);
+}
+
+.bezetting-tick {
+  position: absolute;
+  bottom: 0;
+  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
+  height: 0.6rem;
+}
+
+.bezetting-tick--year {
+  height: 1rem;
+}
+
+.bezetting-tick__label {
+  position: absolute;
+  bottom: 0.7rem;
+  left: var(--primitives-space-2);
+  font-size: var(--primitives-font-size-70);
+  color: var(--semantics-content-secondary-color);
+  white-space: nowrap;
+}
+
+/* "Today" marker.
+
+   Accent, not critical: critical is the design system's colour for errors and
+   destructive actions, and a full-height critical-red rule read as an alarm on
+   a page where today is simply the reference point. Accent marks it as the one
+   line that matters without shouting.
+
+   1px like the month gridlines it sits among; the colour, not the weight, is
+   what sets it apart. */
+.bezetting-today,
+.bezetting-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--semantics-content-accent-color);
+  z-index: 2;
+}
+
+/* A tinted pill rather than loose bold text: the label sat at the very top of
+   the header and collided with the month name behind it. Sitting under the
+   month row, on its own background, it reads as a marker instead of a word that
+   happens to overlap. */
+.bezetting-today__label {
+  position: absolute;
+  top: 0;
+  left: var(--primitives-space-4);
+  padding: 0 var(--primitives-space-4);
+  border-radius: var(--primitives-corner-radius-xs, 4px);
+  background: var(--primitives-color-accent-75);
+  font-size: var(--primitives-font-size-70);
+  font-weight: var(--primitives-font-weight-body-semi-bold, 550);
+  color: var(--primitives-color-accent-750);
+  white-space: nowrap;
+}
+
+/* ── Rijen ────────────────────────────────────────────────────────────────── */
+.bezetting-rows {
+  border-top: 1px solid var(--semantics-surfaces-tinted-border-color);
+}
+
+.bezetting-row {
+  position: relative;
+  /* One line weight throughout: row dividers, the name/track split and the month
+     gridlines all use the same tinted rule. Mixing a darker divider with lighter
+     gridlines made the grid itself the loudest thing on the page. Rows stay
+     separable because each is at least a full lane tall. */
+  border-bottom: 1px solid var(--semantics-surfaces-tinted-border-color);
+}
+
+.bezetting-row:hover {
+  background: var(--semantics-surfaces-tinted-background-color, #f0f4f8);
+}
+
+/* The left cell is a real anchor (focus, keyboard, right-click), but its click
+   area is stretched across the whole row via ::after — so clicking anywhere on
+   the row, including the timeline, opens the colleague panel. */
+.bezetting-row__side {
+  display: flex;
+  align-items: center;
+  padding: var(--primitives-space-6) var(--primitives-space-12);
+  border-right: 1px solid var(--semantics-surfaces-tinted-border-color);
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.bezetting-row__side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* Above the positioned .bezetting-track (and its gridlines/today-line) so a
+     click on the timeline reaches this stretched link, not the track cell. */
+  z-index: 4;
+}
+
+.bezetting-person {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8);
+  min-width: 0;
+}
+
+.bezetting-person__name {
+  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* flex-shrink applies to the host element as a flex item, which lives outside
+   the component's shadow root — nldd-tag can't set its own shrink behaviour
+   relative to our layout. Keep the "eindigt binnenkort" tag at full size so the
+   name (not the date) is what ellipsizes when the cell is narrow. */
+.bezetting-person nldd-tag {
+  flex-shrink: 0;
+}
+
+/* Timeline bars are purely visual: let clicks fall through to the stretched
+   row link so the whole row opens the colleague panel. */
+/* Radius from the token scale rather than a loose 4px, so the bars round like
+   the cards and tags around them. Each phase sets its own colours above; the
+   1px border keeps a bar's extent readable now that the fill is pale. */
+.bezetting-seg {
+  position: absolute;
+  height: var(--bezetting-lane-height);
+  min-width: 3px;
+  border: 1px solid transparent;
+  border-radius: var(--primitives-corner-radius-xs, 4px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Work that ends within three months (ENDING_SOON_DAYS in
+   services/occupancy.py). Marked on the bar rather than beside the name: a
+   colleague on two opdrachten may have one ending this month and another
+   running on for a year, and a tag next to the name claimed the whole person
+   was stopping.
+
+   One band, not a red-orange-yellow ranking: that range is exactly what
+   collapses for the most common colour blindness, so the rank was unreadable
+   for the people it excluded and needed its end date to be legible for
+   everyone else -- at which point the date was doing the work. The bar still
+   carries that date.
+
+   The border matches the fill instead of taking the phase colours' -300 step.
+   The step numbers are not comparable across hues: at -300 warning is far
+   darker relative to its -75 fill than success is to its own, so the same
+   number that reads as a quiet edge on a green bar drew a hard outline around
+   an orange one. Matching the fill keeps the bar a shape, not an outline,
+   while the 1px border still holds the geometry the other bars have. */
+.bezetting-seg--ending-soon {
+  background: var(--primitives-color-warning-75);
+  border-color: var(--primitives-color-warning-75);
+  color: var(--primitives-color-warning-750);
+}
+
+/* calm keeps whatever its phase gave it: active and planned stay green,
+   completed neutral. */
+
+/* The end date, right-aligned in the bar so the name still starts at the left
+   edge. Hidden on bars too narrow to hold both (a container query would be
+   nicer, but each bar is absolutely positioned with an inline width). */
+/* Sits on top of the label's line. The label reserves room via padding-right,
+   but a bar can be narrower than that reserved space, so the date also paints
+   its own background: without it a truncated name still slid under the date on
+   the narrowest bars. */
+.bezetting-seg__end {
+  position: absolute;
+  top: 0;
+  right: 0;
+  padding: 0 var(--primitives-space-6);
+  background: inherit;
+  line-height: calc(var(--bezetting-lane-height) - 2px);
+  font-size: var(--primitives-font-size-70);
+  font-weight: var(--primitives-font-weight-body-semi-bold, 550);
+  white-space: nowrap;
+}
+
+/* Room for the countdown so a long assignment name truncates before it reaches
+   it instead of running underneath. 6rem: "nog 93 dagen", the widest this gets
+   at ENDING_SOON_DAYS, is about 5.5rem including its padding, and the countdown
+   is absolutely positioned so it cannot reserve the space itself. */
+.bezetting-seg--ending-soon .bezetting-seg__label {
+  padding-right: 6rem;
+}
+
+.bezetting-seg__label {
+  display: block;
+  padding: 0 var(--primitives-space-6);
+  /* Minus the bar's 1px border top and bottom, or the label sits low in the bar
+     (height and line-height are both the lane height, but border-box takes the
+     border out of the content area). */
+  line-height: calc(var(--bezetting-lane-height) - 2px);
+  font-size: var(--primitives-font-size-70);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 800px) {
+  .bezetting-timeline {
+    --bezetting-side-width: 200px;
+  }
+}
+
+/* ── Op de bank ───────────────────────────────────────────────────────────── */
+
+/* A bench row differs only in its name cell: a smaller avatar, since nothing
+   runs today and the row never stacks lanes.
+
+   The bar geometry is deliberately NOT changed here. With a smaller lane height
+   the very same opdracht drew thinner on a bench row than on a placed row two
+   lines down, which read as "this one matters less" rather than "this person is
+   free". Bench rows still come out shorter, because the row height follows its
+   lane stack and a bench row only ever has one lane. */
+.bezetting-row--compact .bezetting-person {
+  gap: var(--primitives-space-6);
+}
+
+/* The role, right after the name it belongs to. Secondary and smaller so the
+   name still leads the row; it truncates before the name does, since which
+   person this is matters more than what they are called in. */
+.bezetting-person__role {
+  flex-shrink: 999;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--semantics-content-secondary-color);
+  font-size: var(--primitives-font-size-70);
+}
+
+/* The free stretch on a bench row, running up to today.
+
+   A zone, not a bar: full row height, no border of its own, so the placements
+   sit on it rather than beside it. As a bordered block it butted up against the
+   finished placement that ends exactly where it starts, and the seam between
+   them read as one broken-up strip.
+
+   Hatched rather than filled: the diagonal texture reads as "nothing scheduled
+   here" instead of as a block in its own right, so it stays behind the
+   placement bars rather than competing with them.
+
+   Critical-toned, not neutral: unsold time is the one thing on this page that
+   costs money, and in grey it read as background the eye skips. Kept at -100,
+   the palest step, because it stripes a full row -- a stronger red turns every
+   bench row into an alarm and drowns out the bars it sits behind. */
+.bezetting-free {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 9px,
+    var(--primitives-color-critical-100) 9px,
+    var(--primitives-color-critical-100) 10px
+  );
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* A soft right edge at today, so the zone stops at a line rather than a wall. */
+.bezetting-free::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--semantics-surfaces-base-border-color);
+}
+
+/* Sits on the hatched zone, so it carries a background of its own to stay
+   readable over the stripes. */
+.bezetting-free__label {
+  padding: 0 var(--primitives-space-6);
+  background: var(--semantics-surfaces-base-background-color);
+  border-radius: var(--primitives-corner-radius-xs, 4px);
+  margin-right: var(--primitives-space-6);
+  color: var(--semantics-content-secondary-color);
+  font-size: var(--primitives-font-size-70);
+  white-space: nowrap;
+}
+
+/* Merk and expertise chips on a row. They sit after the role and give way
+   before it does: the name identifies the person, the role says what they do,
+   and the chips only explain why a filtered view includes them. Hidden below md
+   — the name cell is 200px there and the chips would take all of it. */
+.bezetting-person__labels {
+  display: flex;
+  gap: var(--primitives-space-4);
+  flex-shrink: 1000;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.bezetting-person__labels nldd-tag {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1200px) {
+  .bezetting-person__labels {
+    display: none;
+  }
+}

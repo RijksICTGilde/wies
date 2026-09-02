@@ -1,0 +1,14 @@
+{# Filter sheet for the Bezetting timeline, reusing the shared filter system
+   (filter_sidebar.html + filter_interactions.js). A sheet, not the left sidebar,
+   because that sidebar holds the business-management navigation. Shares the
+   #user-filter-sheet id and data-user-filter-open hook so user_filter.js opens it
+   unchanged. #}
+<nldd-sheet id="user-filter-sheet" placement="left" width="480px" accessible-label="Filters">
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="Filters" dismiss-text="Klaar"></nldd-top-title-bar>
+<nldd-simple-section>
+{# The section supplies the padding; the filter panel brings none. #}
+{% include "parts/filter_sidebar.html" %}
+</nldd-simple-section>
+</nldd-page>
+</nldd-sheet>
