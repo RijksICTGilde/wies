@@ -27,7 +27,8 @@
     {# Same chevron as the opdracht and plaatsing cards, so a card that responds
          to a click looks like the other cards that do. Decorative: the button
          itself carries the accessible label and its pressed state. #}
-    <span class="bezetting-stat__chevron assignment-card__chevron" aria-hidden="true">
+    <span class="bezetting-stat__chevron assignment-card__chevron"
+          aria-hidden="true">
       <nldd-icon size="20" name="chevron-right"></nldd-icon>
     </span>
     </nldd-container>
@@ -58,11 +59,7 @@
   {# user_filter.js listens for data-user-filter-open; the count tells you how
      many filters are on inside without opening it. #}
   <li>
-    <nldd-button id="user-filter-button"
-                 variant="secondary"
-                 start-icon="filter"
-                 text="Alle filters{% if active_filter_values %} ({{ active_filter_values }}){% endif %}"
-                 data-user-filter-open></nldd-button>
+    <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Alle filters{% if active_filter_values %} ({{ active_filter_values }}){% endif %}" data-user-filter-open></nldd-button>
   </li>
 </ul>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
