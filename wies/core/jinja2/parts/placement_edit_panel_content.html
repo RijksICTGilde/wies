@@ -64,9 +64,15 @@
              hides it once an own period is chosen. #}
     <nldd-form-field-help-text data-service-period-help>
     De periode van de opdracht is
-    {{ panel_data.service.start_date|datum_nl if panel_data.service.start_date else "onbekend" }}
-    t/m
-    {{ panel_data.service.end_date|datum_nl if panel_data.service.end_date else "heden" }}
+    {%- if panel_data.service.start_date and panel_data.service.end_date %}
+      {{ panel_data.service.start_date|datum_nl }} t/m {{ panel_data.service.end_date|datum_nl }}
+    {%- elif panel_data.service.start_date %}
+      vanaf {{ panel_data.service.start_date|datum_nl }}
+    {%- elif panel_data.service.end_date %}
+      t/m {{ panel_data.service.end_date|datum_nl }}
+    {%- else %}
+      onbekend
+    {%- endif %}
     </nldd-form-field-help-text>
     </nldd-form-field>
     {# Written out instead of as_field_group(): the `hidden` must be there

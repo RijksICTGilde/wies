@@ -17,7 +17,10 @@ don't toggle layout classes on the target. #}
       {% endif %}
     </div>
     {% if user_can_edit and not hide_edit_button %}
+      {# Only after a save: the form is swapped away and focus would drop to
+         <body>. On a first render or a cancel this would steal focus instead. #}
       <button type="button"
+              {% if saved %}autofocus{% endif %}
               class="edit-icon-button"
               hx-get="{{ edit_url }}?edit=true"
               hx-target="#{{ target }}"

@@ -90,9 +90,7 @@
         {% if row_kind == "source" %}
           {% if panel_data.assignment.source_url %}
             <a href="{{ panel_data.assignment.source_url }}" target="_blank">
-              {{ panel_data.assignment.get_source_display() }}
-              <nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>
-            </a>
+            {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon name="square-arrow-right-top" size="16"></nldd-icon></a>
           {% else %}
             {{ panel_data.assignment.get_source_display() }}
           {% endif %}

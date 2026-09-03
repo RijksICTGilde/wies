@@ -32,7 +32,7 @@
   </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
-  {# Click instead of auto-load: see placement_table_rows.html. #}
+  {# Click instead of auto-load: see placement_cards.html. #}
   <div class="wies-load-more">
     <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

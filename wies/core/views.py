@@ -17,7 +17,7 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
@@ -868,12 +868,52 @@ class PublicIdFacetsMixin:
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
-    """Placements table with infinite scroll pagination."""
+    """Placements as cards, grouped per person or per assignment."""
 
     model = Placement
     template_name = "placements.html"
     paginate_by = 60
     page_kwarg = "pagina"
+
+    VIEW_DEFAULT = "persoon"
+    VIEW_OPTIONS = [
+        {"value": "persoon", "label": "Persoon", "icon": "person"},
+        {"value": "opdracht", "label": "Opdracht", "icon": "business-suitcase"},
+    ]
+
+    # Pagination runs over these groups, not over placements, so a group never
+    # straddles a page boundary and shows up half.
+    GROUP_FIELD = {
+        "persoon": "colleague_id",
+        "opdracht": "service__assignment_id",
+    }
+
+    # Sorting on colleague name says nothing in the opdracht view, where one card
+    # is a whole team.
+    SORT_OPTIONS = {
+        "persoon": ["name", "-name", "assignment", "-assignment", "end_date", "-end_date"],
+        "opdracht": ["assignment", "-assignment", "end_date", "-end_date"],
+    }
+    SORT_LABELS = {
+        "name": "Naam (A-Z)",
+        "-name": "Naam (Z-A)",
+        "assignment": "Opdracht (A-Z)",
+        "-assignment": "Opdracht (Z-A)",
+        "-end_date": "Einddatum (nieuwste eerst)",
+        "end_date": "Einddatum (oudste eerst)",
+    }
+    # The default order is the absence of ?order=, so it has no value to label.
+    DEFAULT_SORT_LABEL = {
+        "persoon": "Startdatum (nieuwste eerst)",
+        "opdracht": "Laatst gewijzigd",
+    }
+
+    @property
+    def active_view(self) -> str:
+        """The requested ?weergave=, falling back to the default for unknown values."""
+        requested = self.request.GET.get("weergave") or ""
+        valid = {option["value"] for option in self.VIEW_OPTIONS}
+        return requested if requested in valid else self.VIEW_DEFAULT
 
     def _get_base_queryset(self):
         """Base queryset with search, ordering, and date filters applied."""
@@ -912,28 +952,60 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         order_mapping = {
             "name": "colleague__name",
             "assignment": "service__assignment__name",
-            "skill": "service__skill__name",
             "end_date": "service__assignment__end_date",
         }
 
+        active_view = self.active_view
+        sort_field = None
         order_param = self.request.GET.get("order")
-        if order_param:
+        # A shared url can carry an order this view does not have.
+        if order_param and order_param in self.SORT_OPTIONS[active_view]:
             descending = order_param.startswith("-")
-            field_name = order_param.lstrip("-")
-            order_by = order_mapping.get(field_name)
+            order_by = order_mapping.get(order_param.lstrip("-"))
             if order_by:
-                qs = qs.order_by(f"-{order_by}" if descending else order_by)
+                sort_field = f"-{order_by}" if descending else order_by
+        if sort_field is None:
+            if active_view == "opdracht":
+                # No modified-at on the model, so the audit log stands in. Nulls last:
+                # events age out of retention.
+                qs = qs.annotate(
+                    last_change=Subquery(
+                        Event.objects.filter(object_type="Assignment", object_id=OuterRef("service__assignment_id"))
+                        .order_by("-timestamp")
+                        .values("timestamp")[:1]
+                    )
+                )
+                sort_field = F("last_change").desc(nulls_last=True)
+            else:
+                # Nulls last: a placement without a start date says nothing about
+                # how recent it is.
+                sort_field = F("actual_start_date").desc(nulls_last=True)
+
+        qs = annotate_placement_dates(qs)
+
+        # The group as tiebreaker keeps one person's or opdracht's placements
+        # together when the sort itself ties.
+        qs = qs.order_by(sort_field, self.GROUP_FIELD[active_view])
 
         # The list is a current-state overview: only active placements, for every
         # viewer alike. History and planned placements live on the profile and the
         # side panels, not here.
-        qs = annotate_placement_dates(qs)
         return filter_visible_placements(qs, timezone.now().date())
 
     def _get_loopt_af_options(self, base_qs):
-        """Builds the 'loopt af' filter options with cumulative counts."""
+        """Builds the 'loopt af' filter options with cumulative counts.
+
+        Counts distinct groups, not placements, so the number matches the cards
+        the list will show: two colleagues on one assignment are two cards in the
+        person view and one in the assignment view.
+        """
         today = timezone.now().date()
+        group_field = self.GROUP_FIELD[self.active_view]
         filtered_qs = self._apply_filters(base_qs, exclude_filter="loopt_af").distinct()
+
+        def group_count(qs):
+            return qs.values(group_field).distinct().count()
+
         presets = [
             ("3m", "Binnen 3 maanden", 91),
             ("6m", "Binnen 6 maanden", 182),
@@ -941,11 +1013,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         options = [{"value": "", "label": ""}]
         for value, label, days in presets:
             end_date = today + timedelta(days=days)
-            count = filtered_qs.filter(service__assignment__end_date__lte=end_date).count()
+            count = group_count(filtered_qs.filter(service__assignment__end_date__lte=end_date))
             options.append({"value": value, "label": label, "count": count})
         # "Longer than 6 months"
         half_year = today + timedelta(days=182)
-        count_beyond = filtered_qs.filter(service__assignment__end_date__gt=half_year).count()
+        count_beyond = group_count(filtered_qs.filter(service__assignment__end_date__gt=half_year))
         options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
         return options
 
@@ -1002,6 +1074,38 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             return Placement.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
+    def paginate_queryset(self, queryset, page_size):
+        """Paginate on groups (persons or assignments), not on placements.
+
+        A card shows one person or one assignment with all their placements, so
+        paginating on placements would cut a group in half at the page boundary.
+        """
+        group_field = self.GROUP_FIELD[self.active_view]
+        # A DISTINCT on the group field would have to select every sort column too.
+        seen: set[int] = set()
+        ordered_group_ids = [
+            group_id
+            for group_id in queryset.values_list(group_field, flat=True)
+            if group_id not in seen and not seen.add(group_id)
+        ]
+
+        paginator = self.get_paginator(
+            ordered_group_ids, page_size, orphans=self.get_paginate_orphans(), allow_empty_first_page=True
+        )
+        page = paginator.page(self._validated_page_number(paginator))
+        page_group_ids = list(page.object_list)
+        placements = list(queryset.filter(**{f"{group_field}__in": page_group_ids})) if page_group_ids else []
+        return paginator, page, placements, page.has_other_pages()
+
+    def _validated_page_number(self, paginator) -> int:
+        """The requested ?pagina=, clamped to an existing page (1 on nonsense input)."""
+        raw = self.kwargs.get(self.page_kwarg) or self.request.GET.get(self.page_kwarg) or 1
+        try:
+            number = int(raw)
+        except TypeError, ValueError:
+            return 1
+        return max(1, min(number, paginator.num_pages))
+
     def get_template_names(self):
         """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
@@ -1016,22 +1120,142 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     return [panel_data["panel_content_template"]]
                 return ["parts/placement_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/placement_table_rows.html"]
+                return ["parts/placement_cards.html"]
             return ["parts/filter_and_table_container.html"]
         return ["placements.html"]
+
+    def _view_url(self, value: str) -> str:
+        """URL for a weergave: keeps the filters and search, drops page and order.
+
+        The sort options differ per view, so an ?order= from the other view would
+        not resolve here.
+        """
+        params = self.request.GET.copy()
+        params.pop(self.page_kwarg, None)
+        params.pop("order", None)
+        if value == self.VIEW_DEFAULT:
+            params.pop("weergave", None)
+        else:
+            params["weergave"] = value
+        query = params.urlencode()
+        return f"{reverse('home')}?{query}" if query else reverse("home")
+
+    def _person_cards(self, placements) -> list[dict]:
+        """One card per colleague, with the assignments they are placed on.
+
+        A person on exactly one assignment opens that placement's panel; on more
+        than one the card opens the colleague panel instead.
+        """
+        grouped: dict[int, list] = {}
+        for placement in placements:
+            grouped.setdefault(placement.colleague_id, []).append(placement)
+
+        cards = []
+        for rows in grouped.values():
+            assignments = list(dict.fromkeys(row.service.assignment for row in rows))
+            roles = list(dict.fromkeys(row.service.skill.name for row in rows if row.service.skill))
+            single = assignments[0] if len(assignments) == 1 else None
+            cards.append(
+                {
+                    "name": rows[0].colleague.name,
+                    "assignment": single,
+                    "assignments": assignments,
+                    "roles": roles,
+                    "panel_url": _build_panel_url(
+                        self.request,
+                        **({"plaatsing": rows[0].public_id} if single else {"collega": rows[0].colleague.public_id}),
+                    ),
+                }
+            )
+        return cards
+
+    def _assignment_cards(self, placements) -> list[dict]:
+        """One card per assignment, showing its FULL team.
+
+        The team is prefetched separately rather than read off the filtered
+        placements: a filter on role or label would otherwise silently shrink the
+        team shown on the card to the people that matched the filter.
+
+        Sidestepping the selection filters is the point here; sidestepping the
+        visibility filter is not. This page is a current-state overview, so the
+        team is the team as it stands today — the same rule the list itself
+        follows, and without it a card would name people who left months ago or
+        have not started yet.
+        """
+        assignments = list(dict.fromkeys(p.service.assignment for p in placements))
+        teams: dict[int, list[dict]] = {a.id: [] for a in assignments}
+        seen: set[tuple[int, int]] = set()
+        team_rows = (
+            filter_visible_placements(
+                annotate_placement_dates(Placement.objects.filter(service__assignment_id__in=teams)),
+                timezone.now().date(),
+            )
+            .select_related("colleague", "service__skill")
+            .order_by("colleague__name")
+        )
+        for row in team_rows:
+            key = (row.service.assignment_id, row.colleague_id)
+            if key not in seen:
+                seen.add(key)
+                role = row.service.skill.name if row.service.skill else ""
+                teams[row.service.assignment_id].append({"name": row.colleague.name, "role": role})
+
+        cards = []
+        for assignment in assignments:
+            clients = getattr(assignment, "sorted_clients", [])
+            cards.append(
+                {
+                    "name": assignment.name,
+                    "assignment": assignment,
+                    "client": (clients[0].organization.label or clients[0].organization.name) if clients else "",
+                    "extra_clients": max(len(clients) - 1, 0),
+                    "panel_url": _build_panel_url(self.request, opdracht=assignment.public_id),
+                    "team": teams[assignment.id],
+                }
+            )
+        return cards
 
     def get_context_data(self, **kwargs):
         """Adds the dynamic filter options."""
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add panel URLs to placement objects
-        for placement in context["object_list"]:
-            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.public_id)
+        active_view = self.active_view
+        context["active_view"] = active_view
+        # The template compares against it rather than hardcoding the name, so
+        # changing the default does not silently break the hidden field.
+        context["default_view"] = self.VIEW_DEFAULT
+        counts = {active_view: context["paginator"].count}
+        filtered = self.get_queryset()
+        context["view_options"] = [
+            {
+                **option,
+                "url": self._view_url(option["value"]),
+                "selected": option["value"] == active_view,
+                "count": counts.get(option["value"])
+                if option["value"] in counts
+                else filtered.values(self.GROUP_FIELD[option["value"]]).distinct().count(),
+            }
+            for option in self.VIEW_OPTIONS
+        ]
+        placements = context["object_list"]
+        if active_view == "opdracht":
+            context["cards"] = self._assignment_cards(placements)
+        else:
+            context["cards"] = self._person_cards(placements)
+
+        order_param = self.request.GET.get("order")
+        active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
+        context["active_order"] = active_order
+        # Value and label travel together: keeping the labels in the template
+        # meant maintaining the same list in two places.
+        context["sort_options"] = [
+            {"value": value, "label": self.SORT_LABELS[value]} for value in self.SORT_OPTIONS[active_view]
+        ]
+        context["default_sort_label"] = self.DEFAULT_SORT_LABEL[active_view]
+        context["active_sort_label"] = self.SORT_LABELS.get(active_order) or self.DEFAULT_SORT_LABEL[active_view]
 
         context["filter_target_url"] = reverse("home")
-        context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters: dict = {}
@@ -1060,14 +1284,13 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # For each filter category, count on a queryset excluding that category's filter
         base_qs = self._get_base_queryset()
+        group_field = self.GROUP_FIELD[active_view]
 
         label_filter_groups = []
         for category in LabelCategory.objects.all():
             # Count with all filters EXCEPT this label category
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_placement_qs = Placement.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_ids = cat_placement_qs.values_list("colleague__labels__id", flat=True)
-            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
+            cat_label_counts = _facet_counts(cat_filtered_qs, "colleague__labels__id", group_field)
 
             options = [{"value": "", "label": ""}]
             selected_values = []
@@ -1096,9 +1319,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Merk filter group (one merk per colleague; counts exclude the merk filter)
         suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
-        suborg_placement_qs = Placement.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
-        suborg_id_values = suborg_placement_qs.values_list("colleague__suborganization_id", flat=True)
-        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+        suborg_counts = _facet_counts(suborg_filtered_qs, "colleague__suborganization_id", group_field)
 
         suborganization_options = [{"value": "", "label": ""}]
         suborganization_selected_values = []
@@ -1124,9 +1345,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Skill/role counts: exclude role filter
         skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
-        skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
-        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
+        skill_counts = _facet_counts(skill_filtered_qs, "service__skill__id", group_field)
 
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
@@ -1138,11 +1357,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             skill_options.append(option)
 
         # Org counts exclude the org filter, so the numbers reflect the other
-        # active filters — same cross-filter rule as the groups above.
+        # active filters.
         org_counts = _org_counts_from_filtered(
             self._apply_filters(base_qs, exclude_filter="org").distinct(),
             Placement,
             "service__assignment__organizations__id",
+            group_field=group_field,
         )
 
         context["active_filters"] = active_filters
@@ -2998,17 +3218,37 @@ def search_suggestions(request):
     )
 
 
-def _org_counts_from_filtered(filtered_qs, model, org_lookup: str) -> Counter[int]:
+def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[int]:
+    """Counts distinct groups per facet value, not placements.
+
+    The list shows one card per colleague or per assignment, so a sidebar that
+    counted placements would report a higher number than the list has cards.
+
+    Re-keys on distinct placement ids first: projecting straight off a
+    .distinct() queryset emits SELECT DISTINCT on the projected columns only,
+    which drops rows that differ elsewhere.
+    """
+    rows = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    pairs = rows.values_list(facet_lookup, group_field).distinct()
+    return Counter(fid for fid, _ in pairs if fid is not None)
+
+
+def _org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: str | None = None) -> Counter[int]:
     """Per-org counts from an already org-excluded, filter-applied queryset.
 
     Re-key on distinct row ids first: projecting the org id straight off a
     .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
     shared by multiple rows. The base queryset already drops excluded orgs, so
     the exclusion is not re-applied here.
+
+    With ``group_field`` the count is per distinct group (a colleague or an
+    assignment) instead of per row, so it matches a list that shows one card
+    per group.
     """
     rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    org_id_list = rows.values_list(org_lookup, flat=True)
-    return Counter(oid for oid in org_id_list if oid is not None)
+    # Without group_field each row is its own group, so counting is per row.
+    pairs = rows.values_list(org_lookup, group_field or "id").distinct()
+    return Counter(oid for oid, _ in pairs if oid is not None)
 
 
 def _get_top_org_options(
@@ -3271,6 +3511,7 @@ def client_modal(request):
     if count_mode == "none":
         org_self_counts = Counter()
     else:
+        group_field = None
         if count_mode == "open_assignments":
             view = AssignmentListView()
             model, org_lookup = Assignment, "organizations__id"
@@ -3280,8 +3521,13 @@ def client_modal(request):
         else:
             return HttpResponseBadRequest("Onbekende count_mode")
         view.request = request
+        # The tree counts the same groups the sidebar does, and the sidebar
+        # follows ?weergave=. Without this the modal counted placements whatever
+        # the view, so its numbers sat next to sidebar numbers that disagreed.
+        if count_mode == "placements":
+            group_field = view.GROUP_FIELD[view.active_view]
         filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup)
+        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup, group_field=group_field)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
@@ -3522,6 +3768,12 @@ def _render_inline_edit_display(
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
         **extra,
+        # Lets display.html put `autofocus` on the pencil after a save: htmx
+        # focuses the first [autofocus] element in swapped-in content, and
+        # without it focus drops to <body> with the button that held it.
+        # After **extra, so a spec's display_context cannot override the flag
+        # and lose focus without anything reporting it.
+        "saved": saved,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:

@@ -52,6 +52,7 @@
        see the file header. Global because every page with filters uses the
        sidebar-section from this base. #}
     <script src="{{ app_asset('js/sidebar_sticky.js') }}" defer></script>
+    <script src="{{ app_asset('js/focus_restore.js') }}" defer></script>
   </head>
   <body>
     <nldd-page>
@@ -102,7 +103,7 @@
     <p>
       <a href="https://github.com/RijksICTGilde/wies"
          target="_blank"
-         rel="noopener">GitHub</a>
+         rel="noopener">GitHub<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon name="square-arrow-right-top" size="16"></nldd-icon></a>
       · <a href="{{ url('faq') }}">Veelgestelde vragen</a>
       · <a href="{{ url('contact') }}">Contact</a>
     </p>
