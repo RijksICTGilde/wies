@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TODO: visibility warning on finished placements is shown on team members instead of above the team
-- TODO: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) instead of only to the opdracht owner
+- 636: visibility warning on finished placements is shown on team members instead of above the team
+- 636: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) instead of only to the opdracht owner
 - ?
 
 ## 2026-08-21_2
