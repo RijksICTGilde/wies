@@ -203,6 +203,17 @@ a {
   z-index: 1;
 }
 
+/* The supporting-text slot of a team row: the period dates and the period chip
+   sit on the same line, so lay them out inline with a small gap and keep the
+   chip vertically centred against the date text. Our own span, not an nldd-*
+   element, so a plain class rule is fine. */
+.wies-team-row-meta {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-8, 8px);
+}
+
 /* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
    double spaces and indentation of a pasted description should survive.
    `:not([hidden])` is needed because inline_edit.js swaps the two spans via the

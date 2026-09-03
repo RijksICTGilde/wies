@@ -8,10 +8,10 @@
    covers the whole card and otherwise swallows the hover.
 
    Import with: {% from "parts/privacy_chip.html" import privacy_chip %} #}
-{% macro privacy_chip(note, size="") %}
+{% macro privacy_chip(note, size="", label="Beperkt zichtbaar") %}
   {# instant: the default 700ms show-delay feels slow for a chip you point at
      precisely to read it. #}
   <nldd-tooltip text="{{ note }}" timing="instant">
-  <nldd-tag class="wies-privacy-chip" {% if size %}size="{{ size }}"{% endif %} tabindex="0" color="warning" icon="hidden" text="Beperkt zichtbaar" accessible-label="Beperkt zichtbaar. {{ note }}"></nldd-tag>
+  <nldd-tag class="wies-privacy-chip" {% if size %}size="{{ size }}"{% endif %} tabindex="0" color="warning" icon="hidden" text="{{ label }}" accessible-label="{{ label }}. {{ note }}"></nldd-tag>
   </nldd-tooltip>
 {% endmacro %}

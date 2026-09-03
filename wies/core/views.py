@@ -42,7 +42,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, PRIVACY_BDM, evaluate_placement_visibility
+from wies.core.placement_visibility import LABELS, PRIVACY_BM_OWNED, evaluate_placement_visibility
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -198,12 +198,6 @@ def _build_assignment_panel_data(assignment, request):
         # Same human label as the "Externe bron" row, so the intro says "OTYS
         # IIR", not the raw key "OTYS_IIR".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
-        # One privacy note above the list instead of one per row. The wording
-        # comes from placement_visibility, already tailored to the viewer.
-        "team_privacy_note": next(
-            (note for row in team_rows if (note := row.get("privacy_warning_text"))),
-            "",
-        ),
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
@@ -385,7 +379,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=end_date,
                     tags={"Business Manager": None},
                     historical=True,
-                    privacy_warning_text=PRIVACY_BDM,
+                    privacy_warning_text=PRIVACY_BM_OWNED,
                 )
             historical_by_id[assignment_id]["tags"]["Business Manager"] = None
         else:

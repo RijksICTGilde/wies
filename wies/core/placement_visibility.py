@@ -10,11 +10,15 @@ from dataclasses import dataclass
 
 # Shown to the placed colleague on their own ended/future placement.
 PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Managers"
-# Shown to a Business Manager (BDM) who sees the row purely by role, not because
-# they are placed on it — hence no "jou": they need not be on the team. Also used
-# for an ended assignment shown on a colleague profile, where the audience is the
-# same.
-PRIVACY_BDM = "Alleen zichtbaar voor de Business Managers en het team"
+# Shown to a Business Manager (BDM) who sees a placement purely by role, not
+# because they are placed on it — hence no "jou". The audience is the same as
+# PRIVACY_OWN seen from the other side: the placed consultant and the Business
+# Managers.
+PRIVACY_BDM = "Alleen zichtbaar voor de consultant en de Business Managers"
+# Shown on an ended assignment a colleague *owns* as Business Manager (no
+# consultant is placed on the row, so PRIVACY_BDM's "de consultant" would not
+# fit). Only Business Managers see it.
+PRIVACY_BM_OWNED = "Alleen zichtbaar voor de Business Managers"
 
 # Chip labels per timing, for the non-active states.
 LABELS = {"ended": "Afgelopen", "future": "Gepland"}

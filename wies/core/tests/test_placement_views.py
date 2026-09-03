@@ -23,7 +23,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.placement_visibility import PRIVACY_BDM, PRIVACY_OWN
+from wies.core.placement_visibility import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.views import (
     PlacementListView,
@@ -953,6 +953,30 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Planned Opdracht")
 
+    def test_restricted_card_merges_the_note_into_the_period_chip(self):
+        """The card shows one chip: the period label ("Gepland") carrying the eye
+        icon, warning colour and the note in its tooltip. No separate "Beperkt
+        zichtbaar" chip up with the role tags."""
+        today = timezone.now().date()
+        assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=today + timedelta(days=30),
+            specific_end_date=today + timedelta(days=120),
+            source="wies",
+        )
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(reverse("user-profile")).content.decode()
+
+        assert 'text="Gepland"' in body
+        assert 'text="Beperkt zichtbaar"' not in body
+        assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
+        assert f'accessible-label="Gepland. {PRIVACY_OWN}"' in body
+
     def test_future_placement_card_hidden_on_unrelated_profile_page(self):
         """End-to-end negative: an unrelated viewer loading Alice's data must not
         get her planned assignment. (/profiel/ is self-only, so this checks the
@@ -1543,11 +1567,12 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
     def test_ended_bm_role_shown_to_bdm_with_note(self, mock_timezone):
         """An ended assignment owned by a colleague (but with no placement on it)
         is surfaced on that colleague's profile only to a Business Manager (BDM
-        role), with the PRIVACY_BDM note.
+        role), with the PRIVACY_BM_OWNED note.
 
         This is the ``viewer_is_bdm`` BM-role branch in
         ``_get_colleague_assignments`` — a separate path from the placement-based
-        PRIVACY_OWN/PRIVACY_BDM rule, so it needs its own positive test.
+        PRIVACY_OWN/PRIVACY_BDM rule, and its own note: no consultant is placed
+        on the row, so "de consultant" would not fit.
         """
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
@@ -1570,7 +1595,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         historical = [a for a in assignments if a["historical"]]
         entry = next((a for a in historical if a["id"] == assignment.id), None)
         assert entry is not None, "BDM should see the ended BM assignment"
-        assert entry["privacy_warning_text"] == PRIVACY_BDM
+        assert entry["privacy_warning_text"] == PRIVACY_BM_OWNED
 
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_hidden_from_non_bdm_owner(self, mock_timezone):
@@ -2233,14 +2258,16 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert response.status_code == 200
         return response.content.decode()
 
-    def test_panel_shows_the_note_as_a_chip_with_tooltip(self):
+    def test_panel_shows_the_period_chip_with_the_note_in_its_tooltip(self):
         body = self._panel()
-        # Short on screen, the full sentence in the tooltip.
-        assert 'text="Beperkt zichtbaar"' in body
+        # The period label is the chip's text; the full sentence rides in the
+        # tooltip. There is no separate team-wide "Beperkt zichtbaar" banner.
+        assert 'text="Afgelopen"' in body
+        assert 'text="Beperkt zichtbaar"' not in body
         assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BDM}"' in body
+        assert f'accessible-label="Afgelopen. {PRIVACY_BDM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
@@ -2252,7 +2279,8 @@ class PrivacyNoteSurfacesTest(TestCase):
         self.assignment.save(update_fields=["source"])
         body = self._panel()
         assert "Wordt beheerd in" in body
-        assert 'text="Beperkt zichtbaar"' in body
+        assert 'text="Afgelopen"' in body
+        assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
 
     def test_notes_live_in_one_module(self):
         # Whoever rewords one must find both together.
