@@ -67,6 +67,17 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
 
 
+def is_bdm(user) -> bool:
+    """Whether the user holds the BDM role (Django group "Business Development
+    Manager").
+
+    Used as a visibility gate: a BDM sees ended and future placements/assignments
+    that are otherwise private to the placed colleague — see
+    ``evaluate_placement_visibility``.
+    """
+    return user.is_authenticated and user.groups.filter(name="Business Development Manager").exists()
+
+
 def is_staff_member(user):
     """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
 

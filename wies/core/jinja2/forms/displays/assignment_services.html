@@ -1,3 +1,4 @@
+{% from "parts/privacy_chip.html" import privacy_chip %}
 {# Display partial for the Assignment services EditableCollection. Renders the
 team list from `value` (row dicts from _services_initial, viewer-filtered and
 vacancies-first via _services_display_context). Edit mode swaps the inline-edit
@@ -21,16 +22,22 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       <span>
         {{ row.colleague.name }}
         {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
-        {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
       </span>
-      {% if pl.start_date or pl.end_date %}
-        <span slot="supporting-text">
+      {% if pl.start_date or pl.end_date or row.period_label %}
+        <span slot="supporting-text" class="wies-team-row-meta">
           {% if pl.start_date and pl.end_date %}
             {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
           {% elif pl.start_date %}
             Vanaf {{ pl.start_date|datum_nl }}
           {% elif pl.end_date %}
             t/m {{ pl.end_date|datum_nl }}
+          {% endif %}
+          {% if row.period_label %}
+            {% if row.privacy_warning_text %}
+              {{ privacy_chip(row.privacy_warning_text, size="sm", label=row.period_label) }}
+            {% else %}
+              <nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>
+            {% endif %}
           {% endif %}
         </span>
       {% endif %}

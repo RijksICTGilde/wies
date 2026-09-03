@@ -18,7 +18,7 @@
     <nldd-title size="5">
     <h3>{{ assignment.name }}</h3>
     </nldd-title>
-    {% if assignment.tags or assignment.privacy_warning_text %}
+    {% if assignment.tags %}
       <nldd-spacer size="8"></nldd-spacer>
       <nldd-container layout="wrap" gap="6">
       {% for tag in assignment.tags[:3] %}
@@ -26,11 +26,6 @@
       {% endfor %}
       {% if assignment.tags|length > 3 %}
         <nldd-tag size="sm" text="+{{ assignment.tags|length - 3 }} meer"></nldd-tag>
-      {% endif %}
-      {# With the other tags rather than on its own line at the bottom: it stands
-         out there and sits with the assignment traits it belongs to. #}
-      {% if assignment.privacy_warning_text %}
-        {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}
       {% endif %}
       </nldd-container>
     {% endif %}
@@ -60,10 +55,22 @@
       </nldd-list-item>
     {% endif %}
     {% if assignment.historical %}
+      {% set _period_label = assignment.period_label or 'Afgelopen' %}
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ assignment.period_label or 'Afgelopen' }}"></nldd-text-cell>
+      {# The limited-visibility note rides on the period chip itself: eye icon,
+         warning colour, the full sentence in its tooltip — instead of a separate
+         "Beperkt zichtbaar" chip up with the tags. #}
+      {% if assignment.privacy_warning_text %}
+        {# The chip only takes its own width; the empty growing text-cell after it
+           keeps the chevron pinned to the right edge, where the date normally
+           holds it. #}
+        <nldd-cell>{{ privacy_chip(assignment.privacy_warning_text, size="sm", label=_period_label) }}</nldd-cell>
+        <nldd-text-cell size="sm"></nldd-text-cell>
+      {% else %}
+        <nldd-text-cell size="sm" text="{{ _period_label }}"></nldd-text-cell>
+      {% endif %}
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% elif assignment.start_date or assignment.end_date %}

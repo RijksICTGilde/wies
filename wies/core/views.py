@@ -42,7 +42,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, PRIVACY_TEAM, evaluate_placement_visibility
+from wies.core.placement_visibility import LABELS, PRIVACY_BM_OWNED, evaluate_placement_visibility
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -69,7 +69,7 @@ from .models import (
     Skill,
     Suborganization,
 )
-from .permissions import is_staff_member
+from .permissions import is_bdm, is_staff_member
 from .querysets import (
     annotate_placement_dates,
     annotate_suborganization_usage_counts,
@@ -198,12 +198,6 @@ def _build_assignment_panel_data(assignment, request):
         # Same human label as the "Externe bron" row, so the intro says "OTYS
         # IIR", not the raw key "OTYS_IIR".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
-        # One privacy note above the list instead of one per row. The wording
-        # comes from placement_visibility, already tailored to the viewer.
-        "team_privacy_note": next(
-            (note for row in team_rows if (note := row.get("privacy_warning_text"))),
-            "",
-        ),
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
@@ -304,7 +298,7 @@ def _make_assignment_entry(
 def _get_colleague_assignments(request, colleague, viewer):
 
     today = timezone.now().date()
-    viewer_is_colleague = viewer and colleague.id == viewer.id
+    viewer_is_bdm = is_bdm(request.user)
 
     active_by_id: dict[int, dict] = {}
     historical_by_id: dict[int, dict] = {}
@@ -320,7 +314,6 @@ def _get_colleague_assignments(request, colleague, viewer):
             "service__assignment__name",
             "service__assignment__start_date",
             "service__assignment__end_date",
-            "service__assignment__owner_id",
             "service__skill__name",
             "service__description",
         )
@@ -329,12 +322,11 @@ def _get_colleague_assignments(request, colleague, viewer):
     placement_qs = annotate_placement_dates(placement_qs)
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
-        owner_id = placement["service__assignment__owner_id"]
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague and the assignment's BM-owner.
-        result = evaluate_placement_visibility(start, end, colleague.id, viewer, owner_id, today)
+        # visible to the placed colleague and the Business Managers (BDM role).
+        result = evaluate_placement_visibility(start, end, colleague.id, viewer, viewer_is_bdm, today)
         if not result.visible:
             continue
 
@@ -375,9 +367,8 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=end_date,
                 )
             active_by_id[assignment_id]["tags"]["Business Manager"] = None
-        elif viewer_is_colleague:
-            # Only the colleague sees their own ended BM assignments; an
-            # assignment has exactly one business manager.
+        elif viewer_is_bdm:
+            # Ended BM assignments are only shown to Business Managers (BDM role).
             if assignment_id not in historical_by_id:
                 historical_by_id[assignment_id] = _make_assignment_entry(
                     name,
@@ -388,7 +379,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=end_date,
                     tags={"Business Manager": None},
                     historical=True,
-                    privacy_warning_text=PRIVACY_TEAM,
+                    privacy_warning_text=PRIVACY_BM_OWNED,
                 )
             historical_by_id[assignment_id]["tags"]["Business Manager"] = None
         else:
@@ -518,14 +509,13 @@ def _resolve_placement_panel(request, public_id):
         placement = None
     result = None
     if placement is not None:
-        assignment = placement.service.assignment
         viewer = getattr(request.user, "colleague", None)
         result = evaluate_placement_visibility(
             placement.start_date,
             placement.end_date,
             placement.colleague_id,
             viewer,
-            assignment.owner_id,
+            is_bdm(request.user),
             timezone.now().date(),
         )
     if result is None or not result.visible:

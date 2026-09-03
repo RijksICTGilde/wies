@@ -3,8 +3,8 @@
 Two functions decide who may see a placement:
 
 - ``placement_timing`` / ``evaluate_placement_visibility`` — the per-row rule used
-  by the panels and the colleague profile, where a placed colleague and the
-  BM-owner also see their ended and planned placements.
+  by the panels and the colleague profile, where the placed colleague and the
+  Business Managers (the BDM role) also see ended and planned placements.
 - ``filter_visible_placements`` — the "Wie zit waar?" list, which shows only
   active placements, to every viewer alike.
 
@@ -19,7 +19,7 @@ from django.test import SimpleTestCase, TestCase
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.placement_visibility import (
-    PRIVACY_BM,
+    PRIVACY_BDM,
     PRIVACY_OWN,
     evaluate_placement_visibility,
     placement_timing,
@@ -80,17 +80,16 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
     """The full visibility matrix: timing x viewer, plus the note wording."""
 
     PLACED_ID = 1
-    OWNER_ID = 2
     OTHER_ID = 3
 
-    def _evaluate(self, *, start, end, viewer_id, owner_id=OWNER_ID):
+    def _evaluate(self, *, start, end, viewer_id, viewer_is_bdm=False):
         viewer = _Viewer(id=viewer_id) if viewer_id is not None else None
         return evaluate_placement_visibility(
             start=start,
             end=end,
             placed_colleague_id=self.PLACED_ID,
             viewer=viewer,
-            owner_id=owner_id,
+            viewer_is_bdm=viewer_is_bdm,
             today=TODAY,
         )
 
@@ -107,7 +106,13 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         assert result.visible is True
         assert result.privacy_note is None
 
-    # --- future / ended: private to the placed colleague and the owner ---
+    def test_active_ignores_bdm_flag(self):
+        # An active placement is public regardless of the BDM flag, no note.
+        result = self._evaluate(start=YESTERDAY, end=TOMORROW, viewer_id=self.OTHER_ID, viewer_is_bdm=True)
+        assert result.visible is True
+        assert result.privacy_note is None
+
+    # --- future / ended: private to the placed colleague and the BDMs ---
 
     def test_future_visible_to_placed_colleague_with_own_note(self):
         result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.PLACED_ID)
@@ -121,17 +126,28 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         assert result.timing == "ended"
         assert result.privacy_note == PRIVACY_OWN
 
-    def test_future_visible_to_owner_with_bm_note(self):
-        result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OWNER_ID)
+    def test_future_visible_to_bdm_with_bdm_note(self):
+        result = self._evaluate(
+            start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID, viewer_is_bdm=True
+        )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BM
+        assert result.timing == "future"
+        assert result.privacy_note == PRIVACY_BDM
 
-    def test_ended_visible_to_owner_with_bm_note(self):
-        result = self._evaluate(start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OWNER_ID)
+    def test_ended_visible_to_bdm_with_bdm_note(self):
+        result = self._evaluate(
+            start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OTHER_ID, viewer_is_bdm=True
+        )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BM
+        assert result.privacy_note == PRIVACY_BDM
 
-    def test_future_hidden_from_unrelated(self):
+    def test_bdm_note_reaches_a_viewerless_bdm(self):
+        # The BDM branch does not read ``viewer``, so a null viewer still gets in.
+        result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=None, viewer_is_bdm=True)
+        assert result.visible is True
+        assert result.privacy_note == PRIVACY_BDM
+
+    def test_future_hidden_from_unrelated_non_bdm(self):
         result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID)
         assert result.visible is False
         assert result.privacy_note is None
@@ -142,23 +158,14 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
 
     # --- edge cases in the identity checks ---
 
-    def test_owner_id_none_does_not_grant_or_crash(self):
-        # An assignment without an owner: the BM branch must not fire.
+    def test_placed_branch_wins_when_viewer_is_both_placed_and_bdm(self):
+        # The placed-colleague check runs before the BDM check, so a placed
+        # colleague who is also a BDM gets PRIVACY_OWN, not PRIVACY_BDM.
         result = self._evaluate(
-            start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OWNER_ID, owner_id=None
-        )
-        assert result.visible is False
-
-    def test_placed_branch_wins_when_viewer_is_both_placed_and_owner(self):
-        # The placed-colleague check runs before the owner check, so a viewer who
-        # is both gets PRIVACY_OWN, not PRIVACY_BM.
-        result = evaluate_placement_visibility(
             start=TOMORROW,
             end=TOMORROW + timedelta(days=30),
-            placed_colleague_id=self.PLACED_ID,
-            viewer=_Viewer(id=self.PLACED_ID),
-            owner_id=self.PLACED_ID,
-            today=TODAY,
+            viewer_id=self.PLACED_ID,
+            viewer_is_bdm=True,
         )
         assert result.privacy_note == PRIVACY_OWN
 
@@ -169,7 +176,7 @@ class ListVisibilityParityTest(TestCase):
 
     This is the guardrail against the two implementations drifting: the list is
     active-only and viewer-independent, while the panels additionally show
-    ended/future placements to the placed colleague and the BM-owner.
+    ended/future placements to the placed colleague and the BDMs.
     """
 
     def setUp(self):
@@ -198,7 +205,7 @@ class ListVisibilityParityTest(TestCase):
         qs = annotate_placement_dates(Placement.objects.all())
         return set(filter_visible_placements(qs, TODAY).values_list("id", flat=True))
 
-    def _evaluate_active_ids(self, viewer):
+    def _evaluate_active_ids(self, viewer, *, viewer_is_bdm=False):
         active = set()
         for placement in Placement.objects.all():
             result = evaluate_placement_visibility(
@@ -206,7 +213,7 @@ class ListVisibilityParityTest(TestCase):
                 end=placement.specific_end_date,
                 placed_colleague_id=placement.colleague_id,
                 viewer=viewer,
-                owner_id=self.assignment.owner_id,
+                viewer_is_bdm=viewer_is_bdm,
                 today=TODAY,
             )
             if result.timing == "active":
@@ -215,9 +222,12 @@ class ListVisibilityParityTest(TestCase):
 
     def test_list_equals_active_subset_for_every_viewer(self):
         # The list takes no viewer; the evaluate side is computed per row. For
-        # every viewer class the list must equal the set of active placements.
+        # every viewer class (including a BDM) the list must equal the active set.
         for viewer in (None, self.placed, self.owner, self.unrelated):
-            assert self._list_ids() == self._evaluate_active_ids(viewer), f"mismatch for viewer={viewer}"
+            for viewer_is_bdm in (False, True):
+                assert self._list_ids() == self._evaluate_active_ids(viewer, viewer_is_bdm=viewer_is_bdm), (
+                    f"mismatch for viewer={viewer}, bdm={viewer_is_bdm}"
+                )
 
     def test_list_is_viewer_independent(self):
         # Regression guard: no viewer branch may creep back into the list. The
@@ -226,19 +236,29 @@ class ListVisibilityParityTest(TestCase):
 
     def test_future_and_ended_absent_from_list_but_visible_on_panels(self):
         # The intended divergence: planned/ended placements never reach the list,
-        # yet the panels still show them to the placed colleague and the owner.
+        # yet the panels still show them to the placed colleague and to a BDM.
         list_ids = self._list_ids()
         assert self.future.id not in list_ids
         assert self.ended.id not in list_ids
 
         for placement in (self.future, self.ended):
-            for viewer in (self.placed, self.owner):
-                result = evaluate_placement_visibility(
-                    start=placement.specific_start_date,
-                    end=placement.specific_end_date,
-                    placed_colleague_id=placement.colleague_id,
-                    viewer=viewer,
-                    owner_id=self.assignment.owner_id,
-                    today=TODAY,
-                )
-                assert result.visible is True, f"{placement} should be visible to {viewer} on the panel"
+            # Visible to the placed colleague via the viewer identity...
+            placed_result = evaluate_placement_visibility(
+                start=placement.specific_start_date,
+                end=placement.specific_end_date,
+                placed_colleague_id=placement.colleague_id,
+                viewer=self.placed,
+                viewer_is_bdm=False,
+                today=TODAY,
+            )
+            assert placed_result.visible is True, f"{placement} should be visible to the placed colleague"
+            # ...and to a BDM via the role flag (any viewer, incl. unrelated).
+            bdm_result = evaluate_placement_visibility(
+                start=placement.specific_start_date,
+                end=placement.specific_end_date,
+                placed_colleague_id=placement.colleague_id,
+                viewer=self.unrelated,
+                viewer_is_bdm=True,
+                today=TODAY,
+            )
+            assert bdm_result.visible is True, f"{placement} should be visible to a BDM"

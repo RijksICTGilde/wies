@@ -793,7 +793,8 @@ class TimelinePlacementPrivacyTests(TestCase):
     """The updates tab honours the team tab's placement-visibility rule.
 
     A planned or ended placement is private to the placed colleague and the
-    BM-owner, so its colleague name must not surface in a Team event.
+    Business Managers (the BDM role), so its colleague name must not surface in a
+    Team event for anyone else.
     """
 
     def setUp(self):
@@ -867,10 +868,22 @@ class TimelinePlacementPrivacyTests(TestCase):
         self.assertNotContains(response, "Team")
         self.assertContains(response, "Geen updates")
 
-    def test_bm_owner_still_sees_the_full_history(self):
-        response = self._get_timeline(self.owner_user)
+    def test_bdm_sees_the_full_history(self):
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
+        Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        bdm_user.groups.add(bdm_group)
+
+        response = self._get_timeline(bdm_user)
 
         self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
+
+    def test_non_bdm_owner_no_longer_sees_hidden_history(self):
+        # Ownership alone no longer grants visibility: a non-BDM owner is treated
+        # like any unrelated viewer and the hidden name is filtered out.
+        response = self._get_timeline(self.owner_user)
+
+        self.assertNotContains(response, "Hidden Colleague")
 
     def test_placed_colleague_sees_their_own_placement(self):
         response = self._get_timeline(self.hidden_user)
