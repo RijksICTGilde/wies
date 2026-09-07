@@ -16,7 +16,7 @@
   <nldd-menu-item data-theme-choice="dark" type="radio" text="Donker" icon="moon" {% if request.user.colleague and request.user.colleague.theme == 'dark' %}selected{% endif %}></nldd-menu-item>
   </nldd-menu>
   </nldd-menu-item>
-  {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+  {% if request.user.has_perms(["rijksauth.view_user", "core.view_labelcategory"]) %}
     <nldd-menu-divider></nldd-menu-divider>
     {# Same options and conditions as the admin sidebar. #}
     <nldd-menu-item text="Beheer" icon="user-admin">
@@ -26,7 +26,7 @@
       <nldd-menu-item text="Opdrachtgevers" icon="offices" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
     {% endif %}
     <nldd-menu-item text="Labels" icon="labels" data-href="{{ url('label-admin') }}"></nldd-menu-item>
-    {% if request.user.has_perm('core.view_suborganization') %}
+    {% if request.user.has_perm("core.view_suborganization") %}
       <nldd-menu-item text="Merken" icon="brand" data-href="{{ url('suborganization-admin') }}"></nldd-menu-item>
     {% endif %}
     {% if is_staff_member(request.user) %}

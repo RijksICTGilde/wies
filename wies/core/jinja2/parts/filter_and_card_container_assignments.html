@@ -38,7 +38,7 @@
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}
   {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
+    {% if filter_group.type == "select-multi" %}
       {% set values = active_filters.get(filter_group.name) %}
       {% if values %}
         {% for selected_value in values %}
@@ -49,7 +49,7 @@
           {% endfor %}
         {% endfor %}
       {% endif %}
-    {% elif filter_group.type == 'date' %}
+    {% elif filter_group.type == "date" %}
       {% set value = active_filters.get(filter_group.name) %}
       {% if value %}
         {# Label plus date, so the token shows the mode and not just a bare date. #}

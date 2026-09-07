@@ -8,7 +8,7 @@
      to see what is being filtered on: the badge counts but does not say what. #}
   <nldd-container layout="wrap" gap="8" vertical-alignment="center">
   {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
+    {% if filter_group.type == "select-multi" %}
       {% set values = active_filters.get(filter_group.name) %}
       {% if values %}
         {% for selected_value in values %}
