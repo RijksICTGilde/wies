@@ -25,11 +25,13 @@ from wies.core.querysets import annotate_placement_dates
 # carry bars got squeezed into the left third of the track.
 HORIZON_BACK_DAYS = 61
 HORIZON_AHEAD_DAYS = 122
-ENDS_SOON_DAYS = 60
 
-# Work wrapping up within three months is coloured, so a business manager sees
-# who frees up without reading dates. 93 days rather than 90, so "ends on the
-# same day three months out" lands inside the band people expect.
+# Work wrapping up within three months: the bars colour by it and the summary
+# card counts by it, so a click on the card selects exactly the colleagues whose
+# rows show an orange bar. These were two constants — 60 days for the card, 93
+# for the colour — which had the card select 11 colleagues while the page had
+# coloured 17. 93 days rather than 90, so "ends on the same day three months
+# out" lands inside the band people expect.
 ENDING_SOON_DAYS = 93
 ENDING_LEVEL_SOON = "soon"
 ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
@@ -276,7 +278,7 @@ def colleague_occupancy(
 
     # One cutoff for the whole build: the row flag and the per-segment flag must
     # agree on what "soon" means.
-    soon_cutoff = today + timedelta(days=ENDS_SOON_DAYS)
+    soon_cutoff = today + timedelta(days=ENDING_SOON_DAYS)
 
     rows: list[OccupancyRow] = []
     for colleague in colleagues:

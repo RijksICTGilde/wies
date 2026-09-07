@@ -50,12 +50,12 @@
    to wrap the moment a filter went on. #}
 <ul class="bezetting-toolbar" aria-label="Filters">
   {# Short captions: the row shrinks these three before anything else, and the
-     longer phrasing ("volledig ingezet", "eindigt binnen 60 dagen") truncated to
+     longer phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to
      an unreadable stub well before a laptop's width ran out. The card's
      accessible label still carries the full sentence for a screen reader. #}
   <li>{{ status_card('bench', bench_count, 'op de bank') }}</li>
   <li>{{ status_card('full', full_count, 'volledig ingezet', 'ingezet') }}</li>
-  <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 60 dagen', 'eindigt bijna') }}</li>
+  <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
   {# user_filter.js listens for data-user-filter-open; the count tells you how
      many filters are on inside without opening it. #}
   <li>
