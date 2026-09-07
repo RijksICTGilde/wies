@@ -9,6 +9,7 @@ Usage:
 """
 
 import logging
+import os
 import random
 import re
 from datetime import UTC, date, datetime, timedelta
@@ -44,6 +45,10 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
+
+# Board status of an assignment. Weighted so the BM board shows all four columns
+# populated, with the bulk in the two the business manager works in daily.
+ASSIGNMENT_STATUS_WEIGHTS = {"LEAD": 15, "OPEN": 40, "INGEVULD": 35, "GESLOTEN": 10}
 # Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
 ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
@@ -534,6 +539,39 @@ def weighted_choice(rng: random.Random, options: dict[str, int]) -> str:
     return rng.choices(list(options.keys()), weights=list(options.values()))[0]
 
 
+def _colleague_for_initial_user(user_model):
+    """Make the INITIAL_USER_EMAIL account a Colleague, so it can own work.
+
+    Returns None when no initial user is configured or it has no account yet;
+    the environment then simply has no signed-in owner to seed for.
+    """
+    email = os.environ.get("INITIAL_USER_EMAIL", "").strip()
+    if not email:
+        return None
+    user = user_model.objects.filter(email__iexact=email).first()
+    if user is None:
+        return None
+    existing = Colleague.objects.filter(user=user).first()
+    if existing is not None:
+        return existing
+    name = f"{user.first_name} {user.last_name}".strip() or email.split("@")[0]
+    colleague = Colleague.objects.create(name=name, email=user.email, source="wies", user=user)
+    user.groups.add(Group.objects.get(name="Business Development Manager"))
+    return colleague
+
+
+def _assignment_status(rng: random.Random, *, is_active: bool) -> str:
+    """Board status for a generated assignment.
+
+    Work that already ran its course is Gesloten: a finished assignment sitting
+    in Lead or Open would be a state the board is meant to make impossible to
+    miss, and demo data should not manufacture it.
+    """
+    if not is_active:
+        return "GESLOTEN"
+    return weighted_choice(rng, ASSIGNMENT_STATUS_WEIGHTS)
+
+
 def generate_name(rng: random.Random) -> str:
     return f"{rng.choice(FIRST_NAMES)} {rng.choice(LAST_NAMES)}"
 
@@ -703,7 +741,23 @@ class Command(BaseCommand):
             role_counts[role] += 1
         self.stdout.write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
+        # ── 4e. The person who will actually log in ──────────────────────
+        # ensure_initial_user creates that account but no Colleague, so it owns
+        # nothing and every "my own work" page (the BM board) comes up empty on a
+        # fresh environment. Give it a colleague so there is someone to own the
+        # assignments handed out below.
+        own_colleague = _colleague_for_initial_user(user_model)
+        if own_colleague is not None:
+            colleagues.append(own_colleague)
+            self.stdout.write(f"Initial user linked to a colleague: {own_colleague.email}")
+
         # ── 5. Assignments ───────────────────────────────────────────────
+        # Owners are business managers only: an assignment belongs to whoever
+        # sells and staffs it, and the BM board is read as "my own work". Spread
+        # over everyone would leave each board with a card or two.
+        bm_colleagues = [
+            c for c in colleagues if c.user and c.user.groups.filter(name="Business Development Manager").exists()
+        ] or colleagues
         assignments = []
 
         for _ in range(NUM_ASSIGNMENTS):
@@ -715,7 +769,8 @@ class Command(BaseCommand):
                 start_date=start,
                 end_date=end,
                 extra_info="",
-                owner=rng.choice(colleagues),
+                owner=rng.choice(bm_colleagues),
+                status=_assignment_status(rng, is_active=is_active),
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )

@@ -13,6 +13,15 @@ SERVICE_STATUS = {
     "GESLOTEN": "Gesloten",
 }
 
+#: Status of an assignment as a whole, distinct from the per-role SERVICE_STATUS.
+#: Drives the business management board: every value is a column, in pipeline order.
+ASSIGNMENT_STATUS = {
+    "LEAD": "Lead",
+    "OPEN": "Open",
+    "INGEVULD": "Ingevuld",
+    "GESLOTEN": "Gesloten",
+}
+
 SOURCE_CHOICES = {
     "otys_iir": "OTYS IIR",
     "wies": "Wies",
@@ -191,6 +200,7 @@ class Assignment(models.Model):
     )
     owner = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=False, related_name="owned_assignments")
     extra_info = models.TextField(blank=True, max_length=5000)
+    status = models.CharField("Status", max_length=20, choices=ASSIGNMENT_STATUS, default="OPEN", db_index=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)

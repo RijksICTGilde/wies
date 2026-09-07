@@ -1,33 +1,35 @@
 {% extends "base.html" %}
 {% block title %}
-  Bezetting · Wies
+  Bord · Wies
 {% endblock title %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ app_asset('css/bezetting.css') }}">
+  <link rel="stylesheet" href="{{ app_asset('css/bm_board.css') }}">
   <script src="{{ app_asset('js/filter_interactions.js') }}" defer></script>
   <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
   <script src="{{ app_asset('js/user_filter.js') }}" defer></script>
+  <script src="{{ app_asset('js/bm_board.js') }}" defer></script>
 {% endblock extra_head %}
 {% block content %}
   {# Same width as the top bar and the footer (1920px): without a wrapper the
      content sat flush against the viewport edge while the chrome around it
      stayed indented. The sidebar section used to supply this frame. #}
   <nldd-simple-section width="1920px">
-  <nldd-title size="3">
-  <h1>Bezetting</h1>
-  </nldd-title>
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {% include "parts/business_management_tabs.html" %}
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# The filter row and the results live together in the results partial: the
-       Filters button sits on the row with the status cards, and the sheet it opens
-       drives #results via htmx. Same filter system as the "Gebruikers" list. #}
-  {% include "parts/bezetting_results.html" %}
-  {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
+    <nldd-title size="3">
+    <h1>Bord</h1>
+    </nldd-title>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    {% include "parts/business_management_tabs.html" %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    {# Filter row and columns live together in the results partial, like Bezetting:
+       the Filters button sits on the row with the summary cards, and the sheet it
+       opens drives #results via htmx. #}
+    {% include "parts/bm_board_results.html" %}
+    {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
        #filter-form inside is what the chips drive. #}
-  {% include "parts/bezetting_filter_sheet.html" %}
-  {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
-  <div id="filter-options-modal-container"></div>
+    {% include "parts/bm_board_filter_sheet.html" %}
+    {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
+    <div id="filter-options-modal-container"></div>
   </nldd-simple-section>
 {% endblock content %}
 {% block panel %}

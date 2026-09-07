@@ -1,0 +1,139 @@
+/* "Bord" — the business manager's assignments in a column per status.
+   Colours use NLDD semantic tokens so light and dark both work. */
+
+/* Columns side by side, scrolling horizontally when they no longer fit rather
+   than squeezing every column past readability. Each column scrolls on its own
+   vertically, so a long column does not push the others' headers off screen. */
+.bm-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 1fr);
+  gap: var(--primitives-space-16, 16px);
+  overflow-x: auto;
+  align-items: start;
+}
+
+.bm-board__column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.bm-board__column-head {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  min-width: 0;
+}
+
+.bm-board__column-title {
+  margin: 0;
+  font-size: var(--primitives-font-size-16, 1rem);
+  font-weight: 600;
+  color: var(--components-text-default, inherit);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The drop zone keeps a minimum height so an empty column is still a target
+   big enough to drop a card onto. */
+.bm-board__dropzone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 96px;
+  padding: var(--primitives-space-4, 4px);
+  border-radius: var(--primitives-radius-8, 8px);
+  border: 1px dashed transparent;
+}
+
+/* Only while a card hovers over it: a permanent outline would draw four boxes
+   on a page that is already a grid of cards. */
+.bm-board__dropzone.is-drop-target {
+  border-color: var(--components-border-accent, currentColor);
+  background: var(--components-surface-subtle, transparent);
+}
+
+.bm-board__empty {
+  margin: 0;
+  padding: var(--primitives-space-8, 8px);
+  color: var(--components-text-subtle, inherit);
+  font-size: var(--primitives-font-size-14, 0.875rem);
+}
+
+/* The card's own padding: nldd-card brings none, and a container per block cost
+   a row of vertical rhythm each. One grid, one gap. */
+.bm-card {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+/* Title and drag handle on one row, the handle pinned right. The card itself is
+   a link, so the handle needs its own hit area that does not follow it. */
+.bm-card__head {
+  display: flex;
+  align-items: start;
+  gap: var(--primitives-space-8, 8px);
+  justify-content: space-between;
+}
+
+/* A plain h3 rather than nldd-title: that component's smallest size still
+   carries heading typography and its own block spacing, which is most of what
+   made these cards tall. Two lines, then ellipsis — one long name would
+   otherwise double the card's height; the full name is on the card's
+   accessible-label and in the panel. */
+.bm-card__title {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--components-text-default, inherit);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Client and period as one quiet line under the title, the way a board card
+   carries its metadata. The separator is generated so it never shows up on a
+   card that has only one of the two. */
+.bm-card__meta {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--components-text-subtle, inherit);
+}
+
+/* Generated, so it never shows on a card that carries only one of the two.
+   A bullet rather than another "·": the period already uses that to append
+   "nog N wk", and three identical separators on one line read as one list. */
+.bm-card__org + .bm-card__period::before {
+  content: " • ";
+}
+
+.bm-card__seats {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--components-text-subtle, inherit);
+}
+
+/* An assignment wrapping up. The text says "nog N wk" too, so the colour is
+   not the only cue (WCAG 1.4.1). */
+.bm-card__period--ending {
+  color: var(--components-text-warning, inherit);
+  font-weight: 600;
+}
+
+/* The board reuses Bezetting's toolbar row, whose items share the width between
+   them. Here it holds one button, which should keep its own width and sit at
+   the start rather than stretch across the page. */
+.bm-board__filter-item {
+  flex: 0 0 auto;
+}

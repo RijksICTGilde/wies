@@ -1,0 +1,158 @@
+"""The business manager's assignments, grouped into columns by their status.
+
+Where the "Bezetting" page answers who is free, this board answers where each
+assignment stands: every ``ASSIGNMENT_STATUS`` value is a column, in pipeline
+order (Lead → Open → Ingevuld → Gesloten), and one card per assignment moves
+between them as the work progresses.
+
+The status is a field a business manager sets by dragging a card, not something
+derived from the placements: an assignment can sit in "Lead" long before it has
+any services, and stay in "Ingevuld" while a role is briefly vacant.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from datetime import date, timedelta
+
+from django.db.models import Prefetch
+from django.utils import timezone
+
+from wies.core.models import ASSIGNMENT_STATUS, Assignment, Colleague, Service
+
+# An end date inside this window is "wrapping up": the business manager has to
+# think about an extension or a hand-off. Six weeks is enough lead time to act.
+ENDING_SOON_WEEKS = 6
+
+# Offered by the "eindigt binnen" filter, in months.
+ENDING_WITHIN_CHOICES = (1, 2, 3)
+
+# A month is 30 days here. The filter is a coarse "roughly within N months", and
+# calendar-exact month arithmetic would not make the answer any more useful.
+DAYS_PER_MONTH = 30
+
+
+@dataclass
+class BoardCard:
+    """One assignment on the board."""
+
+    public_id: str
+    name: str
+    org_label: str
+    start_date: date | None
+    end_date: date | None
+    # One service is one seat to fill; the app records no hours, so occupancy is
+    # a count of seats rather than an fte sum.
+    total_seats: int
+    filled_seats: int
+    # Whole weeks until the end date, negative once it has passed, None without
+    # one. Only used while ends_soon is set.
+    weeks_until_end: int | None = None
+    ends_soon: bool = False
+
+    @property
+    def open_seats(self) -> int:
+        return self.total_seats - self.filled_seats
+
+
+@dataclass
+class BoardColumn:
+    """One status column, with the cards that currently sit in it."""
+
+    key: str
+    label: str
+    cards: list[BoardCard] = field(default_factory=list)
+
+    @property
+    def count(self) -> int:
+        return len(self.cards)
+
+
+def build_board(
+    owner: Colleague | None,
+    *,
+    ending_within_months: int | None = None,
+    org_ids: list[int] | None = None,
+) -> list[BoardColumn]:
+    """Return the columns for ``owner``'s assignments, in pipeline order.
+
+    Without a colleague every column comes back empty: the board is always the
+    assignments of one business manager, never everyone's.
+
+    The filters narrow which cards land on the board:
+    - ``ending_within_months`` keeps only assignments ending between today and
+      that many months out. Assignments that already ended fall outside it — the
+      filter reads as "needs attention soon", and a past date does not.
+    - ``org_ids`` keeps only assignments for those client organisations.
+    """
+    columns = {key: BoardColumn(key=key, label=label) for key, label in ASSIGNMENT_STATUS.items()}
+    if owner is None:
+        return list(columns.values())
+
+    today = timezone.now().date()
+    cutoff = today + timedelta(days=DAYS_PER_MONTH * ending_within_months) if ending_within_months else None
+
+    for assignment in _assignments_for(owner, org_ids):
+        if cutoff is not None and not (assignment.end_date and today <= assignment.end_date <= cutoff):
+            continue
+        card = _card_for(assignment, today)
+        # An unknown status would drop the card off the board entirely; park it
+        # in Open instead, where it is visible and can be dragged somewhere else.
+        column = columns.get(assignment.status) or columns["OPEN"]
+        column.cards.append(card)
+
+    return list(columns.values())
+
+
+def _assignments_for(owner: Colleague, org_ids: list[int] | None = None):
+    """Assignments owned by ``owner``, prefetched for the card fields."""
+    queryset = Assignment.objects.filter(owner=owner)
+    if org_ids:
+        queryset = queryset.filter(organizations__id__in=org_ids).distinct()
+    return queryset.prefetch_related(
+        # Services with their placements: the card needs filled-vs-total,
+        # which would otherwise be a query per card.
+        Prefetch(
+            "services",
+            queryset=Service.objects.prefetch_related("placements"),
+            to_attr="loaded_services",
+        ),
+        "organizations",
+    ).order_by("name")
+
+
+def _card_for(assignment: Assignment, today: date) -> BoardCard:
+    org = next(iter(assignment.organizations.all()), None)
+    services = assignment.loaded_services
+    # A seat counts as filled once anyone is placed on it; the remainder is what
+    # the business manager still has to fill.
+    filled = sum(1 for service in services if service.placements.all())
+    weeks = _weeks_until(assignment.end_date, today)
+    return BoardCard(
+        public_id=str(assignment.public_id),
+        name=assignment.name,
+        org_label=(org.label or org.name) if org else "",
+        start_date=assignment.start_date,
+        end_date=assignment.end_date,
+        total_seats=len(services),
+        filled_seats=filled,
+        weeks_until_end=weeks,
+        ends_soon=weeks is not None and 0 <= weeks <= ENDING_SOON_WEEKS,
+    )
+
+
+def _weeks_until(end_date: date | None, today: date) -> int | None:
+    """Whole weeks until ``end_date``, negative once past, None without a date."""
+    if end_date is None:
+        return None
+    return (end_date - today).days // 7
+
+
+def move_assignment(assignment: Assignment, status: str) -> bool:
+    """Move ``assignment`` to ``status``. False when the status is unknown."""
+    if status not in ASSIGNMENT_STATUS:
+        return False
+    if assignment.status != status:
+        assignment.status = status
+        assignment.save(update_fields=["status"])
+    return True
