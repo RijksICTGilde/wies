@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 653: pressing Enter quickly after typing no longer leaves the "Druk op Enter om te zoeken" hint hanging over the results
 - ?
 
 ## 2026-08-21_2
