@@ -47,7 +47,8 @@
   function setupDragStart() {
     document.addEventListener("dragstart", (e) => {
       // Only from the grip: dragging the card body would fight the link.
-      const handle = e.target instanceof Element && e.target.closest("[data-board-handle]");
+      const handle =
+        e.target instanceof Element && e.target.closest("[data-board-handle]");
       const card = handle && cardFor(handle);
       if (!card) return;
       dragged = card;

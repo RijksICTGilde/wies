@@ -5,15 +5,7 @@
 
    `card` is a BoardCard from services/board.py. The stable id is what the drag
    layer moves and what an out-of-band swap targets. #}
-<nldd-card id="bm-card-{{ card.public_id }}"
-           background="tinted"
-           accessible-label="{{ card.name }}"
-           data-board-card
-           data-assignment-id="{{ card.public_id }}"
-           href="{{ url('bm-board') }}?opdracht={{ card.public_id }}"
-           hx-get="{{ url('bm-board') }}?opdracht={{ card.public_id }}"
-           hx-target="#side-panel-content"
-           hx-swap="innerHTML">
+<nldd-card id="bm-card-{{ card.public_id }}" background="tinted" accessible-label="{{ card.name }}" data-board-card data-assignment-id="{{ card.public_id }}" href="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-get="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML">
 <div class="bm-card">
   {# The handle is what starts a drag; the rest of the card stays a link, so a
      plain click still opens the panel (hx_link_guard.js holds back the href). #}
@@ -32,7 +24,7 @@
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
       <span class="bm-card__period{{ ' bm-card__period--ending' if card.ends_soon else '' }}">
-        {{- 't/m ' ~ card.end_date|datum_nl('b Y') -}}
+        {{- 't/m ' ~ card.end_date|datum_nl("b Y") -}}
         {%- if card.ends_soon %} · nog {{ card.weeks_until_end }} wk{% endif -%}
       </span>
     {%- endif -%}

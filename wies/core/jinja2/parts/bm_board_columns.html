@@ -10,7 +10,9 @@
      data-board-move-url-template="{{ url('bm-board-move', args=['00000000-0000-0000-0000-000000000000']) }}">
   {{ get_csrf_hidden_input(request) }}
   {% for column in columns %}
-    <section class="bm-board__column" data-board-column="{{ column.key }}" aria-labelledby="bm-column-{{ column.key }}">
+    <section class="bm-board__column"
+             data-board-column="{{ column.key }}"
+             aria-labelledby="bm-column-{{ column.key }}">
       <div class="bm-board__column-head">
         <h2 class="bm-board__column-title" id="bm-column-{{ column.key }}">{{ column.label }}</h2>
         <nldd-badge number="{{ column.count }}" accessible-label="{{ column.count }} in {{ column.label }}"></nldd-badge>

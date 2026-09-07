@@ -15,21 +15,21 @@
      content sat flush against the viewport edge while the chrome around it
      stayed indented. The sidebar section used to supply this frame. #}
   <nldd-simple-section width="1920px">
-    <nldd-title size="3">
-    <h1>Bord</h1>
-    </nldd-title>
-    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    {% include "parts/business_management_tabs.html" %}
-    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-    {# Filter row and columns live together in the results partial, like Bezetting:
+  <nldd-title size="3">
+  <h1>Bord</h1>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {% include "parts/business_management_tabs.html" %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# Filter row and columns live together in the results partial, like Bezetting:
        the Filters button sits on the row with the summary cards, and the sheet it
        opens drives #results via htmx. #}
-    {% include "parts/bm_board_results.html" %}
-    {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
+  {% include "parts/bm_board_results.html" %}
+  {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
        #filter-form inside is what the chips drive. #}
-    {% include "parts/bm_board_filter_sheet.html" %}
-    {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
-    <div id="filter-options-modal-container"></div>
+  {% include "parts/bm_board_filter_sheet.html" %}
+  {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
+  <div id="filter-options-modal-container"></div>
   </nldd-simple-section>
 {% endblock content %}
 {% block panel %}
