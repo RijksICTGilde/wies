@@ -28,20 +28,20 @@ repos:
         exclude: "jinja2/"
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.30.0"
+    rev: "1.32.0"
     hooks:
       - id: django-upgrade
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
+    rev: v0.16.6
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.44.2
+    rev: v1.46.0
     hooks:
       - id: djlint-reformat-jinja
         types_or: [html]
