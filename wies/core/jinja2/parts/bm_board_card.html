@@ -38,22 +38,24 @@
       </span>
     {%- endif -%}
   </p>
-  {# Only the half that tells the BM something: "2/4 bezet" next to "2 open" is
-     the same fact twice. The text carries the meaning, not the colour
-     (WCAG 1.4.1). #}
-  {% if not card.total_seats %}
-    <p class="bm-card__seats">Nog geen rollen</p>
-  {% elif card.open_seats %}
-    <p class="bm-card__seats bm-card__seats--open">{{ card.open_seats }} van {{ card.total_seats }} nog open</p>
-  {% endif %}
-  {# The gilde its team belongs to, same chips as the Bezetting rows, so the two
-     pages name the same thing the same way. #}
-  {% if card.gilde_labels %}
-    <span class="bm-card__labels">
+  {# The open seats and the gilde on one line: each took a line of its own while
+     together they fit in one. Only the half that tells the BM something —
+     "2/4 bezet" next to "2 open" is the same fact twice — and the text carries
+     the meaning, not the colour (WCAG 1.4.1). #}
+  {% if card.total_seats == 0 or card.open_seats or card.gilde_labels %}
+    <p class="bm-card__foot">
+      {%- if not card.total_seats %}
+        <span class="bm-card__seats">Nog geen rollen</span>
+      {%- elif card.open_seats %}
+        {# "3/5 open" rather than "3 van 5 nog open": the same two numbers, on a
+           card where every line competes for the same width. The word stays —
+           the pair of numbers alone would not say what they count. #}
+        <span class="bm-card__seats bm-card__seats--open">{{ card.open_seats }}/{{ card.total_seats }} open</span>
+      {%- endif -%}
       {%- for name, colour in card.gilde_labels -%}
         <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
       {%- endfor -%}
-    </span>
+    </p>
   {% endif %}
 </div>
 </nldd-card>

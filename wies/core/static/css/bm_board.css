@@ -156,7 +156,6 @@
 }
 
 .bm-card__seats {
-  margin: 0;
   font-size: 0.75rem;
   line-height: 1.4;
   color: var(--components-text-subtle, inherit);
@@ -164,13 +163,13 @@
 
 /* An assignment wrapping up. The text says "nog N wk" too, so the colour is
    not the only cue (WCAG 1.4.1). */
-/* The gilde chips sit on their own line under the meta, with a little air so
-   they do not crowd the text above them. */
-.bm-card__labels {
+/* The open seats and the gilde chips share the last line. */
+.bm-card__foot {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
+  gap: 6px;
+  margin: 2px 0 0;
 }
 
 .bm-card__period--ending {
