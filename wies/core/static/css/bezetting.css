@@ -615,7 +615,11 @@
    menu twin (their statuses live in the filter sheet), and an overflowed item
    with nothing to show gave a ⋯ button reading "Geen opties beschikbaar".
    1050px is where the row stops holding them (measured). */
-@media (max-width: 1050px) {
+/* Just above the width where nldd-toolbar starts pushing its own items into the
+   overflow (measured: 1075px). The cards must be gone by then — they are the
+   shortcut and the create action is not, so the action may never be the first
+   thing to go. Their statuses stay reachable in the filter sheet. */
+@media (max-width: 1100px) {
   .bezetting-toolbar__stats {
     display: none;
   }
