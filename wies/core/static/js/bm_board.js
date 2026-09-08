@@ -22,8 +22,11 @@
     return document.getElementById(GRID_ID);
   }
 
-  function cardFor(target) {
-    return target instanceof Element ? target.closest(CARD) : null;
+  // closest() stops at a shadow boundary and the grip lives inside
+  // nldd-drag-handle-cell's shadow root, so every lookup goes through the
+  // composed path (dom_path.js) instead of the event target.
+  function inPath(event, selector) {
+    return window.wiesClosestInPath(event, selector);
   }
 
   function moveUrl(publicId) {
@@ -46,10 +49,14 @@
 
   function setupDragStart() {
     document.addEventListener("dragstart", (e) => {
-      // Only from the grip: dragging the card body would fight the link.
-      const handle =
-        e.target instanceof Element && e.target.closest("[data-board-handle]");
-      const card = handle && cardFor(handle);
+      // The card renders an <a href> in its shadow root, and a link is natively
+      // draggable: without this the browser drags the URL and never lets the
+      // card move. Anything that did not start on the grip is that link.
+      if (!inPath(e, "[data-board-handle]")) {
+        if (inPath(e, CARD)) e.preventDefault();
+        return;
+      }
+      const card = inPath(e, CARD);
       if (!card) return;
       dragged = card;
       card.classList.add(DRAGGING_CLASS);
@@ -68,7 +75,7 @@
   function setupDropZones() {
     document.addEventListener("dragover", (e) => {
       if (!dragged) return;
-      const zone = e.target instanceof Element && e.target.closest(DROPZONE);
+      const zone = inPath(e, DROPZONE);
       if (!zone) return;
       // Without preventDefault the browser refuses the drop entirely.
       e.preventDefault();
@@ -81,7 +88,7 @@
 
     document.addEventListener("drop", (e) => {
       if (!dragged) return;
-      const zone = e.target instanceof Element && e.target.closest(DROPZONE);
+      const zone = inPath(e, DROPZONE);
       if (!zone) return;
       e.preventDefault();
       const status = zone.dataset.boardDropzone;
