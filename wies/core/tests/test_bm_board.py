@@ -377,11 +377,14 @@ class BmBoardViewTest(TestCase):
         self.assertContains(response, str(self.owner.public_id))
 
     def test_a_card_names_its_business_manager(self):
+        """As an avatar, with the name on hover and for a screen reader: the
+        full name ate the line the client and period share."""
         self._assignment("Van mij")
 
         response = self.client.get(self.url)
 
-        self.assertContains(response, self.owner.name)
+        self.assertContains(response, f'title="{self.owner.name}"')
+        self.assertContains(response, f'<nldd-avatar size="20" name="{self.owner.name}">')
 
     def test_ending_filter_narrows_the_board(self):
         today = timezone.now().date()

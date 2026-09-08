@@ -137,9 +137,16 @@
 /* Generated, so it never shows on a card that carries only one of the two.
    A bullet rather than another "·": the period already uses that to append
    "nog N wk", and three identical separators on one line read as one list. */
+/* The avatar sits on the meta line, so it has to align with the text beside it
+   rather than on the baseline it would otherwise take. */
+.bm-card__owner {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-inline-end: 2px;
+}
+
 /* Generated separators, so a card missing one of the three does not show a
-   stray bullet. */
-.bm-card__owner + .bm-card__org::before,
+   stray bullet. The avatar brings its own gap, so it needs no bullet. */
 .bm-card__owner + .bm-card__period::before {
   content: " • ";
 }
