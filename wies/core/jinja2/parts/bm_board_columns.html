@@ -33,11 +33,9 @@
    everything — say which, or the page reads as broken. #}
 {% if board_is_empty %}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {% if not has_owner %}
-    <nldd-banner variant="neutral" text="Je account is niet aan een collega gekoppeld, waardoor er geen opdrachten op jouw naam kunnen staan."></nldd-banner>
-  {% elif filter_active %}
+  {% if filter_active %}
     <nldd-banner variant="neutral" text="Geen opdrachten binnen deze filters. Pas ze aan of wis ze om alles te zien."></nldd-banner>
   {% else %}
-    <nldd-banner variant="neutral" text="Er staan nog geen opdrachten op jouw naam. Opdrachten verschijnen hier zodra jij de accounthouder bent."></nldd-banner>
+    <nldd-banner variant="neutral" text="Er staan nog geen opdrachten op het bord. Een opdracht verschijnt hier zodra er een business manager aan gekoppeld is."></nldd-banner>
   {% endif %}
 {% endif %}

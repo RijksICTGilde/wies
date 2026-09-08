@@ -815,14 +815,19 @@ def bm_board(request):
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
-    owner = getattr(request.user, "colleague", None)
     org = resolve_facet(OrganizationUnit, request.GET.getlist("org"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
+    owners = resolve_facet(Colleague, request.GET.getlist("bm"))
     ending_within = _board_ending_within(request)
 
-    columns = build_board(owner, ending_within_months=ending_within, org_ids=org.ids, label_ids=labels.ids)
+    columns = build_board(
+        ending_within_months=ending_within,
+        org_ids=org.ids,
+        label_ids=labels.ids,
+        owner_ids=owners.ids,
+    )
 
-    filter_groups = _board_filter_groups(owner, org, labels, ending_within)
+    filter_groups = _board_filter_groups(org, labels, owners, ending_within)
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
@@ -830,6 +835,8 @@ def bm_board(request):
         active_filters["org"] = org.active_values
     if labels.active_values:
         active_filters["labels"] = labels.active_values
+    if owners.active_values:
+        active_filters["bm"] = owners.active_values
     if ending_within:
         active_filters["eindigt"] = [str(ending_within)]
 
@@ -841,10 +848,7 @@ def bm_board(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bm-board"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "filter_active": bool(org.active_values or labels.active_values or ending_within),
-        # Without a colleague record nothing can own assignments, so every column
-        # is empty for a reason the page should say out loud.
-        "has_owner": owner is not None,
+        "filter_active": bool(org.active_values or labels.active_values or owners.active_values or ending_within),
         "board_is_empty": not any(column.cards for column in columns),
         "primary_button": _assignment_create_button(request),
     }
@@ -876,7 +880,7 @@ def _board_ending_within(request):
     return max(months) if months else None
 
 
-def _board_gilde_group(owner, labels):
+def _board_gilde_group(labels):
     """The gilde filter, matching the chips on the cards. None when unused.
 
     Counted over the assignments themselves, not the people on them: two AI
@@ -888,9 +892,7 @@ def _board_gilde_group(owner, labels):
         return None
 
     counts = Counter()
-    for assignment in Assignment.objects.filter(owner=owner).prefetch_related(
-        "services__placements__colleague__labels"
-    ):
+    for assignment in _board_assignments().prefetch_related("services__placements__colleague__labels"):
         on_this_one = {
             label.id
             for service in assignment.services.all()
@@ -921,28 +923,56 @@ def _board_gilde_group(owner, labels):
     }
 
 
-def _board_ending_count(owner, months):
-    """How many of this business manager's assignments end within ``months``."""
+def _board_ending_count(months):
+    """How many assignments on the board end within ``months``."""
     today = timezone.now().date()
     cutoff = today + timedelta(days=DAYS_PER_MONTH * months)
-    return Assignment.objects.filter(owner=owner, end_date__gte=today, end_date__lte=cutoff).count()
+    return _board_assignments().filter(end_date__gte=today, end_date__lte=cutoff).count()
 
 
-def _board_filter_groups(owner, org, labels, ending_within):
-    """Filter groups for the board sheet: gilde, client organisation, end window.
+def _board_assignments():
+    """The assignments the board can show: every owned one, whoever owns it."""
+    return Assignment.objects.filter(owner__isnull=False)
 
-    Only values this business manager actually has assignments for: the full
-    trees would offer hundreds of options that select nothing.
+
+def _board_owner_group(owners):
+    """The business-manager filter. None when nobody owns anything.
+
+    The board spans the team, so this is how you narrow it to one person's
+    pipeline — including your own.
     """
-    if owner is None:
-        return []
+    counts = Counter(_board_assignments().values_list("owner_id", flat=True))
+    if not counts:
+        return None
+
+    selected_ids = set(owners.public_ids)
+    options = [{"value": "", "label": ""}]
+    selected = []
+    for colleague in Colleague.objects.filter(id__in=counts).order_by(Lower("name")):
+        value = str(colleague.public_id)
+        option = {"value": value, "label": colleague.name, "count": counts.get(colleague.id, 0)}
+        if value in selected_ids:
+            option["selected"] = True
+            selected.append(value)
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "bm",
+        "label": "Business Manager",
+        "options": options,
+        "selected_values": selected,
+    }
+
+
+def _board_filter_groups(org, labels, owners, ending_within):
+    """Filter groups for the board sheet: BM, gilde, client organisation, window.
+
+    Only values that actually occur on the board: the full trees would offer
+    hundreds of options that select nothing.
+    """
 
     selected_org_ids = set(org.public_ids)
-    counts = Counter(
-        oid
-        for oid in Assignment.objects.filter(owner=owner).values_list("organizations__id", flat=True)
-        if oid is not None
-    )
+    counts = Counter(oid for oid in _board_assignments().values_list("organizations__id", flat=True) if oid is not None)
     used_orgs = OrganizationUnit.objects.filter(id__in=counts).order_by(Lower("name"))
 
     org_options = [{"value": "", "label": ""}]
@@ -959,7 +989,7 @@ def _board_filter_groups(owner, org, labels, ending_within):
             org_selected.append(value)
         org_options.append(option)
 
-    groups = [_board_gilde_group(owner, labels)]
+    groups = [_board_owner_group(owners), _board_gilde_group(labels)]
     groups = [g for g in groups if g]
     groups.append(
         {
@@ -980,7 +1010,7 @@ def _board_filter_groups(owner, org, labels, ending_within):
         option = {
             "value": value,
             "label": f"{months} maand" if months == 1 else f"{months} maanden",
-            "count": _board_ending_count(owner, months),
+            "count": _board_ending_count(months),
         }
         if ending_within == months:
             option["selected"] = True
@@ -1003,20 +1033,21 @@ def _board_filter_groups(owner, org, labels, ending_within):
 def bm_board_move(request, public_id):
     """Move one assignment to another status column (drag-and-drop target)."""
     assignment = get_object_or_404(Assignment, public_id=public_id)
-    # Only over your own work: the board shows a single business manager's
-    # assignments, so moving someone else's card is never a legitimate request.
-    owner = getattr(request.user, "colleague", None)
-    if owner is None or assignment.owner_id != owner.id:
+    # Any assignment on the board, not only your own: the board shows the whole
+    # team's pipeline, and a business manager covering for a colleague has to be
+    # able to move their card. Reaching this section is the gate; an assignment
+    # nobody owns is not on the board at all.
+    if assignment.owner_id is None:
         raise Http404
 
     if not move_assignment(assignment, request.POST.get("status", "")):
         return HttpResponseBadRequest("Onbekende status")
 
     columns = build_board(
-        owner,
         ending_within_months=_board_ending_within(request),
         org_ids=resolve_facet(OrganizationUnit, request.GET.getlist("org")).ids,
         label_ids=resolve_facet(Label, request.GET.getlist("labels")).ids,
+        owner_ids=resolve_facet(Colleague, request.GET.getlist("bm")).ids,
     )
     return render(request, "parts/bm_board_columns.html", {"columns": columns})
 

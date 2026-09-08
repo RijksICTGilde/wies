@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline. Needs a "Subgroep" label category with the labels "AI" and "ICT" (colour #DCE3EA): the timeline rows show those as chips and the filter sheet offers them
 - 632: the base dummy fixture now ships a user account and role per colleague, its label categories (including "Subgroep" with AI/ICT), and assignment dates spread around today, so an environment seeded with it alone (a PR preview via /staff/, for one) shows a populated Bezetting instead of an empty one
 - ?: a closed assignment can record why it stopped ("Reden van sluiten"), so "the period simply ended" is distinguishable from "we could not staff it"
+- ?: the board shows every business manager's assignments, with a "Business Manager" filter to narrow it to one person's pipeline; each card names its owner
 - ?: new "Bord" page under Business management: your own assignments in a column per status (Lead, Open, Ingevuld, Gesloten), as cards you drag between columns, with a filter for what ends within 1, 2 or 3 months
 - ?
 

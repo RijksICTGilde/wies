@@ -137,6 +137,13 @@
 /* Generated, so it never shows on a card that carries only one of the two.
    A bullet rather than another "·": the period already uses that to append
    "nog N wk", and three identical separators on one line read as one list. */
+/* Generated separators, so a card missing one of the three does not show a
+   stray bullet. */
+.bm-card__owner + .bm-card__org::before,
+.bm-card__owner + .bm-card__period::before {
+  content: " • ";
+}
+
 .bm-card__org + .bm-card__period::before {
   content: " • ";
 }

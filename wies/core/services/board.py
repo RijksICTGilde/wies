@@ -18,7 +18,7 @@ from datetime import date, timedelta
 from django.db.models import Prefetch
 from django.utils import timezone
 
-from wies.core.models import ASSIGNMENT_STATUS, Assignment, Colleague, Service
+from wies.core.models import ASSIGNMENT_STATUS, Assignment, Service
 
 # An end date inside this window is "wrapping up": the business manager has to
 # think about an extension or a hand-off. Six weeks is enough lead time to act.
@@ -52,6 +52,9 @@ class BoardCard:
     filled_seats: int
     # (name, nldd colour) per gilde on this assignment's team, as on Bezetting.
     gilde_labels: list[tuple[str, str]] = field(default_factory=list)
+    # Whose pipeline this sits on. The board spans the team, so a card has to
+    # say who owns it.
+    owner_name: str = ""
     # Whole weeks until the end date, negative once it has passed, None without
     # one. Only used while ends_soon is set.
     weeks_until_end: int | None = None
@@ -76,16 +79,17 @@ class BoardColumn:
 
 
 def build_board(
-    owner: Colleague | None,
     *,
     ending_within_months: int | None = None,
     org_ids: list[int] | None = None,
     label_ids: list[int] | None = None,
+    owner_ids: list[int] | None = None,
 ) -> list[BoardColumn]:
-    """Return the columns for ``owner``'s assignments, in pipeline order.
+    """Return the assignments on the board, in pipeline order.
 
-    Without a colleague every column comes back empty: the board is always the
-    assignments of one business manager, never everyone's.
+    Every business manager's work by default: the board is read to see where the
+    pipeline stands, and that question spans the team. ``owner_ids`` narrows it
+    to one or more of them.
 
     The filters narrow which cards land on the board:
     - ``ending_within_months`` keeps only assignments ending between today and
@@ -94,15 +98,14 @@ def build_board(
     - ``org_ids`` keeps only assignments for those client organisations.
     - ``label_ids`` keeps only assignments whose team carries one of those
       labels, which is how the gilde chips on the cards filter.
+    - ``owner_ids`` keeps only assignments owned by those business managers.
     """
     columns = {key: BoardColumn(key=key, label=label) for key, label in ASSIGNMENT_STATUS.items()}
-    if owner is None:
-        return list(columns.values())
 
     today = timezone.now().date()
     cutoff = today + timedelta(days=DAYS_PER_MONTH * ending_within_months) if ending_within_months else None
 
-    for assignment in _assignments_for(owner, org_ids, label_ids):
+    for assignment in _assignments_for(org_ids, label_ids, owner_ids):
         if cutoff is not None and not (assignment.end_date and today <= assignment.end_date <= cutoff):
             continue
         card = _card_for(assignment, today)
@@ -115,27 +118,37 @@ def build_board(
 
 
 def _assignments_for(
-    owner: Colleague,
     org_ids: list[int] | None = None,
     label_ids: list[int] | None = None,
+    owner_ids: list[int] | None = None,
 ):
-    """Assignments owned by ``owner``, prefetched for the card fields."""
-    queryset = Assignment.objects.filter(owner=owner)
+    """The board's assignments, prefetched for the card fields.
+
+    Only assignments that have an owner: a card names its business manager, and
+    one without is not on anybody's pipeline.
+    """
+    queryset = Assignment.objects.filter(owner__isnull=False)
+    if owner_ids:
+        queryset = queryset.filter(owner_id__in=owner_ids)
     if org_ids:
         queryset = queryset.filter(organizations__id__in=org_ids).distinct()
     if label_ids:
         # Through the people placed on it: an assignment carries no labels itself.
         queryset = queryset.filter(services__placements__colleague__labels__id__in=label_ids).distinct()
-    return queryset.prefetch_related(
-        # Services with their placements: the card needs filled-vs-total,
-        # which would otherwise be a query per card.
-        Prefetch(
-            "services",
-            queryset=Service.objects.prefetch_related("placements"),
-            to_attr="loaded_services",
-        ),
-        "organizations",
-    ).order_by("name")
+    return (
+        queryset.select_related("owner")  # the card names its business manager
+        .prefetch_related(
+            # Services with their placements: the card needs filled-vs-total,
+            # which would otherwise be a query per card.
+            Prefetch(
+                "services",
+                queryset=Service.objects.prefetch_related("placements__colleague__labels__category"),
+                to_attr="loaded_services",
+            ),
+            "organizations",
+        )
+        .order_by("name")
+    )
 
 
 def _card_for(assignment: Assignment, today: date) -> BoardCard:
@@ -152,6 +165,7 @@ def _card_for(assignment: Assignment, today: date) -> BoardCard:
         org_label=(org.label or org.name) if org else "",
         start_date=assignment.start_date,
         end_date=assignment.end_date,
+        owner_name=assignment.owner.name if assignment.owner else "",
         total_seats=len(services),
         filled_seats=filled,
         weeks_until_end=weeks,

@@ -52,48 +52,57 @@ class BuildBoardTest(TestCase):
         return service
 
     def test_every_status_is_a_column(self):
-        columns = build_board(self.owner)
+        columns = build_board(owner_ids=[self.owner.id])
         assert [c.key for c in columns] == ["LEAD", "OPEN", "INGEVULD", "GESLOTEN"]
 
     def test_card_lands_in_its_status_column(self):
         self._assignment("Lead-opdracht", status="LEAD")
         self._assignment("Gesloten opdracht", status="GESLOTEN")
 
-        columns = build_board(self.owner)
+        columns = build_board(owner_ids=[self.owner.id])
 
         assert _card_names(columns, "LEAD") == ["Lead-opdracht"]
         assert _card_names(columns, "GESLOTEN") == ["Gesloten opdracht"]
         assert _card_names(columns, "OPEN") == []
 
-    def test_only_own_assignments(self):
-        other = Colleague.objects.create(name="Ander", email="ander@rijksoverheid.nl", source="wies")
+    def test_the_board_spans_every_business_manager(self):
+        """It is read to see where the pipeline stands, and that is a team
+        question; the BM filter is what narrows it to one person."""
+        other = Colleague.objects.create(name="Ander", email="ander2@rijksoverheid.nl", source="wies")
         self._assignment("Van mij")
         self._assignment("Van iemand anders", owner=other)
 
-        columns = build_board(self.owner)
+        assert sorted(_card_names(build_board(), "OPEN")) == ["Van iemand anders", "Van mij"]
+
+    def test_owner_filter_narrows_to_one_business_manager(self):
+        other = Colleague.objects.create(name="Ander", email="ander2@rijksoverheid.nl", source="wies")
+        self._assignment("Van mij")
+        self._assignment("Van iemand anders", owner=other)
+
+        columns = build_board(owner_ids=[self.owner.id])
 
         assert _card_names(columns, "OPEN") == ["Van mij"]
 
-    def test_without_owner_every_column_is_empty(self):
-        self._assignment("Van mij")
+    def test_an_assignment_without_an_owner_is_not_on_the_board(self):
+        """A card names its business manager; one without is on nobody's
+        pipeline."""
+        Assignment.objects.create(name="Zonder eigenaar", source="wies")
 
-        columns = build_board(None)
-
-        assert all(column.count == 0 for column in columns)
+        assert _card_names(build_board(), "OPEN") == []
 
     def test_occupancy_counts_filled_versus_total(self):
         assignment = self._assignment("Deels bezet")
         self._seat(assignment, filled=True)
         self._seat(assignment, filled=False)
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert (card.filled_seats, card.total_seats, card.open_seats) == (1, 2, 1)
 
     def test_assignment_without_services_has_no_seats(self):
         self._assignment("Nog niets")
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert (card.filled_seats, card.total_seats, card.open_seats) == (0, 0, 0)
 
@@ -101,7 +110,7 @@ class BuildBoardTest(TestCase):
         today = timezone.now().date()
         self._assignment("Loopt af", end_date=today + timedelta(weeks=ENDING_SOON_WEEKS - 1))
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert card.ends_soon is True
         assert card.weeks_until_end == ENDING_SOON_WEEKS - 1
@@ -110,7 +119,7 @@ class BuildBoardTest(TestCase):
         today = timezone.now().date()
         self._assignment("Loopt door", end_date=today + timedelta(weeks=ENDING_SOON_WEEKS + 4))
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert card.ends_soon is False
 
@@ -118,7 +127,7 @@ class BuildBoardTest(TestCase):
         today = timezone.now().date()
         self._assignment("Al voorbij", end_date=today - timedelta(weeks=2))
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert card.ends_soon is False
         assert card.weeks_until_end == -2
@@ -126,7 +135,7 @@ class BuildBoardTest(TestCase):
     def test_without_end_date_there_are_no_weeks(self):
         self._assignment("Geen einddatum")
 
-        card = _columns_by_key(build_board(self.owner))["OPEN"].cards[0]
+        card = _columns_by_key(build_board(owner_ids=[self.owner.id]))["OPEN"].cards[0]
 
         assert card.weeks_until_end is None
         assert card.ends_soon is False
@@ -136,7 +145,7 @@ class BuildBoardTest(TestCase):
         self._assignment("Binnenkort", end_date=today + timedelta(days=20))
         self._assignment("Later", end_date=today + timedelta(days=200))
 
-        columns = build_board(self.owner, ending_within_months=1)
+        columns = build_board(owner_ids=[self.owner.id], ending_within_months=1)
 
         assert _card_names(columns, "OPEN") == ["Binnenkort"]
 
@@ -144,14 +153,14 @@ class BuildBoardTest(TestCase):
         today = timezone.now().date()
         self._assignment("Al afgelopen", end_date=today - timedelta(days=5))
 
-        columns = build_board(self.owner, ending_within_months=1)
+        columns = build_board(owner_ids=[self.owner.id], ending_within_months=1)
 
         assert _card_names(columns, "OPEN") == []
 
     def test_ending_within_filter_excludes_assignments_without_end_date(self):
         self._assignment("Geen einddatum")
 
-        columns = build_board(self.owner, ending_within_months=3)
+        columns = build_board(owner_ids=[self.owner.id], ending_within_months=3)
 
         assert _card_names(columns, "OPEN") == []
 
@@ -176,7 +185,7 @@ class BoardGildeLabelTest(TestCase):
         return assignment
 
     def _card(self, name):
-        for column in build_board(self.owner):
+        for column in build_board(owner_ids=[self.owner.id]):
             for card in column.cards:
                 if card.name == name:
                     return card
@@ -221,7 +230,7 @@ class BoardGildeLabelTest(TestCase):
         self._assignment_with("AI-werk", self.ai)
         self._assignment_with("ICT-werk", self.ict)
 
-        columns = build_board(self.owner, label_ids=[self.ai.id])
+        columns = build_board(owner_ids=[self.owner.id], label_ids=[self.ai.id])
 
         assert _card_names(columns, "OPEN") == ["AI-werk"]
 
@@ -233,7 +242,7 @@ class BoardGildeLabelTest(TestCase):
         other.labels.set([self.ai])
         Placement.objects.create(colleague=other, service=service, source="wies")
 
-        columns = build_board(self.owner, label_ids=[self.ai.id])
+        columns = build_board(owner_ids=[self.owner.id], label_ids=[self.ai.id])
 
         assert _card_names(columns, "OPEN") == ["Twee keer AI"]
 
@@ -253,7 +262,7 @@ class BoardOrgFilterTest(TestCase):
         self._assignment("Bij A", self.org)
         self._assignment("Bij B", self.other)
 
-        columns = build_board(self.owner, org_ids=[self.org.id])
+        columns = build_board(owner_ids=[self.owner.id], org_ids=[self.org.id])
 
         assert _card_names(columns, "OPEN") == ["Bij A"]
 
@@ -261,7 +270,7 @@ class BoardOrgFilterTest(TestCase):
         self._assignment("Bij A", self.org)
         self._assignment("Bij B", self.other)
 
-        columns = build_board(self.owner, org_ids=[])
+        columns = build_board(owner_ids=[self.owner.id], org_ids=[])
 
         assert sorted(_card_names(columns, "OPEN")) == ["Bij A", "Bij B"]
 
@@ -349,6 +358,31 @@ class BmBoardViewTest(TestCase):
         # The full page chrome stays out of a partial swap.
         self.assertNotContains(response, "<h1>Bord</h1>")
 
+    def test_business_manager_filter_narrows_the_board(self):
+        other = Colleague.objects.create(name="Ander", email="ander3@rijksoverheid.nl", source="wies")
+        self._assignment("Van mij")
+        Assignment.objects.create(name="Van iemand anders", owner=other, source="wies")
+
+        response = self.client.get(self.url, {"bm": str(self.owner.public_id)})
+
+        self.assertContains(response, "Van mij")
+        self.assertNotContains(response, "Van iemand anders")
+
+    def test_the_sheet_offers_a_business_manager_group(self):
+        self._assignment("Van mij")
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Business Manager")
+        self.assertContains(response, str(self.owner.public_id))
+
+    def test_a_card_names_its_business_manager(self):
+        self._assignment("Van mij")
+
+        response = self.client.get(self.url)
+
+        self.assertContains(response, self.owner.name)
+
     def test_ending_filter_narrows_the_board(self):
         today = timezone.now().date()
         self._assignment("Binnenkort", end_date=today + timedelta(days=20))
@@ -376,10 +410,10 @@ class BmBoardViewTest(TestCase):
 
         self.assertContains(response, "Over twee maanden")
 
-    def test_empty_board_says_you_own_nothing(self):
+    def test_empty_board_says_why_it_is_empty(self):
         response = self.client.get(self.url)
 
-        self.assertContains(response, "nog geen opdrachten op jouw naam")
+        self.assertContains(response, "nog geen opdrachten op het bord")
 
     def test_empty_board_under_a_filter_says_so_instead(self):
         today = timezone.now().date()
@@ -490,7 +524,7 @@ class AssignmentCreateStatusTest(TestCase):
     def test_card_lands_in_the_column_it_was_created_in(self):
         self._create("Nieuwe lead", "LEAD")
 
-        columns = build_board(self.owner)
+        columns = build_board(owner_ids=[self.owner.id])
 
         assert _card_names(columns, "LEAD") == ["Nieuwe lead"]
         assert _card_names(columns, "OPEN") == []
@@ -565,7 +599,7 @@ class AssignmentCreateStatusTest(TestCase):
         assert response.status_code in (204, 200)
         assignment.refresh_from_db()
         assert assignment.status == "INGEVULD"
-        assert _card_names(build_board(self.owner), "INGEVULD") == ["Te verplaatsen"]
+        assert _card_names(build_board(owner_ids=[self.owner.id]), "INGEVULD") == ["Te verplaatsen"]
 
     def test_editing_from_the_board_reloads_it(self):
         """A panel-only swap would leave the columns on their pre-save counts."""
@@ -719,15 +753,26 @@ class BmBoardMoveTest(TestCase):
 
         assert response.status_code == 405
 
-    def test_cannot_move_someone_elses_assignment(self):
+    def test_can_move_a_colleagues_assignment(self):
+        """The board spans the team, so covering for a colleague means being
+        able to move their card. Reaching this section is the gate."""
         other = Colleague.objects.create(name="Ander", email="ander@rijksoverheid.nl", source="wies")
         theirs = Assignment.objects.create(name="Van hen", source="wies", owner=other, status="OPEN")
 
         response = self.client.post(self._url(theirs), {"status": "GESLOTEN"})
 
-        assert response.status_code == 404
+        assert response.status_code == 200
         theirs.refresh_from_db()
-        assert theirs.status == "OPEN"
+        assert theirs.status == "GESLOTEN"
+
+    def test_cannot_move_an_assignment_that_is_not_on_the_board(self):
+        orphan = Assignment.objects.create(name="Zonder eigenaar", source="wies", status="OPEN")
+
+        response = self.client.post(self._url(orphan), {"status": "GESLOTEN"})
+
+        assert response.status_code == 404
+        orphan.refresh_from_db()
+        assert orphan.status == "OPEN"
 
     def test_non_bdm_cannot_move(self):
         regular = User.objects.create(email="regular@rijksoverheid.nl")

@@ -21,6 +21,7 @@
      short enough to sit together, and an nldd-list-item per fact cost a full
      row height each. Plain text, so it wraps as one sentence. #}
   <p class="bm-card__meta">
+    {%- if card.owner_name %}<span class="bm-card__owner">{{ card.owner_name }}</span>{% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
       <span class="bm-card__period{{ ' bm-card__period--ending' if card.ends_soon else '' }}">
