@@ -740,7 +740,7 @@ def bezetting(request):
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "filter_active": bool(merk.active_values or labels.active_values or selected_statuses),
-        # What the "Alle filters" button counts: the facets that live inside the
+        # What the "Filters" button counts: the facets that live inside the
         # sheet, not the status cards. A status shows it is on by the card being
         # pressed, so counting it here made the button claim a filter the user
         # could already see was applied — and read as "(1)" over an untouched
@@ -810,7 +810,7 @@ def bm_board(request):
     """ "Bord" — the business manager's own assignments, in a column per status.
 
     Sibling of the "Bezetting" page, and set up the same way: summary cards that
-    are status filters, an "Alle filters" sheet for the rest, and the shared side
+    are status filters, a "Filters" sheet for the rest, and the shared side
     panel. A card click opens the assignment panel via the ``opdracht`` param;
     dragging a card to another column posts to ``bm_board_move``.
     """

@@ -73,7 +73,7 @@ class BezettingStatusInSheetTest(TestCase):
         response = self.client.get(self.url, {"status": "bench"})
         body = response.content.decode()
 
-        assert 'text="Alle filters"' in body
+        assert 'text="Filters"' in body
         assert 'text="Filters (1)"' in body
 
 

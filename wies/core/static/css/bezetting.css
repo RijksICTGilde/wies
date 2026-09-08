@@ -10,7 +10,7 @@
 
    A single flex row of four. It does not wrap: the cards give up width first
    (they carry a short count and a caption that can ellipsis), while the button
-   keeps its full label, because "Alle filters" is the way back to everything the
+   keeps its full label, because "Filters" is the way back to everything the
    row cannot show. */
 .bezetting-toolbar {
   display: flex;

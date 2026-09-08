@@ -12,10 +12,8 @@
    child of it can never join a grid defined outside. #}
 <ul class="bezetting-toolbar" aria-label="Weergave en filters">
   <li class="bezetting-toolbar__nav">{% include "parts/business_management_tabs.html" %}</li>
-  {# "Filters", not "Alle filters": that name existed to set the sheet apart
-     from the quick-filter cards next to it, and those are gone. user_filter.js
-     listens for data-user-filter-open; the count tells you how many filters are
-     on inside without opening it. #}
+  {# user_filter.js listens for data-user-filter-open; the count tells you how
+     many filters are on inside without opening it. #}
   <li class="bm-board__filter-item">
     <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
   </li>
