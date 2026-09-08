@@ -50,6 +50,9 @@
    visible card with it. */
 .bezetting-stat {
   display: block;
+  /* Fills its nldd-toolbar-item, which carries the width. max-content does not
+     work here: the nldd-card inside cannot size itself from its own content
+     either, so both collapsed to zero. */
   width: 100%;
   height: 100%;
   padding: 0;
@@ -566,32 +569,11 @@
   margin-inline-start: auto;
 }
 
-/* The section tabs share the filter row. They keep their own width; the status
-   cards beside them are what gives when the row runs out of space. */
-.bezetting-toolbar > .bezetting-toolbar__nav {
-  flex: 0 0 auto;
-  margin-inline-end: var(--primitives-space-8, 8px);
-}
-
 /* Below this the row cannot hold everything: the cards shrink to "14 c" and the
    Filters label breaks over two lines. The cards go first — every status they
    carry is also a group in the sheet, so nothing becomes unreachable, and the
    button counts them once they are hidden. Navigation and the way back to the
    filters are what must survive. */
-.bezetting-toolbar__filters-narrow {
-  display: none;
-}
-
-@media (max-width: 1200px) {
-  .bezetting-toolbar > li:has(.bezetting-stat) {
-    display: none;
-  }
-
-  .bezetting-toolbar__filters-wide {
-    display: none;
-  }
-
-  .bezetting-toolbar__filters-narrow {
-    display: inline-flex;
-  }
-}
+/* No breakpoint of our own for the toolbar: nldd-toolbar measures what fits and
+   moves the rest into its overflow menu, which also keeps every control
+   reachable on a phone. */

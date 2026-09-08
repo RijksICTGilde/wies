@@ -300,6 +300,26 @@
       setStatusCard(card, input ? !input.checked : true);
       dispatchFormChange(document.getElementById("filter-form"));
     });
+
+    // The toolbar's overflow menu shows a CLONE of the card as a menu item, so
+    // the toggle has to be forwarded to the real card the clone stands for.
+    // nldd-menu-item reports activation as `select`, not click.
+    document.addEventListener("select", (e) => {
+      const item = e
+        .composedPath()
+        .find(
+          (el) =>
+            el instanceof Element && el.dataset?.statusMenuItem !== undefined,
+        );
+      if (!item) return;
+      const card = document.querySelector(
+        `[data-status-card][data-status="${CSS.escape(item.dataset.status)}"]`,
+      );
+      if (!card) return;
+      const input = statusCardInput(card);
+      setStatusCard(card, input ? !input.checked : true);
+      dispatchFormChange(document.getElementById("filter-form"));
+    });
   }
 
   function removeFilter(name, value) {
