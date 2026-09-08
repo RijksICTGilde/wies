@@ -599,6 +599,68 @@ class AssignmentCreateStatusTest(TestCase):
         assert names, "editor should be able to edit something at all"
         assert "status" not in names
 
+    def test_closing_reason_shows_once_an_assignment_is_closed(self):
+        assignment = Assignment.objects.create(
+            name="Afgerond",
+            owner=self.owner,
+            source="wies",
+            status="GESLOTEN",
+            closing_reason="Periode afgelopen zoals gepland.",
+        )
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id)})
+
+        self.assertContains(response, "Reden van sluiten")
+        self.assertContains(response, "Periode afgelopen zoals gepland.")
+
+    def test_closing_reason_row_stays_away_while_it_is_open(self):
+        """An open assignment would show an empty row asking a question nobody
+        is answering yet."""
+        assignment = Assignment.objects.create(name="Loopt nog", owner=self.owner, source="wies", status="OPEN")
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id)})
+
+        self.assertNotContains(response, "Reden van sluiten")
+
+    def test_closing_reason_is_optional(self):
+        assignment = Assignment.objects.create(name="Zonder reden", owner=self.owner, source="wies", status="GESLOTEN")
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id)})
+
+        self.assertContains(response, "Reden van sluiten")
+        self.assertContains(response, "Niet ingevuld")
+
+    def test_closing_reason_is_saved_from_the_edit_form(self):
+        assignment = Assignment.objects.create(name="Te sluiten", owner=self.owner, source="wies", status="OPEN")
+
+        self.client.post(
+            reverse("assignment-edit", args=[assignment.public_id]),
+            {
+                "name": assignment.name,
+                "extra_info": "",
+                "org-TOTAL_FORMS": "1",
+                "org-0-organization": str(self.org.public_id),
+                "org-0-role": "PRIMARY",
+                "owner": str(self.owner.public_id),
+                "status": "GESLOTEN",
+                "closing_reason": "Geen geschikte mensen beschikbaar gekregen.",
+            },
+        )
+
+        assignment.refresh_from_db()
+        assert assignment.status == "GESLOTEN"
+        assert assignment.closing_reason == "Geen geschikte mensen beschikbaar gekregen."
+
+    def test_closing_reason_needs_business_management_too(self):
+        editor = User.objects.create(email="editor2@rijksoverheid.nl")
+        editor.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        editor = User.objects.get(pk=editor.pk)
+        assignment = Assignment.objects.create(name="Van een ander", owner=self.owner, source="wies")
+
+        names = [spec.name for _, spec, _ in assignment_edit_specs(assignment, editor)]
+
+        assert "closing_reason" not in names
+
     def test_without_a_status_it_falls_back_to_the_model_default(self):
         """Callers that pass nothing still get an assignment on the board."""
         assignment = create_assignment_from_form(name="Zonder status", owner=self.owner)

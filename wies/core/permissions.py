@@ -159,6 +159,12 @@ def update_assignment_name(user, a):
     return _can_edit_assignment_text_field(user, a)
 
 
+@rule(UPDATE, AssignmentEditables.closing_reason)
+def update_assignment_closing_reason(user, a):
+    """Same gate as the status it explains."""
+    return can_access_business_management(user) and has_permission(UPDATE, a, user)
+
+
 @rule(UPDATE, AssignmentEditables.status)
 def update_assignment_status(user, a):
     """Only the Business management section, which is the only place a status

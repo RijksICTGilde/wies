@@ -84,6 +84,11 @@
        inside Business management. #}
     {% if panel_data.show_status %}
       {% set _rows = _rows + [("Status", "status")] %}
+      {# Only once it is closed: on an open assignment the row would be an empty
+         line asking a question nobody is answering yet. #}
+      {% if panel_data.assignment.status == "GESLOTEN" %}
+        {% set _rows = _rows + [("Reden van sluiten", "closing_reason")] %}
+      {% endif %}
     {% endif %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
@@ -95,6 +100,12 @@
         <nldd-text-cell>
         {% if row_kind == "status" %}
           {{ panel_data.assignment.get_status_display() }}
+        {% elif row_kind == "closing_reason" %}
+          {% if panel_data.assignment.closing_reason %}
+            {{ panel_data.assignment.closing_reason }}
+          {% else %}
+            <span class="wies-text-secondary">Niet ingevuld</span>
+          {% endif %}
         {% elif row_kind == "source" %}
           {% if panel_data.assignment.source_url %}
             <a href="{{ panel_data.assignment.source_url }}" target="_blank">

@@ -201,6 +201,10 @@ class Assignment(models.Model):
     owner = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=False, related_name="owned_assignments")
     extra_info = models.TextField(blank=True, max_length=5000)
     status = models.CharField("Status", max_length=20, choices=ASSIGNMENT_STATUS, default="OPEN", db_index=True)
+    # Why the work stopped. Usually the period simply ran out, but "we could not
+    # staff it" is the answer worth keeping, and that is not derivable from the
+    # dates. Only meaningful while status is GESLOTEN.
+    closing_reason = models.TextField("Reden van sluiten", blank=True, max_length=1000)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)

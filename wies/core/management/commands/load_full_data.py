@@ -49,6 +49,15 @@ SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
 # Board status of an assignment. Weighted so the BM board shows all four columns
 # populated, with the bulk in the two the business manager works in daily.
 ASSIGNMENT_STATUS_WEIGHTS = {"LEAD": 15, "OPEN": 40, "INGEVULD": 35, "GESLOTEN": 10}
+
+# Why a closed assignment stopped. Weighted the way the real ones are: most work
+# simply runs its course, and the others are the cases a BM wants to look back on.
+CLOSING_REASONS = {
+    "Periode afgelopen zoals gepland.": 60,
+    "Verlengd in een nieuwe opdracht.": 15,
+    "Geen geschikte mensen beschikbaar gekregen.": 15,
+    "Opdrachtgever heeft de aanvraag ingetrokken.": 10,
+}
 # Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
 ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
@@ -763,6 +772,7 @@ class Command(BaseCommand):
         for _ in range(NUM_ASSIGNMENTS):
             is_active = rng.random() < ACTIVE_RATIO
             start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
+            status = _assignment_status(rng, is_active=is_active)
 
             assignment = Assignment.objects.create(
                 name=generate_assignment_name(rng),
@@ -770,7 +780,8 @@ class Command(BaseCommand):
                 end_date=end,
                 extra_info="",
                 owner=rng.choice(bm_colleagues),
-                status=_assignment_status(rng, is_active=is_active),
+                status=status,
+                closing_reason=weighted_choice(rng, CLOSING_REASONS) if status == "GESLOTEN" else "",
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )

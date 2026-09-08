@@ -415,6 +415,14 @@ class AssignmentEditables(EditableSet):
         required=False,
     )
 
+    closing_reason = Editable(
+        label="Reden van sluiten",
+        help_text="Alleen van toepassing als de opdracht gesloten is.",
+        widget=forms.Textarea(attrs={"rows": 2}),
+        required=False,
+        display="forms/displays/textarea.html",
+    )
+
     owner = Editable(
         label="Business Manager",
         choices=_bdm_queryset,

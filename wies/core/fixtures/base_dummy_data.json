@@ -2422,6 +2422,7 @@
       "extra_info": "",
       "owner": 19,
       "status": "GESLOTEN",
+      "closing_reason": "Periode afgelopen zoals gepland.",
       "source": "wies",
       "source_id": ""
     }
@@ -2506,6 +2507,7 @@
       "extra_info": "",
       "owner": 7,
       "status": "GESLOTEN",
+      "closing_reason": "Geen geschikte mensen beschikbaar gekregen.",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -2618,6 +2620,7 @@
       "extra_info": "",
       "owner": 19,
       "status": "GESLOTEN",
+      "closing_reason": "Periode afgelopen zoals gepland.",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -2660,6 +2663,7 @@
       "extra_info": "",
       "owner": 31,
       "status": "GESLOTEN",
+      "closing_reason": "Opdrachtgever heeft de aanvraag ingetrokken.",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -2744,6 +2748,7 @@
       "extra_info": "",
       "owner": 29,
       "status": "GESLOTEN",
+      "closing_reason": "Verlengd in een nieuwe opdracht.",
       "source": "wies",
       "source_id": ""
     }

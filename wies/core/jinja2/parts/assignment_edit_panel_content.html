@@ -30,6 +30,9 @@
   {# Only present for Business management; the permission rule decides, so the
      field simply is not in the form for anyone else. #}
   {% if form.status %}{{ form.status.as_field_group() }}{% endif %}
+  {# Always rendered, not just when the assignment is already closed: you fill
+     this in at the moment you close it, which is this same submit. #}
+  {% if form.closing_reason %}{{ form.closing_reason.as_field_group() }}{% endif %}
   {% for error in form.non_field_errors() %}
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}
