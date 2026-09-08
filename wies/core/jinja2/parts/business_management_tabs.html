@@ -1,0 +1,11 @@
+{# Navigation for the Business management section. A tab bar rather than the
+   sidebar this used to be: two items cost the sidebar's full column width,
+   which on the board pushed the fourth status column off screen.
+
+   `navigation` renders a nav landmark with real anchors, so each tab stays a
+   link (middle-click, "open in new tab") instead of a tablist that only looks
+   like navigation. #}
+<nldd-tab-bar variant="icon-and-text" navigation accessible-label="Business management">
+<nldd-tab-bar-item text="Bezetting" icon="calendar-event" href="{{ url('bezetting') }}" {% if request.path == url('bezetting') %}selected{% endif %}></nldd-tab-bar-item>
+<nldd-tab-bar-item text="Bord" icon="rectangle-stack" href="{{ url('bm-board') }}" {% if request.path == url('bm-board') %}selected{% endif %}></nldd-tab-bar-item>
+</nldd-tab-bar>

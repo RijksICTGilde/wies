@@ -10,7 +10,7 @@
 
    A single flex row of four. It does not wrap: the cards give up width first
    (they carry a short count and a caption that can ellipsis), while the button
-   keeps its full label, because "Alle filters" is the way back to everything the
+   keeps its full label, because "Filters" is the way back to everything the
    row cannot show. */
 .bezetting-toolbar {
   display: flex;
@@ -49,7 +49,10 @@
    resolve the percentage against, so the button collapsed to zero and took the
    visible card with it. */
 .bezetting-stat {
-  display: block;
+  /* Flex, not block: the nldd-card inside has to stretch to the button's height,
+     and on a block it kept its own 40px while the tabs and buttons beside it are
+     44px, leaving the cards visibly shorter than the rest of the row. */
+  display: flex;
   width: 100%;
   height: 100%;
   padding: 0;
@@ -62,6 +65,22 @@
   /* The card's own radius token, so the focus ring keeps hugging the card edge
      if the design system ever changes that corner. */
   border-radius: var(--components-card-corner-radius);
+}
+
+.bezetting-stat > nldd-card {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The card stretches, but its container keeps its own 40px, which left the
+   count and caption two pixels above the middle of a 44px row. Stretch that
+   too, and centre what is inside it. */
+.bezetting-stat nldd-card,
+.bezetting-stat nldd-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 /* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
@@ -535,8 +554,8 @@
 
 /* Merk and expertise chips on a row. They sit after the role and give way
    before it does: the name identifies the person, the role says what they do,
-   and the chips only explain why a filtered view includes them. Hidden below md
-   — the name cell is 200px there and the chips would take all of it. */
+   and the chips only explain why a filtered view includes them. Hidden once the
+   name cell drops to 200px, where they would take all of it. */
 .bezetting-person__labels {
   display: flex;
   gap: var(--primitives-space-4);
@@ -549,8 +568,80 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
+/* Same breakpoint as --bezetting-side-width above: until the name cell actually
+   shrinks there is room to spare, and hiding them at 1200px dropped the gilde
+   from rows whose cell was still 360px wide. */
+@media (max-width: 800px) {
   .bezetting-person__labels {
+    display: none;
+  }
+}
+
+/* The create action sits at the far end of the filter row: it adds work rather
+   than narrowing the view, so it reads apart from the status cards. It keeps
+   its own width while those cards share what is left. */
+.bezetting-toolbar__action {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+/* Below this the row cannot hold everything: the cards shrink to "14 c" and the
+   Filters label breaks over two lines. The cards go first — every status they
+   carry is also a group in the sheet, so nothing becomes unreachable, and the
+   button counts them once they are hidden. Navigation and the way back to the
+   filters are what must survive. */
+/* The status cards as one row inside their toolbar item. */
+/* The cards sit outside nldd-toolbar (see the template) but must read as one
+   row with it. The wrapper is the flex row; the toolbar follows the cards and
+   takes the remaining width. */
+.bezetting-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.bezetting-toolbar-row > nldd-tab-bar {
+  flex: 0 0 auto;
+}
+
+.bezetting-toolbar-row > nldd-toolbar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bezetting-toolbar__stats {
+  display: flex;
+  flex: 1 1 auto;
+  gap: var(--primitives-space-8, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Equal width, and no wider than the caption needs. They used to share the row
+   with the tabs and buttons on flex:1 1 0, so all of them shrank together; in
+   their own list they took every pixel the toolbar left over and grew to more
+   than twice the size of the controls beside them. The cap keeps that from
+   happening, the floor is where the short captions still read in full (both
+   measured). */
+.bezetting-toolbar__stats > li {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 150px;
+  max-width: 220px;
+  height: 44px;
+}
+
+/* Hidden here rather than left to the toolbar's overflow: these three have no
+   menu twin (their statuses live in the filter sheet), and an overflowed item
+   with nothing to show gave a ⋯ button reading "Geen opties beschikbaar".
+   1050px is where the row stops holding them (measured). */
+/* Just above the width where nldd-toolbar starts pushing its own items into the
+   overflow (measured: 1075px). The cards must be gone by then — they are the
+   shortcut and the create action is not, so the action may never be the first
+   thing to go. Their statuses stay reachable in the filter sheet. */
+@media (max-width: 1100px) {
+  .bezetting-toolbar__stats {
     display: none;
   }
 }

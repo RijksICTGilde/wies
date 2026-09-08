@@ -45,6 +45,70 @@ def _placement(colleague, name, start, end, role=None):
     )
 
 
+class BezettingStatusInSheetTest(TestCase):
+    """The status facet also lives in the filter sheet.
+
+    On a narrow window the summary cards are hidden (bezetting.css), and a
+    filter you cannot reach is a filter you cannot switch off.
+    """
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.user)
+
+    def test_sheet_offers_every_summary_card_as_a_filter(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Op de bank")
+        self.assertContains(response, "Volledig ingezet")
+        self.assertContains(response, "Eindigt binnen 3 maanden")
+
+    def test_one_submitting_input_per_status(self):
+        """The card shows the state, the sheet's group submits it. Two inputs
+        with the same name sent the value twice, which came back as two
+        identical chips for one filter."""
+        response = self.client.get(self.url, {"status": "bench"})
+        body = response.content.decode()
+
+        assert body.count('name="status" value="bench"') <= 1
+
+    def test_button_carries_no_count(self):
+        """The chips under the row name each active filter, so a number beside
+        them would say the same thing twice (as on the "Wie zit waar?" list)."""
+        response = self.client.get(self.url, {"status": "bench"})
+
+        self.assertContains(response, 'text="Filter"')
+        self.assertNotContains(response, "Filter (1)")
+
+
+class BezettingFilterChipsTest(TestCase):
+    """An active filter is named under the toolbar, not just counted on it."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.user)
+
+    def test_no_chips_without_a_filter(self):
+        response = self.client.get(self.url)
+
+        self.assertNotContains(response, 'data-wies-dismiss="filter"')
+
+    def test_active_status_gets_a_dismissable_chip(self):
+        response = self.client.get(self.url, {"status": "bench"})
+
+        self.assertContains(response, 'data-wies-dismiss="filter"')
+        self.assertContains(response, 'data-filter-value="bench"')
+        self.assertContains(response, "Op de bank")
+
+
 class BezettingAuthTest(TestCase):
     def setUp(self):
         setup_roles()

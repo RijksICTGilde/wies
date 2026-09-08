@@ -24,6 +24,9 @@
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
+  {# Where the assignment starts on the board. Last, because it is the one field
+     you set from what the others say rather than the other way round. #}
+  {% if form.status %}{{ form.status.as_field_group() }}{% endif %}
   {% for error in form.non_field_errors() %}
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}

@@ -1,0 +1,190 @@
+/* "Bord" — the business manager's assignments in a column per status.
+   Colours use NLDD semantic tokens so light and dark both work. */
+
+/* Columns side by side, scrolling horizontally when they no longer fit rather
+   than squeezing every column past readability. Each column scrolls on its own
+   vertically, so a long column does not push the others' headers off screen. */
+.bm-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(280px, 1fr);
+  gap: var(--primitives-space-16, 16px);
+  overflow-x: auto;
+  align-items: start;
+}
+
+.bm-board__column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.bm-board__column-head {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  min-width: 0;
+}
+
+.bm-board__column-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--semantics-content-color);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The drop zone keeps a minimum height so an empty column is still a target
+   big enough to drop a card onto. */
+.bm-board__dropzone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 96px;
+  padding: var(--primitives-space-4, 4px);
+  border-radius: var(--primitives-corner-radius-xs);
+  border: 1px dashed transparent;
+}
+
+/* Only while a card hovers over it: a permanent outline would draw four boxes
+   on a page that is already a grid of cards. */
+.bm-board__dropzone.is-drop-target {
+  border-color: var(--semantics-content-accent-color);
+  border-width: 2px;
+  background: var(--primitives-color-accent-75);
+}
+
+.bm-board__empty {
+  margin: 0;
+  padding: var(--primitives-space-8, 8px);
+  color: var(--semantics-content-secondary-color);
+  font-size: 0.875rem;
+}
+
+/* The card's own padding: nldd-card brings none, and a container per block cost
+   a row of vertical rhythm each. One grid, one gap. */
+.bm-card {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+}
+
+/* Title and drag handle on one row, the handle pinned right. The card itself is
+   a link, so the handle needs its own hit area that does not follow it. */
+.bm-card__head {
+  display: flex;
+  align-items: start;
+  gap: var(--primitives-space-8, 8px);
+  justify-content: space-between;
+}
+
+/* A plain h3 rather than nldd-title: that component's smallest size still
+   carries heading typography and its own block spacing, which is most of what
+   made these cards tall. Two lines, then ellipsis — one long name would
+   otherwise double the card's height; the full name is on the card's
+   accessible-label and in the panel. */
+.bm-card__title {
+  margin: 0;
+  min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--semantics-content-color);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+/* Client and period as one quiet line under the title, the way a board card
+   carries its metadata. The separator is generated so it never shows up on a
+   card that has only one of the two. */
+/* nldd-card renders an <a> across its whole surface in its shadow root, and
+   that link sits above slotted content: the pointer reached the link and never
+   the grip, so no event's composed path held the grip and a drag from it could
+   not be told from a click on the card. Its own stacking context lifts the grip
+   back above that link. */
+/* The create action sits at the far end of the filter row: it adds work rather
+   than narrowing the view, so it reads apart from the filters. */
+.bm-board__filter-action {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
+.bm-card__handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--semantics-content-secondary-color);
+  background: var(--semantics-surfaces-tinted-background-color, transparent);
+  position: relative;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.bm-card__handle:active {
+  cursor: grabbing;
+}
+
+.bm-card__meta {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--semantics-content-secondary-color);
+}
+
+/* Generated, so it never shows on a card that carries only one of the two.
+   A bullet rather than another "·": the period already uses that to append
+   "nog N wk", and three identical separators on one line read as one list. */
+/* The avatar sits on the meta line, so it has to align with the text beside it
+   rather than on the baseline it would otherwise take. */
+.bm-card__owner {
+  display: inline-flex;
+  vertical-align: middle;
+  margin-inline-end: 2px;
+}
+
+/* Generated separators, so a card missing one of the three does not show a
+   stray bullet. The avatar brings its own gap, so it needs no bullet. */
+.bm-card__owner + .bm-card__period::before {
+  content: " • ";
+}
+
+.bm-card__org + .bm-card__period::before {
+  content: " • ";
+}
+
+.bm-card__seats {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--semantics-content-secondary-color);
+}
+
+/* An assignment wrapping up. The text says "nog N wk" too, so the colour is
+   not the only cue (WCAG 1.4.1). */
+/* The open seats and the gilde chips share the last line. */
+.bm-card__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 0;
+}
+
+/* The board reuses Bezetting's toolbar row, whose items share the width between
+   them because that page has status cards to spread. This row holds two
+   buttons, so both keep their own width; the rule there hands that to the last
+   item only, which since the create action is no longer the filter button. */
+.bezetting-toolbar > .bm-board__filter-item {
+  flex: 0 0 auto;
+}

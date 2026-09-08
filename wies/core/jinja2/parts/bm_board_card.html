@@ -1,0 +1,77 @@
+{# One assignment card on the board. Deliberately flatter than the "Opdrachten"
+   card (parts/assignment_card_rows.html): a column shows a stack of these at
+   once, so height decides how much of the pipeline you can see. Title, then one
+   meta line — the detail lives in the panel a click away.
+
+   `card` is a BoardCard from services/board.py. The stable id is what the drag
+   layer moves and what an out-of-band swap targets. #}
+<nldd-card role="listitem" id="bm-card-{{ card.public_id }}" background="tinted" accessible-label="{{ card.name }}" data-board-card data-assignment-id="{{ card.public_id }}" draggable="true" href="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-get="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+<div class="bm-card">
+  {# The handle is what starts a drag; the rest of the card stays a link, so a
+     plain click still opens the panel (hx_link_guard.js holds back the href). #}
+  <div class="bm-card__head">
+    <h3 class="bm-card__title">{{ card.name }}</h3>
+    {# nldd-drag-handle-cell draws the grip itself (an inline SVG, not an icon
+       name); it is a list cell, so it sits in its own wrapper here on a card. #}
+    {# Our own grip, not nldd-drag-handle-cell: that renders a focusable button
+       announcing "druk spatie of enter om te verplaatsen", which is a promise
+       dragging cannot keep — it is mouse-only. That put a dead tab stop on every
+       card. The keyboard route is the side panel, named above the columns. #}
+    <span class="bm-card__handle"
+          data-board-handle
+          draggable="true"
+          aria-hidden="true">
+      <svg viewBox="0 0 10 16" width="10" height="16" focusable="false">
+        <g fill="currentColor">
+        <circle cx="2" cy="2" r="1.5" /><circle cx="8" cy="2" r="1.5" />
+        <circle cx="2" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" />
+        <circle cx="2" cy="14" r="1.5" /><circle cx="8" cy="14" r="1.5" />
+        </g>
+      </svg>
+    </span>
+  </div>
+  {# One meta line instead of a list of labelled rows: client and period are
+     short enough to sit together, and an nldd-list-item per fact cost a full
+     row height each. Plain text, so it wraps as one sentence. #}
+  <p class="bm-card__meta">
+    {%- if card.owner_name %}
+      {# The avatar instead of the name: on a card this narrow the full name ate
+         the line the client and period share. NOT decorative — it replaces the
+         name rather than sitting beside it, so nldd-avatar's own label off
+         `name` is what a screen reader gets.
+
+         nldd-avatar brings its own tooltip, so it needs no wrapper of ours. #}
+      <span class="bm-card__owner">
+        <nldd-avatar size="20" name="{{ card.owner_name }}"></nldd-avatar>
+      </span>
+    {% endif -%}
+    {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
+    {%- if card.end_date %}
+      {# Always the date, never a countdown: swapping in "nog 2 wk" for the cards
+         that were running out put two units in one column, so you could no
+         longer read down it and compare. What is wrapping up is found through
+         the "eindigt binnen" filter instead. #}
+      <span class="bm-card__period">t/m {{ card.end_date|datum_nl("b Y") }}</span>
+    {%- endif -%}
+  </p>
+  {# The open seats and the gilde on one line: each took a line of its own while
+     together they fit in one. Only the half that tells the BM something —
+     "2/4 bezet" next to "2 open" is the same fact twice — and the text carries
+     the meaning, not the colour (WCAG 1.4.1). #}
+  {% if card.total_seats == 0 or card.open_seats or card.gilde_labels %}
+    <p class="bm-card__foot">
+      {%- if not card.total_seats %}
+        <span class="bm-card__seats">Nog geen rollen</span>
+      {%- elif card.open_seats %}
+        {# "3/5 open" rather than "3 van 5 nog open": the same two numbers, on a
+           card where every line competes for the same width. The word stays —
+           the pair of numbers alone would not say what they count. #}
+        <span class="bm-card__seats bm-card__seats--open">{{ card.open_seats }}/{{ card.total_seats }} open</span>
+      {%- endif -%}
+      {%- for name, colour in card.gilde_labels -%}
+        <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
+      {%- endfor -%}
+    </p>
+  {% endif %}
+</div>
+</nldd-card>

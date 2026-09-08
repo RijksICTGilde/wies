@@ -1,0 +1,53 @@
+{# The status columns. A separate partial so a filter change or a move only
+   re-renders this part (htmx target #bm-board-grid). `columns` is a list of
+   BoardColumn from services/board.py.
+
+   Cards are dragged between columns by bm_board.js: native drag-and-drop,
+   because nldd-list's own reordering works within one list only. The move URL
+   template and the CSRF token below feed the POST on drop. #}
+{# Dragging is mouse-only, so the keyboard route has to be findable. #}
+<p class="wies-visually-hidden">
+  Sleep een kaart naar een andere kolom om de status te wijzigen. Zonder muis:
+  open de opdracht en wijzig de status via "Gegevens bewerken".
+</p>
+<div id="bm-board-grid"
+     class="bm-board"
+     data-board-move-url-template="{{ url('bm-board-move', args=['00000000-0000-0000-0000-000000000000']) }}">
+  {{ get_csrf_hidden_input(request) }}
+  {% for column in columns %}
+    <section class="bm-board__column"
+             data-board-column="{{ column.key }}"
+             aria-labelledby="bm-column-{{ column.key }}">
+      <div class="bm-board__column-head">
+        <h2 class="bm-board__column-title" id="bm-column-{{ column.key }}">{{ column.label }}</h2>
+        {# nldd-badge has no accessible-label, so the count would reach a screen reader
+         as a bare number next to the heading. Say it in the markup instead. #}
+        <span class="wies-visually-hidden">{{ column.count }} opdrachten in {{ column.label }}</span>
+        <nldd-badge color="neutral" number="{{ column.count }}" aria-hidden="true"></nldd-badge>
+      </div>
+      {# The drop zone stays a drop zone when empty, so an empty column can still
+         receive the first card. #}
+      {# A list, so a screen reader says how many cards a column holds and which
+         one it is on — the question a board is read for. #}
+      <div class="bm-board__dropzone"
+           data-board-dropzone="{{ column.key }}"
+           role="list">
+        {% for card in column.cards %}
+          {% include "parts/bm_board_card.html" %}
+        {% else %}
+          <p class="bm-board__empty">Geen opdrachten</p>
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
+{# An empty board looks the same whether you own nothing, or a filter hid
+   everything — say which, or the page reads as broken. #}
+{% if board_is_empty %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% if filter_active %}
+    <nldd-banner variant="neutral" text="Geen opdrachten binnen deze filters. Pas ze aan of wis ze om alles te zien."></nldd-banner>
+  {% else %}
+    <nldd-banner variant="neutral" text="Er staan nog geen opdrachten op het bord. Een opdracht verschijnt hier zodra er een business manager aan gekoppeld is."></nldd-banner>
+  {% endif %}
+{% endif %}

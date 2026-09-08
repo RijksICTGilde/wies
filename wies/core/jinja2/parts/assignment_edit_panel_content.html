@@ -27,6 +27,18 @@
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
+  {# Only present for Business management; the permission rule decides, so the
+     field simply is not in the form for anyone else. #}
+  {% if form.status %}{{ form.status.as_field_group() }}{% endif %}
+  {# Rendered but hidden until the status says Gesloten: you fill this in at the
+     moment you close it, which is this same submit, so it cannot be decided
+     server-side. assignment_closing_reason.js follows the dropdown. #}
+  {% if form.closing_reason %}
+    <div data-closing-reason-field
+         {% if panel_data.assignment.status != "GESLOTEN" %}hidden{% endif %}>
+      {{ form.closing_reason.as_field_group() }}
+    </div>
+  {% endif %}
   {% for error in form.non_field_errors() %}
     <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
   {% endfor %}

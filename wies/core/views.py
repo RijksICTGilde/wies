@@ -75,10 +75,16 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
+from .services import board
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
     save_service_from_form,
+)
+from .services.board import (
+    ENDING_WITHIN_CHOICES,
+    build_board,
+    move_assignment,
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
@@ -88,6 +94,9 @@ from .services.occupancy import (
 from .services.occupancy import (
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
+    STATUS_BENCH,
+    STATUS_ENDS_SOON,
+    STATUS_FULL,
     STATUS_VALUES,
     colleague_occupancy,
     row_has_status,
@@ -163,6 +172,21 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
+def _panel_return_response(path):
+    """Send the client back to ``path`` after a panel form saved.
+
+    Normally that is a panel-only swap, which keeps the page behind it intact.
+    The board is the exception: its columns ARE what a status change moves, so a
+    swap that leaves them untouched would show the counts from before the save.
+    """
+    response = HttpResponse(status=204)
+    if path.startswith(reverse("bm-board")):
+        response["HX-Redirect"] = path
+    else:
+        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
 def _is_side_panel_request(request):
     """True for the HTMX requests that render a panel partial.
 
@@ -217,6 +241,9 @@ def _build_assignment_panel_data(assignment, request):
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
+        # The status drives the BM board's columns and means nothing outside that
+        # section, so only the people who work there see it.
+        "show_status": can_access_business_management(request.user),
         "organization_count": assignment.organization_relations.count(),
         # Read-only display context: per-field inline edit was replaced by the
         # edit child sheet, so the panel shows values directly.
@@ -615,8 +642,12 @@ def bezetting(request):
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
-    panel_data = None
-    if placement_id:
+    # The create form takes precedence: it is the only panel here without an
+    # object, so it is checked before the id lookups.
+    panel_data = _assignment_create_panel(request)
+    if panel_data is not None:
+        pass
+    elif placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
@@ -662,6 +693,10 @@ def bezetting(request):
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
     filter_groups = _bezetting_filter_groups(merk, labels, labels_by_category)
+    # Status also lives in the sheet, not only on the cards: on a narrow window
+    # the cards are hidden, and a filter you cannot reach is a filter you cannot
+    # switch off.
+    filter_groups.insert(0, _bezetting_status_group(selected_statuses, bench_count, full_count, ends_soon_count))
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
@@ -705,13 +740,7 @@ def bezetting(request):
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "filter_active": bool(merk.active_values or labels.active_values or selected_statuses),
-        # What the "Alle filters" button counts: the facets that live inside the
-        # sheet, not the status cards. A status shows it is on by the card being
-        # pressed, so counting it here made the button claim a filter the user
-        # could already see was applied — and read as "(1)" over an untouched
-        # sheet. Values, not groups: two labels from one group are two filters
-        # to the reader.
-        "active_filter_values": len(merk.active_values) + len(labels.active_values),
+        "primary_button": _assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
@@ -723,6 +752,225 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
+
+
+def _assignment_create_button(request):
+    """The "Opdracht invoeren" action, or None without the permission.
+
+    Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
+    entering an assignment works identically wherever a business manager is.
+    """
+    if not request.user.has_perm("core.add_assignment"):
+        return None
+    return {
+        "button_text": "Opdracht invoeren",
+        "attrs": {
+            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+            "hx-target": "#side-panel-content",
+            "hx-swap": "innerHTML",
+            "hx-push-url": "true",
+        },
+    }
+
+
+def _assignment_create_panel(request):
+    """panel_data for the empty create form, or None when it does not apply."""
+    if request.GET.get("nieuwe-opdracht") is None or not request.user.has_perm("core.add_assignment"):
+        return None
+    from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
+        assignment_create_specs,
+    )
+
+    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    # Prefill: the creator is usually the BM themselves.
+    if getattr(request.user, "colleague", None):
+        initial["owner"] = request.user.colleague
+    return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
+@business_management_access_required
+def bm_board(request):
+    """ "Bord" — the business manager's own assignments, in a column per status.
+
+    Sibling of the "Bezetting" page, and set up the same way: summary cards that
+    are status filters, a "Filters" sheet for the rest, and the shared side
+    panel. A card click opens the assignment panel via the ``opdracht`` param;
+    dragging a card to another column posts to ``bm_board_move``.
+    """
+    # Side panel: reuse the shared machinery, exactly like Bezetting.
+    assignment_id = request.GET.get("opdracht")
+    panel_data = _assignment_create_panel(request)
+    if panel_data is None and assignment_id:
+        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        if assignment is not None:
+            panel_data = _build_assignment_panel_data(assignment, request)
+
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    org = resolve_facet(OrganizationUnit, request.GET.getlist("org"))
+    labels = resolve_facet(Label, request.GET.getlist("labels"))
+    owners = resolve_facet(Colleague, request.GET.getlist("bm"))
+    ending_within = _board_ending_within(request)
+
+    columns = build_board(
+        ending_within_months=ending_within,
+        org_ids=org.ids,
+        label_ids=labels.ids,
+        owner_ids=owners.ids,
+    )
+
+    filter_groups = _board_filter_groups(org, labels, owners, ending_within)
+    _finalize_filter_groups(filter_groups)
+
+    active_filters = {}
+    if org.active_values:
+        active_filters["org"] = org.active_values
+    if labels.active_values:
+        active_filters["labels"] = labels.active_values
+    if owners.active_values:
+        active_filters["bm"] = owners.active_values
+    if ending_within:
+        active_filters["eindigt"] = [str(ending_within)]
+
+    context = {
+        "columns": columns,
+        "panel_data": panel_data,
+        "ending_within": ending_within,
+        "filter_groups": filter_groups,
+        "active_filters": active_filters,
+        "filter_target_url": reverse("bm-board"),
+        "filter_modal_group_id": request.GET.get("filter_modal", ""),
+        "filter_active": bool(org.active_values or labels.active_values or owners.active_values or ending_within),
+        "board_is_empty": not any(column.cards for column in columns),
+        "primary_button": _assignment_create_button(request),
+    }
+
+    if "HX-Request" in request.headers:
+        if request.GET.get("filter_modal"):
+            return render(request, "parts/filter_options_modal.html", context)
+        return render(request, "parts/bm_board_results.html", context)
+
+    return render(request, "bm_board.html", context)
+
+
+def _board_ending_within(request):
+    """The "eindigt binnen" filter as a whole number of months, or None.
+
+    The sheet renders checkboxes, so several windows can arrive at once; they
+    nest, so the widest one is what the selection means. Anything that is not an
+    offered choice is dropped rather than rejected: a hand-edited URL falls back
+    to the unfiltered board.
+    """
+    months = []
+    for raw in request.GET.getlist("eindigt"):
+        try:
+            value = int(raw)
+        except ValueError:
+            continue
+        if value in ENDING_WITHIN_CHOICES:
+            months.append(value)
+    return max(months) if months else None
+
+
+def _select_multi_group(name, label, objects, counts, selected_public_ids, *, label_attr="name"):
+    """A filter-sheet group from objects with public_ids and a count each."""
+    options = [{"value": "", "label": ""}]
+    selected = []
+    for obj in objects:
+        value = str(obj.public_id)
+        option = {"value": value, "label": getattr(obj, label_attr), "count": counts.get(obj.id, 0)}
+        if value in selected_public_ids:
+            option["selected"] = True
+            selected.append(value)
+        options.append(option)
+    return {"type": "select-multi", "name": name, "label": label, "options": options, "selected_values": selected}
+
+
+def _board_gilde_group(labels):
+    """The gilde filter, matching the chips on the cards. None when unused."""
+    category = LabelCategory.objects.filter(name=board.GILDE_CATEGORY).first()
+    if category is None:
+        return None
+    counts = board.gilde_counts(category.id)
+    if not counts:
+        return None
+    used = Label.objects.filter(id__in=counts).order_by(Lower("name"))
+    return _select_multi_group("labels", category.name, used, counts, set(labels.public_ids))
+
+
+def _board_owner_group(owners):
+    """The business-manager filter. None when nobody owns anything."""
+    counts = board.owner_counts()
+    if not counts:
+        return None
+    used = Colleague.objects.filter(id__in=counts).order_by(Lower("name"))
+    return _select_multi_group("bm", "Business Manager", used, counts, set(owners.public_ids))
+
+
+def _board_org_group(org):
+    counts = board.organization_counts()
+    used = OrganizationUnit.objects.filter(id__in=counts).order_by(Lower("name"))
+    for organization in used:
+        organization.display_name = organization.label or organization.name
+    return _select_multi_group("org", "Opdrachtgever", used, counts, set(org.public_ids), label_attr="display_name")
+
+
+def _board_ending_group(ending_within):
+    """The end-date windows. Checkboxes, so several can arrive; the view reads
+    the widest, which is what a set of nested windows means anyway."""
+    counts = board.ending_within_counts(ENDING_WITHIN_CHOICES)
+    options = [{"value": "", "label": ""}]
+    for months in ENDING_WITHIN_CHOICES:
+        option = {
+            "value": str(months),
+            "label": f"{months} maand" if months == 1 else f"{months} maanden",
+            "count": counts[months],
+        }
+        if ending_within == months:
+            option["selected"] = True
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "eindigt",
+        "label": "Eindigt binnen",
+        "options": options,
+        "selected_values": [str(ending_within)] if ending_within else [],
+    }
+
+
+def _board_filter_groups(org, labels, owners, ending_within):
+    """Filter groups for the board sheet: BM, gilde, client organisation, window.
+
+    Only values that actually occur on the board: the full trees would offer
+    hundreds of options that select nothing.
+    """
+    groups = [_board_owner_group(owners), _board_gilde_group(labels)]
+    return [g for g in groups if g] + [_board_org_group(org), _board_ending_group(ending_within)]
+
+
+@business_management_access_required
+@require_POST
+def bm_board_move(request, public_id):
+    """Move one assignment to another status column (drag-and-drop target)."""
+    assignment = get_object_or_404(Assignment, public_id=public_id)
+    # Any card on the board, not only your own: covering for a colleague means
+    # moving their work too, and reaching this section is the gate.
+    if assignment.owner_id is None:
+        raise Http404
+
+    if not move_assignment(assignment, request.POST.get("status", "")):
+        return HttpResponseBadRequest("Onbekende status")
+
+    columns = build_board(
+        ending_within_months=_board_ending_within(request),
+        org_ids=resolve_facet(OrganizationUnit, request.GET.getlist("org")).ids,
+        label_ids=resolve_facet(Label, request.GET.getlist("labels")).ids,
+        owner_ids=resolve_facet(Colleague, request.GET.getlist("bm")).ids,
+    )
+    return render(request, "parts/bm_board_columns.html", {"columns": columns})
 
 
 def _labels_by_category(labels):
@@ -752,6 +1000,30 @@ def _bezetting_apply_filters(qs, merk, labels_by_category, *, exclude_filter=Non
     if exclude_filter != "merk" and merk.ids:
         qs = qs.filter(suborganization_id__in=merk.ids)
     return qs.distinct()
+
+
+def _bezetting_status_group(selected, bench_count, full_count, ends_soon_count):
+    """The three summary cards as a filter group, for when they do not fit.
+
+    Same values and counts as the cards, so toggling either keeps one state.
+    """
+    options = [{"value": "", "label": ""}]
+    for value, label, count in (
+        (STATUS_BENCH, "Op de bank", bench_count),
+        (STATUS_FULL, "Volledig ingezet", full_count),
+        (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", ends_soon_count),
+    ):
+        option = {"value": value, "label": label, "count": count}
+        if value in selected:
+            option["selected"] = True
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "status",
+        "label": "Status",
+        "options": options,
+        "selected_values": list(selected),
+    }
 
 
 def _bezetting_filter_groups(merk, labels, labels_by_category):
@@ -4380,9 +4652,7 @@ def assignment_edit_view(request, public_id):
     with transaction.atomic():
         save_edit_specs(request, specs, form.cleaned_data)
 
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _panel_return_response(return_path)
 
 
 @require_POST
@@ -4425,9 +4695,7 @@ def assignment_create_sheet(request):
             f'Opdracht "{assignment.name}" is aangemaakt.',
             extra_tags=f"link:{path}|Bekijk opdracht",
         )
-        response = HttpResponse(status=204)
-        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
-        return response
+        return _panel_return_response(path)
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised
     # return address, so terug_url survives a failed submit.

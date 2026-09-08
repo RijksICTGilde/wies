@@ -1,0 +1,33 @@
+{# The results block: the filter button and the columns. HTMX swaps this on
+   every filter change (hx-target="#results"); the filter sheet swaps back
+   separately as OOB so its counts and selection follow.
+
+   No summary cards like Bezetting has: the column headers already carry a count
+   per status, so a row of cards above them counted the same board twice. What
+   is left lives in the sheet. #}
+<nldd-container id="results">
+{# Same toolbar as Bezetting: navigation, the filter sheet and the create
+   action, with an overflow menu for narrow screens. No status cards here — the
+   column headers already carry a count per status. #}
+<div class="bezetting-toolbar-row">
+  {# Outside the toolbar, so it stays put: nldd-toolbar would move it into the
+   overflow menu, and navigation is the last thing that may disappear. #}
+  {% include "parts/business_management_tabs.html" %}
+  <nldd-toolbar label="Weergave en filters">
+  {# Last to go: it is the way to every filter this page has. #}
+  <nldd-toolbar-item slot="end" priority="3">
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filter" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filter" data-user-filter-open></nldd-menu-item>
+  </nldd-toolbar-item>
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end" priority="2">
+    {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-toolbar>
+</div>
+{% include "parts/active_filter_chips.html" %}
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{% include "parts/bm_board_columns.html" %}
+</nldd-container>

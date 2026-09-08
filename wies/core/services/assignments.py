@@ -168,6 +168,7 @@ def create_assignment_from_form(
     start_date: date | None = None,
     end_date: date | None = None,
     owner: Colleague | None = None,
+    status: str | None = None,
     primary_organization_id: int | None = None,
     involved_organization_ids: list[int] | None = None,
 ) -> Assignment:
@@ -182,6 +183,9 @@ def create_assignment_from_form(
         end_date=end_date,
         extra_info=extra_info,
         owner=owner,
+        # Falls back to the model default when the caller passes nothing, so an
+        # assignment always lands in a column on the board.
+        **({"status": status} if status else {}),
         source="wies",
     )
 
@@ -215,6 +219,7 @@ def assignment_create_specs():
         AssignmentEditables.organizations,
         AssignmentEditables.period,
         AssignmentEditables.owner,
+        AssignmentEditables.status,
     ]
     return [(AssignmentEditables, spec, None) for spec in specs]
 
@@ -234,6 +239,7 @@ def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
         start_date=cleaned_data.get("start_date"),
         end_date=cleaned_data.get("end_date"),
         owner=cleaned_data.get("owner"),
+        status=cleaned_data.get("status"),
         primary_organization_id=primary_org.id if primary_org else None,
         involved_organization_ids=[o.id for o in involved_orgs],
     )
@@ -361,6 +367,8 @@ def assignment_edit_specs(assignment, user, only=None):
         AssignmentEditables.organizations,
         AssignmentEditables.period,
         AssignmentEditables.owner,
+        AssignmentEditables.status,
+        AssignmentEditables.closing_reason,
     ]
     if only is not None:
         candidates = [spec for spec in candidates if spec.name == only]
