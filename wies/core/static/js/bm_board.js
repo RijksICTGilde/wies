@@ -1,9 +1,5 @@
-// Dragging assignment cards between the status columns of the BM board.
-//
-// Native drag-and-drop rather than nldd-list's own reordering: that works
-// within a single list, and the whole point here is moving a card from one
-// column to another. Only the grip starts a drag, so a plain click on the card
-// still opens the side panel.
+// Dragging assignment cards between the board's status columns. Native
+// drag-and-drop, because nldd-list only reorders within one list.
 (function () {
   "use strict";
 
@@ -48,11 +44,8 @@
       .forEach((el) => el.classList.remove(DROP_TARGET_CLASS));
   }
 
-  // Whether the pointer went down on the grip. The card renders an <a> across
-  // its whole surface in its shadow root, and that link is what the browser
-  // starts the drag from: the composed path of dragstart holds A > NLDD-CARD
-  // and never the grip, so where the drag began can only be learned earlier,
-  // on mousedown.
+  // The card's shadow <a> is what dragstart fires on, so its path never holds
+  // the grip; only mousedown can tell where the drag began.
   let fromGrip = false;
 
   function setupDragStart() {
@@ -116,6 +109,11 @@
     });
   }
 
+  function announce(message) {
+    const live = document.getElementById("wies-live");
+    if (live) live.textContent = message;
+  }
+
   function moveCard(card, status) {
     const url = moveUrl(card.dataset.assignmentId);
     const token = csrfToken();
@@ -123,11 +121,21 @@
 
     // Show the move immediately; the server response re-renders the columns and
     // corrects the counts (and puts the card back if the move was refused).
-    window.htmx.ajax("POST", url, {
-      target: "#" + GRID_ID,
-      swap: "outerHTML",
-      values: { status: status, csrfmiddlewaretoken: token },
-    });
+    const naam = card.getAttribute("accessible-label") || "";
+    const kolom = document.querySelector(
+      `[data-board-column="${CSS.escape(status)}"] .bm-board__column-title`,
+    );
+    window.htmx
+      .ajax("POST", url, {
+        target: "#" + GRID_ID,
+        swap: "outerHTML",
+        values: { status: status, csrfmiddlewaretoken: token },
+      })
+      .then(() =>
+        announce(
+          `${naam} verplaatst naar ${kolom ? kolom.textContent.trim() : status}`,
+        ),
+      );
   }
 
   function init() {

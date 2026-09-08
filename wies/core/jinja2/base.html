@@ -130,5 +130,11 @@
          nldd-token-field from the NLDD bundle, so no multi_select.js either. #}
       <script src="{{ app_asset('js/onboarding.js') }}" defer></script>
     {% endif %}
+    {# Announces what an htmx swap changed. Without it a moved card or a applied
+       filter happens in silence for a screen reader (WCAG 4.1.3). #}
+    <div id="wies-live"
+         class="wies-visually-hidden"
+         aria-live="polite"
+         aria-atomic="true"></div>
   </body>
 </html>

@@ -1,0 +1,21 @@
+{# What is filtered right now, each one clickable to remove. The counter is gone
+   from the Filter button, so these are what say which filters are on; same
+   tokens and dismiss hook as the list pages, so filter_interactions.js clears
+   them without knowing about the page. #}
+{% if active_filters %}
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% for selected_value in active_filters.get(filter_group.name) or [] %}
+        {% for option in filter_group.options if option.value == selected_value %}
+          <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+  {# Clearing all filters belongs with the chips; filter_interactions.js handles
+     data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+{% endif %}

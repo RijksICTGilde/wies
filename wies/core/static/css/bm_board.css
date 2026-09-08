@@ -29,7 +29,7 @@
 
 .bm-board__column-title {
   margin: 0;
-  font-size: var(--primitives-font-size-16, 1rem);
+  font-size: 1rem;
   font-weight: 600;
   color: var(--semantics-content-color);
   min-width: 0;
@@ -46,22 +46,23 @@
   gap: 6px;
   min-height: 96px;
   padding: var(--primitives-space-4, 4px);
-  border-radius: var(--primitives-radius-8, 8px);
+  border-radius: var(--primitives-corner-radius-xs);
   border: 1px dashed transparent;
 }
 
 /* Only while a card hovers over it: a permanent outline would draw four boxes
    on a page that is already a grid of cards. */
 .bm-board__dropzone.is-drop-target {
-  border-color: var(--components-border-accent, currentColor);
-  background: var(--components-surface-subtle, transparent);
+  border-color: var(--semantics-content-accent-color);
+  border-width: 2px;
+  background: var(--primitives-color-accent-75);
 }
 
 .bm-board__empty {
   margin: 0;
   padding: var(--primitives-space-8, 8px);
   color: var(--semantics-content-secondary-color);
-  font-size: var(--primitives-font-size-14, 0.875rem);
+  font-size: 0.875rem;
 }
 
 /* The card's own padding: nldd-card brings none, and a container per block cost
@@ -117,6 +118,14 @@
 
 .bm-card__handle {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  color: var(--semantics-content-secondary-color);
+  background: var(--semantics-surfaces-tinted-background-color, transparent);
   position: relative;
   z-index: 1;
   cursor: grab;

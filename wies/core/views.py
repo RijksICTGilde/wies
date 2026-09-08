@@ -75,13 +75,13 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
+from .services import board
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
     save_service_from_form,
 )
 from .services.board import (
-    DAYS_PER_MONTH,
     ENDING_WITHIN_CHOICES,
     build_board,
     move_assignment,
@@ -754,11 +754,6 @@ def bezetting(request):
     return render(request, "bezetting.html", context)
 
 
-# The label category whose labels ride along on a card as chips, the gilde the
-# team belongs to. Same category the Bezetting rows show.
-BOARD_GILDE_CATEGORY = "Subgroep"
-
-
 def _assignment_create_button(request):
     """The "Opdracht invoeren" action, or None without the permission.
 
@@ -880,87 +875,69 @@ def _board_ending_within(request):
     return max(months) if months else None
 
 
-def _board_gilde_group(labels):
-    """The gilde filter, matching the chips on the cards. None when unused.
-
-    Counted over the assignments themselves, not the people on them: two AI
-    colleagues on one assignment are one card, and the number beside a filter
-    should say how many cards it would leave.
-    """
-    category = LabelCategory.objects.filter(name=BOARD_GILDE_CATEGORY).first()
-    if category is None:
-        return None
-
-    counts = Counter()
-    for assignment in _board_assignments().prefetch_related("services__placements__colleague__labels"):
-        on_this_one = {
-            label.id
-            for service in assignment.services.all()
-            for placement in service.placements.all()
-            for label in placement.colleague.labels.all()
-            if label.category_id == category.id
-        }
-        counts.update(on_this_one)
-    if not counts:
-        return None
-
-    selected_ids = set(labels.public_ids)
+def _select_multi_group(name, label, objects, counts, selected_public_ids, *, label_attr="name"):
+    """A filter-sheet group from objects with public_ids and a count each."""
     options = [{"value": "", "label": ""}]
     selected = []
-    for label in Label.objects.filter(id__in=counts).order_by(Lower("name")):
-        value = str(label.public_id)
-        option = {"value": value, "label": label.name, "count": counts.get(label.id, 0)}
-        if value in selected_ids:
+    for obj in objects:
+        value = str(obj.public_id)
+        option = {"value": value, "label": getattr(obj, label_attr), "count": counts.get(obj.id, 0)}
+        if value in selected_public_ids:
             option["selected"] = True
             selected.append(value)
         options.append(option)
-    return {
-        "type": "select-multi",
-        "name": "labels",
-        "label": category.name,
-        "options": options,
-        "selected_values": selected,
-    }
+    return {"type": "select-multi", "name": name, "label": label, "options": options, "selected_values": selected}
 
 
-def _board_ending_count(months):
-    """How many assignments on the board end within ``months``."""
-    today = timezone.now().date()
-    cutoff = today + timedelta(days=DAYS_PER_MONTH * months)
-    return _board_assignments().filter(end_date__gte=today, end_date__lte=cutoff).count()
-
-
-def _board_assignments():
-    """The assignments the board can show: every owned one, whoever owns it."""
-    return Assignment.objects.filter(owner__isnull=False)
+def _board_gilde_group(labels):
+    """The gilde filter, matching the chips on the cards. None when unused."""
+    category = LabelCategory.objects.filter(name=board.GILDE_CATEGORY).first()
+    if category is None:
+        return None
+    counts = board.gilde_counts(category.id)
+    if not counts:
+        return None
+    used = Label.objects.filter(id__in=counts).order_by(Lower("name"))
+    return _select_multi_group("labels", category.name, used, counts, set(labels.public_ids))
 
 
 def _board_owner_group(owners):
-    """The business-manager filter. None when nobody owns anything.
-
-    The board spans the team, so this is how you narrow it to one person's
-    pipeline — including your own.
-    """
-    counts = Counter(_board_assignments().values_list("owner_id", flat=True))
+    """The business-manager filter. None when nobody owns anything."""
+    counts = board.owner_counts()
     if not counts:
         return None
+    used = Colleague.objects.filter(id__in=counts).order_by(Lower("name"))
+    return _select_multi_group("bm", "Business Manager", used, counts, set(owners.public_ids))
 
-    selected_ids = set(owners.public_ids)
+
+def _board_org_group(org):
+    counts = board.organization_counts()
+    used = OrganizationUnit.objects.filter(id__in=counts).order_by(Lower("name"))
+    for organization in used:
+        organization.display_name = organization.label or organization.name
+    return _select_multi_group("org", "Opdrachtgever", used, counts, set(org.public_ids), label_attr="display_name")
+
+
+def _board_ending_group(ending_within):
+    """The end-date windows. Checkboxes, so several can arrive; the view reads
+    the widest, which is what a set of nested windows means anyway."""
+    counts = board.ending_within_counts(ENDING_WITHIN_CHOICES)
     options = [{"value": "", "label": ""}]
-    selected = []
-    for colleague in Colleague.objects.filter(id__in=counts).order_by(Lower("name")):
-        value = str(colleague.public_id)
-        option = {"value": value, "label": colleague.name, "count": counts.get(colleague.id, 0)}
-        if value in selected_ids:
+    for months in ENDING_WITHIN_CHOICES:
+        option = {
+            "value": str(months),
+            "label": f"{months} maand" if months == 1 else f"{months} maanden",
+            "count": counts[months],
+        }
+        if ending_within == months:
             option["selected"] = True
-            selected.append(value)
         options.append(option)
     return {
         "type": "select-multi",
-        "name": "bm",
-        "label": "Business Manager",
+        "name": "eindigt",
+        "label": "Eindigt binnen",
         "options": options,
-        "selected_values": selected,
+        "selected_values": [str(ending_within)] if ending_within else [],
     }
 
 
@@ -970,62 +947,8 @@ def _board_filter_groups(org, labels, owners, ending_within):
     Only values that actually occur on the board: the full trees would offer
     hundreds of options that select nothing.
     """
-
-    selected_org_ids = set(org.public_ids)
-    counts = Counter(oid for oid in _board_assignments().values_list("organizations__id", flat=True) if oid is not None)
-    used_orgs = OrganizationUnit.objects.filter(id__in=counts).order_by(Lower("name"))
-
-    org_options = [{"value": "", "label": ""}]
-    org_selected = []
-    for organization in used_orgs:
-        value = str(organization.public_id)
-        option = {
-            "value": value,
-            "label": organization.label or organization.name,
-            "count": counts.get(organization.id, 0),
-        }
-        if value in selected_org_ids:
-            option["selected"] = True
-            org_selected.append(value)
-        org_options.append(option)
-
     groups = [_board_owner_group(owners), _board_gilde_group(labels)]
-    groups = [g for g in groups if g]
-    groups.append(
-        {
-            "type": "select-multi",
-            "name": "org",
-            "label": "Opdrachtgever",
-            "options": org_options,
-            "selected_values": org_selected,
-        }
-    )
-
-    # The shared sheet renders every group as checkboxes, so these windows can be
-    # ticked together; the view then reads the widest one, which is what a set of
-    # nested windows means anyway.
-    ending_options = [{"value": "", "label": ""}]
-    for months in ENDING_WITHIN_CHOICES:
-        value = str(months)
-        option = {
-            "value": value,
-            "label": f"{months} maand" if months == 1 else f"{months} maanden",
-            "count": _board_ending_count(months),
-        }
-        if ending_within == months:
-            option["selected"] = True
-        ending_options.append(option)
-    groups.append(
-        {
-            "type": "select-multi",
-            "name": "eindigt",
-            "label": "Eindigt binnen",
-            "options": ending_options,
-            "selected_values": [str(ending_within)] if ending_within else [],
-        }
-    )
-
-    return groups
+    return [g for g in groups if g] + [_board_org_group(org), _board_ending_group(ending_within)]
 
 
 @business_management_access_required
@@ -1033,10 +956,8 @@ def _board_filter_groups(org, labels, owners, ending_within):
 def bm_board_move(request, public_id):
     """Move one assignment to another status column (drag-and-drop target)."""
     assignment = get_object_or_404(Assignment, public_id=public_id)
-    # Any assignment on the board, not only your own: the board shows the whole
-    # team's pipeline, and a business manager covering for a colleague has to be
-    # able to move their card. Reaching this section is the gate; an assignment
-    # nobody owns is not on the board at all.
+    # Any card on the board, not only your own: covering for a colleague means
+    # moving their work too, and reaching this section is the gate.
     if assignment.owner_id is None:
         raise Http404
 

@@ -14,8 +14,6 @@
    overflow menu, and navigation is the last thing that may disappear. #}
   {% include "parts/business_management_tabs.html" %}
   <nldd-toolbar label="Weergave en filters">
-  {# Highest priority: switching between Bezetting and Bord is how you leave this
-   page, so it is the last thing that may move into a menu. #}
   {# Last to go: it is the way to every filter this page has. #}
   <nldd-toolbar-item slot="end" priority="3">
   <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filter" data-user-filter-open></nldd-button>
@@ -29,28 +27,7 @@
   {% endif %}
   </nldd-toolbar>
 </div>
-{# What is filtered right now, each one clickable to remove — same tokens and
-   dismiss hook as Bezetting and the list pages. #}
-{% if active_filters %}
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
-  {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
-      {% set values = active_filters.get(filter_group.name) %}
-      {% for selected_value in values or [] %}
-        {% for option in filter_group.options %}
-          {% if option.value == selected_value %}
-            <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
-          {% endif %}
-        {% endfor %}
-      {% endfor %}
-    {% endif %}
-  {% endfor %}
-  {# Clearing all filters belongs with the chips;
-               filter_interactions.js handles data-clear-all-filters. #}
-  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
-  </nldd-container>
-{% endif %}
+{% include "parts/active_filter_chips.html" %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% include "parts/bm_board_columns.html" %}
 </nldd-container>

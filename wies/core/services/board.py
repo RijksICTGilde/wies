@@ -12,6 +12,7 @@ any services, and stay in "Ingevuld" while a role is briefly vacant.
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 
@@ -19,6 +20,7 @@ from django.db.models import Prefetch
 from django.utils import timezone
 
 from wies.core.models import ASSIGNMENT_STATUS, Assignment, Service
+from wies.core.services.occupancy import GILDE_CATEGORY
 
 # An end date inside this window is "wrapping up": the business manager has to
 # think about an extension or a hand-off. Six weeks is enough lead time to act.
@@ -30,11 +32,6 @@ ENDING_WITHIN_CHOICES = (1, 2, 3)
 # A month is 30 days here. The filter is a coarse "roughly within N months", and
 # calendar-exact month arithmetic would not make the answer any more useful.
 DAYS_PER_MONTH = 30
-
-# The label category naming the gilde ("AI", "ICT"). Labels live on colleagues,
-# not on assignments, so a card's gilde is the one its team belongs to — the
-# same chips the Bezetting rows carry, kept in step with occupancy.GILDE_CATEGORY.
-GILDE_CATEGORY = "Subgroep"
 
 
 @dataclass
@@ -117,6 +114,49 @@ def build_board(
     return list(columns.values())
 
 
+def board_assignments():
+    """Everything the board can show: every assignment that has an owner."""
+    return Assignment.objects.filter(owner__isnull=False)
+
+
+def owner_counts() -> Counter:
+    """Cards per business manager, for the BM filter."""
+    return Counter(board_assignments().values_list("owner_id", flat=True))
+
+
+def organization_counts() -> Counter:
+    """Cards per client organisation, for the Opdrachtgever filter."""
+    return Counter(oid for oid in board_assignments().values_list("organizations__id", flat=True) if oid)
+
+
+def gilde_counts(category_id: int) -> Counter:
+    """Cards per gilde label, for the Subgroep filter.
+
+    Per assignment, not per person: two AI colleagues on one assignment are one
+    card, so the number beside a filter says how many cards it would leave.
+    """
+    pairs = (
+        board_assignments()
+        .filter(services__placements__colleague__labels__category_id=category_id)
+        .values_list("id", "services__placements__colleague__labels__id")
+        .distinct()
+    )
+    return Counter(label_id for _, label_id in pairs)
+
+
+def ending_within_counts(months_choices) -> dict[int, int]:
+    """Cards ending within each of ``months_choices``, in one pass."""
+    today = timezone.now().date()
+    cutoffs = {m: today + timedelta(days=DAYS_PER_MONTH * m) for m in months_choices}
+    ends = board_assignments().filter(end_date__gte=today).values_list("end_date", flat=True)
+    counts = dict.fromkeys(months_choices, 0)
+    for end in ends:
+        for months, cutoff in cutoffs.items():
+            if end <= cutoff:
+                counts[months] += 1
+    return counts
+
+
 def _assignments_for(
     org_ids: list[int] | None = None,
     label_ids: list[int] | None = None,
@@ -127,7 +167,7 @@ def _assignments_for(
     Only assignments that have an owner: a card names its business manager, and
     one without is not on anybody's pipeline.
     """
-    queryset = Assignment.objects.filter(owner__isnull=False)
+    queryset = board_assignments()
     if owner_ids:
         queryset = queryset.filter(owner_id__in=owner_ids)
     if org_ids:

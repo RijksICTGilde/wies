@@ -5,7 +5,7 @@
 
    `card` is a BoardCard from services/board.py. The stable id is what the drag
    layer moves and what an out-of-band swap targets. #}
-<nldd-card id="bm-card-{{ card.public_id }}" background="tinted" accessible-label="{{ card.name }}" data-board-card data-assignment-id="{{ card.public_id }}" draggable="true" href="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-get="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+<nldd-card role="listitem" id="bm-card-{{ card.public_id }}" background="tinted" accessible-label="{{ card.name }}" data-board-card data-assignment-id="{{ card.public_id }}" draggable="true" href="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-get="{{ url('bm-board') }}?opdracht={{ card.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML">
 <div class="bm-card">
   {# The handle is what starts a drag; the rest of the card stays a link, so a
      plain click still opens the panel (hx_link_guard.js holds back the href). #}
@@ -13,8 +13,21 @@
     <h3 class="bm-card__title">{{ card.name }}</h3>
     {# nldd-drag-handle-cell draws the grip itself (an inline SVG, not an icon
        name); it is a list cell, so it sits in its own wrapper here on a card. #}
-    <span class="bm-card__handle" data-board-handle>
-      <nldd-drag-handle-cell size="sm"></nldd-drag-handle-cell>
+    {# Our own grip, not nldd-drag-handle-cell: that renders a focusable button
+       announcing "druk spatie of enter om te verplaatsen", which is a promise
+       dragging cannot keep — it is mouse-only. That put a dead tab stop on every
+       card. The keyboard route is the side panel, named above the columns. #}
+    <span class="bm-card__handle"
+          data-board-handle
+          draggable="true"
+          aria-hidden="true">
+      <svg viewBox="0 0 10 16" width="10" height="16" focusable="false">
+        <g fill="currentColor">
+        <circle cx="2" cy="2" r="1.5" /><circle cx="8" cy="2" r="1.5" />
+        <circle cx="2" cy="8" r="1.5" /><circle cx="8" cy="8" r="1.5" />
+        <circle cx="2" cy="14" r="1.5" /><circle cx="8" cy="14" r="1.5" />
+        </g>
+      </svg>
     </span>
   </div>
   {# One meta line instead of a list of labelled rows: client and period are
@@ -27,14 +40,10 @@
          name rather than sitting beside it, so nldd-avatar's own label off
          `name` is what a screen reader gets.
 
-         nldd-tooltip rather than a title of our own: a native tooltip waits
-         about a second and cannot be hurried, which is slow for something you
-         point at precisely to read. instant, like the privacy chip. #}
-      <nldd-tooltip text="{{ card.owner_name }}" timing="instant">
+         nldd-avatar brings its own tooltip, so it needs no wrapper of ours. #}
       <span class="bm-card__owner">
         <nldd-avatar size="20" name="{{ card.owner_name }}"></nldd-avatar>
       </span>
-      </nldd-tooltip>
     {% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}

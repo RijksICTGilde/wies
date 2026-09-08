@@ -682,6 +682,20 @@
     return panel ? findScroller(panel) : null;
   }
 
+  // A filter change swaps the results in silence; say what is left (WCAG 4.1.3).
+  function setupFilterAnnounce() {
+    document.addEventListener("htmx:afterSettle", (e) => {
+      const target = e.detail?.target;
+      if (!target || target.id !== "results") return;
+      const live = document.getElementById("wies-live");
+      if (!live) return;
+      const cards = target.querySelectorAll("[data-board-card]").length;
+      const rows = target.querySelectorAll(".bezetting-row").length;
+      const n = cards || rows;
+      live.textContent = n ? `${n} resultaten` : "Geen resultaten";
+    });
+  }
+
   function setupFilterScrollPreserve() {
     let saved = null;
     document.addEventListener("htmx:beforeSwap", (e) => {
@@ -723,6 +737,7 @@
     setupTokenDismiss();
     setupClearAllFilters();
     setupStatusCards();
+    setupFilterAnnounce();
     setupFilterScrollPreserve();
     setupFilterRows();
     setupOrgQuickOptions();

@@ -1,8 +1,5 @@
-// Shows the closing-reason field only while the status is "Gesloten".
-//
-// The reason explains a status, so on anything else it is a question nobody is
-// answering. Server-side rendering cannot decide this: the status is picked in
-// the same form, so the field has to follow the dropdown as it changes.
+// Shows the closing-reason field only while the status is "Gesloten". The
+// status is picked in the same form, so the server cannot decide this.
 (function () {
   "use strict";
 
