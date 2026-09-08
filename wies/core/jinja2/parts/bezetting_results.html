@@ -61,6 +61,11 @@
   <li>
     <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Alle filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
   </li>
+  {% if primary_button %}
+    {# Pushed to the end of the row: the cards and the sheet narrow what you
+       see, this adds to it, so it does not belong in the same cluster. #}
+    <li class="bezetting-toolbar__action">{% include "parts/primary_button.html" %}</li>
+  {% endif %}
 </ul>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Tijdlijn #}

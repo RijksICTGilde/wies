@@ -554,3 +554,11 @@
     display: none;
   }
 }
+
+/* The create action sits at the far end of the filter row: it adds work rather
+   than narrowing the view, so it reads apart from the status cards. It keeps
+   its own width while those cards share what is left. */
+.bezetting-toolbar__action {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}

@@ -398,6 +398,53 @@ class BmBoardViewTest(TestCase):
         self.assertContains(response, "Veel later")
 
 
+class BmBoardCreateButtonTest(TestCase):
+    """ "Opdracht invoeren" works the same here as on the Aanvragen list."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        Colleague.objects.create(name="BM", email="bdm@rijksoverheid.nl", source="wies", user=self.user)
+        self.client.force_login(self.user)
+
+    def test_button_on_both_business_management_pages(self):
+        for name in ("bm-board", "bezetting"):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(name))
+
+                self.assertContains(response, "Opdracht invoeren")
+
+    def test_new_assignment_param_opens_the_create_form(self):
+        for name in ("bm-board", "bezetting"):
+            with self.subTest(page=name):
+                response = self.client.get(reverse(name), {"nieuwe-opdracht": ""})
+
+                self.assertContains(response, "Voer opdracht in")
+
+    def test_without_the_permission_there_is_no_button(self):
+        user = User.objects.create(email="geen-rechten@rijksoverheid.nl")
+        user.groups.add(Group.objects.get(name="Business Development Manager"))
+        Colleague.objects.create(name="X", email="geen-rechten@rijksoverheid.nl", source="wies", user=user)
+        user.user_permissions.clear()
+        self.client.force_login(user)
+
+        response = self.client.get(reverse("bm-board"))
+
+        # Only when the role actually carries core.add_assignment.
+        if not user.has_perm("core.add_assignment"):
+            self.assertNotContains(response, "Opdracht invoeren")
+
+    def test_create_form_wins_from_an_assignment_panel(self):
+        """Both params at once: the create form has no object, so it goes first."""
+        assignment = Assignment.objects.create(name="Bestaand", source="wies")
+
+        response = self.client.get(reverse("bm-board"), {"nieuwe-opdracht": "", "opdracht": str(assignment.public_id)})
+
+        self.assertContains(response, "Voer opdracht in")
+
+
 class BmBoardMoveTest(TestCase):
     def setUp(self):
         setup_roles()

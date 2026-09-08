@@ -108,6 +108,13 @@
    the grip, so no event's composed path held the grip and a drag from it could
    not be told from a click on the card. Its own stacking context lifts the grip
    back above that link. */
+/* The create action sits at the far end of the filter row: it adds work rather
+   than narrowing the view, so it reads apart from the filters. */
+.bm-board__filter-action {
+  flex: 0 0 auto;
+  margin-inline-start: auto;
+}
+
 .bm-card__handle {
   flex: none;
   position: relative;
@@ -158,8 +165,9 @@
 }
 
 /* The board reuses Bezetting's toolbar row, whose items share the width between
-   them. Here it holds one button, which should keep its own width and sit at
-   the start rather than stretch across the page. */
-.bm-board__filter-item {
+   them because that page has status cards to spread. This row holds two
+   buttons, so both keep their own width; the rule there hands that to the last
+   item only, which since the create action is no longer the filter button. */
+.bezetting-toolbar > .bm-board__filter-item {
   flex: 0 0 auto;
 }

@@ -621,8 +621,12 @@ def bezetting(request):
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
-    panel_data = None
-    if placement_id:
+    # The create form takes precedence: it is the only panel here without an
+    # object, so it is checked before the id lookups.
+    panel_data = _assignment_create_panel(request)
+    if panel_data is not None:
+        pass
+    elif placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
@@ -718,6 +722,7 @@ def bezetting(request):
         # sheet. Values, not groups: two labels from one group are two filters
         # to the reader.
         "active_filter_values": len(merk.active_values) + len(labels.active_values),
+        "primary_button": _assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
@@ -736,6 +741,40 @@ def bezetting(request):
 BOARD_GILDE_CATEGORY = "Subgroep"
 
 
+def _assignment_create_button(request):
+    """The "Opdracht invoeren" action, or None without the permission.
+
+    Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
+    entering an assignment works identically wherever a business manager is.
+    """
+    if not request.user.has_perm("core.add_assignment"):
+        return None
+    return {
+        "button_text": "Opdracht invoeren",
+        "attrs": {
+            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+            "hx-target": "#side-panel-content",
+            "hx-swap": "innerHTML",
+            "hx-push-url": "true",
+        },
+    }
+
+
+def _assignment_create_panel(request):
+    """panel_data for the empty create form, or None when it does not apply."""
+    if request.GET.get("nieuwe-opdracht") is None or not request.user.has_perm("core.add_assignment"):
+        return None
+    from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
+        assignment_create_specs,
+    )
+
+    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    # Prefill: the creator is usually the BM themselves.
+    if getattr(request.user, "colleague", None):
+        initial["owner"] = request.user.colleague
+    return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
 @business_management_access_required
 def bm_board(request):
     """ "Bord" — the business manager's own assignments, in a column per status.
@@ -747,8 +786,8 @@ def bm_board(request):
     """
     # Side panel: reuse the shared machinery, exactly like Bezetting.
     assignment_id = request.GET.get("opdracht")
-    panel_data = None
-    if assignment_id:
+    panel_data = _assignment_create_panel(request)
+    if panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
             panel_data = _build_assignment_panel_data(assignment, request)
@@ -792,6 +831,7 @@ def bm_board(request):
         # is empty for a reason the page should say out loud.
         "has_owner": owner is not None,
         "board_is_empty": not any(column.cards for column in columns),
+        "primary_button": _assignment_create_button(request),
     }
 
     if "HX-Request" in request.headers:
