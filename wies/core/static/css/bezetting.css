@@ -535,8 +535,8 @@
 
 /* Merk and expertise chips on a row. They sit after the role and give way
    before it does: the name identifies the person, the role says what they do,
-   and the chips only explain why a filtered view includes them. Hidden below md
-   — the name cell is 200px there and the chips would take all of it. */
+   and the chips only explain why a filtered view includes them. Hidden once the
+   name cell drops to 200px, where they would take all of it. */
 .bezetting-person__labels {
   display: flex;
   gap: var(--primitives-space-4);
@@ -549,7 +549,10 @@
   flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
+/* Same breakpoint as --bezetting-side-width above: until the name cell actually
+   shrinks there is room to spare, and hiding them at 1200px dropped the gilde
+   from rows whose cell was still 360px wide. */
+@media (max-width: 800px) {
   .bezetting-person__labels {
     display: none;
   }
