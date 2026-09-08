@@ -24,17 +24,26 @@
     {%- if card.owner_name %}
       {# The avatar instead of the name: on a card this narrow the full name ate
          the line the client and period share. NOT decorative — it replaces the
-         name rather than sitting beside it, so nldd-avatar's own accessible
-         label off `name` is what a screen reader gets; title shows it on hover. #}
-      <span class="bm-card__owner" title="{{ card.owner_name }}">
+         name rather than sitting beside it, so nldd-avatar's own label off
+         `name` is what a screen reader gets, and what the browser shows on
+         hover. No title of our own on top of it: that drew a second tooltip
+         beside the first. #}
+      <span class="bm-card__owner">
         <nldd-avatar size="20" name="{{ card.owner_name }}"></nldd-avatar>
       </span>
     {% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
+      {# One of the two, not both: "t/m sep 2026" and "nog 2 wk" are the same
+         fact. The countdown wins while it is running out — it says how urgent
+         this is without making you work out the date — and the date takes over
+         once that is no longer the question. #}
       <span class="bm-card__period">
-        {{- 't/m ' ~ card.end_date|datum_nl("b Y") -}}
-        {%- if card.ends_soon %} · nog {{ card.weeks_until_end }} wk{% endif -%}
+        {%- if card.ends_soon -%}
+          nog {{ card.weeks_until_end }} wk
+        {%- else -%}
+          t/m {{ card.end_date|datum_nl("b Y") }}
+        {%- endif -%}
       </span>
     {%- endif -%}
   </p>

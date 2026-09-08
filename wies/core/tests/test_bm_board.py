@@ -383,8 +383,10 @@ class BmBoardViewTest(TestCase):
 
         response = self.client.get(self.url)
 
-        self.assertContains(response, f'title="{self.owner.name}"')
+        # nldd-avatar's own label carries the name, on hover and for a screen
+        # reader; a title of ours on top of it drew a second tooltip.
         self.assertContains(response, f'<nldd-avatar size="20" name="{self.owner.name}">')
+        self.assertNotContains(response, f'title="{self.owner.name}"')
 
     def test_ending_filter_narrows_the_board(self):
         today = timezone.now().date()
