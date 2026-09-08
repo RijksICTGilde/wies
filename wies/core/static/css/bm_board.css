@@ -31,7 +31,7 @@
   margin: 0;
   font-size: var(--primitives-font-size-16, 1rem);
   font-weight: 600;
-  color: var(--components-text-default, inherit);
+  color: var(--semantics-content-color);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -60,7 +60,7 @@
 .bm-board__empty {
   margin: 0;
   padding: var(--primitives-space-8, 8px);
-  color: var(--components-text-subtle, inherit);
+  color: var(--semantics-content-secondary-color);
   font-size: var(--primitives-font-size-14, 0.875rem);
 }
 
@@ -92,7 +92,7 @@
   font-size: 0.875rem;
   font-weight: 600;
   line-height: 1.35;
-  color: var(--components-text-default, inherit);
+  color: var(--semantics-content-color);
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -131,7 +131,7 @@
   margin: 0;
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--components-text-subtle, inherit);
+  color: var(--semantics-content-secondary-color);
 }
 
 /* Generated, so it never shows on a card that carries only one of the two.
@@ -158,7 +158,7 @@
 .bm-card__seats {
   font-size: 0.75rem;
   line-height: 1.4;
-  color: var(--components-text-subtle, inherit);
+  color: var(--semantics-content-secondary-color);
 }
 
 /* An assignment wrapping up. The text says "nog N wk" too, so the colour is
@@ -172,9 +172,17 @@
   margin: 2px 0 0;
 }
 
+/* An assignment wrapping up. The same warning colour the Bezetting bars use, so
+   the two pages flag the same thing the same way, and it is a colour that
+   actually exists: --components-text-warning did not, so it fell back to
+   `inherit` and left the weight doing all the work — the reason a card that
+   ends soon looked merely bolder than its neighbours.
+
+   The weight goes with it: the text says "nog N wk" and the colour carries the
+   warning, so bold was a third signal for one fact (WCAG 1.4.1 is satisfied by
+   the text). */
 .bm-card__period--ending {
-  color: var(--components-text-warning, inherit);
-  font-weight: 600;
+  color: var(--primitives-color-warning-750);
 }
 
 /* The board reuses Bezetting's toolbar row, whose items share the width between
