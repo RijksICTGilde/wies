@@ -48,7 +48,12 @@
    No chips here. What is selected lives in the sheet, and the button counts it;
    repeating each selection as a token beside the button is what forced the row
    to wrap the moment a filter went on. #}
-<ul class="bezetting-toolbar" aria-label="Filters">
+{# The section tabs ride along on this row rather than sitting above it: they
+   are controls for the same view, and a second band cost height on every page.
+   Inside #results because nldd-container's shadow root wraps its slot, so a
+   child of it can never join a grid defined outside. #}
+<ul class="bezetting-toolbar" aria-label="Weergave en filters">
+  <li class="bezetting-toolbar__nav">{% include "parts/business_management_tabs.html" %}</li>
   {# Short captions: the row shrinks these three before anything else, and the
      longer phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to
      an unreadable stub well before a laptop's width ran out. The card's

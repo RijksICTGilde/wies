@@ -562,3 +562,18 @@
   flex: 0 0 auto;
   margin-inline-start: auto;
 }
+
+/* The section tabs share the filter row. They keep their own width; the status
+   cards beside them are what gives when the row runs out of space. */
+.bezetting-toolbar > .bezetting-toolbar__nav {
+  flex: 0 0 auto;
+  margin-inline-end: var(--primitives-space-8, 8px);
+}
+
+/* Narrow: let the row wrap instead of crushing the cards, so the tabs keep a
+   full line of their own. */
+@media (max-width: 900px) {
+  .bezetting-toolbar {
+    flex-wrap: wrap;
+  }
+}
