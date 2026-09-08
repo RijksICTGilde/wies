@@ -45,6 +45,38 @@ def _placement(colleague, name, start, end, role=None):
     )
 
 
+class BezettingStatusInSheetTest(TestCase):
+    """The status facet also lives in the filter sheet.
+
+    On a narrow window the summary cards are hidden (bezetting.css), and a
+    filter you cannot reach is a filter you cannot switch off.
+    """
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.user)
+
+    def test_sheet_offers_every_summary_card_as_a_filter(self):
+        response = self.client.get(self.url)
+
+        self.assertContains(response, "Op de bank")
+        self.assertContains(response, "Volledig ingezet")
+        self.assertContains(response, "Eindigt binnen 3 maanden")
+
+    def test_narrow_button_counts_the_statuses_the_wide_one_leaves_out(self):
+        """Wide, a pressed card shows its own state; narrow it is hidden, so the
+        button is the only thing left that can report it."""
+        response = self.client.get(self.url, {"status": "bench"})
+        body = response.content.decode()
+
+        assert 'text="Alle filters"' in body
+        assert 'text="Filters (1)"' in body
+
+
 class BezettingAuthTest(TestCase):
     def setUp(self):
         setup_roles()

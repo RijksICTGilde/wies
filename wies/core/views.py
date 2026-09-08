@@ -94,6 +94,9 @@ from .services.occupancy import (
 from .services.occupancy import (
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
+    STATUS_BENCH,
+    STATUS_ENDS_SOON,
+    STATUS_FULL,
     STATUS_VALUES,
     colleague_occupancy,
     row_has_status,
@@ -690,6 +693,10 @@ def bezetting(request):
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
     filter_groups = _bezetting_filter_groups(merk, labels, labels_by_category)
+    # Status also lives in the sheet, not only on the cards: on a narrow window
+    # the cards are hidden, and a filter you cannot reach is a filter you cannot
+    # switch off.
+    filter_groups.insert(0, _bezetting_status_group(selected_statuses, bench_count, full_count, ends_soon_count))
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
@@ -739,7 +746,12 @@ def bezetting(request):
         # could already see was applied — and read as "(1)" over an untouched
         # sheet. Values, not groups: two labels from one group are two filters
         # to the reader.
+        #
+        # The statuses ride along in a data attribute instead: once the viewport
+        # hides the cards they are no longer visible on the row, and then the
+        # button is the only thing that can report them (bezetting.css).
         "active_filter_values": len(merk.active_values) + len(labels.active_values),
+        "hidden_filter_values": len(selected_statuses),
         "primary_button": _assignment_create_button(request),
     }
 
@@ -1051,6 +1063,30 @@ def _bezetting_apply_filters(qs, merk, labels_by_category, *, exclude_filter=Non
     if exclude_filter != "merk" and merk.ids:
         qs = qs.filter(suborganization_id__in=merk.ids)
     return qs.distinct()
+
+
+def _bezetting_status_group(selected, bench_count, full_count, ends_soon_count):
+    """The three summary cards as a filter group, for when they do not fit.
+
+    Same values and counts as the cards, so toggling either keeps one state.
+    """
+    options = [{"value": "", "label": ""}]
+    for value, label, count in (
+        (STATUS_BENCH, "Op de bank", bench_count),
+        (STATUS_FULL, "Volledig ingezet", full_count),
+        (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", ends_soon_count),
+    ):
+        option = {"value": value, "label": label, "count": count}
+        if value in selected:
+            option["selected"] = True
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "status",
+        "label": "Status",
+        "options": options,
+        "selected_values": list(selected),
+    }
 
 
 def _bezetting_filter_groups(merk, labels, labels_by_category):

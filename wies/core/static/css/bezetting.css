@@ -570,10 +570,25 @@
   margin-inline-end: var(--primitives-space-8, 8px);
 }
 
-/* Narrow: let the row wrap instead of crushing the cards, so the tabs keep a
-   full line of their own. */
-@media (max-width: 900px) {
-  .bezetting-toolbar {
-    flex-wrap: wrap;
+/* Below this the row cannot hold everything: the cards shrink to "14 c" and the
+   Filters label breaks over two lines. The cards go first — every status they
+   carry is also a group in the sheet, so nothing becomes unreachable, and the
+   button counts them once they are hidden. Navigation and the way back to the
+   filters are what must survive. */
+.bezetting-toolbar__filters-narrow {
+  display: none;
+}
+
+@media (max-width: 1200px) {
+  .bezetting-toolbar > li:has(.bezetting-stat) {
+    display: none;
+  }
+
+  .bezetting-toolbar__filters-wide {
+    display: none;
+  }
+
+  .bezetting-toolbar__filters-narrow {
+    display: inline-flex;
   }
 }
