@@ -25,12 +25,16 @@
       {# The avatar instead of the name: on a card this narrow the full name ate
          the line the client and period share. NOT decorative — it replaces the
          name rather than sitting beside it, so nldd-avatar's own label off
-         `name` is what a screen reader gets, and what the browser shows on
-         hover. No title of our own on top of it: that drew a second tooltip
-         beside the first. #}
+         `name` is what a screen reader gets.
+
+         nldd-tooltip rather than a title of our own: a native tooltip waits
+         about a second and cannot be hurried, which is slow for something you
+         point at precisely to read. instant, like the privacy chip. #}
+      <nldd-tooltip text="{{ card.owner_name }}" timing="instant">
       <span class="bm-card__owner">
         <nldd-avatar size="20" name="{{ card.owner_name }}"></nldd-avatar>
       </span>
+      </nldd-tooltip>
     {% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
