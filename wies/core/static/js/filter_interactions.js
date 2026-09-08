@@ -312,6 +312,15 @@
         `[data-status-card][data-status="${CSS.escape(value)}"]`,
       );
       if (card) setStatusCard(card, false);
+      // The card is what normally carries the checkbox, but it is not on the
+      // row at every width — and the chip that removes the filter is. Clear the
+      // input directly too, or dismissing the chip changed nothing.
+      document
+        .querySelectorAll(`input[name="status"][value="${CSS.escape(value)}"]`)
+        .forEach((input) => {
+          input.checked = false;
+          input.removeAttribute("checked");
+        });
       dispatchFormChange(form);
       return;
     }

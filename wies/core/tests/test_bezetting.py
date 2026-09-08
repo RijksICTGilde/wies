@@ -77,6 +77,30 @@ class BezettingStatusInSheetTest(TestCase):
         assert 'text="Filters (1)"' in body
 
 
+class BezettingFilterChipsTest(TestCase):
+    """An active filter is named under the toolbar, not just counted on it."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.user)
+
+    def test_no_chips_without_a_filter(self):
+        response = self.client.get(self.url)
+
+        self.assertNotContains(response, 'data-wies-dismiss="filter"')
+
+    def test_active_status_gets_a_dismissable_chip(self):
+        response = self.client.get(self.url, {"status": "bench"})
+
+        self.assertContains(response, 'data-wies-dismiss="filter"')
+        self.assertContains(response, 'data-filter-value="bench"')
+        self.assertContains(response, "Op de bank")
+
+
 class BezettingAuthTest(TestCase):
     def setUp(self):
         setup_roles()

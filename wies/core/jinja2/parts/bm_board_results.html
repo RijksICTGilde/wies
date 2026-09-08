@@ -29,6 +29,25 @@
   {% endif %}
   </nldd-toolbar>
 </div>
+{# What is filtered right now, each one clickable to remove — same tokens and
+   dismiss hook as Bezetting and the list pages. #}
+{% if active_filters %}
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% for selected_value in values or [] %}
+        {% for option in filter_group.options %}
+          {% if option.value == selected_value %}
+            <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+  </nldd-container>
+{% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% include "parts/bm_board_columns.html" %}
 </nldd-container>

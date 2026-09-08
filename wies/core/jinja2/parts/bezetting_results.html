@@ -45,9 +45,8 @@
    every other filter. They are one set of controls, so they get one row and
    equal treatment rather than a block of cards with a button beside it.
 
-   No chips here. What is selected lives in the sheet, and the button counts it;
-   repeating each selection as a token beside the button is what forced the row
-   to wrap the moment a filter went on. #}
+   The chips for what is selected sit UNDER this row, not beside the button:
+   next to it they made the row wrap the moment a filter went on. #}
 {# One toolbar for the whole section: navigation, the status filters, the sheet
    and the create action. nldd-toolbar moves what does not fit into an overflow
    menu, which is what makes this work on a phone — a hand-rolled row could only
@@ -97,6 +96,27 @@
   {% endif %}
   </nldd-toolbar>
 </div>
+{# What is filtered right now, each one clickable to remove. The counter on the
+   button says how many there are; these say which, and are the shortest way to
+   undo one. Same token and dismiss hook as the list pages, so
+   filter_interactions.js clears them without knowing about this page. #}
+{% if active_filters %}
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% for selected_value in values or [] %}
+        {% for option in filter_group.options %}
+          {% if option.value == selected_value %}
+            <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+          {% endif %}
+        {% endfor %}
+      {% endfor %}
+    {% endif %}
+  {% endfor %}
+  </nldd-container>
+{% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Tijdlijn #}
 <div class="bezetting-timeline">
