@@ -367,6 +367,7 @@ def assignment_edit_specs(assignment, user, only=None):
         AssignmentEditables.organizations,
         AssignmentEditables.period,
         AssignmentEditables.owner,
+        AssignmentEditables.status,
     ]
     if only is not None:
         candidates = [spec for spec in candidates if spec.name == only]

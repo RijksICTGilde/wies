@@ -1,7 +1,7 @@
 from datetime import timedelta
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -18,7 +18,7 @@ from wies.core.models import (
     Service,
 )
 from wies.core.roles import setup_roles
-from wies.core.services.assignments import create_assignment_from_form
+from wies.core.services.assignments import assignment_edit_specs, create_assignment_from_form
 from wies.core.services.board import ENDING_SOON_WEEKS, build_board, move_assignment
 
 User = get_user_model()
@@ -537,6 +537,67 @@ class AssignmentCreateStatusTest(TestCase):
         response = self.client.get(reverse("assignment-list"), {"opdracht": str(assignment.public_id)})
 
         self.assertNotContains(response, 'text="Status"')
+
+    def test_status_is_editable_from_the_panel(self):
+        assignment = Assignment.objects.create(name="Te verplaatsen", owner=self.owner, source="wies", status="LEAD")
+
+        specs = assignment_edit_specs(assignment, self.user)
+
+        assert "status" in [spec.name for _, spec, _ in specs]
+
+    def test_editing_the_status_moves_the_card(self):
+        assignment = Assignment.objects.create(name="Te verplaatsen", owner=self.owner, source="wies", status="LEAD")
+
+        response = self.client.post(
+            reverse("assignment-edit", args=[assignment.public_id]),
+            {
+                "name": assignment.name,
+                "extra_info": "",
+                "org-TOTAL_FORMS": "1",
+                "org-0-organization": str(self.org.public_id),
+                "org-0-role": "PRIMARY",
+                "owner": str(self.owner.public_id),
+                "status": "INGEVULD",
+                "terug_url": reverse("bm-board"),
+            },
+        )
+
+        assert response.status_code in (204, 200)
+        assignment.refresh_from_db()
+        assert assignment.status == "INGEVULD"
+        assert _card_names(build_board(self.owner), "INGEVULD") == ["Te verplaatsen"]
+
+    def test_editing_from_the_board_reloads_it(self):
+        """A panel-only swap would leave the columns on their pre-save counts."""
+        assignment = Assignment.objects.create(name="Te verplaatsen", owner=self.owner, source="wies", status="LEAD")
+
+        response = self.client.post(
+            reverse("assignment-edit", args=[assignment.public_id]),
+            {
+                "name": assignment.name,
+                "extra_info": "",
+                "org-TOTAL_FORMS": "1",
+                "org-0-organization": str(self.org.public_id),
+                "org-0-role": "PRIMARY",
+                "owner": str(self.owner.public_id),
+                "status": "INGEVULD",
+                "terug_url": reverse("bm-board"),
+            },
+        )
+
+        assert response.headers.get("HX-Redirect", "").startswith(reverse("bm-board"))
+
+    def test_status_is_not_editable_without_business_management(self):
+        """Someone who may edit the assignment still cannot move it on the board."""
+        editor = User.objects.create(email="editor@rijksoverheid.nl")
+        editor.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        editor = User.objects.get(pk=editor.pk)  # drop the permission cache
+        assignment = Assignment.objects.create(name="Van een ander", owner=self.owner, source="wies")
+
+        names = [spec.name for _, spec, _ in assignment_edit_specs(assignment, editor)]
+
+        assert names, "editor should be able to edit something at all"
+        assert "status" not in names
 
     def test_without_a_status_it_falls_back_to_the_model_default(self):
         """Callers that pass nothing still get an assignment on the board."""

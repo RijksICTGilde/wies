@@ -159,6 +159,17 @@ def update_assignment_name(user, a):
     return _can_edit_assignment_text_field(user, a)
 
 
+@rule(UPDATE, AssignmentEditables.status)
+def update_assignment_status(user, a):
+    """Only the Business management section, which is the only place a status
+    means anything: it is the column an assignment sits in on the board.
+
+    Narrower than the whole-object rule on purpose — a placed colleague who may
+    edit the description has no business moving work through the pipeline.
+    """
+    return can_access_business_management(user) and has_permission(UPDATE, a, user)
+
+
 @rule(UPDATE, ServiceEditables.description)
 def update_service_description(user, s):
     """Assignment owner (BM) or the consultant placed on this specific service."""

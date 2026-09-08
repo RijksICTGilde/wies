@@ -169,6 +169,21 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
+def _panel_return_response(path):
+    """Send the client back to ``path`` after a panel form saved.
+
+    Normally that is a panel-only swap, which keeps the page behind it intact.
+    The board is the exception: its columns ARE what a status change moves, so a
+    swap that leaves them untouched would show the counts from before the save.
+    """
+    response = HttpResponse(status=204)
+    if path.startswith(reverse("bm-board")):
+        response["HX-Redirect"] = path
+    else:
+        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
 def _is_side_panel_request(request):
     """True for the HTMX requests that render a panel partial.
 
@@ -4664,9 +4679,7 @@ def assignment_edit_view(request, public_id):
     with transaction.atomic():
         save_edit_specs(request, specs, form.cleaned_data)
 
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _panel_return_response(return_path)
 
 
 @require_POST
@@ -4709,16 +4722,7 @@ def assignment_create_sheet(request):
             f'Opdracht "{assignment.name}" is aangemaakt.',
             extra_tags=f"link:{path}|Bekijk opdracht",
         )
-        response = HttpResponse(status=204)
-        # Swapping only the panel leaves the page behind it on its old content.
-        # That is fine for a list, where the panel is the detail of what you were
-        # already looking at, but the board would keep showing the column counts
-        # from before the assignment existed — so there, navigate for real.
-        if return_to.startswith(reverse("bm-board")):
-            response["HX-Redirect"] = path
-        else:
-            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
-        return response
+        return _panel_return_response(path)
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised
     # return address, so terug_url survives a failed submit.
