@@ -172,19 +172,6 @@
   margin: 2px 0 0;
 }
 
-/* An assignment wrapping up. The same warning colour the Bezetting bars use, so
-   the two pages flag the same thing the same way, and it is a colour that
-   actually exists: --components-text-warning did not, so it fell back to
-   `inherit` and left the weight doing all the work — the reason a card that
-   ends soon looked merely bolder than its neighbours.
-
-   The weight goes with it: the text says "nog N wk" and the colour carries the
-   warning, so bold was a third signal for one fact (WCAG 1.4.1 is satisfied by
-   the text). */
-.bm-card__period--ending {
-  color: var(--primitives-color-warning-750);
-}
-
 /* The board reuses Bezetting's toolbar row, whose items share the width between
    them because that page has status cards to spread. This row holds two
    buttons, so both keep their own width; the rule there hands that to the last

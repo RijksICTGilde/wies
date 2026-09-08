@@ -32,7 +32,7 @@
     {% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
-      <span class="bm-card__period{{ ' bm-card__period--ending' if card.ends_soon else '' }}">
+      <span class="bm-card__period">
         {{- 't/m ' ~ card.end_date|datum_nl("b Y") -}}
         {%- if card.ends_soon %} · nog {{ card.weeks_until_end }} wk{% endif -%}
       </span>
