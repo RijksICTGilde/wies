@@ -630,6 +630,24 @@ class AssignmentCreateStatusTest(TestCase):
         self.assertContains(response, "Reden van sluiten")
         self.assertContains(response, "Niet ingevuld")
 
+    def test_reason_field_starts_hidden_while_the_assignment_is_open(self):
+        """The field is rendered but hidden; JS reveals it when you pick Gesloten."""
+        assignment = Assignment.objects.create(name="Loopt nog", owner=self.owner, source="wies", status="OPEN")
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id), "bewerken": "1"})
+
+        self.assertContains(response, "data-closing-reason-field")
+        self.assertContains(response, "hidden")
+
+    def test_reason_field_starts_visible_on_a_closed_assignment(self):
+        assignment = Assignment.objects.create(name="Afgerond", owner=self.owner, source="wies", status="GESLOTEN")
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id), "bewerken": "1"})
+        body = response.content.decode()
+        wrapper = body[body.index("data-closing-reason-field") : body.index("data-closing-reason-field") + 60]
+
+        assert "hidden" not in wrapper
+
     def test_closing_reason_is_saved_from_the_edit_form(self):
         assignment = Assignment.objects.create(name="Te sluiten", owner=self.owner, source="wies", status="OPEN")
 

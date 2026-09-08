@@ -37,6 +37,9 @@
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
     <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
+    {# The assignment edit panel opens from several pages, so its closing-reason
+       toggle loads here rather than per page. #}
+    <script defer src="{{ app_asset('js/assignment_closing_reason.js') }}"></script>
     <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
     <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
     {# Not just behind show_onboarding: the "Toon meer" handler is delegated on
