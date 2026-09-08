@@ -80,6 +80,11 @@
       ("Plaatsingsdatum", "created_at"),
       ("Business Manager", "owner"),
     ] %}
+    {# Status is the board's column, so it is only meaningful — and only shown —
+       inside Business management. #}
+    {% if panel_data.show_status %}
+      {% set _rows = _rows + [("Status", "status")] %}
+    {% endif %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
       {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
@@ -88,7 +93,9 @@
         <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell>
-        {% if row_kind == "source" %}
+        {% if row_kind == "status" %}
+          {{ panel_data.assignment.get_status_display() }}
+        {% elif row_kind == "source" %}
           {% if panel_data.assignment.source_url %}
             <a href="{{ panel_data.assignment.source_url }}" target="_blank">
             {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon name="square-arrow-right-top" size="16"></nldd-icon></a>

@@ -223,6 +223,9 @@ def _build_assignment_panel_data(assignment, request):
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
+        # The status drives the BM board's columns and means nothing outside that
+        # section, so only the people who work there see it.
+        "show_status": can_access_business_management(request.user),
         "organization_count": assignment.organization_relations.count(),
         # Read-only display context: per-field inline edit was replaced by the
         # edit child sheet, so the panel shows values directly.
@@ -4707,7 +4710,14 @@ def assignment_create_sheet(request):
             extra_tags=f"link:{path}|Bekijk opdracht",
         )
         response = HttpResponse(status=204)
-        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+        # Swapping only the panel leaves the page behind it on its old content.
+        # That is fine for a list, where the panel is the detail of what you were
+        # already looking at, but the board would keep showing the column counts
+        # from before the assignment existed — so there, navigate for real.
+        if return_to.startswith(reverse("bm-board")):
+            response["HX-Redirect"] = path
+        else:
+            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
         return response
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised

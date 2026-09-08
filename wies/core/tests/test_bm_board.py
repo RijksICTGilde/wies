@@ -495,6 +495,49 @@ class AssignmentCreateStatusTest(TestCase):
         assert _card_names(columns, "LEAD") == ["Nieuwe lead"]
         assert _card_names(columns, "OPEN") == []
 
+    def test_creating_from_the_board_reloads_the_page(self):
+        """A panel-only swap would leave the columns on their old counts."""
+        response = self._create("Nieuwe lead", "LEAD")
+
+        assert response.headers.get("HX-Redirect", "").startswith(reverse("bm-board"))
+        assert "HX-Location" not in response.headers
+
+    def test_creating_from_the_list_still_swaps_only_the_panel(self):
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Via de lijst",
+                "extra_info": "",
+                "org-TOTAL_FORMS": "1",
+                "org-0-organization": str(self.org.public_id),
+                "org-0-role": "PRIMARY",
+                "owner": str(self.owner.public_id),
+                "status": "LEAD",
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+
+        assert "HX-Location" in response.headers
+        assert "HX-Redirect" not in response.headers
+
+    def test_status_shows_in_the_panel_for_business_management(self):
+        assignment = Assignment.objects.create(name="Met status", owner=self.owner, source="wies", status="LEAD")
+
+        response = self.client.get(reverse("bm-board"), {"opdracht": str(assignment.public_id)})
+
+        self.assertContains(response, 'text="Status"')
+        self.assertContains(response, "Lead")
+
+    def test_status_stays_hidden_outside_business_management(self):
+        assignment = Assignment.objects.create(name="Met status", owner=self.owner, source="wies", status="LEAD")
+        consultant = User.objects.create(email="consultant@rijksoverheid.nl")
+        consultant.groups.add(Group.objects.get(name="Consultant"))
+        self.client.force_login(consultant)
+
+        response = self.client.get(reverse("assignment-list"), {"opdracht": str(assignment.public_id)})
+
+        self.assertNotContains(response, 'text="Status"')
+
     def test_without_a_status_it_falls_back_to_the_model_default(self):
         """Callers that pass nothing still get an assignment on the board."""
         assignment = create_assignment_from_form(name="Zonder status", owner=self.owner)
