@@ -574,6 +574,27 @@
    carry is also a group in the sheet, so nothing becomes unreachable, and the
    button counts them once they are hidden. Navigation and the way back to the
    filters are what must survive. */
-/* No breakpoint of our own for the toolbar: nldd-toolbar measures what fits and
-   moves the rest into its overflow menu, which also keeps every control
-   reachable on a phone. */
+/* The status cards as one row inside their toolbar item. */
+.bezetting-toolbar__stats {
+  display: flex;
+  gap: var(--primitives-space-8, 8px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bezetting-toolbar__stats > li {
+  display: flex;
+  width: 150px;
+  height: 44px;
+}
+
+/* Hidden here rather than left to the toolbar's overflow: these three have no
+   menu twin (their statuses live in the filter sheet), and an overflowed item
+   with nothing to show gave a ⋯ button reading "Geen opties beschikbaar".
+   1050px is where the row stops holding them (measured). */
+@media (max-width: 1050px) {
+  .bezetting-toolbar__stats {
+    display: none;
+  }
+}

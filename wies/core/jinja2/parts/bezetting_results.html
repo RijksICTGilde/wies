@@ -62,23 +62,21 @@
 <nldd-toolbar-item slot="start" priority="4">
 {% include "parts/business_management_tabs.html" %}
 </nldd-toolbar-item>
-{% for status, count, label, short in [
-  ('bench', bench_count, 'op de bank', none),
-  ('full', full_count, 'volledig ingezet', 'ingezet'),
-  ('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna'),
-] %}
-  {# An explicit width: nldd-toolbar-item does not size itself from slotted
-     content, and the card collapsed to nothing without it. 150px is where the
-     short captions still read in full (measured).
-
-     No overflow twin: these statuses are already a group in the filter sheet,
-     and repeating them in a menu beside the Filters button put the same three
-     toggles in two places. Once a card no longer fits it simply goes, and the
-     Filters button is where you find it back. #}
-  <nldd-toolbar-item slot="start" width="150px" min-width="150px" priority="1">
-  {{ status_card(status, count, label, short) }}
-  </nldd-toolbar-item>
-{% endfor %}
+{# One toolbar item for all three cards, hidden by CSS at the width where they
+   stop fitting rather than handed to the overflow. They have no menu twin — the
+   statuses are already a group in the filter sheet — and letting the toolbar
+   overflow them left a ⋯ button whose menu said "Geen opties beschikbaar". #}
+<nldd-toolbar-item slot="start" priority="1">
+<ul class="bezetting-toolbar__stats" aria-label="Statusfilters">
+  {% for status, count, label, short in [
+    ('bench', bench_count, 'op de bank', none),
+    ('full', full_count, 'volledig ingezet', 'ingezet'),
+    ('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna'),
+  ] %}
+    <li>{{ status_card(status, count, label, short) }}</li>
+  {% endfor %}
+</ul>
+</nldd-toolbar-item>
 {# Highest priority of the three: the cards are a shortcut to three statuses,
    this is the way to every filter there is, so it is the last thing to go. #}
 <nldd-toolbar-item slot="end" priority="3">
