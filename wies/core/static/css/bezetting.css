@@ -575,17 +575,39 @@
    button counts them once they are hidden. Navigation and the way back to the
    filters are what must survive. */
 /* The status cards as one row inside their toolbar item. */
+/* The cards sit outside nldd-toolbar (see the template) but must read as one
+   row with it. The wrapper is the flex row; the toolbar follows the cards and
+   takes the remaining width. */
+.bezetting-toolbar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.bezetting-toolbar-row > nldd-tab-bar {
+  flex: 0 0 auto;
+}
+
+.bezetting-toolbar-row > nldd-toolbar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .bezetting-toolbar__stats {
   display: flex;
+  flex: 1 1 auto;
   gap: var(--primitives-space-8, 8px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
+/* Share the space the tabs and the toolbar leave, down to the width where the
+   short captions still read in full (measured at ~150px). */
 .bezetting-toolbar__stats > li {
   display: flex;
-  width: 150px;
+  flex: 1 1 auto;
+  min-width: 150px;
   height: 44px;
 }
 

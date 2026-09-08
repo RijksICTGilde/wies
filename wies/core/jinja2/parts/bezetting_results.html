@@ -56,44 +56,47 @@
    Each item that can end up in the overflow ships an nldd-menu-item twin: the
    menu shows a CLONE and reports back as `select` on the original, so htmx and
    the click handlers listen for that too. #}
-<nldd-toolbar label="Weergave en filters">
-{# Highest priority: switching between Bezetting and Bord is how you leave this
+{# Outside the toolbar on purpose. Inside it, nldd-toolbar measures the row and
+   moves them into its overflow menu — but these three have no menu twin (their
+   statuses are a group in the filter sheet), so that left a ⋯ button whose menu
+   read "Geen opties beschikbaar". Out here the toolbar has no say over them and
+   CSS hides them at the width where the row stops holding them. #}
+<div class="bezetting-toolbar-row">
+  {# Navigation first, then the status shortcuts, then the toolbar with the sheet
+   and the create action — the order the row had before the cards moved out of
+   the toolbar. Both live outside nldd-toolbar so it cannot overflow them into a
+   menu they have no entry for. #}
+  {% include "parts/business_management_tabs.html" %}
+  <ul class="bezetting-toolbar__stats" aria-label="Statusfilters">
+    {% for status, count, label, short in [
+      ('bench', bench_count, 'op de bank', none),
+      ('full', full_count, 'volledig ingezet', 'ingezet'),
+      ('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna'),
+    ] %}
+      <li>{{ status_card(status, count, label, short) }}</li>
+    {% endfor %}
+  </ul>
+  <nldd-toolbar label="Weergave en filters">
+  {# Highest priority: switching between Bezetting and Bord is how you leave this
    page, so it is the last thing that may move into a menu. #}
-<nldd-toolbar-item slot="start" priority="4">
-{% include "parts/business_management_tabs.html" %}
-</nldd-toolbar-item>
-{# One toolbar item for all three cards, hidden by CSS at the width where they
-   stop fitting rather than handed to the overflow. They have no menu twin — the
-   statuses are already a group in the filter sheet — and letting the toolbar
-   overflow them left a ⋯ button whose menu said "Geen opties beschikbaar". #}
-<nldd-toolbar-item slot="start" priority="1">
-<ul class="bezetting-toolbar__stats" aria-label="Statusfilters">
-  {% for status, count, label, short in [
-    ('bench', bench_count, 'op de bank', none),
-    ('full', full_count, 'volledig ingezet', 'ingezet'),
-    ('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna'),
-  ] %}
-    <li>{{ status_card(status, count, label, short) }}</li>
-  {% endfor %}
-</ul>
-</nldd-toolbar-item>
-{# Highest priority of the three: the cards are a shortcut to three statuses,
+  {# Highest priority of the three: the cards are a shortcut to three statuses,
    this is the way to every filter there is, so it is the last thing to go. #}
-<nldd-toolbar-item slot="end" priority="3">
-{# Counts the statuses too. They show their own state while their card is on
+  <nldd-toolbar-item slot="end" priority="3">
+  {# Counts the statuses too. They show their own state while their card is on
    the row, but the card drops out as soon as the row is tight, and then the
    button is the only thing left that can report them. #}
-{% set _filter_count = active_filter_values + hidden_filter_values %}
-<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-button>
-<nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-menu-item>
-</nldd-toolbar-item>
-{% if primary_button %}
-  <nldd-toolbar-item slot="end" priority="2">
-  {% include "parts/primary_button.html" %}
-  {% include "parts/primary_button_menu_item.html" %}
+  {% set _filter_count = active_filter_values + hidden_filter_values %}
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
-{% endif %}
-</nldd-toolbar>
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end" priority="2">
+    {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-toolbar>
+</div>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Tijdlijn #}
 <div class="bezetting-timeline">

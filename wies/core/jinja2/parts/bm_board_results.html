@@ -9,24 +9,26 @@
 {# Same toolbar as Bezetting: navigation, the filter sheet and the create
    action, with an overflow menu for narrow screens. No status cards here — the
    column headers already carry a count per status. #}
-<nldd-toolbar label="Weergave en filters">
-{# Highest priority: switching between Bezetting and Bord is how you leave this
+<div class="bezetting-toolbar-row">
+  {# Outside the toolbar, so it stays put: nldd-toolbar would move it into the
+   overflow menu, and navigation is the last thing that may disappear. #}
+  {% include "parts/business_management_tabs.html" %}
+  <nldd-toolbar label="Weergave en filters">
+  {# Highest priority: switching between Bezetting and Bord is how you leave this
    page, so it is the last thing that may move into a menu. #}
-<nldd-toolbar-item slot="start" priority="4">
-{% include "parts/business_management_tabs.html" %}
-</nldd-toolbar-item>
-{# Last to go: it is the way to every filter this page has. #}
-<nldd-toolbar-item slot="end" priority="3">
-<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
-<nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-menu-item>
-</nldd-toolbar-item>
-{% if primary_button %}
-  <nldd-toolbar-item slot="end" priority="2">
-  {% include "parts/primary_button.html" %}
-  {% include "parts/primary_button_menu_item.html" %}
+  {# Last to go: it is the way to every filter this page has. #}
+  <nldd-toolbar-item slot="end" priority="3">
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
-{% endif %}
-</nldd-toolbar>
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end" priority="2">
+    {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-toolbar>
+</div>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% include "parts/bm_board_columns.html" %}
 </nldd-container>
