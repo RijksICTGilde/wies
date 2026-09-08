@@ -15,10 +15,10 @@
      content sat flush against the viewport edge while the chrome around it
      stayed indented. The sidebar section used to supply this frame. #}
   <nldd-simple-section width="1920px">
-  <nldd-title size="3">
-  <h1>Bord</h1>
-  </nldd-title>
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {# The selected tab already says which page this is, so the heading would be
+     the same word twice. It stays in the markup, unstyled and visually hidden:
+     it is the page's only h1, and a screen reader still needs one. #}
+  <h1 class="wies-visually-hidden">Bord</h1>
   {# Filter row and columns live together in the results partial, like Bezetting:
        the Filters button sits on the row with the summary cards, and the sheet it
        opens drives #results via htmx. #}
