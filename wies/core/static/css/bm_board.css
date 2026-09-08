@@ -143,6 +143,15 @@
 
 /* An assignment wrapping up. The text says "nog N wk" too, so the colour is
    not the only cue (WCAG 1.4.1). */
+/* The gilde chips sit on their own line under the meta, with a little air so
+   they do not crowd the text above them. */
+.bm-card__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
 .bm-card__period--ending {
   color: var(--components-text-warning, inherit);
   font-weight: 600;

@@ -10,6 +10,8 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Label,
+    LabelCategory,
     OrganizationUnit,
     Placement,
     Service,
@@ -150,6 +152,88 @@ class BuildBoardTest(TestCase):
         columns = build_board(self.owner, ending_within_months=3)
 
         assert _card_names(columns, "OPEN") == []
+
+
+class BoardGildeLabelTest(TestCase):
+    """The gilde chips: an assignment has no labels, the people on it do."""
+
+    def setUp(self):
+        self.owner = Colleague.objects.create(name="BM", email="bm@rijksoverheid.nl", source="wies")
+        self.category = LabelCategory.objects.create(name="Subgroep", color="#DCE3EA")
+        self.ai = Label.objects.create(name="AI", category=self.category)
+        self.ict = Label.objects.create(name="ICT", category=self.category)
+
+    def _assignment_with(self, name, *labels):
+        assignment = Assignment.objects.create(name=name, owner=self.owner, source="wies")
+        service = Service.objects.create(assignment=assignment, description="Rol", source="wies")
+        colleague = Colleague.objects.create(
+            name=f"C{service.id}", email=f"c{service.id}@rijksoverheid.nl", source="wies"
+        )
+        colleague.labels.set(labels)
+        Placement.objects.create(colleague=colleague, service=service, source="wies")
+        return assignment
+
+    def _card(self, name):
+        for column in build_board(self.owner):
+            for card in column.cards:
+                if card.name == name:
+                    return card
+        return None
+
+    def test_card_carries_its_team_gilde(self):
+        self._assignment_with("Met AI", self.ai)
+
+        assert self._card("Met AI").gilde_labels == [("AI", "neutral")]
+
+    def test_assignment_without_placements_has_no_gilde(self):
+        Assignment.objects.create(name="Nog niemand", owner=self.owner, source="wies")
+
+        assert self._card("Nog niemand").gilde_labels == []
+
+    def test_mixed_team_names_both_gildes(self):
+        assignment = self._assignment_with("Gemengd", self.ai)
+        service = Service.objects.create(assignment=assignment, description="Tweede", source="wies")
+        other = Colleague.objects.create(name="Ander", email="ander@rijksoverheid.nl", source="wies")
+        other.labels.set([self.ict])
+        Placement.objects.create(colleague=other, service=service, source="wies")
+
+        assert self._card("Gemengd").gilde_labels == [("AI", "neutral"), ("ICT", "neutral")]
+
+    def test_one_gilde_is_not_repeated_per_person(self):
+        assignment = self._assignment_with("Twee keer AI", self.ai)
+        service = Service.objects.create(assignment=assignment, description="Tweede", source="wies")
+        other = Colleague.objects.create(name="Ander", email="ander@rijksoverheid.nl", source="wies")
+        other.labels.set([self.ai])
+        Placement.objects.create(colleague=other, service=service, source="wies")
+
+        assert self._card("Twee keer AI").gilde_labels == [("AI", "neutral")]
+
+    def test_only_the_gilde_category_becomes_a_chip(self):
+        expertise = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
+        python = Label.objects.create(name="Python", category=expertise)
+        self._assignment_with("Met expertise", self.ai, python)
+
+        assert self._card("Met expertise").gilde_labels == [("AI", "neutral")]
+
+    def test_label_filter_keeps_only_that_gilde(self):
+        self._assignment_with("AI-werk", self.ai)
+        self._assignment_with("ICT-werk", self.ict)
+
+        columns = build_board(self.owner, label_ids=[self.ai.id])
+
+        assert _card_names(columns, "OPEN") == ["AI-werk"]
+
+    def test_label_filter_does_not_duplicate_a_card(self):
+        """Two people with the same label on one assignment is still one card."""
+        assignment = self._assignment_with("Twee keer AI", self.ai)
+        service = Service.objects.create(assignment=assignment, description="Tweede", source="wies")
+        other = Colleague.objects.create(name="Ander", email="ander@rijksoverheid.nl", source="wies")
+        other.labels.set([self.ai])
+        Placement.objects.create(colleague=other, service=service, source="wies")
+
+        columns = build_board(self.owner, label_ids=[self.ai.id])
+
+        assert _card_names(columns, "OPEN") == ["Twee keer AI"]
 
 
 class BoardOrgFilterTest(TestCase):

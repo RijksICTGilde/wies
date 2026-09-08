@@ -37,5 +37,14 @@
   {% elif card.open_seats %}
     <p class="bm-card__seats bm-card__seats--open">{{ card.open_seats }} van {{ card.total_seats }} nog open</p>
   {% endif %}
+  {# The gilde its team belongs to, same chips as the Bezetting rows, so the two
+     pages name the same thing the same way. #}
+  {% if card.gilde_labels %}
+    <span class="bm-card__labels">
+      {%- for name, colour in card.gilde_labels -%}
+        <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
+      {%- endfor -%}
+    </span>
+  {% endif %}
 </div>
 </nldd-card>

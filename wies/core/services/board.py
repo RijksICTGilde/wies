@@ -31,6 +31,11 @@ ENDING_WITHIN_CHOICES = (1, 2, 3)
 # calendar-exact month arithmetic would not make the answer any more useful.
 DAYS_PER_MONTH = 30
 
+# The label category naming the gilde ("AI", "ICT"). Labels live on colleagues,
+# not on assignments, so a card's gilde is the one its team belongs to — the
+# same chips the Bezetting rows carry, kept in step with occupancy.GILDE_CATEGORY.
+GILDE_CATEGORY = "Subgroep"
+
 
 @dataclass
 class BoardCard:
@@ -45,6 +50,8 @@ class BoardCard:
     # a count of seats rather than an fte sum.
     total_seats: int
     filled_seats: int
+    # (name, nldd colour) per gilde on this assignment's team, as on Bezetting.
+    gilde_labels: list[tuple[str, str]] = field(default_factory=list)
     # Whole weeks until the end date, negative once it has passed, None without
     # one. Only used while ends_soon is set.
     weeks_until_end: int | None = None
@@ -73,6 +80,7 @@ def build_board(
     *,
     ending_within_months: int | None = None,
     org_ids: list[int] | None = None,
+    label_ids: list[int] | None = None,
 ) -> list[BoardColumn]:
     """Return the columns for ``owner``'s assignments, in pipeline order.
 
@@ -84,6 +92,8 @@ def build_board(
       that many months out. Assignments that already ended fall outside it — the
       filter reads as "needs attention soon", and a past date does not.
     - ``org_ids`` keeps only assignments for those client organisations.
+    - ``label_ids`` keeps only assignments whose team carries one of those
+      labels, which is how the gilde chips on the cards filter.
     """
     columns = {key: BoardColumn(key=key, label=label) for key, label in ASSIGNMENT_STATUS.items()}
     if owner is None:
@@ -92,7 +102,7 @@ def build_board(
     today = timezone.now().date()
     cutoff = today + timedelta(days=DAYS_PER_MONTH * ending_within_months) if ending_within_months else None
 
-    for assignment in _assignments_for(owner, org_ids):
+    for assignment in _assignments_for(owner, org_ids, label_ids):
         if cutoff is not None and not (assignment.end_date and today <= assignment.end_date <= cutoff):
             continue
         card = _card_for(assignment, today)
@@ -104,11 +114,18 @@ def build_board(
     return list(columns.values())
 
 
-def _assignments_for(owner: Colleague, org_ids: list[int] | None = None):
+def _assignments_for(
+    owner: Colleague,
+    org_ids: list[int] | None = None,
+    label_ids: list[int] | None = None,
+):
     """Assignments owned by ``owner``, prefetched for the card fields."""
     queryset = Assignment.objects.filter(owner=owner)
     if org_ids:
         queryset = queryset.filter(organizations__id__in=org_ids).distinct()
+    if label_ids:
+        # Through the people placed on it: an assignment carries no labels itself.
+        queryset = queryset.filter(services__placements__colleague__labels__id__in=label_ids).distinct()
     return queryset.prefetch_related(
         # Services with their placements: the card needs filled-vs-total,
         # which would otherwise be a query per card.
@@ -129,6 +146,7 @@ def _card_for(assignment: Assignment, today: date) -> BoardCard:
     filled = sum(1 for service in services if service.placements.all())
     weeks = _weeks_until(assignment.end_date, today)
     return BoardCard(
+        gilde_labels=_gilde_labels(services),
         public_id=str(assignment.public_id),
         name=assignment.name,
         org_label=(org.label or org.name) if org else "",
@@ -139,6 +157,22 @@ def _card_for(assignment: Assignment, today: date) -> BoardCard:
         weeks_until_end=weeks,
         ends_soon=weeks is not None and 0 <= weeks <= ENDING_SOON_WEEKS,
     )
+
+
+def _gilde_labels(services) -> list[tuple[str, str]]:
+    """The gildes on this assignment's team, deduplicated, in a stable order.
+
+    An assignment has no labels of its own; the people placed on it do. A team
+    is usually one gilde, but a mixed one names both rather than picking a
+    winner.
+    """
+    seen: dict[str, str] = {}
+    for service in services:
+        for placement in service.placements.all():
+            for label in placement.colleague.labels.all():
+                if label.category.name == GILDE_CATEGORY:
+                    seen.setdefault(label.name, label.category.nldd_color)
+    return sorted(seen.items())
 
 
 def _weeks_until(end_date: date | None, today: date) -> int | None:

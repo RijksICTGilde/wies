@@ -731,6 +731,11 @@ def bezetting(request):
     return render(request, "bezetting.html", context)
 
 
+# The label category whose labels ride along on a card as chips, the gilde the
+# team belongs to. Same category the Bezetting rows show.
+BOARD_GILDE_CATEGORY = "Subgroep"
+
+
 @business_management_access_required
 def bm_board(request):
     """ "Bord" — the business manager's own assignments, in a column per status.
@@ -755,16 +760,19 @@ def bm_board(request):
 
     owner = getattr(request.user, "colleague", None)
     org = resolve_facet(OrganizationUnit, request.GET.getlist("org"))
+    labels = resolve_facet(Label, request.GET.getlist("labels"))
     ending_within = _board_ending_within(request)
 
-    columns = build_board(owner, ending_within_months=ending_within, org_ids=org.ids)
+    columns = build_board(owner, ending_within_months=ending_within, org_ids=org.ids, label_ids=labels.ids)
 
-    filter_groups = _board_filter_groups(owner, org, ending_within)
+    filter_groups = _board_filter_groups(owner, org, labels, ending_within)
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
     if org.active_values:
         active_filters["org"] = org.active_values
+    if labels.active_values:
+        active_filters["labels"] = labels.active_values
     if ending_within:
         active_filters["eindigt"] = [str(ending_within)]
 
@@ -776,10 +784,10 @@ def bm_board(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bm-board"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "filter_active": bool(org.active_values or ending_within),
-        # What the "Alle filters" button counts: every filter, since they all
-        # live in the sheet on this page.
-        "active_filter_values": len(org.active_values) + (1 if ending_within else 0),
+        "filter_active": bool(org.active_values or labels.active_values or ending_within),
+        # What the "Filters" button counts: every filter, since they all live in
+        # the sheet on this page.
+        "active_filter_values": len(org.active_values) + len(labels.active_values) + (1 if ending_within else 0),
         # Without a colleague record nothing can own assignments, so every column
         # is empty for a reason the page should say out loud.
         "has_owner": owner is not None,
@@ -813,6 +821,51 @@ def _board_ending_within(request):
     return max(months) if months else None
 
 
+def _board_gilde_group(owner, labels):
+    """The gilde filter, matching the chips on the cards. None when unused.
+
+    Counted over the assignments themselves, not the people on them: two AI
+    colleagues on one assignment are one card, and the number beside a filter
+    should say how many cards it would leave.
+    """
+    category = LabelCategory.objects.filter(name=BOARD_GILDE_CATEGORY).first()
+    if category is None:
+        return None
+
+    counts = Counter()
+    for assignment in Assignment.objects.filter(owner=owner).prefetch_related(
+        "services__placements__colleague__labels"
+    ):
+        on_this_one = {
+            label.id
+            for service in assignment.services.all()
+            for placement in service.placements.all()
+            for label in placement.colleague.labels.all()
+            if label.category_id == category.id
+        }
+        counts.update(on_this_one)
+    if not counts:
+        return None
+
+    selected_ids = set(labels.public_ids)
+    options = [{"value": "", "label": ""}]
+    selected = []
+    for label in Label.objects.filter(id__in=counts).order_by(Lower("name")):
+        value = str(label.public_id)
+        option = {"value": value, "label": label.name, "count": counts.get(label.id, 0)}
+        if value in selected_ids:
+            option["selected"] = True
+            selected.append(value)
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "labels",
+        "label": category.name,
+        "options": options,
+        "selected_values": selected,
+    }
+
+
 def _board_ending_count(owner, months):
     """How many of this business manager's assignments end within ``months``."""
     today = timezone.now().date()
@@ -820,11 +873,11 @@ def _board_ending_count(owner, months):
     return Assignment.objects.filter(owner=owner, end_date__gte=today, end_date__lte=cutoff).count()
 
 
-def _board_filter_groups(owner, org, ending_within):
-    """Filter groups for the board sheet: client organisation and "eindigt binnen".
+def _board_filter_groups(owner, org, labels, ending_within):
+    """Filter groups for the board sheet: gilde, client organisation, end window.
 
-    Only organisations this business manager actually has assignments for: the
-    full tree would offer hundreds of options that select nothing.
+    Only values this business manager actually has assignments for: the full
+    trees would offer hundreds of options that select nothing.
     """
     if owner is None:
         return []
@@ -851,7 +904,9 @@ def _board_filter_groups(owner, org, ending_within):
             org_selected.append(value)
         org_options.append(option)
 
-    groups = [
+    groups = [_board_gilde_group(owner, labels)]
+    groups = [g for g in groups if g]
+    groups.append(
         {
             "type": "select-multi",
             "name": "org",
@@ -859,7 +914,7 @@ def _board_filter_groups(owner, org, ending_within):
             "options": org_options,
             "selected_values": org_selected,
         }
-    ]
+    )
 
     # The shared sheet renders every group as checkboxes, so these windows can be
     # ticked together; the view then reads the widest one, which is what a set of
@@ -906,6 +961,7 @@ def bm_board_move(request, public_id):
         owner,
         ending_within_months=_board_ending_within(request),
         org_ids=resolve_facet(OrganizationUnit, request.GET.getlist("org")).ids,
+        label_ids=resolve_facet(Label, request.GET.getlist("labels")).ids,
     )
     return render(request, "parts/bm_board_columns.html", {"columns": columns})
 
