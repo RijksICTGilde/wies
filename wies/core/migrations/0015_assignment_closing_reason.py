@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0014_assignment_status'),
+        ("core", "0014_assignment_status"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='assignment',
-            name='closing_reason',
-            field=models.TextField(blank=True, max_length=1000, verbose_name='Reden van sluiten'),
+            model_name="assignment",
+            name="closing_reason",
+            field=models.TextField(blank=True, max_length=1000, verbose_name="Reden van sluiten"),
         ),
     ]
