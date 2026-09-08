@@ -740,18 +740,6 @@ def bezetting(request):
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "filter_active": bool(merk.active_values or labels.active_values or selected_statuses),
-        # What the "Filters" button counts: the facets that live inside the
-        # sheet, not the status cards. A status shows it is on by the card being
-        # pressed, so counting it here made the button claim a filter the user
-        # could already see was applied — and read as "(1)" over an untouched
-        # sheet. Values, not groups: two labels from one group are two filters
-        # to the reader.
-        #
-        # The statuses ride along in a data attribute instead: once the viewport
-        # hides the cards they are no longer visible on the row, and then the
-        # button is the only thing that can report them (bezetting.css).
-        "active_filter_values": len(merk.active_values) + len(labels.active_values),
-        "hidden_filter_values": len(selected_statuses),
         "primary_button": _assignment_create_button(request),
     }
 
@@ -854,9 +842,6 @@ def bm_board(request):
         "filter_target_url": reverse("bm-board"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "filter_active": bool(org.active_values or labels.active_values or ending_within),
-        # What the "Filters" button counts: every filter, since they all live in
-        # the sheet on this page.
-        "active_filter_values": len(org.active_values) + len(labels.active_values) + (1 if ending_within else 0),
         # Without a colleague record nothing can own assignments, so every column
         # is empty for a reason the page should say out loud.
         "has_owner": owner is not None,

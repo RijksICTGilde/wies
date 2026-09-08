@@ -4,9 +4,10 @@
 <nldd-container id="results">
 {% set has_active_filters = active_filters|length > 0 %}
 {# Samenvatting — each card is an independent status filter (OR-toggle). The card
-   is a native <button> (keyboard-accessible for free) carrying a hidden checkbox
-   named "status" with data-filter-input; the #filter-form's hx-include picks it
-   up and filter_interactions.js re-submits on toggle. Counts stay the full
+   is a native <button> (keyboard-accessible for free). It carries no input of its
+   own: the same status is a group in the filter sheet, and two checkboxes with
+   one name submitted the value twice, which came back as two identical chips.
+   filter_interactions.js ticks the sheet's copy and re-submits. Counts stay the full
    population within the merk/label selection, so they don't change when toggled. #}
 {% macro status_card(status, count, label, short=none) %}
   {% set is_active = status in selected_statuses %}
@@ -33,12 +34,6 @@
     </span>
     </nldd-container>
     </nldd-card>
-    <input type="checkbox"
-           name="status"
-           value="{{ status }}"
-           data-filter-input
-           hidden
-           {% if is_active %}checked{% endif %} />
   </button>
 {% endmacro %}
 {# Four items on one row: the three status filters and the sheet that holds
@@ -81,12 +76,8 @@
   {# Highest priority of the three: the cards are a shortcut to three statuses,
    this is the way to every filter there is, so it is the last thing to go. #}
   <nldd-toolbar-item slot="end" priority="3">
-  {# Counts the statuses too. They show their own state while their card is on
-   the row, but the card drops out as soon as the row is tight, and then the
-   button is the only thing left that can report them. #}
-  {% set _filter_count = active_filter_values + hidden_filter_values %}
-  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-button>
-  <nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-menu-item>
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filter" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filter" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
   {% if primary_button %}
     <nldd-toolbar-item slot="end" priority="2">
@@ -115,6 +106,9 @@
       {% endfor %}
     {% endif %}
   {% endfor %}
+  {# Clearing all filters belongs with the chips;
+               filter_interactions.js handles data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
 {% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>

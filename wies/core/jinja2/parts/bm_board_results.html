@@ -18,8 +18,8 @@
    page, so it is the last thing that may move into a menu. #}
   {# Last to go: it is the way to every filter this page has. #}
   <nldd-toolbar-item slot="end" priority="3">
-  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
-  <nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-menu-item>
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filter" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filter" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
   {% if primary_button %}
     <nldd-toolbar-item slot="end" priority="2">
@@ -46,6 +46,9 @@
       {% endfor %}
     {% endif %}
   {% endfor %}
+  {# Clearing all filters belongs with the chips;
+               filter_interactions.js handles data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
 {% endif %}
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>

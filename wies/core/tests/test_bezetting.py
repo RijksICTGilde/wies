@@ -67,14 +67,22 @@ class BezettingStatusInSheetTest(TestCase):
         self.assertContains(response, "Volledig ingezet")
         self.assertContains(response, "Eindigt binnen 3 maanden")
 
-    def test_narrow_button_counts_the_statuses_the_wide_one_leaves_out(self):
-        """Wide, a pressed card shows its own state; narrow it is hidden, so the
-        button is the only thing left that can report it."""
+    def test_one_submitting_input_per_status(self):
+        """The card shows the state, the sheet's group submits it. Two inputs
+        with the same name sent the value twice, which came back as two
+        identical chips for one filter."""
         response = self.client.get(self.url, {"status": "bench"})
         body = response.content.decode()
 
-        assert 'text="Filters"' in body
-        assert 'text="Filters (1)"' in body
+        assert body.count('name="status" value="bench"') <= 1
+
+    def test_button_carries_no_count(self):
+        """The chips under the row name each active filter, so a number beside
+        them would say the same thing twice (as on the "Wie zit waar?" list)."""
+        response = self.client.get(self.url, {"status": "bench"})
+
+        self.assertContains(response, 'text="Filter"')
+        self.assertNotContains(response, "Filter (1)")
 
 
 class BezettingFilterChipsTest(TestCase):
