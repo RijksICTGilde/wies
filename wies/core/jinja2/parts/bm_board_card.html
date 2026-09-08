@@ -38,17 +38,11 @@
     {% endif -%}
     {%- if card.org_label %}<span class="bm-card__org">{{ card.org_label }}</span>{% endif -%}
     {%- if card.end_date %}
-      {# One of the two, not both: "t/m sep 2026" and "nog 2 wk" are the same
-         fact. The countdown wins while it is running out — it says how urgent
-         this is without making you work out the date — and the date takes over
-         once that is no longer the question. #}
-      <span class="bm-card__period">
-        {%- if card.ends_soon -%}
-          nog {{ card.weeks_until_end }} wk
-        {%- else -%}
-          t/m {{ card.end_date|datum_nl("b Y") }}
-        {%- endif -%}
-      </span>
+      {# Always the date, never a countdown: swapping in "nog 2 wk" for the cards
+         that were running out put two units in one column, so you could no
+         longer read down it and compare. What is wrapping up is found through
+         the "eindigt binnen" filter instead. #}
+      <span class="bm-card__period">t/m {{ card.end_date|datum_nl("b Y") }}</span>
     {%- endif -%}
   </p>
   {# The open seats and the gilde on one line: each took a line of its own while
