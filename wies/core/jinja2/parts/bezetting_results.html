@@ -68,21 +68,26 @@
   ('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna'),
 ] %}
   {# An explicit width: nldd-toolbar-item does not size itself from slotted
-     content, and the card collapsed to nothing without it. 160px is where the
-     short captions still read in full (measured); below that the toolbar moves
-     the card into the overflow menu, which is the point. #}
+     content, and the card collapsed to nothing without it. 150px is where the
+     short captions still read in full (measured).
+
+     No overflow twin: these statuses are already a group in the filter sheet,
+     and repeating them in a menu beside the Filters button put the same three
+     toggles in two places. Once a card no longer fits it simply goes, and the
+     Filters button is where you find it back. #}
   <nldd-toolbar-item slot="start" width="150px" min-width="150px" priority="1">
   {{ status_card(status, count, label, short) }}
-  {# In the overflow the card becomes a checkable menu item; ui_handlers.js
-     forwards the choice to the hidden checkbox the card carries. #}
-  <nldd-menu-item slot="overflow" text="{{ count }} {{ label }}" data-status-menu-item data-status="{{ status }}" {% if status in selected_statuses %}selected{% endif %}></nldd-menu-item>
   </nldd-toolbar-item>
 {% endfor %}
 {# Highest priority of the three: the cards are a shortcut to three statuses,
    this is the way to every filter there is, so it is the last thing to go. #}
 <nldd-toolbar-item slot="end" priority="3">
-<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % active_filter_values if active_filter_values else '' }}" data-user-filter-open></nldd-button>
-<nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % (active_filter_values + hidden_filter_values) if (active_filter_values + hidden_filter_values) else '' }}" data-user-filter-open></nldd-menu-item>
+{# Counts the statuses too. They show their own state while their card is on
+   the row, but the card drops out as soon as the row is tight, and then the
+   button is the only thing left that can report them. #}
+{% set _filter_count = active_filter_values + hidden_filter_values %}
+<nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-button>
+<nldd-menu-item slot="overflow" icon="filter" text="Filters{{ ' (%s)' % _filter_count if _filter_count else '' }}" data-user-filter-open></nldd-menu-item>
 </nldd-toolbar-item>
 {% if primary_button %}
   <nldd-toolbar-item slot="end" priority="2">
