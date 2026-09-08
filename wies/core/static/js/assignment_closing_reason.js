@@ -45,7 +45,9 @@
     if (form) sync(form);
   });
 
-  document.body?.addEventListener("htmx:afterSettle", (e) => scan(e.detail?.target || document));
+  document.body?.addEventListener("htmx:afterSettle", (e) =>
+    scan(e.detail?.target || document),
+  );
 
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => scan(document));
