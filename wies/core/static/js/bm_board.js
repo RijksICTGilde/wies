@@ -9,6 +9,7 @@
 
   const GRID_ID = "bm-board-grid";
   const CARD = "[data-board-card]";
+  const HANDLE = "[data-board-handle]";
   const DROPZONE = "[data-board-dropzone]";
   const DROP_TARGET_CLASS = "is-drop-target";
   const DRAGGING_CLASS = "is-dragging";
@@ -47,17 +48,31 @@
       .forEach((el) => el.classList.remove(DROP_TARGET_CLASS));
   }
 
+  // Whether the pointer went down on the grip. The card renders an <a> across
+  // its whole surface in its shadow root, and that link is what the browser
+  // starts the drag from: the composed path of dragstart holds A > NLDD-CARD
+  // and never the grip, so where the drag began can only be learned earlier,
+  // on mousedown.
+  let fromGrip = false;
+
   function setupDragStart() {
+    document.addEventListener(
+      "mousedown",
+      (e) => {
+        fromGrip = Boolean(inPath(e, HANDLE));
+      },
+      true,
+    );
+
     document.addEventListener("dragstart", (e) => {
-      // The card renders an <a href> in its shadow root, and a link is natively
-      // draggable: without this the browser drags the URL and never lets the
-      // card move. Anything that did not start on the grip is that link.
-      if (!inPath(e, "[data-board-handle]")) {
-        if (inPath(e, CARD)) e.preventDefault();
-        return;
-      }
       const card = inPath(e, CARD);
       if (!card) return;
+      // Anywhere but the grip this is the card's own link being dragged, which
+      // would drop a URL somewhere instead of moving the card.
+      if (!fromGrip) {
+        e.preventDefault();
+        return;
+      }
       dragged = card;
       card.classList.add(DRAGGING_CLASS);
       e.dataTransfer.effectAllowed = "move";
@@ -68,6 +83,7 @@
     document.addEventListener("dragend", () => {
       dragged?.classList.remove(DRAGGING_CLASS);
       dragged = null;
+      fromGrip = false;
       clearDropTargets();
     });
   }

@@ -103,6 +103,23 @@
 /* Client and period as one quiet line under the title, the way a board card
    carries its metadata. The separator is generated so it never shows up on a
    card that has only one of the two. */
+/* nldd-card renders an <a> across its whole surface in its shadow root, and
+   that link sits above slotted content: the pointer reached the link and never
+   the grip, so no event's composed path held the grip and a drag from it could
+   not be told from a click on the card. Its own stacking context lifts the grip
+   back above that link. */
+.bm-card__handle {
+  flex: none;
+  position: relative;
+  z-index: 1;
+  cursor: grab;
+  touch-action: none;
+}
+
+.bm-card__handle:active {
+  cursor: grabbing;
+}
+
 .bm-card__meta {
   margin: 0;
   font-size: 0.75rem;
