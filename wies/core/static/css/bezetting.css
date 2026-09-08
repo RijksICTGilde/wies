@@ -49,10 +49,10 @@
    resolve the percentage against, so the button collapsed to zero and took the
    visible card with it. */
 .bezetting-stat {
-  display: block;
-  /* Fills its nldd-toolbar-item, which carries the width. max-content does not
-     work here: the nldd-card inside cannot size itself from its own content
-     either, so both collapsed to zero. */
+  /* Flex, not block: the nldd-card inside has to stretch to the button's height,
+     and on a block it kept its own 40px while the tabs and buttons beside it are
+     44px, leaving the cards visibly shorter than the rest of the row. */
+  display: flex;
   width: 100%;
   height: 100%;
   padding: 0;
@@ -65,6 +65,22 @@
   /* The card's own radius token, so the focus ring keeps hugging the card edge
      if the design system ever changes that corner. */
   border-radius: var(--components-card-corner-radius);
+}
+
+.bezetting-stat > nldd-card {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The card stretches, but its container keeps its own 40px, which left the
+   count and caption two pixels above the middle of a 44px row. Stretch that
+   too, and centre what is inside it. */
+.bezetting-stat nldd-card,
+.bezetting-stat nldd-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 /* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
@@ -602,12 +618,17 @@
   list-style: none;
 }
 
-/* Share the space the tabs and the toolbar leave, down to the width where the
-   short captions still read in full (measured at ~150px). */
+/* Equal width, and no wider than the caption needs. They used to share the row
+   with the tabs and buttons on flex:1 1 0, so all of them shrank together; in
+   their own list they took every pixel the toolbar left over and grew to more
+   than twice the size of the controls beside them. The cap keeps that from
+   happening, the floor is where the short captions still read in full (both
+   measured). */
 .bezetting-toolbar__stats > li {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 1 0;
   min-width: 150px;
+  max-width: 220px;
   height: 44px;
 }
 
