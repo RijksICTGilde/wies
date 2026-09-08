@@ -404,6 +404,17 @@ class AssignmentEditables(EditableSet):
 
     end_date = Editable(label="Einddatum")
 
+    status = Editable(
+        label="Status",
+        # Choices come off the model field (ASSIGNMENT_STATUS), so the board's
+        # columns and this dropdown cannot drift apart.
+        widget=ComboBoxSelect,
+        # Not required: the model's default puts an assignment in a column on its
+        # own, and demanding it here would break every caller that creates one
+        # without naming a status.
+        required=False,
+    )
+
     owner = Editable(
         label="Business Manager",
         choices=_bdm_queryset,

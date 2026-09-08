@@ -7,6 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import (
+    ASSIGNMENT_STATUS,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -17,6 +18,7 @@ from wies.core.models import (
     Service,
 )
 from wies.core.roles import setup_roles
+from wies.core.services.assignments import create_assignment_from_form
 from wies.core.services.board import ENDING_SOON_WEEKS, build_board, move_assignment
 
 User = get_user_model()
@@ -443,6 +445,61 @@ class BmBoardCreateButtonTest(TestCase):
         response = self.client.get(reverse("bm-board"), {"nieuwe-opdracht": "", "opdracht": str(assignment.public_id)})
 
         self.assertContains(response, "Voer opdracht in")
+
+
+class AssignmentCreateStatusTest(TestCase):
+    """The status picked on the create form decides the card's column."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.owner = Colleague.objects.create(name="BM", email="bdm@rijksoverheid.nl", source="wies", user=self.user)
+        self.org = OrganizationUnit.objects.create(name="Ministerie A")
+        self.client.force_login(self.user)
+
+    def _create(self, name, status):
+        return self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": name,
+                "extra_info": "",
+                "org-TOTAL_FORMS": "1",
+                "org-0-organization": str(self.org.public_id),
+                "org-0-role": "PRIMARY",
+                "owner": str(self.owner.public_id),
+                "status": status,
+                "terug_url": reverse("bm-board"),
+            },
+        )
+
+    def test_form_offers_every_column_as_a_status(self):
+        response = self.client.get(reverse("bm-board"), {"nieuwe-opdracht": ""})
+
+        for value, label in ASSIGNMENT_STATUS.items():
+            with self.subTest(status=value):
+                self.assertContains(response, f'value="{value}"')
+                self.assertContains(response, label)
+
+    def test_chosen_status_is_saved(self):
+        self._create("Nieuwe lead", "LEAD")
+
+        assert Assignment.objects.get(name="Nieuwe lead").status == "LEAD"
+
+    def test_card_lands_in_the_column_it_was_created_in(self):
+        self._create("Nieuwe lead", "LEAD")
+
+        columns = build_board(self.owner)
+
+        assert _card_names(columns, "LEAD") == ["Nieuwe lead"]
+        assert _card_names(columns, "OPEN") == []
+
+    def test_without_a_status_it_falls_back_to_the_model_default(self):
+        """Callers that pass nothing still get an assignment on the board."""
+        assignment = create_assignment_from_form(name="Zonder status", owner=self.owner)
+
+        assert assignment.status == "OPEN"
 
 
 class BmBoardMoveTest(TestCase):

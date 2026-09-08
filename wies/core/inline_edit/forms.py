@@ -60,6 +60,10 @@ def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Fie
         base.validators.extend(editable.validators)
     if editable.widget is not None:
         base.widget = editable.widget() if isinstance(editable.widget, type) else editable.widget
+        # A choice field hands its choices to the widget when the field is built,
+        # so a widget swapped in afterwards starts empty and renders no options.
+        if hasattr(base, "choices") and hasattr(base.widget, "choices"):
+            base.widget.choices = base.choices
     if editable.choices is not None:
         opts = editable.choices(obj) if callable(editable.choices) else editable.choices
         if hasattr(base, "queryset"):
