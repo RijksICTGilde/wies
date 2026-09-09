@@ -192,7 +192,7 @@ class InlineEditExistenceOracleTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        # _Setup.placement has no dates, so placement_visibility treats it as
+        # _Setup.placement has no dates, so visibility_rules treats it as
         # active (publicly visible). Push its start into the future so it is
         # genuinely hidden from the unrelated viewer — the oracle test's premise.
         today = timezone.now().date()

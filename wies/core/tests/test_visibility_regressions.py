@@ -16,14 +16,14 @@ Two holes found in review:
 from datetime import timedelta
 
 from django.contrib.auth.models import Permission
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.placement_visibility import PRIVACY_BDM, PRIVACY_OWN
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import STAFF_EMAIL, grant_bdm, make_staff_user
 from wies.core.views import _team_event_privacy_note
+from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
 from wies.rijksauth.models import User
 
 
@@ -103,6 +103,20 @@ class MemberSheetHiddenRowTest(TestCase):
         owner_client.force_login(owner_user)
 
         response = owner_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 200
+        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, "Hidden Member")
+
+    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+    def test_staff_opens_the_hidden_row_sheet(self):
+        # Support staff are privileged viewers, so unlike the change_assignment
+        # editor above they DO see the hidden row and its edit sheet.
+        staff_user = make_staff_user()
+        staff_client = Client()
+        staff_client.force_login(staff_user)
+
+        response = staff_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
         self.assertContains(response, "Teamlid bewerken")

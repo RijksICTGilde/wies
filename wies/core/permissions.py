@@ -9,8 +9,6 @@ at startup.
 
 from __future__ import annotations
 
-from django.conf import settings
-
 from wies.core.editables import (
     AssignmentEditables,
     ServiceEditables,
@@ -18,7 +16,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
-from wies.core.roles import is_bdm
+from wies.core.roles import is_bdm, is_staff_member
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
@@ -66,15 +64,6 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
     if not _is_wies_sourced(assignment):
         return False
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
-
-
-def is_staff_member(user):
-    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
-
-    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
-    and as a per-row edit-permission predicate (e.g. in ``update_assignment``).
-    """
-    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
 # --- Whole-object UPDATE rules ----------------------------------------------

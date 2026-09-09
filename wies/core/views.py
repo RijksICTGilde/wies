@@ -42,14 +42,14 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import (
+from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
+from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BDM,
-    PRIVACY_BM_OWNED,
     PRIVACY_OWN,
+    evaluate_assignment_visibility,
     evaluate_placement_visibility,
 )
-from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -75,13 +75,12 @@ from .models import (
     Skill,
     Suborganization,
 )
-from .permissions import is_staff_member
 from .querysets import (
     annotate_placement_dates,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import viewer_is_bdm
+from .roles import is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -305,8 +304,6 @@ def _make_assignment_entry(
 def _get_colleague_assignments(request, colleague):
 
     today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
-    viewer_holds_bdm = viewer_is_bdm(request)
 
     active_by_id: dict[int, dict] = {}
     historical_by_id: dict[int, dict] = {}
@@ -333,8 +330,9 @@ def _get_colleague_assignments(request, colleague):
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague and the Business Managers (BDM role).
-        result = evaluate_placement_visibility(start, end, colleague.id, viewer, viewer_holds_bdm, today)
+        # visible to the placed colleague, the Business Managers (BDM role) and
+        # support staff.
+        result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
 
@@ -362,21 +360,13 @@ def _get_colleague_assignments(request, colleague):
         "id", "public_id", "name", "start_date", "end_date"
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
-        assignment_is_active = end_date is None or today <= end_date
+        # Active and not-yet-started owned assignments are public; ended ones are
+        # only shown to a privileged viewer (BDM role or support staff).
+        result = evaluate_assignment_visibility(start_date, end_date, request, today)
+        if not result.visible:
+            continue
 
-        if assignment_is_active:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    name,
-                    assignment_id,
-                    request,
-                    public_id=public_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                )
-            active_by_id[assignment_id]["tags"]["Business Manager"] = None
-        elif viewer_holds_bdm:
-            # Ended BM assignments are only shown to Business Managers (BDM role).
+        if result.timing == "ended":
             if assignment_id not in historical_by_id:
                 historical_by_id[assignment_id] = _make_assignment_entry(
                     name,
@@ -387,16 +377,21 @@ def _get_colleague_assignments(request, colleague):
                     end_date=end_date,
                     tags={"Business Manager": None},
                     historical=True,
-                    privacy_warning_text=PRIVACY_BM_OWNED,
-                    # This branch only fires for an ended assignment, so the
-                    # label is statically known — set it here like the
-                    # placement-based entries do, so the template needs no
-                    # fallback.
+                    privacy_warning_text=result.privacy_note,
                     period_label=LABELS["ended"],
                 )
             historical_by_id[assignment_id]["tags"]["Business Manager"] = None
         else:
-            continue
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    public_id=public_id,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            active_by_id[assignment_id]["tags"]["Business Manager"] = None
 
     # Batch-fetch primary organization names for all assignments
     all_ids = set(active_by_id) | set(historical_by_id)
@@ -437,7 +432,7 @@ def _build_colleague_panel_data(colleague, request):
 def _build_placement_panel_data(placement, request, *, visibility=None):
     """Builds the panel context for a single placement.
 
-    ``visibility`` (a PlacementVisibility) flags a non-active placement so the
+    ``visibility`` (a Visibility) flags a non-active placement so the
     card shows the timing chip and privacy note. Access control is the caller's
     job — see ``_resolve_placement_panel``.
     """
@@ -519,13 +514,11 @@ def _resolve_placement_panel(request, public_id):
         placement = None
     result = None
     if placement is not None:
-        viewer = getattr(request.user, "colleague", None)
         result = evaluate_placement_visibility(
             placement.start_date,
             placement.end_date,
             placement.colleague_id,
-            viewer,
-            viewer_is_bdm(request),
+            request,
             timezone.now().date(),
         )
     if result is None or not result.visible:

@@ -23,7 +23,6 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.placement_visibility import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
@@ -32,6 +31,7 @@ from wies.core.views import (
     _get_colleague_assignments,
     _resolve_placement_panel,
 )
+from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
 

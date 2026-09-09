@@ -15,9 +15,9 @@ from django.utils import timezone
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.placement_visibility import LABELS, evaluate_placement_visibility
-from wies.core.roles import BDM_GROUP_NAME, viewer_is_bdm
+from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
 from wies.core.services.urls import current_page_path
+from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
 
 
@@ -168,13 +168,11 @@ def visible_service_rows(assignment, request) -> list[dict]:
     """Returns viewer-filtered team rows for display.
 
     ``_services_initial`` returns every placement; here a placement that is not
-    currently active is hidden from unrelated viewers — only the placed colleague
-    and Business Managers (the BDM role) see it, flagged ``historical`` with a
-    label and privacy note.
+    currently active is hidden from unrelated viewers — only the placed colleague,
+    Business Managers (the BDM role) and support staff see it, flagged
+    ``historical`` with a label and privacy note.
     """
     today = timezone.now().date()
-    viewer = getattr(getattr(request, "user", None), "colleague", None)
-    viewer_holds_bdm = viewer_is_bdm(request)
 
     visible = []
     for row in _services_initial(assignment):
@@ -186,8 +184,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             row["placement_start_date"],
             row["placement_end_date"],
             placement.colleague_id,
-            viewer,
-            viewer_holds_bdm,
+            request,
             today,
         )
         if not result.visible:
@@ -338,8 +335,9 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if viewer_is_bdm(request):
-        # A Business Manager sees the unfiltered list; they may see any team row.
+    if is_bdm_or_staff(request):
+        # A privileged viewer (BDM or support staff) sees the unfiltered list;
+        # they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)
     return [change for change in changes if _change_colleague_names(change) <= allowed]

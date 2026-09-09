@@ -1,79 +1,108 @@
-"""Tests for the placement-visibility rule.
+"""Tests for the visibility rules.
 
-Two functions decide who may see a placement:
+The rules decide who may see a row:
 
-- ``placement_timing`` / ``evaluate_placement_visibility`` — the per-row rule used
-  by the panels and the colleague profile, where the placed colleague and the
+- ``period_timing`` / ``evaluate_placement_visibility`` — the per-placement rule
+  used by the panels and the colleague profile, where the placed colleague and the
   Business Managers (the BDM role) also see ended and planned placements.
+- ``evaluate_assignment_visibility`` — the per-owned-assignment rule on the
+  colleague profile: active and not-yet-started ones are public, an ended one is
+  shown only to a privileged viewer (BDM role or support staff).
 - ``filter_visible_placements`` — the "Wie zit waar?" list, which shows only
   active placements, to every viewer alike.
 
-The tests pin the pure rule down as a table, and assert the list is exactly the
-active subset of it (viewer-independent), so the two surfaces cannot drift apart.
+The tests pin the pure rules down as a table, and assert the list is exactly the
+active subset of the placement rule (viewer-independent), so the two surfaces
+cannot drift apart.
 """
 
 from dataclasses import dataclass
 from datetime import date, timedelta
+from types import SimpleNamespace
 
 from django.test import SimpleTestCase, TestCase
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.placement_visibility import (
-    PRIVACY_BDM,
-    PRIVACY_OWN,
-    evaluate_placement_visibility,
-    placement_timing,
-)
 from wies.core.querysets import annotate_placement_dates
 from wies.core.services.placements import filter_visible_placements
+from wies.core.visibility_rules import (
+    PRIVACY_BDM,
+    PRIVACY_BM_OWNED,
+    PRIVACY_OWN,
+    evaluate_assignment_visibility,
+    evaluate_placement_visibility,
+    period_timing,
+)
 
 TODAY = date(2026, 6, 15)
 YESTERDAY = TODAY - timedelta(days=1)
 TOMORROW = TODAY + timedelta(days=1)
 
 
-# The evaluate function only ever reads ``viewer.id``.
+# The evaluate function reads the viewer off ``request.user.colleague`` (only its
+# ``id``) and the privileged flag off ``is_bdm_or_staff(request)``,
+# which reads the user's BDM group membership. This fake request drives both
+# without a database user.
 @dataclass
 class _Viewer:
     id: int
 
 
-class PlacementTimingTest(SimpleTestCase):
+class _FakeGroups:
+    def __init__(self, *, is_bdm):
+        self._is_bdm = is_bdm
+
+    def filter(self, **kwargs):
+        return SimpleNamespace(exists=lambda: self._is_bdm)
+
+
+def _request(*, viewer_id=None, viewer_privileged=False):
+    colleague = _Viewer(id=viewer_id) if viewer_id is not None else None
+    user = SimpleNamespace(
+        is_authenticated=True,
+        email="viewer@rijksoverheid.nl",
+        colleague=colleague,
+        groups=_FakeGroups(is_bdm=viewer_privileged),
+    )
+    return SimpleNamespace(user=user)
+
+
+class PeriodTimingTest(SimpleTestCase):
     """The three-way timing classification, including the boundaries."""
 
     def test_active_when_mid_range(self):
-        assert placement_timing(start=YESTERDAY, end=TOMORROW, today=TODAY) == "active"
+        assert period_timing(start=YESTERDAY, end=TOMORROW, today=TODAY) == "active"
 
     def test_future_when_start_after_today(self):
-        assert placement_timing(start=TOMORROW, end=TOMORROW + timedelta(days=30), today=TODAY) == "future"
+        assert period_timing(start=TOMORROW, end=TOMORROW + timedelta(days=30), today=TODAY) == "future"
 
     def test_ended_when_end_before_today(self):
-        assert placement_timing(start=YESTERDAY - timedelta(days=30), end=YESTERDAY, today=TODAY) == "ended"
+        assert period_timing(start=YESTERDAY - timedelta(days=30), end=YESTERDAY, today=TODAY) == "ended"
 
     def test_start_equal_today_is_active(self):
         # start > today is future, so start == today falls through to active.
-        assert placement_timing(start=TODAY, end=TOMORROW, today=TODAY) == "active"
+        assert period_timing(start=TODAY, end=TOMORROW, today=TODAY) == "active"
 
     def test_end_equal_today_is_active(self):
         # end < today is ended, so end == today is still active (last day counts).
-        assert placement_timing(start=YESTERDAY, end=TODAY, today=TODAY) == "active"
+        assert period_timing(start=YESTERDAY, end=TODAY, today=TODAY) == "active"
 
     def test_null_start_is_never_future(self):
-        assert placement_timing(start=None, end=TOMORROW, today=TODAY) == "active"
+        assert period_timing(start=None, end=TOMORROW, today=TODAY) == "active"
 
     def test_null_end_is_never_ended(self):
-        assert placement_timing(start=YESTERDAY, end=None, today=TODAY) == "active"
+        assert period_timing(start=YESTERDAY, end=None, today=TODAY) == "active"
 
     def test_future_start_with_null_end_is_future(self):
         # A future start wins regardless of the (missing) end date.
-        assert placement_timing(start=TOMORROW, end=None, today=TODAY) == "future"
+        assert period_timing(start=TOMORROW, end=None, today=TODAY) == "future"
 
     def test_null_start_with_past_end_is_ended(self):
         # No start to make it future, and the end is in the past.
-        assert placement_timing(start=None, end=YESTERDAY, today=TODAY) == "ended"
+        assert period_timing(start=None, end=YESTERDAY, today=TODAY) == "ended"
 
     def test_both_null_is_active(self):
-        assert placement_timing(start=None, end=None, today=TODAY) == "active"
+        assert period_timing(start=None, end=None, today=TODAY) == "active"
 
 
 class EvaluatePlacementVisibilityTest(SimpleTestCase):
@@ -82,14 +111,12 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
     PLACED_ID = 1
     OTHER_ID = 3
 
-    def _evaluate(self, *, start, end, viewer_id, viewer_is_bdm=False):
-        viewer = _Viewer(id=viewer_id) if viewer_id is not None else None
+    def _evaluate(self, *, start, end, viewer_id, viewer_privileged=False):
         return evaluate_placement_visibility(
             start=start,
             end=end,
             placed_colleague_id=self.PLACED_ID,
-            viewer=viewer,
-            viewer_is_bdm=viewer_is_bdm,
+            request=_request(viewer_id=viewer_id, viewer_privileged=viewer_privileged),
             today=TODAY,
         )
 
@@ -108,7 +135,7 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
 
     def test_active_ignores_bdm_flag(self):
         # An active placement is public regardless of the BDM flag, no note.
-        result = self._evaluate(start=YESTERDAY, end=TOMORROW, viewer_id=self.OTHER_ID, viewer_is_bdm=True)
+        result = self._evaluate(start=YESTERDAY, end=TOMORROW, viewer_id=self.OTHER_ID, viewer_privileged=True)
         assert result.visible is True
         assert result.privacy_note is None
 
@@ -128,7 +155,7 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
 
     def test_future_visible_to_bdm_with_bdm_note(self):
         result = self._evaluate(
-            start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID, viewer_is_bdm=True
+            start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID, viewer_privileged=True
         )
         assert result.visible is True
         assert result.timing == "future"
@@ -136,14 +163,16 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
 
     def test_ended_visible_to_bdm_with_bdm_note(self):
         result = self._evaluate(
-            start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OTHER_ID, viewer_is_bdm=True
+            start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OTHER_ID, viewer_privileged=True
         )
         assert result.visible is True
         assert result.privacy_note == PRIVACY_BDM
 
     def test_bdm_note_reaches_a_viewerless_bdm(self):
         # The BDM branch does not read ``viewer``, so a null viewer still gets in.
-        result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=None, viewer_is_bdm=True)
+        result = self._evaluate(
+            start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=None, viewer_privileged=True
+        )
         assert result.visible is True
         assert result.privacy_note == PRIVACY_BDM
 
@@ -165,9 +194,54 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
             start=TOMORROW,
             end=TOMORROW + timedelta(days=30),
             viewer_id=self.PLACED_ID,
-            viewer_is_bdm=True,
+            viewer_privileged=True,
         )
         assert result.privacy_note == PRIVACY_OWN
+
+
+class EvaluateAssignmentVisibilityTest(SimpleTestCase):
+    """The owned (BM-role) assignment rule: active/future public, ended is
+    restricted to a privileged viewer. There is no placed colleague, so no
+    ``PRIVACY_OWN`` branch and the owner gets no special visibility."""
+
+    def _evaluate(self, *, start, end, viewer_privileged=False):
+        return evaluate_assignment_visibility(
+            start=start,
+            end=end,
+            request=_request(viewer_privileged=viewer_privileged),
+            today=TODAY,
+        )
+
+    # --- active / future: public, no note, privilege irrelevant ---
+
+    def test_active_visible_to_unprivileged(self):
+        result = self._evaluate(start=YESTERDAY, end=TOMORROW)
+        assert result.visible is True
+        assert result.timing == "active"
+        assert result.privacy_note is None
+
+    def test_future_is_public(self):
+        # Unlike a placement, a not-yet-started owned assignment is public: it
+        # lands in the active bucket on the profile, no note, no privilege needed.
+        result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30))
+        assert result.visible is True
+        assert result.timing == "future"
+        assert result.privacy_note is None
+
+    # --- ended: only a privileged viewer, with the BM-owned note ---
+
+    def test_ended_visible_to_privileged_with_bm_owned_note(self):
+        result = self._evaluate(start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_privileged=True)
+        assert result.visible is True
+        assert result.timing == "ended"
+        assert result.privacy_note == PRIVACY_BM_OWNED
+
+    def test_ended_hidden_from_unprivileged(self):
+        # The owner viewing their own ended assignment is unprivileged here: the
+        # gate is the role, not ownership, so it stays hidden.
+        result = self._evaluate(start=YESTERDAY - timedelta(days=30), end=YESTERDAY)
+        assert result.visible is False
+        assert result.privacy_note is None
 
 
 class ListVisibilityParityTest(TestCase):
@@ -205,15 +279,16 @@ class ListVisibilityParityTest(TestCase):
         qs = annotate_placement_dates(Placement.objects.all())
         return set(filter_visible_placements(qs, TODAY).values_list("id", flat=True))
 
-    def _evaluate_active_ids(self, viewer, *, viewer_is_bdm=False):
+    def _evaluate_active_ids(self, viewer, *, viewer_privileged=False):
+        viewer_id = viewer.id if viewer is not None else None
+        request = _request(viewer_id=viewer_id, viewer_privileged=viewer_privileged)
         active = set()
         for placement in Placement.objects.all():
             result = evaluate_placement_visibility(
                 start=placement.specific_start_date,
                 end=placement.specific_end_date,
                 placed_colleague_id=placement.colleague_id,
-                viewer=viewer,
-                viewer_is_bdm=viewer_is_bdm,
+                request=request,
                 today=TODAY,
             )
             if result.timing == "active":
@@ -224,9 +299,9 @@ class ListVisibilityParityTest(TestCase):
         # The list takes no viewer; the evaluate side is computed per row. For
         # every viewer class (including a BDM) the list must equal the active set.
         for viewer in (None, self.placed, self.owner, self.unrelated):
-            for viewer_is_bdm in (False, True):
-                assert self._list_ids() == self._evaluate_active_ids(viewer, viewer_is_bdm=viewer_is_bdm), (
-                    f"mismatch for viewer={viewer}, bdm={viewer_is_bdm}"
+            for viewer_privileged in (False, True):
+                assert self._list_ids() == self._evaluate_active_ids(viewer, viewer_privileged=viewer_privileged), (
+                    f"mismatch for viewer={viewer}, bdm={viewer_privileged}"
                 )
 
     def test_list_is_viewer_independent(self):
@@ -247,18 +322,16 @@ class ListVisibilityParityTest(TestCase):
                 start=placement.specific_start_date,
                 end=placement.specific_end_date,
                 placed_colleague_id=placement.colleague_id,
-                viewer=self.placed,
-                viewer_is_bdm=False,
+                request=_request(viewer_id=self.placed.id),
                 today=TODAY,
             )
             assert placed_result.visible is True, f"{placement} should be visible to the placed colleague"
-            # ...and to a BDM via the role flag (any viewer, incl. unrelated).
+            # ...and to a privileged viewer via the role flag (any viewer, incl. unrelated).
             bdm_result = evaluate_placement_visibility(
                 start=placement.specific_start_date,
                 end=placement.specific_end_date,
                 placed_colleague_id=placement.colleague_id,
-                viewer=self.unrelated,
-                viewer_is_bdm=True,
+                request=_request(viewer_id=self.unrelated.id, viewer_privileged=True),
                 today=TODAY,
             )
-            assert bdm_result.visible is True, f"{placement} should be visible to a BDM"
+            assert bdm_result.visible is True, f"{placement} should be visible to a privileged viewer"

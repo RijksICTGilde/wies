@@ -220,7 +220,7 @@ class PlacementPublicIdTests(TestCase):
 
 
 class PlacementPanelParamTests(TestCase):
-    """The ?plaatsing= panel resolves by public_id and keeps placement_visibility,
+    """The ?plaatsing= panel resolves by public_id and keeps placement visibility,
     so a placement the viewer may not see looks like a nonexistent one."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
