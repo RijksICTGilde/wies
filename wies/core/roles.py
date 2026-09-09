@@ -1,10 +1,14 @@
-"""Group/permission setup for Beheerder, Consultant, BDM.
+"""Group/permission setup and role predicates for Beheerder, Consultant, BDM.
 
 Per-row authorization for inline-edit and views lives in
-``wies/core/permissions.py``. This module is concerned only with
-Django Group definitions and what permissions they carry.
+``wies/core/permissions.py``. This module owns the Django Group definitions,
+the group-membership / staff predicates they build on, and the request-cached
+visibility gate those feed. It imports nothing from ``permissions.py`` (the
+dependency runs the other way), so low-level modules like
+``editables/assignment.py`` can import these predicates without a cycle.
 """
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -22,6 +26,48 @@ from wies.core.models import (
 )
 
 User = get_user_model()
+
+BDM_GROUP_NAME = "Business Development Manager"
+
+
+def is_bdm(user) -> bool:
+    """Whether the user holds the BDM role (Django group ``BDM_GROUP_NAME``).
+
+    Used as a visibility gate: a BDM sees ended and future placements/assignments
+    that are otherwise private to the placed colleague — see
+    ``evaluate_placement_visibility``.
+    """
+    return user.is_authenticated and user.groups.filter(name=BDM_GROUP_NAME).exists()
+
+
+def is_staff_member(user) -> bool:
+    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
+
+    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
+    and as a per-row edit- and visibility-predicate (e.g. in ``update_assignment``
+    and ``is_bdm_or_staff``).
+    """
+    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
+
+
+def is_bdm_or_staff(request) -> bool:
+    """Whether the request's user holds the BDM role or is a support-staff member,
+    resolved once per request, cached because the audit timeline calls it once per event.
+    """
+    user = getattr(request, "user", None)
+    if user is None:
+        return False
+    if not hasattr(request, "wies_is_bdm_or_staff"):
+        request.wies_is_bdm_or_staff = is_bdm(user) or is_staff_member(user)
+    return request.wies_is_bdm_or_staff
+
+
+def can_access_business_management(user) -> bool:
+    """Who may reach the "Business management" section (Bezetting and its
+    subpages): Business Managers (BDM) plus support staff (``STAFF_EMAILS``),
+    who see everything elsewhere too.
+    """
+    return is_bdm(user) or is_staff_member(user)
 
 
 def setup_roles():
@@ -46,7 +92,7 @@ def setup_roles():
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         "Consultant": [],
-        "Business Development Manager": [
+        BDM_GROUP_NAME: [
             (Assignment, ["add_assignment"]),
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),

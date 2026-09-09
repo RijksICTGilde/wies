@@ -7,7 +7,7 @@ an omitted field would wipe its column.
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -17,6 +17,7 @@ from wies.core.models import (
     Colleague,
     OrganizationUnit,
 )
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -26,15 +27,11 @@ class AssignmentEditSingleFieldTest(TestCase):
         self.client = Client()
         # Both owner and other are BDM, so both are valid choices in the
         # Business Manager field (choices = _bdm_queryset).
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-
-        self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
-        self.owner_user.groups.add(bdm_group)
+        self.owner_user = grant_bdm(User.objects.create_user(email="owner@rijksoverheid.nl"))
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
 
-        self.other_user = User.objects.create_user(email="other@rijksoverheid.nl")
-        self.other_user.groups.add(bdm_group)
+        self.other_user = grant_bdm(User.objects.create_user(email="other@rijksoverheid.nl"))
         self.client.force_login(self.other_user)
         self.other = Colleague.objects.get(user=self.other_user)
         self.client.force_login(self.owner_user)
@@ -96,12 +93,16 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        Group.objects.get_or_create(name="Business Development Manager")
-        # The owner is deliberately NOT in the BDM group; his edit rights come
-        # from owning the assignment.
+        # The owner is deliberately NOT in the BDM group. Since ownership alone
+        # does not grand edit rights, a Beheerder (change_assignment) drives
+        # the edit UI; the non-BDM owner stays the assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
-        self.client.force_login(self.owner_user)
+        self.client.force_login(self.owner_user)  # the login signal creates the Colleague
         self.owner = Colleague.objects.get(user=self.owner_user)
+
+        self.editor_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
+        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        self.client.force_login(self.editor_user)
 
         self.assignment = Assignment.objects.create(
             name="Handhaving Informatiesysteem",

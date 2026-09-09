@@ -11,6 +11,7 @@ from django.db import DataError, IntegrityError, transaction
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
 
@@ -287,7 +288,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
             groups_dict = {
                 "Beheerder": Group.objects.get(name="Beheerder"),
                 "Consultant": Group.objects.get(name="Consultant"),
-                "BDM": Group.objects.get(name="Business Development Manager"),
+                "BDM": Group.objects.get(name=BDM_GROUP_NAME),
             }
 
             for row in rows:

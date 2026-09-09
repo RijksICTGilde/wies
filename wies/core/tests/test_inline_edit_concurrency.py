@@ -10,6 +10,7 @@ from django.utils import timezone
 from wies.core.editables import AssignmentEditables
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.inline_edit_helpers import post_inline_edit
+from wies.core.tests.role_helpers import grant_bdm
 from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert
 
 User = get_user_model()
@@ -24,6 +25,8 @@ class InlineEditConcurrencyTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl", first_name="O", last_name="w")
+        # Ownership only grants edit rights combined with the BDM role.
+        grant_bdm(self.owner_user)
         self.owner = Colleague.objects.create(
             user=self.owner_user, name="Owner", email="owner@rijksoverheid.nl", source="wies"
         )
@@ -178,6 +181,8 @@ class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.owner_user = User.objects.create_user(email="bm@rijksoverheid.nl", first_name="B", last_name="m")
+        # Ownership only grants edit rights combined with the BDM role.
+        grant_bdm(self.owner_user)
         self.owner = Colleague.objects.create(
             user=self.owner_user, name="BM", email="bm@rijksoverheid.nl", source="wies"
         )
@@ -239,6 +244,8 @@ class TokenlessPostTests(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(email="owner3@rijksoverheid.nl", first_name="O", last_name="w")
+        # Ownership only grants edit rights combined with the BDM role.
+        grant_bdm(self.user)
         self.owner = Colleague.objects.create(
             user=self.user, name="Owner", email="owner3@rijksoverheid.nl", source="wies"
         )

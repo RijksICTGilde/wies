@@ -15,8 +15,9 @@ from django.utils import timezone
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.placement_visibility import LABELS, evaluate_placement_visibility
+from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
 from wies.core.services.urls import current_page_path
+from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
 
 
@@ -26,7 +27,7 @@ def _bdm_queryset(assignment=None):
     # The current owner is always included, even outside the BDM group: without a
     # matching option the combo box renders empty and saving clears the Business
     # Manager. Most owners are in fact not in that group.
-    in_group = Q(user__groups__name="Business Development Manager")
+    in_group = Q(user__groups__name=BDM_GROUP_NAME)
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:
         in_group |= Q(pk=owner_id)
@@ -167,11 +168,11 @@ def visible_service_rows(assignment, request) -> list[dict]:
     """Returns viewer-filtered team rows for display.
 
     ``_services_initial`` returns every placement; here a placement that is not
-    currently active is hidden from unrelated viewers — only the placed colleague
-    and the BM-owner see it, flagged ``historical`` with a label and privacy note.
+    currently active is hidden from unrelated viewers — only the placed colleague,
+    Business Managers (the BDM role) and support staff see it, flagged
+    ``historical`` with a label and privacy note.
     """
     today = timezone.now().date()
-    viewer = getattr(getattr(request, "user", None), "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
@@ -183,8 +184,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             row["placement_start_date"],
             row["placement_end_date"],
             placement.colleague_id,
-            viewer,
-            assignment.owner_id,
+            request,
             today,
         )
         if not result.visible:
@@ -306,21 +306,22 @@ def _visible_colleague_names(assignment, request, viewer) -> set[str]:
     return cache[assignment.id]
 
 
-def team_changes_are_restricted(assignment, request, changes: list[dict]) -> bool:
-    """Returns whether these team rows name anyone not everyone on this assignment sees.
+def restricted_change_names(assignment, changes: list[dict]) -> set[str]:
+    """Returns the names these team rows mention that not everyone sees.
 
-    Drives the note on a timeline row: the BM gets the unfiltered list and should
-    know a row is hidden from others. Tested against what an outsider would see,
-    not against the viewer's own rights, since their own name would otherwise
-    always make the row look visible.
+    Drives the note on a timeline row: a viewer who gets a change naming someone
+    outside the public row set (a BDM, or the person themselves) should know the
+    row is hidden from others. Tested against what an outsider would see, not
+    against the viewer's own rights, since their own name would otherwise always
+    make the row look visible.
     """
     if not changes:
-        return False
+        return set()
     # visible_service_rows only reads request.user, so a bare object without one
     # yields the rows as an outsider sees them.
     public_rows = visible_service_rows(assignment, SimpleNamespace(user=None))
     public_names = {row["colleague"].name for row in public_rows if row["colleague"]}
-    return any(not _change_colleague_names(change) <= public_names for change in changes)
+    return {name for change in changes for name in _change_colleague_names(change)} - public_names
 
 
 def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:
@@ -334,7 +335,9 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if viewer is not None and assignment.owner_id == viewer.id:
+    if is_bdm_or_staff(request):
+        # A privileged viewer (BDM or support staff) sees the unfiltered list;
+        # they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)
     return [change for change in changes if _change_colleague_names(change) <= allowed]

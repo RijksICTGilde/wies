@@ -19,6 +19,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -27,15 +28,16 @@ class PlacementEditViewTest(TestCase):
     """POST-only save of the combined placement edit form.
 
     Edit rights on a Placement chain to UPDATE on the parent assignment, which
-    for a wies assignment is its BM-owner (see permissions.py).
+    for a wies assignment is its BDM owner (see permissions.py).
     """
 
     def setUp(self):
         self.client = Client()
 
         # The Colleague is created on login (user_logged_in signal), so log in
-        # here to fetch it as the assignment owner.
-        self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
+        # here to fetch it as the assignment owner. Ownership only grants edit
+        # rights combined with the BDM role.
+        self.owner_user = grant_bdm(User.objects.create_user(email="owner@rijksoverheid.nl"))
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
 
