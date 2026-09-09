@@ -23,10 +23,10 @@ from wies.core.editables import (
 from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import can_access_business_management, is_staff_member
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
 from wies.core.services.version import get_app_version, get_nldd_version
+from wies.core.visibility_rules import show_bm_page, show_staff_pages
 
 
 def parse_message_link(extra_tags: str) -> dict | None:
@@ -240,8 +240,8 @@ def environment(**options):
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
             "get_messages": get_messages,
-            "is_staff_member": is_staff_member,
-            "can_access_business_management": can_access_business_management,
+            "show_bm_page": show_bm_page,
+            "show_staff_pages": show_staff_pages,
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,

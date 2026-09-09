@@ -80,7 +80,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_access_business_management, is_staff_member
+from .roles import is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -558,8 +558,8 @@ def staff_required(view_func):
 
 def business_management_access_required(view_func):
     """Gate the "Business management" section: Business Development Managers plus
-    support staff (see ``can_access_business_management``)."""
-    return user_passes_test(can_access_business_management, login_url="/geen-toegang/")(view_func)
+    support staff."""
+    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
 
 
 def _bezetting_today_pct():

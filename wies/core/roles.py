@@ -62,14 +62,6 @@ def is_bdm_or_staff(request) -> bool:
     return request.wies_is_bdm_or_staff
 
 
-def can_access_business_management(user) -> bool:
-    """Who may reach the "Business management" section (Bezetting and its
-    subpages): Business Managers (BDM) plus support staff (``STAFF_EMAILS``),
-    who see everything elsewhere too.
-    """
-    return is_bdm(user) or is_staff_member(user)
-
-
 def setup_roles():
     # Define roles
     roles = {
