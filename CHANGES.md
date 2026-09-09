@@ -5,8 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline. Needs a "Subgroep" label category with the labels "AI" and "ICT" (colour #DCE3EA): the timeline rows show those as chips and the filter sheet offers them
-- 632: the base dummy fixture now ships a user account and role per colleague, its label categories (including "Subgroep" with AI/ICT), and assignment dates spread around today, so an environment seeded with it alone (a PR preview via /staff/, for one) shows a populated Bezetting instead of an empty one
-- ?
+- 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations). This replaces the `base_dummy_data.json` fixture, which collided with `manage.py setup` on a fresh `just setup` and whose fixed dates aged out; the generator seeds a colleague+user+role+labels each, all three label categories, assignments/services/placements dated relative to today, a small offline org hierarchy, and audit events, and clears its own data first so reseeding is safe
 
 ## 2026-08-21_2
 

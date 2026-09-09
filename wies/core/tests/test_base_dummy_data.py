@@ -1,34 +1,31 @@
-"""The committed fixture must produce a usable demo environment on its own.
+"""The base dummy data must produce a usable demo environment on its own.
 
 `just setup` runs a chain of commands, but several environments only get as far
-as `loaddata` — a PR preview seeded through /staff/, for one. What the fixture
-alone yields is therefore what those environments show.
+as the base data generator — a PR preview seeded through /staff/, for one. What
+that generator alone yields is therefore what those environments show.
 
-These tests measure against today, and the fixture holds fixed dates, so they
-are what will notice when it ages: the dates were last spread around September
-2026, and once most assignments have ended these fail rather than the demo
-quietly turning into a page of empty rows. Re-spread the dates when they do.
+These tests measure against today. The generator dates its data relative to
+today (`load_dummy_data --profile base`), so — unlike the old fixed-date fixture
+— it does not age out; these tests instead pin that the generated spread stays
+in the shape a consultancy demo needs.
 """
 
 from django.contrib.auth import get_user_model
-from django.core import management
+from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, LabelCategory, Placement
-from wies.core.roles import setup_roles
 from wies.core.services.occupancy import GILDE_CATEGORY, colleague_occupancy
 
 User = get_user_model()
 
 
 class BaseDummyDataFixtureTest(TestCase):
-    """What a bare `loaddata base_dummy_data` leaves behind."""
+    """What `load_dummy_data --profile base` leaves behind."""
 
     def setUp(self):
-        # The fixture references role groups by natural key, so they must exist.
-        setup_roles()
-        management.call_command("loaddata", "base_dummy_data.json", verbosity=0)
+        call_command("load_dummy_data", "--profile", "base", verbosity=0)
 
     def test_every_colleague_has_a_user(self):
         """Bezetting lists colleagues by their user's role group, so a colleague
@@ -94,8 +91,10 @@ class BaseDummyDataFixtureTest(TestCase):
             assert category is not None, f"no {name} category"
             assert category.labels.exists(), f"{name} has no labels"
 
-    def test_loading_twice_does_not_fail_on_duplicate_emails(self):
-        """A unique index guards email case-insensitively, and /staff/ can load
-        the fixture onto an environment that already has it."""
-        management.call_command("loaddata", "base_dummy_data.json", verbosity=0)
+    def test_loading_twice_regenerates_cleanly(self):
+        """/staff/ can reseed onto an environment that already has data. The
+        generator clears its own data first and reuses users by email, so a
+        second run regenerates rather than colliding or piling up."""
+        call_command("load_dummy_data", "--profile", "base", verbosity=0)
+        assert Colleague.objects.count() == 50
         assert Colleague.objects.filter(user__isnull=True).count() == 0

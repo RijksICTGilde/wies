@@ -25,7 +25,7 @@ class StaffDestructiveActionsGuardTest(TestCase):
         assert response.status_code == 200
         body = response.content.decode()
         assert "Database leegmaken" in body
-        assert "Dummy data laden" in body
+        assert "Dummy data genereren" in body
 
     @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
     def test_buttons_hidden_when_disabled(self):
@@ -34,7 +34,7 @@ class StaffDestructiveActionsGuardTest(TestCase):
         assert response.status_code == 200
         body = response.content.decode()
         assert "Database leegmaken" not in body
-        assert "Dummy data laden" not in body
+        assert "Dummy data genereren" not in body
         # Sync action stays visible.
         assert "Organisaties synchroniseren" in body
 

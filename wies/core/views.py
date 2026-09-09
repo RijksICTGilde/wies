@@ -930,8 +930,10 @@ def staff_database(request):
         elif action == "load_base_data":
             if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
                 return HttpResponse(status=405)
-            management.call_command("loaddata", "base_dummy_data.json")
-            messages.success(request, "Data geladen uit base_dummy_data.json")
+            # The generator clears the dummy data it owns first, so reseeding an
+            # environment that already has data regenerates cleanly.
+            management.call_command("load_dummy_data", profile="base")
+            messages.success(request, "Dummy data gegenereerd")
         elif action == "reset_onboarding":
             request.user.onboarding_completed_at = None
             request.user.save(update_fields=["onboarding_completed_at"])

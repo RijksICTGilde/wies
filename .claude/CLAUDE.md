@@ -80,5 +80,4 @@ PR is opened, fill it in (or correct a placeholder) once the PR exists. The chan
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`
-- Base fixture: `wies/core/fixtures/base_dummy_data.json` (committed, small dataset)
-- Dummy data generator: `wies/core/management/commands/load_full_data.py` (management command)
+- Dummy data generator: `wies/core/management/commands/load_full_data.py` — one `generate()` with two size profiles (`load_dummy_data --profile base|full`); `base` is small/offline (used by `just setup`), `full` syncs organizations

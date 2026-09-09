@@ -5,12 +5,13 @@ When changing Django models:
 1. **Update model** in `wies/core/models.py`
 2. **Add a `public_id`** if the model will ever appear in a URL (object route,
    panel param, filter facet, hidden form value). See below.
-3. **Update `wies/core/management/commands/load_full_data.py`** to match new model structure
-4. **Update `wies/core/fixtures/base_dummy_data.json`** if fields were added (required), renamed, or removed
-5. **Run `uv run python manage.py makemigrations`** to generate migrations
-6. **Update forms** in `forms.py` if fields changed
-7. **Update views** if business logic affected
-8. **Run tests** to verify nothing breaks
+3. **Update `wies/core/management/commands/load_full_data.py`** (the dummy-data
+   generator) to match new model structure — both size profiles run through its
+   `generate()` function
+4. **Run `uv run python manage.py makemigrations`** to generate migrations
+5. **Update forms** in `forms.py` if fields changed
+6. **Update views** if business logic affected
+7. **Run tests** to verify nothing breaks
 
 ## Public IDs in URLs
 
@@ -45,5 +46,9 @@ the rest of the suite on an outdated schema.
 
 ## Dummy Data
 
-- `wies/core/fixtures/base_dummy_data.json` — small dataset, committed (for `just setup`, no network needed)
-- `python manage.py load_full_data` — full dataset via sync + ORM (for `just load-full-data`, needs network)
+One generator, two size profiles (both run `load_full_data.generate()`):
+
+- `python manage.py load_dummy_data --profile base` — small dataset, seeds a
+  local org hierarchy, no network (for `just setup`)
+- `python manage.py load_dummy_data --profile full` (alias: `load_full_data`) —
+  full dataset via org sync + ORM (for `just load-full-data`, needs network)

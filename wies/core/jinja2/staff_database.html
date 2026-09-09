@@ -40,17 +40,17 @@
     <nldd-box>
     <nldd-container padding="16">
     <nldd-title size="5">
-    <h2>Dummy data laden</h2>
+    <h2>Dummy data genereren</h2>
     </nldd-title>
     <nldd-spacer size="4" direction="vertical"></nldd-spacer>
     <nldd-rich-text>
-    <p>Laad de basis dummydataset uit <code>base_dummy_data.json</code>.</p>
+    <p>Genereer een basisset dummydata (collega's, opdrachten, plaatsingen). Bestaande dummydata wordt eerst gewist.</p>
     </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     <form method="post">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="load_base_data" />
-      <nldd-button variant="secondary" type="submit" text="Dummy data laden"></nldd-button>
+      <nldd-button variant="secondary" type="submit" text="Dummy data genereren"></nldd-button>
     </form>
     </nldd-container>
     </nldd-box>
