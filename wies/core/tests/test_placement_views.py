@@ -25,6 +25,7 @@ from wies.core.models import (
 )
 from wies.core.placement_visibility import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
 from wies.core.services.organizations import get_org_descendant_ids
+from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
@@ -441,7 +442,6 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
     def setUp(self):
         self.list_url = reverse("home")
         self.skill = Skill.objects.create(name="Python Developer")
-        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
@@ -460,7 +460,7 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        self.user_bdm.groups.add(self.bdm_group)
+        grant_bdm(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(self.list_url)
@@ -591,7 +591,6 @@ class AssignmentServicesFutureAndCountTest(TestCase):
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
-        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
         self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
             name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
@@ -609,7 +608,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        self.user_bdm.groups.add(self.bdm_group)
+        grant_bdm(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -706,7 +705,6 @@ class PlacementPanelVisibilityTest(TestCase):
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
-        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
         self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
             name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
@@ -724,7 +722,7 @@ class PlacementPanelVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        self.user_bdm.groups.add(self.bdm_group)
+        grant_bdm(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -844,7 +842,9 @@ class PlacementPanelPencilPermissionTest(TestCase):
     @patch("wies.core.views.timezone")
     def test_owner_gets_both_pencils(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        # Bob owns the assignment, so he may edit every field.
+        # Bob owns the assignment and holds the BDM role, so he may edit every
+        # field (ownership alone no longer grants edit rights).
+        grant_bdm(self.user_bob)
         pl = self._placement(owner=self.colleague_bob)
 
         data = _resolve_placement_panel(self._request(self.user_bob), pl.public_id)
@@ -860,7 +860,6 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
-        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
         self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
             name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
@@ -874,7 +873,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        self.user_bdm.groups.add(self.bdm_group)
+        grant_bdm(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -898,9 +897,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(
-            self._request(self.user_alice), self.colleague_alice, self.colleague_alice
-        )
+        assignments = _get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
@@ -914,7 +911,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(self._request(self.user_bdm), self.colleague_alice, self.colleague_bdm)
+        assignments = _get_colleague_assignments(self._request(self.user_bdm), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
@@ -926,9 +923,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(
-            self._request(self.user_unrelated), self.colleague_alice, self.colleague_unrelated
-        )
+        assignments = _get_colleague_assignments(self._request(self.user_unrelated), self.colleague_alice)
 
         assert assignments == []
 
@@ -1006,7 +1001,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 class PlacementListFutureVisibilityTest(TestCase):
     """The 'Wie zit waar?' list is a current-state overview: not-yet-started
     (planned) placements are hidden from EVERYONE there, including the placed
-    colleague and the BM-owner. Planned placements remain visible on the colleague
+    colleague and BDMs. Planned placements remain visible on the colleague
     profile and the side panels (``evaluate_placement_visibility``), not here."""
 
     def setUp(self):
@@ -1064,8 +1059,10 @@ class PlacementListFutureVisibilityTest(TestCase):
         assert pl not in self._queryset_as(self.user_alice, mock_tz)
 
     @patch("wies.core.views.timezone")
-    def test_future_placement_hidden_from_bm(self, mock_tz):
-        # Likewise the BM-owner: planned placements do not appear on the list.
+    def test_future_placement_hidden_from_bdm(self, mock_tz):
+        # Likewise a BDM (the role that sees planned placements elsewhere):
+        # planned placements do not appear on the list.
+        grant_bdm(self.user_bob)
         pl = self._future_placement(owner=self.colleague_bob)
         assert pl not in self._queryset_as(self.user_bob, mock_tz)
 
@@ -1188,7 +1185,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        assignments = _get_colleague_assignments(request, self.colleague, viewer=None)
+        assignments = _get_colleague_assignments(request, self.colleague)
 
         # Verify only current assignment is in active list
         active = [a for a in assignments if not a["historical"]]
@@ -1229,7 +1226,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        assignments = _get_colleague_assignments(request, self.colleague, viewer=None)
+        assignments = _get_colleague_assignments(request, self.colleague)
 
         # Verify assignment ending today is included
         active = [a for a in assignments if not a["historical"]]
@@ -1248,7 +1245,6 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
     def setUp(self):
         self.list_url = reverse("home")
         self.skill = Skill.objects.create(name="Tester")
-        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         self.user_alice = User.objects.create_user(email="cp_alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
@@ -1279,7 +1275,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
             source="wies",
             user=self.user_bdm,
         )
-        self.user_bdm.groups.add(self.bdm_group)
+        grant_bdm(self.user_bdm)
 
     def _make_request(self, user):
         factory = RequestFactory()
@@ -1306,7 +1302,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
@@ -1335,7 +1331,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bdm)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_bdm)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
@@ -1364,7 +1360,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == []
@@ -1403,7 +1399,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         active = [a for a in assignments if not a["historical"]]
         historical = [a for a in assignments if a["historical"]]
@@ -1432,7 +1428,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], "Unrelated user should not see ended BM assignments"
@@ -1465,7 +1461,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(user_no_colleague)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=None)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], "User without colleague should not see historical assignments"
@@ -1494,7 +1490,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         active = [a for a in assignments if not a["historical"]]
         active_ids = [a["id"] for a in active]
@@ -1502,7 +1498,10 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_bm_sees_own_ended_placement_on_own_assignment(self, mock_timezone):
-        """BM who also has an ended placement on their own assignment sees it in historical."""
+        """An owner who is also the placed colleague sees their ended placement.
+
+        Visibility comes from being the placed colleague (PRIVACY_OWN rule);
+        ownership itself no longer grants any visibility."""
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now
@@ -1528,15 +1527,19 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
-        assert assignment.id in ids, "BM should see their own ended placement on own assignment"
+        assert assignment.id in ids, "Placed colleague should see their own ended placement"
 
     @patch("wies.core.views.timezone")
     def test_other_bm_cannot_see_ended_bm_assignments(self, mock_timezone):
-        """A BM of a different assignment must NOT see another colleague's ended BM assignments."""
+        """A non-BDM owner of a different assignment sees no ended BM assignments.
+
+        Owning an (unrelated) assignment grants no visibility: without the BDM
+        role Bob counts as any other unrelated viewer. (A BDM would see them —
+        visibility rides on the role, not on ownership.)"""
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now
@@ -1558,10 +1561,10 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_bob)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
-        assert historical == [], "BM of different assignment should not see ended BM assignments"
+        assert historical == [], "Non-BDM owner of a different assignment should not see ended BM assignments"
 
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_shown_to_bdm_with_note(self, mock_timezone):
@@ -1590,7 +1593,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
         # A BDM viewer (not the owner) sees it on Alice's profile.
         request = self._make_request(self.user_bdm)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_bdm)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         entry = next((a for a in historical if a["id"] == assignment.id), None)
@@ -1615,7 +1618,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
+        assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert next((a for a in historical if a["id"] == assignment.id), None) is None, (
@@ -2156,8 +2159,8 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
     follow the list's active-only rule.
 
     A planned (not-yet-started) placement never appears on the list — for any
-    viewer, including the BM-owner — so it is counted for no one. Only active
-    placements contribute to the per-org counts.
+    viewer, including the placed colleague and BDMs — so it is counted for no
+    one. Only active placements contribute to the per-org counts.
     """
 
     def setUp(self):
@@ -2205,9 +2208,10 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
         assert self._modal_count_for(self.unrelated_user) == 0
 
-    def test_planned_placement_not_counted_for_bm_owner(self):
-        """The list is active-only, so a planned placement is not counted even for
-        the BM-owner (they see it on the profile/panels, not on the list)."""
+    def test_planned_placement_not_counted_for_bdm(self):
+        """The list is active-only, so a planned placement is not counted even
+        for a BDM (they see it on the profile/panels, not on the list)."""
+        grant_bdm(self.owner_user)
         self._place(start_offset_days=30, end_offset_days=120)
 
         assert self._modal_count_for(self.owner_user) == 0
@@ -2228,11 +2232,10 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
         # Under the new rule the owner sees the restricted row only if they are a
         # Business Manager (BDM role); make bm_user one.
-        self.bm_user.groups.add(bdm_group)
+        grant_bdm(self.bm_user)
         self.client.force_login(self.bm_user)
         self.bm = Colleague.objects.get(user=self.bm_user)
 
@@ -2297,10 +2300,9 @@ class TimelinePrivacyChipTest(TestCase):
     """
 
     def setUp(self):
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
         # The full team line is shown only to a Business Manager (BDM role).
-        self.bm_user.groups.add(bdm_group)
+        grant_bdm(self.bm_user)
         self.bm_client = Client()
         self.bm_client.force_login(self.bm_user)
         self.bm = Colleague.objects.get(user=self.bm_user)
@@ -2471,10 +2473,7 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
     def test_bdm_still_sees_the_hidden_team_member(self):
         # Guards against over-filtering: a Business Manager (BDM role) must keep
         # full visibility, even when neither placed nor the owner.
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
-        bdm_user.groups.add(bdm_group)
-        Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
+        bdm_user = make_bdm_user()
         bdm_client = Client()
         bdm_client.force_login(bdm_user)
 
@@ -2500,7 +2499,7 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
         self.assertNotContains(response, "Hidden Member")
 
     def test_placed_colleague_still_sees_their_own_ended_assignment(self):
-        # The other authorized viewer besides the BM-owner: the placed colleague
+        # The other authorized viewer besides a BDM: the placed colleague
         # themselves. On their own colleague panel the ended assignment must
         # surface (PRIVACY_OWN), even though it is hidden from the outsider.
         member_user = User.objects.create_user(email="hidden@rijksoverheid.nl")

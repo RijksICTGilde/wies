@@ -42,7 +42,13 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.placement_visibility import LABELS, PRIVACY_BM_OWNED, evaluate_placement_visibility
+from wies.core.placement_visibility import (
+    LABELS,
+    PRIVACY_BDM,
+    PRIVACY_BM_OWNED,
+    PRIVACY_OWN,
+    evaluate_placement_visibility,
+)
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -69,12 +75,13 @@ from .models import (
     Skill,
     Suborganization,
 )
-from .permissions import is_bdm, is_staff_member
+from .permissions import is_staff_member
 from .querysets import (
     annotate_placement_dates,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
+from .roles import viewer_is_bdm
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -295,10 +302,11 @@ def _make_assignment_entry(
     }
 
 
-def _get_colleague_assignments(request, colleague, viewer):
+def _get_colleague_assignments(request, colleague):
 
     today = timezone.now().date()
-    viewer_is_bdm = is_bdm(request.user)
+    viewer = getattr(request.user, "colleague", None)
+    viewer_holds_bdm = viewer_is_bdm(request)
 
     active_by_id: dict[int, dict] = {}
     historical_by_id: dict[int, dict] = {}
@@ -326,7 +334,7 @@ def _get_colleague_assignments(request, colleague, viewer):
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
         # visible to the placed colleague and the Business Managers (BDM role).
-        result = evaluate_placement_visibility(start, end, colleague.id, viewer, viewer_is_bdm, today)
+        result = evaluate_placement_visibility(start, end, colleague.id, viewer, viewer_holds_bdm, today)
         if not result.visible:
             continue
 
@@ -367,7 +375,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=end_date,
                 )
             active_by_id[assignment_id]["tags"]["Business Manager"] = None
-        elif viewer_is_bdm:
+        elif viewer_holds_bdm:
             # Ended BM assignments are only shown to Business Managers (BDM role).
             if assignment_id not in historical_by_id:
                 historical_by_id[assignment_id] = _make_assignment_entry(
@@ -380,6 +388,11 @@ def _get_colleague_assignments(request, colleague, viewer):
                     tags={"Business Manager": None},
                     historical=True,
                     privacy_warning_text=PRIVACY_BM_OWNED,
+                    # This branch only fires for an ended assignment, so the
+                    # label is statically known — set it here like the
+                    # placement-based entries do, so the template needs no
+                    # fallback.
+                    period_label=LABELS["ended"],
                 )
             historical_by_id[assignment_id]["tags"]["Business Manager"] = None
         else:
@@ -410,9 +423,7 @@ def _get_colleague_assignments(request, colleague, viewer):
 
 def _build_colleague_panel_data(colleague, request):
     """Builds the colleague panel context, shared by both views."""
-    viewer = getattr(request.user, "colleague", None)
-
-    assignments = _get_colleague_assignments(request, colleague, viewer)
+    assignments = _get_colleague_assignments(request, colleague)
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
@@ -470,9 +481,8 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
 
     # The colleague's other assignments live in this same panel, under the same
     # visibility rules as the colleague panel — it is the same source.
-    viewer = getattr(request.user, "colleague", None)
     other_assignments = [
-        entry for entry in _get_colleague_assignments(request, colleague, viewer) if entry["id"] != assignment.id
+        entry for entry in _get_colleague_assignments(request, colleague) if entry["id"] != assignment.id
     ]
 
     return {
@@ -495,7 +505,7 @@ def _resolve_placement_panel(request, public_id):
     """Fetches a placement for the side panel, enforcing the team list's rule.
 
     Ended or not-yet-started placements are only shown to the placed colleague
-    and the assignment's BM-owner. Not-found, malformed and not-visible are
+    and Business Managers (the BDM role). Not-found, malformed and not-visible are
     indistinguishable — all raise Http404 for the HTMX panel request, so a hidden
     placement's existence is never revealed, and return None for a full-page load.
     """
@@ -515,7 +525,7 @@ def _resolve_placement_panel(request, public_id):
             placement.end_date,
             placement.colleague_id,
             viewer,
-            is_bdm(request.user),
+            viewer_is_bdm(request),
             timezone.now().date(),
         )
     if result is None or not result.visible:
@@ -2772,21 +2782,25 @@ def _attach_audit_sentence(event) -> None:
 def _team_event_privacy_note(assignment, request, changes) -> str:
     """The note on one team row in the timeline, or "" when there is nothing to say.
 
-    Only for a viewer who sees the row while others do not — in practice the BM.
-    Rows that were filtered away no longer exist here, so they cannot carry a
-    note; the note above the list covers those.
+    Only for a viewer who sees the row while others do not. Derived from the
+    event's own names, not from the current team rows: the change is a frozen
+    snapshot, so the hidden placement it names may since have been deleted (no
+    current row carries a note then), and an unrelated row's note must not label
+    this event.
     """
-    from wies.core.editables.assignment import (  # noqa: PLC0415 — avoids import cycle
-        team_changes_are_restricted,
-        visible_service_rows,
-    )
+    from wies.core.editables.assignment import restricted_change_names  # noqa: PLC0415 — avoids import cycle
 
-    if not team_changes_are_restricted(assignment, request, changes):
+    hidden = restricted_change_names(assignment, changes)
+    if not hidden:
         return ""
-    return next(
-        (note for row in visible_service_rows(assignment, request) if (note := row.get("privacy_warning_text"))),
-        "",
-    )
+    viewer = getattr(request.user, "colleague", None)
+    if viewer is not None and hidden == {viewer.name}:
+        # The only hidden person the event names is the viewer themselves —
+        # a non-BDM only ever reaches this case (their filtered list drops
+        # changes naming hidden others), and a placed BDM gets the wording
+        # matching their own row.
+        return PRIVACY_OWN
+    return PRIVACY_BDM
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
@@ -2986,7 +3000,7 @@ def user_profile(request):
         selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
         label_categories.append({"category": category, "labels": selected})
 
-    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
+    assignment_list = _get_colleague_assignments(request, colleague) if colleague else []
 
     return render(
         request,
@@ -4158,7 +4172,7 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
     invalid POST, pass the bound ``member_form`` + its ``member_heading`` +
     sanitised ``parent_url`` to re-render; the ``teamlid`` lookup is then skipped.
     """
-    from wies.core.editables.assignment import AssignmentEditables, _services_initial, skill_choices  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, skill_choices, visible_service_rows  # noqa: PLC0415
     from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
 
     spec = AssignmentEditables.services
@@ -4174,7 +4188,10 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
         else:
             # teamlid is a Service public_id (UUID string); match it against the row
             # identity. A non-matching or malformed value just misses → 404 panel.
-            initial_row = next((r for r in _services_initial(assignment) if r["service_public_id"] == teamlid), None)
+            # Resolved against the viewer-filtered rows to enforce proper visibility rules
+            initial_row = next(
+                (r for r in visible_service_rows(assignment, request) if r["service_public_id"] == teamlid), None
+            )
             if initial_row is None:
                 return None
             member_heading = "Teamlid bewerken"

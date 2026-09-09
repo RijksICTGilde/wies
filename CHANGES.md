@@ -4,8 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 636: visibility warning on finished placements is shown on team members instead of above the team
+- 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row
 - 636: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) instead of only to the opdracht owner
+- 636: editing and deleting an opdracht now also requires the BDM role, so an owner outside that role no longer has edit rights
 - ?
 
 ## 2026-08-21_2

@@ -22,15 +22,18 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
 
 from .inline_edit_helpers import post_inline_edit
+from .role_helpers import grant_bdm
 
 User = get_user_model()
 
 
 class _Setup(TestCase):
-    """Common fixture: BM owner, placed consultant, unrelated user, assignment with a service."""
+    """Common fixture: BDM owner, placed consultant, unrelated user, assignment with a service."""
 
     def setUp(self):
-        self.owner_user = User.objects.create_user(email="bm@x.nl", first_name="B", last_name="M")
+        # The owner is a BDM: ownership only grants edit rights combined with
+        # the BDM role (see ``update_assignment`` in permissions.py).
+        self.owner_user = grant_bdm(User.objects.create_user(email="bm@x.nl", first_name="B", last_name="M"))
         self.owner = Colleague.objects.create(user=self.owner_user, name="B M", email="bm@x.nl", source="wies")
 
         self.placed_user = User.objects.create_user(email="placed@x.nl", first_name="P", last_name="L")
@@ -71,7 +74,7 @@ class HasPermissionEngineTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, self.placed_user, AssignmentEditables.extra_info) is True
 
     def test_verb_list_or_composes(self):
-        # Owner passes UPDATE on assignment; not LIST-only test, but
+        # The BDM owner passes UPDATE on assignment; not LIST-only test, but
         # demonstrates list normalisation.
         assert has_permission([Verb.UPDATE, Verb.DELETE], self.assignment, self.owner_user) is True
         # A verb the user can't do AND another they also can't do → False.
@@ -82,8 +85,18 @@ class HasPermissionEngineTest(_Setup):
 
 
 class AssignmentPermissionRulesTest(_Setup):
-    def test_owner_can_update_whole_assignment(self):
+    def test_bdm_owner_can_update_whole_assignment(self):
         assert has_permission(Verb.UPDATE, self.assignment, self.owner_user) is True
+
+    def test_non_bdm_owner_cannot_update_or_delete(self):
+        """Ownership alone grants nothing: an owner outside the BDM group is
+        treated as any other viewer (see ``update_assignment``)."""
+        plain_user = User.objects.create_user(email="plain@x.nl", first_name="P", last_name="O")
+        plain = Colleague.objects.create(user=plain_user, name="P O", email="plain@x.nl", source="wies")
+        owned = Assignment.objects.create(name="Plain", owner=plain, source="wies")
+
+        assert has_permission(Verb.UPDATE, owned, plain_user) is False
+        assert has_permission(Verb.DELETE, owned, plain_user) is False
 
     def test_placed_consultant_cannot_update_whole_assignment(self):
         # This is the placement-bug fix — historically this was True.
@@ -143,8 +156,8 @@ class StaffMemberCanEditAssignmentTest(_Setup):
 
 class PlacementPermissionTest(_Setup):
     """A colleague placed on an assignment must not be able to update
-    Placement records on the same assignment — only the assignment
-    owner (or an admin holder of ``core.change_assignment``) can.
+    Placement records on the same assignment — only the assignment's
+    BDM owner (or an admin holder of ``core.change_assignment``) can.
 
     The endpoint shape is ``POST /inline-edit/placement/<id>/colleague/``.
     """
@@ -152,7 +165,7 @@ class PlacementPermissionTest(_Setup):
     def test_placed_consultant_cannot_update_placement_via_engine(self):
         assert has_permission(Verb.UPDATE, self.placement, self.placed_user) is False
 
-    def test_owner_can_update_placement_via_engine(self):
+    def test_bdm_owner_can_update_placement_via_engine(self):
         assert has_permission(Verb.UPDATE, self.placement, self.owner_user) is True
 
     def test_placed_consultant_cannot_replace_colleague_via_endpoint(self):
@@ -173,7 +186,7 @@ class InlineEditExistenceOracleTest(_Setup):
     exists to a viewer who may not touch it: 'not found' and 'not allowed'
     must be indistinguishable, so sequential PKs can't be walked as an oracle.
 
-    ``update_placement`` is owner-only, and the placement is made *planned*
+    ``update_placement`` is BDM-owner-only, and the placement is made *planned*
     (future start) so an unrelated consultant can neither edit nor see it.
     """
 
@@ -193,7 +206,7 @@ class InlineEditExistenceOracleTest(_Setup):
 
     def test_existing_forbidden_and_missing_are_indistinguishable(self):
         """An unrelated consultant cannot edit this placement (update_placement is
-        owner-only) and cannot see it (it is planned). The response for the real,
+        BDM-owner-only) and cannot see it (it is planned). The response for the real,
         hidden placement must match the response for a non-existent public_id."""
         self.client.force_login(self.unrelated_user)
         missing_public_id = uuid.uuid4()
@@ -219,7 +232,7 @@ class ServiceDescriptionRuleTest(_Setup):
     def test_placed_on_service_can_update_description(self):
         assert has_permission(Verb.UPDATE, self.service, self.placed_user, ServiceEditables.description) is True
 
-    def test_owner_can_update_service_description(self):
+    def test_bdm_owner_can_update_service_description(self):
         assert has_permission(Verb.UPDATE, self.service, self.owner_user, ServiceEditables.description) is True
 
 
@@ -330,7 +343,7 @@ class AssignmentMemberSheetPermissionTest(_Setup):
         assert resp.status_code == 403
         assert Service.objects.filter(pk=self.service.pk).exists()
 
-    def test_member_edit_allowed_for_owner(self):
+    def test_member_edit_allowed_for_bdm_owner(self):
         # Guards against the 403 tests passing for the wrong reason (e.g. the
         # endpoint 403-ing everyone).
         owner_client = Client()

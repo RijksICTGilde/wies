@@ -3,7 +3,7 @@
 team list from `value` (row dicts from _services_initial, viewer-filtered and
 vacancies-first via _services_display_context). Edit mode swaps the inline-edit
 wrapper for the formset and back. Historical placements carry a privacy note for
-the placed colleague and BM owner, hidden from unrelated viewers.
+the placed colleague and Business Managers (BDM role), hidden from other viewers.
 
 Rows are not clickable: every action runs through the row menu in the last cell. #}
 {% if value %}
@@ -23,7 +23,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
         {{ row.colleague.name }}
         {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
       </span>
-      {% if pl.start_date or pl.end_date or row.period_label %}
+      {% if pl.start_date or pl.end_date %}
         <span slot="supporting-text" class="wies-team-row-meta">
           {% if pl.start_date and pl.end_date %}
             {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
@@ -32,12 +32,11 @@ Rows are not clickable: every action runs through the row menu in the last cell.
           {% elif pl.end_date %}
             t/m {{ pl.end_date|datum_nl }}
           {% endif %}
+          {# A visible non-active row always carries both label and note (see
+             evaluate_placement_visibility), so the chip needs no plain-tag
+             fallback. #}
           {% if row.period_label %}
-            {% if row.privacy_warning_text %}
-              {{ privacy_chip(row.privacy_warning_text, size="sm", label=row.period_label) }}
-            {% else %}
-              <nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>
-            {% endif %}
+            {{ privacy_chip(row.privacy_warning_text, size="sm", label=row.period_label) }}
           {% endif %}
         </span>
       {% endif %}

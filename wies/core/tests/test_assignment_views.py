@@ -4,7 +4,7 @@ import uuid
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.db import connection
 from django.test import Client, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
@@ -22,6 +22,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -41,10 +42,14 @@ class AssignmentEditAttributeTest(TestCase):
         change_permission = Permission.objects.get(codename="change_assignment")
         self.user_with_permission.user_permissions.add(change_permission)
 
-        self.owner_user = User.objects.create_user(
-            email="owner@rijksoverheid.nl",
-            first_name="Owner",
-            last_name="User",
+        # The owner holds the BDM role: ownership only grants edit rights
+        # combined with BDM (see ``update_assignment`` in permissions.py).
+        self.owner_user = grant_bdm(
+            User.objects.create_user(
+                email="owner@rijksoverheid.nl",
+                first_name="Owner",
+                last_name="User",
+            )
         )
 
         self.assigned_user = User.objects.create_user(
@@ -119,8 +124,8 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated Assignment Name"
 
-    def test_assignment_edit_as_owner_without_permission(self):
-        """The assignment owner can edit without an explicit permission."""
+    def test_assignment_edit_as_bdm_owner_without_permission(self):
+        """The BDM owner can edit without an explicit Django permission."""
         self.client.force_login(self.owner_user)
 
         response = post_inline_edit(
@@ -195,17 +200,17 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.start_date is None
         assert self.assignment.end_date is None
 
-    def test_owner_can_edit_owner_field(self):
-        """The owner can edit the ``owner`` field, which the field permission
+    def test_bdm_owner_can_edit_owner_field(self):
+        """The BDM owner can edit the ``owner`` field, which the field permission
         must not block."""
         self.client.force_login(self.owner_user)
-        new_bdm_user = User.objects.create_user(
-            email="new-bdm@rijksoverheid.nl",
-            first_name="New",
-            last_name="BDM",
+        new_bdm_user = grant_bdm(
+            User.objects.create_user(
+                email="new-bdm@rijksoverheid.nl",
+                first_name="New",
+                last_name="BDM",
+            )
         )
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        new_bdm_user.groups.add(bdm_group)
         new_bdm = Colleague.objects.create(
             user=new_bdm_user,
             name="New BDM",
@@ -259,13 +264,13 @@ class AssignmentEditAttributeTest(TestCase):
             first_name="Staff",
             last_name="Member",
         )
-        new_bdm_user = User.objects.create_user(
-            email="bdm2@rijksoverheid.nl",
-            first_name="New",
-            last_name="BDM",
+        new_bdm_user = grant_bdm(
+            User.objects.create_user(
+                email="bdm2@rijksoverheid.nl",
+                first_name="New",
+                last_name="BDM",
+            )
         )
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        new_bdm_user.groups.add(bdm_group)
         new_bdm = Colleague.objects.create(
             user=new_bdm_user,
             name="New BDM",
@@ -871,8 +876,7 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_bdm_sees_the_full_history(self):
         bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
         Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        bdm_user.groups.add(bdm_group)
+        grant_bdm(bdm_user)
 
         response = self._get_timeline(bdm_user)
 
@@ -957,13 +961,14 @@ class TimelinePlacementPrivacyTests(TestCase):
 
 
 class AssignmentDeleteViewTests(TestCase):
-    """Only the BM-owner can delete a wies-sourced opdracht (#313)."""
+    """Only the BDM owner can delete a wies-sourced opdracht (#313);
+    ownership without the BDM role grants nothing."""
 
     def setUp(self):
         self.client = Client()
 
-        self.owner_user = User.objects.create_user(
-            email="owner-del@rijksoverheid.nl", first_name="Owner", last_name="BM"
+        self.owner_user = grant_bdm(
+            User.objects.create_user(email="owner-del@rijksoverheid.nl", first_name="Owner", last_name="BM")
         )
         self.owner_colleague = Colleague.objects.create(
             user=self.owner_user, name="Owner BM", email="owner-del@rijksoverheid.nl", source="wies"
@@ -997,7 +1002,7 @@ class AssignmentDeleteViewTests(TestCase):
         self.url = reverse("assignment-delete", args=[self.assignment.public_id])
         self.external_url = reverse("assignment-delete", args=[self.external_assignment.public_id])
 
-    def test_owner_can_delete_wies_assignment(self):
+    def test_bdm_owner_can_delete_wies_assignment(self):
         self.client.force_login(self.owner_user)
         assignment_id = self.assignment.id
         service_id = self.service.id
@@ -1072,7 +1077,7 @@ class AssignmentDeleteViewTests(TestCase):
         self.assertContains(response, "Verwijder opdracht")
         self.assertContains(response, "Behoud opdracht")
 
-    def test_owner_cannot_delete_otys_iir_assignment(self):
+    def test_bdm_owner_cannot_delete_otys_iir_assignment(self):
         self.client.force_login(self.owner_user)
         response = self.client.post(self.external_url)
         assert response.status_code == 403

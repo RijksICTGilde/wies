@@ -23,6 +23,33 @@ from wies.core.models import (
 
 User = get_user_model()
 
+BDM_GROUP_NAME = "Business Development Manager"
+
+
+def is_bdm(user) -> bool:
+    """Whether the user holds the BDM role (Django group ``BDM_GROUP_NAME``).
+
+    Used as a visibility gate: a BDM sees ended and future placements/assignments
+    that are otherwise private to the placed colleague — see
+    ``evaluate_placement_visibility``.
+    """
+    return user.is_authenticated and user.groups.filter(name=BDM_GROUP_NAME).exists()
+
+
+def viewer_is_bdm(request) -> bool:
+    """``is_bdm`` for the request's user, resolved once per request.
+
+    Cached on the request because several surfaces need the flag while building
+    one response (team rows, timeline events, the colleague panel) and ``is_bdm``
+    costs a groups query each time — the answer is the same for the whole request.
+    """
+    user = getattr(request, "user", None)
+    if user is None:
+        return False
+    if not hasattr(request, "wies_viewer_is_bdm"):
+        request.wies_viewer_is_bdm = is_bdm(user)
+    return request.wies_viewer_is_bdm
+
 
 def setup_roles():
     # Define roles
@@ -46,7 +73,7 @@ def setup_roles():
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         "Consultant": [],
-        "Business Development Manager": [
+        BDM_GROUP_NAME: [
             (Assignment, ["add_assignment"]),
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),

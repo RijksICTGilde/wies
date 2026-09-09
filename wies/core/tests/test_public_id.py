@@ -34,6 +34,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
+from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 
 User = get_user_model()
 
@@ -76,6 +77,8 @@ class AssignmentPublicIdRoutingTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="u@rijksoverheid.nl", first_name="U", last_name="s")
         self.owner = Colleague.objects.create(user=self.user, name="Owner", email="u@rijksoverheid.nl", source="wies")
+        # Ownership only grants edit/delete rights combined with the BDM role.
+        grant_bdm(self.user)
         self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner, source="wies")
         self.client.force_login(self.user)
 
@@ -84,7 +87,7 @@ class AssignmentPublicIdRoutingTests(TestCase):
 
         assert response.status_code == 200
 
-    def test_delete_route_resolves_by_public_id_for_owner(self):
+    def test_delete_route_resolves_by_public_id_for_bdm_owner(self):
         response = self.client.get(reverse("assignment-delete", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
@@ -280,10 +283,7 @@ class PlacementPanelParamTests(TestCase):
     def test_ended_placement_shown_to_bdm(self):
         """A BDM (not the placed colleague, not the owner) opens the same ended
         placement's panel over HTTP and sees it."""
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
-        Colleague.objects.create(user=bdm_user, name="Bdm", email="bdm@rijksoverheid.nl", source="wies")
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        bdm_user.groups.add(bdm_group)
+        bdm_user = make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm")
         self.client.force_login(bdm_user)
         ended = self._placement(start_offset=-30, end_offset=-10)
 
