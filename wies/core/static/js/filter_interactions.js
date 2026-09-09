@@ -97,7 +97,9 @@
     if (!menu) return;
     const field = document.querySelector("[data-wies-search-input]");
     const hasTerm = ((field && field.value) || "").trim() !== "";
-    const hasItems = menu.children.length > 0;
+    const stale = pendingGeneration !== suggestGeneration;
+    const hasItems = !stale && menu.children.length > 0;
+    if (stale && menu.children.length > 0) menu.innerHTML = "";
     const open = menu.matches(":popover-open");
     if (hasItems && hasTerm && !open) menu.showPopover?.();
     else if ((!hasItems || !hasTerm) && open) menu.hidePopover?.();
@@ -127,7 +129,20 @@
     return ((hidden && hidden.value) || "").trim();
   }
 
+  // A sent htmx request cannot be cancelled, so a response that outlives its
+  // dismissal is dropped on arrival by generation instead.
+  let suggestTimer = null;
+  let suggestGeneration = 0;
+  let pendingGeneration = 0;
+
+  function cancelSuggestions() {
+    clearTimeout(suggestTimer);
+    suggestTimer = null;
+    suggestGeneration += 1;
+  }
+
   function hideSuggestions() {
+    cancelSuggestions();
     const menu = suggestionMenu();
     if (!menu) return;
     if (menu.matches(":popover-open")) menu.hidePopover?.();
@@ -158,18 +173,19 @@
     el.__nddSearchAttached = true;
     anchorSuggestionMenu();
     observeSuggestionMenu();
-    let timer = null;
 
     el.addEventListener("input", (e) => {
       const term = (e.detail?.value ?? el.value ?? "").trim();
-      clearTimeout(timer);
+      cancelSuggestions();
       if (!term) {
         hideSuggestions();
         return;
       }
-      timer = setTimeout(() => {
+      suggestTimer = setTimeout(() => {
+        suggestTimer = null;
         const menu = suggestionMenu();
         if (!menu || !window.htmx) return;
+        pendingGeneration = suggestGeneration;
         window.htmx.ajax(
           "GET",
           `/zoek-suggesties/?zoek=${encodeURIComponent(term)}`,
