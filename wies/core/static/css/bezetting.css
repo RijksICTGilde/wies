@@ -109,10 +109,14 @@
 
 /* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
    via the card's own --_background-color, which inherits into the shadow root so
-   the radius and clipping stay intact. One neutral token covers light and dark.
-   The active/selected state is carried by the filter chip, not the card. */
+   the radius and clipping stay intact. One neutral token covers light and dark. */
 .bezetting-stat:hover nldd-card {
   --_background-color: var(--primitives-color-neutral-50);
+}
+
+.bezetting-stat[aria-pressed="true"] nldd-card {
+  --_background-color: var(--primitives-color-neutral-100);
+  --_border-color: var(--primitives-color-neutral-300);
 }
 
 /* Phase colours for the timeline bars.
