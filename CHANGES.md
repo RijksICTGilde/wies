@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row
 - 636: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) and support staff, instead of only to the opdracht owner
 - 636: editing and deleting an opdracht now also requires the BDM role, so an owner outside that role no longer has edit rights
+- 636: editing or deleting a team member now applies the same visibility rule as the sheet, so a finished or future placement hidden from a viewer can no longer be changed via a crafted request
 - 653: pressing Enter quickly after typing no longer leaves the "Druk op Enter om te zoeken" hint hanging over the results
 - ?
 
