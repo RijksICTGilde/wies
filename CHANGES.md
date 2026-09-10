@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline. Needs a "Subgroep" label category with the labels "AI" and "ICT" (colour #DCE3EA): the timeline rows show those as chips and the filter sheet offers them
-- 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations). This replaces the `base_dummy_data.json` fixture, which collided with `manage.py setup` on a fresh `just setup` and whose fixed dates aged out; the generator seeds a colleague+user+role+labels each, all three label categories, assignments/services/placements dated relative to today, a small offline org hierarchy, and audit events, and clears its own data first so reseeding is safe
+- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline.
+- 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations).
 - 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row
 - 636: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) and support staff, instead of only to the opdracht owner
 - 636: editing and deleting an opdracht now also requires the BDM role, so an owner outside that role no longer has edit rights
