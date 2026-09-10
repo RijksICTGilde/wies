@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: form fields no longer show placeholder text such as "Toevoegen…" or "Kies of typ om te zoeken…"; the label above the field says what goes in it
 - ?: contract hours per week are recorded as periods with a start and end date, by the colleague on their own profile or by a beheerder on the user sheet, so a change of hours keeps the history
 - ?: a role on an opdracht (aanvraag or placed consultant) records its hours per week; the team list, the Aanvragen cards and the Bezetting bars show them
 - ?: Bezetting shows per consultant, on a second line under the name, the role and how many contract hours are still free, with a new "deels beschikbaar" status card for people whose roles do not fill their contract; without hours recorded a placed consultant still counts as fully placed
