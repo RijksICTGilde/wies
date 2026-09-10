@@ -15,7 +15,8 @@
 // In order of reliability. An id is unique; a URL identifies the action, which
 // works just as well here and asks nothing of the templates. A reference to the
 // node itself is worthless: it is detached once the panel is fetched again.
-var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href"];
+// data-status: the status cards on Bezetting carry nothing else.
+var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href", "data-status"];
 
 // What a user can operate. The custom elements are listed because the NLDD
 // components put their real control in a shadow root: `nldd-button` matches no
@@ -214,6 +215,12 @@ FocusRestore.prototype.bind = function () {
     true,
   );
   this.doc.addEventListener("htmx:beforeRequest", function (event) {
+    // A filter toggle is submitted by its form, so elt is the <form>; the
+    // focused button is where the user actually was.
+    var active = self.doc.activeElement;
+    if (active && active !== self.doc.body && active !== event.detail.elt) {
+      self.remember(active);
+    }
     self.remember(event.detail.elt);
   });
   // Going back in browser history is a different context; what we remembered
@@ -221,8 +228,19 @@ FocusRestore.prototype.bind = function () {
   this.doc.addEventListener("htmx:historyRestore", function () {
     self.trail = [];
   });
+  // A frame later: at settle time a swapped-in NLDD control has not rendered
+  // yet and reports checkVisibility() false, so resolve() would skip it.
   this.doc.addEventListener("htmx:afterSettle", function (event) {
-    self.handleSettle(event.detail.target);
+    var target = event.detail.target;
+    var raf =
+      self.doc.defaultView && self.doc.defaultView.requestAnimationFrame;
+    if (typeof raf === "function") {
+      raf.call(self.doc.defaultView, function () {
+        self.handleSettle(target);
+      });
+    } else {
+      self.handleSettle(target);
+    }
   });
 };
 

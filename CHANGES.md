@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: keyboard focus returns to the control you used after a page part is refreshed, also when that control is an NLDD component that renders a frame later
 - 653: pressing Enter quickly after typing no longer leaves the "Druk op Enter om te zoeken" hint hanging over the results
 - ?
 

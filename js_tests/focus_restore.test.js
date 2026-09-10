@@ -100,6 +100,14 @@ describe("describe", () => {
     });
   });
 
+  it("falls back to data-status for a button that carries nothing else", () => {
+    const restore = new FocusRestore(doc);
+    assert.deepEqual(restore.describe(element({ "data-status": "bench" })), {
+      attribute: "data-status",
+      value: "bench",
+    });
+  });
+
   it("returns null without an identifying attribute", () => {
     const restore = new FocusRestore(doc);
     assert.equal(
@@ -365,6 +373,22 @@ describe("handleSettle", () => {
     assert.equal(first.focusCalls.length, 0);
   });
 
+  it("returns to the focused button, not the form that submitted it", () => {
+    // A status card is toggled with Enter; its form fires the request, so htmx
+    // reports the <form> as the cause. That is not where the user was.
+    const card = element({ "data-status": "bench" });
+    const first = element({});
+    doc = makeDoc([card]);
+    const restore = new FocusRestore(doc);
+    restore.remember(card); // what bind() records from activeElement
+    restore.remember(element({ id: "filter-form" })); // then the form, as htmx reports
+
+    restore.handleSettle(swapTarget({ focusable: [first] }));
+
+    assert.equal(doc.activeElement, card);
+    assert.equal(first.focusCalls.length, 0);
+  });
+
   it("falls back to the first control when the cause is gone", () => {
     const first = element({});
     doc = makeDoc([]); // the button that caused the swap is no longer there
@@ -389,5 +413,54 @@ describe("handleSettle", () => {
     const restore = new FocusRestore(doc);
     assert.doesNotThrow(() => restore.handleSettle(null));
     assert.doesNotThrow(() => restore.handleSettle({}));
+  });
+});
+
+// ─── bind ────────────────────────────────────────────────────
+
+describe("bind", () => {
+  it("handles a settle one frame later, once the components have rendered", () => {
+    const listeners = {};
+    const frames = [];
+    doc = makeDoc([]);
+    doc.addEventListener = (name, fn) => {
+      listeners[name] = fn;
+    };
+    // A fake window whose requestAnimationFrame only records the callback,
+    // so the test decides when the frame happens.
+    doc.defaultView = { requestAnimationFrame: (fn) => frames.push(fn) };
+    const restore = new FocusRestore(doc);
+    const seen = [];
+    restore.handleSettle = (target) => seen.push(target);
+    restore.bind();
+
+    const target = swapTarget({});
+    listeners["htmx:afterSettle"]({ detail: { target } });
+
+    assert.equal(
+      seen.length,
+      0,
+      "not on settle itself: nothing has rendered yet",
+    );
+    assert.equal(frames.length, 1);
+    frames[0]();
+    assert.deepEqual(seen, [target]);
+  });
+
+  it("handles the settle at once where there is no frame to wait for", () => {
+    const listeners = {};
+    doc = makeDoc([]);
+    doc.addEventListener = (name, fn) => {
+      listeners[name] = fn;
+    };
+    const restore = new FocusRestore(doc);
+    const seen = [];
+    restore.handleSettle = (target) => seen.push(target);
+    restore.bind();
+
+    const target = swapTarget({});
+    listeners["htmx:afterSettle"]({ detail: { target } });
+
+    assert.deepEqual(seen, [target]);
   });
 });
