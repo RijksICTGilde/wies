@@ -12,9 +12,11 @@ from django.db.models import Prefetch, Q
 from django.urls import reverse
 from django.utils import timezone
 
+from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
+from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
@@ -172,6 +174,10 @@ def visible_service_rows(assignment, request) -> list[dict]:
     currently active is hidden from unrelated viewers — only the placed colleague,
     Business Managers (the BDM role) and support staff see it, flagged
     ``historical`` with a label and privacy note.
+
+    ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
+    description and hours of their own role from the team list too, through the
+    same sheet as on the placement panel.
     """
     today = timezone.now().date()
 
@@ -181,6 +187,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
         if placement is None:  # vacancy → visible to everyone
             visible.append(row)
             continue
+        row["can_edit_role"] = has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],

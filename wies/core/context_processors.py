@@ -38,7 +38,7 @@ def _onboarding_can_edit(entry, user) -> bool:
     return any(
         has_permission(Verb.UPDATE, service, user, spec)
         for service in entry["services"]
-        for spec in (ServiceEditables.skill, ServiceEditables.description)
+        for spec in (ServiceEditables.skill, ServiceEditables.description, ServiceEditables.hours_per_week)
     )
 
 

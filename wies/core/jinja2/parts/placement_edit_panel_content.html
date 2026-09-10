@@ -1,5 +1,5 @@
 {# Child sheet of the placement panel: one form over Service.skill,
-   Service.description and the Placement period group. The back button fires a
+   Service.description, Service.hours_per_week and the Placement period group. The back button fires a
    `back` event that side_panel.js handles; saving re-renders the parent panel.
 
    nldd-form gets its own <form> as a direct child (user-provided form mode),
@@ -48,6 +48,9 @@
   {% endif %}
   {% if form.description %}
     {{ form.description.as_field_group() }}
+  {% endif %}
+  {% if form.hours_per_week %}
+    {{ form.hours_per_week.as_field_group() }}
   {% endif %}
   {% if form.period_source %}
     {# Hidden through a parent with [hidden]: a `display:none` on the select

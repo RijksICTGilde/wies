@@ -273,8 +273,8 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
 def placement_edit_specs(placement, user, only=None):
     """Returns the placement panel's editable specs, each with its own object.
 
-    Three fields across two models (Service.skill, Service.description,
-    Placement.period). Only specs the user may UPDATE come back, so the form never
+    Four fields across two models (Service.skill, Service.description,
+    Service.hours_per_week, Placement.period). Only specs the user may UPDATE come back, so the form never
     shows a field that would be refused on save.
 
     ``only`` (a spec name) narrows it to one field, as with the assignment. "Rol"
@@ -288,12 +288,13 @@ def placement_edit_specs(placement, user, only=None):
     candidates = [
         (ServiceEditables, ServiceEditables.skill, service),
         (ServiceEditables, ServiceEditables.description, service),
+        (ServiceEditables, ServiceEditables.hours_per_week, service),
         (PlacementEditables, PlacementEditables.period, placement),
     ]
     if only is not None:
-        # The role row shows the role with its description below it, so both
-        # belong in the same form.
-        wanted = {"skill", "description"} if only == "skill" else {only}
+        # The role row shows the role with its description and hours below it,
+        # so all three belong in the same form.
+        wanted = {"skill", "description", "hours_per_week"} if only == "skill" else {only}
         candidates = [(s, spec, obj) for (s, spec, obj) in candidates if spec.name in wanted]
     return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
 
