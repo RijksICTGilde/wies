@@ -1,5 +1,5 @@
 import re
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
@@ -17,6 +17,9 @@ from wies.core.services.occupancy import (
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
     colleague_occupancy,
+    month_ticks,
+    occupancy_summary,
+    today_marker_pct,
 )
 
 User = get_user_model()
@@ -362,6 +365,44 @@ class OccupancyServiceTest(TestCase):
         assert len(row.segments) == 1
         assert row.segments[0].assignment_name == "Met tijdlijn"
         assert row.segments[0].phase == "active"
+
+
+class OccupancySummaryTest(TestCase):
+    def setUp(self):
+        setup_roles()
+        self.today = timezone.now().date()
+        self.bench = _consultant("Bea Bank", "bea@x.nl")
+        self.full = _consultant("Fred Full", "fred@x.nl")
+
+    def test_counts_bench_full_and_ends_soon(self):
+        _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
+        rows = colleague_occupancy(self.today)
+        summary = occupancy_summary(rows)
+        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 1}
+
+    def test_ends_soon_is_independent_of_bucket(self):
+        # A far-ending active placement is "full" but not "ends_soon".
+        _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
+        summary = occupancy_summary(colleague_occupancy(self.today))
+        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 0}
+
+
+class TimelineGeometryTest(TestCase):
+    def test_today_marker_pct_matches_horizon_split(self):
+        expected = round(HORIZON_BACK_DAYS / (HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS) * 100, 2)
+        assert today_marker_pct() == expected
+
+    def test_month_ticks_span_the_horizon(self):
+        # A fixed date so the month-boundary and year-rollover branch are exercised.
+        ticks = month_ticks(date(2025, 11, 15))
+        assert ticks, "expected at least one month gridline"
+        # First tick is the first month boundary strictly after the horizon start.
+        assert ticks[0]["label"] == "Oct"  # horizon starts mid-Sep 2025
+        # January appears, so the December->January rollover is covered.
+        assert any(t["month"] == 1 for t in ticks)
+        lefts = [t["left"] for t in ticks]
+        assert lefts == sorted(lefts)  # monotonic left to right
+        assert all(0 <= left <= 100 for left in lefts)
 
 
 class OccupancyMerkFilterTest(TestCase):

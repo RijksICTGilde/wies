@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
-from django.db.models.functions import Concat, Lower
+from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -89,14 +89,15 @@ from .services.assignments import (
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
-    CONSULTANT_GROUP as BEZETTING_CONSULTANT_GROUP,
-)
-from .services.occupancy import (
-    HORIZON_AHEAD_DAYS,
-    HORIZON_BACK_DAYS,
     STATUS_VALUES,
+    bezetting_filter_groups,
     colleague_occupancy,
+    labels_by_category,
+    month_ticks,
+    occupancy_summary,
     row_has_status,
+    split_bench_and_timeline,
+    today_marker_pct,
 )
 from .services.organizations import (
     find_orgs_by_abbreviation,
@@ -562,36 +563,6 @@ def business_management_access_required(view_func):
     return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
 
 
-def _bezetting_today_pct():
-    """Horizontal position of the 'today' marker within the timeline horizon."""
-    return round(HORIZON_BACK_DAYS / (HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS) * 100, 2)
-
-
-def _bezetting_month_ticks(today):
-    """First-of-month gridline labels across the horizon, as {label, month, left%}."""
-    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
-    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
-    span = (horizon_end - horizon_start).days or 1
-    ticks = []
-    year, month = horizon_start.year, horizon_start.month
-    # Advance to the first month boundary on or after the horizon start.
-    if horizon_start.day != 1:
-        month += 1
-        if month > 12:  # noqa: PLR2004 (12 = months per year)
-            month = 1
-            year += 1
-    cursor = date(year, month, 1)
-    while cursor <= horizon_end:
-        left = (cursor - horizon_start).days / span * 100
-        ticks.append({"label": cursor.strftime("%b"), "month": cursor.month, "left": round(left, 2)})
-        month += 1
-        if month > 12:  # noqa: PLR2004 (12 = months per year)
-            month = 1
-            year += 1
-        cursor = date(year, month, 1)
-    return ticks
-
-
 @business_management_access_required
 def bezetting(request):
     """ "Bezetting" — the business-manager occupancy timeline.
@@ -632,18 +603,15 @@ def bezetting(request):
     # ``labels`` param, and merk is its own group.
     merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
-    labels_by_category = _labels_by_category(labels)
+    labels_by_cat = labels_by_category(labels.ids)
 
-    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_category)
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat)
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
     # Summary-card counts are the full population within the merk/label selection —
-    # they stay a stable dashboard regardless of which cards are toggled, so they
-    # are computed before the status filter narrows the rows.
-    bench_count = sum(1 for r in rows if r.bucket == "bench")
-    full_count = sum(1 for r in rows if r.bucket == "full")
-    ends_soon_count = sum(1 for r in rows if r.ends_soon)
+    # computed before the status filter narrows the rows (see occupancy_summary).
+    summary = occupancy_summary(rows)
 
     # Status facet: the three summary cards, as independent OR-toggles. Derived
     # from the built rows (not a queryset column), so it filters here in-memory.
@@ -654,7 +622,7 @@ def bezetting(request):
     # Filter sheet: one select-multi group per facet, with cross-filtered counts,
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
-    filter_groups = _bezetting_filter_groups(merk, labels, labels_by_category)
+    filter_groups = bezetting_filter_groups(merk, labels, labels_by_cat)
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
@@ -665,33 +633,16 @@ def bezetting(request):
     if selected_statuses:
         active_filters["status"] = selected_statuses
 
-    # Bench colleagues get their own section above the placed ones, but keep a
-    # timeline row: they have nothing running today, yet they can have work
-    # already booked for next month, and "is anything lined up for this person"
-    # is the reason to look at the bench at all. The row is compact (no lane
-    # stack to make room for) and shows how long they have been free as a bar.
-    #
-    # Longest-free first, which is the order a business manager reads this in.
-    # Sorted here rather than in the template: Jinja's sort filter cannot order a
-    # list where some bench_days are None (never placed), and comparing None to an
-    # int raises. Those go last — "never placed" is not a long wait, it is a
-    # different thing.
-    bench_rows = sorted(
-        (r for r in rows if r.bucket == "bench"),
-        key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
-    )
-    timeline_rows = [r for r in rows if r.bucket != "bench"]
+    bench_rows, timeline_rows = split_bench_and_timeline(rows)
 
     context = {
         "rows": timeline_rows,
         "bench_rows": bench_rows,
         "panel_data": panel_data,
-        "today_pct": _bezetting_today_pct(),
+        "today_pct": today_marker_pct(),
         "today": today,
-        "month_ticks": _bezetting_month_ticks(today),
-        "bench_count": bench_count,
-        "full_count": full_count,
-        "ends_soon_count": ends_soon_count,
+        "month_ticks": month_ticks(today),
+        **summary,
         "selected_statuses": selected_statuses,
         "filter_groups": filter_groups,
         "active_filters": active_filters,
@@ -716,110 +667,6 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
-
-
-def _labels_by_category(labels):
-    """Group a resolved ``labels`` facet's ids by their category id."""
-    by_category: dict[int, list[int]] = {}
-    for label in Label.objects.filter(id__in=labels.ids).values("id", "category_id"):
-        by_category.setdefault(label["category_id"], []).append(label["id"])
-    return by_category
-
-
-def _bezetting_consultant_colleagues():
-    """Base colleague queryset for the Bezetting page: only consultants, matching
-    the occupancy service (colleagues whose linked user is in that group)."""
-    return Colleague.objects.filter(user__groups__name=BEZETTING_CONSULTANT_GROUP)
-
-
-def _bezetting_apply_filters(qs, merk, labels_by_category, *, exclude_filter=None):
-    """Apply the merk + label filters to a consultant-colleague queryset.
-
-    ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
-    to its current selection: "merk" for the merk group, or a label ``category_id``
-    (int) for that category's group. Labels are OR within a category, AND between.
-    """
-    for cat_id, cat_label_ids in labels_by_category.items():
-        if exclude_filter != cat_id:
-            qs = qs.filter(labels__id__in=cat_label_ids)
-    if exclude_filter != "merk" and merk.ids:
-        qs = qs.filter(suborganization_id__in=merk.ids)
-    return qs.distinct()
-
-
-def _bezetting_filter_groups(merk, labels, labels_by_category):
-    """Build the select-multi filter groups for the Bezetting sheet.
-
-    One group per label category (only labels used by a consultant; empty
-    categories dropped) plus one merk group. Each option carries a cross-filtered
-    count — the number of consultants that would remain if only this value were
-    added to the other active filters — like the "Gebruikers" filter sheet.
-    """
-    base_qs = _bezetting_consultant_colleagues()
-    selected_label_ids = set(labels.public_ids)
-    selected_merk_ids = set(merk.public_ids)
-
-    groups = []
-
-    # Label categories: one group each, only labels actually used by a consultant.
-    used_labels = (
-        Label.objects.filter(colleagues__user__groups__name=BEZETTING_CONSULTANT_GROUP)
-        .distinct()
-        .select_related("category")
-        .order_by("category__name", Lower("name"))
-    )
-    labels_by_cat: dict[int, list] = {}
-    category_names: dict[int, str] = {}
-    for label in used_labels:
-        labels_by_cat.setdefault(label.category_id, []).append(label)
-        category_names[label.category_id] = label.category.name
-
-    for cat_id, cat_labels in labels_by_cat.items():
-        cat_qs = _bezetting_apply_filters(base_qs, merk, labels_by_category, exclude_filter=cat_id)
-        counts = Counter(lid for lid in cat_qs.values_list("labels__id", flat=True) if lid is not None)
-        options = [{"value": "", "label": ""}]
-        selected_values = []
-        for label in cat_labels:
-            value = str(label.public_id)
-            option = {"value": value, "label": label.name, "count": counts.get(label.id, 0)}
-            if value in selected_label_ids:
-                option["selected"] = True
-                selected_values.append(value)
-            options.append(option)
-        groups.append(
-            {
-                "type": "select-multi",
-                "name": "labels",
-                "label": category_names[cat_id],
-                "options": options,
-                "selected_values": selected_values,
-            }
-        )
-
-    # Merk: only suborganisations that have at least one consultant.
-    merk_qs = _bezetting_apply_filters(base_qs, merk, labels_by_category, exclude_filter="merk")
-    merk_counts = Counter(mid for mid in merk_qs.values_list("suborganization_id", flat=True) if mid is not None)
-    merk_options = [{"value": "", "label": ""}]
-    merk_selected = []
-    used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=BEZETTING_CONSULTANT_GROUP).distinct()
-    for suborganization in used_suborgs:
-        value = str(suborganization.public_id)
-        option = {"value": value, "label": suborganization.name, "count": merk_counts.get(suborganization.id, 0)}
-        if value in selected_merk_ids:
-            option["selected"] = True
-            merk_selected.append(value)
-        merk_options.append(option)
-    groups.append(
-        {
-            "type": "select-multi",
-            "name": "merk",
-            "label": "Merk",
-            "options": merk_options,
-            "selected_values": merk_selected,
-        }
-    )
-
-    return groups
 
 
 ERRORS_PER_PAGE = 10
