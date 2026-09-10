@@ -49,7 +49,7 @@ CONSULTANT_GROUP = "Consultant"
 # The label category whose labels ride along on a row as chips. Its labels name
 # the gilde a colleague belongs to ("ICT", "AI"), which is the
 # subdivision this page is read by; the other categories stay in the filter sheet
-# only. Created by assign_random_labels_to_colleagues in demo data, and a
+# only. Created by _seed_all_label_categories in demo data, and a
 # deliberate post-release action in production.
 GILDE_CATEGORY = "Subgroep"
 
