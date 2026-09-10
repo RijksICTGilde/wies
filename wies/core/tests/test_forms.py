@@ -8,6 +8,7 @@ from django.test import TestCase
 from wies.core.form_mixins import NlddFormMixin
 from wies.core.forms import LabelCategoryForm, UserForm
 from wies.core.models import Label, LabelCategory
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 
 User = get_user_model()
@@ -24,7 +25,7 @@ class NlddUserFormRenderingTest(TestCase):
 
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
     def test_form_renders_with_nldd_classes(self):
         """Text-like fields render real nldd-form-field + nldd-text-field components."""
@@ -194,7 +195,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         """Creates the role groups UserForm renders."""
         Group.objects.get_or_create(name="Beheerder")
         Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name="Business Development Manager")
+        Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
     def test_valid_rijksoverheid_email(self):
         """@rijksoverheid.nl addresses are accepted."""
@@ -305,7 +306,7 @@ class NlddFormMixinTest(TestCase):
     def setUp(self):
         Group.objects.get_or_create(name="Beheerder")
         Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name="Business Development Manager")
+        Group.objects.get_or_create(name=BDM_GROUP_NAME)
         self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
         Label.objects.create(name="Brand A", category=self.category)
 

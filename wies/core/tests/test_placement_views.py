@@ -23,6 +23,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
@@ -47,7 +48,7 @@ class PlacementImportTest(TestCase):
         # Create test groups
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create_user(

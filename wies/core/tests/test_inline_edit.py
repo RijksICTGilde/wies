@@ -11,7 +11,7 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -40,6 +40,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
@@ -506,8 +507,7 @@ class AssignmentPanelRenderTest(TestCase):
         self.colleague = Colleague.objects.get(user=self.user)
         # The owner field only offers BDM colleagues, so the combined edit form
         # needs the owner to be a valid choice for itself.
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        self.user.groups.add(bdm_group)
+        grant_bdm(self.user)
         self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
@@ -715,8 +715,7 @@ class AssignmentEditablesFullTest(TestCase):
         # Grant change_assignment so the user can edit regardless of ownership.
         self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         # Put user's Colleague in the BDM group so it shows up in owner choices.
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        self.user.groups.add(bdm_group)
+        grant_bdm(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -819,7 +818,7 @@ class AssignmentCreateFormIntegrationTest(TestCase):
         # the BDM group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        assert "Business Development Manager" in str(qs.query)
+        assert BDM_GROUP_NAME in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
         form = self._form_cls()(
