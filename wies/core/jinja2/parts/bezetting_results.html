@@ -41,14 +41,6 @@
            {% if is_active %}checked{% endif %} />
   </button>
 {% endmacro %}
-{# Four items on one row: the three status filters and the sheet that holds
-   every other filter. They are one set of controls, so they get one row and
-   equal treatment rather than a block of cards with a button beside it.
-
-   What is selected shows as chips on the row below (not a count beside the
-   button, and not tokens beside it — that wrapped the row the moment a filter
-   went on), exactly like the Gebruikers list. Status stays represented by its
-   pressed card, so it gets no chip. #}
 <ul class="bezetting-toolbar" aria-label="Filters">
   {# Short captions: the row shrinks these three before anything else, and the
      longer phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to

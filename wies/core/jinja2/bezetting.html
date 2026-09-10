@@ -16,12 +16,7 @@
   <h1>Bezetting</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# The filter row and the results live together in the results partial: the
-     Filters button sits on the row with the status cards, and the sheet it opens
-     drives #results via htmx. Same filter system as the "Gebruikers" list. #}
   {% include "parts/bezetting_results.html" %}
-  {# Filter sheet mount; user_filter.js opens it. Rendered eagerly: the
-     #filter-form inside is what the chips drive. #}
   {% include "parts/bezetting_filter_sheet.html" %}
   {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
   <div id="filter-options-modal-container"></div>
