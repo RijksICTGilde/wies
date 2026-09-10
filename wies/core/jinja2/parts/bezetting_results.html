@@ -1,6 +1,7 @@
 {# The results block: filter chips, summary cards and the timeline. HTMX swaps
    this on every filter change (hx-target="#results"); the filter sheet swaps back
    separately as OOB so its counts and selection follow. #}
+{% from "parts/filter_chips.html" import filter_chips %}
 <nldd-container id="results">
 {% set has_active_filters = active_filters|length > 0 %}
 {# Samenvatting — each card is an independent status filter (OR-toggle). The card
@@ -56,23 +57,7 @@
 </ul>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% if has_active_filters %}
-  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
-  {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'select-multi' %}
-      {% set values = active_filters.get(filter_group.name) %}
-      {% if values %}
-        {% for selected_value in values %}
-          {% for option in filter_group.options %}
-            {% if option.value == selected_value %}
-              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
-      {% endif %}
-    {% endif %}
-  {% endfor %}
-  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
-  </nldd-container>
+  {{ filter_chips(filter_groups, active_filters) }}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% endif %}
 {# Tijdlijn #}
