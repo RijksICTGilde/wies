@@ -26,7 +26,7 @@ def _bdm_queryset(assignment=None):
     #
     # The current owner is always included, even outside the BDM group: without a
     # matching option the combo box renders empty and saving clears the Business
-    # Manager. Most owners are in fact not in that group.
+    # Manager. Owners are usually in that group, but the odd one isn't.
     in_group = Q(user__groups__name=BDM_GROUP_NAME)
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:

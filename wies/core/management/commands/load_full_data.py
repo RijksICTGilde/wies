@@ -13,6 +13,8 @@ import random
 import re
 from datetime import UTC, date, datetime, timedelta
 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 
 from wies.core.models import (
@@ -27,9 +29,12 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 # ── Target counts ────────────────────────────────────────────────────────────
 NUM_COLLEAGUES = 800
@@ -41,6 +46,9 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
+# Share of colleagues that hold the BDM role. Assignment owners are always
+# drawn from this group, matching production where the owner is a BDM.
+BDM_RATIO = 0.10
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
@@ -669,6 +677,20 @@ class Command(BaseCommand):
                 colleague.save(update_fields=["suborganization"])
             self.stdout.write("Colleague suborganizations assigned")
 
+        # ── 4d. BDM role ─────────────────────────────────────────────────
+        # A subset of colleagues holds the BDM role, via a linked user in the
+        # group. Assignment owners are drawn only from these (see section 5),
+        # matching production where the owner is a BDM.
+        bdm_group, _ = Group.objects.get_or_create(name=BDM_GROUP_NAME)
+        num_bdm = max(1, round(len(colleagues) * BDM_RATIO))
+        bdm_colleagues = rng.sample(colleagues, min(num_bdm, len(colleagues)))
+        for colleague in bdm_colleagues:
+            user = User.objects.create_user(email=colleague.email)
+            user.groups.add(bdm_group)
+            colleague.user = user
+            colleague.save(update_fields=["user"])
+        self.stdout.write(f"BDM colleagues: {len(bdm_colleagues)}")
+
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []
 
@@ -681,7 +703,7 @@ class Command(BaseCommand):
                 start_date=start,
                 end_date=end,
                 extra_info="",
-                owner=rng.choice(colleagues),
+                owner=rng.choice(bdm_colleagues),
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )
