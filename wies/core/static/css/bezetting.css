@@ -40,6 +40,19 @@
   flex: 0 0 auto;
 }
 
+/* Four cards and the button no longer fit one row below this width without the
+   captions ellipsising, so the cards go two to a line and the button takes its
+   own. */
+@media (max-width: 1200px) {
+  .bezetting-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .bezetting-toolbar > li {
+    flex-basis: calc(50% - var(--primitives-space-8, 8px));
+  }
+}
+
 /* Summary cards double as status filters. The clickable element is a native
    <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
    button chrome and let the card size the control.
@@ -152,7 +165,9 @@
 
 /* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
 .bezetting-timeline {
-  --bezetting-side-width: 360px;
+  /* Two lines of identity plus the gilde tags: at 360px a longer role wrapped
+     onto a third line on a third of the rows. */
+  --bezetting-side-width: 400px;
   /* The row is taller than its 28px avatar: the bars are the content, and a
      row squeezed to avatar height left them no room to breathe. */
   --bezetting-row-height: 52px;
@@ -348,21 +363,16 @@
   align-items: center;
   gap: var(--primitives-space-8);
   min-width: 0;
+  width: 100%;
 }
 
-.bezetting-person__name {
-  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* flex-shrink applies to the host element as a flex item, which lives outside
-   the component's shadow root — nldd-tag can't set its own shrink behaviour
-   relative to our layout. Keep the "eindigt binnenkort" tag at full size so the
-   name (not the date) is what ellipsizes when the cell is narrow. */
-.bezetting-person nldd-tag {
-  flex-shrink: 0;
+/* The identity host sets its own width to 100%, which as a flex item leaves
+   the gilde tags beside it no room; sized from zero it takes what the tags
+   leave over and wraps its text before a tag gives way, since a tag that
+   ellipsizes says nothing. */
+.bezetting-person nldd-identity {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Timeline bars are purely visual: let clicks fall through to the stretched
@@ -455,31 +465,6 @@
 
 /* ── Op de bank ───────────────────────────────────────────────────────────── */
 
-/* A bench row differs only in its name cell: a smaller avatar, since nothing
-   runs today and the row never stacks lanes.
-
-   The bar geometry is deliberately NOT changed here. With a smaller lane height
-   the very same opdracht drew thinner on a bench row than on a placed row two
-   lines down, which read as "this one matters less" rather than "this person is
-   free". Bench rows still come out shorter, because the row height follows its
-   lane stack and a bench row only ever has one lane. */
-.bezetting-row--compact .bezetting-person {
-  gap: var(--primitives-space-6);
-}
-
-/* The role, right after the name it belongs to. Secondary and smaller so the
-   name still leads the row; it truncates before the name does, since which
-   person this is matters more than what they are called in. */
-.bezetting-person__role {
-  flex-shrink: 999;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--semantics-content-secondary-color);
-  font-size: var(--primitives-font-size-70);
-}
-
 /* The free stretch on a bench row, running up to today.
 
    A zone, not a bar: full row height, no border of its own, so the placements
@@ -543,9 +528,7 @@
 .bezetting-person__labels {
   display: flex;
   gap: var(--primitives-space-4);
-  flex-shrink: 1000;
-  min-width: 0;
-  overflow: hidden;
+  flex-shrink: 0;
 }
 
 .bezetting-person__labels nldd-tag {

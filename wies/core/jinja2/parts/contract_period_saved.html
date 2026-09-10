@@ -1,0 +1,6 @@
+{# After a save: empty the mount, which takes the open sheet with it, and swap
+   the refreshed block into the page or sheet underneath. #}
+<div id="contractPeriodMount" hx-swap-oob="innerHTML"></div>
+{% with contract_block_oob = true %}
+  {% include "parts/contract_periods_block.html" %}
+{% endwith %}

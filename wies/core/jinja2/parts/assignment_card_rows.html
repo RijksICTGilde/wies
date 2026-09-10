@@ -17,7 +17,8 @@
     <nldd-spacer size="8"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% for service in assignment.services_with_skills[:3] %}
-      <nldd-tag size="sm" text="{{ service.skill.name }}"></nldd-tag>
+      {% set role_text = service.skill.name ~ (" · " ~ service.hours_per_week ~ " u" if service.hours_per_week else "") %}
+      <nldd-tag size="sm" text="{{ role_text }}"></nldd-tag>
     {% endfor %}
     {% if assignment.services_with_skills|length > 3 %}
       <nldd-tag size="sm" text="+{{ assignment.services_with_skills|length - 3 }} meer"></nldd-tag>

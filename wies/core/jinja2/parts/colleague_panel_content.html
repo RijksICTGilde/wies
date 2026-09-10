@@ -24,10 +24,13 @@
   </nldd-title-cell>
   </nldd-list-item>
   </nldd-list>
-  {% if colleague.suborganization %}
+  {% if colleague.suborganization or panel_data.contract_hours %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
-    <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+    {% if colleague.suborganization %}<nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>{% endif %}
+    {% if panel_data.contract_hours %}
+      <nldd-tag color="neutral" icon="clock" text="{{ panel_data.contract_hours }} uur"></nldd-tag>
+    {% endif %}
     </nldd-container>
   {% endif %}
   {% set labels = colleague.labels.all() %}

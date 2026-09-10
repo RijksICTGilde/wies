@@ -378,13 +378,13 @@ class OccupancySummaryTest(TestCase):
         _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
         rows = colleague_occupancy(self.today)
         summary = occupancy_summary(rows)
-        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 1}
+        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 1}
 
     def test_ends_soon_is_independent_of_bucket(self):
         # A far-ending active placement is "full" but not "ends_soon".
         _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
         summary = occupancy_summary(colleague_occupancy(self.today))
-        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 0}
+        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 0}
 
 
 class TimelineGeometryTest(TestCase):
@@ -672,8 +672,6 @@ class BezettingStatusFilterViewTest(TestCase):
         response = self.client.get(self.url)
         content = response.content.decode()
         assert content.index(self.bench.name) < content.index(self.full.name)
-        # Bench rows are compact, placed rows are not.
-        assert "bezetting-row--compact" in content
 
     def test_a_bench_colleague_still_gets_a_bar_for_work_already_booked(self):
         """The reason bench rows keep a timeline: a list of names cannot answer
