@@ -8,7 +8,7 @@
 
 **WCAG 2.2 — Niveau AA**
 
-augustus 2026
+Volledig onderzoek 19 augustus 2026, hertest 9 september 2026 · versie 1.1
 
 </div>
 
@@ -17,20 +17,24 @@ augustus 2026
 ## Inhoudsopgave
 
 - [Inleiding](#inleiding)
-- [Onderzoeksresultaat](#onderzoeksresultaat)
-- [Uitzonderingen en specifieke situaties](#uitzonderingen-en-specifieke-situaties)
-- [Principe 1 Waarneembaar](#principe-1-waarneembaar)
-- [Principe 2 Bedienbaar](#principe-2-bedienbaar)
-- [Principe 3 Begrijpelijk](#principe-3-begrijpelijk)
-- [Principe 4 Robuust](#principe-4-robuust)
-- [Onderzoeksgegevens](#onderzoeksgegevens)
+- [A. Informatie over de opdracht](#a-informatie-over-de-opdracht)
+- [B. Informatie over het onderzoek](#b-informatie-over-het-onderzoek)
+- [C. Informatie over de getoetste applicatie](#c-informatie-over-de-getoetste-applicatie)
+- [D. Resultaten van het onderzoek](#d-resultaten-van-het-onderzoek)
+  - [Principe 1 Waarneembaar](#principe-1-waarneembaar)
+  - [Principe 2 Bedienbaar](#principe-2-bedienbaar)
+  - [Principe 3 Begrijpelijk](#principe-3-begrijpelijk)
+  - [Principe 4 Robuust](#principe-4-robuust)
+- [Bijlagen](#bijlagen)
 
 ---
 
 ## Inleiding
 
-Het toegankelijkheidsonderzoek naar Wies is afgerond op 19 augustus 2026. Dit
-onderzoek laat zien in hoeverre de applicatie op dit moment voldoet aan de
+Het toegankelijkheidsonderzoek naar Wies is afgerond op 19 augustus 2026. Op
+9 september 2026 is een hertest gedaan van de live versie (`main`): bevinding 2
+is opnieuw gemeten, en de instrumentele metingen zijn herhaald in drie browsers.
+Dit rapport laat zien in hoeverre de applicatie op dit moment voldoet aan de
 internationaal geaccepteerde toegankelijkheidsrichtlijnen (WCAG 2.2).
 
 WCAG staat voor Web Content Accessibility Guidelines. Dit zijn de internationale
@@ -55,16 +59,79 @@ toegankelijkheidsproblemen kunnen ontstaan.
 > **Status van dit onderzoek.** Dit onderzoek is uitgevoerd door het eigen
 > ontwikkelteam met geautomatiseerde en instrumentele toetsing. Het is **geen
 > onafhankelijk onderzoek** en is **niet volledig**: er is niet getest met
-> hulpsoftware (schermlezer, spraakbediening) en niet met gebruikers. Het kan een
-> formeel onderzoek voor het register **niet vervangen**. Bij veertien
+> hulpsoftware (schermlezer, spraakbediening) en niet met gebruikers. Als
+> onderbouwing van de verklaring is het pas bruikbaar als die toetsing is gedaan.
+> Bij veertien
 > succescriteria is daarom "niet vastgesteld" genoteerd in plaats van een oordeel.
 
 ---
 
-## Onderzoeksresultaat
+---
 
-Uit het onderzoek is gebleken dat de applicatie op **twee succescriteria niet
-voldoet**, beide op niveau A. Op **31 van de 55** succescriteria wordt voldaan.
+## A. Informatie over de opdracht
+
+|                                   |                                                                                                                                                                                                                                                     |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Onderzoeker**                   | Ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                                           |
+| **Datum**                         | 19 augustus 2026 (volledig onderzoek), 9 september 2026 (hertest)                                                                                                                                                                                   |
+| **Opdrachtgever**                 | Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                                                               |
+| **Norm**                          | WCAG 2.2, niveau A en AA (via EN 301 549)                                                                                                                                                                                                           |
+| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, uitgevoerd als **intern vooronderzoek**, aangevuld met een **hertest** van bevinding 2 en van de instrumentele metingen. Geen onafhankelijk onderzoek; niet alle criteria konden worden vastgesteld. |
+| **Versie van dit document**       | 1.1                                                                                                                                                                                                                                                 |
+| **Onderzochte versie applicatie** | `main` @ `d072cf3b` (19 augustus), `main` @ `f4595a8` (hertest)                                                                                                                                                                                     |
+
+> **Let op bij gebruik als onderbouwing.** DigiToegankelijk stelt eisen aan
+> onderzoeksrapporten die als onderbouwing van een toegankelijkheidsverklaring
+> dienen. Dit rapport voldoet aan de vormeisen (scope, steekproef,
+> evaluatiemethode, browsers met versienummers, technologieën, score per
+> succescriterium), maar **niet** aan de inhoudelijke eis dat alle 55
+> succescriteria daadwerkelijk zijn beoordeeld: veertien konden niet worden
+> vastgesteld. Onafhankelijkheid eist de checklist niet, wel dat het rapport zegt
+> wie het onderzoek deed. Voor status A of B van de verklaring is aanvullende
+> toetsing met hulpsoftware nodig.
+
+---
+
+## B. Informatie over het onderzoek
+
+### Evaluatiemethode
+
+Dit onderzoek volgt de opzet van WCAG-EM (Website Accessibility Conformance
+Evaluation Methodology): scope bepalen, steekproef samenstellen, per
+succescriterium beoordelen en rapporteren. De stappen die toetsing met
+hulpsoftware en met gebruikers vereisen zijn **niet** uitgevoerd; in zoverre is
+de methode niet volledig gevolgd. De hertest herhaalt de instrumentele metingen
+op dezelfde manier, tegen de live versie, in Chromium, Edge en Firefox.
+
+### Scope van het onderzoek
+
+De ingelogde webapplicatie Wies. Buiten scope vallen: het Keycloak-inlogscherm
+(andere leverancier), externe websites waarnaar wordt gelinkt, en de
+beheerinterface van Django.
+
+**Uitzonderingen en specifieke situaties.**
+
+Bij dit onderzoek is uitgegaan van de Europese standaard voor
+toegankelijkheidseisen, de EN 301 549-norm, waarin wordt verwezen naar de
+internationale toegankelijkheidsrichtlijn WCAG 2.
+
+**Op tijd gebaseerde media.** De applicatie bevat geen audio, video of iframes.
+Gemeten op alle onderzochte pagina's: `<video>` 0, `<audio>` 0, `<iframe>` 0. De
+succescriteria 1.2.1 tot en met 1.2.5 zijn daarom niet van toepassing.
+
+**Documenten.** Er worden vanuit de applicatie geen PDF- of Office-bestanden
+aangeboden. De CSV-export van plaatsingen valt buiten de scope van WCAG.
+
+**Besloten applicatie.** Wies is alleen bereikbaar na aanmelding via OIDC. Het
+inlogscherm wordt geleverd door Keycloak, valt onder een andere leverancier en is
+niet meegenomen.
+
+### Samenvatting
+
+Na de hertest voldoet de applicatie op **één succescriterium niet**, op
+niveau A. Op **32 van de 55** succescriteria wordt voldaan. Op 19 augustus waren
+dat er 31, met twee afwijkingen; bevinding 2 is sindsdien opgelost en bij de hertest
+bevestigd.
 Acht succescriteria zijn niet van toepassing. Bij **veertien succescriteria** kon
 met de gebruikte methode geen uitspraak worden gedaan.
 
@@ -77,13 +144,13 @@ voldaan. Getoetst zijn alle 55 succescriteria van WCAG 2.2 op niveau A en AA.
 |                  | Niveau A    | Niveau AA   | Totaal      |
 | ---------------- | ----------- | ----------- | ----------- |
 | **Waarneembaar** | 1 / 9       | 6 / 11      | 7 / 20      |
-| **Bedienbaar**   | 12 / 14     | 5 / 6       | 17 / 20     |
+| **Bedienbaar**   | 13 / 14     | 5 / 6       | 18 / 20     |
 | **Begrijpelijk** | 5 / 7       | 2 / 6       | 7 / 13      |
 | **Robuust**      | 0 / 1       | 0 / 1       | 0 / 2       |
-| **Totaal**       | **18 / 31** | **13 / 24** | **31 / 55** |
+| **Totaal**       | **19 / 31** | **13 / 24** | **32 / 55** |
 
-**Uitgeschreven.** Van de 55 succescriteria voldoen er 31. Twee voldoen niet
-(1.3.1 en 2.4.3, beide niveau A). Acht zijn niet van toepassing omdat de
+**Uitgeschreven.** Van de 55 succescriteria voldoen er 32. Eén voldoet niet
+(1.3.1, niveau A). Acht zijn niet van toepassing omdat de
 applicatie geen audio, video of bewegingsbediening bevat en de authenticatie bij
 een externe leverancier ligt. Van veertien succescriteria kon de status niet
 worden vastgesteld, omdat daarvoor toetsing met hulpsoftware nodig is.
@@ -92,24 +159,24 @@ De lage score bij Waarneembaar en Robuust komt vooral doordat binnen die
 principes veel criteria niet konden worden vastgesteld of niet van toepassing
 zijn; binnen Waarneembaar is één afwijking gevonden en binnen Robuust geen.
 
-### Verdeling van de uitkomsten
+#### Verdeling van de uitkomsten
 
 | Uitkomst               | Aantal | Succescriteria                                                                                     |
 | ---------------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| ✅ Voldoet             | 31     | zie de hoofdstukken hieronder                                                                      |
-| ❌ Voldoet niet        | 2      | 1.3.1, 2.4.3                                                                                       |
+| ✅ Voldoet             | 32     | zie de hoofdstukken hieronder                                                                      |
+| ❌ Voldoet niet        | 1      | 1.3.1                                                                                              |
 | ⬜ Niet vastgesteld    | 14     | 1.1.1, 1.3.2, 1.3.5, 1.4.1, 1.4.11, 1.4.13, 2.4.6, 3.1.2, 3.2.2, 3.3.1, 3.3.3, 3.3.4, 4.1.2, 4.1.3 |
 | ➖ Niet van toepassing | 8      | 1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.4.2, 2.5.4, 3.3.8                                             |
 | **Totaal**             | **55** |                                                                                                    |
 
-### Samenvatting van de bevindingen
+#### Bevindingen
 
-| #   | Bevinding                                          | Succescriterium        | Niveau | Impact |
-| --- | -------------------------------------------------- | ---------------------- | ------ | ------ |
-| 1   | Koppenstructuur slaat een niveau over              | 1.3.1 Info en relaties | A      | Medium |
-| 2   | Focus gaat verloren na het bijwerken van de pagina | 2.4.3 Focus volgorde   | A      | Medium |
+| #   | Bevinding                                          | Succescriterium        | Niveau | Impact | Stand hertest      |
+| --- | -------------------------------------------------- | ---------------------- | ------ | ------ | ------------------ |
+| 1   | Koppenstructuur slaat een niveau over              | 1.3.1 Info en relaties | A      | Medium | Nog aanwezig       |
+| 2   | Focus gaat verloren na het bijwerken van de pagina | 2.4.3 Focus volgorde   | A      | Medium | Opgelost (PR #638) |
 
-### Nieuw in WCAG 2.2
+#### Nieuw in WCAG 2.2
 
 WCAG 2.2 voegt zes succescriteria toe op niveau A en AA, en laat 4.1.1 (Parsen)
 vervallen. De nieuwe criteria zijn in dit onderzoek meegenomen:
@@ -129,34 +196,134 @@ vervallen. De nieuwe criteria zijn in dit onderzoek meegenomen:
 > er veertien niet vastgesteld. Zie ook
 > [Beperkingen van dit onderzoek](#beperkingen-van-dit-onderzoek).
 
-## Uitzonderingen en specifieke situaties
+### Steekproef
 
-Bij dit onderzoek is uitgegaan van de Europese standaard voor
-toegankelijkheidseisen, de EN 301 549-norm, waarin wordt verwezen naar de
-internationale toegankelijkheidsrichtlijn WCAG 2.
+| #   | Pagina                | URL                     | Kenmerken                                          |
+| --- | --------------------- | ----------------------- | -------------------------------------------------- |
+| 1   | Wie zit waar?         | `/`                     | Overzicht, filters, zoeken, zijpanelen, paginering |
+| 2   | Aanvragen             | `/opdrachten/`          | Overzicht met filters en modals                    |
+| 3   | Beheer — gebruikers   | `/beheer/gebruikers/`   | Tabel, formulier in modal                          |
+| 4   | Beheer — labels       | `/beheer/labels/`       | Lijst met acties per rij                           |
+| 5   | Beheer — merken       | `/beheer/merken/`       | Lijst, sheet met formulier                         |
+| 6   | Beheer — organisaties | `/beheer/organisaties/` | Boomstructuur                                      |
+| 7   | Mijn profiel          | `/profiel/`             | Detail met inline bewerken                         |
+| 8   | Veelgestelde vragen   | `/faq/`                 | Tekst met accordeon                                |
+| 9   | Contact               | `/contact/`             | Tekst met externe links                            |
+| 10  | Privacy               | `/privacy/`             | Gegenereerde tekstpagina                           |
+| 11  | Toegankelijkheid      | `/toegankelijkheid/`    | Tekst met afbeelding                               |
 
-**Op tijd gebaseerde media.** De applicatie bevat geen audio, video of iframes.
-Gemeten op alle onderzochte pagina's: `<video>` 0, `<audio>` 0, `<iframe>` 0. De
-succescriteria 1.2.1 tot en met 1.2.5 zijn daarom niet van toepassing.
+De 404-pagina is niet in de steekproef opgenomen. In de onderzoeksomgeving toont
+Django zijn ontwikkelaarspagina; de productieversie gebruikt een eigen Nederlandse
+foutpagina (`404.html`), die niet apart is getoetst.
 
-**Documenten.** Er worden vanuit de applicatie geen PDF- of Office-bestanden
-aangeboden. De CSV-export van plaatsingen valt buiten de scope van WCAG.
+De hertest van 9 september 2026 heeft de instrumentele metingen (koppenstructuur,
+tabvolgorde, focusring, focusinsluiting, JavaScript-fouten) herhaald op pagina 1,
+2, 3, 7 en 8, en de flows van bevinding 2 op pagina 1 en 2.
 
-**Besloten applicatie.** Wies is alleen bereikbaar na aanmelding via OIDC. Het
-inlogscherm wordt geleverd door Keycloak, valt onder een andere leverancier en is
-niet meegenomen.
+### Gebruikte browsers en software
+
+| Software                 | Versie                                         | Gebruikt voor                                                                                                                                          |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Chromium                 | **140.0.7339.16**                              | Alle metingen, 19 augustus                                                                                                                             |
+| Chromium                 | **151.0.7922.34**                              | Hertest, 9 september                                                                                                                                   |
+| Microsoft Edge           | **152.0.4191.66**                              | Hertest, 9 september                                                                                                                                   |
+| Firefox                  | **153.0**                                      | Hertest, 9 september                                                                                                                                   |
+| Playwright               | **1.55.0** (19 augustus), **1.62.0** (hertest) | Aansturing van de browsers                                                                                                                             |
+| axe-core                 | **4.10.2**                                     | Geautomatiseerde toetsing                                                                                                                              |
+| Chrome DevTools Protocol | via Playwright                                 | Uitlezen van de accessibility tree                                                                                                                     |
+| Eigen meetscripts        | —                                              | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
+
+**Instellingen.** Alle metingen zijn uitgevoerd in een schone browsersessie zonder
+extensies, met een weergavekader van 1440 × 900 pixels tenzij anders vermeld.
+axe-core is beperkt tot de regelsets `wcag2a`, `wcag2aa`, `wcag21a` en `wcag21aa`.
+
+**ACT Rules Format.** axe-core implementeert regels uit het ACT Rules Format van
+het W3C en publiceert per regel de bijbehorende ACT-regel-identificatie. Daarmee
+voldoet de gebruikte automatische toetsing aan de eis dat testtools op
+ACT-algoritmen gebaseerd zijn. De eigen meetscripts implementeren geen
+ACT-regels; hun uitkomsten zijn steeds met een tweede methode of visueel
+geverifieerd.
+
+> **Niet gebruikt.** Er is niet getoetst met JAWS, NVDA, VoiceOver, ZoomText,
+> spraakbediening of schakelbediening. Er is niet getoetst in Safari en niet op
+> mobiele apparaten. Alle metingen zijn gedaan op macOS 14.4.
 
 ---
 
-## Principe 1 Waarneembaar
+## C. Informatie over de getoetste applicatie
+
+### Basisniveau van toegankelijkheidsondersteuning
+
+Wies zou moeten werken met alle gangbare browsers en gangbare hulpapparatuur.
+Concreet gaat dit onderzoek uit van: Chromium-, Firefox- en Safari-gebaseerde
+browsers in een actuele versie, in combinatie met schermlezers (JAWS, NVDA,
+VoiceOver), schermvergroters en spraak- of schakelbediening. Er is bij dit
+onderzoek van uitgegaan dat alle door het W3C uitgebrachte technieken door
+hulpsoftware worden ondersteund en dus gebruikt mogen worden.
+
+**Let op:** dit basisniveau is het uitgangspunt, niet het getoetste bereik. Er is
+gemeten in Chromium, Edge en Firefox op macOS, zonder hulpsoftware (zie hierboven). Of het
+gestelde basisniveau daadwerkelijk wordt gehaald, is met dit onderzoek **niet
+vastgesteld**.
+
+### Technologieën van de applicatie
+
+Gebruikt zijn de technologieën HTML5, CSS, JavaScript (inclusief de frameworks
+htmx en Lit voor webcomponenten), WAI-ARIA en de DOM inclusief Shadow DOM,
+waarvoor technieken zijn gedocumenteerd in
+https://www.w3.org/WAI/WCAG22/Techniques/. De applicatie maakt gebruik van de
+componentbibliotheek @nldd/design-system. Er worden geen PDF-, SMIL- of
+Silverlight-technologieën toegepast.
+
+### Bereik van geautomatiseerde toetsing
+
+Wies is opgebouwd uit NLDD-webcomponenten. Het overgrote deel van de interface
+staat daardoor in een shadow root, buiten het bereik van standaard
+toetsingsgereedschap.
+
+|                         | Aantal elementen |
+| ----------------------- | ---------------- |
+| In het gewone document  | 638              |
+| In shadow roots         | **2.310**        |
+| Aandeel in shadow roots | **≈ 78 %**       |
+
+Dit is geverifieerd door bewust fouten te injecteren:
+
+| Injectie                 | Locatie         | Gedetecteerd door axe-core |
+| ------------------------ | --------------- | -------------------------- |
+| `<img>` zonder `alt`     | gewone document | ja                         |
+| Tekst met contrast 1,9:1 | gewone document | ja                         |
+| Tekst met contrast 1,9:1 | shadow root     | **nee**                    |
+
+Het resultaat "0 overtredingen" van axe-core geldt daarom uitsluitend voor de
+± 22 % van de interface die in het gewone document staat, en is op zichzelf geen
+bewijs van conformiteit. De contrast-, structuur- en naamgevingstoetsen zijn zo
+uitgevoerd dat zij shadow roots wél doorlopen, respectievelijk via de accessibility
+tree.
+
+### Afhankelijke technologie
+
+HTML5, CSS, WAI-ARIA, ECMAScript (htmx en Lit-webcomponenten), DOM inclusief
+Shadow DOM.
+
+---
+
+## D. Resultaten van het onderzoek
+
+Per succescriterium staat hieronder het oordeel: voldoet, voldoet niet, niet van
+toepassing, of niet vastgesteld. Bij een afwijking staat wat precies is gevonden, op
+welke pagina's, en hoe het op te lossen is. Elk criterium sluit af met een korte uitleg
+van wat het vraagt.
+
+### Principe 1 Waarneembaar
 
 _Informatie en componenten van de gebruikersinterface moeten toonbaar zijn aan gebruikers op voor hen waarneembare wijze._
 
-### Richtlijn 1.1 Tekstalternatieven
+#### Richtlijn 1.1 Tekstalternatieven
 
 _Lever tekstalternatieven voor alle niet-tekstuele content, zodat die veranderd kan worden in andere vormen die mensen nodig hebben._
 
-#### Succescriterium 1.1.1 (Niveau A) — Niet-tekstuele content
+##### Succescriterium 1.1.1 (Niveau A) — Niet-tekstuele content
 
 Alle niet-tekstuele content die aan de gebruiker wordt gepresenteerd, heeft een
 tekstalternatief dat een gelijkwaardig doel dient.
@@ -186,7 +353,7 @@ krijgen, zodat ze niet dubbel worden voorgelezen.
 
 </div>
 
-### Richtlijn 1.2 Op tijd gebaseerde media
+#### Richtlijn 1.2 Op tijd gebaseerde media
 
 De applicatie bevat geen audio en geen video. Gemeten op alle elf onderzochte
 pagina's: `<video>` 0, `<audio>` 0, `<iframe>` 0. De onderstaande vijf
@@ -212,11 +379,11 @@ en moeten ze opnieuw worden beoordeeld.
 
 </div>
 
-### Richtlijn 1.3 Aanpasbaar
+#### Richtlijn 1.3 Aanpasbaar
 
 _Creëer content die op verschillende manieren gepresenteerd kan worden zonder verlies van informatie of structuur._
 
-#### Succescriterium 1.3.1 (Niveau A) — Info en relaties
+##### Succescriterium 1.3.1 (Niveau A) — Info en relaties
 
 Informatie, structuur en relaties overgebracht door presentatie kunnen door
 software bepaald worden of zijn beschikbaar in tekst.
@@ -248,6 +415,9 @@ paginatitel.
 
 **Bron:** `wies/core/jinja2/parts/filter_sidebar.html`, regel 42 en 81.
 
+**Hertest.** Op 9 september 2026 nog aanwezig op `/`, `/opdrachten/` en
+`/beheer/gebruikers/`, in Chromium, Edge en Firefox gelijk.
+
 **Geadviseerde oplossing.** Breng de filtergroepen naar `<h2>` en plaats de
 zijbalk in de broncode ná de `<h1>`. Visueel kan de volgorde met CSS blijven zoals
 hij nu is. Daarmee wordt de reeks H1 → H2 → H3 sluitend.
@@ -269,7 +439,7 @@ ook aan blinde bezoekers worden voorgelezen. Let in het bijzonder op:
 
 </div>
 
-#### Succescriterium 1.3.2 (Niveau A) — Betekenisvolle volgorde
+##### Succescriterium 1.3.2 (Niveau A) — Betekenisvolle volgorde
 
 Als de volgorde waarin content wordt gepresenteerd van invloed is op zijn
 betekenis, kan een betekenisvolle leesvolgorde door software bepaald worden.
@@ -295,7 +465,7 @@ volgorde afwijken van wat op het scherm staat.
 
 </div>
 
-#### Succescriterium 1.3.3 (Niveau A) — Zintuiglijke eigenschappen
+##### Succescriterium 1.3.3 (Niveau A) — Zintuiglijke eigenschappen
 
 Instructies zijn niet alleen afhankelijk van zintuiglijke eigenschappen zoals
 vorm, omvang, visuele locatie, oriëntatie of geluid.
@@ -319,7 +489,7 @@ daarvan het element bij zijn naam of label.
 
 </div>
 
-#### Succescriterium 1.3.4 (Niveau AA) — Oriëntatie
+##### Succescriterium 1.3.4 (Niveau AA) — Oriëntatie
 
 De weergave en bediening van content is niet beperkt tot een enkele schermstand.
 
@@ -342,7 +512,7 @@ hebben, kunnen de stand vaak niet wijzigen.
 
 </div>
 
-#### Succescriterium 1.3.5 (Niveau AA) — Inputdoel identificeren
+##### Succescriterium 1.3.5 (Niveau AA) — Inputdoel identificeren
 
 Het doel van elk invoerveld waarmee informatie over de gebruiker wordt verzameld,
 kan door software worden bepaald.
@@ -371,11 +541,11 @@ mensen met een cognitieve beperking.
 
 </div>
 
-### Richtlijn 1.4 Onderscheidbaar
+#### Richtlijn 1.4 Onderscheidbaar
 
 _Maak het voor gebruikers gemakkelijker om content te horen en te zien._
 
-#### Succescriterium 1.4.1 (Niveau A) — Gebruik van kleur
+##### Succescriterium 1.4.1 (Niveau A) — Gebruik van kleur
 
 Kleur wordt niet als het enige visuele middel gebruikt om informatie over te
 brengen.
@@ -401,7 +571,7 @@ foutmeldingen niet alleen "rood" zijn maar ook tekstueel worden benoemd.
 
 </div>
 
-#### Succescriterium 1.4.2 (Niveau A) — Geluidsbediening
+##### Succescriterium 1.4.2 (Niveau A) — Geluidsbediening
 
 <div class="verdict na">
 
@@ -411,7 +581,7 @@ Er is geen automatisch spelende audio aanwezig.
 
 </div>
 
-#### Succescriterium 1.4.3 (Niveau AA) — Contrast (minimum)
+##### Succescriterium 1.4.3 (Niveau AA) — Contrast (minimum)
 
 De visuele weergave van tekst en afbeeldingen van tekst heeft een
 contrastverhouding van ten minste 4,5:1.
@@ -447,7 +617,7 @@ handmatig te meten.
 
 </div>
 
-#### Succescriterium 1.4.4 (Niveau AA) — Herschalen van tekst
+##### Succescriterium 1.4.4 (Niveau AA) — Herschalen van tekst
 
 Tekst kan zonder hulptechnologie tot 200 procent schalen zonder verlies van
 content of functionaliteit.
@@ -471,7 +641,7 @@ valt of buiten beeld raakt zonder dat gescrold kan worden, is een probleem.
 
 </div>
 
-#### Succescriterium 1.4.5 (Niveau AA) — Afbeeldingen van tekst
+##### Succescriterium 1.4.5 (Niveau AA) — Afbeeldingen van tekst
 
 <div class="verdict pass">
 
@@ -493,7 +663,7 @@ bij vergroting. Dit is eenvoudig te testen door alles op de pagina te selecteren
 
 </div>
 
-#### Succescriterium 1.4.10 (Niveau AA) — Dynamisch aanpassen (reflow)
+##### Succescriterium 1.4.10 (Niveau AA) — Dynamisch aanpassen (reflow)
 
 Content kan zonder verlies van informatie of functionaliteit en zonder te scrollen
 in twee dimensies worden weergegeven.
@@ -521,7 +691,7 @@ tweedimensionale lay-out vereisen, zoals kaarten en grote datatabellen.
 
 </div>
 
-#### Succescriterium 1.4.11 (Niveau AA) — Niet-tekstueel contrast
+##### Succescriterium 1.4.11 (Niveau AA) — Niet-tekstueel contrast
 
 De visuele weergave van componenten en grafische objecten heeft een
 contrastverhouding van ten minste 3:1.
@@ -548,7 +718,7 @@ slechtziende gebruikers niet te zien waar een veld begint of eindigt.
 
 </div>
 
-#### Succescriterium 1.4.12 (Niveau AA) — Tekstafstand
+##### Succescriterium 1.4.12 (Niveau AA) — Tekstafstand
 
 Er is geen verlies van content of functionaliteit wanneer regelhoogte,
 letterafstand en woordafstand worden gewijzigd.
@@ -574,7 +744,7 @@ verdwijnen.
 
 </div>
 
-#### Succescriterium 1.4.13 (Niveau AA) — Content bij aanwijzen of focussen
+##### Succescriterium 1.4.13 (Niveau AA) — Content bij aanwijzen of focussen
 
 <div class="verdict unknown">
 
@@ -599,13 +769,13 @@ blijven tot de gebruiker wegbeweegt of hem sluit.
 
 ---
 
-## Principe 2 Bedienbaar
+### Principe 2 Bedienbaar
 
 _Componenten van de gebruikersinterface en navigatie moeten bedienbaar zijn._
 
-### Richtlijn 2.1 Toetsenbordtoegankelijk
+#### Richtlijn 2.1 Toetsenbordtoegankelijk
 
-#### Succescriterium 2.1.1 (Niveau A) — Toetsenbord
+##### Succescriterium 2.1.1 (Niveau A) — Toetsenbord
 
 Alle functionaliteit van de content is bedienbaar via een toetsenbordinterface.
 
@@ -629,7 +799,7 @@ bedienen, zonder muis.
 
 </div>
 
-#### Succescriterium 2.1.2 (Niveau A) — Geen toetsenbordval
+##### Succescriterium 2.1.2 (Niveau A) — Geen toetsenbordval
 
 <div class="verdict pass">
 
@@ -652,7 +822,7 @@ er moet altijd een weg naar buiten zijn — meestal met Escape of een sluitknop.
 
 </div>
 
-#### Succescriterium 2.1.4 (Niveau A) — Sneltoetsen tekentoets
+##### Succescriterium 2.1.4 (Niveau A) — Sneltoetsen tekentoets
 
 <div class="verdict pass">
 
@@ -672,9 +842,9 @@ sneltoetsen moeten uit te zetten of opnieuw toe te wijzen zijn.
 
 </div>
 
-### Richtlijn 2.2 Genoeg tijd
+#### Richtlijn 2.2 Genoeg tijd
 
-#### Succescriterium 2.2.1 (Niveau A) — Timing aanpasbaar
+##### Succescriterium 2.2.1 (Niveau A) — Timing aanpasbaar
 
 <div class="verdict pass">
 
@@ -696,7 +866,7 @@ blinde bezoekers en mensen met een cognitieve beperking, die meer tijd nodig heb
 
 </div>
 
-#### Succescriterium 2.2.2 (Niveau A) — Pauzeren, stoppen, verbergen
+##### Succescriterium 2.2.2 (Niveau A) — Pauzeren, stoppen, verbergen
 
 <div class="verdict pass">
 
@@ -717,9 +887,9 @@ pauzeren, te stoppen of te verbergen zijn.
 
 </div>
 
-### Richtlijn 2.3 Toevallen
+#### Richtlijn 2.3 Toevallen
 
-#### Succescriterium 2.3.1 (Niveau A) — Drie flitsen of beneden drempelwaarde
+##### Succescriterium 2.3.1 (Niveau A) — Drie flitsen of beneden drempelwaarde
 
 <div class="verdict pass">
 
@@ -738,9 +908,9 @@ meer dan drie keer per seconde flitst.
 
 </div>
 
-### Richtlijn 2.4 Navigeerbaar
+#### Richtlijn 2.4 Navigeerbaar
 
-#### Succescriterium 2.4.1 (Niveau A) — Blokken omzeilen
+##### Succescriterium 2.4.1 (Niveau A) — Blokken omzeilen
 
 Er is een mechanisme beschikbaar om blokken content die op meerdere webpagina's
 worden herhaald te omzeilen.
@@ -771,7 +941,7 @@ krijgt.
 
 </div>
 
-#### Succescriterium 2.4.2 (Niveau A) — Paginatitel
+##### Succescriterium 2.4.2 (Niveau A) — Paginatitel
 
 <div class="verdict pass">
 
@@ -793,45 +963,50 @@ specifieke deel vooraan, de sitenaam achteraan.
 
 </div>
 
-#### Succescriterium 2.4.3 (Niveau A) — Focus volgorde
+##### Succescriterium 2.4.3 (Niveau A) — Focus volgorde
 
 Focusbare componenten krijgen de focus in een volgorde waardoor betekenis en
 bedienbaarheid behouden blijven.
 
-<div class="verdict fail">
+<div class="verdict pass">
 
-**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-**Impact: medium** · Alle pagina's met panelen, sheets of inline bewerken
+Vastgesteld bij de hertest van 9 september 2026 op `main` @ `f4595a8`. Op
+19 augustus voldeed de applicatie niet; dat was bevinding 2.
 
 </div>
 
-Wies vervangt delen van de pagina zonder deze opnieuw te laden. Staat de focus op
-een element dat daarbij wordt vervangen, dan valt de focus terug op `<body>` en
-begint de volgende Tab-toets weer bovenaan de pagina.
+**Wat er mis was.** Wies vervangt delen van de pagina zonder deze opnieuw te laden.
+Stond de focus op een element dat daarbij werd vervangen, dan viel de focus terug op
+`<body>` en begon de volgende Tab-toets weer bovenaan de pagina. Dat trof elk
+zijpaneel, elke sheet en elke inline bewerking. De bevinding was bekend als issue #600.
 
-Dit treft elk zijpaneel, elke sheet en elke inline bewerking — de kern van de
-applicatie. Voor wie met het toetsenbord werkt, betekent het dat na elke handeling
-de weg terug opnieuw moet worden afgelegd. In een werkapplicatie die de hele dag
-wordt gebruikt, loopt dat sterk op.
+**Oplossing.** PR #638 verplaatst na elke swap de focus naar het element waar de
+gebruiker was, of naar een logisch startpunt binnen het vervangen fragment. Van het
+oorspronkelijke advies wijkt het op één punt af: de focus gaat naar een element
+_binnen_ het fragment, niet naar het fragment zelf, omdat de container een shadow
+host is waarvan de `tabindex` de tabvolgorde van het paneel zou breken.
 
-Deze bevinding is bekend in de projectadministratie als issue #600.
+**Hertest.** `scripts/focus_swap.py` geeft 9 van 9 op `main`. Daarnaast zijn de
+volgende flows met het toetsenbord doorlopen in Chromium, Edge en Firefox
+(`scripts/hertest_swap.py`); in alle drie landt de focus op dezelfde plek.
 
-**Geadviseerde oplossing.** Verplaats na het vervangen van een fragment de focus
-programmatisch naar dat fragment, of naar een logisch startpunt daarbinnen.
+| Flow                                       | Focus na de swap                                           |
+| ------------------------------------------ | ---------------------------------------------------------- |
+| Kaart openen (Enter) op Wie zit waar?      | Het zijpaneel (`dialog`)                                   |
+| Zijpaneel sluiten (Escape)                 | Terug op de kaart die het opende                           |
+| Updates-tab in het paneel                  | Blijft op de tab                                           |
+| Inline bewerken openen                     | Het eerste invoerveld                                      |
+| Filtergroep "Meer..." openen               | Het zoekveld in de modal; Escape brengt terug naar de knop |
+| Weergave wisselen (Collega's / Opdrachten) | Blijft op de gekozen optie                                 |
+| "Opdracht invoeren" op Aanvragen           | Het zijpaneel (`dialog`)                                   |
 
-> **Status na dit onderzoek.** PR #638 voert deze oplossing uit, met één afwijking
-> van het advies hierboven: de focus gaat naar een element _binnen_ het vervangen
-> fragment en niet naar het fragment zelf. De container is een `nldd-page` en dus
-> een shadow host, en daar bepaalt de `tabindex` van de host of zijn inhoud
-> meedoet in de tabvolgorde — het fragment focusbaar maken brak de tabvolgorde
-> van het zijpaneel.
->
-> `scripts/focus_swap.py` meet deze bevinding; `focus.py` doet dat niet, want dat
-> voert geen swaps uit. De meting geeft 9 van 9 met de wijziging en faalt zonder
-> op de flow "inline bewerken openen", waar de focus dan op `<body>` blijft.
-> Het oordeel hierboven beschrijft de stand op de onderzoeksdatum en blijft
-> daarom staan tot de wijziging op `main` staat.
+**Observatie, geen afwijking.** Firefox geeft elke pagina één tabstop extra aan het
+begin: `nldd-page` is een scrollbare container en Firefox maakt die standaard met Tab
+bereikbaar. Chromium en Edge doen dat niet. Het is een keuze van de browser en zit in
+het design system, niet in Wies; het is te voorkomen met `tabindex="-1"` op
+`nldd-page` in `@nldd/design-system`.
 
 <div class="explain">
 
@@ -844,7 +1019,7 @@ naar het begin van de pagina.
 
 </div>
 
-#### Succescriterium 2.4.4 (Niveau A) — Linkdoel (in context)
+##### Succescriterium 2.4.4 (Niveau A) — Linkdoel (in context)
 
 <div class="verdict pass">
 
@@ -866,7 +1041,7 @@ in zo'n lijst niets.
 
 </div>
 
-#### Succescriterium 2.4.5 (Niveau AA) — Meerdere manieren
+##### Succescriterium 2.4.5 (Niveau AA) — Meerdere manieren
 
 <div class="verdict pass">
 
@@ -887,7 +1062,7 @@ uitgezonderd.
 
 </div>
 
-#### Succescriterium 2.4.6 (Niveau AA) — Koppen en labels
+##### Succescriterium 2.4.6 (Niveau AA) — Koppen en labels
 
 <div class="verdict unknown">
 
@@ -909,7 +1084,7 @@ inhoud te krijgen.
 
 </div>
 
-#### Succescriterium 2.4.7 (Niveau AA) — Focus zichtbaar
+##### Succescriterium 2.4.7 (Niveau AA) — Focus zichtbaar
 
 <div class="verdict pass">
 
@@ -936,7 +1111,7 @@ duidelijk is welk element aan de beurt is.
 
 </div>
 
-#### Succescriterium 2.4.11 (Niveau AA) — Focus niet bedekt (minimaal)
+##### Succescriterium 2.4.11 (Niveau AA) — Focus niet bedekt (minimaal)
 
 Wanneer een component toetsenbordfocus krijgt, wordt deze niet volledig verborgen
 door content die door de auteur is toegevoegd.
@@ -963,9 +1138,9 @@ met focus mag niet **volledig** verborgen zijn.
 
 </div>
 
-### Richtlijn 2.5 Inputmodaliteiten
+#### Richtlijn 2.5 Inputmodaliteiten
 
-#### Succescriterium 2.5.1 (Niveau A) — Bewegingen aanwijzer
+##### Succescriterium 2.5.1 (Niveau A) — Bewegingen aanwijzer
 
 <div class="verdict pass">
 
@@ -975,7 +1150,7 @@ Er zijn geen multipoint- of padgebaseerde bewegingen aangetroffen.
 
 </div>
 
-#### Succescriterium 2.5.2 (Niveau A) — Annulering aanwijzer
+##### Succescriterium 2.5.2 (Niveau A) — Annulering aanwijzer
 
 <div class="verdict pass">
 
@@ -996,7 +1171,7 @@ loslaten te reageren, kan de gebruiker de muis nog wegbewegen.
 
 </div>
 
-#### Succescriterium 2.5.3 (Niveau A) — Label in naam
+##### Succescriterium 2.5.3 (Niveau A) — Label in naam
 
 <div class="verdict pass">
 
@@ -1017,7 +1192,7 @@ bevatten. Anders kan iemand die met spraakbediening werkt de knop niet aanroepen
 
 </div>
 
-#### Succescriterium 2.5.4 (Niveau A) — Bewegingsactivering
+##### Succescriterium 2.5.4 (Niveau A) — Bewegingsactivering
 
 <div class="verdict na">
 
@@ -1027,7 +1202,7 @@ Er is geen functionaliteit die door beweging van het apparaat wordt geactiveerd.
 
 </div>
 
-#### Succescriterium 2.5.7 (Niveau AA) — Sleepbewegingen
+##### Succescriterium 2.5.7 (Niveau AA) — Sleepbewegingen
 
 Alle functionaliteit die met slepen wordt bediend, kan ook met één aanwijzer
 zonder slepen worden bediend.
@@ -1053,7 +1228,7 @@ lijst.
 
 </div>
 
-#### Succescriterium 2.5.8 (Niveau AA) — Doelgrootte (minimum)
+##### Succescriterium 2.5.8 (Niveau AA) — Doelgrootte (minimum)
 
 <div class="verdict pass">
 
@@ -1079,13 +1254,13 @@ elkaar staan.
 
 ---
 
-## Principe 3 Begrijpelijk
+### Principe 3 Begrijpelijk
 
 _Informatie en de bediening van de gebruikersinterface moeten begrijpelijk zijn._
 
-### Richtlijn 3.1 Leesbaar
+#### Richtlijn 3.1 Leesbaar
 
-#### Succescriterium 3.1.1 (Niveau A) — Taal van de pagina
+##### Succescriterium 3.1.1 (Niveau A) — Taal van de pagina
 
 <div class="verdict pass">
 
@@ -1105,7 +1280,7 @@ Nederlandse tekst mogelijk met een Engelse uitspraak.
 
 </div>
 
-#### Succescriterium 3.1.2 (Niveau AA) — Taal van onderdelen
+##### Succescriterium 3.1.2 (Niveau AA) — Taal van onderdelen
 
 <div class="verdict unknown">
 
@@ -1129,9 +1304,9 @@ ingeburgerd, hoeft dat niet.
 
 </div>
 
-### Richtlijn 3.2 Voorspelbaar
+#### Richtlijn 3.2 Voorspelbaar
 
-#### Succescriterium 3.2.1 (Niveau A) — Bij focus
+##### Succescriterium 3.2.1 (Niveau A) — Bij focus
 
 <div class="verdict pass">
 
@@ -1151,7 +1326,7 @@ een klassiek voorbeeld van wat niet mag.
 
 </div>
 
-#### Succescriterium 3.2.2 (Niveau A) — Bij input
+##### Succescriterium 3.2.2 (Niveau A) — Bij input
 
 <div class="verdict unknown">
 
@@ -1174,7 +1349,7 @@ gebruiker daar vooraf over is geïnformeerd.
 
 </div>
 
-#### Succescriterium 3.2.3 (Niveau AA) — Consistente navigatie
+##### Succescriterium 3.2.3 (Niveau AA) — Consistente navigatie
 
 <div class="verdict pass">
 
@@ -1185,7 +1360,7 @@ pagina's in dezelfde relatieve volgorde.
 
 </div>
 
-#### Succescriterium 3.2.4 (Niveau AA) — Consistente identificatie
+##### Succescriterium 3.2.4 (Niveau AA) — Consistente identificatie
 
 <div class="verdict pass">
 
@@ -1204,7 +1379,7 @@ Noem een knop niet op de ene pagina "Opslaan" en op de andere "Bewaren".
 
 </div>
 
-#### Succescriterium 3.2.6 (Niveau A) — Consistente hulp
+##### Succescriterium 3.2.6 (Niveau A) — Consistente hulp
 
 Als een pagina een manier biedt om hulp te vinden, staat die op elke pagina in
 dezelfde relatieve volgorde.
@@ -1231,9 +1406,9 @@ pagina opnieuw te zoeken waar ze terechtkunnen.
 
 </div>
 
-### Richtlijn 3.3 Assistentie bij invoer
+#### Richtlijn 3.3 Assistentie bij invoer
 
-#### Succescriterium 3.3.1 (Niveau A) — Fout identificatie
+##### Succescriterium 3.3.1 (Niveau A) — Fout identificatie
 
 <div class="verdict unknown">
 
@@ -1255,7 +1430,7 @@ hij moet zijn.
 
 </div>
 
-#### Succescriterium 3.3.2 (Niveau A) — Labels of instructies
+##### Succescriterium 3.3.2 (Niveau A) — Labels of instructies
 
 <div class="verdict pass">
 
@@ -1283,7 +1458,7 @@ verdwijnt zodra men begint te typen.
 
 </div>
 
-#### Succescriterium 3.3.3 (Niveau AA) — Foutsuggestie
+##### Succescriterium 3.3.3 (Niveau AA) — Foutsuggestie
 
 <div class="verdict unknown">
 
@@ -1303,7 +1478,7 @@ cognitieve beperking.
 
 </div>
 
-#### Succescriterium 3.3.4 (Niveau AA) — Foutpreventie
+##### Succescriterium 3.3.4 (Niveau AA) — Foutpreventie
 
 <div class="verdict unknown">
 
@@ -1325,7 +1500,7 @@ controleren of bevestigen.
 
 </div>
 
-#### Succescriterium 3.3.7 (Niveau A) — Overbodige invoer
+##### Succescriterium 3.3.7 (Niveau A) — Overbodige invoer
 
 Informatie die de gebruiker eerder heeft ingevoerd, wordt automatisch ingevuld of
 is te kiezen, en hoeft niet opnieuw te worden ingetypt.
@@ -1351,7 +1526,7 @@ Uitzonderingen gelden onder meer voor het opnieuw invoeren van een wachtwoord.
 
 </div>
 
-#### Succescriterium 3.3.8 (Niveau AA) — Toegankelijke authenticatie (minimaal)
+##### Succescriterium 3.3.8 (Niveau AA) — Toegankelijke authenticatie (minimaal)
 
 Bij het inloggen is geen cognitieve test vereist, tenzij er een alternatief of
 hulpmiddel beschikbaar is.
@@ -1384,18 +1559,18 @@ niet mag.
 
 ---
 
-## Principe 4 Robuust
+### Principe 4 Robuust
 
 _Content moet voldoende robuust zijn om betrouwbaar geïnterpreteerd te worden door een breed scala van gebruikersagenten, waaronder hulptechnologieën._
 
-### Richtlijn 4.1 Compatibel
+#### Richtlijn 4.1 Compatibel
 
 > **Succescriterium 4.1.1 (Parsen) is vervallen.** Dit criterium is in WCAG 2.2
 > geschrapt, omdat moderne browsers zelf omgaan met kleine fouten in de opmaak.
 > Ter informatie: er is wel op gecontroleerd, en op alle elf pagina's zijn
 > **0 dubbele ID's** aangetroffen.
 
-#### Succescriterium 4.1.2 (Niveau A) — Naam, rol, waarde
+##### Succescriterium 4.1.2 (Niveau A) — Naam, rol, waarde
 
 <div class="verdict unknown">
 
@@ -1420,7 +1595,7 @@ de browser die betekenis niet vanzelf kent.
 
 </div>
 
-#### Succescriterium 4.1.3 (Niveau AA) — Statusberichten
+##### Succescriterium 4.1.3 (Niveau AA) — Statusberichten
 
 <div class="verdict unknown">
 
@@ -1446,154 +1621,21 @@ gebruiker de verandering niet op.
 
 ---
 
-## Onderzoeksgegevens
+---
 
-### A. Informatie over de opdracht
-
-|                                   |                                                                                                                                                                     |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Onderzoeker**                   | Ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                           |
-| **Opdrachtgever**                 | Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                               |
-| **Datum**                         | 19 augustus 2026                                                                                                                                                    |
-| **Norm**                          | WCAG 2.2, niveau A en AA (via EN 301 549)                                                                                                                           |
-| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, uitgevoerd als **intern vooronderzoek**. Geen onafhankelijk onderzoek; niet alle criteria konden worden vastgesteld. |
-| **Versie van dit document**       | 1.0                                                                                                                                                                 |
-| **Onderzochte versie applicatie** | `main` @ `d072cf3b`                                                                                                                                                 |
-
-> **Let op bij gebruik als onderbouwing.** DigiToegankelijk stelt eisen aan
-> onderzoeksrapporten die als onderbouwing van een toegankelijkheidsverklaring
-> dienen. Dit rapport voldoet aan de vormeisen (scope, steekproef,
-> evaluatiemethode, browsers met versienummers, technologieën, score per
-> succescriterium), maar **niet** aan de inhoudelijke eis dat alle 55
-> succescriteria daadwerkelijk zijn beoordeeld: veertien konden niet worden
-> vastgesteld. Daarnaast is het onderzoek niet onafhankelijk uitgevoerd. Voor
-> status A of B van de verklaring is aanvullend, onafhankelijk onderzoek nodig.
-
-### B. Informatie over het onderzoek
-
-**Evaluatiemethode**
-Dit onderzoek volgt de opzet van WCAG-EM (Website Accessibility Conformance
-Evaluation Methodology): scope bepalen, steekproef samenstellen, per
-succescriterium beoordelen en rapporteren. De stappen die toetsing met
-hulpsoftware en met gebruikers vereisen zijn **niet** uitgevoerd; in zoverre is
-de methode niet volledig gevolgd.
-
-### Scope van het onderzoek
-
-De ingelogde webapplicatie Wies. Buiten scope vallen: het Keycloak-inlogscherm
-(andere leverancier), externe websites waarnaar wordt gelinkt, en de
-beheerinterface van Django.
-
-### Steekproef
-
-| #   | Pagina                | URL                     | Kenmerken                                          |
-| --- | --------------------- | ----------------------- | -------------------------------------------------- |
-| 1   | Wie zit waar?         | `/`                     | Overzicht, filters, zoeken, zijpanelen, paginering |
-| 2   | Aanvragen             | `/opdrachten/`          | Overzicht met filters en modals                    |
-| 3   | Beheer — gebruikers   | `/beheer/gebruikers/`   | Tabel, formulier in modal                          |
-| 4   | Beheer — labels       | `/beheer/labels/`       | Lijst met acties per rij                           |
-| 5   | Beheer — merken       | `/beheer/merken/`       | Lijst, sheet met formulier                         |
-| 6   | Beheer — organisaties | `/beheer/organisaties/` | Boomstructuur                                      |
-| 7   | Mijn profiel          | `/profiel/`             | Detail met inline bewerken                         |
-| 8   | Veelgestelde vragen   | `/faq/`                 | Tekst met accordeon                                |
-| 9   | Contact               | `/contact/`             | Tekst met externe links                            |
-| 10  | Privacy               | `/privacy/`             | Gegenereerde tekstpagina                           |
-| 11  | Toegankelijkheid      | `/toegankelijkheid/`    | Tekst met afbeelding                               |
-
-De 404-pagina is niet in de steekproef opgenomen. In de onderzoeksomgeving toont
-Django zijn ontwikkelaarspagina; de productieversie gebruikt een eigen Nederlandse
-foutpagina (`404.html`), die niet apart is getoetst.
-
-### Gebruikte browsers en software
-
-| Software                 | Versie                | Gebruikt voor                                                                                                                                          |
-| ------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Chromium                 | **140.0.7339.16**     | Alle metingen                                                                                                                                          |
-| Playwright               | **1.55.0**            | Aansturing van de browser                                                                                                                              |
-| axe-core                 | **4.10.2**            | Geautomatiseerde toetsing                                                                                                                              |
-| Chrome DevTools Protocol | via Playwright 1.55.0 | Uitlezen van de accessibility tree                                                                                                                     |
-| Eigen meetscripts        | —                     | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
-
-**Instellingen.** Alle metingen zijn uitgevoerd in een schone browsersessie zonder
-extensies, met een weergavekader van 1440 × 900 pixels tenzij anders vermeld.
-axe-core is beperkt tot de regelsets `wcag2a`, `wcag2aa`, `wcag21a` en `wcag21aa`.
-
-**ACT Rules Format.** axe-core implementeert regels uit het ACT Rules Format van
-het W3C en publiceert per regel de bijbehorende ACT-regel-identificatie. Daarmee
-voldoet de gebruikte automatische toetsing aan de eis dat testtools op
-ACT-algoritmen gebaseerd zijn. De eigen meetscripts implementeren geen
-ACT-regels; hun uitkomsten zijn steeds met een tweede methode of visueel
-geverifieerd.
-
-> **Niet gebruikt.** Er is niet getoetst met JAWS, NVDA, VoiceOver, ZoomText,
-> spraakbediening of schakelbediening. Er is niet getoetst in Firefox, Safari of
-> Edge, en niet op mobiele apparaten.
-
-### C. Informatie over de getoetste applicatie
-
-**Basisniveau van toegankelijkheidsondersteuning**
-
-Wies zou moeten werken met alle gangbare browsers en gangbare hulpapparatuur.
-Concreet gaat dit onderzoek uit van: Chromium-, Firefox- en Safari-gebaseerde
-browsers in een actuele versie, in combinatie met schermlezers (JAWS, NVDA,
-VoiceOver), schermvergroters en spraak- of schakelbediening. Er is bij dit
-onderzoek van uitgegaan dat alle door het W3C uitgebrachte technieken door
-hulpsoftware worden ondersteund en dus gebruikt mogen worden.
-
-**Let op:** dit basisniveau is het uitgangspunt, niet het getoetste bereik. Er is
-uitsluitend gemeten in Chromium en zonder hulpsoftware (zie hierboven). Of het
-gestelde basisniveau daadwerkelijk wordt gehaald, is met dit onderzoek **niet
-vastgesteld**.
-
-**Technologieën van de applicatie**
-
-Gebruikt zijn de technologieën HTML5, CSS, JavaScript (inclusief de frameworks
-htmx en Lit voor webcomponenten), WAI-ARIA en de DOM inclusief Shadow DOM,
-waarvoor technieken zijn gedocumenteerd in
-https://www.w3.org/WAI/WCAG22/Techniques/. De applicatie maakt gebruik van de
-componentbibliotheek @nldd/design-system. Er worden geen PDF-, SMIL- of
-Silverlight-technologieën toegepast.
-
-**Bereik van geautomatiseerde toetsing**
-
-Wies is opgebouwd uit NLDD-webcomponenten. Het overgrote deel van de interface
-staat daardoor in een shadow root, buiten het bereik van standaard
-toetsingsgereedschap.
-
-|                         | Aantal elementen |
-| ----------------------- | ---------------- |
-| In het gewone document  | 638              |
-| In shadow roots         | **2.310**        |
-| Aandeel in shadow roots | **≈ 78 %**       |
-
-Dit is geverifieerd door bewust fouten te injecteren:
-
-| Injectie                 | Locatie         | Gedetecteerd door axe-core |
-| ------------------------ | --------------- | -------------------------- |
-| `<img>` zonder `alt`     | gewone document | ja                         |
-| Tekst met contrast 1,9:1 | gewone document | ja                         |
-| Tekst met contrast 1,9:1 | shadow root     | **nee**                    |
-
-Het resultaat "0 overtredingen" van axe-core geldt daarom uitsluitend voor de
-± 22 % van de interface die in het gewone document staat, en is op zichzelf geen
-bewijs van conformiteit. De contrast-, structuur- en naamgevingstoetsen zijn zo
-uitgevoerd dat zij shadow roots wél doorlopen, respectievelijk via de accessibility
-tree.
-
-### Afhankelijke technologie
-
-HTML5, CSS, WAI-ARIA, ECMAScript (htmx en Lit-webcomponenten), DOM inclusief
-Shadow DOM.
+## Bijlagen
 
 ### Beperkingen van dit onderzoek
 
-**1. Geen onafhankelijk onderzoek.** Uitgevoerd door het eigen ontwikkelteam. Voor
-het register is een onafhankelijk onderzoek vereist.
+**1. Geen onafhankelijk onderzoek.** Uitgevoerd door het eigen ontwikkelteam. De
+checklist van DigiToegankelijk vereist geen onafhankelijk bureau, wel dat het rapport
+vermeldt wie het deed; dat staat in deel A.
 
 **2. Geen toetsing met hulpsoftware.** Er is niet getest met JAWS, NVDA, VoiceOver,
 spraakbediening of schakelbediening. Tien succescriteria blijven daardoor open,
 waaronder 4.1.2 en 4.1.3, die bij een applicatie van eigen webcomponenten juist het
-kwetsbaarst zijn.
+kwetsbaarst zijn. Er ligt een toetsronde klaar (`toetsronde.html`) om dit met NVDA en
+VoiceOver zelf te meten.
 
 **3. Geen gebruikerstest.** Er zijn geen mensen met een beperking bij het onderzoek
 betrokken.
@@ -1602,22 +1644,26 @@ betrokken.
 (opdracht aanmaken, teamlid toevoegen, onboarding) zijn alleen de beginpagina's
 getoetst.
 
-**5. Eén browser, één platform.** Chromium op desktop. Niet getoetst in Firefox,
-Safari of Edge, en niet op mobiele apparaten.
+**5. Drie browsers, één platform.** Het volledige onderzoek is gedaan in Chromium.
+De hertest herhaalde de instrumentele metingen in Chromium, Edge en Firefox op macOS;
+de drie gedragen zich gelijk op alle gemeten punten. Niet getoetst in Safari en niet
+op mobiele apparaten.
 
-**6. Meetfouten zijn opgetreden.** Zeven eigen metingen leverden onjuiste
+**6. Meetfouten zijn opgetreden.** Negen eigen metingen leverden onjuiste
 bevindingen op, die pas bij verificatie sneuvelden. De laatste twee kwamen uit de
-vervolgmeting van bevinding 2:
+hertest:
 
-| Onjuiste meting                         | Werkelijkheid           | Oorzaak                                                                       |
-| --------------------------------------- | ----------------------- | ----------------------------------------------------------------------------- |
-| 910 contrastfouten                      | 0                       | `oklch()`-waarden als RGB gelezen                                             |
-| 8 van 10 tabstops zonder focusring      | Alle zichtbaar          | Ring wordt in de shadow root getekend                                         |
-| 192 elementen zonder toegankelijke naam | 0                       | Naam komt uit inhoud die via een slot wordt doorgegeven                       |
-| Sheet sluit de focus niet in            | Sluit wel in (9 van 12) | Detectie kon de shadow-grens niet oversteken                                  |
-| 16 tabstops met bedekte focus           | Geen enkele bedekt      | `elementFromPoint` gaf het omhullende component terug, niet een bedekker      |
-| Focus staat niet in het geswapte paneel | Staat er wel in         | `#side-panel-content` zit _binnen_ de sheet; de check keek een niveau te laag |
-| Updates-tab niet met Tab bereikbaar     | Werkt zoals bedoeld     | Roving tabindex: binnen een tabbar navigeer je met de pijltjes                |
+| Onjuiste meting                                        | Werkelijkheid                                     | Oorzaak                                                                                                                                                       |
+| ------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 910 contrastfouten                                     | 0                                                 | `oklch()`-waarden als RGB gelezen                                                                                                                             |
+| 8 van 10 tabstops zonder focusring                     | Alle zichtbaar                                    | Ring wordt in de shadow root getekend                                                                                                                         |
+| 192 elementen zonder toegankelijke naam                | 0                                                 | Naam komt uit inhoud die via een slot wordt doorgegeven                                                                                                       |
+| Sheet sluit de focus niet in                           | Sluit wel in (9 van 12)                           | Detectie kon de shadow-grens niet oversteken                                                                                                                  |
+| 16 tabstops met bedekte focus                          | Geen enkele bedekt                                | `elementFromPoint` gaf het omhullende component terug, niet een bedekker                                                                                      |
+| Focus staat niet in het geswapte paneel                | Staat er wel in                                   | `#side-panel-content` zit _binnen_ de sheet; de check keek een niveau te laag                                                                                 |
+| Updates-tab niet met Tab bereikbaar                    | Werkt zoals bedoeld                               | Roving tabindex: binnen een tabbar navigeer je met de pijltjes                                                                                                |
+| 23 van 25 tabstops zonder focusring (hertest)          | Alle zichtbaar                                    | Berekende `outline` uitgelezen; de ring staat in de shadow root. Vervangen door een pixelvergelijking met en zonder focus                                     |
+| Firefox: 14 van 14 tabstops zonder focusring (hertest) | Ring zichtbaar, op screenshot gelijk aan Chromium | Firefox hertekent na `blur()` niet binnen de meettijd, dus de pixelvergelijking ziet geen verschil. In Firefox is de ring visueel gecontroleerd, niet gemeten |
 
 Dat een geautomatiseerde uitkomst een plausibele vorm heeft, betekent niet dat hij
 klopt. Elke bevinding in dit rapport is daarom tegen de werkelijkheid getoetst — via
@@ -1626,22 +1672,22 @@ lukte, staat "niet vastgesteld" in plaats van een oordeel.
 
 ### Geadviseerde vervolgstappen
 
-| Stap                                            | Waarom                                              | Prioriteit |
-| ----------------------------------------------- | --------------------------------------------------- | ---------- |
-| 1. Bevinding 1 oplossen (koppenstructuur)       | Niveau A, kleine wijziging in één bestand           | Hoog       |
-| 2. Bevinding 2 oplossen (focus na bijwerken)    | Niveau A, raakt de kern van de applicatie — PR #638 | Hoog       |
-| 3. Toetsing met schermlezer (NVDA en VoiceOver) | Sluit de tien openstaande criteria                  | Hoog       |
-| 4. Onafhankelijk WCAG-EM-onderzoek              | Vereist voor de toegankelijkheidsverklaring         | Hoog       |
-| 5. Issue #600 bijwerken                         | Het skiplink-deel is achterhaald                    | Laag       |
-| 6. axe-core opnemen in de bouwstraat            | Voorkomt regressie in het gewone document           | Middel     |
-| 7. 404-pagina en processen alsnog toetsen       | Ontbraken in de steekproef                          | Middel     |
+| Stap                                            | Waarom                                                                                              | Prioriteit |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------- |
+| 1. Bevinding 1 oplossen (koppenstructuur)       | Niveau A, kleine wijziging in één bestand                                                           | Hoog       |
+| 2. Bevinding 2 oplossen (focus na bijwerken)    | Gedaan in PR #638, bevestigd bij de hertest                                                         | Afgerond   |
+| 3. Toetsing met schermlezer (NVDA en VoiceOver) | Sluit de tien openstaande criteria                                                                  | Hoog       |
+| 4. Het onderzoek volledig maken                 | Alle 55 criteria beoordeeld is vereist voor status A of B; zelf met hulpsoftware, of via een bureau | Hoog       |
+| 5. Issue #600 sluiten                           | Bevinding 2 is opgelost; het skiplink-deel was al achterhaald                                       | Laag       |
+| 6. axe-core opnemen in de bouwstraat            | Voorkomt regressie in het gewone document                                                           | Middel     |
+| 7. 404-pagina en processen alsnog toetsen       | Ontbraken in de steekproef                                                                          | Middel     |
 
 ---
 
 <div class="footer-note">
 
 **Herleidbaarheid.** Alle cijfers in dit rapport komen uit meetscripts die zijn
-uitgevoerd tegen een draaiende instantie van `main` @ `d072cf3b` op 19 augustus 2026. De scripts zijn beschikbaar bij het ontwikkelteam, zodat de metingen
+uitgevoerd tegen een draaiende instantie van `main`: @ `d072cf3b` op 19 augustus 2026 en @ `f4595a8` op 9 september 2026. De scripts zijn beschikbaar bij het ontwikkelteam, zodat de metingen
 herhaald kunnen worden.
 
 </div>

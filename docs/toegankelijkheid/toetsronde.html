@@ -1,0 +1,1591 @@
+<title>Toetsronde Wies</title>
+<link
+  rel="stylesheet"
+  href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono&display=swap"
+/>
+<style>
+  :root {
+    --ground: #fbfbfc;
+    --surface: #ffffff;
+    --ink: #1b2430;
+    --ink-soft: #59616d;
+    --rule: #dfe3e8;
+    --accent: #154273;
+    --accent-soft: #e8eef5;
+    --code-bg: #f2f4f7;
+    --ok: #2e7d4f;
+    --ok-soft: #e6f2ea;
+    --nok: #a4262c;
+    --nok-soft: #f8e8e9;
+    --warn: #b25e09;
+    --warn-soft: #fbf0e3;
+    --na: #6b7480;
+    --na-soft: #eef0f3;
+    --field: #ffffff;
+    --field-border: #b9c1cc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12161c;
+      --surface: #181d25;
+      --ink: #e6e9ed;
+      --ink-soft: #a2aab6;
+      --rule: #2b323c;
+      --accent: #7fa8d4;
+      --accent-soft: #1b2430;
+      --code-bg: #1e242c;
+      --ok: #6fbf8e;
+      --ok-soft: #16241a;
+      --nok: #e28a8e;
+      --nok-soft: #2b1a1c;
+      --warn: #e0a063;
+      --warn-soft: #2a2113;
+      --na: #98a0ac;
+      --na-soft: #1e232b;
+      --field: #12161c;
+      --field-border: #3a4350;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #12161c;
+    --surface: #181d25;
+    --ink: #e6e9ed;
+    --ink-soft: #a2aab6;
+    --rule: #2b323c;
+    --accent: #7fa8d4;
+    --accent-soft: #1b2430;
+    --code-bg: #1e242c;
+    --ok: #6fbf8e;
+    --ok-soft: #16241a;
+    --nok: #e28a8e;
+    --nok-soft: #2b1a1c;
+    --warn: #e0a063;
+    --warn-soft: #2a2113;
+    --na: #98a0ac;
+    --na-soft: #1e232b;
+    --field: #12161c;
+    --field-border: #3a4350;
+  }
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+    font-size: 17px;
+    line-height: 1.6;
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+    display: grid;
+    gap: 40px;
+  }
+  @media (min-width: 1040px) {
+    .wrap {
+      grid-template-columns: 240px minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  header {
+    grid-column: 1/-1;
+    border-bottom: 3px solid var(--accent);
+    padding: 48px 0 20px;
+  }
+  h1 {
+    font-family: Bitter, Georgia, serif;
+    font-size: 2.3rem;
+    line-height: 1.15;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+  .sub {
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  h2 {
+    font-family: Bitter, Georgia, serif;
+    font-size: 1.5rem;
+    margin: 48px 0 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+    text-wrap: balance;
+  }
+  h2:first-child {
+    margin-top: 0;
+  }
+  h3 {
+    font-family: Bitter, Georgia, serif;
+    font-size: 1.12rem;
+    margin: 0;
+  }
+  p,
+  li {
+    max-width: 72ch;
+  }
+  code,
+  kbd {
+    font-family: "JetBrains Mono", ui-monospace, Menlo, monospace;
+    font-size: 0.86em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.38em;
+    border-radius: 3px;
+  }
+  kbd {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    white-space: nowrap;
+  }
+  a {
+    color: var(--accent);
+  }
+  nav.toc {
+    position: sticky;
+    top: 20px;
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  nav.toc h2 {
+    font-family: "Source Sans 3", sans-serif;
+    font-size: 0.76rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    border: 0;
+    margin: 0 0 10px;
+    padding: 0;
+  }
+  nav.toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 5px;
+  }
+  nav.toc a {
+    text-decoration: none;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  nav.toc a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  nav.toc .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--na-soft);
+    border: 1px solid var(--rule);
+    flex: none;
+    margin-top: 8px;
+  }
+  nav.toc .dot.ok {
+    background: var(--ok);
+    border-color: var(--ok);
+  }
+  nav.toc .dot.nok {
+    background: var(--nok);
+    border-color: var(--nok);
+  }
+  nav.toc .dot.open {
+    background: var(--warn);
+    border-color: var(--warn);
+  }
+  @media (max-width: 1039px) {
+    nav.toc {
+      position: static;
+      border-bottom: 1px solid var(--rule);
+      padding-bottom: 16px;
+    }
+  }
+  main {
+    min-width: 0;
+  }
+  .box {
+    margin: 20px 0;
+    padding: 14px 20px;
+    background: var(--surface);
+    border-left: 4px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+  }
+  .box.warn {
+    border-left-color: var(--warn);
+  }
+  .box p {
+    margin: 0.35em 0;
+  }
+  .progress {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  @media (max-width: 640px) {
+    .progress {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 14px;
+  }
+  .tile .n {
+    font-family: Bitter, Georgia, serif;
+    font-size: 1.9rem;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .tile .l {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 4px;
+  }
+  .tile.ok .n {
+    color: var(--ok);
+  }
+  .tile.nok .n {
+    color: var(--nok);
+  }
+  .tile.open .n {
+    color: var(--warn);
+  }
+  .bar {
+    height: 8px;
+    background: var(--na-soft);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .bar span {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    width: 0;
+    transition: width 0.3s;
+  }
+  .save {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    min-height: 1.4em;
+  }
+  .save .pip {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--na);
+  }
+  .save.saving .pip {
+    background: var(--warn);
+  }
+  .save.saved .pip {
+    background: var(--ok);
+  }
+  .save.local .pip {
+    background: var(--warn);
+  }
+  .save.error .pip {
+    background: var(--nok);
+  }
+  .tablewrap {
+    overflow-x: auto;
+    margin: 16px 0;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.93rem;
+  }
+  th,
+  td {
+    border: 1px solid var(--rule);
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--accent-soft);
+    font-weight: 600;
+  }
+  .grid2 {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px 18px;
+  }
+  label {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin-bottom: 3px;
+  }
+  input[type="text"],
+  select,
+  textarea {
+    width: 100%;
+    font: inherit;
+    font-size: 0.95rem;
+    color: var(--ink);
+    background: var(--field);
+    border: 1px solid var(--field-border);
+    border-radius: 5px;
+    padding: 7px 9px;
+  }
+  textarea {
+    min-height: 64px;
+    resize: vertical;
+  }
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  summary:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .crit {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    margin: 18px 0;
+    overflow: hidden;
+  }
+  .crit > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 18px;
+    border-left: 5px solid var(--na);
+  }
+  .crit > summary::-webkit-details-marker {
+    display: none;
+  }
+  .crit[data-verdict="ok"] > summary {
+    border-left-color: var(--ok);
+  }
+  .crit[data-verdict="nok"] > summary {
+    border-left-color: var(--nok);
+  }
+  .crit[data-verdict="open"] > summary {
+    border-left-color: var(--warn);
+  }
+  .crit .id {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 0.15em 0.55em;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .crit .lvl {
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .crit .who {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+  .crit .badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.15em 0.6em;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .badge.ok {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+  .badge.nok {
+    background: var(--nok-soft);
+    color: var(--nok);
+  }
+  .badge.open {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+  .badge.na {
+    background: var(--na-soft);
+    color: var(--na);
+  }
+  .crit .body {
+    padding: 4px 18px 18px;
+    border-top: 1px solid var(--rule);
+  }
+  .crit h4 {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin: 18px 0 6px;
+  }
+  .crit ol,
+  .crit ul {
+    margin: 0;
+    padding-left: 1.3em;
+  }
+  .crit li {
+    margin: 0.3em 0;
+  }
+  .combos {
+    display: grid;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .combo {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 10px 12px;
+    display: grid;
+    grid-template-columns: minmax(150px, 220px) 1fr;
+    gap: 10px 14px;
+    align-items: start;
+  }
+  @media (max-width: 640px) {
+    .combo {
+      grid-template-columns: 1fr;
+    }
+  }
+  .combo .name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .combo .hint {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  .combo select {
+    margin-top: 6px;
+  }
+  .combo[data-v="ok"] {
+    background: var(--ok-soft);
+  }
+  .combo[data-v="nok"] {
+    background: var(--nok-soft);
+  }
+  .combo[data-v="na"] {
+    background: var(--na-soft);
+  }
+  .keys td:first-child {
+    white-space: nowrap;
+  }
+  .summary pre {
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    font-size: 0.84rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+  button {
+    font: inherit;
+    font-size: 0.92rem;
+    padding: 7px 14px;
+    border-radius: 5px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #fff;
+    cursor: pointer;
+  }
+  button.secondary {
+    background: var(--surface);
+    color: var(--accent);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Toetsronde Wies</h1>
+    <p class="sub">
+      De veertien open succescriteria doorlopen en vastleggen, op de live versie
+    </p>
+  </header>
+
+  <nav class="toc" aria-label="Inhoud">
+    <h2>Criteria</h2>
+    <ul id="toc"></ul>
+  </nav>
+
+  <main>
+    <h2 id="voortgang">Voortgang</h2>
+    <div class="progress" id="progress">
+      <div class="tile ok">
+        <div class="n" id="n-ok">0</div>
+        <div class="l">voldoet</div>
+      </div>
+      <div class="tile nok">
+        <div class="n" id="n-nok">0</div>
+        <div class="l">voldoet niet</div>
+      </div>
+      <div class="tile open">
+        <div class="n" id="n-open">0</div>
+        <div class="l">deels gedaan</div>
+      </div>
+      <div class="tile">
+        <div class="n" id="n-todo">14</div>
+        <div class="l">nog niet begonnen</div>
+      </div>
+    </div>
+    <div class="bar" aria-hidden="true"><span id="bar"></span></div>
+    <div class="save" id="save">
+      <span class="pip"></span><span id="save-text">Verbinden met opslag…</span>
+    </div>
+    <div aria-live="polite" class="visually-hidden" id="live"></div>
+
+    <div class="box">
+      <p>
+        <strong>Waarom jij, en niet een script.</strong> Wies bestaat uit
+        webcomponenten met een shadow root. Geautomatiseerde toetsing kijkt daar
+        maar half doorheen; het rapport telt negen eigen metingen die om die
+        reden onjuist bleken. Een schermlezer leest wat de browser echt aan de
+        toegankelijkheidslaag doorgeeft. Dat is de enige meting die telt voor
+        deze veertien.
+      </p>
+      <p>
+        Tien criteria vragen een schermlezer. Vier zijn een visueel of
+        inhoudelijk oordeel; die staan er ook bij, zodat je alles in één ronde
+        doet. Alles wat je invult wordt bewaard.
+      </p>
+    </div>
+
+    <h2 id="software">1. Software en versies</h2>
+    <p>
+      Op de Mac heb je alles al: VoiceOver zit in macOS, Safari staat erop. Voor
+      de Windows-kant is NVDA gratis; installeer die op een Windows-machine of
+      in een virtuele machine. De checklist eist versienummers, geen "laatste
+      versie". Op de Mac: Apple-menu → Over deze Mac, en Safari → Over Safari.
+      In NVDA: Help → Over.
+    </p>
+
+    <div class="box warn">
+      <p>
+        <strong>Safari is nu extra belangrijk.</strong> De instrumentele
+        metingen zijn gedaan in Chromium, Edge en Firefox; de WebKit-engine was
+        niet aan te sturen. Jouw VoiceOver-ronde in Safari is daarmee de enige
+        meting in die engine. Loop er dus ook kort de toetsenbordbediening na:
+        Tab-volgorde, focusring, en of het zijpaneel de focus vasthoudt.
+      </p>
+    </div>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Combinatie</th>
+            <th>Waarom deze</th>
+            <th>Klaarzetten</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <strong>VoiceOver + Safari</strong><br /><span class="hint"
+                >macOS</span
+              >
+            </td>
+            <td>
+              De combinatie waar Apple op test. Veel rijksmedewerkers werken op
+              een Mac.
+            </td>
+            <td>
+              Systeeminstellingen → Toegankelijkheid → VoiceOver. Aanzetten met
+              <kbd>⌘ F5</kbd>. Doorloop de ingebouwde training één keer.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>NVDA + Firefox</strong><br /><span class="hint"
+                >Windows</span
+              >
+            </td>
+            <td>
+              De meest gebruikte gratis schermlezer. Firefox is de
+              referentiebrowser van de NVDA-ontwikkelaars.
+            </td>
+            <td>
+              Download op nvaccess.org. Start met <kbd>Ctrl Alt N</kbd>. Zet in
+              Instellingen → Spraak de stem op Nederlands.
+            </td>
+          </tr>
+          <tr>
+            <td>
+              <strong>NVDA + Chrome</strong><br /><span class="hint"
+                >Windows</span
+              >
+            </td>
+            <td>
+              Dekt de Chromium-kant. Werkt iets hier én in Firefox, dan werkt
+              het vrijwel zeker in Edge.
+            </td>
+            <td>Zelfde NVDA, andere browser.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid2" id="setup">
+      <div>
+        <label for="s-tester">Wie toetst</label
+        ><input
+          type="text"
+          id="s-tester"
+          data-setup="tester"
+          autocomplete="name"
+        />
+      </div>
+      <div>
+        <label for="s-date">Datum</label
+        ><input
+          type="text"
+          id="s-date"
+          data-setup="date"
+          placeholder="bv. 12 september 2026"
+        />
+      </div>
+      <div>
+        <label for="s-macos">macOS</label
+        ><input
+          type="text"
+          id="s-macos"
+          data-setup="macos"
+          placeholder="bv. 14.4"
+        />
+      </div>
+      <div>
+        <label for="s-safari">Safari</label
+        ><input
+          type="text"
+          id="s-safari"
+          data-setup="safari"
+          placeholder="bv. 17.4"
+        />
+      </div>
+      <div>
+        <label for="s-nvda">NVDA</label
+        ><input
+          type="text"
+          id="s-nvda"
+          data-setup="nvda"
+          placeholder="bv. 2025.1"
+        />
+      </div>
+      <div>
+        <label for="s-windows">Windows</label
+        ><input
+          type="text"
+          id="s-windows"
+          data-setup="windows"
+          placeholder="bv. 11 23H2"
+        />
+      </div>
+      <div>
+        <label for="s-firefox">Firefox</label
+        ><input type="text" id="s-firefox" data-setup="firefox" />
+      </div>
+      <div>
+        <label for="s-chrome">Chrome</label
+        ><input type="text" id="s-chrome" data-setup="chrome" />
+      </div>
+    </div>
+
+    <h2 id="toetsen">2. De toetsen die je nodig hebt</h2>
+    <div class="tablewrap">
+      <table class="keys">
+        <thead>
+          <tr>
+            <th>Wat</th>
+            <th>VoiceOver</th>
+            <th>NVDA</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Aan/uit</td>
+            <td><kbd>⌘ F5</kbd></td>
+            <td><kbd>Ctrl Alt N</kbd> / <kbd>Insert Q</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgend element lezen</td>
+            <td><kbd>VO →</kbd> (VO = <kbd>Ctrl ⌥</kbd>)</td>
+            <td><kbd>↓</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgende kop</td>
+            <td><kbd>VO ⌘ H</kbd></td>
+            <td><kbd>H</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgend landmark</td>
+            <td>Rotor <kbd>VO U</kbd>, kies Oriëntatiepunten</td>
+            <td><kbd>D</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgende knop</td>
+            <td>Rotor → Knoppen</td>
+            <td><kbd>B</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgend formulierveld</td>
+            <td>Rotor → Formulierregelaars</td>
+            <td><kbd>F</kbd></td>
+          </tr>
+          <tr>
+            <td>Lijst van alles op de pagina</td>
+            <td>Rotor <kbd>VO U</kbd>, pijl links/rechts wisselt categorie</td>
+            <td><kbd>Insert F7</kbd></td>
+          </tr>
+          <tr>
+            <td>Activeren</td>
+            <td><kbd>VO Space</kbd></td>
+            <td><kbd>Enter</kbd> of <kbd>Space</kbd></td>
+          </tr>
+          <tr>
+            <td>Stoppen met praten</td>
+            <td><kbd>Ctrl</kbd></td>
+            <td><kbd>Ctrl</kbd></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="box">
+      <p>
+        <strong>Doe het scherm uit.</strong> Zet tijdens de toetsing het scherm
+        uit of draai je weg. Anders vul je onbewust aan wat je ziet, en dan meet
+        je niet wat een blinde gebruiker hoort. Het scherm mag aan om te
+        noteren, niet om te begrijpen wat er gebeurt.
+      </p>
+    </div>
+
+    <h2 id="steekproef">3. De steekproef</h2>
+    <p>
+      Dezelfde elf pagina's als het rapport, zodat de uitkomsten optellen. Voor
+      de open criteria zijn deze vier het zwaarst; begin daar. Doe daarna de
+      tekstpagina's, die zijn snel.
+    </p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Pagina</th>
+            <th>URL</th>
+            <th>Wat je er tegenkomt</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Wie zit waar?</td>
+            <td><code>/</code></td>
+            <td>
+              Filterzijbalk met "Meer…"-knoppen die een modal openen, zoeken,
+              weergave Collega's/Opdrachten, sortering, kaarten die een
+              zijpaneel openen, inline bewerken in dat paneel
+            </td>
+          </tr>
+          <tr>
+            <td>Aanvragen</td>
+            <td><code>/opdrachten/</code></td>
+            <td>
+              De "Opdracht invoeren"-flow, van knop tot opgeslagen; verwijderen
+            </td>
+          </tr>
+          <tr>
+            <td>Beheer, gebruikers</td>
+            <td><code>/beheer/gebruikers/</code></td>
+            <td>Tabel, formulier in een modal, verwijderen</td>
+          </tr>
+          <tr>
+            <td>Mijn profiel</td>
+            <td><code>/profiel/</code></td>
+            <td>Naam en e-mail, inline bewerken, privacy-chips met tooltip</td>
+          </tr>
+          <tr>
+            <td>Overige</td>
+            <td>
+              <code>/faq/</code>, <code>/contact/</code>,
+              <code>/privacy/</code>, <code>/toegankelijkheid/</code>,
+              <code>/beheer/labels/</code>, <code>/beheer/merken/</code>,
+              <code>/beheer/organisaties/</code>
+            </td>
+            <td>Tekst, accordeon, lijsten met acties per rij, boomstructuur</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="box warn">
+      <p>
+        <strong>Eén ding dat je gaat tegenkomen en geen fout is.</strong> In
+        Firefox landt de eerste Tab op elke pagina op een leeg, scrollbaar
+        element (<code>nldd-page</code>) vóór de skip-link. Firefox maakt
+        scrollbare containers bewust bereikbaar met Tab; Chromium en Safari doen
+        dat niet. Noteer het gerust, maar reken het niet aan.
+      </p>
+    </div>
+
+    <h2 id="criteria">4. De veertien criteria</h2>
+    <p>
+      Per criterium: waarom het nog open staat, wat je doet, wat je hoort te
+      horen, en per combinatie je oordeel. Eén falende combinatie telt als
+      "voldoet niet": het basisniveau in het rapport is "alle gangbare browsers
+      en hulpapparatuur". Het eindoordeel per criterium wordt daaruit afgeleid.
+    </p>
+
+    <div id="crit-list"></div>
+
+    <h2 id="samenvatting">5. Samenvatting voor het rapport</h2>
+    <p>
+      Dit blok volgt uit wat je hierboven invult, in de vorm die het rapport
+      gebruikt. Als het onderzoek hiermee volledig is, kan de verklaring naar
+      status B; status A vraagt daarnaast dat bevinding 1 is opgelost.
+    </p>
+    <div class="summary"><pre id="summary"></pre></div>
+    <p>
+      <button type="button" id="copy" class="secondary">
+        Kopieer samenvatting
+      </button>
+      <span id="copy-msg" class="hint"></span>
+    </p>
+  </main>
+</div>
+
+<script>
+  (function () {
+    "use strict";
+
+    var SR = [
+      { key: "vo_safari", name: "VoiceOver + Safari", hint: "macOS" },
+      { key: "nvda_firefox", name: "NVDA + Firefox", hint: "Windows" },
+      { key: "nvda_chrome", name: "NVDA + Chrome", hint: "Windows" },
+    ];
+    var VIS = [
+      { key: "visueel", name: "Beoordeling", hint: "zonder schermlezer" },
+    ];
+    var CONTRAST = [
+      { key: "licht", name: "Licht thema", hint: "Safari of Chrome" },
+      { key: "donker", name: "Donker thema", hint: "zelfde browser" },
+    ];
+
+    var GROUPS = [
+      {
+        title: "Oriëntatie",
+        items: [
+          {
+            id: "2.4.6",
+            level: "AA",
+            name: "Koppen en labels",
+            combos: SR,
+            why: "De koppen zijn beschrijvend, maar of elke kop en elk label duidelijk zegt waar het blok over gaat is een inhoudelijk oordeel dat niet is gegeven.",
+            steps: [
+              "Spring op elke pagina met de koppentoets door de pagina.",
+              "Ga op Wie zit waar? en Aanvragen ook met de formuliertoets langs de velden en luister naar de labels.",
+            ],
+            expect: [
+              "Een reeks koppen die zegt waar elk blok over gaat, in een logische volgorde.",
+              'Bij elk veld een label dat zegt wat je moet invullen, niet alleen "bewerkbare tekst".',
+            ],
+            note: "De sprong van h3 naar h1 in de zijbalk is bevinding 1 (1.3.1) en telt hier niet mee.",
+          },
+          {
+            id: "1.3.2",
+            level: "A",
+            name: "Betekenisvolle volgorde",
+            combos: SR,
+            why: "De broncodevolgorde komt overeen met de visuele volgorde, behalve de zijbalk. Een sluitend oordeel vraagt een schermlezer.",
+            steps: [
+              "Lees Wie zit waar? van boven naar beneden met de pijltoets, zonder te springen.",
+              "Open een kaart en lees het zijpaneel op dezelfde manier.",
+            ],
+            expect: [
+              "Een volgorde die overeenkomt met wat er visueel staat: navigatie, titel, filters, resultaten.",
+              "In het paneel: titel, tabs, gegevens, in die volgorde.",
+            ],
+            note: "De zijbalk komt in de code vóór de titel; dat is bekend. Noteer alleen als de volgorde daarbuiten verwart.",
+          },
+        ],
+      },
+      {
+        title: "Beeld en kleur",
+        items: [
+          {
+            id: "1.1.1",
+            level: "A",
+            name: "Niet-tekstuele content",
+            combos: SR,
+            why: "Op Beheer gebruikers staan 265 SVG-iconen zonder naam of aria-hidden. Vrijwel alle staan naast een tekstlabel en zijn dus terecht decoratief, maar per icoon moet worden bepaald of het betekenis draagt.",
+            steps: [
+              "Ga op Beheer gebruikers en Wie zit waar? langs elke knop en elk icoon.",
+              "Ga naar het rijkslogo in de navigatiebalk en het label op de pagina Toegankelijkheid.",
+            ],
+            expect: [
+              "Een icoon naast tekst wordt overgeslagen of herhaalt de tekst niet.",
+              'Een icoon zónder tekst (potlood, prullenbak, menu) heeft een naam: "Bewerken", "Verwijderen".',
+              'Het logo zegt "Rijkswapen" of vergelijkbaar.',
+            ],
+            note: "",
+          },
+          {
+            id: "1.4.1",
+            level: "A",
+            name: "Gebruik van kleur",
+            combos: VIS,
+            why: 'Status wordt overgebracht met tekstlabels naast kleur, zoals "Beperkt zichtbaar" en "Afgelopen". Een uitputtende controle van alle statusweergaven ontbreekt.',
+            steps: [
+              "Loop op Wie zit waar?, Aanvragen en Beheer gebruikers alles langs dat gekleurd is: chips, badges, statusbalken, rode of groene tekst.",
+              "Vraag je bij elk: als dit grijs was, wist ik dan nog wat het betekent?",
+            ],
+            expect: [
+              "Elke betekenis die met kleur wordt gegeven staat ook in tekst of vorm.",
+            ],
+            note: "Dit is een visueel oordeel; één beoordeling volstaat.",
+          },
+          {
+            id: "1.4.11",
+            level: "AA",
+            name: "Niet-tekstueel contrast",
+            combos: CONTRAST,
+            why: "De contrastmeting betrof tekst. Randen van invoervelden, iconen, focusring en statuskleuren zijn niet gemeten, omdat de componenten hun kleuren in een shadow root zetten.",
+            steps: [
+              "Zet de schermlezer uit. Bekijk in het lichte thema de randen van invoervelden, de focusring bij Tab, checkboxes, schakelaars en iconen.",
+              "Herhaal in het donkere thema (systeeminstelling of het thema in Mijn profiel).",
+            ],
+            expect: [
+              "Elke rand, ring en elk icoon is duidelijk te onderscheiden van de achtergrond, ruwweg 3:1. Twijfel je, meet dan met de kleurenpipet van de browser.",
+            ],
+            note: "",
+          },
+          {
+            id: "1.4.13",
+            level: "AA",
+            name: "Content bij aanwijzen of focussen",
+            combos: VIS,
+            why: "Wies heeft tooltips op iconen en op de privacy-chips. Of die met Escape sluiten, met de muis te bereiken zijn en blijven staan zolang nodig, is niet getoetst.",
+            steps: [
+              "Ga op Mijn profiel met Tab naar een privacy-chip en op Wie zit waar? naar een icoonknop.",
+              "Druk Escape terwijl de tooltip zichtbaar is.",
+              "Beweeg de muis van het icoon naar de tooltip zelf.",
+            ],
+            expect: [
+              "De tooltip verdwijnt met Escape zonder dat de focus verspringt.",
+              "De tooltip blijft staan zolang de muis erop rust.",
+              "Hij verbergt niets dat je nodig hebt.",
+            ],
+            note: "",
+          },
+        ],
+      },
+      {
+        title: "Formulieren",
+        items: [
+          {
+            id: "3.3.1",
+            level: "A",
+            name: "Foutidentificatie",
+            combos: SR,
+            why: "Fouten worden server-side gerenderd en met invalid en error-message aan het veld gekoppeld. Of de melding een schermlezer bereikt, is niet getoetst.",
+            steps: [
+              'Open op Aanvragen "Opdracht invoeren", laat de opdrachtgever leeg en sla op.',
+              "Spring met de formuliertoets naar het lege veld.",
+            ],
+            expect: [
+              "Je hoort dat er een fout is en welk veld het betreft.",
+              'Bij het veld zelf wordt de fout herhaald: "ongeldig" of de melding.',
+            ],
+            note: "",
+          },
+          {
+            id: "3.3.3",
+            level: "AA",
+            name: "Foutsuggestie",
+            combos: SR,
+            why: "Niet getoetst; vraagt het doorlopen van de formulieren met foutieve invoer.",
+            steps: [
+              "Zelfde formulier als 3.3.1. Probeer ook een einddatum vóór de begindatum, en op Beheer gebruikers een e-mailadres zonder @.",
+            ],
+            expect: [
+              'De melding zegt hoe je het oplost: "Voeg minimaal 1 opdrachtgever toe" is een suggestie, "Ongeldig" is dat niet.',
+            ],
+            note: "",
+          },
+          {
+            id: "1.3.5",
+            level: "AA",
+            name: "Inputdoel identificeren",
+            combos: SR,
+            why: "Geen enkel veld op Beheer gebruikers heeft een autocomplete-attribuut. Het criterium geldt alleen voor velden over de gebruiker zélf; de formulieren in Wies gaan over collega's. Of die uitzondering opgaat, vraagt bevestiging.",
+            steps: [
+              "Ga op Mijn profiel naar de velden voor naam en e-mail.",
+              "Bevestig of er ergens anders velden zijn die over jou gaan.",
+            ],
+            expect: [
+              'Bij e-mail hoor je "e-mailadres" of vergelijkbaar, niet alleen "bewerkbare tekst". Zijn er geen velden over de gebruiker zelf, dan is het criterium niet van toepassing.',
+            ],
+            note: 'Kies dan "n.v.t." en schrijf op waarom.',
+          },
+          {
+            id: "3.3.4",
+            level: "AA",
+            name: "Foutpreventie",
+            combos: SR,
+            why: "Destructieve acties vragen bevestiging, maar niet elke wijzigende handeling is gecontroleerd, waaronder het verwijderen van plaatsingen en gebruikers.",
+            steps: [
+              "Verwijder een opdracht op Aanvragen, een gebruiker op Beheer gebruikers en een label op Beheer labels. Annuleer telkens.",
+            ],
+            expect: [
+              "Bij elk een bevestigingsvraag die je hoort, met een duidelijke knop om te annuleren.",
+            ],
+            note: "Doe dit op een testomgeving of annuleer. Verwijderen is echt.",
+          },
+        ],
+      },
+      {
+        title: "Interactie",
+        items: [
+          {
+            id: "4.1.2",
+            level: "A",
+            name: "Naam, rol, waarde",
+            combos: SR,
+            why: "Via de accessibility tree heeft elk interactief element een naam en een rol. Of waarden en toestandswisselingen ook worden doorgegeven is bij eigen componenten met een shadow root het kwetsbaarste punt. Het zwaarste criterium van de ronde.",
+            steps: [
+              "Ga op Wie zit waar? langs elk bedienbaar element en luister naar rol én toestand:",
+              'de checkboxes in de filterzijbalk en in de "Meer…"-modal;',
+              "de weergavekeuze Collega's / Opdrachten en het sorteermenu;",
+              "een kaart, en na openen de tabs Gegevens / Updates in het zijpaneel;",
+              "de potloodknop en het veld dat daarna verschijnt.",
+            ],
+            expect: [
+              'Checkbox: "aangevinkt" of "niet aangevinkt".',
+              'Weergavekeuze: "geselecteerd".',
+              "Zijpaneel: je hoort dat een dialoog opent en dat je erin zit.",
+              'Tabs: "tabblad, geselecteerd".',
+              'Sorteermenu: rol "menu" en welke keuze actief is.',
+            ],
+            note: "",
+          },
+          {
+            id: "4.1.3",
+            level: "AA",
+            name: "Statusberichten",
+            combos: SR,
+            why: "Er zijn 20 live regions gevonden, aangemaakt door de componentbibliotheek. Of het aantal resultaten na filteren en de melding na opslaan echt worden aangekondigd, is niet getoetst.",
+            steps: [
+              "Vink op Wie zit waar? een filter aan en wacht, zonder ergens heen te navigeren.",
+              "Sla op Aanvragen een nieuwe opdracht op.",
+              "Bewerk in een zijpaneel een veld en sla op.",
+            ],
+            expect: [
+              "Na het filteren hoor je vanzelf hoeveel resultaten er zijn.",
+              "Na opslaan hoor je een bevestiging.",
+              "Blijft het stil, dan faalt dit criterium.",
+            ],
+            note: "",
+          },
+          {
+            id: "3.2.2",
+            level: "A",
+            name: "Bij input",
+            combos: SR,
+            why: "De filters werken de lijst automatisch bij. Dat is een verandering van content, geen contextwijziging, maar of dat voor een schermlezergebruiker begrijpelijk verloopt is niet getoetst.",
+            steps: [
+              "Verander een filter en een sortering op Wie zit waar?.",
+              'Verander in "Opdracht invoeren" een keuzeveld.',
+            ],
+            expect: [
+              "Alleen de lijst verandert. Er opent niets, er verschuift niets, en de focus blijft waar je was.",
+            ],
+            note: "",
+          },
+          {
+            id: "3.1.2",
+            level: "AA",
+            name: "Taal van onderdelen",
+            combos: SR,
+            why: 'De interface bevat Engelse rolnamen als "UX designer" en "Scrum Master" zonder lang-attribuut. Voor vaktermen die Nederlands jargon zijn geworden geldt een uitzondering; of die opgaat is een inhoudelijk oordeel.',
+            steps: [
+              "Laat op Wie zit waar? en Beheer gebruikers de rolnamen en labels voorlezen met de Nederlandse stem.",
+            ],
+            expect: [
+              "Noteer welke termen zó verminkt worden dat je ze niet herkent. Alleen die tellen; een herkenbaar uitgesproken vakterm valt onder de uitzondering.",
+            ],
+            note: "",
+          },
+        ],
+      },
+    ];
+
+    var ALL = [];
+    GROUPS.forEach(function (g) {
+      g.items.forEach(function (c) {
+        ALL.push(c);
+      });
+    });
+
+    // State: per criterium {verdicts: {key: ""|ok|nok|na}, heard: {key: text}, remark: text}
+    var state = { setup: {}, crit: {} };
+    ALL.forEach(function (c) {
+      state.crit[c.id] = { verdicts: {}, heard: {}, remark: "" };
+    });
+
+    function docId(id) {
+      return "sc-" + id;
+    }
+    function esc(s) {
+      return String(s).replace(/[&<>"]/g, function (ch) {
+        return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch];
+      });
+    }
+
+    function derive(c) {
+      var s = state.crit[c.id];
+      var vals = c.combos.map(function (k) {
+        return s.verdicts[k.key] || "";
+      });
+      if (
+        vals.some(function (v) {
+          return v === "nok";
+        })
+      )
+        return "nok";
+      var filled = vals.filter(Boolean).length;
+      if (filled === 0) return "";
+      if (filled < vals.length) return "open";
+      if (
+        vals.every(function (v) {
+          return v === "na";
+        })
+      )
+        return "na";
+      return "ok";
+    }
+    var LABEL = {
+      ok: "Voldoet",
+      nok: "Voldoet niet",
+      open: "Deels gedaan",
+      na: "N.v.t.",
+      "": "Nog niet begonnen",
+    };
+
+    function render() {
+      var toc = document.getElementById("toc");
+      var host = document.getElementById("crit-list");
+      toc.innerHTML = "";
+      host.innerHTML = "";
+      GROUPS.forEach(function (g) {
+        var h = document.createElement("h3");
+        h.textContent = g.title;
+        h.style.margin = "28px 0 4px";
+        host.appendChild(h);
+        g.items.forEach(function (c) {
+          var li = document.createElement("li");
+          li.innerHTML =
+            '<a href="#sc-' +
+            esc(c.id) +
+            '"><span>' +
+            esc(c.id) +
+            " " +
+            esc(c.name) +
+            '</span><span class="dot" data-dot="' +
+            esc(c.id) +
+            '"></span></a>';
+          toc.appendChild(li);
+
+          var d = document.createElement("details");
+          d.className = "crit";
+          d.id = "sc-" + c.id;
+          var combos = c.combos
+            .map(function (k) {
+              var sid = "v-" + c.id + "-" + k.key,
+                hid = "h-" + c.id + "-" + k.key;
+              return (
+                '<div class="combo" data-combo="' +
+                esc(k.key) +
+                '">' +
+                '<div><div class="name">' +
+                esc(k.name) +
+                '</div><div class="hint">' +
+                esc(k.hint) +
+                "</div>" +
+                '<label for="' +
+                sid +
+                '" class="visually-hidden">Oordeel ' +
+                esc(k.name) +
+                "</label>" +
+                '<select id="' +
+                sid +
+                '" data-crit="' +
+                esc(c.id) +
+                '" data-key="' +
+                esc(k.key) +
+                '" data-field="verdict">' +
+                '<option value="">Nog niet gedaan</option><option value="ok">Voldoet</option><option value="nok">Voldoet niet</option><option value="na">N.v.t.</option></select></div>' +
+                '<div><label for="' +
+                hid +
+                '">Wat je hoorde of zag, en op welke pagina</label>' +
+                '<textarea id="' +
+                hid +
+                '" data-crit="' +
+                esc(c.id) +
+                '" data-key="' +
+                esc(k.key) +
+                '" data-field="heard"></textarea></div></div>'
+              );
+            })
+            .join("");
+          d.innerHTML =
+            '<summary><span class="id">' +
+            esc(c.id) +
+            '</span><span class="lvl">Niveau ' +
+            esc(c.level) +
+            "</span><h3>" +
+            esc(c.name) +
+            "</h3>" +
+            '<span class="who">' +
+            (c.combos === SR ? "schermlezer" : "visueel") +
+            '</span><span class="badge na" data-badge="' +
+            esc(c.id) +
+            '">Nog niet begonnen</span></summary>' +
+            '<div class="body">' +
+            "<h4>Waarom nog open</h4><p>" +
+            esc(c.why) +
+            "</p>" +
+            "<h4>Wat je doet</h4><ol>" +
+            c.steps
+              .map(function (s) {
+                return "<li>" + esc(s) + "</li>";
+              })
+              .join("") +
+            "</ol>" +
+            "<h4>Wat je hoort te horen</h4><ul>" +
+            c.expect
+              .map(function (s) {
+                return "<li>" + esc(s) + "</li>";
+              })
+              .join("") +
+            "</ul>" +
+            (c.note ? '<p class="hint"><em>' + esc(c.note) + "</em></p>" : "") +
+            '<h4>Oordeel per combinatie</h4><div class="combos">' +
+            combos +
+            "</div>" +
+            '<h4>Voor het rapport</h4><label for="r-' +
+            esc(c.id) +
+            '">Bij "voldoet niet": pagina, wat er had moeten staan, en als je het weet het bestand in de code</label>' +
+            '<textarea id="r-' +
+            esc(c.id) +
+            '" data-crit="' +
+            esc(c.id) +
+            '" data-field="remark"></textarea>' +
+            "</div>";
+          host.appendChild(d);
+        });
+      });
+      fill();
+      document.getElementById("crit-list").addEventListener("input", onInput);
+      document.getElementById("crit-list").addEventListener("change", onInput);
+      document.getElementById("setup").addEventListener("input", onSetup);
+    }
+
+    function fill() {
+      ALL.forEach(function (c) {
+        var s = state.crit[c.id];
+        c.combos.forEach(function (k) {
+          var sel = document.getElementById("v-" + c.id + "-" + k.key);
+          var ta = document.getElementById("h-" + c.id + "-" + k.key);
+          if (sel && sel.value !== (s.verdicts[k.key] || ""))
+            sel.value = s.verdicts[k.key] || "";
+          if (
+            ta &&
+            ta.value !== (s.heard[k.key] || "") &&
+            document.activeElement !== ta
+          )
+            ta.value = s.heard[k.key] || "";
+        });
+        var r = document.getElementById("r-" + c.id);
+        if (r && r.value !== s.remark && document.activeElement !== r)
+          r.value = s.remark;
+      });
+      Object.keys(state.setup).forEach(function (k) {
+        var el = document.querySelector('[data-setup="' + k + '"]');
+        if (el && el.value !== state.setup[k] && document.activeElement !== el)
+          el.value = state.setup[k];
+      });
+      refresh();
+    }
+
+    function refresh() {
+      var n = { ok: 0, nok: 0, open: 0, na: 0, "": 0 };
+      ALL.forEach(function (c) {
+        var v = derive(c);
+        n[v]++;
+        var d = document.getElementById("sc-" + c.id);
+        if (d) d.dataset.verdict = v;
+        var b = document.querySelector('[data-badge="' + c.id + '"]');
+        if (b) {
+          b.className = "badge " + (v || "na");
+          b.textContent = LABEL[v];
+        }
+        var dot = document.querySelector('[data-dot="' + c.id + '"]');
+        if (dot) dot.className = "dot " + (v === "na" ? "ok" : v);
+        c.combos.forEach(function (k) {
+          var box = document.querySelector(
+            "#sc-" + CSS.escape(c.id) + ' [data-combo="' + k.key + '"]',
+          );
+          if (box) box.dataset.v = state.crit[c.id].verdicts[k.key] || "";
+        });
+      });
+      document.getElementById("n-ok").textContent = n.ok + n.na;
+      document.getElementById("n-nok").textContent = n.nok;
+      document.getElementById("n-open").textContent = n.open;
+      document.getElementById("n-todo").textContent = n[""];
+      document.getElementById("bar").style.width =
+        Math.round((100 * (ALL.length - n[""] - n.open)) / ALL.length) + "%";
+      document.getElementById("summary").textContent = summary();
+    }
+
+    function summary() {
+      var s = state.setup,
+        lines = [];
+      lines.push(
+        "Toetsronde Wies, " +
+          (s.date || "[datum]") +
+          ", door " +
+          (s.tester || "[naam]"),
+      );
+      lines.push(
+        "VoiceOver op macOS " +
+          (s.macos || "?") +
+          " met Safari " +
+          (s.safari || "?") +
+          "; NVDA " +
+          (s.nvda || "?") +
+          " op Windows " +
+          (s.windows || "?") +
+          " met Firefox " +
+          (s.firefox || "?") +
+          " en Chrome " +
+          (s.chrome || "?"),
+      );
+      lines.push("");
+      ALL.forEach(function (c) {
+        var v = derive(c),
+          st = state.crit[c.id];
+        lines.push(
+          c.id +
+            " (niveau " +
+            c.level +
+            ") " +
+            c.name +
+            ": " +
+            LABEL[v].toLowerCase(),
+        );
+        c.combos.forEach(function (k) {
+          var vv = st.verdicts[k.key];
+          if (!vv && !st.heard[k.key]) return;
+          lines.push(
+            "  " +
+              k.name +
+              ": " +
+              (LABEL[vv] || "nog niet gedaan").toLowerCase() +
+              (st.heard[k.key]
+                ? " — " + st.heard[k.key].replace(/\s+/g, " ")
+                : ""),
+          );
+        });
+        if (st.remark)
+          lines.push("  Voor het rapport: " + st.remark.replace(/\s+/g, " "));
+      });
+      return lines.join("\n");
+    }
+
+    // ---- opslag: db als het kan, anders localStorage
+    var db = null,
+      saveTimer = null,
+      pending = {};
+    var saveEl = document.getElementById("save"),
+      saveText = document.getElementById("save-text");
+    function status(cls, text) {
+      saveEl.className = "save " + cls;
+      saveText.textContent = text;
+    }
+    function announce(t) {
+      document.getElementById("live").textContent = t;
+    }
+
+    function onInput(e) {
+      var el = e.target;
+      if (!el.dataset || !el.dataset.crit) return;
+      var s = state.crit[el.dataset.crit];
+      if (el.dataset.field === "verdict") s.verdicts[el.dataset.key] = el.value;
+      else if (el.dataset.field === "heard") s.heard[el.dataset.key] = el.value;
+      else if (el.dataset.field === "remark") s.remark = el.value;
+      pending[docId(el.dataset.crit)] = s;
+      refresh();
+      queue();
+    }
+    function onSetup(e) {
+      var el = e.target;
+      if (!el.dataset.setup) return;
+      state.setup[el.dataset.setup] = el.value;
+      pending["setup"] = state.setup;
+      refresh();
+      queue();
+    }
+    function queue() {
+      status("saving", "Bewaren…");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(flush, 600);
+    }
+    function flush() {
+      var batch = pending;
+      pending = {};
+      var ids = Object.keys(batch);
+      if (!ids.length) return;
+      if (!db) {
+        try {
+          localStorage.setItem("toetsronde", JSON.stringify(state));
+          status("local", "Bewaard in deze browser (geen gedeelde opslag)");
+        } catch (err) {
+          status("error", "Kon niet bewaren");
+        }
+        return;
+      }
+      Promise.all(
+        ids.map(function (id) {
+          var body = JSON.parse(JSON.stringify(batch[id]));
+          body.updatedAt = new Date().toISOString();
+          return db.doc("toetsronde/" + id).set(body);
+        }),
+      )
+        .then(function () {
+          status(
+            "saved",
+            "Bewaard " +
+              new Date().toLocaleTimeString("nl-NL", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+          );
+        })
+        .catch(function (err) {
+          if (err && err.code === "unavailable") {
+            ids.forEach(function (id) {
+              pending[id] = batch[id];
+            });
+            setTimeout(flush, 1500 + Math.random() * 1500);
+            status("saving", "Opnieuw proberen…");
+            return;
+          }
+          status(
+            "error",
+            "Bewaren mislukt: " +
+              (err && err.message ? err.message : "onbekende fout"),
+          );
+          announce("Bewaren mislukt");
+        });
+    }
+
+    function loadLocal() {
+      try {
+        var raw = localStorage.getItem("toetsronde");
+        if (raw) {
+          var st = JSON.parse(raw);
+          state.setup = st.setup || {};
+          Object.keys(st.crit || {}).forEach(function (k) {
+            if (state.crit[k]) state.crit[k] = st.crit[k];
+          });
+        }
+      } catch (err) {}
+    }
+
+    render();
+    loadLocal();
+    fill();
+
+    var usable = window.claude && typeof window.claude.use === "function";
+    (usable ? window.claude.use("db") : Promise.resolve(null)).then(
+      function (ns) {
+        if (!ns) {
+          status(
+            "local",
+            "Geen gedeelde opslag; wordt alleen in deze browser bewaard",
+          );
+          return;
+        }
+        db = ns;
+        db.collection("toetsronde").onSnapshot(
+          function (snap) {
+            snap.docs.forEach(function (doc) {
+              var body = doc.data();
+              if (!body) return;
+              if (doc.id === "setup") {
+                state.setup = body;
+                return;
+              }
+              var id = doc.id.replace(/^sc-/, "");
+              if (!state.crit[id]) return;
+              state.crit[id] = {
+                verdicts: body.verdicts || {},
+                heard: body.heard || {},
+                remark: body.remark || "",
+              };
+            });
+            fill();
+            if (!snap.metadata.fromCache)
+              status(
+                "saved",
+                "Gedeelde opslag verbonden; alles wat je invult wordt bewaard",
+              );
+          },
+          function (err) {
+            status("error", "Opslag niet beschikbaar: " + err.code);
+          },
+        );
+      },
+    );
+
+    document.getElementById("copy").addEventListener("click", function () {
+      var msg = document.getElementById("copy-msg");
+      navigator.clipboard.writeText(summary()).then(
+        function () {
+          msg.textContent = "Gekopieerd.";
+          announce("Samenvatting gekopieerd");
+        },
+        function () {
+          msg.textContent =
+            "Kopiëren lukte niet; selecteer de tekst hierboven.";
+        },
+      );
+    });
+  })();
+</script>

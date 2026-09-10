@@ -5,22 +5,30 @@ Onderbouwing bij toegankelijkheidsverklaring **29132**.
 ## Het rapport
 
 [`rapport-wcag22-2026-08.md`](rapport-wcag22-2026-08.md) — WCAG 2.2 niveau A en
-AA, uitgevoerd op `main` @ `d072cf3b`, 19 augustus 2026.
+AA, versie 1.1. Volledig onderzoek op `main` @ `d072cf3b`, 19 augustus 2026;
+hertest op `main` @ `f4595a8`, 9 september 2026. Opbouw A tot en met D zoals
+DigiToegankelijk die voorschrijft.
 
-**Uitkomst: 31 van de 55 succescriteria voldoen.** Twee afwijkingen, beide niveau
-A:
+**Uitkomst na de hertest: 32 van de 55 succescriteria voldoen.** Eén afwijking,
+niveau A:
 
 | Succescriterium        | Bevinding                                       | Waar                              |
 | ---------------------- | ----------------------------------------------- | --------------------------------- |
 | 1.3.1 Info en relaties | Koppenstructuur slaat een niveau over (H1 → H3) | `parts/filter_sidebar.html:42,81` |
-| 2.4.3 Focus volgorde   | Focus valt terug op `<body>` na een htmx-swap   | Issue #600                        |
+
+Bevinding 2 (2.4.3, focus na een htmx-swap) is opgelost in PR #638 en bij de
+hertest bevestigd in Chromium, Edge en Firefox.
 
 Veertien succescriteria konden niet worden vastgesteld: daarvoor is toetsing met
-een schermlezer nodig.
+een schermlezer nodig. [`toetsronde.html`](toetsronde.html) loopt die veertien af,
+met per criterium de stappen en invulvelden per schermlezer-combinatie. Open je
+het bestand lokaal, dan bewaart het alleen in je eigen browser; de gepubliceerde
+versie als Claude-artifact heeft gedeelde opslag.
 
-> **Dit rapport is geen vervanging van een formeel onderzoek.** Het is uitgevoerd
-> door het eigen team, zonder hulpsoftware en zonder gebruikers. Voor status A of
-> B van de verklaring is een onafhankelijk WCAG-EM-onderzoek vereist.
+> **Dit rapport is nog niet volledig.** Het is uitgevoerd door het eigen team,
+> zonder hulpsoftware en zonder gebruikers. Voor status A of B van de verklaring
+> moeten alle 55 criteria beoordeeld zijn; onafhankelijkheid eist DigiToegankelijk
+> niet, wel dat het rapport zegt wie het deed.
 
 ## De metingen herhalen
 
@@ -36,18 +44,21 @@ curl -sL https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js -o sc
 cd scripts && python3 scan.py              # axe-core over 11 pagina's
 ```
 
-| Script          | Meet                                                            |
-| --------------- | --------------------------------------------------------------- |
-| `scan.py`       | axe-core over de elf pagina's uit de steekproef                 |
-| `contrast2.py`  | 1.4.3 contrast, inclusief shadow DOM, met canvas-kleurconversie |
-| `manual.py`     | koppenstructuur, taal, paginatitel, reflow, tabvolgorde         |
-| `names.py`      | toegankelijke namen via de accessibility tree                   |
-| `focus.py`      | 2.4.1 skiplink en 2.4.7 focuszichtbaarheid                      |
-| `focus_swap.py` | 2.4.3 focus na een htmx-swap (bevinding 2) — vereist een sessie |
-| `extra.py`      | doelgrootte, tekstafstand, weergavestand, linkteksten           |
-| `extra2.py`     | niet-tekstueel contrast, toetsenbordval, live regions           |
-| `wcag22.py`     | de nieuwe 2.2-criteria: 2.4.11, 3.2.6, 3.3.7, 3.3.8             |
-| `parsen.py`     | dubbele ID's (4.1.1, vervallen in 2.2)                          |
+| Script                 | Meet                                                                                               |
+| ---------------------- | -------------------------------------------------------------------------------------------------- |
+| `scan.py`              | axe-core over de elf pagina's uit de steekproef                                                    |
+| `contrast2.py`         | 1.4.3 contrast, inclusief shadow DOM, met canvas-kleurconversie                                    |
+| `manual.py`            | koppenstructuur, taal, paginatitel, reflow, tabvolgorde                                            |
+| `names.py`             | toegankelijke namen via de accessibility tree                                                      |
+| `focus.py`             | 2.4.1 skiplink en 2.4.7 focuszichtbaarheid                                                         |
+| `focus_swap.py`        | 2.4.3 focus na een htmx-swap (bevinding 2) — vereist een sessie                                    |
+| `extra.py`             | doelgrootte, tekstafstand, weergavestand, linkteksten                                              |
+| `extra2.py`            | niet-tekstueel contrast, toetsenbordval, live regions                                              |
+| `wcag22.py`            | de nieuwe 2.2-criteria: 2.4.11, 3.2.6, 3.3.7, 3.3.8                                                |
+| `parsen.py`            | dubbele ID's (4.1.1, vervallen in 2.2)                                                             |
+| `hertest_browsers.py`  | hertest: koppen, tabvolgorde, JS-fouten in Chromium, Edge en Firefox — vereist een sessie          |
+| `hertest_focusring.py` | hertest: focusring als pixelverschil (niet bruikbaar in Firefox, zie rapport) — vereist een sessie |
+| `hertest_swap.py`      | hertest: focus na een htmx-swap in drie browsers — vereist een sessie                              |
 
 `focus_swap.py` is de uitzondering: de panelen zitten achter OIDC, dus het heeft
 een sessie nodig. Maak er een aan en geef de sleutel mee:
@@ -81,8 +92,9 @@ van de browser.
 
 ## Waarschuwing bij eigen metingen
 
-Vijf metingen leverden tijdens dit onderzoek een plausibel ogende maar onjuiste
-uitkomst op:
+Negen metingen leverden tijdens dit onderzoek een plausibel ogende maar onjuiste
+uitkomst op; de volledige lijst staat in het rapport onder beperking 6. De eerste
+vijf:
 
 | Onjuist                        | Werkelijk      | Oorzaak                                         |
 | ------------------------------ | -------------- | ----------------------------------------------- |
@@ -97,7 +109,7 @@ voordat je hem opschrijft.
 
 ## Vervolg
 
-1. De twee bevindingen oplossen (1.3.1 is een kleine wijziging in één bestand)
-2. Issue #600 bijwerken — het skiplink-deel is achterhaald, die bestaat wel
-3. Schermlezertest voor de veertien openstaande criteria
-4. Onafhankelijk WCAG-EM-onderzoek voor de verklaring
+1. Bevinding 1 oplossen (een kleine wijziging in één bestand)
+2. Issue #600 sluiten; bevinding 2 is opgelost
+3. De toetsronde met schermlezer doen voor de veertien openstaande criteria
+4. Het rapport openbaar publiceren als onderbouwing van de verklaring
