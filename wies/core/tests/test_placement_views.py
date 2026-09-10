@@ -770,6 +770,39 @@ class PlacementPanelVisibilityTest(TestCase):
         assert card["privacy_warning_text"] == PRIVACY_OWN
 
     @patch("wies.core.views.timezone")
+    def test_ended_panel_renders_the_period_chip(self, mock_tz):
+        # End-to-end: the rendered panel shows the "Afgelopen" tag plus the
+        # icon-only privacy chip beside the period, the same chip as the team row.
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(
+            reverse("home") + f"?plaatsing={pl.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+
+        assert 'text="Afgelopen"' in body
+        assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
+        assert 'variant="icon"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+
+    @patch("wies.core.views.timezone")
+    def test_active_panel_renders_no_period_chip(self, mock_tz):
+        # An active placement carries no label or note, so no chip clutters the panel.
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2026, 1, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(
+            reverse("home") + f"?plaatsing={pl.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+
+        assert 'text="Afgelopen"' not in body
+        assert "wies-privacy-chip" not in body
+
+    @patch("wies.core.views.timezone")
     def test_future_placement_shown_to_bdm_with_gepland(self, mock_tz):
         # A Business Manager (BDM role), neither placed nor the owner, still sees
         # the future placement panel, with the BDM note.
