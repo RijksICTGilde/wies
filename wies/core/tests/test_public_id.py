@@ -34,6 +34,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
+from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 
 User = get_user_model()
 
@@ -76,6 +77,8 @@ class AssignmentPublicIdRoutingTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="u@rijksoverheid.nl", first_name="U", last_name="s")
         self.owner = Colleague.objects.create(user=self.user, name="Owner", email="u@rijksoverheid.nl", source="wies")
+        # Ownership only grants edit/delete rights combined with the BDM role.
+        grant_bdm(self.user)
         self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner, source="wies")
         self.client.force_login(self.user)
 
@@ -84,7 +87,7 @@ class AssignmentPublicIdRoutingTests(TestCase):
 
         assert response.status_code == 200
 
-    def test_delete_route_resolves_by_public_id_for_owner(self):
+    def test_delete_route_resolves_by_public_id_for_bdm_owner(self):
         response = self.client.get(reverse("assignment-delete", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
@@ -217,7 +220,7 @@ class PlacementPublicIdTests(TestCase):
 
 
 class PlacementPanelParamTests(TestCase):
-    """The ?plaatsing= panel resolves by public_id and keeps placement_visibility,
+    """The ?plaatsing= panel resolves by public_id and keeps placement visibility,
     so a placement the viewer may not see looks like a nonexistent one."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
@@ -277,18 +280,28 @@ class PlacementPanelParamTests(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
 
-    def test_ended_placement_shown_to_bm_owner(self):
-        """The BM-owner opens the same ended placement's panel over HTTP."""
-        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
-        self.owner.user = owner_user
-        self.owner.save(update_fields=["user"])
-        self.client.force_login(owner_user)
+    def test_ended_placement_shown_to_bdm(self):
+        """A BDM (not the placed colleague, not the owner) opens the same ended
+        placement's panel over HTTP and sees it."""
+        bdm_user = make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm")
+        self.client.force_login(bdm_user)
         ended = self._placement(start_offset=-30, end_offset=-10)
 
         response = self._panel(ended.public_id)
 
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
+
+    def test_ended_placement_hidden_from_non_bdm_owner(self):
+        """The BM-owner is no longer entitled by ownership alone: a non-BDM owner
+        gets the same 404 as any unrelated viewer."""
+        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        self.client.force_login(owner_user)
+        ended = self._placement(start_offset=-30, end_offset=-10)
+
+        assert self._panel(ended.public_id).status_code == 404
 
     def test_malformed_value_is_404(self):
         assert self._panel("not-a-uuid").status_code == 404

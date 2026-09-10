@@ -9,8 +9,6 @@ at startup.
 
 from __future__ import annotations
 
-from django.conf import settings
-
 from wies.core.editables import (
     AssignmentEditables,
     ServiceEditables,
@@ -18,6 +16,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
+from wies.core.roles import is_bdm, is_staff_member
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
@@ -67,21 +66,12 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
 
 
-def is_staff_member(user):
-    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
-
-    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
-    and as a per-row edit-permission predicate (e.g. in ``update_assignment``).
-    """
-    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
-
-
 # --- Whole-object UPDATE rules ----------------------------------------------
 
 
 @rule(UPDATE, Assignment)
 def update_assignment(user, a):
-    """Full edit: BM owner of a wies-sourced assignment, holder of
+    """Full edit: BDM owner of a wies-sourced assignment, holder of
     core.change_assignment, or a support-staff member (``STAFF_EMAILS``).
 
     Placed colleagues do NOT pass — they get narrower access via the
@@ -89,7 +79,7 @@ def update_assignment(user, a):
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or _is_assignment_owner(user, a) or is_staff_member(user)
+    return _has_change_perm(user, a) or (_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user)
 
 
 @rule(UPDATE, Service)
@@ -121,14 +111,14 @@ def update_user(user, target):
 
 @rule(DELETE, Assignment)
 def delete_assignment(user, a):
-    """The BM-owner of a wies-sourced opdracht, or a support-staff
+    """The BDM owner of a wies-sourced opdracht, or a support-staff
     member (``STAFF_EMAILS``) (issue #313).
 
     Beheerder (``core.change_assignment``) is intentionally NOT
     included here — deletion stays with the owner who has end-to-end
     accountability for the opdracht, plus staff for support cases.
     """
-    return _is_wies_sourced(a) and (_is_assignment_owner(user, a) or is_staff_member(user))
+    return _is_wies_sourced(a) and ((_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user))
 
 
 # --- Field-level UPDATE rules -----------------------------------------------

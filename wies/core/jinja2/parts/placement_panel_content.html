@@ -1,4 +1,5 @@
 {% from "parts/row_actions.html" import render_row_actions %}
+{% from "parts/privacy_chip.html" import privacy_chip %}
 {% if not panel_data %}
   {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Plaatsing" dismiss-text="Sluit"></nldd-top-title-bar>
@@ -82,6 +83,12 @@
     {%- endif %}
   {% else %}
     <span class="wies-text-secondary">Geen periode ingesteld</span>
+  {% endif %}
+  {# A non-active card always carries both label and note (see
+     evaluate_placement_visibility), same chip as the team row. #}
+  {% if card.period_label %}
+    <nldd-tag size="sm" text="{{ card.period_label }}"></nldd-tag>
+    {{ privacy_chip(card.privacy_warning_text, size="sm") }}
   {% endif %}
   </nldd-text-cell>
   {% if panel_data.can_edit_period %}

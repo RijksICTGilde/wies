@@ -11,7 +11,7 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -40,9 +40,11 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
+from wies.core.tests.role_helpers import grant_bdm
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -105,6 +107,8 @@ class InlineEditInfrastructureTest(TestCase):
             first_name="Inline",
             last_name="Tester",
         )
+        # Ownership only grants edit rights combined with the BDM role.
+        grant_bdm(self.user)
         self.client.force_login(self.user)
         # The user_logged_in signal auto-creates a Colleague for the
         # user. Grab it for use as assignment owner.
@@ -286,9 +290,10 @@ class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, "G", "G", "group@rijksoverheid.nl")
+        grant_bdm(self.user)
         self.client.force_login(self.user)
 
-        # Owner so the permission engine allows all UPDATEs
+        # BDM owner so the permission engine allows all UPDATEs
         # these tests focus on group rendering/save, not auth.
         self.assignment = Assignment.objects.create(
             name="G",
@@ -410,9 +415,10 @@ class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, email="cs@rijksoverheid.nl", first_name="C", last_name="S")
+        grant_bdm(self.user)
         self.client.force_login(self.user)
 
-        # Owner so permission checks pass;
+        # BDM owner so permission checks pass;
         # this test focuses on the custom-save dispatch, not auth.
         self.assignment = Assignment.objects.create(
             name="Before",
@@ -450,9 +456,10 @@ class InlineEditDisplayTest(TestCase):
             first_name="D",
             last_name="D",
         )
+        grant_bdm(self.user)
         self.client.force_login(self.user)
 
-        # Owner so permission checks pass;
+        # BDM owner so permission checks pass;
         # this test focuses on display rendering, not auth.
         self.assignment = Assignment.objects.create(
             name="Shown",
@@ -500,8 +507,7 @@ class AssignmentPanelRenderTest(TestCase):
         self.colleague = Colleague.objects.get(user=self.user)
         # The owner field only offers BDM colleagues, so the combined edit form
         # needs the owner to be a valid choice for itself.
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        self.user.groups.add(bdm_group)
+        grant_bdm(self.user)
         self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
@@ -709,8 +715,7 @@ class AssignmentEditablesFullTest(TestCase):
         # Grant change_assignment so the user can edit regardless of ownership.
         self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         # Put user's Colleague in the BDM group so it shows up in owner choices.
-        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
-        self.user.groups.add(bdm_group)
+        grant_bdm(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -813,7 +818,7 @@ class AssignmentCreateFormIntegrationTest(TestCase):
         # the BDM group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        assert "Business Development Manager" in str(qs.query)
+        assert BDM_GROUP_NAME in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
         form = self._form_cls()(
@@ -1661,6 +1666,8 @@ class ServiceDescriptionPermissionTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.owner_user = User.objects.create_user(email="bm@rijksoverheid.nl", first_name="Bm", last_name="Boss")
+        # Ownership only grants edit rights combined with the BDM role.
+        grant_bdm(self.owner_user)
         self.owner = Colleague.objects.create(
             user=self.owner_user, name="Bm Boss", email="bm@rijksoverheid.nl", source="wies"
         )
@@ -1717,7 +1724,7 @@ class ServiceDescriptionPermissionTest(TestCase):
         assert self.my_service.skill_id != new_skill.id
 
     def test_owner_can_use_inline_pencil(self):
-        """BM can edit descriptions inline, consistent with skill and period."""
+        """A BDM owner can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
         resp = post_inline_edit(self.client, self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
