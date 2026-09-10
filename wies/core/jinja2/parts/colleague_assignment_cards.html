@@ -58,9 +58,11 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      {# Empty growing text-cell necessary to keep the chevron pinned to the right edge #}
-      <nldd-cell>{{ privacy_chip(assignment.privacy_warning_text, size="sm", label=assignment.period_label) }}</nldd-cell>
-      <nldd-text-cell size="sm"></nldd-text-cell>
+      {# The chip sits right after the word, inside the growing cell, so the
+         chevron stays pinned to the right edge. #}
+      <nldd-text-cell size="sm">
+      <span class="wies-team-row-meta">{{ assignment.period_label }} {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}</span>
+      </nldd-text-cell>
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% elif assignment.start_date or assignment.end_date %}

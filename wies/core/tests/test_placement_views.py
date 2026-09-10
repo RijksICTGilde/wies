@@ -949,9 +949,9 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         self.assertContains(response, "Planned Opdracht")
 
     def test_restricted_card_merges_the_note_into_the_period_chip(self):
-        """The card shows one chip: the period label ("Gepland") carrying the eye
-        icon, warning colour and the note in its tooltip. No separate "Beperkt
-        zichtbaar" chip up with the role tags."""
+        """The card shows the period ("Gepland") as plain text with an icon-only
+        chip beside it that carries the note in its tooltip and accessible name.
+        No separate "Beperkt zichtbaar" chip up with the role tags."""
         today = timezone.now().date()
         assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -967,10 +967,11 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         body = self.client.get(reverse("user-profile")).content.decode()
 
-        assert 'text="Gepland"' in body
+        assert 'class="wies-team-row-meta">Gepland ' in body
         assert 'text="Beperkt zichtbaar"' not in body
         assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
-        assert f'accessible-label="Gepland. {PRIVACY_OWN}"' in body
+        assert 'variant="icon"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
 
     def test_future_placement_card_hidden_on_unrelated_profile_page(self):
         """End-to-end negative: an unrelated viewer loading Alice's data must not
@@ -2263,14 +2264,15 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def test_panel_shows_the_period_chip_with_the_note_in_its_tooltip(self):
         body = self._panel()
-        # The period label is the chip's text; the full sentence rides in the
-        # tooltip. There is no separate team-wide "Beperkt zichtbaar" banner.
+        # The period is a plain tag; the icon-only chip beside it carries the
+        # sentence in its tooltip. No separate team-wide "Beperkt zichtbaar" banner.
         assert 'text="Afgelopen"' in body
         assert 'text="Beperkt zichtbaar"' not in body
         assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
+        assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Afgelopen. {PRIVACY_BDM}"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BDM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
