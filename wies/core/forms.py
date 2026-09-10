@@ -7,10 +7,11 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
+from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
-from .models import MAX_HOURS_PER_WEEK, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
+from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -301,7 +302,10 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-HOURS_PER_WEEK_CHOICES = [("", " "), *((h, f"{h} uur") for h in range(1, MAX_HOURS_PER_WEEK + 1))]
+class UserDeleteForm(NlddFormMixin, forms.Form):
+    """Asked when deleting a user with a colleague profile: the day the contract ends."""
+
+    left_on = forms.DateField(label="Uit dienst per", help_text="Contractperioden na deze dag vervallen.")
 
 
 class ContractPeriodForm(NlddFormMixin, forms.ModelForm):
@@ -311,13 +315,13 @@ class ContractPeriodForm(NlddFormMixin, forms.ModelForm):
     the period inside the hours range and clear of the colleague's other periods.
     """
 
-    hours_per_week = forms.TypedChoiceField(label="Uren per week", choices=HOURS_PER_WEEK_CHOICES, coerce=int)
     start_date = forms.DateField(label="Startdatum")
     end_date = forms.DateField(label="Einddatum", required=False, help_text="Leeg laten zolang de periode loopt.")
 
     class Meta:
         model = ContractPeriod
         fields = ["hours_per_week", "start_date", "end_date"]
+        widgets = {"hours_per_week": forms.Select(choices=HOURS_PER_WEEK_CHOICES)}
 
 
 class ServiceForm(NlddFormMixin, forms.Form):
@@ -344,9 +348,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     # Hours belong to the role, so an open aanvraag carries them too. A list,
     # not a number input: nldd-text-field has no number type.
-    hours_per_week = forms.TypedChoiceField(
-        label="Uren per week", choices=HOURS_PER_WEEK_CHOICES, coerce=int, empty_value=None, required=False
-    )
+    hours_per_week = ServiceEditables.hours_per_week.form_field()
     is_filled = forms.ChoiceField(
         label="Status",
         choices=[("aanvraag", "Aanvraag"), ("ingevuld", "Geplaatste consultant")],

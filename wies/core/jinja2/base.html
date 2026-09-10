@@ -121,6 +121,9 @@
     </nldd-page>
     {% block panel %}
     {% endblock panel %}
+    {# Mount for the contract-period sheet, which opens from the profile, the
+       user sheet and the colleague panel alike. #}
+    <div id="contractPeriodMount"></div>
     {% if show_onboarding %}
       {% include "parts/onboarding/onboarding_wizard.html" %}
       {# inline_edit.js already loads in <head>; the label picker renders an

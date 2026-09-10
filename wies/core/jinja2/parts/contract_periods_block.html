@@ -1,7 +1,8 @@
-{# Contract periods of one colleague: on the own profile and in the user sheet in
-   beheer. Every action swaps this block back in, so both pages stay as they are:
-   the add/edit sheet on save, delete straight away. The csrf input rides along
-   for that delete; on the profile there is no surrounding form to take it from. #}
+{# Contract periods of one colleague: on the own profile, in the user sheet and
+   in the colleague panel. Every action swaps this block back in, so the page
+   stays as it is: the add/edit sheet on save, delete straight away. The csrf
+   input rides along for that delete; on the profile there is no surrounding
+   form to take it from. #}
 <div id="contractPeriodsBlock"
      {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}>
   {{ get_csrf_hidden_input(request) }}
@@ -28,12 +29,14 @@
         {% endif %}
       </span>
       </nldd-text-cell>
-      <nldd-cell>
-      <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Bewerken" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} bewerken" hx-get="{{ url(contract_block.edit_url_name, args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
-      </nldd-cell>
-      <nldd-cell>
-      <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-post="{{ url(contract_block.delete_url_name, args=[period.public_id]) }}" hx-confirm="Contractperiode van {{ period.hours_per_week }} uur verwijderen?" hx-include="#contractPeriodsBlock" hx-target="#contractPeriodsBlock" hx-swap="outerHTML"></nldd-button>
-      </nldd-cell>
+      {% if contract_block.can_edit %}
+        <nldd-cell>
+        <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Bewerken" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} bewerken" hx-get="{{ url('contract-period-edit', args=[period.public_id]) ~ contract_block.url_suffix }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+        </nldd-cell>
+        <nldd-cell>
+        <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-post="{{ url('contract-period-delete', args=[period.public_id]) ~ contract_block.url_suffix }}" hx-confirm="Contractperiode van {{ period.hours_per_week }} uur verwijderen?" hx-include="#contractPeriodsBlock" hx-target="#contractPeriodsBlock" hx-swap="outerHTML"></nldd-button>
+        </nldd-cell>
+      {% endif %}
       </nldd-list-item>
     {% endfor %}
     </nldd-list>
@@ -42,6 +45,8 @@
     <p>{{ contract_block.empty_text }}</p>
     </nldd-rich-text>
   {% endif %}
-  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  <nldd-button size="sm" start-icon="plus" text="Contractperiode toevoegen" hx-get="{{ contract_block.add_url }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+  {% if contract_block.can_edit %}
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-button size="sm" start-icon="plus" text="Contractperiode toevoegen" hx-get="{{ contract_block.add_url }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+  {% endif %}
 </div>

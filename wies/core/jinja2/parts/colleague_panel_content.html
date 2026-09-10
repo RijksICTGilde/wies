@@ -24,11 +24,15 @@
   </nldd-title-cell>
   </nldd-list-item>
   </nldd-list>
-  {% if colleague.suborganization or panel_data.contract_hours %}
+  {% set contract_block = panel_data.contract_block %}
+  {# Who keeps the hours gets the full block further down instead of the tag:
+     one place that is right after a save. #}
+  {% set show_hours_tag = panel_data.contract_hours and not contract_block.can_edit %}
+  {% if colleague.suborganization or show_hours_tag %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
     {% if colleague.suborganization %}<nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>{% endif %}
-    {% if panel_data.contract_hours %}
+    {% if show_hours_tag %}
       <nldd-tag color="neutral" icon="clock" text="{{ panel_data.contract_hours }} uur"></nldd-tag>
     {% endif %}
     </nldd-container>
@@ -43,6 +47,10 @@
       <nldd-tag>{{ label.name }}</nldd-tag>
     {% endfor %}
     </nldd-container>
+  {% endif %}
+  {% if contract_block.can_edit %}
+    <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% include "parts/contract_periods_block.html" %}
   {% endif %}
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <nldd-title size="4">
