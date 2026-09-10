@@ -151,6 +151,7 @@ def _services_initial(assignment):
                 "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
+                "hours_per_week": service.hours_per_week,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
                 "has_custom_period": inherits_assignment_period,
@@ -218,6 +219,7 @@ def _service_audit_row(row: dict) -> dict:
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
         "description": row["description"] or "",
+        "hours_per_week": row.get("hours_per_week"),
         # Included so a period-only edit registers as a change (#393).
         "has_custom_period": row["has_custom_period"],
         "start_date": _fmt_date(row["placement_start_date"]),

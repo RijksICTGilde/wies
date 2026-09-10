@@ -53,6 +53,7 @@ from wies.core.visibility_rules import (
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
+    ContractPeriodForm,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
@@ -64,6 +65,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ContractPeriod,
     ErrorEvent,
     Event,
     Label,
@@ -92,6 +94,7 @@ from .services.occupancy import (
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
+    contract_hours_on,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -436,6 +439,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "contract_hours": contract_hours_on(colleague.contract_periods.all(), timezone.now().date()),
         "assignments": assignments,
     }
 
@@ -2104,6 +2108,11 @@ def user_edit(request, public_id):
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
+    # Contract periods sit on the linked colleague; a user without one has
+    # nothing to hang them on and gets no block.
+    colleague = getattr(edited_user, "colleague", None)
+    contract_block = _contract_block(colleague, admin=True) if colleague else None
+
     if request.method == "GET":
         form = UserForm(instance=edited_user)
         return render(
@@ -2111,6 +2120,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2144,6 +2154,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2428,6 +2439,115 @@ def profile_name_edit(request):
     )
 
 
+def _own_colleague_or_404(request):
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        raise Http404("Geen collegaprofiel om te bewerken")
+    return colleague
+
+
+def _contract_block(colleague, *, admin=False):
+    """Context for parts/contract_periods_block.html.
+
+    One block serves two places: the own profile (self-only routes, h2 on a
+    page) and the user sheet in beheer (change_user routes, h3 in the sheet).
+    """
+    if not admin:
+        return {
+            "colleague": colleague,
+            "heading_tag": "h2",
+            "add_url": reverse("profile-contract-period-add"),
+            "edit_url_name": "profile-contract-period-edit",
+            "delete_url_name": "profile-contract-period-delete",
+            "empty_text": "Nog niet ingevuld. Business managers zien dan niet hoeveel uur je beschikbaar bent.",
+        }
+    if colleague.user is None:
+        raise Http404("Geen gebruiker bij dit collegaprofiel")
+    return {
+        "colleague": colleague,
+        "heading_tag": "h3",
+        "add_url": reverse("user-contract-period-add", args=[colleague.user.public_id]),
+        "edit_url_name": "user-contract-period-edit",
+        "delete_url_name": "user-contract-period-delete",
+        "empty_text": "Nog niet ingevuld. Business managers zien dan niet hoeveel uur deze collega beschikbaar is.",
+    }
+
+
+def _contract_period_sheet(request, period, post_url, contract_block):
+    """Add or edit one contract period in a sheet; a save swaps the block back in."""
+    if request.method == "POST":
+        form = ContractPeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            form.save()
+            return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+    else:
+        form = ContractPeriodForm(instance=period)
+
+    form.fields["hours_per_week"].widget.attrs["autofocus"] = True
+    title = "Contractperiode bewerken" if period.pk else "Contractperiode toevoegen"
+    return render(
+        request,
+        "parts/contract_period_sheet.html",
+        {"content": form, "form_post_url": post_url, "sheet_title": title},
+    )
+
+
+@login_required
+def profile_contract_period_edit(request, public_id=None):
+    """Only your own periods: the profile page is self-only, and a period of
+    someone else is a 404 rather than a hint that it exists."""
+    colleague = _own_colleague_or_404(request)
+    if public_id is None:
+        period = ContractPeriod(colleague=colleague)
+        post_url = reverse("profile-contract-period-add")
+    else:
+        period = get_object_or_404(ContractPeriod, public_id=public_id, colleague=colleague)
+        post_url = reverse("profile-contract-period-edit", args=[period.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague))
+
+
+@login_required
+@require_POST
+def profile_contract_period_delete(request, public_id):
+    colleague = _own_colleague_or_404(request)
+    get_object_or_404(ContractPeriod, public_id=public_id, colleague=colleague).delete()
+    return render(request, "parts/contract_periods_block.html", {"contract_block": _contract_block(colleague)})
+
+
+def _admin_period_or_404(public_id):
+    return get_object_or_404(ContractPeriod.objects.select_related("colleague__user"), public_id=public_id)
+
+
+@permission_required("rijksauth.change_user", raise_exception=True)
+def user_contract_period_add(request, public_id):
+    """A beheerder adds a period on the user sheet; routed on the user, as that sheet is."""
+    edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    colleague = getattr(edited_user, "colleague", None)
+    if colleague is None:
+        raise Http404("Geen collegaprofiel om te bewerken")
+    period = ContractPeriod(colleague=colleague)
+    post_url = reverse("user-contract-period-add", args=[edited_user.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, admin=True))
+
+
+@permission_required("rijksauth.change_user", raise_exception=True)
+def user_contract_period_edit(request, public_id):
+    period = _admin_period_or_404(public_id)
+    post_url = reverse("user-contract-period-edit", args=[period.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, admin=True))
+
+
+@permission_required("rijksauth.change_user", raise_exception=True)
+@require_POST
+def user_contract_period_delete(request, public_id):
+    period = _admin_period_or_404(public_id)
+    colleague = period.colleague
+    period.delete()
+    return render(
+        request, "parts/contract_periods_block.html", {"contract_block": _contract_block(colleague, admin=True)}
+    )
+
+
 @login_required
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
@@ -2435,9 +2555,7 @@ def profile_labels_edit(request):
     Onboarding asks the same question with the same fields, but saves each one
     when its step is left; here they land together under one "Opslaan".
     """
-    colleague = getattr(request.user, "colleague", None)
-    if colleague is None:
-        raise Http404("Geen collegaprofiel om te bewerken")
+    colleague = _own_colleague_or_404(request)
 
     categories = list(LabelCategory.objects.order_by("name"))
 
@@ -3119,6 +3237,7 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
+            "contract_block": _contract_block(colleague) if colleague else None,
             "panel_data": panel_data,
         },
     )

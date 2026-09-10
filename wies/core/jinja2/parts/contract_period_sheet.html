@@ -1,0 +1,14 @@
+{# A POST only reaches here on a validation error, and then only the body goes
+   back, not the whole sheet. Same shape as profile_name_sheet.html. #}
+{% if request.method == "POST" %}
+  {% include "parts/contract_period_body.html" %}
+{% else %}
+  <nldd-sheet id="contractPeriodModal" data-auto-show placement="right" width="480px" accessible-label="{{ sheet_title }}">
+  <nldd-page sticky-header>
+  <nldd-top-title-bar slot="header" text="{{ sheet_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <div id="contractPeriodBody">{% include "parts/contract_period_body.html" %}</div>
+  </nldd-simple-section>
+  </nldd-page>
+  </nldd-sheet>
+{% endif %}

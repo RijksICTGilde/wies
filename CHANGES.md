@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: contract hours per week are recorded as periods with a start and end date, by the colleague on their own profile or by a beheerder on the user sheet, so a change of hours keeps the history
+- ?: a role on an opdracht (aanvraag or placed consultant) records its hours per week; the team list, the Aanvragen cards and the Bezetting bars show them
+- ?: Bezetting shows per consultant, on a second line under the name, the role and how many contract hours are still free, with a new "deels beschikbaar" status card for people whose roles do not fill their contract; without hours recorded a placed consultant still counts as fully placed
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline.
 - 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations).
 - 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row

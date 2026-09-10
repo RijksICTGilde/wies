@@ -23,7 +23,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
         {{ row.colleague.name }}
         {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
       </span>
-      {% if pl.start_date or pl.end_date %}
+      {% if pl.start_date or pl.end_date or row.hours_per_week %}
         <span slot="supporting-text" class="wies-team-row-meta">
           {% if pl.start_date and pl.end_date %}
             {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
@@ -32,6 +32,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
           {% elif pl.end_date %}
             t/m {{ pl.end_date|datum_nl }}
           {% endif %}
+          {% if row.hours_per_week %}<span>{{ row.hours_per_week }} uur</span>{% endif %}
           {# A visible non-active row always carries both label and note (see
              evaluate_placement_visibility), so the chip needs no plain-tag
              fallback. #}
@@ -58,15 +59,16 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {# "Aanvraag: <rol>" reads as one sentence; a separate tag next to it did
          that job less clearly. #}
       <span>Aanvraag: {{ row.skill_name }}</span>
-      {% if svc and (svc.start_date or svc.end_date) %}
-        <span slot="supporting-text">
-          {% if svc.start_date and svc.end_date %}
+      {% if (svc and (svc.start_date or svc.end_date)) or row.hours_per_week %}
+        <span slot="supporting-text" class="wies-team-row-meta">
+          {% if svc and svc.start_date and svc.end_date %}
             {{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}
-          {% elif svc.start_date %}
+          {% elif svc and svc.start_date %}
             Vanaf {{ svc.start_date|datum_nl }}
-          {% elif svc.end_date %}
+          {% elif svc and svc.end_date %}
             t/m {{ svc.end_date|datum_nl }}
           {% endif %}
+          {% if row.hours_per_week %}<span>{{ row.hours_per_week }} uur</span>{% endif %}
         </span>
       {% endif %}
       </nldd-text-cell>

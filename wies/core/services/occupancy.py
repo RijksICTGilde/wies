@@ -5,9 +5,11 @@ timeline of their placements across the horizon (2 months back → 4 months ahea
 so a business manager sees at a glance who is on the bench and whose assignment
 ends soon.
 
-The app records no per-week hours, so occupancy is binary: a colleague is either
-"op de bank" (``bench`` — no active placement today) or "volledig ingezet"
-(``full`` — at least one active placement today). There is no partial state.
+A colleague is "op de bank" (``bench``: no active placement today), "deels
+beschikbaar" (``partial``: placed, but the hours of their active roles add up to
+less than their contract) or "volledig ingezet" (``full``). Hours are optional:
+without contract hours, or with an active role that has none, the row cannot be
+split and counts as full, exactly as before hours existed.
 """
 
 from __future__ import annotations
@@ -52,15 +54,19 @@ CONSULTANT_GROUP = "Consultant"
 GILDE_CATEGORY = "Subgroep"
 
 BUCKET_BENCH = "bench"  # no active placement today
-BUCKET_FULL = "full"  # at least one active placement today
+BUCKET_PARTIAL = "partial"  # placed, with contract hours left over
+BUCKET_FULL = "full"  # placed, and no hours left (or hours unknown)
+# Sort order: bench first, then partials, then fully placed.
+_BUCKET_RANK = {BUCKET_BENCH: 0, BUCKET_PARTIAL: 1, BUCKET_FULL: 2}
 
 # Status facets exposed by the summary cards (independent OR-toggles). Not DB
 # columns: each is a derived property of an OccupancyRow, so filtering on them
 # happens in-memory on the built rows, not in the queryset.
 STATUS_BENCH = "bench"
+STATUS_PARTIAL = "partial"
 STATUS_FULL = "full"
 STATUS_ENDS_SOON = "ends_soon"
-STATUS_VALUES = (STATUS_BENCH, STATUS_FULL, STATUS_ENDS_SOON)
+STATUS_VALUES = (STATUS_BENCH, STATUS_PARTIAL, STATUS_FULL, STATUS_ENDS_SOON)
 
 
 @dataclass
@@ -90,12 +96,14 @@ class TimelineSegment:
     # wrapping up. None wherever ending_level is calm, so the template has
     # nothing to render there.
     days_left: int | None = None
+    # Hours per week of the role, None when the role has none recorded.
+    hours_per_week: int | None = None
 
 
 @dataclass
 class OccupancyRow:
     colleague: Colleague
-    bucket: str  # bench | full
+    bucket: str  # bench | partial | full
     ends_soon: bool
     earliest_active_end: date | None
     segments: list[TimelineSegment] = field(default_factory=list)
@@ -125,12 +133,30 @@ class OccupancyRow:
     # Whether the stretch started before the horizon: the bar is clipped at the
     # left edge, so it needs to say it runs on beyond what is shown.
     bench_bar_clipped: bool = False
+    # Contract hours per week on today's date; None when no period covers today.
+    contract_hours: int | None = None
+    # Hours per week of the active roles added up; None when any of them has no
+    # hours, since a partial sum would understate how placed someone is.
+    active_hours: int | None = None
+    # Contract minus active hours, or the whole contract on the bench. None
+    # whenever either side is unknown.
+    unfilled_hours: int | None = None
+
+
+def contract_hours_on(periods, day: date) -> int | None:
+    """Hours per week of the period covering ``day``, from an already loaded list."""
+    for period in periods:
+        if period.start_date <= day and (period.end_date is None or day <= period.end_date):
+            return period.hours_per_week
+    return None
 
 
 def row_has_status(row: OccupancyRow, status: str) -> bool:
     """Whether an occupancy row matches a status facet from the summary cards."""
     if status == STATUS_BENCH:
         return row.bucket == BUCKET_BENCH
+    if status == STATUS_PARTIAL:
+        return row.bucket == BUCKET_PARTIAL
     if status == STATUS_FULL:
         return row.bucket == BUCKET_FULL
     if status == STATUS_ENDS_SOON:
@@ -215,9 +241,10 @@ def colleague_occupancy(
 ) -> list[OccupancyRow]:
     """Build the occupancy rows, sorted most-pressing first.
 
-    Sort key (ascending): (bench before full, earliest_active_end). Bench
-    colleagues come first, then fully-placed colleagues by soonest-ending
-    assignment.
+    Sort key (ascending): (bench, partial, full), then the most hours left,
+    then earliest_active_end. Bench colleagues come first, then partially placed
+    ones with the most free hours first, then fully-placed colleagues by
+    soonest-ending assignment.
 
     ``merk_ids`` optionally restricts the rows to colleagues in those
     suborganisations (merken); an empty/None value shows everyone.
@@ -237,7 +264,7 @@ def colleague_occupancy(
     colleagues = (
         Colleague.objects.filter(user__groups__name=CONSULTANT_GROUP)
         .select_related("suborganization")
-        .prefetch_related("labels__category")
+        .prefetch_related("labels__category", "contract_periods")
         .order_by("name")
     )
     if merk_ids:
@@ -288,15 +315,19 @@ def colleague_occupancy(
 
         active_count = 0
         active_ends: list[date] = []
+        active_hours: int | None = 0
         segments: list[TimelineSegment] = []
         for placement in placements:
             start = placement.actual_start_date
             end = placement.actual_end_date
             phase = _phase(start, end, today)
+            hours = placement.service.hours_per_week
             if phase == "active":
                 active_count += 1
                 if end is not None:
                     active_ends.append(end)
+                # One role without hours makes the sum unknowable.
+                active_hours = None if active_hours is None or hours is None else active_hours + hours
             left, width = _position(start, end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
@@ -310,6 +341,7 @@ def colleague_occupancy(
                     ends_soon=(phase == "active" and end is not None and end <= soon_cutoff),
                     ending_level=_ending_level(end, phase, today),
                     days_left=_days_left(end, phase, today),
+                    hours_per_week=hours,
                     # 8% of the horizon is roughly four weeks; below that the
                     # label is all ellipsis and no word.
                     too_narrow=width < NARROW_BAR_PCT,
@@ -318,7 +350,16 @@ def colleague_occupancy(
         segments.sort(key=lambda s: s.start or horizon_start)
         lane_count = _assign_lanes(segments, horizon_start, horizon_end)
 
-        bucket = BUCKET_BENCH if active_count == 0 else BUCKET_FULL
+        contract_hours = contract_hours_on(colleague.contract_periods.all(), today)
+        if active_count == 0:
+            bucket = BUCKET_BENCH
+            unfilled_hours = contract_hours
+        elif contract_hours is not None and active_hours is not None and active_hours < contract_hours:
+            bucket = BUCKET_PARTIAL
+            unfilled_hours = contract_hours - active_hours
+        else:
+            bucket = BUCKET_FULL
+            unfilled_hours = 0 if contract_hours is not None and active_hours is not None else None
         earliest_active_end = min(active_ends) if active_ends else None
         ends_soon = earliest_active_end is not None and earliest_active_end <= soon_cutoff
 
@@ -364,10 +405,13 @@ def colleague_occupancy(
                 bench_bar_clipped=bench_bar_clipped,
                 segments=segments,
                 lane_count=lane_count,
+                contract_hours=contract_hours,
+                active_hours=active_hours if active_count else None,
+                unfilled_hours=unfilled_hours,
             )
         )
 
-    rows.sort(key=lambda r: (0 if r.bucket == BUCKET_BENCH else 1, r.earliest_active_end or far_future))
+    rows.sort(key=lambda r: (_BUCKET_RANK[r.bucket], -(r.unfilled_hours or 0), r.earliest_active_end or far_future))
     return rows
 
 
@@ -379,6 +423,7 @@ def occupancy_summary(rows) -> dict:
     """
     return {
         "bench_count": sum(1 for r in rows if r.bucket == BUCKET_BENCH),
+        "partial_count": sum(1 for r in rows if r.bucket == BUCKET_PARTIAL),
         "full_count": sum(1 for r in rows if r.bucket == BUCKET_FULL),
         "ends_soon_count": sum(1 for r in rows if r.ends_soon),
     }

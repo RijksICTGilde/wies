@@ -37,6 +37,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ContractPeriod,
     Event,
     Label,
     LabelCategory,
@@ -81,6 +82,11 @@ RIJKSOVERHEID_RATIO = 0.90
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
 # Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
 ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
+# Contract hours per week: mostly 36, the rijksoverheid norm.
+CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
+# Hours per week on a role. None: the role has no hours recorded yet, which the
+# Bezetting page must keep handling.
+ROLE_HOURS_WEIGHTS = {None: 15, 8: 5, 16: 10, 24: 20, 32: 25, 36: 20, 40: 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
@@ -841,6 +847,24 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         role_counts[role] += 1
     write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
+    # ── 4e. Contract periods ─────────────────────────────────────────
+    # One running period each, started some time ago; a fifth also has an
+    # older, closed period with different hours, so the history has something
+    # to show.
+    for colleague in colleagues:
+        hours = weighted_choice(rng, CONTRACT_HOURS_WEIGHTS)
+        started = today - timedelta(days=rng.randint(180, 1100))
+        ContractPeriod.objects.create(colleague=colleague, hours_per_week=hours, start_date=started)
+        if rng.random() < 0.2:  # noqa: PLR2004 (0.2 = share with a closed earlier period)
+            earlier_hours = rng.choice([h for h in CONTRACT_HOURS_WEIGHTS if h != hours])
+            ContractPeriod.objects.create(
+                colleague=colleague,
+                hours_per_week=earlier_hours,
+                start_date=started - timedelta(days=rng.randint(365, 900)),
+                end_date=started - timedelta(days=1),
+            )
+    write("Contract periods assigned")
+
     # ── 5. Assignments ───────────────────────────────────────────────
     assignments = []
 
@@ -897,6 +921,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
             skill=skill,
+            hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",
@@ -912,6 +937,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
             skill=skill,
+            hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",
