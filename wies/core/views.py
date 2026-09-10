@@ -363,35 +363,37 @@ def _get_colleague_assignments(request, colleague):
         # Active and not-yet-started owned assignments are public; ended ones are
         # only shown to a privileged viewer (BDM role or support staff).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
+
+        existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
+        if existing is not None:
+            existing["tags"]["Business Manager"] = None
+            continue
         if not result.visible:
             continue
 
         if result.timing == "ended":
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    name,
-                    assignment_id,
-                    request,
-                    public_id=public_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                    tags={"Business Manager": None},
-                    historical=True,
-                    privacy_warning_text=result.privacy_note,
-                    period_label=LABELS["ended"],
-                )
-            historical_by_id[assignment_id]["tags"]["Business Manager"] = None
+            historical_by_id[assignment_id] = _make_assignment_entry(
+                name,
+                assignment_id,
+                request,
+                public_id=public_id,
+                start_date=start_date,
+                end_date=end_date,
+                tags={"Business Manager": None},
+                historical=True,
+                privacy_warning_text=result.privacy_note,
+                period_label=LABELS["ended"],
+            )
         else:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    name,
-                    assignment_id,
-                    request,
-                    public_id=public_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                )
-            active_by_id[assignment_id]["tags"]["Business Manager"] = None
+            active_by_id[assignment_id] = _make_assignment_entry(
+                name,
+                assignment_id,
+                request,
+                public_id=public_id,
+                start_date=start_date,
+                end_date=end_date,
+                tags={"Business Manager": None},
+            )
 
     # Batch-fetch primary organization names for all assignments
     all_ids = set(active_by_id) | set(historical_by_id)
