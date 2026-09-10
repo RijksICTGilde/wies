@@ -553,6 +553,53 @@ class BezettingLabelFilterViewTest(TestCase):
         assert b"LegeCategorie" not in response.content
 
 
+class BezettingFilterChipTest(TestCase):
+    """Active merk/label filters show as dismissible chips below the toolbar,
+    with a "Wis alle filters" button, like the Gebruikers list."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
+
+        self.thema = LabelCategory.objects.create(name="Thema", color="#0066CC")
+        self.ai = Label.objects.create(name="AI", category=self.thema)
+        self.digi = Suborganization.objects.create(name="Digi Gilde")
+        self.a = _consultant("Aisha AI", "a@x.nl", suborganization=self.digi)
+        self.a.labels.add(self.ai)
+
+    def test_no_chip_row_without_filters(self):
+        content = self.client.get(self.url).content.decode()
+        assert "Wis alle filters" not in content
+
+    def test_label_filter_renders_a_dismissible_chip(self):
+        content = self.client.get(self.url, {"labels": str(self.ai.public_id)}).content.decode()
+        # A dismiss token carrying the human label and the value to remove.
+        assert 'data-wies-dismiss="filter"' in content
+        assert 'data-filter-name="labels"' in content
+        assert f'data-filter-value="{self.ai.public_id}"' in content
+        # The chip shows the label name, not the uuid.
+        assert re.search(r"data-filter-value=[^>]*>AI</nldd-token>", content)
+        assert "Wis alle filters" in content
+
+    def test_merk_filter_renders_a_chip(self):
+        content = self.client.get(self.url, {"merk": str(self.digi.public_id)}).content.decode()
+        assert 'data-filter-name="merk"' in content
+        assert f'data-filter-value="{self.digi.public_id}"' in content
+        assert "Digi Gilde" in content
+
+    def test_status_filter_gets_no_chip_but_clear_all_is_available(self):
+        # Status stays represented by its pressed card, so no chip — but the row
+        # still appears so "Wis alle filters" (which clears the cards too) is
+        # reachable.
+        content = self.client.get(self.url, {"status": "bench"}).content.decode()
+        assert 'data-filter-name="status"' not in content
+        assert "Wis alle filters" in content
+
+
 class BezettingStatusFilterViewTest(TestCase):
     """The summary cards act as status filters (bench / full / ends_soon),
     independent OR-toggles applied in-memory on the built rows."""
