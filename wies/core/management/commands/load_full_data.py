@@ -47,6 +47,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.events import create_event
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
@@ -70,7 +71,7 @@ PROFILES = {
     # base counts are tuned to satisfy the occupancy expectations in
     # test_base_dummy_data.py (≥20 consultant placements, 50-85% placed, both
     # urgency bands, a minority of bench rows with planned work).
-    "base": Profile(num_colleagues=50, num_assignments=32, num_placements=52, seed_orgs_locally=True),
+    "base": Profile(num_colleagues=50, num_assignments=32, num_placements=60, seed_orgs_locally=True),
     "full": Profile(num_colleagues=800, num_assignments=530, num_placements=800, seed_orgs_locally=False),
 }
 
@@ -80,6 +81,8 @@ RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
 # Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+# Assignment owners are drawn only from the BDM colleagues, matching production
+# where the owner is a Business Development Manager.
 ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
@@ -828,6 +831,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     role_groups = {name: Group.objects.get(name=name) for name in ROLE_WEIGHTS}
     role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
     roles = assign_roles(rng, len(colleagues))
+    bdm_colleagues = []
     for colleague, role in zip(colleagues, roles, strict=True):
         first_name, _, last_name = colleague.name.partition(" ")
         # A previous run may have left a user with this email (colleagues are
@@ -839,6 +843,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         colleague.save(update_fields=["user"])
         user.groups.add(role_groups[role])
         role_counts[role] += 1
+        if role == BDM_GROUP_NAME:
+            bdm_colleagues.append(colleague)
     write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
     # ── 5. Assignments ───────────────────────────────────────────────
@@ -853,7 +859,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             start_date=start,
             end_date=end,
             extra_info="",
-            owner=rng.choice(colleagues),
+            # Owners are drawn only from BDM colleagues, matching production
+            # where the assignment owner is a Business Development Manager.
+            owner=rng.choice(bdm_colleagues),
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",
         )

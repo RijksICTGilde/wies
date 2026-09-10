@@ -33,10 +33,10 @@ Rows are not clickable: every action runs through the row menu in the last cell.
             t/m {{ pl.end_date|datum_nl }}
           {% endif %}
           {# A visible non-active row always carries both label and note (see
-             evaluate_placement_visibility), so the chip needs no plain-tag
-             fallback. #}
+             evaluate_placement_visibility). #}
           {% if row.period_label %}
-            {{ privacy_chip(row.privacy_warning_text, size="sm", label=row.period_label) }}
+            <nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>
+            {{ privacy_chip(row.privacy_warning_text, size="sm") }}
           {% endif %}
         </span>
       {% endif %}

@@ -23,6 +23,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
@@ -47,7 +48,7 @@ class PlacementImportTest(TestCase):
         # Create test groups
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create_user(
@@ -769,6 +770,39 @@ class PlacementPanelVisibilityTest(TestCase):
         assert card["privacy_warning_text"] == PRIVACY_OWN
 
     @patch("wies.core.views.timezone")
+    def test_ended_panel_renders_the_period_chip(self, mock_tz):
+        # End-to-end: the rendered panel shows the "Afgelopen" tag plus the
+        # icon-only privacy chip beside the period, the same chip as the team row.
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(
+            reverse("home") + f"?plaatsing={pl.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+
+        assert 'text="Afgelopen"' in body
+        assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
+        assert 'variant="icon"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+
+    @patch("wies.core.views.timezone")
+    def test_active_panel_renders_no_period_chip(self, mock_tz):
+        # An active placement carries no label or note, so no chip clutters the panel.
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2026, 1, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(
+            reverse("home") + f"?plaatsing={pl.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+
+        assert 'text="Afgelopen"' not in body
+        assert "wies-privacy-chip" not in body
+
+    @patch("wies.core.views.timezone")
     def test_future_placement_shown_to_bdm_with_gepland(self, mock_tz):
         # A Business Manager (BDM role), neither placed nor the owner, still sees
         # the future placement panel, with the BDM note.
@@ -949,9 +983,9 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         self.assertContains(response, "Planned Opdracht")
 
     def test_restricted_card_merges_the_note_into_the_period_chip(self):
-        """The card shows one chip: the period label ("Gepland") carrying the eye
-        icon, warning colour and the note in its tooltip. No separate "Beperkt
-        zichtbaar" chip up with the role tags."""
+        """The card shows the period ("Gepland") as plain text with an icon-only
+        chip beside it that carries the note in its tooltip and accessible name.
+        No separate "Beperkt zichtbaar" chip up with the role tags."""
         today = timezone.now().date()
         assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -967,10 +1001,11 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         body = self.client.get(reverse("user-profile")).content.decode()
 
-        assert 'text="Gepland"' in body
+        assert 'class="wies-team-row-meta">Gepland ' in body
         assert 'text="Beperkt zichtbaar"' not in body
         assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
-        assert f'accessible-label="Gepland. {PRIVACY_OWN}"' in body
+        assert 'variant="icon"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
 
     def test_future_placement_card_hidden_on_unrelated_profile_page(self):
         """End-to-end negative: an unrelated viewer loading Alice's data must not
@@ -2263,14 +2298,15 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def test_panel_shows_the_period_chip_with_the_note_in_its_tooltip(self):
         body = self._panel()
-        # The period label is the chip's text; the full sentence rides in the
-        # tooltip. There is no separate team-wide "Beperkt zichtbaar" banner.
+        # The period is a plain tag; the icon-only chip beside it carries the
+        # sentence in its tooltip. No separate team-wide "Beperkt zichtbaar" banner.
         assert 'text="Afgelopen"' in body
         assert 'text="Beperkt zichtbaar"' not in body
         assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
+        assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Afgelopen. {PRIVACY_BDM}"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BDM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()

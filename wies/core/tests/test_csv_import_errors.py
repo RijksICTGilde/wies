@@ -1,6 +1,7 @@
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.users import create_users_from_csv
 
@@ -57,7 +58,7 @@ class UserCsvImportGracefulErrorTests(TestCase):
     def setUp(self):
         Group.objects.create(name="Beheerder")
         Group.objects.create(name="Consultant")
-        Group.objects.create(name="Business Development Manager")
+        Group.objects.create(name=BDM_GROUP_NAME)
 
     def test_value_longer_than_the_column_returns_graceful_error(self):
         # User.first_name is max_length=150; a longer value would raise a DataError

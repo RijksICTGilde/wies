@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
+from wies.core.roles import BDM_GROUP_NAME
 
 User = get_user_model()
 
@@ -56,7 +57,7 @@ class UserViewsTest(TestCase):
         # Create test groups for form testing
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
         # Create test users
         self.user1 = User.objects.create_user(
@@ -695,7 +696,7 @@ class UserImportTest(TestCase):
         # Create test groups
         self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
         # Brands referenced by import CSVs must already exist (imports never create merken).
         self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
@@ -1014,7 +1015,7 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         assert john.groups.count() == 3
         assert john.groups.filter(name="Beheerder").exists()
         assert john.groups.filter(name="Consultant").exists()
-        assert john.groups.filter(name="Business Development Manager").exists()
+        assert john.groups.filter(name=BDM_GROUP_NAME).exists()
 
     def test_import_empty_csv(self):
         """Test import with empty CSV file"""

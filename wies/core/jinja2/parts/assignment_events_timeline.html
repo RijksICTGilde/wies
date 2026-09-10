@@ -19,7 +19,7 @@
          are the same for everyone. Filtered-out entries are gone by now and
          carry no chip — the timeline deliberately hides that they existed. #}
       {% if event.privacy_note %}
-        {{ privacy_chip(event.privacy_note, size="sm") }}
+        {{ privacy_chip(event.privacy_note, size="sm", label="Beperkt zichtbaar") }}
       {% endif %}
       {% if event.render_kind == "textarea" %}
         {% if event.formatted_old %}

@@ -122,6 +122,69 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, "Teamlid bewerken")
         self.assertContains(response, "Hidden Member")
 
+    # ── Mutation paths: the same visibility gate as the sheet (#655) ──────────
+    #
+    # The ?teamlid= sheet above resolves its row through visible_service_rows;
+    # the edit and delete endpoints mutate that same row and must not be reachable
+    # for a row the viewer cannot see, even with UPDATE rights.
+
+    def _delete_url(self, placement) -> str:
+        return reverse("assignment-member-delete", args=[self.assignment.public_id, placement.service.public_id])
+
+    def _edit_row(self, placement) -> dict:
+        """A valid single-row ServiceForm payload pointing at ``placement``'s row."""
+        return {
+            "service_public_id": str(placement.service.public_id),
+            "placement_public_id": str(placement.public_id),
+            "skill": str(self.skill.public_id),
+            "description": "edited",
+            "is_filled": "ingevuld",
+            "colleague": str(placement.colleague.public_id),
+            "has_custom_period": "on",
+            "terug_url": f"/?opdracht={self.assignment.public_id}",
+        }
+
+    def test_editor_cannot_delete_a_hidden_row(self):
+        response = self.editor_client.post(self._delete_url(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 404
+        assert Service.objects.filter(pk=self.hidden_placement.service_id).exists()
+
+    def test_editor_can_delete_a_visible_row(self):
+        response = self.editor_client.post(self._delete_url(self.active_placement), headers=self.HX)
+
+        assert response.status_code == 204
+        assert not Service.objects.filter(pk=self.active_placement.service_id).exists()
+
+    def test_bdm_owner_can_delete_a_hidden_row(self):
+        owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        grant_bdm(owner_user)
+        owner_client = Client()
+        owner_client.force_login(owner_user)
+
+        response = owner_client.post(self._delete_url(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 204
+        assert not Service.objects.filter(pk=self.hidden_placement.service_id).exists()
+
+    def test_editor_cannot_edit_a_hidden_row(self):
+        url = reverse("assignment-member-edit", args=[self.assignment.public_id])
+        response = self.editor_client.post(url, self._edit_row(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 404
+        self.hidden_placement.service.refresh_from_db()
+        assert self.hidden_placement.service.description == "s"
+
+    def test_editor_can_edit_a_visible_row(self):
+        url = reverse("assignment-member-edit", args=[self.assignment.public_id])
+        response = self.editor_client.post(url, self._edit_row(self.active_placement), headers=self.HX)
+
+        assert response.status_code == 204
+        self.active_placement.service.refresh_from_db()
+        assert self.active_placement.service.description == "edited"
+
 
 class TeamEventPrivacyNoteTest(TestCase):
     """The timeline note derives from the event's own names, not from whichever

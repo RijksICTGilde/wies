@@ -9,6 +9,7 @@ from types import SimpleNamespace
 from django import forms
 from django.db import transaction
 from django.db.models import Prefetch, Q
+from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
 
@@ -26,7 +27,7 @@ def _bdm_queryset(assignment=None):
     #
     # The current owner is always included, even outside the BDM group: without a
     # matching option the combo box renders empty and saving clears the Business
-    # Manager. Most owners are in fact not in that group.
+    # Manager. Owners are usually in that group, but the odd one isn't.
     in_group = Q(user__groups__name=BDM_GROUP_NAME)
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:
@@ -201,6 +202,24 @@ def visible_service_rows(assignment, request) -> list[dict]:
                 }
             )
     return visible
+
+
+def visible_service_or_404(assignment, request, service_public_id):
+    """Resolves a team row through the viewer's filtered rows, so a hidden row
+    is as unreachable for a mutation as it is for the sheet.
+
+    The GET sheet resolves ``?teamlid=`` against ``visible_service_rows``; the
+    edit/delete endpoints mutate the same row and must apply the same visibility
+    gate, not just the UPDATE-permission gate (#655).
+    """
+    row = next(
+        (r for r in visible_service_rows(assignment, request) if r["service_public_id"] == str(service_public_id)),
+        None,
+    )
+    if row is None:
+        msg = "Unknown service"
+        raise Http404(msg)
+    return row["service"]
 
 
 def _services_display_context(assignment, request) -> dict:

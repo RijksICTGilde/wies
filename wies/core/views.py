@@ -374,35 +374,37 @@ def _get_colleague_assignments(request, colleague):
         # Active and not-yet-started owned assignments are public; ended ones are
         # only shown to a privileged viewer (BDM role or support staff).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
+
+        existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
+        if existing is not None:
+            existing["tags"]["Business Manager"] = None
+            continue
         if not result.visible:
             continue
 
         if result.timing == "ended":
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    name,
-                    assignment_id,
-                    request,
-                    public_id=public_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                    tags={"Business Manager": None},
-                    historical=True,
-                    privacy_warning_text=result.privacy_note,
-                    period_label=LABELS["ended"],
-                )
-            historical_by_id[assignment_id]["tags"]["Business Manager"] = None
+            historical_by_id[assignment_id] = _make_assignment_entry(
+                name,
+                assignment_id,
+                request,
+                public_id=public_id,
+                start_date=start_date,
+                end_date=end_date,
+                tags={"Business Manager": None},
+                historical=True,
+                privacy_warning_text=result.privacy_note,
+                period_label=LABELS["ended"],
+            )
         else:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    name,
-                    assignment_id,
-                    request,
-                    public_id=public_id,
-                    start_date=start_date,
-                    end_date=end_date,
-                )
-            active_by_id[assignment_id]["tags"]["Business Manager"] = None
+            active_by_id[assignment_id] = _make_assignment_entry(
+                name,
+                assignment_id,
+                request,
+                public_id=public_id,
+                start_date=start_date,
+                end_date=end_date,
+                tags={"Business Manager": None},
+            )
 
     # Batch-fetch primary organization names for all assignments
     all_ids = set(active_by_id) | set(historical_by_id)
@@ -2951,7 +2953,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # A viewer who sees more than an outsider (the BM gets the unfiltered
+            # A viewer who sees more than an outsider (the BDM or staff gets the unfiltered
             # list) should know this row is hidden from others. Team rows only:
             # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)
@@ -4326,7 +4328,11 @@ def assignment_member_edit_view(request, public_id):
     The form posts a single formset row, which mutates exactly that one service
     (and its placement). Same contract as assignment_edit_view.
     """
-    from wies.core.editables.assignment import AssignmentEditables, skill_choices  # noqa: PLC0415
+    from wies.core.editables.assignment import (  # noqa: PLC0415
+        AssignmentEditables,
+        skill_choices,
+        visible_service_or_404,
+    )
     from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
@@ -4354,6 +4360,12 @@ def assignment_member_edit_view(request, public_id):
     if not form.is_valid():
         return rerender(form)
 
+    # Editing an existing row: gate the target on the viewer's visible rows, so a
+    # row hidden by the visibility rules is as unreachable for an edit as it is
+    # for the sheet. A new row (no service_public_id) has nothing to hide yet.
+    if form.cleaned_data.get("service_public_id"):
+        visible_service_or_404(assignment, request, form.cleaned_data["service_public_id"])
+
     try:
         with member_audit_event(request, assignment):
             save_service_from_form(assignment, form)
@@ -4370,7 +4382,7 @@ def assignment_member_edit_view(request, public_id):
 @require_POST
 def assignment_member_delete_view(request, public_id, service_public_id):
     """Deletes one team member, after the confirmation dialog in the panel."""
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, visible_service_or_404  # noqa: PLC0415
 
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
@@ -4380,11 +4392,10 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return HttpResponseForbidden()
 
-    # Resolved by public_id within this assignment, so a foreign id 404s rather
-    # than emitting a no-op audit event.
-    service = assignment.services.filter(public_id=service_public_id).first()
-    if service is None:
-        raise Http404("Unknown service")
+    # Resolved through the viewer's visible rows, so a row hidden by the
+    # visibility rules is as unreachable for deletion as it is for the sheet;
+    # a foreign id 404s rather than emitting a no-op audit event.
+    service = visible_service_or_404(assignment, request, service_public_id)
 
     with member_audit_event(request, assignment):
         service.delete()

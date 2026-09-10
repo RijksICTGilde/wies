@@ -2,7 +2,7 @@ import json
 import re
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -14,6 +14,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.roles import setup_roles
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -42,8 +43,7 @@ class AssignmentCreateTest(TestCase):
             first_name="BDM",
             last_name="User",
         )
-        bdm_group = Group.objects.get(name="Business Development Manager")
-        self.bdm_user.groups.add(bdm_group)
+        grant_bdm(self.bdm_user)
         add_assignment = Permission.objects.get(codename="add_assignment")
         add_service = Permission.objects.get(codename="add_service")
         add_placement = Permission.objects.get(codename="add_placement")

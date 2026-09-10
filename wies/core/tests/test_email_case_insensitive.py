@@ -12,6 +12,7 @@ from django.db import IntegrityError, transaction
 from django.test import RequestFactory, TestCase
 
 from wies.core.models import Colleague
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.users import create_users_from_csv
 from wies.rijksauth.auth_backend import AuthBackend
@@ -96,7 +97,7 @@ class UserCSVCaseInsensitiveDuplicateTest(TestCase):
     def setUp(self):
         Group.objects.get_or_create(name="Beheerder")
         Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name="Business Development Manager")
+        Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
     def test_intra_file_case_different_duplicate_is_flagged(self):
         csv_content = (

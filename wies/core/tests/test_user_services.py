@@ -5,6 +5,7 @@ from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Event
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.users import (
     create_user,
     create_users_from_csv,
@@ -405,7 +406,7 @@ class CreateUsersFromCSVEmailDomainTest(TestCase):
         """Create required groups for CSV import"""
         Group.objects.get_or_create(name="Beheerder")
         Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name="Business Development Manager")
+        Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
     def test_csv_import_valid_emails(self):
         """Test CSV import with valid ODI email addresses"""

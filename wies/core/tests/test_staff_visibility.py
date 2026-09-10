@@ -156,6 +156,33 @@ class StaffSeesProfileHistoryTest(_VisibilityFixture):
         assert any(a["id"] == owned.id and a["historical"] for a in assignments)
 
 
+class OwnerPlacedOnEndedAssignmentTest(_VisibilityFixture):
+    """When you own AND are placed on an ended assignment, the card shows via your
+    own placement; the "Business Manager" label must ride along on it (#655).
+
+    Regression: the owned-assignment visibility gate used to ``continue`` past the
+    label for a non-privileged viewer, dropping it from a card that is shown anyway.
+    """
+
+    @patch("wies.core.views.timezone")
+    def test_own_profile_keeps_the_bm_label_on_the_ended_card(self, mock_tz):
+        # Alice is not a BDM and not staff; she views her own profile. The ended
+        # assignment she owns is also one she is placed on (self.ended).
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        self.assignment.owner = self.colleague_alice
+        self.assignment.start_date = date(2024, 1, 1)
+        self.assignment.end_date = date(2024, 6, 14)
+        self.assignment.save(update_fields=["owner", "start_date", "end_date"])
+
+        assignments = _get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
+
+        card = next(a for a in assignments if a["id"] == self.assignment.id)
+        tag_names = {t["skill"] for t in card["tags"]}
+        assert card["historical"] is True
+        assert "Business Manager" in tag_names
+        assert "Python Developer" in tag_names
+
+
 class StaffSeesTimelineEventTest(TestCase):
     """The updates tab shows a staff viewer the team event for a hidden placement."""
 
