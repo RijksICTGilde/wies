@@ -115,8 +115,7 @@
 }
 
 .bezetting-stat[aria-pressed="true"] nldd-card {
-  --_background-color: var(--primitives-color-neutral-100);
-  --_border-color: var(--primitives-color-neutral-300);
+  --_background-color: var(--primitives-color-neutral-150);
 }
 
 /* Phase colours for the timeline bars.
