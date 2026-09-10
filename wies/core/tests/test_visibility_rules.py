@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from types import SimpleNamespace
 
-from django.test import SimpleTestCase, TestCase
+from django.test import SimpleTestCase, TestCase, override_settings
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.querysets import annotate_placement_dates
@@ -105,6 +105,10 @@ class PeriodTimingTest(SimpleTestCase):
         assert period_timing(start=None, end=None, today=TODAY) == "active"
 
 
+# The privileged flag must come only from the fake groups, never from a stray
+# STAFF_EMAILS in the environment matching _request's viewer email — pin it empty
+# so the unprivileged cases stay unprivileged for the reason under test.
+@override_settings(STAFF_EMAILS=[])
 class EvaluatePlacementVisibilityTest(SimpleTestCase):
     """The full visibility matrix: timing x viewer, plus the note wording."""
 
@@ -199,6 +203,7 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         assert result.privacy_note == PRIVACY_OWN
 
 
+@override_settings(STAFF_EMAILS=[])
 class EvaluateAssignmentVisibilityTest(SimpleTestCase):
     """The owned (BM-role) assignment rule: active/future public, ended is
     restricted to a privileged viewer. There is no placed colleague, so no
@@ -244,6 +249,7 @@ class EvaluateAssignmentVisibilityTest(SimpleTestCase):
         assert result.privacy_note is None
 
 
+@override_settings(STAFF_EMAILS=[])
 class ListVisibilityParityTest(TestCase):
     """The WZW list (``filter_visible_placements``) must equal the ``active``
     subset of ``evaluate_placement_visibility``, for every viewer alike.
