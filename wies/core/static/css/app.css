@@ -263,7 +263,7 @@ a > nldd-icon:last-child {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--primitives-space-8, 8px);
+  gap: var(--primitives-space-16, 16px);
 }
 
 /* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the

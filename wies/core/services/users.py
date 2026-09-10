@@ -8,6 +8,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
+from django.db.models import Q
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
@@ -341,3 +342,22 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         "users_created": users_created,
         "errors": errors,  # May contain warnings when success is True
     }
+
+
+def close_contract_periods(colleague, day):
+    """Ends the colleague's contract on ``day``: the running period stops there
+    and periods still to start go.
+
+    Called when the user is removed. The colleague stays (placements keep their
+    history), but Bezetting must stop counting hours nobody fills.
+    """
+    running = (
+        colleague.contract_periods.filter(start_date__lte=day)
+        .filter(Q(end_date__isnull=True) | Q(end_date__gt=day))
+        .first()
+    )
+    if running is not None:
+        running.end_date = day
+        running.save(update_fields=["end_date"])
+    colleague.contract_periods.filter(start_date__gt=day).delete()
+    return running

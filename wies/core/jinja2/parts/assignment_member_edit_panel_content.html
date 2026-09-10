@@ -91,6 +91,7 @@
     </nldd-form-field>
   </div>
   {{ svc_form.description.as_field_group() }}
+  {{ svc_form.hours_per_week.as_field_group() }}
   {# has_custom_period is inverted: checked means inherit the assignment period. The
      segmented control does not post; the hidden input below carries the choice
      ("on" = inherit, empty = own period). #}

@@ -1,0 +1,18 @@
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#contractPeriodBody"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {% for error in content.non_field_errors() %}
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+  {% endfor %}
+  {{ content.hours_per_week.as_field_group() }}
+  {{ content.start_date.as_field_group() }}
+  {{ content.end_date.as_field_group() }}
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

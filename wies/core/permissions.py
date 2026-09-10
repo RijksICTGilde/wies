@@ -14,7 +14,7 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
-from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
 from wies.core.roles import is_bdm, is_staff_member
 from wies.rijksauth.models import User
@@ -140,6 +140,22 @@ def update_service_description(user, s):
     return _is_wies_sourced(s.assignment) and (
         has_permission(UPDATE, s.assignment, user) or _is_placed_on_service(user, s)
     )
+
+
+@rule(UPDATE, ServiceEditables.hours_per_week)
+def update_service_hours_per_week(user, s):
+    """As the description: the consultant on this service keeps their own hours."""
+    return update_service_description(user, s)
+
+
+@rule(UPDATE, ContractPeriod)
+def update_contract_period(user, _period):
+    """Beheerder (rijksauth.change_user), BDM or support staff.
+
+    A consultant reads their own periods on the profile but does not keep them;
+    the hours are what Bezetting plans with.
+    """
+    return user.has_perm("rijksauth.change_user") or is_bdm(user) or is_staff_member(user)
 
 
 @rule(UPDATE, UserEditables.email)

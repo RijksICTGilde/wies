@@ -6,6 +6,7 @@ from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
@@ -395,7 +396,10 @@ class UserViewsTest(TestCase):
         initial_event_count = Event.objects.count()
 
         user_id = self.user1.id
-        response = self.client.post(reverse("user-delete", args=[self.user1.public_id]))
+        # A user with a colleague profile is asked for the day they left.
+        response = self.client.post(
+            reverse("user-delete", args=[self.user1.public_id]), {"left_on": timezone.now().date().isoformat()}
+        )
 
         # Should return updated table (HTMX response)
         assert response.status_code == 200

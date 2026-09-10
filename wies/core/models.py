@@ -1,9 +1,11 @@
 import uuid
 
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
+from django.db.models import Q
 from django.db.models.functions import Lower
 from django.utils import timezone
 
@@ -17,6 +19,11 @@ SOURCE_CHOICES = {
     "otys_iir": "OTYS IIR",
     "wies": "Wies",
 }
+
+# Upper bound for hours per week, on a contract and on a role alike.
+MAX_HOURS_PER_WEEK = 40
+# A select rather than a number input: nldd-text-field has no number type.
+HOURS_PER_WEEK_CHOICES = [("", " "), *((h, f"{h} uur") for h in range(1, MAX_HOURS_PER_WEEK + 1))]
 
 
 DEFAULT_SUBORGANIZATIONS = {
@@ -175,6 +182,46 @@ class Colleague(models.Model):
 
 
 # Create your models here.
+class ContractPeriod(models.Model):
+    """Hours per week a colleague works under contract, kept as a history.
+
+    A change (32 to 36) closes one period and opens the next, so the hours on
+    any past date stay known. An empty end date means the period runs today.
+    """
+
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    colleague = models.ForeignKey("Colleague", models.CASCADE, related_name="contract_periods")
+    hours_per_week = models.PositiveSmallIntegerField(
+        "Uren per week", validators=[MinValueValidator(1), MaxValueValidator(MAX_HOURS_PER_WEEK)]
+    )
+    start_date = models.DateField("Startdatum")
+    end_date = models.DateField("Einddatum", null=True, blank=True)
+
+    class Meta:
+        ordering = ["-start_date"]
+        verbose_name = "Contractperiode"
+        verbose_name_plural = "Contractperioden"
+
+    def __str__(self):
+        until = self.end_date.isoformat() if self.end_date else "heden"
+        return f"{self.colleague.name}: {self.hours_per_week} uur ({self.start_date.isoformat()} - {until})"
+
+    def clean(self):
+        if self.end_date and self.start_date and self.end_date < self.start_date:
+            raise ValidationError({"end_date": "Einddatum moet op of na de startdatum liggen."})
+        if self.colleague_id is None or self.start_date is None:
+            return
+        # Two periods on one colleague may not overlap, or the hours on a day
+        # would be ambiguous. An open end runs forever.
+        others = ContractPeriod.objects.filter(colleague_id=self.colleague_id).exclude(pk=self.pk)
+        if self.end_date:
+            others = others.filter(start_date__lte=self.end_date)
+        overlapping = others.filter(Q(end_date__isnull=True) | Q(end_date__gte=self.start_date))
+        if overlapping.exists():
+            raise ValidationError({"start_date": "Deze periode overlapt met een andere contractperiode."})
+
+
 class Assignment(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -267,6 +314,14 @@ class Service(models.Model):
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True)  # do not use directly, see property below
     specific_end_date = models.DateField(null=True, blank=True)  # do not use directly, see property below
+    # On the role rather than the placement, so an open aanvraag carries hours
+    # too; a placement counts the hours of its role.
+    hours_per_week = models.PositiveSmallIntegerField(
+        "Uren per week",
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(MAX_HOURS_PER_WEEK)],
+    )
     # placements via reverse relation
     status = models.CharField(max_length=20, choices=SERVICE_STATUS, default="OPEN")
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)

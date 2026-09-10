@@ -53,17 +53,20 @@ from wies.core.visibility_rules import (
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
+    ContractPeriodForm,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
     ProfileNameForm,
     SuborganizationForm,
+    UserDeleteForm,
     UserForm,
 )
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ContractPeriod,
     ErrorEvent,
     Event,
     Label,
@@ -92,6 +95,7 @@ from .services.occupancy import (
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
+    contract_hours_on,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -112,7 +116,13 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
+from .services.users import (
+    close_contract_periods,
+    create_user,
+    create_users_from_csv,
+    is_allowed_email_domain,
+    update_user,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -438,6 +448,8 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "contract_hours": contract_hours_on(colleague.contract_periods.all(), timezone.now().date()),
+        "contract_block": _contract_block(colleague, "panel", request.user),
         "assignments": assignments,
     }
 
@@ -2106,6 +2118,11 @@ def user_edit(request, public_id):
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
+    # Contract periods sit on the linked colleague; a user without one has
+    # nothing to hang them on and gets no block.
+    colleague = getattr(edited_user, "colleague", None)
+    contract_block = _contract_block(colleague, "user", request.user) if colleague else None
+
     if request.method == "GET":
         form = UserForm(instance=edited_user)
         return render(
@@ -2113,6 +2130,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2146,6 +2164,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2156,37 +2175,57 @@ def user_edit(request, public_id):
     return HttpResponse(status=405)
 
 
+def _colleague_delete_note(colleague, today):
+    """What deleting the user leaves behind, for the confirm dialog: the colleague
+    stays with their placements, and their contract ends on the chosen day."""
+    if colleague is None:
+        return ""
+    note = " Het collegaprofiel blijft bestaan, met de plaatsingen op opdrachten."
+    hours = contract_hours_on(colleague.contract_periods.all(), today)
+    if hours is not None:
+        return note + f" De contractperiode van {hours} uur eindigt op de dag hieronder."
+    return note
+
+
 @permission_required("rijksauth.delete_user", raise_exception=True)
 def user_delete(request, public_id):
     """Deletes a user, after the confirmation modal."""
     user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    colleague = getattr(user, "colleague", None)
+    today = timezone.now().date()
 
-    if request.method == "GET":
+    def render_modal(form):
         return render(
             request,
-            "parts/confirm_delete_modal.html",
+            "parts/user_delete_modal.html",
             {
-                "dialog_text": "Gebruiker verwijderen?",
+                "content": form,
                 "dialog_supporting": (
                     f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Verwijderen is permanent en niet terug te draaien."
+                    "Verwijderen is permanent en niet terug te draaien." + _colleague_delete_note(colleague, today)
                 ),
-                "confirm_label": "Verwijder gebruiker",
-                "cancel_label": "Behoud gebruiker",
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
             },
         )
+
+    if request.method == "GET":
+        return render_modal(UserDeleteForm(initial={"left_on": today}) if colleague else None)
     if request.method == "POST":
-        if hasattr(user, "colleague") and user.colleague:
-            label_names = [label.name for label in user.colleague.labels.all()]
-        else:
-            label_names = []
+        form = UserDeleteForm(request.POST) if colleague else None
+        if form is not None and not form.is_valid():
+            return render_modal(form)
+        label_names = [label.name for label in colleague.labels.all()] if colleague else []
+        # The colleague outlives the user (SET_NULL), so their contract has to
+        # end here or Bezetting keeps counting hours nobody fills.
+        ended = close_contract_periods(colleague, form.cleaned_data["left_on"]) if colleague else None
         context = {
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
             "label_names": label_names,
             "group_names": [g.name for g in user.groups.all()],
+            "contract_hours_ended": ended.hours_per_week if ended else None,
+            "left_on": ended.end_date.isoformat() if ended else None,
         }
         # Capture the int PK before delete() nulls it; Event.object_id keeps
         # referencing the internal id, not the public_id.
@@ -2201,6 +2240,8 @@ def user_delete(request, public_id):
             request=request,
             context=context,
         )
+        name = f"{user.first_name} {user.last_name}".strip() or user.email
+        messages.success(request, f"{name} is verwijderd.")
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("admin-users")
         return response
@@ -2430,6 +2471,100 @@ def profile_name_edit(request):
     )
 
 
+def _own_colleague_or_404(request):
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        raise Http404("Geen collegaprofiel om te bewerken")
+    return colleague
+
+
+_CONTRACT_SURFACES = ("profile", "user", "panel")
+
+
+def _contract_surface(request):
+    """Where the block sits. The URLs carry it, so a save renders the block back
+    in the shape of the page it came from."""
+    surface = request.GET.get("in")
+    return surface if surface in _CONTRACT_SURFACES else "panel"
+
+
+def _contract_block(colleague, surface, user):
+    """Context for parts/contract_periods_block.html.
+
+    One block for three places: the own profile (h2 on a page), the user sheet
+    and the colleague panel (h3). Only who may keep the periods gets the
+    buttons; a consultant reads their own.
+    """
+    can_edit = has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user)
+    if surface != "profile":
+        empty_text = "Nog niet ingevuld. Bezetting toont dan niet hoeveel uur deze collega beschikbaar is."
+    elif can_edit:
+        empty_text = "Nog niet ingevuld. Business managers zien dan niet hoeveel uur je beschikbaar bent."
+    else:
+        empty_text = "Nog niet ingevuld. Je business manager kan je contracturen invullen."
+    return {
+        "colleague": colleague,
+        "heading_tag": "h2" if surface == "profile" else "h3",
+        "can_edit": can_edit,
+        "add_url": reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}",
+        "url_suffix": f"?in={surface}",
+        "empty_text": empty_text,
+    }
+
+
+def _contract_period_sheet(request, period, post_url, contract_block):
+    """Add or edit one contract period in a sheet; a save swaps the block back in."""
+    if request.method == "POST":
+        form = ContractPeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            form.save()
+            return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+    else:
+        form = ContractPeriodForm(instance=period)
+
+    form.fields["hours_per_week"].widget.attrs["autofocus"] = True
+    title = "Contractperiode bewerken" if period.pk else "Contractperiode toevoegen"
+    return render(
+        request,
+        "parts/contract_period_sheet.html",
+        {"content": form, "form_post_url": post_url, "sheet_title": title},
+    )
+
+
+@login_required
+def contract_period_add(request, colleague_public_id):
+    colleague = get_object_or_404(Colleague, public_id=colleague_public_id)
+    period = ContractPeriod(colleague=colleague)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    post_url = reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}"
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, surface, request.user))
+
+
+@login_required
+def contract_period_edit(request, public_id):
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    post_url = reverse("contract-period-edit", args=[period.public_id]) + f"?in={surface}"
+    block = _contract_block(period.colleague, surface, request.user)
+    return _contract_period_sheet(request, period, post_url, block)
+
+
+@login_required
+@require_POST
+def contract_period_delete(request, public_id):
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    colleague = period.colleague
+    period.delete()
+    block = _contract_block(colleague, _contract_surface(request), request.user)
+    return render(request, "parts/contract_periods_block.html", {"contract_block": block})
+
+
 @login_required
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
@@ -2437,9 +2572,7 @@ def profile_labels_edit(request):
     Onboarding asks the same question with the same fields, but saves each one
     when its step is left; here they land together under one "Opslaan".
     """
-    colleague = getattr(request.user, "colleague", None)
-    if colleague is None:
-        raise Http404("Geen collegaprofiel om te bewerken")
+    colleague = _own_colleague_or_404(request)
 
     categories = list(LabelCategory.objects.order_by("name"))
 
@@ -3121,6 +3254,7 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
+            "contract_block": _contract_block(colleague, "profile", request.user) if colleague else None,
             "panel_data": panel_data,
         },
     )
@@ -3194,7 +3328,7 @@ def _onboarding_edit_groups(request, entry, data=None):
     for service in services:
         service_specs = [
             (ServiceEditables, spec, service)
-            for spec in (ServiceEditables.skill, ServiceEditables.description)
+            for spec in (ServiceEditables.skill, ServiceEditables.description, ServiceEditables.hours_per_week)
             if has_permission(Verb.UPDATE, service, request.user, spec)
         ]
         if not service_specs:
