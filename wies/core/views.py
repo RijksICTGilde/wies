@@ -2836,7 +2836,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # A viewer who sees more than an outsider (the BM gets the unfiltered
+            # A viewer who sees more than an outsider (the BDM or staff gets the unfiltered
             # list) should know this row is hidden from others. Team rows only:
             # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)
