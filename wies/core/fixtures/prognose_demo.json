@@ -1,0 +1,300 @@
+{
+  "years": ["2026", "2027", "2028"],
+  "current_year": "2026",
+  "by_year": {
+    "2026": [
+      {
+        "label": "jan",
+        "is_current": false,
+        "planned_pct": 88,
+        "aanvragen_pct": 0,
+        "free_pct": 12,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "feb",
+        "is_current": false,
+        "planned_pct": 91,
+        "aanvragen_pct": 0,
+        "free_pct": 9,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mrt",
+        "is_current": false,
+        "planned_pct": 94,
+        "aanvragen_pct": 0,
+        "free_pct": 6,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "apr",
+        "is_current": false,
+        "planned_pct": 82,
+        "aanvragen_pct": 0,
+        "free_pct": 18,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mei",
+        "is_current": false,
+        "planned_pct": 85,
+        "aanvragen_pct": 0,
+        "free_pct": 15,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jun",
+        "is_current": false,
+        "planned_pct": 88,
+        "aanvragen_pct": 0,
+        "free_pct": 12,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jul",
+        "is_current": false,
+        "planned_pct": 91,
+        "aanvragen_pct": 0,
+        "free_pct": 9,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "aug",
+        "is_current": false,
+        "planned_pct": 94,
+        "aanvragen_pct": 0,
+        "free_pct": 6,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "sep",
+        "is_current": true,
+        "planned_pct": 80,
+        "aanvragen_pct": 30,
+        "free_pct": 0,
+        "overcommit_pct": 10
+      },
+      {
+        "label": "okt",
+        "is_current": false,
+        "planned_pct": 77,
+        "aanvragen_pct": 33,
+        "free_pct": 0,
+        "overcommit_pct": 10
+      },
+      {
+        "label": "nov",
+        "is_current": false,
+        "planned_pct": 74,
+        "aanvragen_pct": 37,
+        "free_pct": 0,
+        "overcommit_pct": 11
+      },
+      {
+        "label": "dec",
+        "is_current": false,
+        "planned_pct": 71,
+        "aanvragen_pct": 40,
+        "free_pct": 0,
+        "overcommit_pct": 11
+      }
+    ],
+    "2027": [
+      {
+        "label": "jan",
+        "is_current": false,
+        "planned_pct": 68,
+        "aanvragen_pct": 37,
+        "free_pct": 0,
+        "overcommit_pct": 5
+      },
+      {
+        "label": "feb",
+        "is_current": false,
+        "planned_pct": 64,
+        "aanvragen_pct": 33,
+        "free_pct": 3,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mrt",
+        "is_current": false,
+        "planned_pct": 61,
+        "aanvragen_pct": 30,
+        "free_pct": 9,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "apr",
+        "is_current": false,
+        "planned_pct": 58,
+        "aanvragen_pct": 26,
+        "free_pct": 16,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mei",
+        "is_current": false,
+        "planned_pct": 55,
+        "aanvragen_pct": 23,
+        "free_pct": 22,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jun",
+        "is_current": false,
+        "planned_pct": 52,
+        "aanvragen_pct": 20,
+        "free_pct": 28,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jul",
+        "is_current": false,
+        "planned_pct": 49,
+        "aanvragen_pct": 16,
+        "free_pct": 35,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "aug",
+        "is_current": false,
+        "planned_pct": 46,
+        "aanvragen_pct": 13,
+        "free_pct": 41,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "sep",
+        "is_current": false,
+        "planned_pct": 43,
+        "aanvragen_pct": 9,
+        "free_pct": 48,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "okt",
+        "is_current": false,
+        "planned_pct": 40,
+        "aanvragen_pct": 6,
+        "free_pct": 54,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "nov",
+        "is_current": false,
+        "planned_pct": 37,
+        "aanvragen_pct": 3,
+        "free_pct": 60,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "dec",
+        "is_current": false,
+        "planned_pct": 34,
+        "aanvragen_pct": 0,
+        "free_pct": 66,
+        "overcommit_pct": 0
+      }
+    ],
+    "2028": [
+      {
+        "label": "jan",
+        "is_current": false,
+        "planned_pct": 30,
+        "aanvragen_pct": 0,
+        "free_pct": 70,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "feb",
+        "is_current": false,
+        "planned_pct": 27,
+        "aanvragen_pct": 0,
+        "free_pct": 73,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mrt",
+        "is_current": false,
+        "planned_pct": 24,
+        "aanvragen_pct": 0,
+        "free_pct": 76,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "apr",
+        "is_current": false,
+        "planned_pct": 21,
+        "aanvragen_pct": 0,
+        "free_pct": 79,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "mei",
+        "is_current": false,
+        "planned_pct": 18,
+        "aanvragen_pct": 0,
+        "free_pct": 82,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jun",
+        "is_current": false,
+        "planned_pct": 15,
+        "aanvragen_pct": 0,
+        "free_pct": 85,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "jul",
+        "is_current": false,
+        "planned_pct": 12,
+        "aanvragen_pct": 0,
+        "free_pct": 88,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "aug",
+        "is_current": false,
+        "planned_pct": 9,
+        "aanvragen_pct": 0,
+        "free_pct": 91,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "sep",
+        "is_current": false,
+        "planned_pct": 8,
+        "aanvragen_pct": 0,
+        "free_pct": 92,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "okt",
+        "is_current": false,
+        "planned_pct": 8,
+        "aanvragen_pct": 0,
+        "free_pct": 92,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "nov",
+        "is_current": false,
+        "planned_pct": 8,
+        "aanvragen_pct": 0,
+        "free_pct": 92,
+        "overcommit_pct": 0
+      },
+      {
+        "label": "dec",
+        "is_current": false,
+        "planned_pct": 8,
+        "aanvragen_pct": 0,
+        "free_pct": 92,
+        "overcommit_pct": 0
+      }
+    ]
+  }
+}

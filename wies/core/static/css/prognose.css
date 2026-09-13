@@ -1,7 +1,27 @@
-/* "Prognose" — capacity vs. planned area chart (exploratory demo). */
+/* "Prognose" — per-month bars whose LENGTH is proportional to demand as a
+   percentage of capacity, on a fixed 0..AXIS_MAX scale (exploratory demo). */
 
 .prognose-page {
   max-width: 1200px;
+}
+
+.prognose-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.prognose-year-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.prognose-year-select {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
+  border: 1px solid #b8b8b8;
+  border-radius: 4px;
+  background: #fff;
 }
 
 .prognose-legend {
@@ -25,43 +45,116 @@
   border-radius: 3px;
 }
 
-.prognose-swatch--capacity {
-  background: #e6e6e6;
-  border: 1px solid #b8b8b8;
-}
-
 .prognose-swatch--planned {
-  background: rgba(31, 122, 77, 0.55);
+  background: rgba(31, 122, 77, 0.85);
   border: 1px solid #1f7a4d;
 }
 
 .prognose-swatch--aanvragen {
-  background: rgba(200, 120, 30, 0.45);
+  background: rgba(200, 120, 30, 0.85);
   border: 1px solid #c8781e;
 }
 
+/* Bar chart */
 #prognose-chart {
-  position: relative;
   width: 100%;
 }
 
-/* Hover tooltip */
-.prognose-tooltip {
-  position: absolute;
-  z-index: 5;
-  pointer-events: none;
-  transform: translateX(-50%);
-  background: #fff;
-  border: 1px solid #d0d0d0;
-  border-radius: 6px;
-  padding: 0.4rem 0.6rem;
-  font-size: 0.78rem;
-  line-height: 1.4;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-  white-space: nowrap;
+.prognose-bars {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  height: 420px;
+  padding-left: 3.5rem; /* y-axis gutter for the capacity label */
 }
 
-.prognose-tooltip strong {
-  display: block;
-  margin-bottom: 0.15rem;
+/* Dashed 100%-capacity reference line across the plot; label sits in the left
+   gutter so it never overlaps a bar. */
+.prognose-capline {
+  position: absolute;
+  left: 3.5rem;
+  right: 0;
+  border-top: 2px dashed #767676;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.prognose-capline__label {
+  position: absolute;
+  right: 100%; /* to the left of the line, in the gutter */
+  top: -0.6rem;
+  margin-right: 0.4rem;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  color: #555;
+}
+
+.prognose-bar-col {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 0;
+}
+
+/* The track is the full axis (0..AXIS_MAX). The bar is pinned to its bottom;
+   its segments are sized as a fraction of this full height, so bar length is
+   strictly proportional to the percentage. */
+.prognose-bar-track {
+  position: relative;
+  width: 100%;
+  max-width: 60px;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.prognose-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column-reverse; /* stack from the bottom up */
+}
+
+.prognose-bar-seg {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.prognose-bar-seg--planned {
+  background: rgba(31, 122, 77, 0.9);
+}
+
+.prognose-bar-seg--aanvragen {
+  background: rgba(200, 120, 30, 0.9);
+}
+
+.prognose-bar-value {
+  font-size: 0.7rem;
+  color: #fff;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+}
+
+.prognose-bar-label {
+  margin-top: 0.4rem;
+  font-size: 0.8rem;
+  color: #4b4b4b;
+}
+
+.prognose-bar-col.is-current .prognose-bar-label {
+  font-weight: 700;
+  color: #154273;
+}
+
+.prognose-bar-col.is-current .prognose-bar {
+  outline: 2px solid #154273;
+  outline-offset: 1px;
 }

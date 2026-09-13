@@ -1,37 +1,21 @@
-// Prognose chart: available capacity (grey band) vs. planned hours (green area)
-// across the horizon. Data arrives via the #prognose-chart[data-forecast]
-// attribute (no inline <script>, per the script-src 'self' CSP). Drawn with the
-// vendored uPlot library.
+// Prognose chart: per-month bars whose LENGTH is proportional to the demand
+// (ingepland + aanvragen) as a percentage of the available capacity. A dashed
+// line marks 100% (capacity); a bar that runs above it is over capacity. Data
+// arrives via the #prognose-chart[data-forecast] attribute (no inline <script>,
+// per the script-src 'self' CSP). Plain DOM — POC, no chart library needed.
 
 (function () {
   "use strict";
 
-  const CAPACITY_COLOR = "#b8b8b8"; // grey — matches "afgerond" in bench.css
-  const CAPACITY_FILL = "#e6e6e6";
-  const PLANNED_COLOR = "#1f7a4d"; // green — "actief" in bench.css
-  const PLANNED_FILL = "rgba(31, 122, 77, 0.55)";
-  const AANVRAGEN_COLOR = "#c8781e"; // amber — open requests, stacked on planned
-  const AANVRAGEN_FILL = "rgba(200, 120, 30, 0.45)";
-  const TODAY_COLOR = "#d52b1e"; // red — "vandaag" marker
-
-  const MONTHS_NL = [
-    "jan",
-    "feb",
-    "mrt",
-    "apr",
-    "mei",
-    "jun",
-    "jul",
-    "aug",
-    "sep",
-    "okt",
-    "nov",
-    "dec",
-  ];
+  // Top of the y-axis, in percent. Bars are scaled against this, so equal
+  // lengths always mean equal percentages. Give some headroom above 100% so
+  // over-capacity months have room to stand taller.
+  const AXIS_MAX = 120;
 
   function init() {
     const el = document.getElementById("prognose-chart");
-    if (!el || typeof uPlot === "undefined") return;
+    const select = document.getElementById("prognose-year");
+    if (!el || !select) return;
 
     let data;
     try {
@@ -40,173 +24,94 @@
       return;
     }
 
-    // uPlot wants the x-axis as UNIX seconds and series as parallel arrays.
-    const xs = data.weeks.map((iso) => Date.parse(iso) / 1000);
-    const capacity = data.capacity;
-    const planned = data.planned;
-    const aanvragen = data.aanvragen;
-    const unfilled = data.unfilled;
-    const overcommit = data.overcommit;
-    // uPlot has no built-in stacking: plot the cumulative demand (planned +
-    // aanvragen) as one filled area and draw the green "planned" fill on top,
-    // so the amber band between them reads as the requests stacked on planned.
-    const demand = planned.map((p, i) => p + (aanvragen[i] || 0));
-    const todaySec = Date.parse(data.today) / 1000;
+    // Populate the year dropdown, defaulting to the current year.
+    data.years.forEach((year) => {
+      const opt = document.createElement("option");
+      opt.value = year;
+      opt.textContent = year;
+      if (year === data.current_year) opt.selected = true;
+      select.appendChild(opt);
+    });
 
-    // Vertical "vandaag" line, drawn on top of the series each redraw.
-    const todayLine = {
-      hooks: {
-        draw: [
-          (u) => {
-            const cx = Math.round(u.valToPos(todaySec, "x", true));
-            const ctx = u.ctx;
-            ctx.save();
-            ctx.strokeStyle = TODAY_COLOR;
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(cx, u.bbox.top);
-            ctx.lineTo(cx, u.bbox.top + u.bbox.height);
-            ctx.stroke();
-            ctx.restore();
-          },
-        ],
-      },
-    };
+    function render(year) {
+      const months = data.by_year[year] || [];
+      el.innerHTML = "";
 
-    const tooltip = makeTooltip(el);
+      const chart = document.createElement("div");
+      chart.className = "prognose-bars";
 
-    function fillSeries(stroke, fill) {
-      return {
-        stroke,
-        fill,
-        width: 2,
-        points: { show: false },
-      };
+      // Dashed 100%-capacity reference line, positioned on the same absolute
+      // scale as the bars (100 of AXIS_MAX from the bottom).
+      const capLine = document.createElement("div");
+      capLine.className = "prognose-capline";
+      capLine.style.bottom = (100 / AXIS_MAX) * 100 + "%";
+      const capLabel = document.createElement("span");
+      capLabel.className = "prognose-capline__label";
+      capLabel.textContent = "100%";
+      capLine.appendChild(capLabel);
+      chart.appendChild(capLine);
+
+      months.forEach((m) => {
+        const col = document.createElement("div");
+        col.className =
+          "prognose-bar-col" + (m.is_current ? " is-current" : "");
+
+        // The bar stacks from the bottom up; its total length is proportional to
+        // ingepland + aanvragen on the absolute (0..AXIS_MAX) scale.
+        const bar = document.createElement("div");
+        bar.className = "prognose-bar";
+
+        bar.title =
+          m.label +
+          " " +
+          year +
+          "\nIngepland: " +
+          m.planned_pct +
+          "%\nAanvragen: " +
+          m.aanvragen_pct +
+          "%" +
+          (m.overcommit_pct > 0
+            ? "\nBoven capaciteit: +" + m.overcommit_pct + "%"
+            : "\nVrij: " + m.free_pct + "%");
+
+        bar.appendChild(segment("planned", m.planned_pct));
+        bar.appendChild(segment("aanvragen", m.aanvragen_pct));
+
+        const label = document.createElement("div");
+        label.className = "prognose-bar-label";
+        label.textContent = m.label;
+
+        // A column is a full-height track (the axis) with the bar pinned to the
+        // bottom and the month label beneath it.
+        const track = document.createElement("div");
+        track.className = "prognose-bar-track";
+        track.appendChild(bar);
+
+        col.appendChild(track);
+        col.appendChild(label);
+        chart.appendChild(col);
+      });
+
+      el.appendChild(chart);
     }
 
-    const opts = {
-      width: el.clientWidth || 900,
-      height: 420,
-      cursor: { y: false, points: { show: true } },
-      scales: {
-        x: { time: true },
-        y: { range: (u, min, max) => [0, max * 1.05] },
-      },
-      legend: { show: false },
-      plugins: [todayLine, tooltip.plugin],
-      axes: [
-        {
-          // Month ticks in Dutch.
-          values: (u, splits) =>
-            splits.map((s) => {
-              const d = new Date(s * 1000);
-              const label = MONTHS_NL[d.getMonth()];
-              return d.getMonth() === 0 ? label + " " + d.getFullYear() : label;
-            }),
-          grid: { stroke: "#eee", width: 1 },
-          ticks: { stroke: "#ddd", width: 1 },
-        },
-        {
-          label: "uren per week",
-          grid: { stroke: "#f0f0f0", width: 1 },
-          ticks: { show: false },
-        },
-      ],
-      // Draw order = series order (later paints on top). Capacity (grey) sits
-      // behind; the cumulative "demand" amber fill goes next; the green
-      // "planned" fill paints last so the amber only shows above the green.
-      series: [
-        {},
-        Object.assign(
-          { label: "Beschikbare capaciteit" },
-          fillSeries(CAPACITY_COLOR, CAPACITY_FILL),
-        ),
-        Object.assign(
-          { label: "Aanvragen" },
-          fillSeries(AANVRAGEN_COLOR, AANVRAGEN_FILL),
-        ),
-        Object.assign(
-          { label: "Ingepland" },
-          fillSeries(PLANNED_COLOR, PLANNED_FILL),
-        ),
-      ],
-    };
+    // A segment's height is its share of the FULL axis, so 20% and 40% segments
+    // differ in length by exactly 2×.
+    function segment(kind, pct) {
+      const seg = document.createElement("div");
+      seg.className = "prognose-bar-seg prognose-bar-seg--" + kind;
+      seg.style.height = (pct / AXIS_MAX) * 100 + "%";
+      if (pct >= 6) {
+        const v = document.createElement("span");
+        v.className = "prognose-bar-value";
+        v.textContent = Math.round(pct) + "%";
+        seg.appendChild(v);
+      }
+      return seg;
+    }
 
-    const plot = new uPlot(opts, [xs, capacity, demand, planned], el);
-    tooltip.attach(plot, {
-      weeks: data.weeks,
-      capacity,
-      planned,
-      aanvragen,
-      unfilled,
-      overcommit,
-    });
-
-    // Keep the chart responsive to width changes.
-    window.addEventListener("resize", () => {
-      plot.setSize({ width: el.clientWidth || 900, height: 420 });
-    });
-  }
-
-  // A minimal hover tooltip: capaciteit / ingepland / onbezet for the hovered week.
-  function makeTooltip(container) {
-    const box = document.createElement("div");
-    box.className = "prognose-tooltip";
-    box.style.display = "none";
-    container.appendChild(box);
-
-    let series = null;
-
-    return {
-      plugin: {
-        hooks: {
-          setCursor: [
-            (u) => {
-              const idx = u.cursor.idx;
-              if (idx == null || series == null) {
-                box.style.display = "none";
-                return;
-              }
-              const iso = series.weeks[idx];
-              const d = new Date(iso);
-              const dateLabel =
-                d.getDate() +
-                " " +
-                MONTHS_NL[d.getMonth()] +
-                " " +
-                d.getFullYear();
-              const overcommitLine =
-                series.overcommit[idx] > 0
-                  ? "<div>Tekort: " + series.overcommit[idx] + " u/wk</div>"
-                  : "<div>Onbezet: " +
-                    Math.max(series.unfilled[idx], 0) +
-                    " u/wk</div>";
-              box.innerHTML =
-                "<strong>" +
-                dateLabel +
-                "</strong>" +
-                "<div>Capaciteit: " +
-                series.capacity[idx] +
-                " u/wk</div>" +
-                "<div>Ingepland: " +
-                series.planned[idx] +
-                " u/wk</div>" +
-                "<div>Aanvragen: " +
-                series.aanvragen[idx] +
-                " u/wk</div>" +
-                overcommitLine;
-              box.style.display = "block";
-              const left = u.valToPos(u.data[0][idx], "x");
-              box.style.left = left + "px";
-              box.style.top = "8px";
-            },
-          ],
-        },
-      },
-      attach(plot, s) {
-        series = s;
-      },
-    };
+    select.addEventListener("change", () => render(select.value));
+    render(select.value || data.current_year);
   }
 
   if (document.readyState === "loading") {

@@ -69,7 +69,7 @@ from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
-from .services.occupancy import capacity_forecast, colleague_occupancy
+from .services.occupancy import colleague_occupancy
 from .services.opdrachten_per_client import assignments_per_primary_client
 from .services.organizations import (
     find_orgs_by_abbreviation,
@@ -522,9 +522,16 @@ def bench_overview(request):
 
 
 def bm_prognose(request):
-    """Business-management "Prognose" — capacity vs. planned hours over the horizon."""
-    forecast = capacity_forecast(timezone.now().date())
-    return render(request, "bm_prognose.html", {"forecast_json": json.dumps(forecast)})
+    """Business-management "Prognose" — capacity vs. planned hours over the horizon.
+
+    POC: the chart is driven by a hand-authored JSON of monthly percentages
+    (``fixtures/prognose_demo.json``) rather than computed from live data, so the
+    demo shows a believable, deliberately-shaped curve (no aanvragen in the past,
+    demand tapering into the future).
+    """
+    fixture = settings.APPS_DIR / "core" / "fixtures" / "prognose_demo.json"
+    forecast_json = fixture.read_text(encoding="utf-8")
+    return render(request, "bm_prognose.html", {"forecast_json": forecast_json})
 
 
 def bm_opdrachten(request):
