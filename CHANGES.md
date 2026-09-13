@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-09-13
+
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline.
 - 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations).
 - 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row
@@ -11,7 +15,6 @@ This files lists the changes during the lifetime of this project.
 - 636: editing and deleting an opdracht now also requires the BDM role, so an owner outside that role no longer has edit rights
 - 636: editing or deleting a team member now applies the same visibility rule as the sheet, so a finished or future placement hidden from a viewer can no longer be changed via a crafted request
 - 653: pressing Enter quickly after typing no longer leaves the "Druk op Enter om te zoeken" hint hanging over the results
-- ?
 
 ## 2026-08-21_2
 
