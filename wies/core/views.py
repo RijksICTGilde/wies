@@ -42,7 +42,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
+from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BDM,
@@ -80,7 +80,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import is_staff_member
+from .roles import is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -88,6 +88,17 @@ from .services.assignments import (
 )
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
+from .services.occupancy import (
+    STATUS_VALUES,
+    bezetting_filter_groups,
+    colleague_occupancy,
+    labels_by_category,
+    month_ticks,
+    occupancy_summary,
+    row_has_status,
+    split_bench_and_timeline,
+    today_marker_pct,
+)
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -548,6 +559,110 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
+def business_management_access_required(view_func):
+    """Gate the "Business management" section: Business Development Managers plus
+    support staff."""
+    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
+
+
+@business_management_access_required
+def bezetting(request):
+    """ "Bezetting" — the business-manager occupancy timeline.
+
+    Rows are colleagues, sorted most-pressing first (bench → full). A row click
+    opens the shared colleague side panel via the ``collega`` param, exactly like
+    the "Wie zit waar?" table.
+    """
+    today = timezone.now().date()
+
+    # Side panel: reuse the shared machinery. A row click opens the colleague
+    # panel (?collega); links inside that panel open an opdracht (?opdracht) or
+    # plaatsing (?plaatsing) panel, exactly like on "Wie zit waar?".
+    placement_id = request.GET.get("plaatsing")
+    assignment_id = request.GET.get("opdracht")
+    colleague_id = request.GET.get("collega")
+    panel_data = None
+    if placement_id:
+        panel_data = _resolve_placement_panel(request, placement_id)
+    elif assignment_id:
+        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        if assignment is not None:
+            panel_data = _build_assignment_panel_data(assignment, request)
+    elif colleague_id:
+        colleague = _resolve_panel_object(request, Colleague, colleague_id)
+        if colleague is not None:
+            panel_data = _build_colleague_panel_data(colleague, request)
+
+    # HTMX panel requests return just the panel content, like WZW.
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Merk (suborganisation) and label-category filters, resolved from the URL.
+    # Labels are OR within a category and AND between categories (like "Wie zit
+    # waar?"); each label category becomes its own filter group under the shared
+    # ``labels`` param, and merk is its own group.
+    merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
+    labels = resolve_facet(Label, request.GET.getlist("labels"))
+    labels_by_cat = labels_by_category(labels.ids)
+
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat)
+    for row in rows:
+        row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
+
+    # Summary-card counts are the full population within the merk/label selection —
+    # computed before the status filter narrows the rows (see occupancy_summary).
+    summary = occupancy_summary(rows)
+
+    # Status facet: the three summary cards, as independent OR-toggles. Derived
+    # from the built rows (not a queryset column), so it filters here in-memory.
+    selected_statuses = [s for s in request.GET.getlist("status") if s in STATUS_VALUES]
+    if selected_statuses:
+        rows = [r for r in rows if any(row_has_status(r, s) for s in selected_statuses)]
+
+    # Filter sheet: one select-multi group per facet, with cross-filtered counts,
+    # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
+    # everyone on this page is a consultant.
+    filter_groups = bezetting_filter_groups(merk, labels, labels_by_cat)
+    _finalize_filter_groups(filter_groups)
+
+    active_filters = {}
+    if merk.active_values:
+        active_filters["merk"] = merk.active_values
+    if labels.active_values:
+        active_filters["labels"] = labels.active_values
+    if selected_statuses:
+        active_filters["status"] = selected_statuses
+
+    bench_rows, timeline_rows = split_bench_and_timeline(rows)
+
+    context = {
+        "rows": timeline_rows,
+        "bench_rows": bench_rows,
+        "panel_data": panel_data,
+        "today_pct": today_marker_pct(),
+        "today": today,
+        "month_ticks": month_ticks(today),
+        **summary,
+        "selected_statuses": selected_statuses,
+        "filter_groups": filter_groups,
+        "active_filters": active_filters,
+        "filter_target_url": reverse("bezetting"),
+        "filter_modal_group_id": request.GET.get("filter_modal", ""),
+    }
+
+    # HTMX filter change: return just the results block; the filter sheet swaps
+    # back OOB (see parts/bezetting_results.html). The "Meer…" sheet reuses the
+    # shared template, exactly like the user list.
+    if "HX-Request" in request.headers:
+        if request.GET.get("filter_modal"):
+            return render(request, "parts/filter_options_modal.html", context)
+        return render(request, "parts/bezetting_results.html", context)
+
+    return render(request, "bezetting.html", context)
+
+
 ERRORS_PER_PAGE = 10
 
 
@@ -649,8 +764,10 @@ def staff_database(request):
         elif action == "load_base_data":
             if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
                 return HttpResponse(status=405)
-            management.call_command("loaddata", "base_dummy_data.json")
-            messages.success(request, "Data geladen uit base_dummy_data.json")
+            # The generator clears the dummy data it owns first, so reseeding an
+            # environment that already has data regenerates cleanly.
+            management.call_command("load_dummy_data", profile="base")
+            messages.success(request, "Dummy data gegenereerd")
         elif action == "reset_onboarding":
             request.user.onboarding_completed_at = None
             request.user.save(update_fields=["onboarding_completed_at"])

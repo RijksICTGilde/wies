@@ -65,7 +65,7 @@ Every user-facing change must be recorded in `CHANGES.md` under the
 `## unreleased` heading, as a `- <PR#>: <description>` bullet — the PR
 number, so a reader can jump straight to the code/discussion. Add the
 entry as part of the same PR; since the PR number isn't known until the
-PR is opened, fill it in (or correct a placeholder) once the PR exists.
+PR is opened, fill it in (or correct a placeholder) once the PR exists. The changelog items are in English.
 
 ### Testing
 
@@ -80,5 +80,4 @@ PR is opened, fill it in (or correct a placeholder) once the PR exists.
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`
-- Base fixture: `wies/core/fixtures/base_dummy_data.json` (committed, small dataset)
-- Dummy data generator: `wies/core/management/commands/load_full_data.py` (management command)
+- Dummy data generator: `wies/core/management/commands/load_full_data.py` — one `generate()` with two size profiles (`load_dummy_data --profile base|full`); `base` is small/offline (used by `just setup`), `full` syncs organizations

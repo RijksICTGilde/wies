@@ -16,7 +16,7 @@ each rule stays identical across surfaces.
 
 from dataclasses import dataclass
 
-from wies.core.roles import is_bdm_or_staff
+from wies.core.roles import is_bdm_or_staff, is_staff_member
 
 # Shown to the placed colleague on their own ended/future placement.
 PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Managers"
@@ -32,6 +32,17 @@ PRIVACY_BM_OWNED = "Alleen zichtbaar voor de Business Managers"
 
 # Chip labels per timing, for the non-active states.
 LABELS = {"ended": "Afgelopen", "future": "Gepland"}
+
+
+def show_bm_page(request) -> bool:
+    """Whether to show the "Business management" section: BDM or support staff."""
+    return is_bdm_or_staff(request)
+
+
+def show_staff_pages(request) -> bool:
+    """Whether to show the staff-only pages (Statistieken, Database)."""
+    user = getattr(request, "user", None)
+    return user is not None and is_staff_member(user)
 
 
 @dataclass(frozen=True)

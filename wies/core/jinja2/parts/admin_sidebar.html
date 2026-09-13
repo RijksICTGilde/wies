@@ -36,7 +36,7 @@
   <nldd-text-cell text="Merken"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
-{% if is_staff_member(user) %}
+{% if show_staff_pages(request) %}
   <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">
   <nldd-icon name="chart-x-y-axis-line"></nldd-icon>

@@ -1,0 +1,58 @@
+{# The active-filter chip strip: one removable nldd-token per active filter,
+   plus a "Wis alle filters" button. Shared by every filtered list — the
+   bezetting timeline, the users list, and the opdracht card/table containers.
+
+   The token markup carries no URL: removal is declarative. Each token has
+   data-wies-dismiss="filter" + data-filter-name/data-filter-value, and the
+   clear-all button carries data-clear-all-filters; static/js/filter_interactions.js
+   handles both. Keep those hooks in step with that file.
+
+   Inputs:
+   - filter_groups   — list of {type, name, label, options}; select-multi and
+                       date groups produce chips here.
+   - active_filters  — {param_name: iterable_of_selected_values}.
+   - org_chip_data   — org-facet chips (only the PublicIdFacetsMixin pages pass
+                       these); each {param_name, param_value, label}.
+   - unknown_chip_data — fail-closed "Onbekend" chips, same shape.
+
+   The caller keeps the `{% if has_active_filters %}` guard and the trailing
+   spacer: the guard expression and the spacer size differ per page.
+
+   Import with: {% from "parts/filter_chips.html" import filter_chips %} #}
+{% macro filter_chips(filter_groups, active_filters, org_chip_data=[], unknown_chip_data=[]) %}
+  <nldd-container layout="wrap" gap="8" vertical-alignment="center">
+  {% for chip in org_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {# Fail-closed: a facet value that matches nothing (stale or invented public_id)
+     gets an "Onbekend" chip instead of vanishing, keeping the empty list
+     explainable and clearable. See PublicIdFacetsMixin.add_unknown_filter_chips. #}
+  {% for chip in unknown_chip_data %}
+    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+  {% endfor %}
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% elif filter_group.type == 'date' %}
+      {% set value = active_filters.get(filter_group.name) %}
+      {% if value %}
+        {# Label plus date, so the token shows which mode it is and not just a
+        bare date. #}
+        <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ filter_group.label }}" data-wies-dismiss="filter" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ value.strftime("%d-%m-%Y") }}</nldd-token>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+  {# Clearing all filters belongs with the chips; filter_interactions.js handles
+     data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
+  </nldd-container>
+{% endmacro %}

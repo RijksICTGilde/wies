@@ -1,26 +1,44 @@
 """Generate dummy data for the Wies project.
 
-Syncs real organizations from organisaties.overheid.nl, then generates
-colleagues, assignments, services, and placements with realistic Dutch names
-and government project names.
+One generator, two size profiles (see ``PROFILES``):
+
+- ``full`` — a large dataset that syncs real organizations from
+  organisaties.overheid.nl. Needs the network.
+- ``base`` — a small, self-contained dataset that seeds a handful of
+  organizations locally. Works offline, so it drives ``just setup`` and the
+  /staff/ "load base data" button. It replaces the old
+  ``base_dummy_data.json`` fixture: everything the fixture shipped (colleagues
+  with a user+role+labels, all three label categories, assignments, services,
+  placements, org units, events) is generated here with dates relative to
+  today, so it never ages out the way a fixed-date snapshot did.
+
+The generator clears the dummy data it owns before regenerating, so running it
+a second time (a /staff/ reseed onto an environment that already has data)
+regenerates cleanly instead of piling up duplicates.
 
 Usage:
-    python manage.py load_full_data               # Full dataset
+    python manage.py load_dummy_data --profile base   # small, offline
+    python manage.py load_dummy_data --profile full   # large, network sync
+    python manage.py load_full_data                   # alias for --profile full
 """
 
 import logging
 import random
 import re
-from datetime import UTC, date, datetime, timedelta
+from dataclasses import dataclass
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
+from django.utils import timezone
 
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
+    Label,
     LabelCategory,
     OrganizationType,
     OrganizationUnit,
@@ -30,29 +48,48 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.roles import BDM_GROUP_NAME
+from wies.core.services.events import create_event
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
 logger = logging.getLogger(__name__)
 
-User = get_user_model()
 
-# ── Target counts ────────────────────────────────────────────────────────────
-NUM_COLLEAGUES = 800
-NUM_ASSIGNMENTS = 530
-NUM_PLACEMENTS = 800
+# ── Size profiles ────────────────────────────────────────────────────────────
+@dataclass(frozen=True)
+class Profile:
+    """A named size + org-source combination for the generator."""
+
+    num_colleagues: int
+    num_assignments: int
+    num_placements: int
+    # base seeds a small org hierarchy locally (offline); full syncs the real
+    # organizations from organisaties.overheid.nl over the network.
+    seed_orgs_locally: bool
+
+
+PROFILES = {
+    # base counts are tuned to satisfy the occupancy expectations in
+    # test_base_dummy_data.py (≥20 consultant placements, 50-85% placed, both
+    # urgency bands, a minority of bench rows with planned work).
+    "base": Profile(num_colleagues=50, num_assignments=32, num_placements=60, seed_orgs_locally=True),
+    "full": Profile(num_colleagues=800, num_assignments=530, num_placements=800, seed_orgs_locally=False),
+}
 
 # ── Distribution settings ────────────────────────────────────────────────────
 ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
-# Share of colleagues that hold the BDM role. Assignment owners are always
-# drawn from this group, matching production where the owner is a BDM.
-BDM_RATIO = 0.10
+# Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+# Assignment owners are drawn only from the BDM colleagues, matching production
+# where the owner is a Business Development Manager.
+ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
 MAX_LABELS_PER_CATEGORY = 2
+# Roughly half the assignments also get a second (update) audit event.
+EVENT_UPDATE_PROBABILITY = 0.5
 
 # ── Skills ───────────────────────────────────────────────────────────────────
 SKILLS = [
@@ -574,6 +611,77 @@ def historic_dates(rng: random.Random, ref: date) -> tuple[date, date]:
     return start, end
 
 
+# ── Offline organizations (base profile) ─────────────────────────────────────
+# A small, fixed hierarchy so the base profile works without the network sync.
+BASE_MINISTRIES = [
+    ("Algemene Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010"),
+    ("Binnenlandse Zaken en Koninkrijksrelaties", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"),
+    ("Buitenlandse Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013"),
+    ("Defensie", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018"),
+    ("Economische Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045"),
+    ("Financiën", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090"),
+    ("Infrastructuur en Waterstaat", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130"),
+    ("Justitie en Veiligheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058"),
+    ("Onderwijs, Cultuur en Wetenschap", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109"),
+    ("Sociale Zaken en Werkgelegenheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073"),
+    ("Volksgezondheid, Welzijn en Sport", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025"),
+]
+# (name, tooi, parent_ministry_name or None) — the agentschappen/onderdelen.
+BASE_SUBORGS = [
+    ("Directoraat-generaal Belastingdienst", "https://identifier.overheid.nl/tooi/id/oorg/oorg12368", "Financiën"),
+    ("Rijkswaterstaat", "https://identifier.overheid.nl/tooi/id/oorg/oorg10004", "Infrastructuur en Waterstaat"),
+    ("Rijksinstituut voor Volksgezondheid en Milieu", "https://identifier.overheid.nl/tooi/id/oorg/oorg10123", None),
+    (
+        "Dienst Justitiële Inrichtingen",
+        "https://identifier.overheid.nl/tooi/id/oorg/oorg10114",
+        "Justitie en Veiligheid",
+    ),
+]
+
+
+def seed_base_organizations() -> None:
+    """Create a small fixed org hierarchy for the offline base profile."""
+    ministerie, _ = OrganizationType.objects.get_or_create(name="Ministerie", defaults={"label": "Ministerie"})
+    onderdeel, _ = OrganizationType.objects.get_or_create(
+        name="Organisatieonderdeel", defaults={"label": "Organisatieonderdeel"}
+    )
+
+    ministries: dict[str, OrganizationUnit] = {}
+    for name, tooi in BASE_MINISTRIES:
+        unit = OrganizationUnit.objects.create(name=name, label=f"Ministerie van {name}", tooi_identifier=tooi)
+        unit.organization_types.add(ministerie)
+        ministries[name] = unit
+
+    for name, tooi, parent_name in BASE_SUBORGS:
+        unit = OrganizationUnit.objects.create(
+            name=name, label=name, tooi_identifier=tooi, parent=ministries.get(parent_name)
+        )
+        unit.organization_types.add(onderdeel)
+
+
+def assign_roles(rng: random.Random, count: int) -> list[str]:
+    """A shuffled list of ``count`` role names in roughly ``ROLE_WEIGHTS``
+    proportion, but guaranteeing at least one of every role when ``count``
+    allows it — a weighted per-item draw can leave a rare role (Beheerder)
+    empty at the small base-profile size."""
+    roles = list(ROLE_WEIGHTS)
+    if count <= len(roles):
+        return roles[:count]
+
+    total = sum(ROLE_WEIGHTS.values())
+    # One of each first, then fill the remainder by proportion.
+    counts = dict.fromkeys(roles, 1)
+    remaining = count - len(roles)
+    for role in roles:
+        counts[role] += round(remaining * ROLE_WEIGHTS[role] / total)
+    # Rounding can drift by a few; correct on the majority role.
+    counts[roles[0]] += count - sum(counts.values())
+
+    result = [role for role, n in counts.items() for _ in range(n)]
+    rng.shuffle(result)
+    return result
+
+
 def classify_orgs_from_db() -> tuple[list[int], list[int]]:
     """Split org PKs into (rijksoverheid_non_root, other) using DB data."""
     ministry_type = OrganizationType.objects.filter(name="Ministerie").first()
@@ -593,211 +701,278 @@ def classify_orgs_from_db() -> tuple[list[int], list[int]]:
     return rijks_non_root, other
 
 
-class Command(BaseCommand):
-    help = "Generate dummy data: sync organizations, then create colleagues, assignments, services, and placements"
+def _seed_all_label_categories() -> None:
+    """Ensure every label category + its labels exist, self-contained.
 
-    def handle(self, *args, **options):  # noqa: C901
-        rng = random.Random(42)  # noqa: S311
-        today = datetime.now(tz=UTC).date()
+    Production seeds Expertise/Thema from ``setup``; the offline base profile
+    seeds them here too so it does not depend on ``setup`` having run. Subgroep
+    is the demo-only "gilde" category the Bezetting page filters on.
+    """
+    from wies.core.models import DEFAULT_LABELS  # noqa: PLC0415 — avoid a heavy import at module load
 
-        # ── 0. Clean up existing dummy data ──────────────────────────────
-        self.stdout.write("Cleaning up existing data...")
-        Placement.objects.all().delete()
-        Service.objects.all().delete()
-        Assignment.objects.all().delete()
-        Colleague.objects.all().delete()
-        OrganizationUnit.objects.update(parent=None)
-        OrganizationUnit.objects.all().delete()
+    for category_name, category_vals in DEFAULT_LABELS.items():
+        category, _ = LabelCategory.objects.get_or_create(
+            name=category_name, defaults={"color": category_vals["color"]}
+        )
+        for label_name in category_vals["labels"]:
+            Label.objects.get_or_create(name=label_name, category=category)
 
-        # ── 1. Organizations (via sync service) ──────────────────────────
-        self.stdout.write("Syncing organizations from organisaties.overheid.nl...")
+    subgroep, _ = LabelCategory.objects.get_or_create(name="Subgroep", defaults={"color": "#DCE3EA"})
+    for label_name in ("ICT", "AI"):
+        Label.objects.get_or_create(name=label_name, category=subgroep)
+
+
+def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
+    """Generate a full set of dummy data for the given size profile.
+
+    Clears the dummy data it owns first, so a second run (e.g. a /staff/ reseed)
+    regenerates cleanly instead of duplicating. Users are kept across runs and
+    reused by email, since deleting them would orphan logins.
+    """
+    rng = random.Random(42)  # noqa: S311
+    today = timezone.now().date()
+
+    # Role groups are needed for the per-colleague user role; seed them if this
+    # runs standalone.
+    from wies.core.roles import setup_roles  # noqa: PLC0415 — local import avoids a heavy import at module load
+
+    setup_roles()
+
+    # ── 0. Clean up existing dummy data ──────────────────────────────
+    write("Cleaning up existing data...")
+    Placement.objects.all().delete()
+    Service.objects.all().delete()
+    # Assignment events carry the assignment PK in object_id (not a FK), so they
+    # do not cascade; clear them here or they pile up over reseeds.
+    Event.objects.filter(object_type="Assignment").delete()
+    Assignment.objects.all().delete()
+    Colleague.objects.all().delete()
+    OrganizationUnit.objects.update(parent=None)
+    OrganizationUnit.objects.all().delete()
+
+    # ── 1. Organizations ─────────────────────────────────────────────
+    if profile.seed_orgs_locally:
+        write("Seeding a small organization hierarchy locally (offline)...")
+        seed_base_organizations()
+    else:
+        write("Syncing organizations from organisaties.overheid.nl...")
         result = sync_organizations()
-        self.stdout.write(
+        write(
             f"  Sync: created={result.created}, updated={result.updated}, "
             f"unchanged={result.unchanged}, deactivated={result.deactivated}"
         )
 
-        org_count = OrganizationUnit.objects.filter(end_date__isnull=True).count()
-        self.stdout.write(f"  Active organizations: {org_count}")
+    org_count = OrganizationUnit.objects.filter(end_date__isnull=True).count()
+    write(f"  Active organizations: {org_count}")
 
-        # ── 2. Skills ────────────────────────────────────────────────────
-        skills = []
-        for name in SKILLS:
-            skill, _ = Skill.objects.get_or_create(name=name)
-            skills.append(skill)
-        self.stdout.write(f"Skills: {len(skills)}")
+    # ── 2. Skills ────────────────────────────────────────────────────
+    skills = []
+    for name in SKILLS:
+        skill, _ = Skill.objects.get_or_create(name=name)
+        skills.append(skill)
+    write(f"Skills: {len(skills)}")
 
-        # ── 3. Classify orgs for assignment distribution ─────────────────
-        rijks_pks, other_pks = classify_orgs_from_db()
-        self.stdout.write(f"Rijksoverheid orgs (non-root): {len(rijks_pks)}, Other orgs: {len(other_pks)}")
+    # ── 3. Classify orgs for assignment distribution ─────────────────
+    rijks_pks, other_pks = classify_orgs_from_db()
+    write(f"Rijksoverheid orgs (non-root): {len(rijks_pks)}, Other orgs: {len(other_pks)}")
 
-        # ── 4. Colleagues ────────────────────────────────────────────────
-        used_emails: set[str] = set()
-        colleagues = []
-        for i in range(1, NUM_COLLEAGUES + 1):
-            name = generate_name(rng)
-            base = sanitize_email(name)
-            email = f"{base}@rijksoverheid.nl"
-            if email in used_emails:
-                email = f"{base}.{i}@rijksoverheid.nl"
-            used_emails.add(email)
+    # ── 4. Colleagues ────────────────────────────────────────────────
+    used_emails: set[str] = set()
+    colleagues = []
+    for i in range(1, profile.num_colleagues + 1):
+        name = generate_name(rng)
+        base = sanitize_email(name)
+        email = f"{base}@rijksoverheid.nl"
+        if email in used_emails:
+            email = f"{base}.{i}@rijksoverheid.nl"
+        used_emails.add(email)
 
-            num_skills = rng.randint(1, 3)
-            chosen_skills = rng.sample(skills, num_skills)
+        num_skills = rng.randint(1, 3)
+        chosen_skills = rng.sample(skills, num_skills)
 
-            colleague = Colleague.objects.create(
-                name=name,
-                email=email,
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
-            )
-            colleague.skills.set(chosen_skills)
-            colleagues.append(colleague)
-        self.stdout.write(f"Colleagues: {len(colleagues)}")
+        colleague = Colleague.objects.create(
+            name=name,
+            email=email,
+            source=weighted_choice(rng, SOURCE_WEIGHTS),
+            source_id="",
+        )
+        colleague.skills.set(chosen_skills)
+        colleagues.append(colleague)
+    write(f"Colleagues: {len(colleagues)}")
 
-        # ── 4b. Colleague labels ─────────────────────────────────────────
-        labels_by_category = {category: list(category.labels.all()) for category in LabelCategory.objects.all()}
-        labels_by_category = {k: v for k, v in labels_by_category.items() if v}
+    # ── 4b. Colleague labels ─────────────────────────────────────────
+    _seed_all_label_categories()
+    labels_by_category = {category: list(category.labels.all()) for category in LabelCategory.objects.all()}
+    labels_by_category = {k: v for k, v in labels_by_category.items() if v}
 
-        if labels_by_category:
-            for colleague in colleagues:
-                colleague_labels = []
-                for labels in labels_by_category.values():
-                    has_enough = len(labels) >= MAX_LABELS_PER_CATEGORY
-                    n = MAX_LABELS_PER_CATEGORY if has_enough and rng.random() < MULTI_LABEL_PROBABILITY else 1
-                    colleague_labels.extend(rng.sample(labels, n))
-                colleague.labels.set(colleague_labels)
-            self.stdout.write("Colleague labels assigned")
-
-        # ── 4c. Colleague suborganization (exactly one per colleague) ────
-        suborganizations = list(Suborganization.objects.all())
-        if suborganizations:
-            for colleague in colleagues:
-                colleague.suborganization = rng.choice(suborganizations)
-                colleague.save(update_fields=["suborganization"])
-            self.stdout.write("Colleague suborganizations assigned")
-
-        # ── 4d. BDM role ─────────────────────────────────────────────────
-        # A subset of colleagues holds the BDM role, via a linked user in the
-        # group. Assignment owners are drawn only from these (see section 5),
-        # matching production where the owner is a BDM.
-        bdm_group, _ = Group.objects.get_or_create(name=BDM_GROUP_NAME)
-        num_bdm = max(1, round(len(colleagues) * BDM_RATIO))
-        bdm_colleagues = rng.sample(colleagues, min(num_bdm, len(colleagues)))
-        for colleague in bdm_colleagues:
-            user = User.objects.create_user(email=colleague.email)
-            user.groups.add(bdm_group)
-            colleague.user = user
-            colleague.save(update_fields=["user"])
-        self.stdout.write(f"BDM colleagues: {len(bdm_colleagues)}")
-
-        # ── 5. Assignments ───────────────────────────────────────────────
-        assignments = []
-
-        for _ in range(NUM_ASSIGNMENTS):
-            is_active = rng.random() < ACTIVE_RATIO
-            start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
-
-            assignment = Assignment.objects.create(
-                name=generate_assignment_name(rng),
-                start_date=start,
-                end_date=end,
-                extra_info="",
-                owner=rng.choice(bdm_colleagues),
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
-            )
-            assignments.append(assignment)
-        self.stdout.write(f"Assignments: {len(assignments)}")
-
-        # ── 6. Assignment ↔ Organization links ───────────────────────────
-        for assignment in assignments:
-            if rng.random() < RIJKSOVERHEID_RATIO and rijks_pks:
-                org_pk = rng.choice(rijks_pks)
-            elif other_pks:
-                org_pk = rng.choice(other_pks)
-            else:
-                org_pk = rng.choice(rijks_pks) if rijks_pks else 1
-            AssignmentOrganizationUnit.objects.create(
-                assignment=assignment,
-                organization_id=org_pk,
-                role="PRIMARY",
-            )
-
-        # ── 7. Services ──────────────────────────────────────────────────
-        all_services: list[Service] = []
-
-        # First pass: each assignment gets at least 1 service
-        shuffled_assignments = list(assignments)
-        rng.shuffle(shuffled_assignments)
-
-        for assignment in shuffled_assignments:
-            skill = rng.choice(skills)
-            service = Service.objects.create(
-                assignment=assignment,
-                description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
-                skill=skill,
-                period_source="ASSIGNMENT",
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
-            )
-            all_services.append(service)
-
-        # Second pass: add extra services until we have enough for placements
-        target_placeable = NUM_PLACEMENTS + 50
-        while len(all_services) < target_placeable:
-            assignment = rng.choice(assignments)
-            skill = rng.choice(skills)
-            service = Service.objects.create(
-                assignment=assignment,
-                description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
-                skill=skill,
-                period_source="ASSIGNMENT",
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
-            )
-            all_services.append(service)
-
-        self.stdout.write(f"Services: {len(all_services)}")
-
-        # ── 8. Placements ────────────────────────────────────────────────
-        placeable_services = list(all_services)
-        rng.shuffle(placeable_services)
-
-        # Determine how many placements each colleague gets
-        colleague_targets: dict[int, int] = {}
+    if labels_by_category:
         for colleague in colleagues:
-            r = rng.random()
-            if r < SINGLE_PLACEMENT_THRESHOLD:
-                colleague_targets[colleague.id] = 1
-            elif r < DOUBLE_PLACEMENT_THRESHOLD:
-                colleague_targets[colleague.id] = 2
-            else:
-                colleague_targets[colleague.id] = rng.randint(3, 4)
+            colleague_labels = []
+            for labels in labels_by_category.values():
+                has_enough = len(labels) >= MAX_LABELS_PER_CATEGORY
+                n = MAX_LABELS_PER_CATEGORY if has_enough and rng.random() < MULTI_LABEL_PROBABILITY else 1
+                colleague_labels.extend(rng.sample(labels, n))
+            colleague.labels.set(colleague_labels)
+        write("Colleague labels assigned")
 
-        placement_count = 0
-        service_idx = 0
+    # ── 4c. Colleague suborganization (exactly one per colleague) ────
+    suborganizations = list(Suborganization.objects.all())
+    if suborganizations:
+        for colleague in colleagues:
+            colleague.suborganization = rng.choice(suborganizations)
+            colleague.save(update_fields=["suborganization"])
+        write("Colleague suborganizations assigned")
 
-        shuffled_colleagues = list(colleagues)
-        rng.shuffle(shuffled_colleagues)
+    # ── 4d. Colleague user + role (most consultants, some BDM, few beheerder) ──
+    user_model = get_user_model()
+    role_groups = {name: Group.objects.get(name=name) for name in ROLE_WEIGHTS}
+    role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
+    roles = assign_roles(rng, len(colleagues))
+    bdm_colleagues = []
+    for colleague, role in zip(colleagues, roles, strict=True):
+        first_name, _, last_name = colleague.name.partition(" ")
+        # A previous run may have left a user with this email (colleagues are
+        # deleted and recreated, users are not); reuse it instead of colliding.
+        user, _ = user_model.objects.get_or_create(
+            email=colleague.email, defaults={"first_name": first_name, "last_name": last_name}
+        )
+        colleague.user = user
+        colleague.save(update_fields=["user"])
+        # Reused users keep their old groups and roles are reshuffled each run, so
+        # drop the role groups before adding the current one
+        user.groups.remove(*role_groups.values())
+        user.groups.add(role_groups[role])
+        role_counts[role] += 1
+        if role == BDM_GROUP_NAME:
+            bdm_colleagues.append(colleague)
+    write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
-        for colleague in shuffled_colleagues:
-            for _ in range(colleague_targets[colleague.id]):
-                if service_idx >= len(placeable_services) or placement_count >= NUM_PLACEMENTS:
-                    break
-                service = placeable_services[service_idx]
-                service_idx += 1
+    # ── 5. Assignments ───────────────────────────────────────────────
+    assignments = []
 
-                Placement.objects.create(
-                    colleague=colleague,
-                    service=service,
-                    period_source="SERVICE",
-                    specific_start_date=None,
-                    specific_end_date=None,
-                    source=weighted_choice(rng, SOURCE_WEIGHTS),
-                    source_id="",
-                )
-                placement_count += 1
+    for _ in range(profile.num_assignments):
+        is_active = rng.random() < ACTIVE_RATIO
+        start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
 
-        self.stdout.write(f"Placements: {placement_count}")
+        assignment = Assignment.objects.create(
+            name=generate_assignment_name(rng),
+            start_date=start,
+            end_date=end,
+            extra_info="",
+            # Owners are drawn only from BDM colleagues, matching production
+            # where the assignment owner is a Business Development Manager.
+            owner=rng.choice(bdm_colleagues),
+            source=weighted_choice(rng, SOURCE_WEIGHTS),
+            source_id="",
+        )
+        assignments.append(assignment)
+        # A couple of audit events per assignment so the events routes have data.
+        create_event(object_type="Assignment", action="create", source="sync", object_id=assignment.id)
+        if rng.random() < EVENT_UPDATE_PROBABILITY:
+            create_event(
+                object_type="Assignment",
+                action="update",
+                source="sync",
+                object_id=assignment.id,
+                context={"name": assignment.name},
+            )
+    write(f"Assignments: {len(assignments)}")
+
+    # ── 6. Assignment ↔ Organization links ───────────────────────────
+    for assignment in assignments:
+        if rng.random() < RIJKSOVERHEID_RATIO and rijks_pks:
+            org_pk = rng.choice(rijks_pks)
+        elif other_pks:
+            org_pk = rng.choice(other_pks)
+        else:
+            org_pk = rng.choice(rijks_pks) if rijks_pks else 1
+        AssignmentOrganizationUnit.objects.create(
+            assignment=assignment,
+            organization_id=org_pk,
+            role="PRIMARY",
+        )
+
+    # ── 7. Services ──────────────────────────────────────────────────
+    all_services: list[Service] = []
+
+    # First pass: each assignment gets at least 1 service
+    shuffled_assignments = list(assignments)
+    rng.shuffle(shuffled_assignments)
+
+    for assignment in shuffled_assignments:
+        skill = rng.choice(skills)
+        service = Service.objects.create(
+            assignment=assignment,
+            description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            skill=skill,
+            period_source="ASSIGNMENT",
+            source=weighted_choice(rng, SOURCE_WEIGHTS),
+            source_id="",
+        )
+        all_services.append(service)
+
+    # Second pass: add extra services until we have enough for placements
+    target_placeable = profile.num_placements + 50
+    while len(all_services) < target_placeable:
+        assignment = rng.choice(assignments)
+        skill = rng.choice(skills)
+        service = Service.objects.create(
+            assignment=assignment,
+            description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            skill=skill,
+            period_source="ASSIGNMENT",
+            source=weighted_choice(rng, SOURCE_WEIGHTS),
+            source_id="",
+        )
+        all_services.append(service)
+
+    write(f"Services: {len(all_services)}")
+
+    # ── 8. Placements ────────────────────────────────────────────────
+    placeable_services = list(all_services)
+    rng.shuffle(placeable_services)
+
+    # Determine how many placements each colleague gets
+    colleague_targets: dict[int, int] = {}
+    for colleague in colleagues:
+        r = rng.random()
+        if r < SINGLE_PLACEMENT_THRESHOLD:
+            colleague_targets[colleague.id] = 1
+        elif r < DOUBLE_PLACEMENT_THRESHOLD:
+            colleague_targets[colleague.id] = 2
+        else:
+            colleague_targets[colleague.id] = rng.randint(3, 4)
+
+    placement_count = 0
+    service_idx = 0
+
+    shuffled_colleagues = list(colleagues)
+    rng.shuffle(shuffled_colleagues)
+
+    for colleague in shuffled_colleagues:
+        for _ in range(colleague_targets[colleague.id]):
+            if service_idx >= len(placeable_services) or placement_count >= profile.num_placements:
+                break
+            service = placeable_services[service_idx]
+            service_idx += 1
+
+            Placement.objects.create(
+                colleague=colleague,
+                service=service,
+                period_source="SERVICE",
+                specific_start_date=None,
+                specific_end_date=None,
+                source=weighted_choice(rng, SOURCE_WEIGHTS),
+                source_id="",
+            )
+            placement_count += 1
+
+    write(f"Placements: {placement_count}")
+
+
+class Command(BaseCommand):
+    help = "Generate the full dummy dataset (network sync). Alias for load_dummy_data --profile full."
+
+    def handle(self, *args, **options):
+        generate(PROFILES["full"], write=self.stdout.write)
         self.stdout.write(self.style.SUCCESS("Done!"))

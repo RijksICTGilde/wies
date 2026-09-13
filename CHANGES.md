@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 632: (post-release actions) new "Business management" page with a "Bezetting" timeline.
+- 632: dummy data is now generated from one command with two size profiles — `load_dummy_data --profile base` (small, offline; used by `just setup` and the /staff/ "Dummy data genereren" button) and `--profile full` (large, syncs organizations).
 - 636: the limited-visibility warning on finished and planned placements moved onto the placement's own row
 - 636: finished and future opdrachten and plaatsingen are now visible to Business Managers (the BDM role) and support staff, instead of only to the opdracht owner
 - 636: editing and deleting an opdracht now also requires the BDM role, so an owner outside that role no longer has edit rights

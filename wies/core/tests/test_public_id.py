@@ -60,9 +60,9 @@ class AssignmentPublicIdTests(TestCase):
 
         assert a.public_id == original
 
-    def test_base_fixture_loads_and_every_assignment_has_a_public_id(self):
-        """Every assignment in the committed base fixture has a public_id."""
-        call_command("loaddata", "base_dummy_data.json", verbosity=0)
+    def test_base_data_generates_and_every_assignment_has_a_public_id(self):
+        """Every assignment the base generator creates has a public_id."""
+        call_command("load_dummy_data", "--profile", "base", verbosity=0)
 
         total = Assignment.objects.count()
         assert total > 0
@@ -163,8 +163,8 @@ class ColleaguePublicIdTests(TestCase):
         assert_is_public_id(c1.public_id)
         assert c1.public_id != c2.public_id
 
-    def test_base_fixture_loads_and_every_colleague_has_a_public_id(self):
-        call_command("loaddata", "base_dummy_data.json", verbosity=0)
+    def test_base_data_generates_and_every_colleague_has_a_public_id(self):
+        call_command("load_dummy_data", "--profile", "base", verbosity=0)
 
         assert Colleague.objects.count() > 0
         assert Colleague.objects.filter(public_id__isnull=True).count() == 0
