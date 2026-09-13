@@ -248,10 +248,17 @@ def colleague_occupancy(
     if labels_by_category:
         colleagues = colleagues.distinct()
 
+    # Materialise the row set once for both placement queries below
+    colleagues = list(colleagues)
+    colleague_ids = [colleague.id for colleague in colleagues]
+
     # All placements overlapping the horizon, in one query. Overlap = starts on or
     # before the horizon end AND (no end, or ends on or after the horizon start).
+    # Scoped to the rows being rendered — the whole-table scan cost nothing the
+    # page uses, since a placement of a non-consultant (or a filtered-out
+    # colleague) is never looked up.
     horizon_placements = (
-        annotate_placement_dates(Placement.objects.all())
+        annotate_placement_dates(Placement.objects.filter(colleague_id__in=colleague_ids))
         .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=horizon_end))
         .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=horizon_start))
         .select_related("service__assignment", "service__skill")
@@ -262,14 +269,17 @@ def colleague_occupancy(
 
     # How long each colleague has been free, which the horizon cannot answer: the
     # placement that ended is usually older than the window the timeline draws.
-    # One aggregate over every finished placement, not a per-row query.
+    # One aggregate over every finished placement, not a per-row query. Scoped to
+    # the rendered colleagues: this scans historical placements, which grow
+    # unbounded with time, so restricting it to the rows shown keeps the page's
+    # cost proportional to what it displays rather than to all history.
     # Walked oldest-first so the last write per colleague is their most recent
     # finished placement: one pass gives both the date and the role, where an
     # aggregate could only give the date. select_related keeps it one query.
     last_end_by_colleague: dict[int, date] = {}
     last_role_by_colleague: dict[int, str] = {}
     finished = (
-        annotate_placement_dates(Placement.objects.all())
+        annotate_placement_dates(Placement.objects.filter(colleague_id__in=colleague_ids))
         .filter(actual_end_date__lt=today)
         .select_related("service__skill")
         .order_by("actual_end_date")

@@ -613,9 +613,6 @@ def historic_dates(rng: random.Random, ref: date) -> tuple[date, date]:
 
 # ── Offline organizations (base profile) ─────────────────────────────────────
 # A small, fixed hierarchy so the base profile works without the network sync.
-# Names and TOOI identifiers mirror the real ministries so the data reads true;
-# the type name "ministerie" matches what the live sync stores (lowercase), so
-# classify_orgs_from_db() behaves the same offline as online.
 BASE_MINISTRIES = [
     ("Algemene Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010"),
     ("Binnenlandse Zaken en Koninkrijksrelaties", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"),
@@ -644,9 +641,9 @@ BASE_SUBORGS = [
 
 def seed_base_organizations() -> None:
     """Create a small fixed org hierarchy for the offline base profile."""
-    ministerie, _ = OrganizationType.objects.get_or_create(name="ministerie", defaults={"label": "Ministerie"})
+    ministerie, _ = OrganizationType.objects.get_or_create(name="Ministerie", defaults={"label": "Ministerie"})
     onderdeel, _ = OrganizationType.objects.get_or_create(
-        name="organisatieonderdeel", defaults={"label": "Organisatieonderdeel"}
+        name="Organisatieonderdeel", defaults={"label": "Organisatieonderdeel"}
     )
 
     ministries: dict[str, OrganizationUnit] = {}
@@ -841,6 +838,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         )
         colleague.user = user
         colleague.save(update_fields=["user"])
+        # Reused users keep their old groups and roles are reshuffled each run, so
+        # drop the role groups before adding the current one
+        user.groups.remove(*role_groups.values())
         user.groups.add(role_groups[role])
         role_counts[role] += 1
         if role == BDM_GROUP_NAME:
