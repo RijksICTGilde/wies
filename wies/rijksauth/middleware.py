@@ -26,3 +26,21 @@ class AutoLoginMiddleware:
                 login(request, user, backend="wies.rijksauth.auth_backend.AuthBackend")
                 logger.info("Auto-login: logged in as %s", user)
         return self.get_response(request)
+
+
+STAFF_OVERRIDE_SESSION_KEY = "wies_staff_override"
+
+
+class StaffOverrideMiddleware:
+    """Local only: carries the session's staff switch onto the user object, where
+    ``is_staff_member`` reads it. Registered by the local settings after the
+    auto-login, so the switch sees the logged-in user."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, "user", None)
+        if user is not None and user.is_authenticated:
+            user.wies_staff_override = request.session.get(STAFF_OVERRIDE_SESSION_KEY)
+        return self.get_response(request)

@@ -2397,6 +2397,22 @@ def user_theme(request):
 
 
 @login_required
+@require_POST
+def dev_staff_toggle(request):
+    """Local only: flips the session's staff switch and returns to the page.
+
+    Testing every staff rule from one account beats editing STAFF_EMAILS and
+    restarting; outside DEBUG the switch does not exist.
+    """
+    if not settings.DEBUG:
+        raise Http404
+    from wies.rijksauth.middleware import STAFF_OVERRIDE_SESSION_KEY  # noqa: PLC0415 — dev-only, keeps the import local
+
+    request.session[STAFF_OVERRIDE_SESSION_KEY] = not is_staff_member(request.user)
+    return redirect(_safe_return_path(request.POST.get("terug"), "/"))
+
+
+@login_required
 def profile_name_edit(request):
     """First and last name of the logged-in user, in one sheet.
 

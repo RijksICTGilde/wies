@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- ?: local development only: the user menu gets a "Staff-rechten aan/uit" switch that grants or revokes support-staff rights for the session, so both sides of every staff rule can be tested from one account
 
 ## 2026-09-13
 

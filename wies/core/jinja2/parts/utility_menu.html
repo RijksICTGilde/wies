@@ -36,6 +36,13 @@
     </nldd-menu>
     </nldd-menu-item>
   {% endif %}
+  {% if DEBUG %}
+    <nldd-menu-divider></nldd-menu-divider>
+    {# Local only: staff rights on or off for this session, to test both sides of
+       the staff rules from one account. menu_nav.js posts data-post-url with the
+       csrf token below; the page reloads with the new rights. #}
+    <nldd-menu-item text="{{ 'Staff-rechten uit' if show_staff_pages(request) else 'Staff-rechten aan' }}" icon="{{ 'lock-closed' if show_staff_pages(request) else 'lock-open' }}" data-post-url="{{ url('dev-staff-toggle') }}" data-post-return="{{ request.get_full_path() }}"></nldd-menu-item>
+  {% endif %}
   <nldd-menu-divider></nldd-menu-divider>
   {# Uitloggen is POST-only (require_POST, zie rijksauth.views.logout) om
      forced-logout via een andere site te blokkeren. Geen data-href (dat zou een
