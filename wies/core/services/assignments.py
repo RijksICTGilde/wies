@@ -48,6 +48,7 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
     cd = form.cleaned_data
     skill = _resolve_skill_from_cleaned(cd)
     description = cd.get("description", "")
+    hours_per_week = cd.get("hours_per_week")
     has_custom_period = cd.get("has_custom_period", False)
     start = cd.get("placement_start_date")
     end = cd.get("placement_end_date")
@@ -65,8 +66,9 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
             raise ValidationError(msg)
         service.description = description
         service.skill = skill
+        service.hours_per_week = hours_per_week
         service.status = "OPEN"
-        update_fields = ["description", "skill", "status"]
+        update_fields = ["description", "skill", "hours_per_week", "status"]
         if has_custom_period:
             service.period_source = Service.SERVICE
             service.specific_start_date = start
@@ -82,6 +84,7 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
             "assignment": assignment,
             "description": description,
             "skill": skill,
+            "hours_per_week": hours_per_week,
             "status": "OPEN",
             "source": "wies",
         }

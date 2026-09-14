@@ -2,12 +2,14 @@
    this on every filter change (hx-target="#results"); the filter sheet swaps back
    separately as OOB so its counts and selection follow. #}
 {% from "parts/filter_chips.html" import filter_chips %}
-<nldd-container id="results">
+{# data-wies-announce-rows: filter_interactions.js announces the row count after a swap. #}
+<nldd-container id="results" data-wies-announce-rows=".bezetting-row">
 {% set has_active_filters = active_filters|length > 0 %}
 {# Samenvatting — each card is an independent status filter (OR-toggle). The card
-   is a native <button> (keyboard-accessible for free) carrying a hidden checkbox
-   named "status" with data-filter-input; the #filter-form's hx-include picks it
-   up and filter_interactions.js re-submits on toggle. Counts stay the full
+   is a native <button> (keyboard-accessible for free). It carries no input of its
+   own: the same status is a group in the filter sheet, and two checkboxes with
+   one name submitted the value twice, which came back as two identical chips.
+   filter_interactions.js ticks the sheet's copy and re-submits. Counts stay the full
    population within the merk/label selection, so they don't change when toggled. #}
 {% macro status_card(status, count, label, short=none) %}
   {% set is_active = status in selected_statuses %}
@@ -34,27 +36,46 @@
     </span>
     </nldd-container>
     </nldd-card>
-    <input type="checkbox"
-           name="status"
-           value="{{ status }}"
-           data-filter-input
-           hidden
-           {% if is_active %}checked{% endif %} />
   </button>
 {% endmacro %}
-<ul class="bezetting-toolbar" aria-label="Filters">
-  {# Short captions: the row shrinks these three before anything else, and the
-     longer phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to
-     an unreadable stub well before a laptop's width ran out. The card's
-     accessible label still carries the full sentence for a screen reader. #}
-  <li>{{ status_card('bench', bench_count, 'op de bank') }}</li>
-  <li>{{ status_card('full', full_count, 'volledig ingezet', 'ingezet') }}</li>
-  <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
-  {# user_filter.js listens for data-user-filter-open. #}
-  <li>
-    <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
-  </li>
-</ul>
+{# The status shortcuts and the Filters button read as one row, but the cards
+   sit OUTSIDE nldd-toolbar on purpose. Inside it, the toolbar measures the row
+   and moves them into its overflow menu, and these four have no menu twin (their
+   statuses are a group in the filter sheet), which left a ⋯ button whose menu
+   read "Geen opties beschikbaar". Out here CSS hides them at the width where the
+   row stops holding them; the sheet keeps every status reachable.
+
+   The toolbar itself holds what must survive any width: the Filters button, with
+   an nldd-menu-item twin for the overflow menu. The menu shows a CLONE of the
+   twin and reports back as `select` on the original, so user_filter.js listens
+   for that too. #}
+<div class="bezetting-toolbar-row">
+  <ul class="bezetting-toolbar__stats" aria-label="Statusfilters">
+    {# Short captions: the row shrinks these before anything else, and the longer
+       phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to an
+       unreadable stub well before a laptop's width ran out. The card's accessible
+       label still carries the full sentence for a screen reader. #}
+    <li>{{ status_card('bench', bench_count, 'op de bank') }}</li>
+    <li>{{ status_card('partial', partial_count, 'deels beschikbaar', 'deels vrij') }}</li>
+    {# No card for "volledig ingezet": the page is read for who is free, and the
+       status stays in the sheet for the odd time it is wanted. #}
+    <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
+  </ul>
+  <nldd-toolbar label="Filters en acties">
+  {# Last to go: the cards are a shortcut, this is the way to every filter. #}
+  <nldd-toolbar-item slot="end" priority="3">
+  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filters" data-user-filter-open></nldd-menu-item>
+  </nldd-toolbar-item>
+  {# The same create action as on Aanvragen, with its menu twin. #}
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end" priority="2">
+    {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-toolbar>
+</div>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% if has_active_filters %}
   {{ filter_chips(filter_groups, active_filters) }}
@@ -84,8 +105,8 @@
   </div>
   {# One row shape for both sections: a bench row is the same row plus its
      free-since line, so the two cannot drift apart. #}
-  {% macro timeline_row(row, compact=false) %}
-    <div class="bezetting-row bezetting-row--{{ row.bucket }}{% if compact %} bezetting-row--compact{% endif %}"
+  {% macro timeline_row(row) %}
+    <div class="bezetting-row bezetting-row--{{ row.bucket }}"
          style="--bezetting-lanes: {{ row.lane_count }}">
       <a class="bezetting-row__side"
          href="{{ row.colleague.panel_url }}"
@@ -96,18 +117,32 @@
              name: there it read as if the COLLEAGUE stopped, while someone on
              two opdrachten may have one wrapping up and another running on for
              months. Which section a row is in says bench vs. ingezet. #}
+        {# Two lines per person, as an nldd-identity: the name, then what they
+             do and what is still free. Someone exactly full shows no hours at
+             all, someone over their contract shows by how much; unknown stays
+             visible, as that is what keeps them out of the "deels beschikbaar"
+             count. #}
+        {% if row.next_contract %}
+          {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
+        {% elif row.contract_hours is none and row.contract_ended %}
+          {% set hours_text = "geen lopend contract" %}
+        {% elif row.contract_hours is none %}
+          {% set hours_text = "contracturen onbekend" %}
+        {% elif row.unfilled_hours is none %}
+          {% set hours_text = "uren van rol onbekend" %}
+        {% elif row.unfilled_hours > 0 %}
+          {% set hours_text = row.unfilled_hours ~ " uur vrij" %}
+        {% elif row.unfilled_hours < 0 %}
+          {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" %}
+        {% else %}
+          {% set hours_text = none %}
+        {% endif %}
         <div class="bezetting-person">
-          <nldd-avatar size="28" name="{{ row.colleague.name }}" decorative></nldd-avatar>
-          {# A span, not <strong>: the weight is visual hierarchy within the
-               row, not emphasis a screen reader should announce. #}
-          <span class="bezetting-person__name">{{ row.colleague.name }}</span>
-          {# What this person does. On the bench this is their most recent role
-               rather than a current one; the row already sits under "Op de bank",
-               so the qualifier that used to precede it said what the section had
-               said already. #}
-          {% if row.role %}
-            <span class="bezetting-person__role">{{ row.role }}</span>
-          {% endif %}
+          {# On the bench the role is the most recent one rather than a current
+               one; the row already sits under "Op de bank", so no qualifier. #}
+          <nldd-identity text="{{ row.colleague.name }}" supporting-text="{{ [row.role, hours_text]|select|join(' · ') }}">
+          <nldd-avatar slot="avatars" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+          </nldd-identity>
           {# The gilde a colleague belongs to, and only that category: showing
                it on the row is what makes a filtered view explainable ("why is
                this person here"), while the full expertise list would fill the
@@ -151,12 +186,12 @@
                  style="left: {{ seg.left_pct }}%;
                         width: {{ seg.width_pct }}%;
                         top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
-                 title="{{ seg.assignment_name }}{% if seg.end %} — loopt tot {{ seg.end|datum_nl('j b Y') }}{% endif %}">
+                 title="{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} uur{% endif %}{% if seg.end %} — loopt tot {{ seg.end|datum_nl('j b Y') }}{% endif %}">
               {# djlint:on #}
               {# A bar too narrow for its name renders a stray "I..."; the
                    title attribute still carries it. #}
               {% if not seg.too_narrow %}
-                <span class="bezetting-seg__label">{{ seg.assignment_name }}</span>
+                <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} uur{% endif %}</span>
               {% endif %}
               {% if seg.ending_level != "calm" %}
                 {# Days remaining rather than the end date: how soon someone
@@ -180,7 +215,7 @@
        thing a list of names could not answer. No headings between the two: the
        hatched free stretch already says which rows are the empty ones, and the
        counts they carried are on the cards above. #}
-    {% for row in bench_rows %}{{ timeline_row(row, compact=true) }}{% endfor %}
+    {% for row in bench_rows %}{{ timeline_row(row) }}{% endfor %}
     {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
     {% if not bench_rows and not rows %}
       {# nldd-inline-dialog is the empty state across the app (see

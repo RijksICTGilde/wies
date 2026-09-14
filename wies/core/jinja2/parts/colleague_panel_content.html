@@ -24,6 +24,7 @@
   </nldd-title-cell>
   </nldd-list-item>
   </nldd-list>
+  {% set contract_block = panel_data.contract_block %}
   {% if colleague.suborganization %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
@@ -40,6 +41,14 @@
       <nldd-tag>{{ label.name }}</nldd-tag>
     {% endfor %}
     </nldd-container>
+  {% endif %}
+  {# Contract hours are for who plans with them (BM, beheerder, staff); a
+     consultant sees only their own, on the profile. The block carries buttons
+     only for beheerder and staff. The hours of a role on an aanvraag are
+     another matter and stay visible to everyone. #}
+  {% if panel_data.can_view_contract %}
+    <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% include "parts/contract_periods_block.html" %}
   {% endif %}
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <nldd-title size="4">

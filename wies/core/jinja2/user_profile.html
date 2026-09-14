@@ -34,6 +34,10 @@ empty sidebar #}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     <nldd-button size="sm" start-icon="edit" text="Naam wijzigen" hx-get="{{ url('profile-name-edit') }}" hx-target="#profileNameModal" hx-swap="innerHTML"></nldd-button>
     <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% if contract_block %}
+      {% include "parts/contract_periods_block.html" %}
+      <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% endif %}
     {% if colleague and colleague.suborganization %}
       <nldd-title size="5">
       <h2>Merk</h2>
