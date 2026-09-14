@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 668: the user menu has a "Staff-rechten" switch that turns support-staff rights on or off for the session, so the app can be tested with and without them from one account; local development only
 
 ## 2026-09-13
 

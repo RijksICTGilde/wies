@@ -50,6 +50,7 @@ from wies.core.visibility_rules import (
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
 )
+from wies.rijksauth.middleware import STAFF_OVERRIDE_SESSION_KEY
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -2394,6 +2395,19 @@ def user_theme(request):
     colleague.theme = theme
     colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
+
+
+@login_required
+@require_POST
+def dev_staff_toggle(request):
+    """Flips the session's staff switch and returns to the page. Local only."""
+    if not settings.DEBUG:
+        raise Http404
+    staff = not is_staff_member(request.user)
+    request.session[STAFF_OVERRIDE_SESSION_KEY] = staff
+    # The reload closes the menu, so the notification shows the result.
+    messages.info(request, f"Staff-rechten {'aan' if staff else 'uit'} voor deze sessie.")
+    return redirect(_safe_return_path(request.POST.get("terug"), "/"))
 
 
 @login_required

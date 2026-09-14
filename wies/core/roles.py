@@ -47,7 +47,13 @@ def is_staff_member(user) -> bool:
     and as a per-row edit- and visibility-predicate (e.g. in ``update_assignment``
     and ``is_bdm_or_staff``).
     """
-    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
+    if not user.is_authenticated:
+        return False
+    # The session switch from the user menu (StaffOverrideMiddleware), local only.
+    override = getattr(user, "wies_staff_override", None)
+    if settings.DEBUG and override is not None:
+        return override
+    return user.email.lower() in settings.STAFF_EMAILS
 
 
 def is_bdm_or_staff(request) -> bool:

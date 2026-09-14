@@ -33,6 +33,9 @@ if SKIP_OIDC:
     MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
     MIDDLEWARE.append("wies.rijksauth.middleware.AutoLoginMiddleware")
 
+# After the auto-login, so the switch sees the logged-in user.
+MIDDLEWARE.append("wies.rijksauth.middleware.StaffOverrideMiddleware")
+
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
 LOGGING = {
