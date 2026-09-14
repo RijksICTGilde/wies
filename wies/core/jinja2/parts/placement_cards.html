@@ -9,7 +9,7 @@
 {% for card in cards %}
   <nldd-card background="tinted" accessible-label="{{ card.name }}" href="{{ card.panel_url }}" hx-get="{{ card.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
-  {% if active_view == 'opdracht' %}
+  {% if active_view == "opdracht" %}
     <nldd-title size="5">
     <h3>{{ card.name }}</h3>
     </nldd-title>
@@ -55,7 +55,7 @@
   </nldd-container>
   <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
   <nldd-list variant="simple" dividers="never" accessible-label="Gegevens">
-  {% if active_view == 'opdracht' %}
+  {% if active_view == "opdracht" %}
     {% if card.client %}
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
