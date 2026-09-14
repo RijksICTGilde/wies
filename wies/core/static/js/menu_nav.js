@@ -2,8 +2,7 @@
 // shadow root and cannot be wrapped in a form.
 const HREF_CARRIERS = new Set(["nldd-menu-item", "nldd-icon-button"]);
 
-// Posts to the URL with the csrf token already in the markup; `fields` are
-// extra hidden inputs (name → value).
+// Posts to the URL with the csrf token already in the markup, plus `fields`.
 function submitPost(url, fields = {}) {
   const token = document.querySelector(
     'input[name="csrfmiddlewaretoken"]',
@@ -42,11 +41,9 @@ document.addEventListener("click", (e) => {
   else window.location.href = carrier.dataset.href;
 });
 
-// A switch that posts its new state (the local staff switch in the user menu).
-// On click, not on change: the switch's change event stays inside its shadow
-// root when the knob itself is clicked, and only the label click surfaces one.
-// The server flips the state, so a click is all it needs; a label click also
-// clicks the inner input, hence the once-only guard. The page reloads after.
+// The staff switch in the user menu. On click rather than change: a click on
+// the knob leaves the change event inside the switch's shadow root. A label
+// click also clicks the knob, hence the once-only guard.
 document.addEventListener("click", (e) => {
   const field = e
     .composedPath()
@@ -58,7 +55,7 @@ document.addEventListener("click", (e) => {
     );
   if (!field || field.dataset.posting) return;
   field.dataset.posting = "1";
-  // A beat for the knob to be seen moving before the reload takes the menu.
+  // Long enough to see the knob move before the reload.
   setTimeout(
     () =>
       submitPost(field.dataset.postUrl, {

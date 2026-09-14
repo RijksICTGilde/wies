@@ -50,6 +50,7 @@ from wies.core.visibility_rules import (
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
 )
+from wies.rijksauth.middleware import STAFF_OVERRIDE_SESSION_KEY
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -2399,19 +2400,12 @@ def user_theme(request):
 @login_required
 @require_POST
 def dev_staff_toggle(request):
-    """Local only: flips the session's staff switch and returns to the page.
-
-    Testing every staff rule from one account beats editing STAFF_EMAILS and
-    restarting; outside DEBUG the switch does not exist.
-    """
+    """Flips the session's staff switch and returns to the page. Local only."""
     if not settings.DEBUG:
         raise Http404
-    from wies.rijksauth.middleware import STAFF_OVERRIDE_SESSION_KEY  # noqa: PLC0415 — dev-only, keeps the import local
-
     staff = not is_staff_member(request.user)
     request.session[STAFF_OVERRIDE_SESSION_KEY] = staff
-    # The page reloads with the new rights, which closes the menu before the
-    # switch is seen moving; the notification says what happened.
+    # The reload closes the menu, so the notification shows the result.
     messages.info(request, f"Staff-rechten {'aan' if staff else 'uit'} voor deze sessie.")
     return redirect(_safe_return_path(request.POST.get("terug"), "/"))
 

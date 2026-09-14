@@ -32,9 +32,8 @@ STAFF_OVERRIDE_SESSION_KEY = "wies_staff_override"
 
 
 class StaffOverrideMiddleware:
-    """Local only: carries the session's staff switch onto the user object, where
-    ``is_staff_member`` reads it. Registered by the local settings after the
-    auto-login, so the switch sees the logged-in user."""
+    """Carries the session's staff switch onto the user, where is_staff_member
+    reads it. Local only; registered after the auto-login."""
 
     def __init__(self, get_response):
         self.get_response = get_response

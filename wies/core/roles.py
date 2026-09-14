@@ -49,9 +49,7 @@ def is_staff_member(user) -> bool:
     """
     if not user.is_authenticated:
         return False
-    # Local only: a per-session switch in the user menu (StaffOverrideMiddleware)
-    # so a developer can test both sides of every staff rule without editing
-    # STAFF_EMAILS. Never consulted outside DEBUG.
+    # The session switch from the user menu (StaffOverrideMiddleware), local only.
     override = getattr(user, "wies_staff_override", None)
     if settings.DEBUG and override is not None:
         return override
