@@ -23,15 +23,15 @@
         {{ content[field_name].as_field_group() }}
       {% endif %}
     {% endfor %}
-    {# Periods save on their own, from a sheet on top of this one; the block
-       only lists them. #}
-    {% if contract_block is defined and contract_block %}
-      <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-      {% include "parts/contract_periods_block.html" %}
-    {% endif %}
   {% endif %}
   <nldd-form-actions>
   <nldd-button variant="{{ 'destructive' if warning_modal else 'primary' }}" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>
+{# Below the form, not in it: the periods save on their own from a sheet on top
+   of this one, and their delete post must not carry the user's fields along. #}
+{% if contract_block is defined and contract_block %}
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  {% include "parts/contract_periods_block.html" %}
+{% endif %}

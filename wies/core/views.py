@@ -24,6 +24,7 @@ from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpRespo
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
@@ -63,6 +64,7 @@ from .forms import (
     UserForm,
 )
 from .models import (
+    DEFAULT_HOURS_PER_WEEK,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -99,7 +101,6 @@ from .services.occupancy import (
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
-    contract_hours_on,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -452,8 +453,11 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "contract_hours": contract_hours_on(colleague.contract_periods.all(), timezone.now().date()),
         "contract_block": _contract_block(colleague, "panel", request.user),
+        # Who plans with the hours may read them; keeping them is beheer.
+        "can_view_contract": is_bdm(request.user)
+        or is_staff_member(request.user)
+        or request.user.has_perm("rijksauth.change_user"),
         "assignments": assignments,
     }
 
@@ -635,12 +639,19 @@ def _bezetting_status_group(selected, summary):
         if value in selected:
             option["selected"] = True
         options.append(option)
+    real_options = options[1:]
     return {
         "type": "select-multi",
         "name": "status",
         "label": "Status",
         "options": options,
         "selected_values": list(selected),
+        # Finalized by hand, outside _finalize_filter_groups: that keeps the top
+        # three by count and hides the rest behind "Meer…", which would drop the
+        # hidden input of the fourth status and leave its card dead.
+        "group_id": "status",
+        "top_options": real_options,
+        "has_more": False,
     }
 
 
@@ -711,8 +722,8 @@ def bezetting(request):
     # Status also lives in the sheet, not only on the cards: on a narrow window
     # the cards are hidden, and a filter you cannot reach is a filter you cannot
     # switch off.
-    filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
     _finalize_filter_groups(filter_groups)
+    filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
 
     active_filters = {}
     if merk.active_values:
@@ -2234,15 +2245,16 @@ def user_edit(request, public_id):
     return HttpResponse(status=405)
 
 
-def _colleague_delete_note(colleague, today):
+def _colleague_delete_note(colleague):
     """What deleting the user leaves behind, for the confirm dialog: the colleague
     stays with their placements, and their contract ends on the chosen day."""
     if colleague is None:
         return ""
-    note = " Het collegaprofiel blijft bestaan, met de plaatsingen op opdrachten."
-    hours = contract_hours_on(colleague.contract_periods.all(), today)
-    if hours is not None:
-        return note + f" De contractperiode van {hours} uur eindigt op de dag hieronder."
+    note = " Het collegaprofiel en de plaatsingen op opdrachten blijven bestaan."
+    if colleague.contract_periods.exists():
+        # In general terms: with a backdated day an earlier period may be the
+        # one that ends, and later ones go, so naming today's hours would lie.
+        return note + " Het contract eindigt op de dag hieronder."
     return note
 
 
@@ -2261,7 +2273,7 @@ def user_delete(request, public_id):
                 "content": form,
                 "dialog_supporting": (
                     f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Verwijderen is permanent en niet terug te draaien." + _colleague_delete_note(colleague, today)
+                    "Dit is niet terug te draaien." + _colleague_delete_note(colleague)
                 ),
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
             },
@@ -2274,31 +2286,38 @@ def user_delete(request, public_id):
         if form is not None and not form.is_valid():
             return render_modal(form)
         label_names = [label.name for label in colleague.labels.all()] if colleague else []
-        # The colleague outlives the user (SET_NULL), so their contract has to
-        # end here or Bezetting keeps counting hours nobody fills.
-        ended = close_contract_periods(colleague, form.cleaned_data["left_on"]) if colleague else None
-        context = {
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "label_names": label_names,
-            "group_names": [g.name for g in user.groups.all()],
-            "contract_hours_ended": ended.hours_per_week if ended else None,
-            "left_on": ended.end_date.isoformat() if ended else None,
-        }
+        # The colleague outlives the user (SET_NULL) with their placements, and
+        # drops off Bezetting with the user. The contract ends here so the
+        # colleague panel and the history say when the hours stopped.
         # Capture the int PK before delete() nulls it; Event.object_id keeps
         # referencing the internal id, not the public_id.
         user_pk = user.id
-        user.delete()
-        create_event(
-            object_type="User",
-            action="delete",
-            source="user",
-            object_id=user_pk,
-            user=request.user,
-            request=request,
-            context=context,
-        )
+        # One transaction: a contract ended without the user gone, or a user
+        # gone without a trace, would both be worse than the failure itself.
+        with transaction.atomic():
+            ended, dropped = (
+                close_contract_periods(colleague, form.cleaned_data["left_on"]) if colleague else (None, [])
+            )
+            context = {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "label_names": label_names,
+                "group_names": [g.name for g in user.groups.all()],
+                "left_on": form.cleaned_data["left_on"].isoformat() if colleague else None,
+                "contract_ended": _contract_period_snapshot(ended) if ended else None,
+                "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+            }
+            user.delete()
+            create_event(
+                object_type="User",
+                action="delete",
+                source="user",
+                object_id=user_pk,
+                user=request.user,
+                request=request,
+                context=context,
+            )
         name = f"{user.first_name} {user.last_name}".strip() or user.email
         messages.success(request, f"{name} is verwijderd.")
         response = HttpResponse(status=200)
@@ -2571,12 +2590,43 @@ def _contract_block(colleague, surface, user):
     }
 
 
+def _contract_period_event(request, period, action, before=None):
+    """Logs a contract-period change on the colleague's user.
+
+    Colleague is not an audit object type, and the hours belong to the person,
+    so the event sits with the user like the user's own deletion does. A
+    colleague without a user leaves no event; nothing displays these yet.
+    """
+    if period.colleague.user_id is None:
+        return
+    snapshot = _contract_period_snapshot(period)
+    create_event(
+        object_type="User",
+        action="update",
+        source="user",
+        object_id=period.colleague.user_id,
+        user=request.user,
+        request=request,
+        context={"field_name": "contract_periods", "action": action, "before": before, "after": snapshot},
+    )
+
+
+def _contract_period_snapshot(period):
+    return {
+        "hours_per_week": period.hours_per_week,
+        "start_date": period.start_date.isoformat(),
+        "end_date": period.end_date.isoformat() if period.end_date else None,
+    }
+
+
 def _contract_period_sheet(request, period, post_url, contract_block):
     """Add or edit one contract period in a sheet; a save swaps the block back in."""
     if request.method == "POST":
+        before = _contract_period_snapshot(period) if period.pk else None
         form = ContractPeriodForm(request.POST, instance=period)
         if form.is_valid():
             form.save()
+            _contract_period_event(request, period, "update" if before else "create", before)
             return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
     else:
         form = ContractPeriodForm(instance=period)
@@ -2613,15 +2663,35 @@ def contract_period_edit(request, public_id):
 
 
 @login_required
-@require_POST
 def contract_period_delete(request, public_id):
+    """GET asks in the shared confirm modal; POST deletes and swaps the block back
+    in through the same response as a save, which also empties the mount the
+    modal sits in."""
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    if request.method != "POST":
+        return render(
+            request,
+            "parts/confirm_delete_modal.html",
+            {
+                "dialog_text": "Contractperiode verwijderen?",
+                "dialog_supporting": (
+                    f"De periode van {period.hours_per_week} uur vanaf {date_format(period.start_date, 'j b Y')} "
+                    "verdwijnt uit de geschiedenis. Een periode afsluiten kan ook met een einddatum."
+                ),
+                "confirm_label": "Verwijder periode",
+                "cancel_label": "Behoud periode",
+                "form_post_url": reverse("contract-period-delete", args=[period.public_id]) + f"?in={surface}",
+            },
+        )
     colleague = period.colleague
+    before = _contract_period_snapshot(period)
     period.delete()
-    block = _contract_block(colleague, _contract_surface(request), request.user)
-    return render(request, "parts/contract_periods_block.html", {"contract_block": block})
+    _contract_period_event(request, period, "delete", before)
+    block = _contract_block(colleague, surface, request.user)
+    return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 
 @login_required
@@ -4488,7 +4558,11 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
         teamlid = request.GET.get("teamlid", "")
         if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
             filled = teamlid == "nieuw-ingevuld"
-            initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
+            initial_row = {
+                "is_filled": "ingevuld" if filled else "aanvraag",
+                "has_custom_period": True,
+                "hours_per_week": DEFAULT_HOURS_PER_WEEK,
+            }
             member_heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
         else:
             # teamlid is a Service public_id (UUID string); match it against the row

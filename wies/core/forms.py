@@ -305,7 +305,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 class UserDeleteForm(NlddFormMixin, forms.Form):
     """Asked when deleting a user with a colleague profile: the day the contract ends."""
 
-    left_on = forms.DateField(label="Uit dienst per", help_text="Contractperioden na deze dag vervallen.")
+    left_on = forms.DateField(label="Uit dienst per", help_text="Perioden die na deze dag beginnen vervallen.")
 
 
 class ContractPeriodForm(NlddFormMixin, forms.ModelForm):

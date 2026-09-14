@@ -22,6 +22,8 @@ SOURCE_CHOICES = {
 
 # Upper bound for hours per week, on a contract and on a role alike.
 MAX_HOURS_PER_WEEK = 40
+# What a new role starts at: the common full-time contract, one click away from anything else.
+DEFAULT_HOURS_PER_WEEK = 36
 # A select rather than a number input: nldd-text-field has no number type.
 HOURS_PER_WEEK_CHOICES = [("", " "), *((h, f"{h} uur") for h in range(1, MAX_HOURS_PER_WEEK + 1))]
 

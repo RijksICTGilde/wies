@@ -348,8 +348,13 @@ def close_contract_periods(colleague, day):
     """Ends the colleague's contract on ``day``: the running period stops there
     and periods still to start go.
 
-    Called when the user is removed. The colleague stays (placements keep their
-    history), but Bezetting must stop counting hours nobody fills.
+    Called when the user is removed. The colleague stays with their placements
+    and leaves Bezetting with the user; ending the contract keeps the colleague
+    panel and the history honest about when the hours stopped.
+
+    Returns what changed, for the audit event: the period that now ends on
+    ``day`` (or None) and the periods that were dropped. With ``day`` before the
+    start of the current period that one is dropped and an earlier one ends.
     """
     running = (
         colleague.contract_periods.filter(start_date__lte=day)
@@ -359,5 +364,6 @@ def close_contract_periods(colleague, day):
     if running is not None:
         running.end_date = day
         running.save(update_fields=["end_date"])
-    colleague.contract_periods.filter(start_date__gt=day).delete()
-    return running
+    later = list(colleague.contract_periods.filter(start_date__gt=day))
+    colleague.contract_periods.filter(pk__in=[p.pk for p in later]).delete()
+    return running, later

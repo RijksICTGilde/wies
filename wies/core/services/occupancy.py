@@ -21,7 +21,7 @@ from datetime import date, timedelta
 from django.db.models import Q
 from django.db.models.functions import Lower
 
-from wies.core.models import Colleague, Label, Placement, Suborganization
+from wies.core.models import Colleague, ContractPeriod, Label, Placement, Suborganization
 from wies.core.querysets import annotate_placement_dates
 
 # Timeline horizon and "pressing" threshold. Four months ahead, not six: the far
@@ -135,11 +135,17 @@ class OccupancyRow:
     bench_bar_clipped: bool = False
     # Contract hours per week on today's date; None when no period covers today.
     contract_hours: int | None = None
+    # Without a period covering today: the first period still to start, or
+    # whether one has already ended. Both say "the hours are known, just not
+    # for today", which is not the same as never filled in.
+    next_contract: ContractPeriod | None = None
+    contract_ended: bool = False
     # Hours per week of the active roles added up; None when any of them has no
     # hours, since a partial sum would understate how placed someone is.
     active_hours: int | None = None
-    # Contract minus active hours, or the whole contract on the bench. None
-    # whenever either side is unknown.
+    # Contract minus active hours, or the whole contract on the bench; negative
+    # when the roles add up to more than the contract. None whenever either
+    # side is unknown.
     unfilled_hours: int | None = None
 
 
@@ -149,6 +155,14 @@ def contract_hours_on(periods, day: date) -> int | None:
         if period.start_date <= day and (period.end_date is None or day <= period.end_date):
             return period.hours_per_week
     return None
+
+
+def contract_outlook(periods, day: date) -> tuple[ContractPeriod | None, bool]:
+    """For a day no period covers: the first period after ``day`` (if any) and
+    whether any period ended before it."""
+    upcoming = [p for p in periods if p.start_date > day]
+    ended = any(p.end_date is not None and p.end_date < day for p in periods)
+    return (min(upcoming, key=lambda p: p.start_date) if upcoming else None, ended)
 
 
 def row_has_status(row: OccupancyRow, status: str) -> bool:
@@ -360,7 +374,11 @@ def colleague_occupancy(
         segments.sort(key=lambda s: s.start or horizon_start)
         lane_count = _assign_lanes(segments, horizon_start, horizon_end)
 
-        contract_hours = contract_hours_on(colleague.contract_periods.all(), today)
+        periods = colleague.contract_periods.all()
+        contract_hours = contract_hours_on(periods, today)
+        next_contract, contract_ended = (
+            (None, False) if contract_hours is not None else contract_outlook(periods, today)
+        )
         if active_count == 0:
             bucket = BUCKET_BENCH
             unfilled_hours = contract_hours
@@ -369,7 +387,11 @@ def colleague_occupancy(
             unfilled_hours = contract_hours - active_hours
         else:
             bucket = BUCKET_FULL
-            unfilled_hours = 0 if contract_hours is not None and active_hours is not None else None
+            # Kept as a signed number: 24 on contract and 36 in roles is not
+            # "full", it is 12 over, and the page should say so.
+            unfilled_hours = (
+                contract_hours - active_hours if contract_hours is not None and active_hours is not None else None
+            )
         earliest_active_end = min(active_ends) if active_ends else None
         ends_soon = earliest_active_end is not None and earliest_active_end <= soon_cutoff
 
@@ -416,12 +438,23 @@ def colleague_occupancy(
                 segments=segments,
                 lane_count=lane_count,
                 contract_hours=contract_hours,
+                next_contract=next_contract,
+                contract_ended=contract_ended,
                 active_hours=active_hours if active_count else None,
                 unfilled_hours=unfilled_hours,
             )
         )
 
-    rows.sort(key=lambda r: (_BUCKET_RANK[r.bucket], -(r.unfilled_hours or 0), r.earliest_active_end or far_future))
+    # Partial rows by most free hours first; the bench is re-sorted on how long
+    # someone has been free in split_bench_and_timeline, and full rows go by
+    # when their work ends.
+    rows.sort(
+        key=lambda r: (
+            _BUCKET_RANK[r.bucket],
+            -(r.unfilled_hours or 0) if r.bucket == BUCKET_PARTIAL else 0,
+            r.earliest_active_end or far_future,
+        )
+    )
     return rows
 
 

@@ -150,12 +150,13 @@ def update_service_hours_per_week(user, s):
 
 @rule(UPDATE, ContractPeriod)
 def update_contract_period(user, _period):
-    """Beheerder (rijksauth.change_user), BDM or support staff.
+    """Beheerder (rijksauth.change_user) or support staff: keeping contracts is
+    user administration, like the user sheet it also lives on.
 
-    A consultant reads their own periods on the profile but does not keep them;
-    the hours are what Bezetting plans with.
+    A BDM plans with the hours and reads them in the colleague panel; a
+    consultant reads only their own, on the profile.
     """
-    return user.has_perm("rijksauth.change_user") or is_bdm(user) or is_staff_member(user)
+    return user.has_perm("rijksauth.change_user") or is_staff_member(user)
 
 
 @rule(UPDATE, UserEditables.email)

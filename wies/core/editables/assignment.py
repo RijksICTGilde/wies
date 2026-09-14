@@ -181,6 +181,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
     same sheet as on the placement panel.
     """
     today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
@@ -188,7 +189,13 @@ def visible_service_rows(assignment, request) -> list[dict]:
         if placement is None:  # vacancy → visible to everyone
             visible.append(row)
             continue
-        row["can_edit_role"] = has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
+        # Only the viewer's own row can qualify, so the rule (a query) runs for
+        # that one and not for every member of the team.
+        row["can_edit_role"] = (
+            viewer is not None
+            and placement.colleague_id == viewer.id
+            and has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
+        )
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],
@@ -274,6 +281,7 @@ def placement_audit_row(placement) -> dict:
             "skill_name": service.skill.name if service.skill else "",
             "colleague": placement.colleague,
             "description": service.description,
+            "hours_per_week": service.hours_per_week,
             "has_custom_period": placement.period_source != Placement.PLACEMENT,
             "placement_start_date": placement.start_date,
             "placement_end_date": placement.end_date,
@@ -388,6 +396,14 @@ def _services_render_change(change: dict) -> dict:
     new_period = _period_label(new)
     if old_period != new_period:
         return {"text": f"de periode van {new_label} van {old_period} naar {new_period} gewijzigd"}
+    old_hours = old.get("hours_per_week")
+    new_hours = new.get("hours_per_week")
+    if old_hours != new_hours:
+        if old_hours is None:
+            return {"text": f"de uren van {new_label} op {new_hours} per week gezet"}
+        if new_hours is None:
+            return {"text": f"de uren van {new_label} ({old_hours} per week) verwijderd"}
+        return {"text": f"de uren van {new_label} van {old_hours} naar {new_hours} per week gewijzigd"}
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:

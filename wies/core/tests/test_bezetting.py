@@ -601,6 +601,15 @@ class BezettingFilterChipTest(TestCase):
         assert "Wis alle filters" in content
         assert 'data-name="status"' in content
 
+    def test_every_status_has_a_sheet_input_whatever_its_count(self):
+        # Four statuses, and the sheet's top-3 cut must not drop the fourth: the
+        # sheet checkbox is the only input its card can tick.
+        content = self.client.get(self.url).content.decode()
+        hidden = re.search(r'data-hidden-inputs="status".*?</span>', content, re.DOTALL).group(0)
+        for value in ("bench", "partial", "full", "ends_soon"):
+            assert f'value="{value}"' in hidden, value
+        assert "filter_modal=status" not in content
+
     def test_status_card_carries_no_input_of_its_own(self):
         # The sheet's checkbox submits; a second one on the card sent the value
         # twice and came back as two identical chips.
@@ -787,8 +796,9 @@ class BezettingStatusFilterViewTest(TestCase):
         assert b"Fred Full" in response.content
 
     def test_active_status_shows_on_its_own_card(self):
-        """No chip beside the Filters button: a status says it is on by its card
-        being pressed, and repeating it as a token forced the row to wrap."""
+        """The card says a status is on by being pressed; the chip under the row
+        (see test_status_filter_gets_a_chip_and_a_sheet_group) is for when the
+        card is hidden."""
         response = self.client.get(self.url, {"status": "bench"})
         content = response.content.decode()
         assert re.search(r'data-status="bench"[^>]*\s+aria-pressed="true"', content, re.DOTALL)

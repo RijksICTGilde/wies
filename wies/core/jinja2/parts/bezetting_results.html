@@ -2,7 +2,8 @@
    this on every filter change (hx-target="#results"); the filter sheet swaps back
    separately as OOB so its counts and selection follow. #}
 {% from "parts/filter_chips.html" import filter_chips %}
-<nldd-container id="results">
+{# data-wies-announce-rows: filter_interactions.js announces the row count after a swap. #}
+<nldd-container id="results" data-wies-announce-rows=".bezetting-row">
 {% set has_active_filters = active_filters|length > 0 %}
 {# Samenvatting — each card is an independent status filter (OR-toggle). The card
    is a native <button> (keyboard-accessible for free). It carries no input of its
@@ -117,15 +118,22 @@
              two opdrachten may have one wrapping up and another running on for
              months. Which section a row is in says bench vs. ingezet. #}
         {# Two lines per person, as an nldd-identity: the name, then what they
-             do and what is still free. Someone fully placed shows no hours at
-             all; unknown stays visible, as that is what keeps them out of the
-             "deels beschikbaar" count. #}
-        {% if row.contract_hours is none %}
+             do and what is still free. Someone exactly full shows no hours at
+             all, someone over their contract shows by how much; unknown stays
+             visible, as that is what keeps them out of the "deels beschikbaar"
+             count. #}
+        {% if row.next_contract %}
+          {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
+        {% elif row.contract_hours is none and row.contract_ended %}
+          {% set hours_text = "geen lopend contract" %}
+        {% elif row.contract_hours is none %}
           {% set hours_text = "contracturen onbekend" %}
         {% elif row.unfilled_hours is none %}
-          {% set hours_text = "uren onbekend" %}
+          {% set hours_text = "uren van rol onbekend" %}
         {% elif row.unfilled_hours > 0 %}
           {% set hours_text = row.unfilled_hours ~ " uur vrij" %}
+        {% elif row.unfilled_hours < 0 %}
+          {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" %}
         {% else %}
           {% set hours_text = none %}
         {% endif %}
@@ -183,7 +191,7 @@
               {# A bar too narrow for its name renders a stray "I..."; the
                    title attribute still carries it. #}
               {% if not seg.too_narrow %}
-                <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} u{% endif %}</span>
+                <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} uur{% endif %}</span>
               {% endif %}
               {% if seg.ending_level != "calm" %}
                 {# Days remaining rather than the end date: how soon someone

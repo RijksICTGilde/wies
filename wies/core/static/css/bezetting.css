@@ -57,12 +57,8 @@
 
 /* Summary cards double as status filters. The clickable element is a native
    <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
-   button chrome and let the card size the control.
-
-   No height: 100% here. It made sense while the cards sat in a collection's grid
-   cells, which have a height to fill; on a plain list item there is nothing to
-   resolve the percentage against, so the button collapsed to zero and took the
-   visible card with it. */
+   button chrome. The list item it sits in has a fixed height (see above), so
+   height: 100% resolves against that and the button fills it. */
 .bezetting-stat {
   /* Flex, not block: the nldd-card inside has to stretch to the button's height,
      and on a block it kept its own 40px against the 44px of the button beside
@@ -82,6 +78,9 @@
   border-radius: var(--components-card-corner-radius);
 }
 
+/* The card is a flex item of our button, which lives outside its shadow root:
+   only from here can it be told to take the button's width and to give way
+   instead of pushing the button off the row. */
 .bezetting-stat > nldd-card {
   flex: 1 1 auto;
   min-width: 0;
@@ -552,10 +551,6 @@
 .bezetting-person__labels {
   display: flex;
   gap: var(--primitives-space-4);
-  flex-shrink: 0;
-}
-
-.bezetting-person__labels nldd-tag {
   flex-shrink: 0;
 }
 

@@ -1,6 +1,8 @@
 {# Delete confirmation for a user. Unlike confirm_delete_modal.html it carries a
    form: with a colleague profile the beheerder picks the day the contract ends.
-   The destructive button posts the form through htmx; on a validation error the
+   The form posts through htmx, and so does the destructive button outside it:
+   Enter in the date field would otherwise submit natively (one field, no submit
+   button) and land on the empty HX-Redirect response. On a validation error the
    modal comes back into its mount and reopens. #}
 <nldd-modal-dialog data-auto-show text="Gebruiker verwijderen?" supporting-text="{{ dialog_supporting }}">
 {% if content %}
@@ -8,7 +10,12 @@
      the buttons: the dialog stacks its slot content without any. #}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-form>
-  <form id="userDeleteForm" method="post" action="{{ form_post_url }}">
+  <form id="userDeleteForm"
+        method="post"
+        action="{{ form_post_url }}"
+        hx-post="{{ form_post_url }}"
+        hx-target="#userFormModal"
+        hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
     {{ content.left_on.as_field_group() }}
   </form>
