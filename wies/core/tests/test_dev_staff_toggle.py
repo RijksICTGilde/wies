@@ -25,6 +25,8 @@ class StaffOverrideTest(TestCase):
         assert response.status_code == 302
         assert response.url == "/profiel/"
         assert self.client.session[STAFF_OVERRIDE_SESSION_KEY] is True
+        body = self.client.get("/profiel/").content.decode()
+        assert "Staff-rechten aan voor deze sessie." in body
 
     @override_settings(DEBUG=True, STAFF_EMAILS=[])
     def test_the_middleware_carries_the_switch_onto_the_request(self):

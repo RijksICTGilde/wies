@@ -36,19 +36,22 @@
     </nldd-menu>
     </nldd-menu-item>
   {% endif %}
-  {% if DEBUG %}
-    <nldd-menu-divider></nldd-menu-divider>
-    {# Local only: staff rights on or off for this session, to test both sides of
-       the staff rules from one account. menu_nav.js posts data-post-url with the
-       csrf token below; the page reloads with the new rights. #}
-    <nldd-menu-item text="{{ 'Staff-rechten uit' if show_staff_pages(request) else 'Staff-rechten aan' }}" icon="{{ 'lock-closed' if show_staff_pages(request) else 'lock-open' }}" data-post-url="{{ url('dev-staff-toggle') }}" data-post-return="{{ request.get_full_path() }}"></nldd-menu-item>
-  {% endif %}
   <nldd-menu-divider></nldd-menu-divider>
   {# Uitloggen is POST-only (require_POST, zie rijksauth.views.logout) om
      forced-logout via een andere site te blokkeren. Geen data-href (dat zou een
      GET zijn → 405); menu_nav.js dient bij data-logout-url een POST-form in met
      het csrf-token dat hieronder al gerenderd wordt. #}
   <nldd-menu-item text="Log uit" icon="logout" data-logout-url="{{ url('logout') }}"></nldd-menu-item>
+  {% if DEBUG %}
+    {# Local only: staff rights on or off for this session, to test both sides of
+       the staff rules from one account. A switch in the menu's footer slot, which
+       is the one place in a menu for a control that is not a menu item;
+       menu_nav.js posts data-post-url on change with the csrf token below and
+       the page reloads with the new rights. #}
+    <nldd-container slot="footer" padding="12">
+    <nldd-switch-field label="Staff-rechten" name="staff" {% if show_staff_pages(request) %}checked{% endif %} data-post-url="{{ url('dev-staff-toggle') }}" data-post-return="{{ request.get_full_path() }}"></nldd-switch-field>
+    </nldd-container>
+  {% endif %}
   </nldd-menu>
   </nldd-menu-bar-item>
   </nldd-menu-bar>

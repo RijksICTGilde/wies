@@ -41,3 +41,29 @@ document.addEventListener("click", (e) => {
     });
   else window.location.href = carrier.dataset.href;
 });
+
+// A switch that posts its new state (the local staff switch in the user menu).
+// On click, not on change: the switch's change event stays inside its shadow
+// root when the knob itself is clicked, and only the label click surfaces one.
+// The server flips the state, so a click is all it needs; a label click also
+// clicks the inner input, hence the once-only guard. The page reloads after.
+document.addEventListener("click", (e) => {
+  const field = e
+    .composedPath()
+    .find(
+      (el) =>
+        el instanceof Element &&
+        el.localName === "nldd-switch-field" &&
+        el.dataset.postUrl,
+    );
+  if (!field || field.dataset.posting) return;
+  field.dataset.posting = "1";
+  // A beat for the knob to be seen moving before the reload takes the menu.
+  setTimeout(
+    () =>
+      submitPost(field.dataset.postUrl, {
+        terug: field.dataset.postReturn || "/",
+      }),
+    350,
+  );
+});

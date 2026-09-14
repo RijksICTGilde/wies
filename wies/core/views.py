@@ -2408,7 +2408,11 @@ def dev_staff_toggle(request):
         raise Http404
     from wies.rijksauth.middleware import STAFF_OVERRIDE_SESSION_KEY  # noqa: PLC0415 — dev-only, keeps the import local
 
-    request.session[STAFF_OVERRIDE_SESSION_KEY] = not is_staff_member(request.user)
+    staff = not is_staff_member(request.user)
+    request.session[STAFF_OVERRIDE_SESSION_KEY] = staff
+    # The page reloads with the new rights, which closes the menu before the
+    # switch is seen moving; the notification says what happened.
+    messages.info(request, f"Staff-rechten {'aan' if staff else 'uit'} voor deze sessie.")
     return redirect(_safe_return_path(request.POST.get("terug"), "/"))
 
 
