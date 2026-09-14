@@ -92,6 +92,10 @@ from .services.assignments import (
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
+    STATUS_BENCH,
+    STATUS_ENDS_SOON,
+    STATUS_FULL,
+    STATUS_PARTIAL,
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
@@ -577,6 +581,69 @@ def business_management_access_required(view_func):
     return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
 
 
+def _assignment_create_button(request):
+    """The "Opdracht invoeren" action, or None without the permission.
+
+    Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
+    entering an assignment works identically wherever a business manager is.
+    """
+    if not request.user.has_perm("core.add_assignment"):
+        return None
+    return {
+        "button_text": "Opdracht invoeren",
+        "attrs": {
+            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+            "hx-target": "#side-panel-content",
+            "hx-swap": "innerHTML",
+            "hx-push-url": "true",
+        },
+    }
+
+
+def _assignment_create_panel(request):
+    """panel_data for the empty create form, or None when it does not apply.
+
+    Without the permission it falls away silently: these are list pages, not a
+    403.
+    """
+    if request.GET.get("nieuwe-opdracht") is None or not request.user.has_perm("core.add_assignment"):
+        return None
+    from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
+        assignment_create_specs,
+    )
+
+    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    # Prefill: the creator is usually the BM themselves.
+    if getattr(request.user, "colleague", None):
+        initial["owner"] = request.user.colleague
+    return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
+def _bezetting_status_group(selected, summary):
+    """The summary cards as a filter group, for when they do not fit the row.
+
+    Same values and counts as the cards, so toggling either keeps one state.
+    """
+    options = [{"value": "", "label": ""}]
+    for value, label, count in (
+        (STATUS_BENCH, "Op de bank", summary["bench_count"]),
+        (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
+        (STATUS_FULL, "Volledig ingezet", summary["full_count"]),
+        (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
+    ):
+        option = {"value": value, "label": label, "count": count}
+        if value in selected:
+            option["selected"] = True
+        options.append(option)
+    return {
+        "type": "select-multi",
+        "name": "status",
+        "label": "Status",
+        "options": options,
+        "selected_values": list(selected),
+    }
+
+
 @business_management_access_required
 def bezetting(request):
     """ "Bezetting" — the business-manager occupancy timeline.
@@ -593,8 +660,12 @@ def bezetting(request):
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
-    panel_data = None
-    if placement_id:
+    # The create form takes precedence: it is the only panel here without an
+    # object, so it is checked before the id lookups.
+    panel_data = _assignment_create_panel(request)
+    if panel_data is not None:
+        pass
+    elif placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
@@ -637,6 +708,10 @@ def bezetting(request):
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
     filter_groups = bezetting_filter_groups(merk, labels, labels_by_cat)
+    # Status also lives in the sheet, not only on the cards: on a narrow window
+    # the cards are hidden, and a filter you cannot reach is a filter you cannot
+    # switch off.
+    filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
     _finalize_filter_groups(filter_groups)
 
     active_filters = {}
@@ -662,6 +737,7 @@ def bezetting(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
+        "primary_button": _assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
@@ -1776,16 +1852,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # Opens the create sheet as a panel on the list itself via
         # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
         # in the address bar so a reload reopens the sheet (see side_panel.js).
-        if self.request.user.has_perm("core.add_assignment"):
-            context["primary_button"] = {
-                "button_text": "Opdracht invoeren",
-                "attrs": {
-                    "hx-get": _build_panel_url(self.request, **{"nieuwe-opdracht": ""}),
-                    "hx-target": "#side-panel-content",
-                    "hx-swap": "innerHTML",
-                    "hx-push-url": "true",
-                },
-            }
+        context["primary_button"] = _assignment_create_button(self.request)
 
         # Side panel
         placement_id = self.request.GET.get("plaatsing")
@@ -1795,17 +1862,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # ?nieuwe-opdracht opens the empty create form as a panel on the list.
         # Checked before the object lookups: this panel has no object. Without the
         # permission it falls away silently — this is the list view, not a 403.
-        if self.request.GET.get("nieuwe-opdracht") is not None and self.request.user.has_perm("core.add_assignment"):
-            from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
-                assignment_create_specs,
-            )
-
-            specs = assignment_create_specs()
-            form_cls, initial = build_combined_form_class(specs)
-            # Prefill: the creator is usually the BM themselves.
-            if getattr(self.request.user, "colleague", None):
-                initial["owner"] = self.request.user.colleague
-            context["panel_data"] = _build_assignment_create_panel_data(self.request, form_cls(initial=initial))
+        create_panel = _assignment_create_panel(self.request)
+        if create_panel is not None:
+            context["panel_data"] = create_panel
         elif placement_id:
             panel_data = _resolve_placement_panel(self.request, placement_id)
             if panel_data is not None:
