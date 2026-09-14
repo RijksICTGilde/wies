@@ -40,7 +40,7 @@
   space. A group can render nothing, so loop.first/last is unreliable here. #}
   {% set ns = namespace(rendered=false) %}
   {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'modal' %}
+    {% if filter_group.type == "modal" %}
       {% if ns.rendered %}
         <nldd-spacer size="24"></nldd-spacer>
       {% endif %}
@@ -77,7 +77,7 @@
         </nldd-list>
       {% endif %}
       {% set ns.rendered = true %}
-    {% elif filter_group.type == 'select-multi' %}
+    {% elif filter_group.type == "select-multi" %}
       {% set top_options = filter_group.top_options if filter_group.top_options is defined else
       filter_group.options|selectattr('value')|list %}
       {% if top_options %}
@@ -133,7 +133,7 @@
           {% endfor %}
         </span>
       {% endif %}
-    {% elif filter_group.type == 'date' %}
+    {% elif filter_group.type == "date" %}
       {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
       {% set ns.rendered = true %}
       <nldd-title size="6">

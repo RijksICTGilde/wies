@@ -47,10 +47,10 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# nldd-code-viewer instead of a plain <pre>: it brings highlighting, a copy
      button, and a scroll area that does not stretch the sheet. #}
-  <nldd-code-viewer language="python" wrap>{{ error.traceback }}</nldd-code-viewer>
+<nldd-code-viewer language="python" wrap>{{ error.traceback }}</nldd-code-viewer>
 {% else %}
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <nldd-rich-text>
-  <p>Geen traceback beschikbaar.</p>
-  </nldd-rich-text>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+<nldd-rich-text>
+<p>Geen traceback beschikbaar.</p>
+</nldd-rich-text>
 {% endif %}
