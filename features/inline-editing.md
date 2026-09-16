@@ -250,7 +250,7 @@ UPDATE = Verb.UPDATE
 
 @rule(UPDATE, Assignment)                              # whole-object
 def update_assignment(user, a):
-    return _is_wies_sourced(a) and (_has_change_perm(user, a) or _is_assignment_owner(user, a))
+    return _is_wies_sourced(a) and (_is_assignment_owner(user, a) or is_assignment_admin(user))
 
 
 @rule(UPDATE, Placement)                               # delegate to parent
