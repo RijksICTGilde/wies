@@ -232,6 +232,8 @@ class RoleMatrixViewTest(TestCase):
         content = response.content.decode()
         assert "Opdracht bewerken (van een ander)" in content
         assert "Can add user" in content
+        # The page text sends the reader to the combined column ("zie die kolom").
+        assert content.count(f'<th scope="col">{COMBINED}</th>') == len(role_matrix.SECTIONS) + 1
         assert f' href="{self.url}"' in content  # sidebar
         assert f'data-href="{self.url}"' in content
 
