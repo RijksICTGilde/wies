@@ -139,11 +139,9 @@ def update_service_description(user, s):
 
 @rule(UPDATE, UserEditables.email)
 def update_user_email(user, target):
-    """Email is admin-only — even on the user's own profile — and platform
-    administration only on this route.
+    """Platform administration only, even on the user's own profile.
 
-    Stricter than the whole-object User rule: no self-edit branch. The rule
-    cannot see the new address, so ``may_change_email`` cannot be applied here;
+    The rule cannot see the new address, so ``may_change_email`` cannot apply;
     Gebruikersbeheer changes email through the user form, which applies it.
     """
     return _has_change_perm(user, target) and is_staff_member(user)

@@ -63,11 +63,8 @@ def is_staff_member(user) -> bool:
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
-    """Whether ``editor`` may change an account's email from ``old`` to ``new``.
-
-    ``is_staff_member`` reads the email, so moving a ``STAFF_EMAILS`` address onto
-    or off an account moves platform administration. Only a platform
-    administrator may do that; ``editor=None`` (the system) may not.
+    """Moving a ``STAFF_EMAILS`` address moves platform administration, so only a
+    platform administrator may; ``editor=None`` (the system) may not.
     """
     old, new = old.lower(), new.lower()
     if old == new or (old not in settings.STAFF_EMAILS and new not in settings.STAFF_EMAILS):

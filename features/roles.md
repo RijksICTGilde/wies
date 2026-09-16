@@ -48,8 +48,8 @@ in two places:
 Platformbeheer follows the email address, so changing an email to or from a
 `STAFF_EMAILS` address is platform administration too (`may_change_email` in
 `roles.py`). `UserForm` rejects it for anyone else and `update_user` refuses
-it. The generic inline-edit route for `email` cannot see the new address, so
-it is open to platform administrators only.
+it. The generic inline-edit route for `email` is platform administration only
+(`update_user_email` in `permissions.py` says why).
 
 The CSV import has a `Gebruikersbeheer` column (formerly `Beheerder`); it only
 takes effect when a platform administrator runs the import.

@@ -262,9 +262,6 @@ class RoleGrantTest(TestCase):
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
 class StaffEmailChangeTest(TestCase):
-    """``is_staff_member`` reads the email, so moving a STAFF address moves
-    platform administration: only a platform administrator may do that."""
-
     def setUp(self):
         setup_roles()
         user_admin_group = Group.objects.get(name=USER_ADMIN_GROUP_NAME)
