@@ -303,9 +303,29 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
 
 class UserDeleteForm(NlddFormMixin, forms.Form):
-    """Asked when deleting a user with a colleague profile: the day the contract ends."""
+    """Asked when deleting a user with a colleague profile: the day the contract ends.
+
+    Required only while there are contract periods to end; without them the
+    day is just recorded with the deletion.
+    """
 
     left_on = forms.DateField(label="Uit dienst per", help_text="Perioden die na deze dag beginnen vervallen.")
+
+    def __init__(self, *args, colleague=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.periods = colleague.contract_periods.all() if colleague else ContractPeriod.objects.none()
+        if not self.periods.exists():
+            self.fields["left_on"].required = False
+            self.fields["left_on"].help_text = "Wordt vastgelegd bij de verwijdering."
+
+    def clean(self):
+        cleaned = super().clean()
+        day = cleaned.get("left_on")
+        # A day before every period would leave nothing to end and drop them
+        # all, which is the history this model exists to keep.
+        if day and self.periods.exists() and not self.periods.filter(start_date__lte=day).exists():
+            self.add_error("left_on", "Deze dag ligt vóór elke contractperiode. Kies een dag binnen of na een periode.")
+        return cleaned
 
 
 class ContractPeriodForm(NlddFormMixin, forms.ModelForm):

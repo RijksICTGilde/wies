@@ -674,15 +674,13 @@ def bezetting(request):
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
     panel_data = _assignment_create_panel(request)
-    if panel_data is not None:
-        pass
-    elif placement_id:
+    if panel_data is None and placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
-    elif assignment_id:
+    elif panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
             panel_data = _build_assignment_panel_data(assignment, request)
-    elif colleague_id:
+    elif panel_data is None and colleague_id:
         colleague = _resolve_panel_object(request, Colleague, colleague_id)
         if colleague is not None:
             panel_data = _build_colleague_panel_data(colleague, request)
@@ -2280,9 +2278,9 @@ def user_delete(request, public_id):
         )
 
     if request.method == "GET":
-        return render_modal(UserDeleteForm(initial={"left_on": today}) if colleague else None)
+        return render_modal(UserDeleteForm(initial={"left_on": today}, colleague=colleague) if colleague else None)
     if request.method == "POST":
-        form = UserDeleteForm(request.POST) if colleague else None
+        form = UserDeleteForm(request.POST, colleague=colleague) if colleague else None
         if form is not None and not form.is_valid():
             return render_modal(form)
         label_names = [label.name for label in colleague.labels.all()] if colleague else []
@@ -2295,16 +2293,15 @@ def user_delete(request, public_id):
         # One transaction: a contract ended without the user gone, or a user
         # gone without a trace, would both be worse than the failure itself.
         with transaction.atomic():
-            ended, dropped = (
-                close_contract_periods(colleague, form.cleaned_data["left_on"]) if colleague else (None, [])
-            )
+            left_on = form.cleaned_data["left_on"] if colleague else None
+            ended, dropped = close_contract_periods(colleague, left_on) if left_on else (None, [])
             context = {
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "label_names": label_names,
                 "group_names": [g.name for g in user.groups.all()],
-                "left_on": form.cleaned_data["left_on"].isoformat() if colleague else None,
+                "left_on": left_on.isoformat() if left_on else None,
                 "contract_ended": _contract_period_snapshot(ended) if ended else None,
                 "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
             }
@@ -2595,11 +2592,14 @@ def _contract_period_event(request, period, action, before=None):
 
     Colleague is not an audit object type, and the hours belong to the person,
     so the event sits with the user like the user's own deletion does. A
-    colleague without a user leaves no event; nothing displays these yet.
+    colleague without a user (the user was deleted) leaves no event: that is a
+    deliberate trade-off, as adding Colleague as an audit type for a case that
+    is only reachable by typing ?collega= by hand is not worth it yet. Nothing
+    displays these events so far.
     """
     if period.colleague.user_id is None:
         return
-    snapshot = _contract_period_snapshot(period)
+    after = None if action == "delete" else _contract_period_snapshot(period)
     create_event(
         object_type="User",
         action="update",
@@ -2607,7 +2607,7 @@ def _contract_period_event(request, period, action, before=None):
         object_id=period.colleague.user_id,
         user=request.user,
         request=request,
-        context={"field_name": "contract_periods", "action": action, "before": before, "after": snapshot},
+        context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
     )
 
 

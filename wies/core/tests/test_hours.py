@@ -351,7 +351,7 @@ class ProfileContractPeriodTest(TestCase):
         # in the profile's shape.
         body = response.content.decode()
         assert 'id="contractPeriodMount" hx-swap-oob="innerHTML"' in body
-        assert re.search(r'id="contractPeriodsBlock"\s+hx-swap-oob="outerHTML"', body)
+        assert re.search(rf'id="contractPeriodsBlock-{self.colleague.public_id}"\s+hx-swap-oob="outerHTML"', body)
         assert "<h2>Contracturen</h2>" in body
         assert "32 uur" in body
         [period] = ContractPeriod.objects.filter(colleague=self.colleague)
@@ -556,6 +556,8 @@ class UserSheetContractPeriodTest(TestCase):
         assert all(e.object_type == "User" and e.object_id == self.user.id for e in events)
         assert events[1].context["before"]["hours_per_week"] == 36
         assert events[1].context["after"]["hours_per_week"] == 24
+        assert events[2].context["before"]["hours_per_week"] == 24
+        assert events[2].context["after"] is None
 
     def test_deleting_asks_first_in_the_shared_modal(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
@@ -667,6 +669,25 @@ class UserSheetContractPeriodTest(TestCase):
         body = self.client.get(reverse("user-delete", args=[self.user.public_id])).content.decode()
         assert "blijven bestaan" in body
         assert "Het contract eindigt" not in body
+
+    def test_a_day_before_every_period_is_refused(self):
+        period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+        response = self.client.post(
+            reverse("user-delete", args=[self.user.public_id]),
+            {"left_on": (self.today - timedelta(days=10)).isoformat()},
+        )
+        assert response.status_code == 200
+        assert "HX-Redirect" not in response
+        assert "vóór elke contractperiode" in response.content.decode()
+        assert ContractPeriod.objects.filter(pk=period.pk).exists()
+        assert User.objects.filter(pk=self.user.pk).exists()
+
+    def test_without_periods_the_day_is_optional(self):
+        dialog = self.client.get(reverse("user-delete", args=[self.user.public_id])).content.decode()
+        assert "Wordt vastgelegd bij de verwijdering." in dialog
+        response = self.client.post(reverse("user-delete", args=[self.user.public_id]))
+        assert "HX-Redirect" in response
+        assert not User.objects.filter(pk=self.user.pk).exists()
 
     def test_a_user_without_colleague_is_deleted_without_a_day(self):
         loose = User.objects.create(email="los@rijksoverheid.nl", onboarding_completed_at=timezone.now())

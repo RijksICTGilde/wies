@@ -2,7 +2,9 @@
    in the colleague panel. Every action opens in the shared mount (the add/edit
    sheet, the delete confirmation) and swaps this block back in afterwards, so
    the page stays as it is. #}
-<div id="contractPeriodsBlock"
+{# The id carries the colleague: the own profile can show a colleague panel
+   beside its own block, and an out-of-band swap replaces every match. #}
+<div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"
      {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}>
   <nldd-title size="5">
   {% if contract_block.heading_tag == "h2" %}
