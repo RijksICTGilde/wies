@@ -24,6 +24,7 @@ from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpRespo
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.formats import date_format
 from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
@@ -53,17 +54,21 @@ from wies.core.visibility_rules import (
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
+    ContractPeriodForm,
     LabelCategoryFormSet,
     LabelForm,
     ProfileLabelsForm,
     ProfileNameForm,
     SuborganizationForm,
+    UserDeleteForm,
     UserForm,
 )
 from .models import (
+    DEFAULT_HOURS_PER_WEEK,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ContractPeriod,
     ErrorEvent,
     Event,
     Label,
@@ -89,6 +94,10 @@ from .services.assignments import (
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
+    STATUS_BENCH,
+    STATUS_ENDS_SOON,
+    STATUS_FULL,
+    STATUS_PARTIAL,
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
@@ -112,7 +121,13 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
+from .services.users import (
+    close_contract_periods,
+    create_user,
+    create_users_from_csv,
+    is_allowed_email_domain,
+    update_user,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -438,6 +453,11 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "contract_block": _contract_block(colleague, "panel", request.user),
+        # Who plans with the hours may read them; keeping them is beheer.
+        "can_view_contract": is_bdm(request.user)
+        or is_staff_member(request.user)
+        or request.user.has_perm("rijksauth.change_user"),
         "assignments": assignments,
     }
 
@@ -565,6 +585,76 @@ def business_management_access_required(view_func):
     return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
 
 
+def _assignment_create_button(request):
+    """The "Opdracht invoeren" action, or None without the permission.
+
+    Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
+    entering an assignment works identically wherever a business manager is.
+    """
+    if not request.user.has_perm("core.add_assignment"):
+        return None
+    return {
+        "button_text": "Opdracht invoeren",
+        "attrs": {
+            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+            "hx-target": "#side-panel-content",
+            "hx-swap": "innerHTML",
+            "hx-push-url": "true",
+        },
+    }
+
+
+def _assignment_create_panel(request):
+    """panel_data for the empty create form, or None when it does not apply.
+
+    Without the permission it falls away silently: these are list pages, not a
+    403.
+    """
+    if request.GET.get("nieuwe-opdracht") is None or not request.user.has_perm("core.add_assignment"):
+        return None
+    from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
+        assignment_create_specs,
+    )
+
+    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    # Prefill: the creator is usually the BM themselves.
+    if getattr(request.user, "colleague", None):
+        initial["owner"] = request.user.colleague
+    return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
+def _bezetting_status_group(selected, summary):
+    """The summary cards as a filter group, for when they do not fit the row.
+
+    Same values and counts as the cards, so toggling either keeps one state.
+    """
+    options = [{"value": "", "label": ""}]
+    for value, label, count in (
+        (STATUS_BENCH, "Op de bank", summary["bench_count"]),
+        (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
+        (STATUS_FULL, "Volledig ingezet", summary["full_count"]),
+        (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
+    ):
+        option = {"value": value, "label": label, "count": count}
+        if value in selected:
+            option["selected"] = True
+        options.append(option)
+    real_options = options[1:]
+    return {
+        "type": "select-multi",
+        "name": "status",
+        "label": "Status",
+        "options": options,
+        "selected_values": list(selected),
+        # Finalized by hand, outside _finalize_filter_groups: that keeps the top
+        # three by count and hides the rest behind "Meer…", which would drop the
+        # hidden input of the fourth status and leave its card dead.
+        "group_id": "status",
+        "top_options": real_options,
+        "has_more": False,
+    }
+
+
 @business_management_access_required
 def bezetting(request):
     """ "Bezetting" — the business-manager occupancy timeline.
@@ -581,14 +671,16 @@ def bezetting(request):
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
-    panel_data = None
-    if placement_id:
+    # The create form takes precedence: it is the only panel here without an
+    # object, so it is checked before the id lookups.
+    panel_data = _assignment_create_panel(request)
+    if panel_data is None and placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
-    elif assignment_id:
+    elif panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
             panel_data = _build_assignment_panel_data(assignment, request)
-    elif colleague_id:
+    elif panel_data is None and colleague_id:
         colleague = _resolve_panel_object(request, Colleague, colleague_id)
         if colleague is not None:
             panel_data = _build_colleague_panel_data(colleague, request)
@@ -625,7 +717,11 @@ def bezetting(request):
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
     filter_groups = bezetting_filter_groups(merk, labels, labels_by_cat)
+    # Status also lives in the sheet, not only on the cards: on a narrow window
+    # the cards are hidden, and a filter you cannot reach is a filter you cannot
+    # switch off.
     _finalize_filter_groups(filter_groups)
+    filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
 
     active_filters = {}
     if merk.active_values:
@@ -650,6 +746,7 @@ def bezetting(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
+        "primary_button": _assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
@@ -1764,16 +1861,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # Opens the create sheet as a panel on the list itself via
         # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
         # in the address bar so a reload reopens the sheet (see side_panel.js).
-        if self.request.user.has_perm("core.add_assignment"):
-            context["primary_button"] = {
-                "button_text": "Opdracht invoeren",
-                "attrs": {
-                    "hx-get": _build_panel_url(self.request, **{"nieuwe-opdracht": ""}),
-                    "hx-target": "#side-panel-content",
-                    "hx-swap": "innerHTML",
-                    "hx-push-url": "true",
-                },
-            }
+        context["primary_button"] = _assignment_create_button(self.request)
 
         # Side panel
         placement_id = self.request.GET.get("plaatsing")
@@ -1783,17 +1871,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # ?nieuwe-opdracht opens the empty create form as a panel on the list.
         # Checked before the object lookups: this panel has no object. Without the
         # permission it falls away silently — this is the list view, not a 403.
-        if self.request.GET.get("nieuwe-opdracht") is not None and self.request.user.has_perm("core.add_assignment"):
-            from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
-                assignment_create_specs,
-            )
-
-            specs = assignment_create_specs()
-            form_cls, initial = build_combined_form_class(specs)
-            # Prefill: the creator is usually the BM themselves.
-            if getattr(self.request.user, "colleague", None):
-                initial["owner"] = self.request.user.colleague
-            context["panel_data"] = _build_assignment_create_panel_data(self.request, form_cls(initial=initial))
+        create_panel = _assignment_create_panel(self.request)
+        if create_panel is not None:
+            context["panel_data"] = create_panel
         elif placement_id:
             panel_data = _resolve_placement_panel(self.request, placement_id)
             if panel_data is not None:
@@ -2106,6 +2186,11 @@ def user_edit(request, public_id):
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
+    # Contract periods sit on the linked colleague; a user without one has
+    # nothing to hang them on and gets no block.
+    colleague = getattr(edited_user, "colleague", None)
+    contract_block = _contract_block(colleague, "user", request.user) if colleague else None
+
     if request.method == "GET":
         form = UserForm(instance=edited_user)
         return render(
@@ -2113,6 +2198,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2146,6 +2232,7 @@ def user_edit(request, public_id):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_block": contract_block,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -2156,51 +2243,80 @@ def user_edit(request, public_id):
     return HttpResponse(status=405)
 
 
+def _colleague_delete_note(colleague):
+    """What deleting the user leaves behind, for the confirm dialog: the colleague
+    stays with their placements, and their contract ends on the chosen day."""
+    if colleague is None:
+        return ""
+    note = " Het collegaprofiel en de plaatsingen op opdrachten blijven bestaan."
+    if colleague.contract_periods.exists():
+        # In general terms: with a backdated day an earlier period may be the
+        # one that ends, and later ones go, so naming today's hours would lie.
+        return note + " Het contract eindigt op de dag hieronder."
+    return note
+
+
 @permission_required("rijksauth.delete_user", raise_exception=True)
 def user_delete(request, public_id):
     """Deletes a user, after the confirmation modal."""
     user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    colleague = getattr(user, "colleague", None)
+    today = timezone.now().date()
 
-    if request.method == "GET":
+    def render_modal(form):
         return render(
             request,
-            "parts/confirm_delete_modal.html",
+            "parts/user_delete_modal.html",
             {
-                "dialog_text": "Gebruiker verwijderen?",
+                "content": form,
                 "dialog_supporting": (
                     f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Verwijderen is permanent en niet terug te draaien."
+                    "Dit is niet terug te draaien." + _colleague_delete_note(colleague)
                 ),
-                "confirm_label": "Verwijder gebruiker",
-                "cancel_label": "Behoud gebruiker",
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
             },
         )
+
+    if request.method == "GET":
+        return render_modal(UserDeleteForm(initial={"left_on": today}, colleague=colleague) if colleague else None)
     if request.method == "POST":
-        if hasattr(user, "colleague") and user.colleague:
-            label_names = [label.name for label in user.colleague.labels.all()]
-        else:
-            label_names = []
-        context = {
-            "email": user.email,
-            "first_name": user.first_name,
-            "last_name": user.last_name,
-            "label_names": label_names,
-            "group_names": [g.name for g in user.groups.all()],
-        }
+        form = UserDeleteForm(request.POST, colleague=colleague) if colleague else None
+        if form is not None and not form.is_valid():
+            return render_modal(form)
+        label_names = [label.name for label in colleague.labels.all()] if colleague else []
+        # The colleague outlives the user (SET_NULL) with their placements, and
+        # drops off Bezetting with the user. The contract ends here so the
+        # colleague panel and the history say when the hours stopped.
         # Capture the int PK before delete() nulls it; Event.object_id keeps
         # referencing the internal id, not the public_id.
         user_pk = user.id
-        user.delete()
-        create_event(
-            object_type="User",
-            action="delete",
-            source="user",
-            object_id=user_pk,
-            user=request.user,
-            request=request,
-            context=context,
-        )
+        # One transaction: a contract ended without the user gone, or a user
+        # gone without a trace, would both be worse than the failure itself.
+        with transaction.atomic():
+            left_on = form.cleaned_data["left_on"] if colleague else None
+            ended, dropped = close_contract_periods(colleague, left_on) if left_on else (None, [])
+            context = {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "label_names": label_names,
+                "group_names": [g.name for g in user.groups.all()],
+                "left_on": left_on.isoformat() if left_on else None,
+                "contract_ended": _contract_period_snapshot(ended) if ended else None,
+                "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+            }
+            user.delete()
+            create_event(
+                object_type="User",
+                action="delete",
+                source="user",
+                object_id=user_pk,
+                user=request.user,
+                request=request,
+                context=context,
+            )
+        name = f"{user.first_name} {user.last_name}".strip() or user.email
+        messages.success(request, f"{name} is verwijderd.")
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("admin-users")
         return response
@@ -2430,6 +2546,149 @@ def profile_name_edit(request):
     )
 
 
+def _own_colleague_or_404(request):
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        raise Http404("Geen collegaprofiel om te bewerken")
+    return colleague
+
+
+_CONTRACT_SURFACES = ("profile", "user", "panel")
+
+
+def _contract_surface(request):
+    """Where the block sits. The URLs carry it, so a save renders the block back
+    in the shape of the page it came from."""
+    surface = request.GET.get("in")
+    return surface if surface in _CONTRACT_SURFACES else "panel"
+
+
+def _contract_block(colleague, surface, user):
+    """Context for parts/contract_periods_block.html.
+
+    One block for three places: the own profile (h2 on a page), the user sheet
+    and the colleague panel (h3). Only who may keep the periods gets the
+    buttons; a consultant reads their own.
+    """
+    can_edit = has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user)
+    if surface != "profile":
+        empty_text = "Nog niet ingevuld. Bezetting toont dan niet hoeveel uur deze collega beschikbaar is."
+    elif can_edit:
+        empty_text = "Nog niet ingevuld. Business managers zien dan niet hoeveel uur je beschikbaar bent."
+    else:
+        empty_text = "Nog niet ingevuld. Je business manager kan je contracturen invullen."
+    return {
+        "colleague": colleague,
+        "heading_tag": "h2" if surface == "profile" else "h3",
+        "can_edit": can_edit,
+        "add_url": reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}",
+        "url_suffix": f"?in={surface}",
+        "empty_text": empty_text,
+    }
+
+
+def _contract_period_event(request, period, action, before=None):
+    """Logs a contract-period change on the colleague the hours belong to.
+
+    On the colleague, not the user: the colleague outlives the user, and the
+    hours of someone who has left are exactly what must stay traceable. Nothing
+    displays these events yet.
+    """
+    after = None if action == "delete" else _contract_period_snapshot(period)
+    create_event(
+        object_type="Colleague",
+        action="update",
+        source="user",
+        object_id=period.colleague_id,
+        user=request.user,
+        request=request,
+        context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
+    )
+
+
+def _contract_period_snapshot(period):
+    return {
+        "hours_per_week": period.hours_per_week,
+        "start_date": period.start_date.isoformat(),
+        "end_date": period.end_date.isoformat() if period.end_date else None,
+    }
+
+
+def _contract_period_sheet(request, period, post_url, contract_block):
+    """Add or edit one contract period in a sheet; a save swaps the block back in."""
+    if request.method == "POST":
+        before = _contract_period_snapshot(period) if period.pk else None
+        form = ContractPeriodForm(request.POST, instance=period)
+        if form.is_valid():
+            form.save()
+            _contract_period_event(request, period, "update" if before else "create", before)
+            return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+    else:
+        form = ContractPeriodForm(instance=period)
+
+    form.fields["hours_per_week"].widget.attrs["autofocus"] = True
+    title = "Contractperiode bewerken" if period.pk else "Contractperiode toevoegen"
+    return render(
+        request,
+        "parts/contract_period_sheet.html",
+        {"content": form, "form_post_url": post_url, "sheet_title": title},
+    )
+
+
+@login_required
+def contract_period_add(request, colleague_public_id):
+    colleague = get_object_or_404(Colleague, public_id=colleague_public_id)
+    period = ContractPeriod(colleague=colleague)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    post_url = reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}"
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, surface, request.user))
+
+
+@login_required
+def contract_period_edit(request, public_id):
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    post_url = reverse("contract-period-edit", args=[period.public_id]) + f"?in={surface}"
+    block = _contract_block(period.colleague, surface, request.user)
+    return _contract_period_sheet(request, period, post_url, block)
+
+
+@login_required
+def contract_period_delete(request, public_id):
+    """GET asks in the shared confirm modal; POST deletes and swaps the block back
+    in through the same response as a save, which also empties the mount the
+    modal sits in."""
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    surface = _contract_surface(request)
+    if request.method != "POST":
+        return render(
+            request,
+            "parts/confirm_delete_modal.html",
+            {
+                "dialog_text": "Contractperiode verwijderen?",
+                "dialog_supporting": (
+                    f"De periode van {period.hours_per_week} uur vanaf {date_format(period.start_date, 'j b Y')} "
+                    "verdwijnt uit de geschiedenis. Een periode afsluiten kan ook met een einddatum."
+                ),
+                "confirm_label": "Verwijder periode",
+                "cancel_label": "Behoud periode",
+                "form_post_url": reverse("contract-period-delete", args=[period.public_id]) + f"?in={surface}",
+            },
+        )
+    colleague = period.colleague
+    before = _contract_period_snapshot(period)
+    period.delete()
+    _contract_period_event(request, period, "delete", before)
+    block = _contract_block(colleague, surface, request.user)
+    return render(request, "parts/contract_period_saved.html", {"contract_block": block})
+
+
 @login_required
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
@@ -2437,9 +2696,7 @@ def profile_labels_edit(request):
     Onboarding asks the same question with the same fields, but saves each one
     when its step is left; here they land together under one "Opslaan".
     """
-    colleague = getattr(request.user, "colleague", None)
-    if colleague is None:
-        raise Http404("Geen collegaprofiel om te bewerken")
+    colleague = _own_colleague_or_404(request)
 
     categories = list(LabelCategory.objects.order_by("name"))
 
@@ -3121,6 +3378,7 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
+            "contract_block": _contract_block(colleague, "profile", request.user) if colleague else None,
             "panel_data": panel_data,
         },
     )
@@ -3194,7 +3452,7 @@ def _onboarding_edit_groups(request, entry, data=None):
     for service in services:
         service_specs = [
             (ServiceEditables, spec, service)
-            for spec in (ServiceEditables.skill, ServiceEditables.description)
+            for spec in (ServiceEditables.skill, ServiceEditables.description, ServiceEditables.hours_per_week)
             if has_permission(Verb.UPDATE, service, request.user, spec)
         ]
         if not service_specs:
@@ -4295,7 +4553,11 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
         teamlid = request.GET.get("teamlid", "")
         if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
             filled = teamlid == "nieuw-ingevuld"
-            initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
+            initial_row = {
+                "is_filled": "ingevuld" if filled else "aanvraag",
+                "has_custom_period": True,
+                "hours_per_week": DEFAULT_HOURS_PER_WEEK,
+            }
             member_heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
         else:
             # teamlid is a Service public_id (UUID string); match it against the row

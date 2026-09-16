@@ -29,3 +29,9 @@
   </nldd-form-actions>
 </form>
 </nldd-form>
+{# Below the form, not in it: the periods save on their own from a sheet on top
+   of this one, and their delete post must not carry the user's fields along. #}
+{% if contract_block is defined and contract_block %}
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  {% include "parts/contract_periods_block.html" %}
+{% endif %}
