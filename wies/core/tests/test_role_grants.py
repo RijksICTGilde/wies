@@ -333,8 +333,6 @@ class StaffEmailChangeTest(TestCase):
         assert (self.staff.first_name, self.staff.email) == ("Nieuw", STAFF_EMAIL)
 
     def test_edit_route_refuses_move_even_if_form_allows_it(self):
-        # The form has already written the new address onto the instance
-        # update_user gets, so the service must check the stored one.
         self.client.force_login(self.user_admin)
 
         with mock.patch("wies.core.forms.may_change_email", return_value=True):
