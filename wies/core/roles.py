@@ -62,6 +62,19 @@ def is_staff_member(user) -> bool:
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
+def may_change_email(editor, old: str, new: str) -> bool:
+    """Whether ``editor`` may change an account's email from ``old`` to ``new``.
+
+    ``is_staff_member`` reads the email, so moving a ``STAFF_EMAILS`` address onto
+    or off an account moves platform administration. Only a platform
+    administrator may do that; ``editor=None`` (the system) may not.
+    """
+    old, new = old.lower(), new.lower()
+    if old == new or (old not in settings.STAFF_EMAILS and new not in settings.STAFF_EMAILS):
+        return True
+    return editor is not None and is_staff_member(editor)
+
+
 def is_bdm_or_assignment_admin(request) -> bool:
     """Whether the request's user holds the BDM or the Opdrachtbeheer role,
     resolved once per request, cached because the audit timeline calls it once per event.

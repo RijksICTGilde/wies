@@ -267,7 +267,7 @@ def update_assignment_extra_info(user, a):
 
 @rule(UPDATE, UserEditables.email)                     # field-level: stricter
 def update_user_email(user, target):
-    return _has_change_perm(user, target)              # admin-only, no self-edit branch
+    return _has_change_perm(user, target) and is_staff_member(user)  # no self-edit branch
 ```
 
 Predicates (`_is_wies_sourced`, `_has_change_perm`,

@@ -288,7 +288,12 @@ class UserEmailFieldRuleTest(TestCase):
         # Field-level rule: stricter override; admin-only.
         assert has_permission(Verb.UPDATE, self.user, self.user, UserEditables.email) is False
 
-    def test_admin_can_update_email(self):
+    def test_admin_cannot_update_email_inline(self):
+        # The rule cannot see the new address; see update_user_email.
+        assert has_permission(Verb.UPDATE, self.user, self.admin, UserEditables.email) is False
+
+    @override_settings(STAFF_EMAILS=["adm@x.nl"])
+    def test_platform_admin_can_update_email(self):
         assert has_permission(Verb.UPDATE, self.user, self.admin, UserEditables.email) is True
 
 

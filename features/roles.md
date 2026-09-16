@@ -45,6 +45,12 @@ in two places:
   someone with Opdrachtbeheer therefore does not strip it. The `User` event
   records the roles the user ends up with in `group_names`.
 
+Platformbeheer follows the email address, so changing an email to or from a
+`STAFF_EMAILS` address is platform administration too (`may_change_email` in
+`roles.py`). `UserForm` rejects it for anyone else and `update_user` refuses
+it. The generic inline-edit route for `email` cannot see the new address, so
+it is open to platform administrators only.
+
 The CSV import has a `Gebruikersbeheer` column (formerly `Beheerder`); it only
 takes effect when a platform administrator runs the import.
 

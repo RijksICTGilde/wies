@@ -16,7 +16,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
-from wies.core.roles import is_assignment_admin, is_bdm
+from wies.core.roles import is_assignment_admin, is_bdm, is_staff_member
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
@@ -139,8 +139,11 @@ def update_service_description(user, s):
 
 @rule(UPDATE, UserEditables.email)
 def update_user_email(user, target):
-    """Email is admin-only — even on the user's own profile.
+    """Email is admin-only — even on the user's own profile — and platform
+    administration only on this route.
 
-    Stricter than the whole-object User rule: no self-edit branch.
+    Stricter than the whole-object User rule: no self-edit branch. The rule
+    cannot see the new address, so ``may_change_email`` cannot be applied here;
+    Gebruikersbeheer changes email through the user form, which applies it.
     """
-    return _has_change_perm(user, target)
+    return _has_change_perm(user, target) and is_staff_member(user)

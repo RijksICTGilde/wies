@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 13: (post-release actions) split authority into platform administration (`STAFF_EMAILS`), the renamed role `Gebruikersbeheer` (was `Beheerder`) and the new role `Opdrachtbeheer`. Editing/deleting any assignment, the Business management section and the ended/future placement visibility move from `STAFF_EMAILS` to `Opdrachtbeheer`; a migration gives everyone in `STAFF_EMAILS` that role once. Only `STAFF_EMAILS` may grant or revoke `Gebruikersbeheer` and `Opdrachtbeheer`. The user CSV import column `Beheerder` is now `Gebruikersbeheer`: update the header of existing import files. See `features/roles.md`
+- 13: (post-release actions) split authority into platform administration (`STAFF_EMAILS`), the renamed role `Gebruikersbeheer` (was `Beheerder`) and the new role `Opdrachtbeheer`. Editing/deleting any assignment, the Business management section and the ended/future placement visibility move from `STAFF_EMAILS` to `Opdrachtbeheer`; a migration gives everyone in `STAFF_EMAILS` that role once. Only `STAFF_EMAILS` may grant or revoke `Gebruikersbeheer` and `Opdrachtbeheer`, or change an email to or from a `STAFF_EMAILS` address. The user CSV import column `Beheerder` is now `Gebruikersbeheer`: update the header of existing import files. See `features/roles.md`
 
 ## 2026-09-13
 

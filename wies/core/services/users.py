@@ -5,13 +5,19 @@ from io import StringIO
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
-from wies.core.roles import BDM_GROUP_NAME, STAFF_GRANTED_GROUPS, USER_ADMIN_GROUP_NAME, is_staff_member
+from wies.core.roles import (
+    BDM_GROUP_NAME,
+    STAFF_GRANTED_GROUPS,
+    USER_ADMIN_GROUP_NAME,
+    is_staff_member,
+    may_change_email,
+)
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
 
@@ -146,6 +152,10 @@ def update_user(
     other_user = User.objects.filter(email__iexact=email).exclude(pk=user.pk).first()
     if other_user is not None:
         raise EmailNotAvailableError(email)
+
+    if not may_change_email(updater, user.email, email):
+        msg = "Only platform administration may move a STAFF_EMAILS address"
+        raise PermissionDenied(msg)
 
     user.first_name = first_name
     user.last_name = last_name
