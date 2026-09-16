@@ -15,8 +15,8 @@ from wies.core.roles import (
     BDM_GROUP_NAME,
     STAFF_GRANTED_GROUPS,
     USER_ADMIN_GROUP_NAME,
-    is_staff_member,
     may_change_email,
+    may_grant,
 )
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
@@ -71,10 +71,8 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
 def _apply_groups(user, groups, updater) -> list:
     """Sets the user's roles, keeping the ``STAFF_GRANTED_GROUPS`` the updater
     may not change. Returns the roles the user ends up with."""
-    new = set(groups)
-    if not (updater and is_staff_member(updater)):
-        new = {g for g in new if g.name not in STAFF_GRANTED_GROUPS}
-        new |= set(user.groups.filter(name__in=STAFF_GRANTED_GROUPS))
+    new = {g for g in groups if may_grant(updater, g.name)}
+    new |= {g for g in user.groups.filter(name__in=STAFF_GRANTED_GROUPS) if not may_grant(updater, g.name)}
     user.groups.set(new)
     return sorted(new, key=lambda g: g.name)
 

@@ -29,6 +29,7 @@ from wies.core.models import (
 User = get_user_model()
 
 BDM_GROUP_NAME = "Business Development Manager"
+CONSULTANT_GROUP_NAME = "Consultant"
 USER_ADMIN_GROUP_NAME = "Gebruikersbeheer"
 ASSIGNMENT_ADMIN_GROUP_NAME = "Opdrachtbeheer"
 
@@ -72,6 +73,13 @@ def may_change_email(editor, old: str, new: str) -> bool:
     return editor is not None and is_staff_member(editor)
 
 
+def may_grant(editor, group_name: str) -> bool:
+    """Whether ``editor`` may grant or revoke the role ``group_name``; ``editor=None``
+    (the system) may not grant the ``STAFF_GRANTED_GROUPS``.
+    """
+    return group_name not in STAFF_GRANTED_GROUPS or (editor is not None and is_staff_member(editor))
+
+
 def is_bdm_or_assignment_admin(request) -> bool:
     """Whether the request's user holds the BDM or the Opdrachtbeheer role,
     resolved once per request, cached because the audit timeline calls it once per event.
@@ -105,7 +113,7 @@ def setup_roles():
             ),
             (OrganizationUnit, ["view_organizationunit"]),
         ],
-        "Consultant": [],
+        CONSULTANT_GROUP_NAME: [],
         ASSIGNMENT_ADMIN_GROUP_NAME: [],
         BDM_GROUP_NAME: [
             (Assignment, ["add_assignment"]),
