@@ -86,7 +86,7 @@ class RoleMatrixStandInTest(TestCase):
         # Restore, so the next question starts from the same user.
         User.objects.filter(pk=self.other_user.pk).update(email="ander-account@rijksoverheid.nl")
         self.other_user.groups.clear()
-        # 403 without the gate, 200 with form errors; a 302 that dropped the change is no either.
+        # No on 403 (gate), 200 (form errors) or a 302 that dropped the change.
         return response.status_code == 302 and all(stored[key] == value for key, value in changes.items())
 
     def test_stand_in_matches_a_saved_user(self):
