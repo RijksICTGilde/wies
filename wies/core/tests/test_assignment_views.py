@@ -34,13 +34,13 @@ class AssignmentEditAttributeTest(TestCase):
         """Creates the users, colleagues and assignments used by the tests."""
         self.client = Client()
 
-        self.user_with_permission = User.objects.create_user(
-            email="perm@rijksoverheid.nl",
-            first_name="User",
-            last_name="WithPerm",
+        self.user_with_permission = grant_assignment_admin(
+            User.objects.create_user(
+                email="perm@rijksoverheid.nl",
+                first_name="User",
+                last_name="WithPerm",
+            )
         )
-        change_permission = Permission.objects.get(codename="change_assignment")
-        self.user_with_permission.user_permissions.add(change_permission)
 
         # The owner holds the BDM role: ownership only grants edit rights
         # combined with BDM (see ``update_assignment`` in permissions.py).
@@ -110,8 +110,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]))
         assert response.status_code in [302, 403]
 
-    def test_assignment_edit_with_change_assignment_permission(self):
-        """A user holding change_assignment can edit."""
+    def test_assignment_edit_as_assignment_admin(self):
+        """An Opdrachtbeheer user can edit."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -988,7 +988,7 @@ class AssignmentDeleteViewTests(TestCase):
             user=self.owner_user, name="Owner BM", email="owner-del@rijksoverheid.nl", source="wies"
         )
 
-        # Holds change_assignment but is not the owner: #313 is owner-only.
+        # A direct change_assignment grant is no role: it opens no delete.
         self.admin_user = User.objects.create_user(
             email="admin-del@rijksoverheid.nl", first_name="Admin", last_name="User"
         )
@@ -1097,7 +1097,7 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.external_assignment.id).exists()
 
-    def test_beheerder_cannot_delete(self):
+    def test_change_assignment_holder_cannot_delete(self):
         self.client.force_login(self.admin_user)
         response = self.client.post(self.url)
         assert response.status_code == 403

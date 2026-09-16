@@ -252,7 +252,7 @@ class InlineEditPermissionTest(TestCase):
         _restore_rules(self._prev_rules)
 
     def test_object_permission_denied_returns_display_with_alert(self):
-        # No placement, no ownership, no change_assignment perm → whole-object
+        # No placement, no ownership, no role → whole-object
         # rule update_assignment denies → alert rendered.
         _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
@@ -712,9 +712,7 @@ class AssignmentEditablesFullTest(TestCase):
             first_name="F",
             last_name="F",
         )
-        # Grant change_assignment so the user can edit regardless of ownership.
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
-        # Put user's Colleague in the BDM group so it shows up in owner choices.
+        # BDM owner: may edit, and the Colleague shows up in owner choices.
         grant_bdm(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
@@ -844,7 +842,7 @@ class PlacementServiceEditablesTest(TestCase):
             first_name="P",
             last_name="S",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         assignment = Assignment.objects.create(
@@ -927,7 +925,7 @@ class AssignmentServicesDisplayTest(TestCase):
             first_name="Svc",
             last_name="Display",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1075,9 +1073,8 @@ class AssignmentServicesAuditTest(TestCase):
             email="svc-audit@rijksoverheid.nl",
             first_name="Svc",
             last_name="Audit",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_bdm(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
@@ -1383,9 +1380,8 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             email="svc-period@rijksoverheid.nl",
             first_name="Svc",
             last_name="Period",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_bdm(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
@@ -1814,7 +1810,7 @@ class InlineOrganizationsEditTest(TestCase):
             first_name="O",
             last_name="O",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(

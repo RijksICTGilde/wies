@@ -59,13 +59,14 @@ class HasPermissionEngineTest(_Setup):
 
         assert has_permission(Verb.UPDATE, self.assignment, AnonymousUser()) is False
 
-    def test_superuser_gets_all_perms_via_django_model_backend(self):
-        # The engine no longer short-circuits superusers; they pass because
-        # rules consult user.has_perm(...) and AuthBackend (inheriting from
-        # ModelBackend) grants superusers every permission.
-        assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is True
-        assert has_permission(Verb.UPDATE, self.placement, self.superuser) is True
-        assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is True
+    def test_superuser_flag_carries_no_assignment_rights(self):
+        # Assignment rules consult roles, not user.has_perm(...), so the
+        # superuser flag (which ModelBackend turns into every permission) opens
+        # nothing there. It still passes the has_perm-based User rule.
+        assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is False
+        assert has_permission(Verb.UPDATE, self.placement, self.superuser) is False
+        assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is False
+        assert has_permission(Verb.UPDATE, self.unrelated_user, self.superuser) is True
 
     def test_field_rule_overrides_object_rule(self):
         # The placed consultant fails the whole-object update rule but
@@ -109,14 +110,14 @@ class AssignmentPermissionRulesTest(_Setup):
         ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
         assert has_permission(Verb.UPDATE, ext, self.owner_user) is False
 
-    def test_change_assignment_perm_grants_update(self):
-        # Granting the Django permission directly (no role holds it; a
-        # per-user grant) lets the user update.
+    def test_change_assignment_perm_does_not_grant_update(self):
+        # Assignment rights come from the BDM owner or Opdrachtbeheer only; a
+        # direct Django permission grant opens nothing.
         u = User.objects.create_user(email="hp@x.nl", first_name="H", last_name="P")
         u.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         # Refresh so the permissions cache is rebuilt.
         u = User.objects.get(pk=u.pk)
-        assert has_permission(Verb.UPDATE, self.assignment, u) is True
+        assert has_permission(Verb.UPDATE, self.assignment, u) is False
 
 
 class AssignmentAdminCanEditAssignmentTest(_Setup):

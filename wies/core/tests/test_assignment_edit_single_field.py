@@ -7,7 +7,6 @@ an omitted field would wipe its column.
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -17,7 +16,7 @@ from wies.core.models import (
     Colleague,
     OrganizationUnit,
 )
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_assignment_admin, grant_bdm
 
 User = get_user_model()
 
@@ -94,14 +93,14 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
         # The owner is deliberately NOT in the BDM group. Since ownership alone
-        # does not grant edit rights, a holder of change_assignment drives
+        # does not grant edit rights, an Opdrachtbeheer user drives
         # the edit UI; the non-BDM owner stays the assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)  # the login signal creates the Colleague
         self.owner = Colleague.objects.get(user=self.owner_user)
 
         self.editor_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
-        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_assignment_admin(self.editor_user)
         self.client.force_login(self.editor_user)
 
         self.assignment = Assignment.objects.create(

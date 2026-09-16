@@ -34,7 +34,7 @@ def _has_change_perm(user, obj) -> bool:
     """True iff `user` holds the standard Django change_<model> permission for `obj`.
 
     Uses ``app_label`` so models in ``rijksauth`` (User) and ``core``
-    (Assignment, Service, Placement, Colleague) both resolve correctly.
+    (Colleague) both resolve correctly.
     """
     return user.has_perm(f"{obj._meta.app_label}.change_{obj._meta.model_name}")  # noqa: SLF001 — _meta is Django's canonical model-introspection API
 
@@ -78,7 +78,7 @@ def update_assignment(user, a):
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or (_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user)
+    return (_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user)
 
 
 @rule(UPDATE, Service)
