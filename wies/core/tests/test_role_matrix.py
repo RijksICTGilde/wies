@@ -170,6 +170,20 @@ class RoleMatrixStandInTest(TestCase):
         assert column("E-mailadres wijzigen (van een ander)") == {"Gebruikersbeheer", COMBINED}
         assert column("E-mailadres inline wijzigen (van een ander)") == {COMBINED}
 
+    def test_rows_only_the_combination_allows(self):
+        """The page text points at the combined column instead of naming these rows."""
+        cells = _cells()
+        parts = (role_matrix.PLATFORM, USER_ADMIN_GROUP_NAME)
+        more = {
+            label
+            for label, heading in cells
+            if heading == COMBINED and cells[(label, heading)] and not any(cells[(label, p)] for p in parts)
+        }
+        assert more == {
+            "Rol Gebruikersbeheer of Opdrachtbeheer toekennen",
+            "E-mailadres inline wijzigen (van een ander)",
+        }
+
     def test_group_permissions_match_a_saved_user(self):
         headings = [heading for heading, _groups, _staff in role_matrix.COLUMNS]
         table = role_matrix.group_permissions()
