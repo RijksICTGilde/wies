@@ -3,7 +3,7 @@
 from datetime import date
 from types import SimpleNamespace
 
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.db import connection
 from django.test import TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
@@ -71,17 +71,23 @@ class RoleMatrixStandInTest(TestCase):
         return Service.objects.create(assignment=self._assignment(user, own=own), description="d")
 
     def _group_ids(self, *names):
-        return [str(pk) for pk in Group.objects.filter(name__in=names).values_list("pk", flat=True)]
+        return sorted(str(pk) for pk in Group.objects.filter(name__in=names).values_list("pk", flat=True))
 
     def _form_accepts(self, editor, changes):
         """Whether ``editor`` saves ``changes`` to another user through the user screen."""
         self.client.force_login(editor)
         data = {"first_name": "Ander", "last_name": "Account", "email": self.other_user.email, **changes}
         response = self.client.post(reverse("user-edit", args=[self.other_user.public_id]), data)
+        saved = User.objects.get(pk=self.other_user.pk)
+        stored = {
+            "email": saved.email,
+            "groups": sorted(str(pk) for pk in saved.groups.values_list("pk", flat=True)),
+        }
         # Restore, so the next question starts from the same user.
         User.objects.filter(pk=self.other_user.pk).update(email="ander-account@rijksoverheid.nl")
         self.other_user.groups.clear()
-        return response.status_code == 302  # 403 without the gate, 200 with form errors
+        # 403 without the gate, 200 with form errors; a 302 that dropped the change is no either.
+        return response.status_code == 302 and all(stored[key] == value for key, value in changes.items())
 
     def test_stand_in_matches_a_saved_user(self):
         past = (date(2000, 1, 1), date(2000, 1, 2))
@@ -163,6 +169,18 @@ class RoleMatrixStandInTest(TestCase):
         assert column("Rol Gebruikersbeheer of Opdrachtbeheer toekennen") == {COMBINED}
         assert column("E-mailadres wijzigen (van een ander)") == {"Gebruikersbeheer", COMBINED}
         assert column("E-mailadres inline wijzigen (van een ander)") == {COMBINED}
+
+    def test_group_permissions_match_a_saved_user(self):
+        headings = [heading for heading, _groups, _staff in role_matrix.COLUMNS]
+        table = role_matrix.group_permissions()
+
+        for index, heading in enumerate(headings):
+            with self.subTest(column=heading):
+                held = set(Permission.objects.filter(group__user=self.users[heading]).values_list("name", flat=True))
+                assert {name for name, cells in table if cells[index]} == held
+        assert {name for name, _cells in table} == set(
+            Permission.objects.filter(group__user__in=self.users.values()).values_list("name", flat=True)
+        )
 
     @override_settings(STAFF_EMAILS=[])
     def test_without_staff_emails_platform_column_has_no_extra_rights(self):
