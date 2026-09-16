@@ -1,10 +1,8 @@
-"""Gives everyone in STAFF_EMAILS the new Opdrachtbeheer role, once.
+"""Gives everyone in STAFF_EMAILS the new Opdrachtbeheer role, once, so nobody
+loses the assignment rights STAFF_EMAILS used to carry.
 
-Platform administration (STAFF_EMAILS) used to carry the assignment rights that
-now belong to Opdrachtbeheer; this keeps those rights for whoever holds them
-today. Each environment reads its own list at deploy time. It is deliberately
-not in setup_roles(), which runs on every start and would re-grant the role to
-someone who removed it from themselves. See features/roles.md.
+Not in setup_roles(): that runs on every start and would re-grant the role to
+someone who removed it from themselves.
 """
 
 import os

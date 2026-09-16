@@ -662,7 +662,7 @@ def seed_base_organizations() -> None:
 def assign_roles(rng: random.Random, count: int) -> list[str]:
     """A shuffled list of ``count`` role names in roughly ``ROLE_WEIGHTS``
     proportion, but guaranteeing at least one of every role when ``count``
-    allows it — a weighted per-item draw can leave a rare role (Gebruikersbeheer)
+    allows it: a weighted per-item draw can leave a rare role (Gebruikersbeheer)
     empty at the small base-profile size."""
     roles = list(ROLE_WEIGHTS)
     if count <= len(roles):

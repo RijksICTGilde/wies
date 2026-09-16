@@ -217,10 +217,6 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
-
-    ``editor`` is the user filling in the form. Unless they do platform
-    administration, the roles in ``STAFF_GRANTED_GROUPS`` are left out of the
-    choices, so they can neither see nor submit them (see ``features/roles.md``).
     """
 
     first_name = UserEditables.first_name.form_field()

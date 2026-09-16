@@ -54,8 +54,7 @@ takes effect when a platform administrator runs the import.
   has no Django model permissions, all its rights are rules.
 - Migration `rijksauth/0009_backfill_assignment_admin` gives everyone in the
   environment's `STAFF_EMAILS` the `Opdrachtbeheer` role, once, so nobody loses
-  a right they had. It is not in `setup_roles()`, which would re-grant the role
-  to someone who removed it from themselves.
+  a right they had.
 - Migration `rijksauth/0010_rename_beheerder_group` renames `Beheerder` to
   `Gebruikersbeheer`, keeping members and permissions.
 - `ensure_initial_user` still gives the first user of a fresh environment

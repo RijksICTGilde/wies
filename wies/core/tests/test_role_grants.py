@@ -1,10 +1,4 @@
-"""Who may grant which role (the grant matrix in ``features/roles.md``).
-
-Only platform administration (``STAFF_EMAILS``) may grant or revoke
-Gebruikersbeheer and Opdrachtbeheer. Gebruikersbeheer may still grant the job
-roles Consultant and BDM, but does not see the privileged roles in the user
-form, cannot submit them, and does not strip them from someone who holds them.
-"""
+"""Who may grant which role (the grant matrix in ``features/roles.md``)."""
 
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
@@ -57,8 +51,6 @@ class RoleGrantTest(TestCase):
 
     def _group_names(self, user):
         return set(user.groups.values_list("name", flat=True))
-
-    # --- The form -----------------------------------------------------------
 
     def test_user_admin_does_not_see_privileged_roles(self):
         names = set(UserForm(editor=self.user_admin).fields["groups"].queryset.values_list("name", flat=True))
@@ -123,8 +115,6 @@ class RoleGrantTest(TestCase):
         assert "HX-Redirect" not in response
         assert not User.objects.filter(email="new@rijksoverheid.nl").exists()
 
-    # --- What Gebruikersbeheer may do ----------------------------------------
-
     def test_user_admin_may_grant_consultant_and_bdm(self):
         self.client.force_login(self.user_admin)
 
@@ -164,8 +154,6 @@ class RoleGrantTest(TestCase):
         event = Event.objects.filter(object_type="User", action="update").last()
         assert set(event.context["group_names"]) == self._group_names(self.target)
 
-    # --- What platform administration may do ---------------------------------
-
     def test_staff_grants_assignment_admin_with_event(self):
         self.client.force_login(self.staff)
 
@@ -195,8 +183,6 @@ class RoleGrantTest(TestCase):
 
         assert response["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.staff) == {USER_ADMIN_GROUP_NAME}
-
-    # --- The service, without the form ---------------------------------------
 
     def _update(self, updater, groups):
         update_user(

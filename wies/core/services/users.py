@@ -63,12 +63,8 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
 
 
 def _apply_groups(user, groups, updater) -> list:
-    """Sets the user's roles, preserving roles the updater may not grant.
-
-    Only platform administration may grant or revoke ``STAFF_GRANTED_GROUPS``;
-    for anyone else those are dropped from ``groups`` and the user's current
-    ones are kept. Returns the roles the user ends up with.
-    """
+    """Sets the user's roles, keeping the ``STAFF_GRANTED_GROUPS`` the updater
+    may not change. Returns the roles the user ends up with."""
     new = set(groups)
     if not (updater and is_staff_member(updater)):
         new = {g for g in new if g.name not in STAFF_GRANTED_GROUPS}

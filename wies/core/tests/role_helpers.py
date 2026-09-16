@@ -2,7 +2,7 @@
 
 Ownership only grants assignment edit rights combined with the BDM role, and
 ended/future placements are visible to privileged viewers only (the BDM role or
-Opdrachtbeheer) — so most tests that exercise an owner's rights or
+Opdrachtbeheer), so most tests that exercise an owner's rights or
 restricted-visibility rows need a BDM or Opdrachtbeheer user. One helper instead of a
 hand-rolled group block per test class, so a change in how the role is
 provisioned lands in one place.
@@ -34,8 +34,8 @@ def grant_assignment_admin(user):
 
 def make_assignment_admin_user(email="opdrachtbeheer@rijksoverheid.nl", name="Opdrachtbeheer"):
     """An Opdrachtbeheer user with a linked colleague, ready for ``force_login``."""
-    from wies.core.models import Colleague  # noqa: PLC0415 (import not at top level) — see make_bdm_user
-    from wies.rijksauth.models import User  # noqa: PLC0415 (import not at top level) — see make_bdm_user
+    from wies.core.models import Colleague  # noqa: PLC0415 (import not at top level), see make_bdm_user
+    from wies.rijksauth.models import User  # noqa: PLC0415 (import not at top level), see make_bdm_user
 
     user = User.objects.create_user(email=email)
     Colleague.objects.create(name=name, email=email, source="wies", user=user)

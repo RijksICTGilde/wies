@@ -59,8 +59,8 @@ def _is_placed_on_service(user, service) -> bool:
 
 
 def _can_edit_assignment_text_field(user, assignment) -> bool:
-    """Whoever may edit the whole assignment, or a placed consultant —
-    but only on wies-sourced opdrachten."""
+    """Whoever may edit the whole assignment, or a placed consultant, but
+    only on wies-sourced opdrachten."""
     if not _is_wies_sourced(assignment):
         return False
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)

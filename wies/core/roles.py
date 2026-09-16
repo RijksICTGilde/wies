@@ -56,9 +56,8 @@ def is_assignment_admin(user) -> bool:
 def is_staff_member(user) -> bool:
     """Whether the user does platform administration (``STAFF_EMAILS``).
 
-    Gates the platform pages (``/beheer/statistieken/``, ``/beheer/database/``)
-    and is the only authority that may grant ``STAFF_GRANTED_GROUPS``. It carries
-    no rights on assignments; those come from ``is_assignment_admin``.
+    Gates the platform pages (``/beheer/statistieken/``, ``/beheer/database/``).
+    It carries no rights on assignments; those come from ``is_assignment_admin``.
     """
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 

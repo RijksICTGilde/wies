@@ -94,7 +94,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
         # The owner is deliberately NOT in the BDM group. Since ownership alone
-        # does not grand edit rights, a holder of change_assignment drives
+        # does not grant edit rights, a holder of change_assignment drives
         # the edit UI; the non-BDM owner stays the assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)  # the login signal creates the Colleague
