@@ -253,6 +253,26 @@ class RoleGrantTest(TestCase):
             f"Row 2: {USER_ADMIN_GROUP_NAME} not applied, only platform administration may grant it"
         ]
 
+    def test_csv_import_warns_only_for_created_rows_that_asked_for_user_admin(self):
+        # Row 3 asks for no privileged role, row 4 is skipped as an existing user.
+        csv_content = (
+            f"first_name,last_name,email,brand,{USER_ADMIN_GROUP_NAME},Consultant,BDM\n"
+            "Ann,Een,ann@rijksoverheid.nl,,y,n,n\n"
+            "Bob,Twee,bob@rijksoverheid.nl,,n,y,n\n"
+            f"Tom,Drie,{self.target.email},,y,n,n\n"
+            "Eva,Vier,eva@rijksoverheid.nl,,Y,n,y\n"
+        )
+
+        result = create_users_from_csv(self.user_admin, csv_content)
+
+        assert result["success"], result
+        assert result["users_created"] == 3
+        assert result["errors"] == [
+            f"Row 2: {USER_ADMIN_GROUP_NAME} not applied, only platform administration may grant it",
+            f"User with email '{self.target.email}' already exists, skipped",
+            f"Row 5: {USER_ADMIN_GROUP_NAME} not applied, only platform administration may grant it",
+        ]
+
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
             f"first_name,last_name,email,brand,{USER_ADMIN_GROUP_NAME},Consultant,BDM\n"

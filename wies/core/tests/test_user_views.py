@@ -1028,7 +1028,9 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(csv_content)})
 
-        assert "Import geslaagd" in response.content.decode()
+        content = response.content.decode()
+        assert "Import geslaagd" in content
+        assert "Row 2: Gebruikersbeheer not applied" in content
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert set(john.groups.values_list("name", flat=True)) == {"Consultant", BDM_GROUP_NAME}
 
