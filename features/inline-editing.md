@@ -275,6 +275,9 @@ Predicates (`_is_wies_sourced`, `_has_change_perm`,
 bodies are plain Python returning `bool` — no DSL, no operator
 overloading.
 
+A new `@rule` also needs a row on the role page (`role_matrix.SECTIONS`,
+see `features/roles.md`); `test_role_matrix.py` fails without one.
+
 ### Calling `has_permission`
 
 ```python

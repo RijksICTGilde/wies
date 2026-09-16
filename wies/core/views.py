@@ -28,6 +28,7 @@ from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
+from wies.core import role_matrix as role_matrix_rules
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import (
     Editable,
@@ -661,6 +662,26 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
+
+
+@permission_required("rijksauth.view_user", raise_exception=True)
+def role_matrix(request):
+    """What each role may do, answered by the rules themselves (``role_matrix.py``).
+
+    Behind ``rijksauth.view_user``, the gate of the Beheer menu: Gebruikersbeheer,
+    and a platform administrator only when also holding that role. The page
+    describes the model and shows no data, so the gate could be wider; this
+    keeps it with the other user-administration pages.
+    """
+    return render(
+        request,
+        "role_matrix.html",
+        {
+            "columns": [heading for heading, _group in role_matrix_rules.COLUMNS],
+            "sections": role_matrix_rules.build_matrix(),
+            "group_permissions": role_matrix_rules.group_permissions(),
+        },
+    )
 
 
 ERRORS_PER_PAGE = 10

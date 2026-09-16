@@ -3,15 +3,16 @@
 Wies separates three kinds of authority. Each is named after what it lets you
 do, not after who holds it.
 
-| Authority | Where it lives | What it allows |
+| Authority | Where it lives | In short |
 |---|---|---|
-| Platformbeheer | `STAFF_EMAILS` (env var) | `/beheer/statistieken/` (usage, errors, stacktraces), `/beheer/database/`, granting the privileged roles below |
-| Gebruikersbeheer | role (Django group) | create, edit and delete users; labels and merken |
-| Opdrachtbeheer | role (Django group) | edit and delete any wies-sourced assignment (and its services and team), the Business management section, colleagues' ended and future placements, the unfiltered team timeline |
+| Platformbeheer | `STAFF_EMAILS` (env var) | the platform pages, granting the privileged roles |
+| Gebruikersbeheer | role (Django group) | users, labels and merken |
+| Opdrachtbeheer | role (Django group) | any wies-sourced assignment, whoever owns it |
 
 The job roles `Consultant` and `Business Development Manager` (BDM) sit next
-to these. A BDM gets the same Business management section and visibility as
-Opdrachtbeheer, but only edits the assignments they own.
+to these. What each role may do, including the scope (own versus someone
+else's assignment), is on the page **Beheer > Rollen** (see below), not in a
+table here.
 
 Platformbeheer carries **no** functional rights. A platform administrator who
 also does assignment work holds `Opdrachtbeheer` as well. To test the app as a
@@ -23,18 +24,13 @@ Code: `wies/core/roles.py` (`is_staff_member`, `is_assignment_admin`,
 
 ## Who may grant what
 
-Only Platformbeheer creates privilege.
+Only Platformbeheer creates privilege: the privileged roles
+(`STAFF_GRANTED_GROUPS` in `roles.py`) may be granted by Platformbeheer only,
+the job roles by Gebruikersbeheer as well (`may_grant`). Platformbeheer itself
+is granted by nobody inside the application: change `STAFF_EMAILS` and deploy.
+Granting happens in the user screen, so it also takes Gebruikersbeheer.
 
-| Role | May be granted by |
-|---|---|
-| Consultant | Gebruikersbeheer, Platformbeheer |
-| BDM | Gebruikersbeheer, Platformbeheer |
-| Gebruikersbeheer | Platformbeheer only |
-| Opdrachtbeheer | Platformbeheer only |
-| Platformbeheer | nobody inside the application: change `STAFF_EMAILS` and deploy |
-
-The privileged roles are `STAFF_GRANTED_GROUPS` in `roles.py`. It is enforced
-in two places:
+The rule is enforced in two places:
 
 - `UserForm(editor=...)` leaves them out of the role choices for anyone who is
   not a platform administrator. They are not shown, and a submitted id for one
@@ -54,6 +50,20 @@ it. The generic inline-edit route for `email` is platform administration only
 The CSV import has a `Gebruikersbeheer` column (formerly `Beheerder`); it only
 takes effect when a platform administrator runs the import. For anyone else
 the import lists each row whose role was dropped as a warning.
+
+## Rollenpagina
+
+`/beheer/rollen/` (Beheer > Rollen, for `rijksauth.view_user`) shows per role
+what it may do on its own, and the Django permissions per group. The cells are
+not written by hand: `wies/core/role_matrix.py` asks the real rules
+(`has_permission`, the visibility rules, `may_grant`) for a stand-in user with
+one role, acting on unsaved objects, so the page only reads. A placed
+consultant's extra rights need a placement in the database and are named in the
+page text instead.
+
+`test_role_matrix.py` fails when a registered `@rule` has no row, or when the
+stand-in answers differently from a saved user with the same role. A new rule
+therefore needs a `Row` in `role_matrix.SECTIONS`.
 
 ## Deploy
 
