@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Label, LabelCategory
@@ -20,6 +20,16 @@ class RBACSetupTest(TestCase):
         group = Group.objects.get(name="Opdrachtbeheer")
         assert not group.permissions.exists()
         assert not group.user_set.exists()
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_setup_roles_does_not_grant_assignment_admin_to_staff(self):
+        """setup_roles() runs on every start; a staff member who removed
+        Opdrachtbeheer from themselves must not get it back."""
+        User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
+
+        setup_roles()
+
+        assert not Group.objects.get(name="Opdrachtbeheer").user_set.exists()
 
     def test_setup_roles_creates_user_admin_group(self):
         """Test that setup_roles creates the Gebruikersbeheer group"""

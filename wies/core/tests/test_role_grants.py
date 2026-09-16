@@ -84,6 +84,17 @@ class RoleGrantTest(TestCase):
         self.assertContains(response, ASSIGNMENT_ADMIN_GROUP_NAME)
         self.assertContains(response, USER_ADMIN_GROUP_NAME)
 
+    def test_rendered_create_form_shows_privileged_roles_only_to_staff(self):
+        for editor, shown in ((self.staff, True), (self.user_admin, False)):
+            with self.subTest(editor=editor.email):
+                self.client.force_login(editor)
+
+                response = self.client.get(reverse("user-create"), headers=HX)
+
+                assert response.status_code == 200
+                assert (ASSIGNMENT_ADMIN_GROUP_NAME in response.content.decode()) is shown
+                self.assertContains(response, BDM_GROUP_NAME)
+
     def test_smuggled_privileged_role_fails_validation(self):
         for group in (self.user_admin_group, self.assignment_admin_group):
             with self.subTest(group=group.name):
@@ -169,6 +180,22 @@ class RoleGrantTest(TestCase):
         assert event.object_id == self.target.id
         assert event.user_id == self.staff.id
         assert event.context["group_names"] == [ASSIGNMENT_ADMIN_GROUP_NAME]
+
+    def test_staff_creates_user_with_privileged_roles(self):
+        self.client.force_login(self.staff)
+        new = User(first_name="N", last_name="U", email="new@rijksoverheid.nl")
+
+        response = self.client.post(
+            reverse("user-create"),
+            self._payload(new, [self.assignment_admin_group, self.user_admin_group]),
+            headers=HX,
+        )
+
+        assert response["HX-Redirect"] == reverse("admin-users")
+        assert self._group_names(User.objects.get(email="new@rijksoverheid.nl")) == {
+            ASSIGNMENT_ADMIN_GROUP_NAME,
+            USER_ADMIN_GROUP_NAME,
+        }
 
     def test_staff_revokes_own_assignment_admin(self):
         # The "switch it off and test as a normal user" workflow.
