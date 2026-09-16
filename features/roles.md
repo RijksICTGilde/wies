@@ -52,7 +52,8 @@ it. The generic inline-edit route for `email` is platform administration only
 (`update_user_email` in `permissions.py` says why).
 
 The CSV import has a `Gebruikersbeheer` column (formerly `Beheerder`); it only
-takes effect when a platform administrator runs the import.
+takes effect when a platform administrator runs the import. For anyone else
+the import lists each row whose role was dropped as a warning.
 
 ## Deploy
 

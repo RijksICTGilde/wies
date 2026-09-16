@@ -249,6 +249,9 @@ class RoleGrantTest(TestCase):
 
         assert result["success"], result
         assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {"Consultant"}
+        assert result["errors"] == [
+            f"Row 2: {USER_ADMIN_GROUP_NAME} not applied, only platform administration may grant it"
+        ]
 
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
@@ -260,6 +263,7 @@ class RoleGrantTest(TestCase):
 
         assert result["success"], result
         assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {USER_ADMIN_GROUP_NAME}
+        assert result["errors"] == []
 
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])

@@ -292,7 +292,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         if row_errors:
             errors.extend(row_errors)
         else:
-            rows.append(row)
+            rows.append((row_num, row))
 
     if errors:
         return {
@@ -313,7 +313,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 "BDM": Group.objects.get(name=BDM_GROUP_NAME),
             }
 
-            for row in rows:
+            for row_num, row in rows:
                 first_name = row["first_name"].strip()
                 last_name = row["last_name"].strip()
                 email = row["email"].strip()
@@ -340,7 +340,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     errors.append(f"User with email '{email}' already exists, skipped")
                     continue
 
-                create_user(
+                user = create_user(
                     creator,
                     first_name=first_name,
                     last_name=last_name,
@@ -350,6 +350,12 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     request=request,
                 )
                 users_created += 1
+                dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
+                if dropped:
+                    errors.append(
+                        f"Row {row_num}: {', '.join(sorted(dropped))} not applied, "
+                        "only platform administration may grant it"
+                    )
     except (DataError, IntegrityError) as e:
         logger.warning("User-CSV import failed with a data error", exc_info=e)
         return {
