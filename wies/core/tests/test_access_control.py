@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from wies.core.tests.role_helpers import grant_assignment_admin
+
 User = get_user_model()
 
 
@@ -86,6 +88,18 @@ class AccessControlTest(TestCase):
     def test_non_staff_email_cannot_access_staff_page(self):
         """Test that a user whose email is not in STAFF_EMAILS is redirected away from staff subpages"""
         self.client.force_login(self.test_user)
+
+        for path in ("/beheer/statistieken/", "/beheer/database/"):
+            with self.subTest(path=path):
+                response = self.client.get(path, follow=False)
+
+                assert response.status_code == 302
+                assert response.url.startswith("/geen-toegang/")
+
+    @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
+    def test_assignment_admin_cannot_access_staff_page(self):
+        """Opdrachtbeheer is a functional role, not platform administration."""
+        self.client.force_login(grant_assignment_admin(self.test_user))
 
         for path in ("/beheer/statistieken/", "/beheer/database/"):
             with self.subTest(path=path):

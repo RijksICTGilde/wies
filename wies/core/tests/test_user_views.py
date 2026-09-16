@@ -4,7 +4,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.forms import UserForm
@@ -55,7 +55,7 @@ class UserViewsTest(TestCase):
         self.merk_b = Suborganization.objects.create(name="Merk B")
 
         # Create test groups for form testing
-        self.admin_group = Group.objects.create(name="Beheerder")
+        self.admin_group = Group.objects.create(name="Gebruikersbeheer")
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
@@ -694,7 +694,7 @@ class UserImportTest(TestCase):
         self.import_url = reverse("user-import-csv")
 
         # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
+        self.admin_group = Group.objects.create(name="Gebruikersbeheer")
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
@@ -779,10 +779,12 @@ class UserImportTest(TestCase):
         content = response.content.decode()
         assert "Ongeldig bestandstype" in content
 
+    # Granting Gebruikersbeheer takes platform administration (features/roles.md).
+    @override_settings(STAFF_EMAILS=["test@rijksoverheid.nl"])
     def test_import_valid_csv_creates_users(self):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
 John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n
 Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -801,19 +803,19 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         # Verify the existing merk was assigned (looked up, not created)
         assert john.colleague.suborganization is not None
         assert john.colleague.suborganization.name == "Brand A"
-        assert john.groups.filter(name="Beheerder").exists()
+        assert john.groups.filter(name="Gebruikersbeheer").exists()
         assert not john.groups.filter(name="Consultant").exists()
 
         jane = User.objects.get(email="jane.smith@rijksoverheid.nl")
         assert jane.first_name == "Jane"
         assert jane.groups.filter(name="Consultant").exists()
-        assert not jane.groups.filter(name="Beheerder").exists()
+        assert not jane.groups.filter(name="Gebruikersbeheer").exists()
 
     def test_import_accepts_semicolon_delimiter(self):
         """Test that import accepts CSV files using `;` as the delimiter (Excel default on many locales)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            "first_name;last_name;email;brand;Beheerder;Consultant;BDM\n"
+            "first_name;last_name;email;brand;Gebruikersbeheer;Consultant;BDM\n"
             "John;Doe;john.doe@rijksoverheid.nl;Brand A;y;n;n\n"
             "Jane;Smith;jane.smith@rijksoverheid.nl;Brand B;n;y;n"
         )
@@ -830,7 +832,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         """Test that import accepts CSV files saved with a UTF-8 BOM (Excel on Windows)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            "first_name,last_name,email,brand,Beheerder,Consultant,BDM\n"
+            "first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n"
         )
         csv_file = SimpleUploadedFile(
@@ -913,7 +915,7 @@ Jane,Smith,also-invalid"""
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
 John,Doe,john@rijksoverheid.nl,Brand A,yes,n,n
 Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -923,7 +925,7 @@ Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "Beheerder" in content
+        assert "Gebruikersbeheer" in content
         assert "must be" in content
         assert "Consultant" in content
 
@@ -998,10 +1000,11 @@ John,Doe,john@rijksoverheid.nl"""
         assert john.colleague.suborganization is None
         assert john.groups.count() == 0
 
+    @override_settings(STAFF_EMAILS=["test@rijksoverheid.nl"])
     def test_import_with_multiple_groups(self):
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -1013,9 +1016,21 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.groups.count() == 3
-        assert john.groups.filter(name="Beheerder").exists()
+        assert john.groups.filter(name="Gebruikersbeheer").exists()
         assert john.groups.filter(name="Consultant").exists()
         assert john.groups.filter(name=BDM_GROUP_NAME).exists()
+
+    def test_import_by_non_staff_skips_user_admin_column(self):
+        """Without platform administration the Gebruikersbeheer column is not applied."""
+        self.client.force_login(self.auth_user)
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
+John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
+
+        response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(csv_content)})
+
+        assert "Import geslaagd" in response.content.decode()
+        john = User.objects.get(email="john@rijksoverheid.nl")
+        assert set(john.groups.values_list("name", flat=True)) == {"Consultant", BDM_GROUP_NAME}
 
     def test_import_empty_csv(self):
         """Test import with empty CSV file"""
@@ -1064,7 +1079,7 @@ Jane,Smith,invalid-email"""
     def test_import_handles_whitespace_in_fields(self):
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
   John  ,  Doe  ,  john@rijksoverheid.nl  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 

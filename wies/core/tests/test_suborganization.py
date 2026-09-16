@@ -68,7 +68,7 @@ class GetSuborganizationByNameTest(TestCase):
 
 
 class SuborganizationInlineEditPermissionTest(TestCase):
-    """Suborganization keeps the same permission as labels: self-edit + Beheerder."""
+    """Suborganization keeps the same permission as labels: self-edit + Gebruikersbeheer."""
 
     def setUp(self):
         setup_roles()
@@ -86,7 +86,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         )
 
         self.admin_user = User.objects.create_user(email="admin@rijksoverheid.nl", first_name="Admin")
-        self.admin_user.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin_user.groups.add(Group.objects.get(name="Gebruikersbeheer"))
 
         self.other_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="Other")
 
@@ -285,7 +285,7 @@ class SuborganizationAdminTest(TestCase):
         setup_roles()
         self.client = Client()
         self.admin_user = User.objects.create_user(email="beheer@rijksoverheid.nl")
-        self.admin_user.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin_user.groups.add(Group.objects.get(name="Gebruikersbeheer"))
         self.plain_user = User.objects.create_user(email="plain@rijksoverheid.nl")
 
     def test_admin_requires_permission(self):
@@ -451,7 +451,7 @@ class SuborganizationAdminTest(TestCase):
 
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):
-    """Each endpoint is gated by its own permission, not just 'is Beheerder'."""
+    """Each endpoint is gated by its own permission, not just 'is Gebruikersbeheer'."""
 
     def setUp(self):
         setup_roles()

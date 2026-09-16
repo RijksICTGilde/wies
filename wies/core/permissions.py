@@ -16,7 +16,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
-from wies.core.roles import is_bdm, is_staff_member
+from wies.core.roles import is_assignment_admin, is_bdm
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
@@ -59,8 +59,8 @@ def _is_placed_on_service(user, service) -> bool:
 
 
 def _can_edit_assignment_text_field(user, assignment) -> bool:
-    """BM-owner, Beheerder (``change_assignment``) or a placed
-    consultant — but only on wies-sourced opdrachten."""
+    """Whoever may edit the whole assignment, or a placed consultant —
+    but only on wies-sourced opdrachten."""
     if not _is_wies_sourced(assignment):
         return False
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
@@ -71,15 +71,14 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
 
 @rule(UPDATE, Assignment)
 def update_assignment(user, a):
-    """Full edit: BDM owner of a wies-sourced assignment, holder of
-    core.change_assignment, or a support-staff member (``STAFF_EMAILS``).
+    """Full edit of a wies-sourced assignment: its BDM owner, or Opdrachtbeheer.
 
     Placed colleagues do NOT pass — they get narrower access via the
     field-level rules for description/extra_info below.
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or (_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user)
+    return _has_change_perm(user, a) or (_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user)
 
 
 @rule(UPDATE, Service)
@@ -96,13 +95,13 @@ def update_placement(user, p):
 
 @rule(UPDATE, Colleague)
 def update_colleague(user, c):
-    """Admin (Beheerder via has_perm), or the colleague themselves."""
+    """Admin (Gebruikersbeheer via has_perm), or the colleague themselves."""
     return _has_change_perm(user, c) or getattr(user, "colleague", None) == c
 
 
 @rule(UPDATE, User)
 def update_user(user, target):
-    """Admin path (Beheerder holds rijksauth.change_user) or self-edit."""
+    """Admin path (Gebruikersbeheer holds rijksauth.change_user) or self-edit."""
     return _has_change_perm(user, target) or target == user
 
 
@@ -111,14 +110,10 @@ def update_user(user, target):
 
 @rule(DELETE, Assignment)
 def delete_assignment(user, a):
-    """The BDM owner of a wies-sourced opdracht, or a support-staff
-    member (``STAFF_EMAILS``) (issue #313).
-
-    Beheerder (``core.change_assignment``) is intentionally NOT
-    included here — deletion stays with the owner who has end-to-end
-    accountability for the opdracht, plus staff for support cases.
+    """The BDM owner of a wies-sourced opdracht, who has end-to-end
+    accountability for it, or Opdrachtbeheer for support cases (issue #313).
     """
-    return _is_wies_sourced(a) and ((_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user))
+    return _is_wies_sourced(a) and ((_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user))
 
 
 # --- Field-level UPDATE rules -----------------------------------------------

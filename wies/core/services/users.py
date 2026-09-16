@@ -11,7 +11,7 @@ from django.db import DataError, IntegrityError, transaction
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import BDM_GROUP_NAME, STAFF_GRANTED_GROUPS, USER_ADMIN_GROUP_NAME, is_staff_member
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
 
@@ -62,6 +62,21 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
+def _apply_groups(user, groups, updater) -> list:
+    """Sets the user's roles, preserving roles the updater may not grant.
+
+    Only platform administration may grant or revoke ``STAFF_GRANTED_GROUPS``;
+    for anyone else those are dropped from ``groups`` and the user's current
+    ones are kept. Returns the roles the user ends up with.
+    """
+    new = set(groups)
+    if not (updater and is_staff_member(updater)):
+        new = {g for g in new if g.name not in STAFF_GRANTED_GROUPS}
+        new |= set(user.groups.filter(name__in=STAFF_GRANTED_GROUPS))
+    user.groups.set(new)
+    return sorted(new, key=lambda g: g.name)
+
+
 def create_user(
     creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
 ):
@@ -94,8 +109,7 @@ def create_user(
     if suborganization is not None:
         colleague.suborganization = suborganization
         colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
+    groups = _apply_groups(user, groups, creator)
 
     context = {
         "email": email,
@@ -150,8 +164,7 @@ def update_user(
         label_names = [label.name for label in labels]
     colleague.suborganization = suborganization
     colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
+    groups = _apply_groups(user, groups, updater)
 
     context = {
         "first_name": first_name,
@@ -182,7 +195,8 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     - last_name (required)
     - email (required)
     - brand (optional, merk name - assigned as the colleague's merk; must already exist)
-    - Beheerder (optional, "y" or "n")
+    - Gebruikersbeheer (optional, "y" or "n"; only applied when the importer does
+      platform administration, see ``_apply_groups``)
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
 
@@ -250,7 +264,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 domains_str = ", ".join(allowed_domains)
                 row_errors.append(f"Row {row_num}: email '{email}' has invalid domain. Allowed: {domains_str}")
 
-        for group_name in ["Beheerder", "Consultant", "BDM"]:
+        for group_name in [USER_ADMIN_GROUP_NAME, "Consultant", "BDM"]:
             if group_name in row:
                 value = row[group_name].strip().lower()
                 if value not in {"y", "n", ""}:
@@ -286,7 +300,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         with transaction.atomic():
             # Get all groups once
             groups_dict = {
-                "Beheerder": Group.objects.get(name="Beheerder"),
+                USER_ADMIN_GROUP_NAME: Group.objects.get(name=USER_ADMIN_GROUP_NAME),
                 "Consultant": Group.objects.get(name="Consultant"),
                 "BDM": Group.objects.get(name=BDM_GROUP_NAME),
             }
@@ -306,7 +320,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     suborganization = suborg_mapping[brand_name]
 
                 groups_to_assign = []
-                for group_name in ["Beheerder", "Consultant", "BDM"]:
+                for group_name in [USER_ADMIN_GROUP_NAME, "Consultant", "BDM"]:
                     if row.get(group_name, "").strip().lower() == "y":
                         group = groups_dict.get(group_name)
                         if group:

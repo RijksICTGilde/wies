@@ -80,7 +80,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import is_bdm, is_staff_member
+from .roles import is_assignment_admin, is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -561,8 +561,8 @@ def staff_required(view_func):
 
 def business_management_access_required(view_func):
     """Gate the "Business management" section: Business Development Managers plus
-    support staff."""
-    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
+    Opdrachtbeheer."""
+    return user_passes_test(lambda u: is_bdm(u) or is_assignment_admin(u), login_url="/geen-toegang/")(view_func)
 
 
 @business_management_access_required
@@ -2049,7 +2049,7 @@ def user_create(request):
     element_id = "userFormModal"
 
     if request.method == "GET":
-        form = UserForm()
+        form = UserForm(editor=request.user)
         form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
             request,
@@ -2064,7 +2064,7 @@ def user_create(request):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST)
+        form = UserForm(request.POST, editor=request.user)
         if form.is_valid():
             create_user(
                 request.user,
@@ -2107,7 +2107,7 @@ def user_edit(request, public_id):
     element_id = "userFormModal"
 
     if request.method == "GET":
-        form = UserForm(instance=edited_user)
+        form = UserForm(instance=edited_user, editor=request.user)
         return render(
             request,
             "parts/user_form_modal.html",
@@ -2121,7 +2121,7 @@ def user_edit(request, public_id):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST, instance=edited_user)
+        form = UserForm(request.POST, instance=edited_user, editor=request.user)
         if form.is_valid():
             update_user(
                 updater=request.user,

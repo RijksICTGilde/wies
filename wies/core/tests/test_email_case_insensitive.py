@@ -95,7 +95,7 @@ class UserCSVCaseInsensitiveDuplicateTest(TestCase):
     """CSV user import detects intra-file duplicates that differ only in case."""
 
     def setUp(self):
-        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Gebruikersbeheer")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name=BDM_GROUP_NAME)
 

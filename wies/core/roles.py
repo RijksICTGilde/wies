@@ -1,4 +1,5 @@
-"""Group/permission setup and role predicates for Beheerder, Consultant, BDM.
+"""Group/permission setup and role predicates for Gebruikersbeheer, Opdrachtbeheer,
+Consultant and BDM. The authority model is described in ``features/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
 ``wies/core/permissions.py``. This module owns the Django Group definitions,
@@ -28,6 +29,12 @@ from wies.core.models import (
 User = get_user_model()
 
 BDM_GROUP_NAME = "Business Development Manager"
+USER_ADMIN_GROUP_NAME = "Gebruikersbeheer"
+ASSIGNMENT_ADMIN_GROUP_NAME = "Opdrachtbeheer"
+
+# Roles that create privilege, so only platform administration (``STAFF_EMAILS``)
+# may grant or revoke them.
+STAFF_GRANTED_GROUPS = frozenset({USER_ADMIN_GROUP_NAME, ASSIGNMENT_ADMIN_GROUP_NAME})
 
 
 def is_bdm(user) -> bool:
@@ -40,32 +47,38 @@ def is_bdm(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=BDM_GROUP_NAME).exists()
 
 
-def is_staff_member(user) -> bool:
-    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
+def is_assignment_admin(user) -> bool:
+    """Whether the user may act on any assignment (Django group
+    ``ASSIGNMENT_ADMIN_GROUP_NAME``)."""
+    return user.is_authenticated and user.groups.filter(name=ASSIGNMENT_ADMIN_GROUP_NAME).exists()
 
-    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
-    and as a per-row edit- and visibility-predicate (e.g. in ``update_assignment``
-    and ``is_bdm_or_staff``).
+
+def is_staff_member(user) -> bool:
+    """Whether the user does platform administration (``STAFF_EMAILS``).
+
+    Gates the platform pages (``/beheer/statistieken/``, ``/beheer/database/``)
+    and is the only authority that may grant ``STAFF_GRANTED_GROUPS``. It carries
+    no rights on assignments; those come from ``is_assignment_admin``.
     """
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
-def is_bdm_or_staff(request) -> bool:
-    """Whether the request's user holds the BDM role or is a support-staff member,
+def is_bdm_or_assignment_admin(request) -> bool:
+    """Whether the request's user holds the BDM or the Opdrachtbeheer role,
     resolved once per request, cached because the audit timeline calls it once per event.
     """
     user = getattr(request, "user", None)
     if user is None:
         return False
-    if not hasattr(request, "wies_is_bdm_or_staff"):
-        request.wies_is_bdm_or_staff = is_bdm(user) or is_staff_member(user)
-    return request.wies_is_bdm_or_staff
+    if not hasattr(request, "wies_is_bdm_or_assignment_admin"):
+        request.wies_is_bdm_or_assignment_admin = is_bdm(user) or is_assignment_admin(user)
+    return request.wies_is_bdm_or_assignment_admin
 
 
 def setup_roles():
     # Define roles
     roles = {
-        "Beheerder": [
+        USER_ADMIN_GROUP_NAME: [
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
             (
                 LabelCategory,
@@ -84,6 +97,7 @@ def setup_roles():
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         "Consultant": [],
+        ASSIGNMENT_ADMIN_GROUP_NAME: [],
         BDM_GROUP_NAME: [
             (Assignment, ["add_assignment"]),
             (Service, ["add_service"]),

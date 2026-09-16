@@ -252,7 +252,7 @@ class InlineEditPermissionTest(TestCase):
         _restore_rules(self._prev_rules)
 
     def test_object_permission_denied_returns_display_with_alert(self):
-        # No placement, no ownership, no Beheerder perm → whole-object
+        # No placement, no ownership, no change_assignment perm → whole-object
         # rule update_assignment denies → alert rendered.
         _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])

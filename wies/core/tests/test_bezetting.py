@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, Suborganization
-from wies.core.roles import setup_roles
+from wies.core.roles import ASSIGNMENT_ADMIN_GROUP_NAME, setup_roles
 from wies.core.services.occupancy import (
     GILDE_CATEGORY,
     HORIZON_AHEAD_DAYS,
@@ -86,15 +86,24 @@ class BezettingAuthTest(TestCase):
         assert response.status_code == 200
         assert b"Bezetting" in response.content
 
-    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_staff_gets_page(self):
-        # Support staff (STAFF_EMAILS) may reach the business-management section too,
+    def test_assignment_admin_gets_page(self):
+        # Opdrachtbeheer may reach the business-management section too,
         # even without the Business Development Manager role.
-        staff = User.objects.create(email="staff@rijksoverheid.nl")
-        self.client.force_login(staff)
+        admin = User.objects.create(email="opdrachtbeheer@rijksoverheid.nl")
+        admin.groups.add(Group.objects.get(name=ASSIGNMENT_ADMIN_GROUP_NAME))
+        self.client.force_login(admin)
         response = self.client.get(self.url)
         assert response.status_code == 200
         assert b"Bezetting" in response.content
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_bare_staff_redirected(self):
+        # Platform administration alone carries no functional rights.
+        staff = User.objects.create(email="staff@rijksoverheid.nl")
+        self.client.force_login(staff)
+        response = self.client.get(self.url)
+        assert response.status_code == 302
+        assert "/geen-toegang/" in response.url
 
 
 class BezettingPanelTest(TestCase):
@@ -158,12 +167,19 @@ class BezettingNavVisibilityTest(TestCase):
         response = self.client.get(reverse("home"))
         assert b"Business management" not in response.content
 
+    def test_tab_visible_for_assignment_admin(self):
+        admin = User.objects.create(email="opdrachtbeheer@rijksoverheid.nl")
+        admin.groups.add(Group.objects.get(name=ASSIGNMENT_ADMIN_GROUP_NAME))
+        self.client.force_login(admin)
+        response = self.client.get(reverse("home"))
+        assert b"Business management" in response.content
+
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_tab_visible_for_staff(self):
+    def test_tab_hidden_for_bare_staff(self):
         staff = User.objects.create(email="staff@rijksoverheid.nl")
         self.client.force_login(staff)
         response = self.client.get(reverse("home"))
-        assert b"Business management" in response.content
+        assert b"Business management" not in response.content
 
 
 class OccupancyServiceTest(TestCase):

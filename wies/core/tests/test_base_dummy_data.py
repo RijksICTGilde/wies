@@ -41,7 +41,7 @@ class BaseDummyDataFixtureTest(TestCase):
 
     def test_the_other_roles_are_represented(self):
         """Roles drive permissions, so the demo data has to exercise more than one."""
-        for role in ("Business Development Manager", "Beheerder"):
+        for role in ("Business Development Manager", "Gebruikersbeheer"):
             assert Colleague.objects.filter(user__groups__name=role).exists(), f"no {role}"
 
     def test_consultants_have_placements_to_draw(self):

@@ -80,10 +80,10 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
-# Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+# Role mix for the dummy users: most consultants, some BDMs, a few user administrators.
 # Assignment owners are drawn only from the BDM colleagues, matching production
 # where the owner is a Business Development Manager.
-ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
+ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Gebruikersbeheer": 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
@@ -662,7 +662,7 @@ def seed_base_organizations() -> None:
 def assign_roles(rng: random.Random, count: int) -> list[str]:
     """A shuffled list of ``count`` role names in roughly ``ROLE_WEIGHTS``
     proportion, but guaranteeing at least one of every role when ``count``
-    allows it — a weighted per-item draw can leave a rare role (Beheerder)
+    allows it — a weighted per-item draw can leave a rare role (Gebruikersbeheer)
     empty at the small base-profile size."""
     roles = list(ROLE_WEIGHTS)
     if count <= len(roles):

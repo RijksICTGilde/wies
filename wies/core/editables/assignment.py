@@ -16,7 +16,7 @@ from django.utils import timezone
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
+from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_assignment_admin
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
@@ -354,8 +354,8 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if is_bdm_or_staff(request):
-        # A privileged viewer (BDM or support staff) sees the unfiltered list;
+    if is_bdm_or_assignment_admin(request):
+        # A privileged viewer (BDM or Opdrachtbeheer) sees the unfiltered list;
         # they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)

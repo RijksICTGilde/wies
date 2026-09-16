@@ -11,6 +11,7 @@ from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
 from .models import Colleague, Label, LabelCategory, Suborganization
+from .roles import STAFF_GRANTED_GROUPS, is_staff_member
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -216,6 +217,10 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
+
+    ``editor`` is the user filling in the form. Unless they do platform
+    administration, the roles in ``STAFF_GRANTED_GROUPS`` are left out of the
+    choices, so they can neither see nor submit them (see ``features/roles.md``).
     """
 
     first_name = UserEditables.first_name.form_field()
@@ -254,8 +259,13 @@ class UserForm(NlddFormMixin, forms.ModelForm):
             raise ValidationError(msg)
         return email
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # The queryset is also what submitted ids are validated against, so this
+        # enforces the grant rule server-side, not only in the rendered form.
+        if not (editor and is_staff_member(editor)):
+            self.fields["groups"].queryset = Group.objects.exclude(name__in=STAFF_GRANTED_GROUPS)
 
         instance = kwargs.get("instance")
 

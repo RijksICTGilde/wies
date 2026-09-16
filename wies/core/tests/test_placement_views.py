@@ -46,7 +46,7 @@ class PlacementImportTest(TestCase):
         self.import_url = reverse("assignment-import-csv")
 
         # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
+        self.admin_group = Group.objects.create(name="Gebruikersbeheer")
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 

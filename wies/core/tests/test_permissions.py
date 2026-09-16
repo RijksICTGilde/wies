@@ -22,7 +22,7 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
 
 from .inline_edit_helpers import post_inline_edit
-from .role_helpers import grant_bdm
+from .role_helpers import grant_assignment_admin, grant_bdm
 
 User = get_user_model()
 
@@ -110,8 +110,8 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, ext, self.owner_user) is False
 
     def test_change_assignment_perm_grants_update(self):
-        # Granting the Django permission directly (e.g. via a Beheerder
-        # role that holds it, or per-user grant) lets the user update.
+        # Granting the Django permission directly (no role holds it; a
+        # per-user grant) lets the user update.
         u = User.objects.create_user(email="hp@x.nl", first_name="H", last_name="P")
         u.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         # Refresh so the permissions cache is rebuilt.
@@ -119,45 +119,75 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, u) is True
 
 
-@override_settings(STAFF_EMAILS=["staff@x.nl"])
-class StaffMemberCanEditAssignmentTest(_Setup):
-    """Users in ``STAFF_EMAILS`` can edit wies-sourced assignments and their
-    chained Service/Placement records (issue #392). External-source
+class AssignmentAdminCanEditAssignmentTest(_Setup):
+    """Opdrachtbeheer can edit and delete wies-sourced assignments and their
+    chained Service/Placement records (issues #392, #313). External-source
     assignments stay read-only."""
+
+    def setUp(self):
+        super().setUp()
+        self.admin_user = grant_assignment_admin(
+            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
+        )
+
+    def test_assignment_admin_can_update_assignment(self):
+        assert has_permission(Verb.UPDATE, self.assignment, self.admin_user) is True
+
+    def test_assignment_admin_can_delete_assignment(self):
+        assert has_permission(Verb.DELETE, self.assignment, self.admin_user) is True
+
+    def test_assignment_admin_cannot_delete_external_assignment(self):
+        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
+        assert has_permission(Verb.DELETE, ext, self.admin_user) is False
+
+    def test_assignment_admin_can_update_service(self):
+        assert has_permission(Verb.UPDATE, self.service, self.admin_user) is True
+
+    def test_assignment_admin_can_update_placement(self):
+        assert has_permission(Verb.UPDATE, self.placement, self.admin_user) is True
+
+    def test_assignment_admin_can_update_field_level_rules(self):
+        a, s = self.assignment, self.service
+        assert has_permission(Verb.UPDATE, a, self.admin_user, field=AssignmentEditables.name) is True
+        assert has_permission(Verb.UPDATE, a, self.admin_user, field=AssignmentEditables.extra_info) is True
+        assert has_permission(Verb.UPDATE, s, self.admin_user, field=ServiceEditables.description) is True
+
+    def test_assignment_admin_cannot_update_external_assignment(self):
+        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
+        assert has_permission(Verb.UPDATE, ext, self.admin_user) is False
+
+    def test_unrelated_user_still_denied(self):
+        assert has_permission(Verb.UPDATE, self.assignment, self.unrelated_user) is False
+
+
+@override_settings(STAFF_EMAILS=["staff@x.nl"])
+class StaffMemberHasNoAssignmentRightsTest(_Setup):
+    """Platform administration (``STAFF_EMAILS``) carries no functional rights:
+    without Opdrachtbeheer a staff member may not edit or delete an assignment."""
 
     def setUp(self):
         super().setUp()
         self.staff_user = User.objects.create_user(email="staff@x.nl", first_name="S", last_name="T")
 
-    def test_staff_can_update_assignment(self):
+    def test_staff_cannot_update_assignment(self):
+        assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is False
+
+    def test_staff_cannot_delete_assignment(self):
+        assert has_permission(Verb.DELETE, self.assignment, self.staff_user) is False
+
+    def test_staff_cannot_update_service_or_placement(self):
+        assert has_permission(Verb.UPDATE, self.service, self.staff_user) is False
+        assert has_permission(Verb.UPDATE, self.placement, self.staff_user) is False
+
+    def test_staff_with_assignment_admin_can_update(self):
+        grant_assignment_admin(self.staff_user)
         assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is True
-
-    def test_staff_can_delete_assignment(self):
-        assert has_permission(Verb.DELETE, self.assignment, self.staff_user) is True
-
-    def test_staff_cannot_delete_external_assignment(self):
-        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
-        assert has_permission(Verb.DELETE, ext, self.staff_user) is False
-
-    def test_staff_can_update_service(self):
-        assert has_permission(Verb.UPDATE, self.service, self.staff_user) is True
-
-    def test_staff_can_update_placement(self):
-        assert has_permission(Verb.UPDATE, self.placement, self.staff_user) is True
-
-    def test_staff_cannot_update_external_assignment(self):
-        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
-        assert has_permission(Verb.UPDATE, ext, self.staff_user) is False
-
-    def test_non_staff_unrelated_user_still_denied(self):
-        # Sanity check that the override doesn't accidentally grant everyone.
-        assert has_permission(Verb.UPDATE, self.assignment, self.unrelated_user) is False
 
 
 class PlacementPermissionTest(_Setup):
     """A colleague placed on an assignment must not be able to update
     Placement records on the same assignment — only the assignment's
-    BDM owner (or an admin holder of ``core.change_assignment``) can.
+    BDM owner (or Opdrachtbeheer) can.
 
     The endpoint shape is ``POST /inline-edit/placement/<id>/colleague/``.
     """
@@ -356,35 +386,36 @@ class AssignmentMemberSheetPermissionTest(_Setup):
         assert resp.status_code != 403
 
 
-@override_settings(STAFF_EMAILS=["staff@x.nl"])
-class StaffCanEditServiceAndPlacementOverHttpTest(_Setup):
-    """Support staff (``STAFF_EMAILS``) can edit Service and Placement records
-    end-to-end over the inline-edit HTTP endpoint, not just at the engine level.
+class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
+    """Opdrachtbeheer can edit Service and Placement records end-to-end over the
+    inline-edit HTTP endpoint, not just at the engine level.
 
-    The engine-level equivalents live in ``StaffMemberCanEditAssignmentTest``;
+    The engine-level equivalents live in ``AssignmentAdminCanEditAssignmentTest``;
     these drive the real ``inline_edit_view`` request so the whole stack (lookup,
-    ``_permission_denied``, save) is exercised for a staff editor.
+    ``_permission_denied``, save) is exercised for an Opdrachtbeheer editor.
     """
 
     def setUp(self):
         super().setUp()
-        self.staff_user = User.objects.create_user(email="staff@x.nl", first_name="S", last_name="T")
+        self.admin_user = grant_assignment_admin(
+            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
+        )
         self.client = Client()
-        self.client.force_login(self.staff_user)
+        self.client.force_login(self.admin_user)
 
-    def test_staff_can_edit_service_description_inline(self):
+    def test_assignment_admin_can_edit_service_description_inline(self):
         url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
 
-        resp = post_inline_edit(self.client, url, {"description": "Staff-bewerking"})
+        resp = post_inline_edit(self.client, url, {"description": "Opdrachtbeheer-bewerking"})
 
         assert resp.status_code == 200
         self.assertNotContains(resp, "geen rechten")
         self.service.refresh_from_db()
-        assert self.service.description == "Staff-bewerking"
+        assert self.service.description == "Opdrachtbeheer-bewerking"
 
-    def test_staff_can_edit_placement_period_inline(self):
-        # An unrelated non-staff user is refused this exact edit (see
-        # InlineEditExistenceOracleTest); staff must be able to save it.
+    def test_assignment_admin_can_edit_placement_period_inline(self):
+        # An unrelated user is refused this exact edit (see
+        # InlineEditExistenceOracleTest); Opdrachtbeheer must be able to save it.
         url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
 
         resp = post_inline_edit(
