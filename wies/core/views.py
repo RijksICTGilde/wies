@@ -672,7 +672,7 @@ def role_matrix(request):
         request,
         "role_matrix.html",
         {
-            "columns": [heading for heading, _group in role_matrix_rules.COLUMNS],
+            "columns": [heading for heading, _groups, _staff in role_matrix_rules.COLUMNS],
             "sections": role_matrix_rules.build_matrix(),
             "group_permissions": role_matrix_rules.group_permissions(),
         },

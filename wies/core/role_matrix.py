@@ -23,6 +23,7 @@ from wies.core.roles import (
     CONSULTANT_GROUP_NAME,
     USER_ADMIN_GROUP_NAME,
     is_staff_member,
+    may_change_email,
     may_grant,
 )
 from wies.core.visibility_rules import evaluate_assignment_visibility, evaluate_placement_visibility, show_bm_page
@@ -32,13 +33,15 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 PLATFORM = "Platformbeheer"
-# (column heading, Django group or None for platform administration)
+# (column heading, Django groups, platform administration). The last column is
+# the one combination that may more than its parts: granting a privileged role.
 COLUMNS = [
-    ("Consultant", CONSULTANT_GROUP_NAME),
-    ("BDM", BDM_GROUP_NAME),
-    (ASSIGNMENT_ADMIN_GROUP_NAME, ASSIGNMENT_ADMIN_GROUP_NAME),
-    (USER_ADMIN_GROUP_NAME, USER_ADMIN_GROUP_NAME),
-    (PLATFORM, None),
+    ("Consultant", (CONSULTANT_GROUP_NAME,), False),
+    ("BDM", (BDM_GROUP_NAME,), False),
+    (ASSIGNMENT_ADMIN_GROUP_NAME, (ASSIGNMENT_ADMIN_GROUP_NAME,), False),
+    (USER_ADMIN_GROUP_NAME, (USER_ADMIN_GROUP_NAME,), False),
+    (PLATFORM, (), True),
+    (f"{PLATFORM} met {USER_ADMIN_GROUP_NAME}", (USER_ADMIN_GROUP_NAME,), True),
 ]
 
 _OTHER = -99  # pk of a colleague that is not the stand-in
@@ -88,11 +91,10 @@ def _group_perms(group_names) -> frozenset[str]:
     )
 
 
-def stand_in(group_name: str | None, pk: int = -1) -> StandIn:
-    """The stand-in for one column: a group, or ``None`` for platform administration."""
-    if group_name is None:
-        return StandIn((), next(iter(sorted(settings.STAFF_EMAILS)), ""), pk, frozenset())
-    return StandIn((group_name,), "rollenmatrix@example.invalid", pk, _group_perms([group_name]))
+def stand_in(group_names, *, staff: bool, pk: int = -1) -> StandIn:
+    """The stand-in for one column of ``COLUMNS``."""
+    email = next(iter(sorted(settings.STAFF_EMAILS)), "") if staff else "rollenmatrix@example.invalid"
+    return StandIn(group_names, email, pk, _group_perms(group_names))
 
 
 def _assignment(u, *, own: bool) -> Assignment:
@@ -105,6 +107,11 @@ def _service(u, *, own: bool) -> Service:
 
 def _can(verb, obj, field=None):
     return lambda u: has_permission(verb, obj(u), u, field=field)
+
+
+def _in_user_screen(u, *, allowed: bool) -> bool:
+    """``allowed`` behind the gate of ``user_edit``, where the form asks it."""
+    return u.has_perm("rijksauth.change_user") and allowed
 
 
 def _sees_ended_placement(u, *, own: bool) -> bool:
@@ -199,6 +206,10 @@ SECTIONS: list[tuple[str, list[Row]]] = [
             Row("Eigen profiel bewerken", _can(UPDATE, lambda u: u.account)),
             Row(
                 "E-mailadres wijzigen (van een ander)",
+                lambda u: _in_user_screen(u, allowed=may_change_email(u, "a@example.invalid", "b@example.invalid")),
+            ),
+            Row(
+                "E-mailadres inline wijzigen (van een ander)",
                 _can(UPDATE, lambda u: User(pk=_OTHER), UserEditables.email),
                 _rule(UPDATE, User, UserEditables.email),
             ),
@@ -210,11 +221,15 @@ SECTIONS: list[tuple[str, list[Row]]] = [
             Row("Eigen collegagegevens bewerken", _can(UPDATE, lambda u: u.colleague)),
             Row(
                 "Rol Consultant of BDM toekennen",
-                lambda u: may_grant(u, CONSULTANT_GROUP_NAME) and may_grant(u, BDM_GROUP_NAME),
+                lambda u: _in_user_screen(
+                    u, allowed=may_grant(u, CONSULTANT_GROUP_NAME) and may_grant(u, BDM_GROUP_NAME)
+                ),
             ),
             Row(
                 "Rol Gebruikersbeheer of Opdrachtbeheer toekennen",
-                lambda u: may_grant(u, USER_ADMIN_GROUP_NAME) and may_grant(u, ASSIGNMENT_ADMIN_GROUP_NAME),
+                lambda u: _in_user_screen(
+                    u, allowed=may_grant(u, USER_ADMIN_GROUP_NAME) and may_grant(u, ASSIGNMENT_ADMIN_GROUP_NAME)
+                ),
             ),
         ],
     ),
@@ -224,7 +239,7 @@ SECTIONS: list[tuple[str, list[Row]]] = [
 
 def build_matrix() -> list[tuple[str, list[tuple[str, list[bool]]]]]:
     """``[(section, [(row label, [allowed per column])])]``."""
-    users = [stand_in(group) for _heading, group in COLUMNS]
+    users = [stand_in(groups, staff=staff) for _heading, groups, staff in COLUMNS]
     return [(title, [(row.label, [bool(row.check(u)) for u in users]) for row in rows]) for title, rows in SECTIONS]
 
 
@@ -232,7 +247,11 @@ def group_permissions() -> list[tuple[str, list[bool]]]:
     """The Django model permissions per column, straight from ``Group.permissions``."""
     held = {
         group.name: {perm.pk for perm in group.permissions.all()}
-        for group in Group.objects.filter(name__in=[g for _h, g in COLUMNS if g]).prefetch_related("permissions")
+        for group in Group.objects.filter(name__in={g for _h, groups, _s in COLUMNS for g in groups}).prefetch_related(
+            "permissions"
+        )
     }
     perms = Permission.objects.filter(group__name__in=held).distinct().order_by("content_type__app_label", "codename")
-    return [(perm.name, [perm.pk in held.get(group, ()) for _h, group in COLUMNS]) for perm in perms]
+    return [
+        (perm.name, [any(perm.pk in held.get(g, ()) for g in groups) for _h, groups, _s in COLUMNS]) for perm in perms
+    ]

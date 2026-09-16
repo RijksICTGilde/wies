@@ -55,7 +55,10 @@ the import lists each row whose role was dropped as a warning.
 what it may do on its own, and the Django permissions per group. The cells are
 not written by hand: `wies/core/role_matrix.py` asks the real rules
 (`has_permission`, the visibility rules, `may_grant`) for a stand-in user with
-one role, acting on unsaved objects, so the page only reads. A placed
+one role, acting on unsaved objects, so the page only reads. A row about the
+user screen asks the screen's gate (`change_user`) as well as the rule the form
+applies. Platformbeheer with Gebruikersbeheer is the one combination that may
+more than its parts (granting the privileged roles), so it has its own column. A placed
 consultant's extra rights need a placement in the database and are named in the
 page text instead.
 
