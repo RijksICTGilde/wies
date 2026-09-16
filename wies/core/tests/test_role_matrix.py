@@ -32,7 +32,6 @@ def _cells():
 
 class RoleMatrixCoverageTest(TestCase):
     def test_every_registered_rule_has_a_row(self):
-        """A new ``@rule`` without a row in the matrix fails the build."""
         covered = {row.rule for _title, rows in role_matrix.SECTIONS for row in rows if row.rule}
 
         assert set(registered_rules()) <= covered, set(registered_rules()) - covered

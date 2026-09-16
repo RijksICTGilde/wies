@@ -1,13 +1,7 @@
-"""The role matrix on ``/beheer/rollen/``: what each role may do, on its own.
+"""The role matrix on ``/beheer/rollen/``, see ``features/roles.md``.
 
-Every cell is answered by the real rules (``has_permission``, the visibility
-rules, ``may_grant``), asked for a stand-in user that holds exactly one role.
-Nothing is parsed from the predicates and nothing is written: the stand-in and
-the objects it acts on are unsaved, with negative primary keys so a query in a
+The objects the stand-in acts on get negative primary keys, so a query in a
 rule (``_is_placed_on_assignment``) runs and finds nothing.
-
-``test_role_matrix.py`` keeps this honest: every registered ``@rule`` needs a
-row, and the stand-in must answer like a saved user with the same role.
 """
 
 from __future__ import annotations

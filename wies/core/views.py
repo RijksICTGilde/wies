@@ -666,13 +666,8 @@ def bezetting(request):
 
 @permission_required("rijksauth.view_user", raise_exception=True)
 def role_matrix(request):
-    """What each role may do, answered by the rules themselves (``role_matrix.py``).
-
-    Behind ``rijksauth.view_user``, the gate of the Beheer menu: Gebruikersbeheer,
-    and a platform administrator only when also holding that role. The page
-    describes the model and shows no data, so the gate could be wider; this
-    keeps it with the other user-administration pages.
-    """
+    """The page shows no data, so the gate could be wider; ``view_user`` keeps it
+    with the other Beheer pages."""
     return render(
         request,
         "role_matrix.html",

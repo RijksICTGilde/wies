@@ -10,9 +10,7 @@ do, not after who holds it.
 | Opdrachtbeheer | role (Django group) | any wies-sourced assignment, whoever owns it |
 
 The job roles `Consultant` and `Business Development Manager` (BDM) sit next
-to these. What each role may do, including the scope (own versus someone
-else's assignment), is on the page **Beheer > Rollen** (see below), not in a
-table here.
+to these. What each role may do is on the page **Beheer > Rollen** (see below).
 
 Platformbeheer carries **no** functional rights. A platform administrator who
 also does assignment work holds `Opdrachtbeheer` as well. To test the app as a
@@ -51,7 +49,7 @@ The CSV import has a `Gebruikersbeheer` column (formerly `Beheerder`); it only
 takes effect when a platform administrator runs the import. For anyone else
 the import lists each row whose role was dropped as a warning.
 
-## Rollenpagina
+## Role page
 
 `/beheer/rollen/` (Beheer > Rollen, for `rijksauth.view_user`) shows per role
 what it may do on its own, and the Django permissions per group. The cells are
@@ -62,8 +60,7 @@ consultant's extra rights need a placement in the database and are named in the
 page text instead.
 
 `test_role_matrix.py` fails when a registered `@rule` has no row, or when the
-stand-in answers differently from a saved user with the same role. A new rule
-therefore needs a `Row` in `role_matrix.SECTIONS`.
+stand-in answers differently from a saved user with the same role.
 
 ## Deploy
 
