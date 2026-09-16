@@ -20,6 +20,14 @@
            value="{{ active_view }}"
            data-filter-input />
   {% endif %}
+  {# Same for the chosen order: a filter change must not silently reset the
+     sort. Survives "Wis alle filters", which only clears the filter inputs. #}
+  {% if active_order is defined and active_order %}
+    <input type="hidden"
+           name="order"
+           value="{{ active_order }}"
+           data-filter-input />
+  {% endif %}
   {# Updated by nldd-search-field through the bridge. #}
   <input type="hidden"
          name="zoek"

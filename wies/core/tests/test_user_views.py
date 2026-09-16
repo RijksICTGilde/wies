@@ -571,6 +571,45 @@ class UserViewsTest(TestCase):
         assert created_event.action == "update"
         assert created_event.context["email"] == "updated@rijksoverheid.nl"
 
+    def test_user_edit_returns_to_filtered_list(self):
+        # The sheet opens over the filtered list; saving must not throw the
+        # filters, search and order away. pagina goes: it never sits in the
+        # address bar and a full page at pagina=2 would show only that page.
+        self.client.force_login(self.auth_user)
+        current = (
+            f"http://testserver{reverse('admin-users')}?rol={self.admin_group.id}&zoek=jan&order=-last_name&pagina=2"
+        )
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.public_id]),
+            {"first_name": "Updated", "last_name": "Name", "email": "updated@rijksoverheid.nl"},
+            headers={"hx-request": "true", "hx-current-url": current},
+        )
+        assert response.status_code == 200
+        assert (
+            response["HX-Redirect"] == f"{reverse('admin-users')}?rol={self.admin_group.id}&zoek=jan&order=-last_name"
+        )
+
+    def test_user_edit_ignores_current_url_off_the_list(self):
+        # The header is client controlled: only the list's own path is followed,
+        # and never the host it names.
+        self.client.force_login(self.auth_user)
+        for current in ("http://testserver/opdrachten/?x=1", "https://evil.example/elders/?x=1"):
+            response = self.client.post(
+                reverse("user-edit", args=[self.user1.public_id]),
+                {"first_name": "Updated", "last_name": "Name", "email": "updated@rijksoverheid.nl"},
+                headers={"hx-request": "true", "hx-current-url": current},
+            )
+            assert response["HX-Redirect"] == reverse("admin-users")
+
+    def test_user_delete_returns_to_filtered_list(self):
+        self.client.force_login(self.auth_user)
+        current = f"http://testserver{reverse('admin-users')}?merk={self.merk_a.public_id}"
+        response = self.client.post(
+            reverse("user-delete", args=[self.user1.public_id]),
+            headers={"hx-request": "true", "hx-current-url": current},
+        )
+        assert response["HX-Redirect"] == f"{reverse('admin-users')}?merk={self.merk_a.public_id}"
+
     def test_user_edit_validation_errors(self):
         """Test user editing with validation errors"""
         self.client.force_login(self.auth_user)

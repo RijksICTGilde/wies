@@ -7,7 +7,19 @@
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   {# Role tags inline after the name, like the skill tag on a team member. #}
-  <nldd-text-cell divider-start width="full" supporting-text="{{ user.email }}">
+  {# Merk and the labels of a few categories (see UserListView) as text after
+     the e-mail. Not every label: that read as a blob. Not tags: a third kind
+     of tag on the row, after the roles, was too much. The attribute, not the
+     slot: slotted content takes the main text colour, the attribute gets the
+     secondary style. user.colleague is Undefined for a user without a
+     profile: the reverse one-to-one raises an AttributeError. #}
+  {% set colleague = user.colleague %}
+  {% set profile = [] %}
+  {% if colleague %}
+    {% set labels = colleague.labels.all()|selectattr("category.name", "in", row_label_categories)|map(attribute="name")|list %}
+    {% set profile = [colleague.suborganization.name if colleague.suborganization else none] + labels %}
+  {% endif %}
+  <nldd-text-cell divider-start width="full" supporting-text="{{ ([user.email] + profile)|select|join(' · ') }}">
   <span>
     {{ user.first_name }} {{ user.last_name }}
     {% for group in user.groups.all() %}

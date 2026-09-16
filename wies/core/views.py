@@ -17,8 +17,8 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
-from django.db.models.functions import Concat
+from django.db.models import Case, Exists, F, Func, Model, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models.functions import Concat, Lower
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -1821,12 +1821,51 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
 
+    # ``?order=`` value -> (label, ordering over the sort_* annotations below).
+    # The default order is the absence of the parameter, like on Bezetting, so it
+    # has no value to label. The other name is the tiebreaker, so two Jansens
+    # still stand in a predictable order.
+    DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
+    DEFAULT_ORDERING = ("sort_last_name", "sort_first_name")
+    SORT_OPTIONS = {
+        "-last_name": ("Achternaam (Z-A)", ("-sort_last_name", "-sort_first_name")),
+        "first_name": ("Voornaam (A-Z)", ("sort_first_name", "sort_last_name")),
+        "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
+        "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
+    }
+    # Dutch surnames sort on the name proper: "de Wit" stands under the W, between
+    # Demir and Hendriks, not under the D. One or more of these particles at the
+    # start of the lowercased surname are skipped; Postgres regexp, like the rest.
+    TUSSENVOEGSELS = (
+        r"^((van|von|de|den|der|des|het|'t|ten|ter|te|op|in|aan|bij|uit|onder|over|voor"
+        r"|la|le|du|da|di|dos|del|della|el|al|d')\s+)+"
+    )
+
+    # Label categories whose labels the rows show, next to the merk. A start:
+    # every label made the row a blob. The names are managed in the label admin,
+    # so a renamed category drops off the rows until this list follows.
+    ROW_LABEL_CATEGORIES = ("Subgroep",)
+
+    @cached_property
+    def active_order(self) -> str:
+        """The requested ``?order=``; empty for the default and for a value this list does not have."""
+        requested = self.request.GET.get("order", "")
+        return requested if requested in self.SORT_OPTIONS else ""
+
     def _get_base_queryset(self):
-        """Base queryset with search applied."""
+        """Base queryset with search and ordering applied."""
+        ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
         qs = (
-            User.objects.prefetch_related("groups", "colleague__labels__category")
+            User.objects.select_related("colleague__suborganization")
+            .prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
-            .order_by("last_name", "first_name")
+            .annotate(
+                sort_last_name=Func(
+                    Lower("last_name"), Value(self.TUSSENVOEGSELS), Value(""), function="regexp_replace"
+                ),
+                sort_first_name=Lower("first_name"),
+            )
+            .order_by(*ordering)
         )
 
         search_filter = self.request.GET.get("zoek")
@@ -2020,6 +2059,16 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         # shows a top-3 with a "Meer..." toggle like the other lists.
         _finalize_filter_groups(context["filter_groups"])
 
+        context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
+
+        # Feeds parts/sort_control.html, shared with Bezetting.
+        context["active_order"] = self.active_order
+        context["sort_options"] = [{"value": value, "label": label} for value, (label, _) in self.SORT_OPTIONS.items()]
+        context["default_sort_label"] = self.DEFAULT_SORT_LABEL
+        context["active_sort_label"] = (
+            self.SORT_OPTIONS[self.active_order][0] if self.active_order else self.DEFAULT_SORT_LABEL
+        )
+
         context["primary_button"] = {
             "button_text": "Gebruiker toevoegen",
             "attrs": {
@@ -2038,6 +2087,23 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             context["next_page_url"] = None
 
         return context
+
+
+def _user_list_behind_sheet(request) -> str:
+    """The user list as the address bar shows it: filters, search and order kept.
+
+    The user sheets open over the filtered list, so after saving we return to
+    that list, not to the unfiltered default. HX-Current-URL carries the URL in
+    the address bar (hx-replace-url keeps the filters there). The header is
+    client controlled, so only its query is used, and only on the list's own
+    path. No pagina: "Meer tonen" loads pages in place and never puts one in the
+    URL, and a full page at pagina=2 would show only that page.
+    """
+    list_path = reverse("admin-users")
+    parsed = urllib.parse.urlparse(request.headers.get("HX-Current-URL", ""))
+    if parsed.path != list_path:
+        return list_path
+    return _url_drop_params(list_path, QueryDict(parsed.query), ("pagina",))
 
 
 @permission_required("rijksauth.add_user", raise_exception=True)
@@ -2079,9 +2145,9 @@ def user_create(request):
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
                 return response
-            return redirect(reverse("admin-users"))
+            return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
@@ -2137,9 +2203,9 @@ def user_edit(request, public_id):
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
                 return response
-            return redirect(reverse("admin-users"))
+            return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
@@ -2202,7 +2268,7 @@ def user_delete(request, public_id):
             context=context,
         )
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("admin-users")
+        response["HX-Redirect"] = _user_list_behind_sheet(request)
         return response
     return HttpResponse(status=405)
 
