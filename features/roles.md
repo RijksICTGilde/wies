@@ -57,10 +57,10 @@ not written by hand: `wies/core/role_matrix.py` asks the real rules
 (`has_permission`, the visibility rules, `may_grant`) for a stand-in user with
 one role, acting on unsaved objects, so the page only reads. A row about the
 user screen asks the screen's gate (`change_user`) as well as the rule the form
-applies. Platformbeheer with Gebruikersbeheer is the one combination that may
-more than its parts (granting the privileged roles), so it has its own column. A placed
-consultant's extra rights need a placement in the database and are named in the
-page text instead.
+applies. Platformbeheer with Gebruikersbeheer is the one combination that may do
+more than its parts (granting the privileged roles), so it has its own column. A
+placed consultant's extra rights need a placement in the database and are named
+in the page text instead.
 
 `test_role_matrix.py` fails when a registered `@rule` has no row, or when the
 stand-in answers differently from a saved user with the same role.

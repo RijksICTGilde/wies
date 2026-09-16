@@ -33,8 +33,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 PLATFORM = "Platformbeheer"
-# (column heading, Django groups, platform administration). The last column is
-# the one combination that may more than its parts: granting a privileged role.
+# (column heading, Django groups, platform administration)
 COLUMNS = [
     ("Consultant", (CONSULTANT_GROUP_NAME,), False),
     ("BDM", (BDM_GROUP_NAME,), False),

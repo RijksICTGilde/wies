@@ -154,7 +154,6 @@ class RoleMatrixStandInTest(TestCase):
         assert cells[("Opdracht bewerken (van een ander)", "Opdrachtbeheer")]
 
     def test_user_screen_rows(self):
-        """Rows about the user screen need its gate as well as the rule it applies."""
         cells = _cells()
 
         def column(label):
