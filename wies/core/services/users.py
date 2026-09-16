@@ -153,7 +153,9 @@ def update_user(
     if other_user is not None:
         raise EmailNotAvailableError(email)
 
-    if not may_change_email(updater, user.email, email):
+    # Read the stored address: a ModelForm has already written the new one onto ``user``.
+    stored_email = User.objects.values_list("email", flat=True).get(pk=user.pk)
+    if not may_change_email(updater, stored_email, email):
         msg = "Only platform administration may move a STAFF_EMAILS address"
         raise PermissionDenied(msg)
 

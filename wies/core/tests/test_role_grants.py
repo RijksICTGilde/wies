@@ -1,5 +1,7 @@
 """Who may grant which role (the grant matrix in ``features/roles.md``)."""
 
+from unittest import mock
+
 import pytest
 from django.contrib.auth.models import Group
 from django.core.exceptions import PermissionDenied
@@ -285,10 +287,14 @@ class StaffEmailChangeTest(TestCase):
         user.refresh_from_db()
         return user.email
 
+    def _set_email(self, user, email):
+        User.objects.filter(pk=user.pk).update(email=email)
+
     def test_user_admin_cannot_move_staff_address_away(self):
         self.client.force_login(self.user_admin)
         for edit in (self._edit_email, self._inline_email):
             with self.subTest(route=edit.__name__):
+                self._set_email(self.staff, STAFF_EMAIL)
                 edit(self.staff, "weg@rijksoverheid.nl")
                 assert self._email(self.staff) == STAFF_EMAIL
 
@@ -299,9 +305,39 @@ class StaffEmailChangeTest(TestCase):
         self.client.force_login(self.user_admin)
         for edit in (self._edit_email, self._inline_email):
             with self.subTest(route=edit.__name__):
+                self._set_email(self.user_admin, "gebruikersbeheer@rijksoverheid.nl")
                 edit(self.user_admin, STAFF_EMAIL)
                 assert self._email(self.user_admin) == "gebruikersbeheer@rijksoverheid.nl"
         assert self.client.get(reverse("staff-database")).status_code != 200
+
+    def test_user_admin_cannot_move_staff_address_stored_in_other_case(self):
+        self._set_email(self.staff, "Platform@rijksoverheid.nl")
+        self.client.force_login(self.user_admin)
+
+        self._edit_email(self.staff, "weg@rijksoverheid.nl")
+
+        assert self._email(self.staff) == "Platform@rijksoverheid.nl"
+
+    def test_user_admin_may_edit_staff_user_keeping_the_address(self):
+        self.client.force_login(self.user_admin)
+        payload = {"first_name": "Nieuw", "last_name": "B", "email": STAFF_EMAIL}
+
+        response = self.client.post(reverse("user-edit", args=[self.staff.public_id]), payload, headers=HX)
+
+        assert response["HX-Redirect"] == reverse("admin-users")
+        self.staff.refresh_from_db()
+        assert (self.staff.first_name, self.staff.email) == ("Nieuw", STAFF_EMAIL)
+
+    def test_edit_route_refuses_move_even_if_form_allows_it(self):
+        # The form has already written the new address onto the instance
+        # update_user gets, so the service must check the stored one.
+        self.client.force_login(self.user_admin)
+
+        with mock.patch("wies.core.forms.may_change_email", return_value=True):
+            response = self._edit_email(self.staff, "weg@rijksoverheid.nl")
+
+        assert response.status_code == 403
+        assert self._email(self.staff) == STAFF_EMAIL
 
     def test_form_shows_error_to_user_admin(self):
         self.client.force_login(self.user_admin)
