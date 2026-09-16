@@ -542,7 +542,7 @@ class UserSheetContractPeriodTest(TestCase):
         [period] = self.colleague.contract_periods.all()
         assert (period.hours_per_week, period.start_date) == (36, self.today)
 
-    def test_period_changes_are_logged_on_the_user(self):
+    def test_period_changes_are_logged_on_the_colleague(self):
         before = Event.objects.count()
         self.client.post(self.add_url, {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""})
         [period] = self.colleague.contract_periods.all()
@@ -553,7 +553,7 @@ class UserSheetContractPeriodTest(TestCase):
         self.client.post(reverse("contract-period-delete", args=[period.public_id]) + "?in=user")
         events = list(Event.objects.order_by("id")[before:])
         assert [e.context["action"] for e in events] == ["create", "update", "delete"]
-        assert all(e.object_type == "User" and e.object_id == self.user.id for e in events)
+        assert all(e.object_type == "Colleague" and e.object_id == self.colleague.id for e in events)
         assert events[1].context["before"]["hours_per_week"] == 36
         assert events[1].context["after"]["hours_per_week"] == 24
         assert events[2].context["before"]["hours_per_week"] == 24
@@ -566,6 +566,17 @@ class UserSheetContractPeriodTest(TestCase):
         assert "36 uur" in body
         assert 'text="Verwijder periode"' in body
         assert ContractPeriod.objects.filter(pk=period.pk).exists()
+
+    def test_a_colleague_without_user_still_gets_an_event(self):
+        loose = Colleague.objects.create(name="Weg Gebruiker", email="weg@x.nl", source="wies")
+        before = Event.objects.count()
+        self.client.post(
+            reverse("contract-period-add", args=[loose.public_id]) + "?in=panel",
+            {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""},
+        )
+        assert Event.objects.count() == before + 1
+        event = Event.objects.order_by("-id").first()
+        assert (event.object_type, event.object_id) == ("Colleague", loose.id)
 
     def test_admin_edits_and_deletes_a_period(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)

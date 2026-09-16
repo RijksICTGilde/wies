@@ -2588,23 +2588,18 @@ def _contract_block(colleague, surface, user):
 
 
 def _contract_period_event(request, period, action, before=None):
-    """Logs a contract-period change on the colleague's user.
+    """Logs a contract-period change on the colleague the hours belong to.
 
-    Colleague is not an audit object type, and the hours belong to the person,
-    so the event sits with the user like the user's own deletion does. A
-    colleague without a user (the user was deleted) leaves no event: that is a
-    deliberate trade-off, as adding Colleague as an audit type for a case that
-    is only reachable by typing ?collega= by hand is not worth it yet. Nothing
-    displays these events so far.
+    On the colleague, not the user: the colleague outlives the user, and the
+    hours of someone who has left are exactly what must stay traceable. Nothing
+    displays these events yet.
     """
-    if period.colleague.user_id is None:
-        return
     after = None if action == "delete" else _contract_period_snapshot(period)
     create_event(
-        object_type="User",
+        object_type="Colleague",
         action="update",
         source="user",
-        object_id=period.colleague.user_id,
+        object_id=period.colleague_id,
         user=request.user,
         request=request,
         context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
