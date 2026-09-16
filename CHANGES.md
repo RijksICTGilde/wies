@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 672: the user list has a sort control in the toolbar; it names the current order (achternaam A-Z by default) and offers achternaam Z-A, voornaam and most recently added
+- 672: each row in the user list shows the colleague's merk and subgroep after the e-mail address
+- 672: saving, adding or deleting a user returns to the user list as it was filtered, searched and sorted, instead of the unfiltered list
 - ?
 
 ## 2026-09-13

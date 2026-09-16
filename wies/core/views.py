@@ -77,6 +77,7 @@ from .models import (
 )
 from .querysets import (
     annotate_placement_dates,
+    annotate_sort_names,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
@@ -112,6 +113,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
+from .services.urls import current_page_url_on
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
@@ -1821,13 +1823,32 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
 
+    # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
+    DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
+    DEFAULT_ORDERING = ("sort_last_name", "sort_first_name")
+    SORT_OPTIONS = {
+        "-last_name": ("Achternaam (Z-A)", ("-sort_last_name", "-sort_first_name")),
+        "first_name": ("Voornaam (A-Z)", ("sort_first_name", "sort_last_name")),
+        "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
+        "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
+    }
+    # Label categories shown on the row next to the merk; names as managed in the label admin.
+    ROW_LABEL_CATEGORIES = ("Subgroep",)
+
+    @cached_property
+    def active_order(self) -> str:
+        """The requested ``?order=``; empty for the default and for unknown values."""
+        requested = self.request.GET.get("order", "")
+        return requested if requested in self.SORT_OPTIONS else ""
+
     def _get_base_queryset(self):
-        """Base queryset with search applied."""
-        qs = (
-            User.objects.prefetch_related("groups", "colleague__labels__category")
+        """Base queryset with search and ordering applied."""
+        ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
+        qs = annotate_sort_names(
+            User.objects.select_related("colleague__suborganization")
+            .prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
-            .order_by("last_name", "first_name")
-        )
+        ).order_by(*ordering)
 
         search_filter = self.request.GET.get("zoek")
         if search_filter:
@@ -2020,6 +2041,14 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         # shows a top-3 with a "Meer..." toggle like the other lists.
         _finalize_filter_groups(context["filter_groups"])
 
+        context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
+        context["active_order"] = self.active_order
+        context["sort_options"] = [{"value": value, "label": label} for value, (label, _) in self.SORT_OPTIONS.items()]
+        context["default_sort_label"] = self.DEFAULT_SORT_LABEL
+        context["active_sort_label"] = (
+            self.SORT_OPTIONS[self.active_order][0] if self.active_order else self.DEFAULT_SORT_LABEL
+        )
+
         context["primary_button"] = {
             "button_text": "Gebruiker toevoegen",
             "attrs": {
@@ -2038,6 +2067,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             context["next_page_url"] = None
 
         return context
+
+
+def _user_list_behind_sheet(request) -> str:
+    """The user list with the filters, search and order the sheet was opened over."""
+    return current_page_url_on(request, reverse("admin-users"))
 
 
 @permission_required("rijksauth.add_user", raise_exception=True)
@@ -2079,9 +2113,9 @@ def user_create(request):
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
                 return response
-            return redirect(reverse("admin-users"))
+            return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
@@ -2137,9 +2171,9 @@ def user_edit(request, public_id):
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
                 return response
-            return redirect(reverse("admin-users"))
+            return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
             request,
@@ -2202,7 +2236,7 @@ def user_delete(request, public_id):
             context=context,
         )
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("admin-users")
+        response["HX-Redirect"] = _user_list_behind_sheet(request)
         return response
     return HttpResponse(status=405)
 
