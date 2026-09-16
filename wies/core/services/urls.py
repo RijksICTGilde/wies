@@ -4,7 +4,7 @@ Stateless helpers for deriving the URL/path a user is actually on,
 independent of which backend endpoint a request hit.
 """
 
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse
 
 
 def current_page_path(request) -> str:
@@ -51,4 +51,20 @@ def url_without_param(request, name: str) -> str:
     params.pop("page", None)
     query = urlencode(params, doseq=True)
     path = current_page_path(request)
+    return f"{path}?{query}" if query else path
+
+
+def current_page_url_on(request, path: str) -> str:
+    """Return the address-bar URL when it is on ``path``, else bare ``path``.
+
+    For a redirect after a sheet that opened over a filtered list: the
+    filters, search and order in the address bar survive. ``HX-Current-URL``
+    is client controlled, so only its query is used, and only on ``path``.
+    Paging is dropped, as in :func:`url_with_param`.
+    """
+    parsed = urlparse(request.headers.get("HX-Current-URL", ""))
+    if parsed.path != path:
+        return path
+    params = [(k, v) for k, v in parse_qsl(parsed.query) if k not in ("page", "pagina")]
+    query = urlencode(params)
     return f"{path}?{query}" if query else path

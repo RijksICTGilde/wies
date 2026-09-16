@@ -17,8 +17,8 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Func, Model, OuterRef, Prefetch, Q, Subquery, Value, When
-from django.db.models.functions import Concat, Lower
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -77,6 +77,7 @@ from .models import (
 )
 from .querysets import (
     annotate_placement_dates,
+    annotate_sort_names,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
@@ -112,6 +113,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
+from .services.urls import current_page_url_on
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
@@ -1821,10 +1823,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
 
-    # ``?order=`` value -> (label, ordering over the sort_* annotations below).
-    # The default order is the absence of the parameter, like on Bezetting, so it
-    # has no value to label. The other name is the tiebreaker, so two Jansens
-    # still stand in a predictable order.
+    # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
     DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
     DEFAULT_ORDERING = ("sort_last_name", "sort_first_name")
     SORT_OPTIONS = {
@@ -1833,40 +1832,23 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
         "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
     }
-    # Dutch surnames sort on the name proper: "de Wit" stands under the W, between
-    # Demir and Hendriks, not under the D. One or more of these particles at the
-    # start of the lowercased surname are skipped; Postgres regexp, like the rest.
-    TUSSENVOEGSELS = (
-        r"^((van|von|de|den|der|des|het|'t|ten|ter|te|op|in|aan|bij|uit|onder|over|voor"
-        r"|la|le|du|da|di|dos|del|della|el|al|d')\s+)+"
-    )
-
-    # Label categories whose labels the rows show, next to the merk. A start:
-    # every label made the row a blob. The names are managed in the label admin,
-    # so a renamed category drops off the rows until this list follows.
+    # Label categories shown on the row next to the merk; names as managed in the label admin.
     ROW_LABEL_CATEGORIES = ("Subgroep",)
 
     @cached_property
     def active_order(self) -> str:
-        """The requested ``?order=``; empty for the default and for a value this list does not have."""
+        """The requested ``?order=``; empty for the default and for unknown values."""
         requested = self.request.GET.get("order", "")
         return requested if requested in self.SORT_OPTIONS else ""
 
     def _get_base_queryset(self):
         """Base queryset with search and ordering applied."""
         ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
-        qs = (
+        qs = annotate_sort_names(
             User.objects.select_related("colleague__suborganization")
             .prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
-            .annotate(
-                sort_last_name=Func(
-                    Lower("last_name"), Value(self.TUSSENVOEGSELS), Value(""), function="regexp_replace"
-                ),
-                sort_first_name=Lower("first_name"),
-            )
-            .order_by(*ordering)
-        )
+        ).order_by(*ordering)
 
         search_filter = self.request.GET.get("zoek")
         if search_filter:
@@ -2060,8 +2042,6 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         _finalize_filter_groups(context["filter_groups"])
 
         context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
-
-        # Feeds parts/sort_control.html, shared with Bezetting.
         context["active_order"] = self.active_order
         context["sort_options"] = [{"value": value, "label": label} for value, (label, _) in self.SORT_OPTIONS.items()]
         context["default_sort_label"] = self.DEFAULT_SORT_LABEL
@@ -2090,20 +2070,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
 
 def _user_list_behind_sheet(request) -> str:
-    """The user list as the address bar shows it: filters, search and order kept.
-
-    The user sheets open over the filtered list, so after saving we return to
-    that list, not to the unfiltered default. HX-Current-URL carries the URL in
-    the address bar (hx-replace-url keeps the filters there). The header is
-    client controlled, so only its query is used, and only on the list's own
-    path. No pagina: "Meer tonen" loads pages in place and never puts one in the
-    URL, and a full page at pagina=2 would show only that page.
-    """
-    list_path = reverse("admin-users")
-    parsed = urllib.parse.urlparse(request.headers.get("HX-Current-URL", ""))
-    if parsed.path != list_path:
-        return list_path
-    return _url_drop_params(list_path, QueryDict(parsed.query), ("pagina",))
+    """The user list with the filters, search and order the sheet was opened over."""
+    return current_page_url_on(request, reverse("admin-users"))
 
 
 @permission_required("rijksauth.add_user", raise_exception=True)

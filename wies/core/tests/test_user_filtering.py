@@ -106,7 +106,7 @@ class UserFilterSlotTest(UserFilterRenderTest):
 
 
 class UserListSortTest(TestCase):
-    """The toolbar sort control (#TBD): the order is named and can be changed."""
+    """The toolbar sort control (#672): the order is named and can be changed."""
 
     def setUp(self):
         self.client = Client()
@@ -178,7 +178,7 @@ class UserListSortTest(TestCase):
 
 
 class UserRowProfileTest(UserFilterRenderTest):
-    """Merk and subgroep are visible on the row itself (#TBD)."""
+    """Merk and subgroep are visible on the row itself (#672)."""
 
     def test_row_shows_merk_and_subgroep_after_email(self):
         subgroep = LabelCategory.objects.create(name="Subgroep", color="#0066CC")

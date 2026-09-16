@@ -27,8 +27,7 @@
    Nested in block containers it would stick to the count line. #}
 {% include "parts/user_table.html" %}
 {% if request.headers.get("HX-Request") %}
-  {# The sort control rides along OOB: the toolbar itself does not render in an
-     htmx response, but the button text and checked item must show the new order. #}
+  {# The sort control rides along OOB so the button shows the new order. #}
   {% set sort_control_oob = true %}
   {% include "parts/sort_control.html" %}
   {# The sheet content, with updated counts and selection, rides along as OOB. #}

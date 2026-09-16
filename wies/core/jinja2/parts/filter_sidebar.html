@@ -20,8 +20,7 @@
            value="{{ active_view }}"
            data-filter-input />
   {% endif %}
-  {# Same for the chosen order: a filter change must not silently reset the
-     sort. Survives "Wis alle filters", which only clears the filter inputs. #}
+  {# Same for the chosen order. #}
   {% if active_order is defined and active_order %}
     <input type="hidden"
            name="order"

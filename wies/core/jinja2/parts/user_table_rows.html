@@ -7,12 +7,9 @@
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   {# Role tags inline after the name, like the skill tag on a team member. #}
-  {# Merk and the labels of a few categories (see UserListView) as text after
-     the e-mail. Not every label: that read as a blob. Not tags: a third kind
-     of tag on the row, after the roles, was too much. The attribute, not the
-     slot: slotted content takes the main text colour, the attribute gets the
-     secondary style. user.colleague is Undefined for a user without a
-     profile: the reverse one-to-one raises an AttributeError. #}
+  {# Merk and subgroep as text after the e-mail: every label read as a blob,
+     tags next to the role tags was too much. user.colleague is Undefined for
+     a user without a profile. #}
   {% set colleague = user.colleague %}
   {% set profile = [] %}
   {% if colleague %}
