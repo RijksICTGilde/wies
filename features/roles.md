@@ -65,3 +65,29 @@ takes effect when a platform administrator runs the import.
 The BDM role carries the visibility of colleagues' ended and future
 placements, and Gebruikersbeheer may grant BDM. Separating that visibility from
 BDM is a separate change.
+
+## Scoping by merk (#526)
+
+The roles are global today; limiting them to a merk is on the roadmap. Keep
+these seams intact so that change stays local:
+
+- **Predicates are asked with the object in hand.** Edit and delete rights on
+  an assignment reach `is_assignment_admin` and `is_bdm` only from the rules in
+  `permissions.py`, which receive the assignment. Scoping then changes the rule
+  bodies, not their call sites. The row-visibility checks
+  (`evaluate_*_visibility`, `_services_visible_changes`) have the row too, but
+  ask `is_bdm_or_assignment_admin(request)`, a per-request cached answer; scoping
+  them means passing the assignment in and caching per merk. The Business
+  management gate (`business_management_access_required`, `show_bm_page`) has
+  no object and stays "holds the role"; the rows on those pages then need a
+  merk filter.
+- **Group names live in `roles.py`.** Querysets import the constants
+  (`_bdm_queryset` uses `BDM_GROUP_NAME`) instead of spelling names. The
+  exception today is `CONSULTANT_GROUP` in `services/occupancy.py`.
+
+Open data question: an assignment has no merk of its own. It can only be
+derived via `owner.suborganization`, and both links are nullable
+(`Assignment.owner` and `Colleague.suborganization` are `SET_NULL`). Scoping
+needs a decision on who may act on an assignment without an owner or merk,
+and on whether the assignment's merk follows its owner (moves when the owner
+changes merk or is replaced) or is stored on the assignment.
