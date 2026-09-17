@@ -1,3 +1,6 @@
+{# The group headings are h2, not h3: the sidebar precedes the h1 in reading
+   order, and a screen reader that walks the headings then met an h3 straight
+   after the h1 (finding 1 of the WCAG audit). size="6" keeps them small. #}
 {# The row itself is the checkbox; the nldd-checkbox inside is decorative only.
    Submitted values live in hidden inputs behind the list, mirrored there by
    filter_interactions.js so hx-include picks them up natively (getlist). #}
@@ -47,13 +50,15 @@
       {# Client: top-3 quick options (each with its own param) plus a "Meer"
   button that opens the client tree. #}
       <nldd-title size="6">
-      <h3>{{ filter_group.label }}</h3>
+      <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
       {% if filter_group.top_options %}
         <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-org-quick>
         {% for option in filter_group.top_options %}
-          <nldd-list-item checkbox {% if option.selected %}checked{% endif %} data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
+          {# id: the row is replaced with the whole sidebar on every filter change,
+             and focus_restore.js finds it again by this id. #}
+          <nldd-list-item id="filter-{{ option.param }}-{{ option.value }}" checkbox {% if option.selected %}checked{% endif %} data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
           <nldd-cell>
           <nldd-checkbox decorative {% if option.selected %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
@@ -86,12 +91,12 @@
         {% endif %}
         {% set ns.rendered = true %}
         <nldd-title size="6">
-        <h3>{{ filter_group.label }}</h3>
+        <h2>{{ filter_group.label }}</h2>
         </nldd-title>
         <nldd-spacer size="4"></nldd-spacer>
         <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-wies-fieldset data-name="{{ filter_group.name }}" data-group-id="{{ filter_group.group_id }}">
         {% for option in top_options %}
-          <nldd-list-item checkbox {% if option.value in filter_group.selected_values %}checked{% endif %} data-value="{{ option.value }}">
+          <nldd-list-item id="filter-{{ filter_group.group_id }}-{{ option.value }}" checkbox {% if option.value in filter_group.selected_values %}checked{% endif %} data-value="{{ option.value }}">
           <nldd-cell>
           <nldd-checkbox decorative {% if option.value in filter_group.selected_values %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
@@ -137,7 +142,7 @@
       {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
       {% set ns.rendered = true %}
       <nldd-title size="6">
-      <h3>{{ filter_group.label }}</h3>
+      <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
       <nldd-date-field width="full" data-wies-input name="{{ filter_group.name }}" accessible-label="{{ filter_group.label }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">

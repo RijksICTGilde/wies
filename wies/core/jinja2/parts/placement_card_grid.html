@@ -12,9 +12,11 @@
      hides every card past that (and the "Meer tonen" cell with them). Wies
      paginates server-side and appends via its own button, so the built-in limit
      has to be lifted -- the component can't know our pages accumulate. #}
-  <nldd-collection id="placement-list" layout="grid" item-width="260px" max-items="9999" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  {# data-announce: live_region.js reads this out after a filter change. The count
+     is the number of cards: colleagues or opdrachten, whichever the weergave shows. #}
+  <nldd-collection id="placement-list" layout="grid" item-width="260px" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdrachten' if active_view == 'opdracht' else "collega's" }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
 {% else %}
-  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen inzetten gevonden" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}

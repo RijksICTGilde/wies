@@ -53,8 +53,19 @@
        sidebar-section from this base. #}
     <script src="{{ app_asset('js/sidebar_sticky.js') }}" defer></script>
     <script src="{{ app_asset('js/focus_restore.js') }}" defer></script>
+    <script src="{{ app_asset('js/live_region.js') }}" defer></script>
+    <script src="{{ app_asset('js/field_error_description.js') }}" defer></script>
   </head>
   <body>
+    {# A screen reader only reads a live region whose text changes after the
+       region itself was already there, so this one is always in the page and
+       starts empty. live_region.js puts in it what a swap changed: the number of
+       results after a filter, a notification, the errors of a rejected form. #}
+    <div id="wies-live" class="wies-visually-hidden" role="status"></div>
+    {# For the notification that came with a full page load: a live region is
+       not spoken then, so live_region.js puts the text here and gives it focus.
+       First in the body, so the next Tab goes to the skip link. #}
+    <div id="wies-alert" class="wies-visually-hidden"></div>
     <nldd-page>
     {% block header %}
       {# Wraps what is skipped: focus lands on the element after it. #}

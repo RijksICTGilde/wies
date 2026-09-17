@@ -15,17 +15,18 @@
 // In order of reliability. An id is unique; a URL identifies the action, which
 // works just as well here and asks nothing of the templates. A reference to the
 // node itself is worthless: it is detached once the panel is fetched again.
-var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href"];
+// data-status: the status cards on Bezetting carry nothing else.
+var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href", "data-status"];
 
 // What a user can operate. The custom elements are listed because the NLDD
 // components put their real control in a shadow root: `nldd-button` matches no
 // standard selector but is a tab stop.
 //
-// Only components that accept focus(), through delegatesFocus or their own
-// focus() override. nldd-checkbox, nldd-radio-button, the -field variants and
-// nldd-segmented-control have neither, so focus() on them silently does
-// nothing. A selector that matches but does not focus is worse than no match:
-// it crowds out an element further along that would have taken it.
+// A component takes focus through delegatesFocus or its own focus() override,
+// or, failing both, through the control inside its shadow root that focusInto()
+// reaches for: the list rows and checkboxes are built that way.
+// nldd-segmented-control is absent: it renders no control to reach, and a
+// selector that matches but does not focus only costs a wasted attempt.
 //
 // nldd-dropdown is absent on purpose: it wraps a real <select> in light DOM,
 // which "select" already matches. The host precedes it in document order and
@@ -45,6 +46,10 @@ var FOCUSABLE = [
   "nldd-icon-button",
   "nldd-link",
   "nldd-list-item[href]",
+  "nldd-list-item[checkbox]",
+  "nldd-list-item[button]",
+  "nldd-checkbox:not([decorative])",
+  "nldd-radio-button",
   "nldd-search-field",
   "nldd-text-field",
   "nldd-multi-line-text-field",
@@ -56,6 +61,16 @@ var FOCUSABLE = [
   "nldd-switch",
   "nldd-tab-bar-item[selected]",
   "nldd-menu-bar-item",
+].join(",");
+
+// Inside a shadow root, the control a host without delegatesFocus is hiding.
+var INNER_CONTROL = [
+  "button",
+  "a[href]",
+  "input:not([type=hidden])",
+  "select",
+  "textarea",
+  "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
 // A save that bounces back with HX-Location produces three swaps: the button
@@ -122,6 +137,36 @@ FocusRestore.prototype.focusTook = function (element) {
   );
 };
 
+// Each element followed by the controls inside it, in document order.
+FocusRestore.prototype.withControls = function (elements) {
+  var out = [];
+  var list = Array.prototype.slice.call(elements);
+  for (var i = 0; i < list.length; i++) {
+    out.push(list[i]);
+    if (typeof list[i].querySelectorAll !== "function") continue;
+    var inner = list[i].querySelectorAll(FOCUSABLE);
+    for (var j = 0; j < inner.length; j++) out.push(inner[j]);
+  }
+  return out;
+};
+
+// The host first; if that did not take and it hides its control in a shadow
+// root, that control. nldd-list-item and nldd-checkbox have no delegatesFocus,
+// so host.focus() is a silent no-op while the button inside is the real tab
+// stop. The document reports the host as active either way.
+FocusRestore.prototype.focusInto = function (element, options) {
+  element.focus(options);
+  if (this.focusTook(element)) return true;
+  var root = element.shadowRoot;
+  var inner =
+    root && typeof root.querySelector === "function"
+      ? root.querySelector(INNER_CONTROL)
+      : null;
+  if (!inner || typeof inner.focus !== "function") return false;
+  inner.focus(options);
+  return this.focusTook(element);
+};
+
 // Keep going until one takes. Stopping at the first match would leave focus on
 // <body>, which is what this module exists to prevent.
 FocusRestore.prototype.focusFirst = function (elements, options) {
@@ -131,8 +176,7 @@ FocusRestore.prototype.focusFirst = function (elements, options) {
     var element = list[i];
     if (!this.isVisible(element) || typeof element.focus !== "function")
       continue;
-    element.focus({ preventScroll: preventScroll });
-    if (this.focusTook(element)) return true;
+    if (this.focusInto(element, { preventScroll: preventScroll })) return true;
   }
   return false;
 };
@@ -141,8 +185,7 @@ FocusRestore.prototype.focusFromTrail = function () {
   for (var i = 0; i < this.trail.length; i++) {
     var element = this.resolve(this.trail[i]);
     if (!element || typeof element.focus !== "function") continue;
-    element.focus({ preventScroll: true });
-    if (!this.focusTook(element)) continue;
+    if (!this.focusInto(element, { preventScroll: true })) continue;
     // Everything up to and including this step is dealt with; anything newer
     // belongs to a level we just came back from.
     this.trail = this.trail.slice(i + 1);
@@ -163,10 +206,16 @@ FocusRestore.prototype.handleSettle = function (container) {
   // `invalid` is the convention of wire_field_errors(): every widget puts it on
   // the element nldd-form-field._findInput() returns. The error text carries it
   // too but is not an input.
+  //
+  // The client picker marks a plain <div> around its "Opdrachtgever toevoegen"
+  // button, so the controls inside a rejected element are candidates too.
   var invalid = container.querySelectorAll(
     "[invalid]:not(nldd-form-field-error-text)",
   );
-  if (invalid.length && this.focusFirst(invalid, { preventScroll: false }))
+  if (
+    invalid.length &&
+    this.focusFirst(this.withControls(invalid), { preventScroll: false })
+  )
     return;
 
   if (this.lastInput === "mouse") return;
@@ -214,6 +263,12 @@ FocusRestore.prototype.bind = function () {
     true,
   );
   this.doc.addEventListener("htmx:beforeRequest", function (event) {
+    // A filter toggle is submitted by its form, so elt is the <form>; the
+    // focused button is where the user actually was.
+    var active = self.doc.activeElement;
+    if (active && active !== self.doc.body && active !== event.detail.elt) {
+      self.remember(active);
+    }
     self.remember(event.detail.elt);
   });
   // Going back in browser history is a different context; what we remembered
@@ -221,8 +276,25 @@ FocusRestore.prototype.bind = function () {
   this.doc.addEventListener("htmx:historyRestore", function () {
     self.trail = [];
   });
+  // A frame later: at settle time a swapped-in NLDD control has not rendered
+  // yet and reports checkVisibility() false, so resolve() would skip it.
+  //
+  // detail.target is the element the request was aimed at; after an outerHTML
+  // swap that is the detached old one, and searching it finds nothing that can
+  // take focus. The event itself fires on each element that was settled in,
+  // including the out-of-band ones, so that is the new content.
   this.doc.addEventListener("htmx:afterSettle", function (event) {
-    self.handleSettle(event.detail.target);
+    var target = event.detail.target;
+    if (target && target.isConnected === false) target = event.target;
+    var raf =
+      self.doc.defaultView && self.doc.defaultView.requestAnimationFrame;
+    if (typeof raf === "function") {
+      raf.call(self.doc.defaultView, function () {
+        self.handleSettle(target);
+      });
+    } else {
+      self.handleSettle(target);
+    }
   });
 };
 
