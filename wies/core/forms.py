@@ -86,6 +86,13 @@ class ProfileNameForm(NlddFormMixin, forms.ModelForm):
         model = User
         fields = ["first_name", "last_name"]
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # WCAG 1.3.5: these fields are about the user themself, unlike the same
+        # fields on the admin form, so they carry the autocomplete purpose.
+        self.fields["first_name"].widget.attrs["autocomplete"] = "given-name"
+        self.fields["last_name"].widget.attrs["autocomplete"] = "family-name"
+
 
 class ProfileLabelsForm(NlddFormMixin, forms.Form):
     """Every label category in one sheet, with the token fields from onboarding.

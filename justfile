@@ -2,7 +2,7 @@ export COMPOSE_FILE := "docker-compose.yml"
 
 # Vendor package versies
 HTMX_VERSION := "2.0.8"
-NLDD_VERSION := "0.8.82"
+NLDD_VERSION := "0.8.88"
 
 # Default command to list all available commands.
 default:

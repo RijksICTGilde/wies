@@ -1,17 +1,20 @@
-{# nldd-form-field only reveals an error text when the input reflects `invalid`
-   and points at it by id via `error-message` — without that wiring the messages
-   render at height 0 and screen readers never announce them. Each widget sets
-   that wiring itself on the element _findInput() returns.
-
-   `invalid` is also set on the error text as a no-JS/pre-upgrade fallback; an
-   error text only exists when there is an error, so it is always correct.
+{# An nldd-validation-list shows an item without a rule only when the input
+   reflects `invalid` and names the item's id in `unmet`; without that wiring the
+   messages stay hidden and screen readers never announce them. Each widget sets
+   that wiring itself on the element _findInput() returns, and nldd-form-field
+   hands the list to the input as its accessible description.
 
    A field that is technically optional but has a sensible default can suppress
    the Optioneel badge with `hide-optional` in widget.attrs. #}
 {% set error_ids = wire_field_errors(field) %}
 <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
-{% for error in field.errors %}
-  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
-{% endfor %}
+{% if field.errors %}
+  {# `for`: a widget that is no form input names the control the list is about. #}
+  <nldd-validation-list{% if field.field.widget.attrs.get("validation-for") %} for="{{ field.field.widget.attrs["validation-for"] }}"{% endif %}>
+  {% for error in field.errors %}
+    <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+  {% endfor %}
+  </nldd-validation-list>
+{% endif %}
 </nldd-form-field>

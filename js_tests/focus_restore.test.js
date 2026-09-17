@@ -10,7 +10,7 @@ const FocusRestore = require("../wies/core/static/js/focus_restore.js");
 
 let doc;
 
-const INVALID = "[invalid]:not(nldd-form-field-error-text)";
+const INVALID = "[invalid]";
 const AUTOFOCUS = "[autofocus]";
 
 function element(attributes, options) {
@@ -35,6 +35,21 @@ function element(attributes, options) {
       if (this.takesFocus) doc.activeElement = this;
     },
   };
+}
+
+// A host without delegatesFocus: focus() on it does nothing, the control in
+// its shadow root takes it, and the document then reports the host as active,
+// as a real shadow tree retargets activeElement.
+function shadowHost(attributes, options) {
+  const host = element(attributes, { takesFocus: false });
+  const control = element({}, options);
+  control.focus = function (focusOptions) {
+    control.focusCalls.push(focusOptions);
+    if (control.takesFocus) doc.activeElement = host;
+  };
+  host.shadowRoot = { querySelector: () => control };
+  host.control = control;
+  return host;
 }
 
 // A swap target. Rather than run a selector engine, it answers the three
@@ -97,6 +112,14 @@ describe("describe", () => {
     assert.deepEqual(restore.describe(element({ href: "/faq" })), {
       attribute: "href",
       value: "/faq",
+    });
+  });
+
+  it("falls back to data-status for a button that carries nothing else", () => {
+    const restore = new FocusRestore(doc);
+    assert.deepEqual(restore.describe(element({ "data-status": "bench" })), {
+      attribute: "data-status",
+      value: "bench",
     });
   });
 
@@ -248,6 +271,48 @@ describe("focusFirst", () => {
   });
 });
 
+// ─── focusInto ───────────────────────────────────────────────
+
+describe("focusInto", () => {
+  it("reaches the control inside a host that refuses focus itself", () => {
+    const host = shadowHost({ id: "filter-rol-a" });
+    const restore = new FocusRestore(doc);
+
+    assert.equal(restore.focusInto(host, { preventScroll: true }), true);
+    assert.equal(doc.activeElement, host);
+    assert.deepEqual(host.control.focusCalls, [{ preventScroll: true }]);
+  });
+
+  it("leaves the shadow root alone when the host takes focus", () => {
+    const host = shadowHost({ id: "x" });
+    host.focus = function () {
+      doc.activeElement = host;
+    };
+    const restore = new FocusRestore(doc);
+
+    assert.equal(restore.focusInto(host), true);
+    assert.equal(host.control.focusCalls.length, 0);
+  });
+
+  it("reports failure when neither host nor control takes", () => {
+    const host = shadowHost({ id: "x" }, { takesFocus: false });
+    const restore = new FocusRestore(doc);
+
+    assert.equal(restore.focusInto(host), false);
+    assert.equal(doc.activeElement, null);
+  });
+
+  it("returns to a filter row through its shadow control", () => {
+    const row = shadowHost({ id: "filter-rol-a" });
+    doc = makeDoc([row]);
+    const restore = new FocusRestore(doc);
+    restore.remember(element({ id: "filter-rol-a" }));
+
+    assert.equal(restore.focusFromTrail(), true);
+    assert.equal(doc.activeElement, row);
+  });
+});
+
 // ─── focusFromTrail ──────────────────────────────────────────
 
 describe("focusFromTrail", () => {
@@ -304,6 +369,17 @@ describe("handleSettle", () => {
 
     assert.equal(doc.activeElement, field);
     assert.deepEqual(field.focusCalls, [{ preventScroll: false }]);
+  });
+
+  it("sends the user to the button inside a rejected element that is no control", () => {
+    const button = element({ id: "assignment-org-trigger-btn" });
+    const picker = element({ invalid: "" }, { takesFocus: false });
+    picker.querySelectorAll = () => [button];
+    const restore = new FocusRestore(doc);
+
+    restore.handleSettle(swapTarget({ invalid: [picker] }));
+    assert.equal(doc.activeElement, button);
+    assert.deepEqual(button.focusCalls, [{ preventScroll: false }]);
   });
 
   it("leaves focus alone when the mouse is driving", () => {
@@ -365,6 +441,22 @@ describe("handleSettle", () => {
     assert.equal(first.focusCalls.length, 0);
   });
 
+  it("returns to the focused button, not the form that submitted it", () => {
+    // A status card is toggled with Enter; its form fires the request, so htmx
+    // reports the <form> as the cause. That is not where the user was.
+    const card = element({ "data-status": "bench" });
+    const first = element({});
+    doc = makeDoc([card]);
+    const restore = new FocusRestore(doc);
+    restore.remember(card); // what bind() records from activeElement
+    restore.remember(element({ id: "filter-form" })); // then the form, as htmx reports
+
+    restore.handleSettle(swapTarget({ focusable: [first] }));
+
+    assert.equal(doc.activeElement, card);
+    assert.equal(first.focusCalls.length, 0);
+  });
+
   it("falls back to the first control when the cause is gone", () => {
     const first = element({});
     doc = makeDoc([]); // the button that caused the swap is no longer there
@@ -389,5 +481,74 @@ describe("handleSettle", () => {
     const restore = new FocusRestore(doc);
     assert.doesNotThrow(() => restore.handleSettle(null));
     assert.doesNotThrow(() => restore.handleSettle({}));
+  });
+});
+
+// ─── bind ────────────────────────────────────────────────────
+
+describe("bind", () => {
+  it("handles a settle one frame later, once the components have rendered", () => {
+    const listeners = {};
+    const frames = [];
+    doc = makeDoc([]);
+    doc.addEventListener = (name, fn) => {
+      listeners[name] = fn;
+    };
+    // A fake window whose requestAnimationFrame only records the callback,
+    // so the test decides when the frame happens.
+    doc.defaultView = { requestAnimationFrame: (fn) => frames.push(fn) };
+    const restore = new FocusRestore(doc);
+    const seen = [];
+    restore.handleSettle = (target) => seen.push(target);
+    restore.bind();
+
+    const target = swapTarget({});
+    listeners["htmx:afterSettle"]({ detail: { target } });
+
+    assert.equal(
+      seen.length,
+      0,
+      "not on settle itself: nothing has rendered yet",
+    );
+    assert.equal(frames.length, 1);
+    frames[0]();
+    assert.deepEqual(seen, [target]);
+  });
+
+  it("settles on the new content when the request target is detached", () => {
+    const listeners = {};
+    doc = makeDoc([]);
+    doc.addEventListener = (name, fn) => {
+      listeners[name] = fn;
+    };
+    const restore = new FocusRestore(doc);
+    const seen = [];
+    restore.handleSettle = (target) => seen.push(target);
+    restore.bind();
+
+    // An outerHTML swap: detail.target is the element that was replaced, the
+    // event fires on its replacement.
+    const old = Object.assign(swapTarget({}), { isConnected: false });
+    const fresh = swapTarget({});
+    listeners["htmx:afterSettle"]({ target: fresh, detail: { target: old } });
+
+    assert.deepEqual(seen, [fresh]);
+  });
+
+  it("handles the settle at once where there is no frame to wait for", () => {
+    const listeners = {};
+    doc = makeDoc([]);
+    doc.addEventListener = (name, fn) => {
+      listeners[name] = fn;
+    };
+    const restore = new FocusRestore(doc);
+    const seen = [];
+    restore.handleSettle = (target) => seen.push(target);
+    restore.bind();
+
+    const target = swapTarget({});
+    listeners["htmx:afterSettle"]({ detail: { target } });
+
+    assert.deepEqual(seen, [target]);
   });
 });

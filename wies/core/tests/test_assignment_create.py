@@ -162,11 +162,11 @@ class AssignmentCreateTest(TestCase):
         # Invalid form: re-render (200), no assignment created.
         assert response.status_code == 200
         assert not Assignment.objects.filter(name="Zonder Opdrachtgever").exists()
-        # The org error must render id-wired (error-message + invalid), or
+        # The org error must render id-wired (unmet + invalid), or
         # nldd-form-field shows it at height 0 and "Aanmaken" appears dead.
         html = response.content.decode()
         assert 'id="error-organizations-1"' in html
-        assert 'error-message="error-organizations-1"' in html
+        assert 'unmet="error-organizations-1"' in html
         # The template splits the picker div's attributes over lines, so match
         # the element rather than one flat substring.
         picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)

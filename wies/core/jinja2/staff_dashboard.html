@@ -22,7 +22,7 @@
     (usage.total_logins_90d, "Totaal logins (90 dagen)"),
     (usage.failures_30d, "Mislukte logins (30 dagen)"),
   ] %}
-  <nldd-collection layout="grid" gap="16px">
+  <nldd-collection layout="grid" gap="16">
   {% for value, label in _tiles %}
     <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">

@@ -367,6 +367,26 @@
 		var(--primitives-font-size-200) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
+	--primitives-font-body-lg-semi-bold-loose:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-200) / var(--primitives-line-height-loose)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-lg-semi-bold-snug:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-200) / var(--primitives-line-height-snug)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-lg-semi-bold-tight:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-200) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-lg-semi-bold-flat:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-200) / var(--primitives-line-height-flat)
+		var(--primitives-font-family-body)
+	;
 	--primitives-font-body-lg-bold-loose:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-200) / var(--primitives-line-height-loose)
@@ -424,6 +444,26 @@
 	;
 	--primitives-font-body-md-medium-flat:
 		var(--primitives-font-weight-body-medium)
+		var(--primitives-font-size-100) / var(--primitives-line-height-flat)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-md-semi-bold-loose:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-100) / var(--primitives-line-height-loose)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-md-semi-bold-snug:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-100) / var(--primitives-line-height-snug)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-md-semi-bold-tight:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-100) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-md-semi-bold-flat:
+		var(--primitives-font-weight-body-semi-bold)
 		var(--primitives-font-size-100) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
@@ -487,6 +527,26 @@
 		var(--primitives-font-size-90) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
+	--primitives-font-body-sm-semi-bold-loose:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-90) / var(--primitives-line-height-loose)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-sm-semi-bold-snug:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-90) / var(--primitives-line-height-snug)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-sm-semi-bold-tight:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-90) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-sm-semi-bold-flat:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-90) / var(--primitives-line-height-flat)
+		var(--primitives-font-family-body)
+	;
 	--primitives-font-body-sm-bold-loose:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-90) / var(--primitives-line-height-loose)
@@ -547,6 +607,26 @@
 		var(--primitives-font-size-80) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
+	--primitives-font-body-xs-semi-bold-loose:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-80) / var(--primitives-line-height-loose)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xs-semi-bold-snug:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-80) / var(--primitives-line-height-snug)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xs-semi-bold-tight:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-80) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xs-semi-bold-flat:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-80) / var(--primitives-line-height-flat)
+		var(--primitives-font-family-body)
+	;
 	--primitives-font-body-xs-bold-loose:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-80) / var(--primitives-line-height-loose)
@@ -565,11 +645,6 @@
 	--primitives-font-body-xs-bold-flat:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-80) / var(--primitives-line-height-flat)
-		var(--primitives-font-family-body)
-	;
-	--primitives-font-body-xxs-bold-flat:
-		var(--primitives-font-weight-body-bold)
-		var(--primitives-font-size-70) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
 	--primitives-font-body-xxs-regular-loose:
@@ -612,6 +687,26 @@
 		var(--primitives-font-size-70) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
+	--primitives-font-body-xxs-semi-bold-loose:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-70) / var(--primitives-line-height-loose)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xxs-semi-bold-snug:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-70) / var(--primitives-line-height-snug)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xxs-semi-bold-tight:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-70) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xxs-semi-bold-flat:
+		var(--primitives-font-weight-body-semi-bold)
+		var(--primitives-font-size-70) / var(--primitives-line-height-flat)
+		var(--primitives-font-family-body)
+	;
 	--primitives-font-body-xxs-bold-loose:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-70) / var(--primitives-line-height-loose)
@@ -625,6 +720,11 @@
 	--primitives-font-body-xxs-bold-tight:
 		var(--primitives-font-weight-body-bold)
 		var(--primitives-font-size-70) / var(--primitives-line-height-tight)
+		var(--primitives-font-family-body)
+	;
+	--primitives-font-body-xxs-bold-flat:
+		var(--primitives-font-weight-body-bold)
+		var(--primitives-font-size-70) / var(--primitives-line-height-flat)
 		var(--primitives-font-family-body)
 	;
 
@@ -849,17 +949,37 @@
 
 	--semantics-surfaces-border-width: var(--semantics-dividers-thickness);
 	--semantics-surfaces-corner-radius: var(--primitives-corner-radius-lg);
+	--semantics-surfaces-ring-thickness: var(--primitives-border-width-regular);
 	--semantics-surfaces-base-background-color: light-dark(var(--primitives-color-neutral-0), var(--primitives-color-neutral-100));
 	--semantics-surfaces-base-border-color: var(--semantics-dividers-color);
 	--semantics-surfaces-tinted-background-color: light-dark(var(--primitives-color-neutral-25), var(--primitives-color-neutral-75));
 	--semantics-surfaces-tinted-border-color: var(--semantics-dividers-color);
+
+	/* ## Text */
+
+	--semantics-text-max-width: 40em;
+
 
 	/* ## Content */
 
 	--semantics-content-color: light-dark(var(--primitives-color-neutral-800), var(--primitives-color-neutral-900));
 	--semantics-content-secondary-color: light-dark(var(--primitives-color-neutral-600), var(--primitives-color-neutral-700));
 	--semantics-content-secondary-opacity: 75%;
-	--semantics-content-contrast-color: oklch(from currentColor calc((0.65 - l) * infinity) 0 h);
+	/* Black or white on the current color, whichever reads. The threshold is the
+	   relative luminance where the two give the same contrast, Y = (sqrt(21) - 1) / 20,
+	   so the one that is picked always clears 4.5:1. Lightness would be the wrong
+	   input: it is perceptual, and it parts ways with luminance per hue. `/ 1` keeps
+	   the text opaque on a translucent fill. Replaced by contrast-color() below
+	   wherever the browser has it. */
+	--semantics-content-contrast-color: color(from currentColor xyz clamp(0, (0.1791 / y - 1) * infinity, 1) clamp(0, (0.1791 / y - 1) * infinity, 1) clamp(0, (0.1791 / y - 1) * infinity, 1) / 1);
+
+	/* The same question asked of the engine, which knows the rendered color
+	   rather than the one a formula can reach. Nested here so both halves of the
+	   answer stand together. */
+	@supports (color: contrast-color(red)) {
+		--semantics-content-contrast-color: contrast-color(currentColor);
+	}
+
 	--semantics-content-accent-color: light-dark(var(--primitives-color-accent-750), var(--primitives-color-accent-650));
 	--semantics-content-critical-color: light-dark(var(--primitives-color-critical-600), var(--primitives-color-critical-650));
 	--semantics-content-warning-color: light-dark(var(--primitives-color-warning-600), var(--primitives-color-warning-650));
@@ -1544,8 +1664,8 @@
 
 	/* ## Forms */
 
-	--semantics-forms-gap: var(--primitives-space-16);
-	--semantics-forms-gap-tight: var(--primitives-space-10);
+	--semantics-forms-fields-gap: var(--primitives-space-16);
+	--semantics-forms-sections-gap: var(--primitives-space-24);
 	--semantics-forms-label-column-width: var(--primitives-area-240);
 	--semantics-forms-columns-gap: var(--primitives-space-8);
 	--semantics-forms-section-title-font: var(--primitives-font-body-lg-bold-tight);
@@ -1806,9 +1926,19 @@
 	--components-list-item-indicator-inline-inset: var(--primitives-space-8);
 	--components-list-item-is-hovered-background-color: light-dark(var(--primitives-color-neutral-50), var(--primitives-color-neutral-150));
 	--components-list-item-is-hovered-content-color: var(--primitives-color-neutral-1000);
+	--components-list-item-is-active-background-color: light-dark(var(--primitives-color-neutral-75), var(--primitives-color-neutral-200));
+	--components-list-item-is-active-content-color: var(--primitives-color-neutral-1000);
+	--components-list-item-is-expanded-background-color: light-dark(var(--primitives-color-neutral-100), var(--primitives-color-neutral-250));
+	--components-list-item-is-expanded-content-color: var(--primitives-color-neutral-1000);
+	--components-list-item-is-expanded-is-hovered-background-color: light-dark(var(--primitives-color-neutral-150), var(--primitives-color-neutral-300));
+	--components-list-item-is-expanded-is-active-background-color: light-dark(var(--primitives-color-neutral-200), var(--primitives-color-neutral-350));
 	--components-list-item-is-selected-background-color: light-dark(var(--primitives-color-neutral-100), var(--primitives-color-neutral-250));
 	--components-list-item-is-selected-content-color: var(--primitives-color-neutral-1000);
+	--components-list-item-is-selected-is-hovered-background-color: light-dark(var(--primitives-color-neutral-150), var(--primitives-color-neutral-300));
+	--components-list-item-is-selected-is-active-background-color: light-dark(var(--primitives-color-neutral-200), var(--primitives-color-neutral-350));
 	--components-list-item-is-highlighted-background-color: var(--semantics-controls-is-highlighted-indicator-color);
+	--components-list-item-is-highlighted-is-hovered-background-color: light-dark(var(--primitives-color-accent-800), var(--primitives-color-accent-700));
+	--components-list-item-is-highlighted-is-active-background-color: light-dark(var(--primitives-color-accent-850), var(--primitives-color-accent-750));
 	--components-list-item-is-highlighted-content-color: var(--semantics-controls-is-highlighted-contrast-color);
 
 	/* ## Menu */

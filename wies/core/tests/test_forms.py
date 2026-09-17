@@ -39,11 +39,11 @@ class NlddUserFormRenderingTest(TestCase):
         assert 'class="nldd-input"' not in rendered
 
     def test_form_displays_validation_errors_with_nldd_classes(self):
-        """Validation errors render as wired nldd-form-field-error-text elements.
+        """Validation errors render as wired nldd-validation-item elements.
 
-        nldd-form-field only reveals the error when the input reflects `invalid`
-        and names the error id in `error-message`; without that the message
-        renders at height 0 and no screen reader announces it.
+        An nldd-validation-list shows an item without a rule only when the input
+        reflects `invalid` and names the item's id in `unmet`; without that the
+        message stays hidden and no screen reader announces it.
         """
         form = UserForm(data={})
 
@@ -51,12 +51,12 @@ class NlddUserFormRenderingTest(TestCase):
 
         rendered = str(form)
 
-        error_ids = re.findall(r'<nldd-form-field-error-text id="([^"]+)"', rendered)
+        error_ids = re.findall(r'<nldd-validation-item id="([^"]+)"', rendered)
         assert error_ids, "no error texts rendered with an id"
 
         for error_id in error_ids:
             assert re.search(
-                rf'<nldd-[a-z-]+field[^>]*invalid[^>]*error-message="[^"]*{re.escape(error_id)}',
+                rf'<nldd-[a-z-]+field[^>]*invalid[^>]*unmet="[^"]*{re.escape(error_id)}',
                 rendered,
                 re.DOTALL,
             ), f"error text {error_id} is not referenced by an invalid input"
@@ -112,12 +112,12 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
     """
 
     def _first_error_id(self, rendered):
-        ids = re.findall(r'<nldd-form-field-error-text id="([^"]+)"', rendered)
+        ids = re.findall(r'<nldd-validation-item id="([^"]+)"', rendered)
         assert ids, "no error text rendered with an id"
         return ids
 
     def test_radioselect_error_wired_to_group(self):
-        """RadioSelect: nldd-radio-button-group carries invalid + error-message."""
+        """RadioSelect: nldd-radio-button-group carries invalid + unmet."""
         form = LabelCategoryForm(data={"name": ""})
         assert not form.is_valid()
         assert "color" in form.errors
@@ -126,7 +126,7 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
         error_ids = self._first_error_id(rendered)
         assert any(
             re.search(
-                rf'<nldd-radio-button-group[^>]*invalid[^>]*error-message="[^"]*{re.escape(eid)}',
+                rf'<nldd-radio-button-group[^>]*invalid[^>]*unmet="[^"]*{re.escape(eid)}',
                 rendered,
                 re.DOTALL,
             )
@@ -148,25 +148,25 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
         return ChoiceForm(**kwargs)
 
     def test_select_error_wired_to_dropdown(self):
-        """Select: nldd-dropdown host carries invalid + error-message."""
+        """Select: nldd-dropdown host carries invalid + unmet."""
         form = self._make_choice_form(data={})
         assert not form.is_valid()
         rendered = str(form)
 
         assert re.search(
-            r"<nldd-dropdown[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            r"<nldd-dropdown[^>]*invalid[^>]*unmet=\"[^\"]+\"",
             rendered,
             re.DOTALL,
         ), "nldd-dropdown is not wired to its error text"
 
     def test_multiselect_error_wired_to_token_field(self):
-        """SelectMultiple: nldd-token-field host carries invalid + error-message."""
+        """SelectMultiple: nldd-token-field host carries invalid + unmet."""
         form = self._make_choice_form(data={})
         assert not form.is_valid()
         rendered = str(form)
 
         assert re.search(
-            r"<nldd-token-field[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            r"<nldd-token-field[^>]*invalid[^>]*unmet=\"[^\"]+\"",
             rendered,
             re.DOTALL,
         ), "nldd-token-field is not wired to its error text"
@@ -182,7 +182,7 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
         rendered = str(form)
 
         assert re.search(
-            r"<nldd-checkbox-field[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            r"<nldd-checkbox-field[^>]*invalid[^>]*unmet=\"[^\"]+\"",
             rendered,
             re.DOTALL,
         ), "first nldd-checkbox-field is not wired to its error text"
@@ -346,7 +346,7 @@ class NlddFormMixinTest(TestCase):
         for marker in self.RVO_MARKERS:
             assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
         # Wired by id, otherwise the component keeps the error hidden.
-        assert re.search(r'<nldd-form-field-error-text id="[^"]+"', rendered) is not None
+        assert re.search(r'<nldd-validation-item id="[^"]+"', rendered) is not None
 
     def test_nldd_form_required_label_class(self):
         form = self._make_nldd_test_form()

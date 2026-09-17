@@ -31,17 +31,17 @@ class NlddErrorList(ErrorList):
 def wire_field_errors(field) -> list[str]:
     """Point a bound field's widget at its error texts, and return their ids.
 
-    ``nldd-form-field`` only reveals an ``nldd-form-field-error-text`` when the
-    slotted input reflects ``invalid`` and names it in ``error-message``.
-    Without that wiring the messages render at height 0 and screen readers
-    never announce them, so the user sees no reason why a save failed.
+    An ``nldd-validation-list`` shows an item without a rule only when the
+    control reflects ``invalid`` and names the item's id in ``unmet``. Without
+    that wiring the messages stay hidden and screen readers never announce
+    them, so the user sees no reason why a save failed.
 
     Called from the field template because errors only exist after validation,
     long after the widget was configured.
     """
     error_ids = [f"error-{field.html_name}-{i}" for i, _ in enumerate(field.errors, start=1)]
     if error_ids:
-        field.field.widget.attrs.update({"invalid": True, "error-message": " ".join(error_ids)})
+        field.field.widget.attrs.update({"invalid": True, "unmet": " ".join(error_ids)})
     # Forwarded to the inner input, where a screen reader announces it.
     if field.field.required:
         field.field.widget.attrs.setdefault("required", True)

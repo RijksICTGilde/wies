@@ -41,7 +41,7 @@
       and have no sensible equivalent in the overflow menu. #}
       <nldd-toolbar-item slot="start" priority="1">
       <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
-      <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
+      <nldd-tab-bar-item current text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
       <nldd-tab-bar-item text="Updates" data-tab-panel="tab-panel-updates" hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.public_id]) }}" hx-target="#tab-panel-updates" hx-swap="innerHTML"></nldd-tab-bar-item>
       </nldd-tab-bar>
       </nldd-toolbar-item>
