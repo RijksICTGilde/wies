@@ -37,7 +37,13 @@ function container(held) {
 function makeDoc(notifications, sheets) {
   return {
     readyState: "complete",
-    body: { appended: [], appendChild(node) { this.appended.push(node); node.parentElement = this; } },
+    body: {
+      appended: [],
+      appendChild(node) {
+        this.appended.push(node);
+        node.parentElement = this;
+      },
+    },
     getElementById(id) {
       if (id === "wies-live") return region;
       if (id === "wies-alert") return alertRegion;
@@ -49,7 +55,12 @@ function makeDoc(notifications, sheets) {
       return [];
     },
     createElement() {
-      return { attributes: {}, setAttribute(name, value) { this.attributes[name] = value; } };
+      return {
+        attributes: {},
+        setAttribute(name, value) {
+          this.attributes[name] = value;
+        },
+      };
     },
   };
 }
@@ -59,7 +70,11 @@ function makeDoc(notifications, sheets) {
 function sheet(modal) {
   return {
     children: [],
-    shadowRoot: { querySelector: () => ({ matches: (selector) => selector === ":modal" && modal }) },
+    shadowRoot: {
+      querySelector: () => ({
+        matches: (selector) => selector === ":modal" && modal,
+      }),
+    },
     querySelector(selector) {
       return selector === "[data-wies-live]" ? this.children[0] || null : null;
     },
@@ -76,8 +91,12 @@ beforeEach(() => {
     textContent: "",
     attributes: {},
     focusCalls: [],
-    setAttribute(name, value) { this.attributes[name] = value; },
-    focus(options) { this.focusCalls.push(options); },
+    setAttribute(name, value) {
+      this.attributes[name] = value;
+    },
+    focus(options) {
+      this.focusCalls.push(options);
+    },
   };
   timers = [];
   doc = makeDoc();
@@ -106,7 +125,10 @@ describe("messagesIn", () => {
     const live = liveRegion();
     const found = live.messagesIn(
       container({
-        errors: [el({}, " Opdrachtnaam is verplicht "), el({}, "Voeg minimaal 1 opdrachtgever toe")],
+        errors: [
+          el({}, " Opdrachtnaam is verplicht "),
+          el({}, "Voeg minimaal 1 opdrachtgever toe"),
+        ],
       }),
     );
     assert.deepEqual(found, [
@@ -126,7 +148,9 @@ describe("messagesIn", () => {
 
   it("says fout, not fouten, for a single error", () => {
     const live = liveRegion();
-    const found = live.messagesIn(container({ errors: [el({}, "Vul een naam in")] }));
+    const found = live.messagesIn(
+      container({ errors: [el({}, "Vul een naam in")] }),
+    );
     assert.deepEqual(found, ["Het formulier heeft 1 fout: Vul een naam in"]);
   });
 
@@ -233,15 +257,30 @@ describe("modal sheet", () => {
     const modal = sheet(true);
     const calls = [];
     const notifications = {
-      attributes: {}, style: {}, open: false,
-      getAttribute(name) { return this.attributes[name] || null; },
-      setAttribute(name, value) { this.attributes[name] = value; },
-      matches(selector) { return selector === ":popover-open" && this.open; },
-      showPopover() { this.open = true; calls.push("show"); },
-      hidePopover() { this.open = false; calls.push("hide"); },
+      attributes: {},
+      style: {},
+      open: false,
+      getAttribute(name) {
+        return this.attributes[name] || null;
+      },
+      setAttribute(name, value) {
+        this.attributes[name] = value;
+      },
+      matches(selector) {
+        return selector === ":popover-open" && this.open;
+      },
+      showPopover() {
+        this.open = true;
+        calls.push("show");
+      },
+      hidePopover() {
+        this.open = false;
+        calls.push("hide");
+      },
     };
     doc = makeDoc([], [modal]);
-    doc.getElementById = (id) => (id === "nldd-notification-region" ? notifications : region);
+    doc.getElementById = (id) =>
+      id === "nldd-notification-region" ? notifications : region;
     const live = liveRegion();
     live.raiseNotifications();
     assert.equal(notifications.attributes.popover, "manual");
@@ -249,13 +288,23 @@ describe("modal sheet", () => {
     assert.deepEqual(calls, ["show"]);
 
     live.raiseNotifications();
-    assert.deepEqual(calls, ["show", "hide", "show"], "restacked above a dialog opened since");
+    assert.deepEqual(
+      calls,
+      ["show", "hide", "show"],
+      "restacked above a dialog opened since",
+    );
   });
 
   it("leaves the notification region alone without a modal sheet", () => {
-    const notifications = { setAttribute() { throw new Error("touched"); }, showPopover() {} };
+    const notifications = {
+      setAttribute() {
+        throw new Error("touched");
+      },
+      showPopover() {},
+    };
     doc = makeDoc([], [sheet(false)]);
-    doc.getElementById = (id) => (id === "nldd-notification-region" ? notifications : region);
+    doc.getElementById = (id) =>
+      id === "nldd-notification-region" ? notifications : region;
     liveRegion().raiseNotifications();
   });
 });
@@ -279,7 +328,10 @@ describe("handleNotifications", () => {
 
   it("reads a notification once when it is added and moved in one batch", () => {
     const live = liveRegion();
-    live.handleNotifications([el({ text: "Opgeslagen" }), el({ text: "Opgeslagen" })]);
+    live.handleNotifications([
+      el({ text: "Opgeslagen" }),
+      el({ text: "Opgeslagen" }),
+    ]);
     timers[0].fn();
     assert.equal(region.textContent, "Opgeslagen");
   });
@@ -287,7 +339,10 @@ describe("handleNotifications", () => {
   it("swallows the second arrival when the component moves itself", () => {
     const live = liveRegion();
     live.handleNotifications([el({ text: "Opgeslagen" })]);
-    assert.equal(live.handleNotifications([el({ text: "Opgeslagen" })]), undefined);
+    assert.equal(
+      live.handleNotifications([el({ text: "Opgeslagen" })]),
+      undefined,
+    );
     assert.equal(timers.length, 1);
   });
 
@@ -303,7 +358,8 @@ describe("watchNotifications", () => {
     const observed = [];
     doc = makeDoc();
     function FakeObserver(callback) {
-      this.observe = (node, options) => observed.push({ node, options, callback });
+      this.observe = (node, options) =>
+        observed.push({ node, options, callback });
     }
     const live = new LiveRegion(doc, {
       setTimeout: (fn, ms) => timers.push({ fn, ms }),
@@ -314,14 +370,19 @@ describe("watchNotifications", () => {
     assert.equal(observed[0].node, doc.body);
     assert.deepEqual(observed[0].options, { childList: true, subtree: true });
 
-    observed[0].callback([{ addedNodes: [el({ text: "Periode opgeslagen" })] }]);
+    observed[0].callback([
+      { addedNodes: [el({ text: "Periode opgeslagen" })] },
+    ]);
     timers[0].fn();
     assert.equal(region.textContent, "Periode opgeslagen");
   });
 
   it("does nothing where there is no MutationObserver", () => {
     doc = makeDoc();
-    const live = new LiveRegion(doc, { setTimeout: () => {}, MutationObserver: null });
+    const live = new LiveRegion(doc, {
+      setTimeout: () => {},
+      MutationObserver: null,
+    });
     live.watchNotifications();
   });
 });
@@ -338,7 +399,11 @@ describe("handleLoad", () => {
     assert.equal(alertRegion.textContent, "Gebruiker verwijderd");
     assert.equal(alertRegion.attributes.tabindex, "-1");
     assert.deepEqual(alertRegion.focusCalls, [{ preventScroll: true }]);
-    assert.equal(region.textContent, "", "not the polite region: that is not spoken after a load");
+    assert.equal(
+      region.textContent,
+      "",
+      "not the polite region: that is not spoken after a load",
+    );
   });
 
   it("keeps the watcher off the notifications it will announce itself", () => {
@@ -356,7 +421,11 @@ describe("handleLoad", () => {
 
     clock = 5000;
     live.handleNotifications([el({ text: "Je naam is opgeslagen." })]);
-    assert.equal(timers.length, 2, "after the load, the same words are a new notification again");
+    assert.equal(
+      timers.length,
+      2,
+      "after the load, the same words are a new notification again",
+    );
   });
 
   it("does nothing without flash messages", () => {

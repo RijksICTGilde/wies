@@ -19,7 +19,8 @@
 
 var REJECTED = "[invalid][error-message]";
 var CONTROL = "input, textarea, select, button";
-var LIGHT_CONTROL = "nldd-button, button, input:not([type=hidden]), select, textarea";
+var LIGHT_CONTROL =
+  "nldd-button, button, input:not([type=hidden]), select, textarea";
 
 // The element a screen reader reads when this one is focused: the control in
 // its shadow root, else the first control inside it (borrowed: that control is
@@ -30,9 +31,7 @@ function controlIn(host) {
   var light = host.querySelector(LIGHT_CONTROL);
   if (!light) return null;
   return {
-    control: light.shadowRoot
-      ? light.shadowRoot.querySelector(CONTROL)
-      : light,
+    control: light.shadowRoot ? light.shadowRoot.querySelector(CONTROL) : light,
     borrowed: true,
   };
 }

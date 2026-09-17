@@ -85,8 +85,13 @@ LiveRegion.prototype.modalSheet = function () {
   var sheets = this.doc.querySelectorAll("nldd-sheet");
   for (var i = 0; i < sheets.length; i++) {
     var root = sheets[i].shadowRoot;
-    var dialog = root && root.querySelector ? root.querySelector("dialog") : null;
-    if (dialog && typeof dialog.matches === "function" && dialog.matches(":modal"))
+    var dialog =
+      root && root.querySelector ? root.querySelector("dialog") : null;
+    if (
+      dialog &&
+      typeof dialog.matches === "function" &&
+      dialog.matches(":modal")
+    )
       return sheets[i];
   }
   return null;
@@ -259,7 +264,8 @@ LiveRegion.prototype.handleLoad = function () {
     if (!spoken) return;
     spoken.textContent = messages.join(". ");
     spoken.setAttribute("tabindex", "-1");
-    if (typeof spoken.focus === "function") spoken.focus({ preventScroll: true });
+    if (typeof spoken.focus === "function")
+      spoken.focus({ preventScroll: true });
   }, LOAD_DELAY);
 };
 

@@ -21,7 +21,7 @@ class A11yMarkupTest(TestCase):
         self.assertNotContains(response, "<h3>Opdrachtgever</h3>")
 
     def test_profile_name_fields_carry_their_input_purpose(self):
-        response = self.client.get(reverse("profile-name-edit"), HTTP_HX_REQUEST="true")
+        response = self.client.get(reverse("profile-name-edit"), headers={"hx-request": "true"})
         assert response.status_code == 200
         self.assertContains(response, 'autocomplete="given-name"')
         self.assertContains(response, 'autocomplete="family-name"')
