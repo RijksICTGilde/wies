@@ -10,11 +10,11 @@
 <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
 {% if field.errors %}
-{# `for`: a widget that is no form input names the control the list is about. #}
-<nldd-validation-list{% if field.field.widget.attrs.get("validation-for") %} for="{{ field.field.widget.attrs["validation-for"] }}"{% endif %}>
-{% for error in field.errors %}
-  <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-{% endfor %}
-</nldd-validation-list>
+  {# `for`: a widget that is no form input names the control the list is about. #}
+  <nldd-validation-list{% if field.field.widget.attrs.get("validation-for") %} for="{{ field.field.widget.attrs["validation-for"] }}"{% endif %}>
+  {% for error in field.errors %}
+    <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+  {% endfor %}
+  </nldd-validation-list>
 {% endif %}
 </nldd-form-field>

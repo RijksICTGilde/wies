@@ -12,7 +12,8 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form novalidate hx-post="{{ panel_data.edit_url }}"
+<form novalidate
+      hx-post="{{ panel_data.edit_url }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#side-panel-content"
       hx-swap="innerHTML">

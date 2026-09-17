@@ -18,7 +18,8 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form novalidate hx-post="{{ panel_data.edit_url }}"
+<form novalidate
+      hx-post="{{ panel_data.edit_url }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#side-panel-content"
       hx-swap="innerHTML"
@@ -38,11 +39,11 @@
     </nldd-menu>
     </nldd-combo-box>
     {% if form.skill.errors %}
-    <nldd-validation-list>
-    {% for error in form.skill.errors %}
-      <nldd-validation-item id="{{ skill_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
-    {% endfor %}
-    </nldd-validation-list>
+      <nldd-validation-list>
+      {% for error in form.skill.errors %}
+        <nldd-validation-item id="{{ skill_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+      {% endfor %}
+      </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
   {% else %}
@@ -88,12 +89,12 @@
     {% set start_errors = wire_field_errors(form.specific_start_date) %}
     <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
     {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
-{% if form.specific_start_date.errors %}
-    <nldd-validation-list>
-    {% for error in form.specific_start_date.errors %}
-      <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
-    {% endfor %}
-    </nldd-validation-list>
+    {% if form.specific_start_date.errors %}
+      <nldd-validation-list>
+      {% for error in form.specific_start_date.errors %}
+        <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+      {% endfor %}
+      </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
     {# Off means no known end date, the placement runs on. The switch is not
@@ -104,12 +105,12 @@
     {% set end_errors = wire_field_errors(form.specific_end_date) %}
     <nldd-form-field label="{{ form.specific_end_date.label }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
     {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
-{% if form.specific_end_date.errors %}
-    <nldd-validation-list>
-    {% for error in form.specific_end_date.errors %}
-      <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
-    {% endfor %}
-    </nldd-validation-list>
+    {% if form.specific_end_date.errors %}
+      <nldd-validation-list>
+      {% for error in form.specific_end_date.errors %}
+        <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+      {% endfor %}
+      </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
   {% endif %}

@@ -13,7 +13,8 @@
 </nldd-title>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form novalidate data-onboarding-detail-form
+<form novalidate
+      data-onboarding-detail-form
       hx-post="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#onboarding-detail"
@@ -34,12 +35,12 @@
       {% set error_ids = wire_field_errors(bound) %}
       <nldd-form-field label="{{ bound.label }}">
       {{ bound.as_widget(attrs={"autofocus": loop.first and group.form.prefix == "opdracht"}) }}
-{% if bound.errors %}
-      <nldd-validation-list>
-      {% for error in bound.errors %}
-        <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-      {% endfor %}
-      </nldd-validation-list>
+      {% if bound.errors %}
+        <nldd-validation-list>
+        {% for error in bound.errors %}
+          <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+        {% endfor %}
+        </nldd-validation-list>
       {% endif %}
       </nldd-form-field>
     {% endfor %}

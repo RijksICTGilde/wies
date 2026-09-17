@@ -12,7 +12,8 @@
   <h1>Plaatsingen importeren</h1>
   </nldd-rich-text>
   <nldd-form>
-  <form novalidate method="post"
+  <form novalidate
+        method="post"
         action="{{ url('assignment-import-csv') }}"
         enctype="multipart/form-data">
     {{ get_csrf_hidden_input(request) }}

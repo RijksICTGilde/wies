@@ -66,7 +66,8 @@
   <p>Start een achtergrondtaak die organisaties synchroniseert.</p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <form novalidate method="post"
+  <form novalidate
+        method="post"
         hx-post="{{ url('staff-database') }}"
         hx-target="#task-list"
         hx-swap="innerHTML">
@@ -93,7 +94,8 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {# The preview is a confirmation step, not a page block: it lands in the mount
      below as a bottom sheet and dialog.js opens it after the swap. #}
-  <form novalidate hx-post="{{ url('staff-database') }}"
+  <form novalidate
+        hx-post="{{ url('staff-database') }}"
         hx-target="#merge-preview-mount"
         hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
@@ -140,7 +142,8 @@
     </p>
     </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    <form novalidate method="post"
+    <form novalidate
+          method="post"
           data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="clear_data" />

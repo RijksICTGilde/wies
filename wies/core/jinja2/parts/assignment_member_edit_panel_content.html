@@ -8,7 +8,8 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form novalidate data-member-form
+<form novalidate
+      data-member-form
       hx-post="{{ panel_data.member_edit_url }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#side-panel-content"
@@ -36,12 +37,12 @@
   <nldd-radio-button-field value="aanvraag" label="Aanvraag" {% if status_value == "aanvraag" %}checked{% endif %}></nldd-radio-button-field>
   <nldd-radio-button-field value="ingevuld" label="Geplaatste consultant" {% if status_value == "ingevuld" %}checked{% endif %}></nldd-radio-button-field>
   </nldd-radio-button-group>
-{% if svc_form.is_filled.errors %}
-  <nldd-validation-list>
-  {% for error in svc_form.is_filled.errors %}
-    <nldd-validation-item id="{{ is_filled_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-  {% endfor %}
-  </nldd-validation-list>
+  {% if svc_form.is_filled.errors %}
+    <nldd-validation-list>
+    {% for error in svc_form.is_filled.errors %}
+      <nldd-validation-item id="{{ is_filled_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
   {# A combo box too: the consultant list is as long as the role list. #}
@@ -59,12 +60,12 @@
     {% endfor %}
     </nldd-menu>
     </nldd-combo-box>
-{% if svc_form.colleague.errors %}
-    <nldd-validation-list>
-    {% for error in svc_form.colleague.errors %}
-      <nldd-validation-item id="{{ colleague_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-    {% endfor %}
-    </nldd-validation-list>
+    {% if svc_form.colleague.errors %}
+      <nldd-validation-list>
+      {% for error in svc_form.colleague.errors %}
+        <nldd-validation-item id="{{ colleague_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+      {% endfor %}
+      </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
   </div>
@@ -82,12 +83,12 @@
   {% endfor %}
   </nldd-menu>
   </nldd-combo-box>
-{% if svc_form.skill.errors %}
-  <nldd-validation-list>
-  {% for error in svc_form.skill.errors %}
-    <nldd-validation-item id="{{ skill_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-  {% endfor %}
-  </nldd-validation-list>
+  {% if svc_form.skill.errors %}
+    <nldd-validation-list>
+    {% for error in svc_form.skill.errors %}
+      <nldd-validation-item id="{{ skill_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
   {# Only for "+ Nieuwe rol": server-rendered hidden unless that option is
@@ -98,11 +99,11 @@
     <nldd-form-field label="{{ svc_form.new_skill_name.label }}">
     <nldd-text-field name="{{ svc_form.new_skill_name.html_name }}" accessible-label="{{ svc_form.new_skill_name.label }}" data-new-skill-input value="{{ new_skill_value }}" maxlength="30" {% if svc_form.new_skill_name.errors %}invalid unmet="{{ new_skill_error_ids|join(' ') }}"{% endif %}></nldd-text-field>
     {% if svc_form.new_skill_name.errors %}
-    <nldd-validation-list>
-    {% for error in svc_form.new_skill_name.errors %}
-      <nldd-validation-item id="{{ new_skill_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
-    {% endfor %}
-    </nldd-validation-list>
+      <nldd-validation-list>
+      {% for error in svc_form.new_skill_name.errors %}
+        <nldd-validation-item id="{{ new_skill_error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
+      {% endfor %}
+      </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
   </div>
@@ -144,12 +145,12 @@
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
   <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits %} hidden{% endif %}>
   {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
-{% if svc_form.placement_start_date.errors %}
-  <nldd-validation-list>
-  {% for error in svc_form.placement_start_date.errors %}
-    <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
-  {% endfor %}
-  </nldd-validation-list>
+  {% if svc_form.placement_start_date.errors %}
+    <nldd-validation-list>
+    {% for error in svc_form.placement_start_date.errors %}
+      <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
   {# Off means no known end date, the placement runs on. The switch does not post;
@@ -160,12 +161,12 @@
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
   <nldd-form-field label="{{ svc_form.placement_end_date.label }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
   {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
-{% if svc_form.placement_end_date.errors %}
-  <nldd-validation-list>
-  {% for error in svc_form.placement_end_date.errors %}
-    <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
-  {% endfor %}
-  </nldd-validation-list>
+  {% if svc_form.placement_end_date.errors %}
+    <nldd-validation-list>
+    {% for error in svc_form.placement_end_date.errors %}
+      <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
   {# Hidden inputs last: nldd-form spaces all siblings, so one at the top pushes

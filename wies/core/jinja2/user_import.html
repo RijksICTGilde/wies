@@ -8,7 +8,8 @@
   <h1>Gebruikers importeren</h1>
   </nldd-rich-text>
   <nldd-form>
-  <form novalidate method="post"
+  <form novalidate
+        method="post"
         action="{{ url('user-import-csv') }}"
         enctype="multipart/form-data">
     {{ get_csrf_hidden_input(request) }}
