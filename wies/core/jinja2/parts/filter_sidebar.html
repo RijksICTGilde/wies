@@ -8,7 +8,7 @@
    padding or positioning of its own — that is up to the parent. The container
    stays because the OOB swap targets its id. #}
 <nldd-container id="filter-panel" {% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}>
-<form id="filter-form"
+<form novalidate id="filter-form"
       hx-get="{{ filter_target_url }}"
       hx-target="#results"
       hx-swap="outerHTML settle:0"

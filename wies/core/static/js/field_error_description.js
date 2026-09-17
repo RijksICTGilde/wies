@@ -1,85 +1,43 @@
 "use strict";
 
 /**
- * Lets the error under a rejected field reach the screen reader.
- *
- * nldd-form-field wires a field's errors the standard way: the input gets
- * aria-describedby="<id of the error text>". But that input sits in the
- * component's shadow root and the error text in the page, and an id reference
- * cannot cross that boundary: the browser resolves it to nothing, so VoiceOver
- * says "ongeldige invoer" and not why. Element reflection
- * (ariaDescribedByElements) may point across it; where the browser lacks
- * that, aria-description carries the same words as a plain string.
- *
- * Runs once the page is loaded and after every htmx settle, on the fields
- * wire_field_errors() marked with `invalid` and `error-message`. A rejected
- * element that is no control itself, like the <div> the client picker marks,
- * lends the description to the first control inside it.
+ * Lets the error of a control that is no form input reach the screen reader.
+ * nldd-form-field hands its validation list to the input as an accessible
+ * description, but the client picker's control is a button the field does not
+ * recognise, so its list points at the button with `for` and nobody describes
+ * the button. This does, with "Fout:" in front because a button, unlike a
+ * field, does not say "ongeldig" itself.
  */
 
-var REJECTED = "[invalid][error-message]";
-var CONTROL = "input, textarea, select, button";
-var LIGHT_CONTROL =
-  "nldd-button, button, input:not([type=hidden]), select, textarea";
+var BORROWED = "nldd-validation-list[for]";
 
-// The element a screen reader reads when this one is focused: the control in
-// its shadow root, else the first control inside it (borrowed: that control is
-// not the invalid thing, so its description has to say it is an error).
-function controlIn(host) {
-  var shadow = host.shadowRoot ? host.shadowRoot.querySelector(CONTROL) : null;
-  if (shadow) return { control: shadow, borrowed: false };
-  var light = host.querySelector(LIGHT_CONTROL);
-  if (!light) return null;
-  return {
-    control: light.shadowRoot ? light.shadowRoot.querySelector(CONTROL) : light,
-    borrowed: true,
-  };
-}
-
-function wording(errors) {
-  return errors
-    .map(function (el) {
-      return el.textContent.trim();
-    })
-    .join(". ");
-}
-
-function describe(host) {
-  var ids = (host.getAttribute("error-message") || "").split(/\s+/);
-  var errors = [];
+function describe(list) {
+  var control = document.getElementById(list.getAttribute("for"));
+  if (!control || !control.hasAttribute("invalid")) return;
+  var ids = (control.getAttribute("unmet") || "").split(/\s+/);
+  var words = [];
   for (var i = 0; i < ids.length; i++) {
-    var el = ids[i] && document.getElementById(ids[i]);
-    if (el) errors.push(el);
+    var item = ids[i] && document.getElementById(ids[i]);
+    if (item) words.push(item.textContent.trim());
   }
-  if (!errors.length) return;
-  // Lit renders the shadow root a frame after the element connects; until
-  // then there is no input to describe.
-  var ready =
-    host.updateComplete && typeof host.updateComplete.then === "function"
-      ? host.updateComplete
-      : Promise.resolve();
+  if (!words.length) return;
+  // Lit renders the shadow root a frame after the element connects.
+  var ready = control.updateComplete || Promise.resolve();
   ready.then(function () {
-    var found = controlIn(host);
-    if (!found || !found.control) return;
-    var control = found.control;
-    // A field says "ongeldig" itself through aria-invalid; a borrowed button
-    // does not, so the words have to. That rules out element reflection there.
-    if (found.borrowed) {
-      control.setAttribute("aria-description", "Fout: " + wording(errors));
-      return;
-    }
-    if ("ariaDescribedByElements" in control) {
-      control.ariaDescribedByElements = errors;
-      return;
-    }
-    control.setAttribute("aria-description", wording(errors));
+    var target = control.shadowRoot
+      ? control.shadowRoot.querySelector("button, a, input")
+      : null;
+    (target || control).setAttribute(
+      "aria-description",
+      "Fout: " + words.join(". "),
+    );
   });
 }
 
 function describeAll(root) {
   if (!root || typeof root.querySelectorAll !== "function") return;
-  var hosts = root.querySelectorAll(REJECTED);
-  for (var i = 0; i < hosts.length; i++) describe(hosts[i]);
+  var lists = root.querySelectorAll(BORROWED);
+  for (var i = 0; i < lists.length; i++) describe(lists[i]);
 }
 
 document.addEventListener("htmx:afterSettle", function (event) {

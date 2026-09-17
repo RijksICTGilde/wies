@@ -21,7 +21,7 @@
     (colleague_count, "collega's"),
     (organization_count, "organisaties"),
   ] %}
-  <nldd-collection layout="horizontal-scroll" gap="16px" item-width="200px">
+  <nldd-collection layout="horizontal-scroll" gap="16" item-width="200px">
   {% for value, label in _tiles %}
     <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">
@@ -47,7 +47,7 @@
     <p>Genereer een basisset dummydata (collega's, opdrachten, plaatsingen). Bestaande dummydata wordt eerst gewist.</p>
     </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    <form method="post">
+    <form novalidate method="post">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="load_base_data" />
       <nldd-button variant="secondary" type="submit" text="Dummy data genereren"></nldd-button>
@@ -66,7 +66,7 @@
   <p>Start een achtergrondtaak die organisaties synchroniseert.</p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <form method="post"
+  <form novalidate method="post"
         hx-post="{{ url('staff-database') }}"
         hx-target="#task-list"
         hx-swap="innerHTML">
@@ -93,7 +93,7 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {# The preview is a confirmation step, not a page block: it lands in the mount
      below as a bottom sheet and dialog.js opens it after the swap. #}
-  <form hx-post="{{ url('staff-database') }}"
+  <form novalidate hx-post="{{ url('staff-database') }}"
         hx-target="#merge-preview-mount"
         hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
@@ -116,7 +116,7 @@
   </p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <form method="post">
+  <form novalidate method="post">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="reset_onboarding" />
     <nldd-button variant="secondary" type="submit" text="Onboarding resetten"></nldd-button>
@@ -127,7 +127,7 @@
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
     {# Danger zone: irreversible. Color reinforces but never carries the signal —
        heading, text and button label each name what disappears (WCAG 1.4.1). #}
-    <nldd-box variant="critical">
+    <nldd-box background="critical">
     <nldd-container padding="16">
     <nldd-title size="5">
     <h2>Database leegmaken</h2>
@@ -140,7 +140,7 @@
     </p>
     </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    <form method="post"
+    <form novalidate method="post"
           data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="clear_data" />

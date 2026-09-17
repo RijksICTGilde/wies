@@ -4,11 +4,12 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
-- ?: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
-- ?: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
-- ?: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
-- ?: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
+- 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
+- 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
+- 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
+- 673: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
+- 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
+- 673: NLDD design system 0.8.82 → 0.8.88: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel, and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
 - ?
 
 ## 2026-09-13

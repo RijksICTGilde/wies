@@ -1,7 +1,7 @@
 {# Body of the category management sheet, kept separate from the sheet: every
    action re-renders only this part so the sheet stays open. #}
 <nldd-form>
-<form method="post"
+<form novalidate method="post"
       action="{{ form_post_url }}"
       hx-post="{{ form_post_url }}"
       hx-target="#categoryManageBody"

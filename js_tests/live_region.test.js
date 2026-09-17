@@ -4,69 +4,35 @@ const LiveRegion = require("../wies/core/static/js/live_region.js");
 
 // ─── Fake DOM ────────────────────────────────────────────────
 //
-// Only what LiveRegion touches: a container answers the three selectors with
-// what the test declares it holds, the document hands out the region.
+// Only what LiveRegion touches: elements answer getAttribute and matches, a
+// container answers the three selectors with what the test declares it holds,
+// the document hands out the regions and the sheets.
 
-let doc, region, alertRegion, timers;
+let doc, region, alertRegion, timers, clock;
 
 function el(attributes, text) {
   return {
-    getAttribute(name) {
-      return name in attributes ? attributes[name] : null;
-    },
-    matches(selector) {
-      return selector === "nldd-notification[text]" && "text" in attributes;
-    },
+    getAttribute: (name) => (name in attributes ? attributes[name] : null),
+    matches: (selector) =>
+      selector === "nldd-notification[text]" && "text" in attributes,
     querySelectorAll: () => [],
     textContent: text || "",
   };
 }
 
 function container(held) {
-  const byselector = {
-    "nldd-notification[text]": held.notifications || [],
+  const bySelector = {
     "[data-announce]": held.announce || [],
-    "nldd-form-field-error-text": held.errors || [],
+    "[invalid][unmet]": held.rejected || [],
   };
   return {
     matches: () => false,
-    querySelectorAll: (selector) => byselector[selector] || [],
-  };
-}
-
-function makeDoc(notifications, sheets) {
-  return {
-    readyState: "complete",
-    body: {
-      appended: [],
-      appendChild(node) {
-        this.appended.push(node);
-        node.parentElement = this;
-      },
-    },
-    getElementById(id) {
-      if (id === "wies-live") return region;
-      if (id === "wies-alert") return alertRegion;
-      return null;
-    },
-    querySelectorAll(selector) {
-      if (selector === "nldd-notification[text]") return notifications || [];
-      if (selector === "nldd-sheet") return sheets || [];
-      return [];
-    },
-    createElement() {
-      return {
-        attributes: {},
-        setAttribute(name, value) {
-          this.attributes[name] = value;
-        },
-      };
-    },
+    querySelectorAll: (selector) => bySelector[selector] || [],
   };
 }
 
 // A sheet: a host with a shadow dialog that is modal or not, and a light-DOM
-// child list that the live region is appended to.
+// child list that the region is appended to.
 function sheet(modal) {
   return {
     children: [],
@@ -85,9 +51,8 @@ function sheet(modal) {
   };
 }
 
-beforeEach(() => {
-  region = { textContent: "" };
-  alertRegion = {
+function focusable() {
+  return {
     textContent: "",
     attributes: {},
     focusCalls: [],
@@ -98,305 +63,204 @@ beforeEach(() => {
       this.focusCalls.push(options);
     },
   };
+}
+
+beforeEach(() => {
+  region = { textContent: "" };
+  alertRegion = focusable();
   timers = [];
-  doc = makeDoc();
+  clock = 0;
+  doc = {
+    readyState: "complete",
+    body: {},
+    notifications: [],
+    sheets: [],
+    items: {},
+    getElementById(id) {
+      return (
+        { "wies-live": region, "wies-alert": alertRegion }[id] ||
+        this.items[id] ||
+        null
+      );
+    },
+    querySelectorAll(selector) {
+      if (selector === "nldd-notification[text]") return this.notifications;
+      if (selector === "nldd-sheet") return this.sheets;
+      return [];
+    },
+    createElement: () => focusable(),
+  };
 });
 
-function liveRegion(options) {
-  let clock = 0;
+function live(options) {
   return new LiveRegion(doc, {
     setTimeout: (fn, ms) => timers.push({ fn, ms }),
-    now: () => (options && options.now ? options.now() : (clock += 1)),
+    now: () => clock,
+    ...options,
   });
 }
 
 // ─── messagesIn ──────────────────────────────────────────────
 
 describe("messagesIn", () => {
-  it("reads the count a list carries", () => {
-    const live = liveRegion();
-    const found = live.messagesIn(
-      container({ announce: [el({ "data-announce": "12 gebruikers" })] }),
-    );
-    assert.deepEqual(found, ["12 gebruikers"]);
-  });
-
-  it("folds the errors of a rejected form into one sentence", () => {
-    const live = liveRegion();
-    const found = live.messagesIn(
+  it("reads the count a list carries, then the errors the rejected controls point at", () => {
+    doc.items = {
+      "e-name": el({}, " Opdrachtnaam is verplicht "),
+      "e-org": el({}, "Voeg minimaal 1 opdrachtgever toe"),
+    };
+    const found = live().messagesIn(
       container({
-        errors: [
-          el({}, " Opdrachtnaam is verplicht "),
-          el({}, "Voeg minimaal 1 opdrachtgever toe"),
+        announce: [el({ "data-announce": "12 gebruikers" })],
+        // The picker's wrapper and its button name the same id: read once.
+        rejected: [
+          el({ unmet: "e-name" }),
+          el({ unmet: "e-org" }),
+          el({ unmet: "e-org" }),
         ],
       }),
     );
     assert.deepEqual(found, [
+      "12 gebruikers",
       "Het formulier heeft 2 fouten: Opdrachtnaam is verplicht. Voeg minimaal 1 opdrachtgever toe",
     ]);
   });
 
-  it("leaves errors inside a role=alert to that alert", () => {
-    const live = liveRegion();
-    const alerted = el({}, "Al gemeld");
-    alerted.closest = (selector) => (selector === "[role='alert']" ? {} : null);
-    const found = live.messagesIn(
-      container({ errors: [alerted, el({}, "Vul een naam in")] }),
-    );
-    assert.deepEqual(found, ["Het formulier heeft 1 fout: Vul een naam in"]);
-  });
-
-  it("says fout, not fouten, for a single error", () => {
-    const live = liveRegion();
-    const found = live.messagesIn(
-      container({ errors: [el({}, "Vul een naam in")] }),
+  it("says fout for a single error and skips ids without an item", () => {
+    doc.items = { "e-name": el({}, "Vul een naam in") };
+    const found = live().messagesIn(
+      container({ rejected: [el({ unmet: "e-name e-gone" })] }),
     );
     assert.deepEqual(found, ["Het formulier heeft 1 fout: Vul een naam in"]);
   });
 
   it("includes the container itself when it is the list", () => {
-    const live = liveRegion();
     const list = container({});
     list.matches = (selector) => selector === "[data-announce]";
     list.getAttribute = () => "Geen opdrachten gevonden";
-    assert.deepEqual(live.messagesIn(list), ["Geen opdrachten gevonden"]);
+    assert.deepEqual(live().messagesIn(list), ["Geen opdrachten gevonden"]);
   });
 
   it("returns nothing for a fragment with nothing to say, or no element", () => {
-    const live = liveRegion();
-    assert.deepEqual(live.messagesIn(container({})), []);
-    assert.deepEqual(live.messagesIn(null), []);
-    assert.deepEqual(live.messagesIn({}), []);
+    assert.deepEqual(live().messagesIn(container({})), []);
+    assert.deepEqual(live().messagesIn(null), []);
   });
 });
 
 // ─── announce ────────────────────────────────────────────────
 
 describe("announce", () => {
-  it("empties the region and fills it a tick later", () => {
-    const live = liveRegion();
+  it("empties the region and fills it a tick later, so a repeat is still a change", () => {
     region.textContent = "6 collega's";
-
-    assert.equal(live.announce("6 collega's"), true);
+    assert.equal(live().announce("6 collega's"), true);
     assert.equal(region.textContent, "");
-    assert.equal(timers.length, 1);
     timers[0].fn();
     assert.equal(region.textContent, "6 collega's");
   });
 
   it("drops the same text heard again within the window", () => {
-    let clock = 0;
-    const live = liveRegion({ now: () => clock });
-    assert.equal(live.announce("6 collega's"), true);
+    const l = live();
+    assert.equal(l.announce("6 collega's"), true);
     clock = 500;
-    assert.equal(live.announce("6 collega's"), false);
+    assert.equal(l.announce("6 collega's"), false);
     clock = 1500;
-    assert.equal(live.announce("6 collega's"), true);
+    assert.equal(l.announce("6 collega's"), true);
   });
 
   it("does nothing without a region or without text", () => {
     region = null;
-    const live = liveRegion();
-    assert.equal(live.announce("x"), false);
+    assert.equal(live().announce("x"), false);
     region = { textContent: "" };
-    assert.equal(live.announce(""), false);
+    assert.equal(live().announce(""), false);
   });
 });
 
-// ─── handleSettle / handleLoad ───────────────────────────────
-
-describe("handleSettle", () => {
-  it("announces what the settled fragment carries, in reading order", () => {
-    const live = liveRegion();
-    live.handleSettle(
-      container({
-        announce: [el({ "data-announce": "3 opdrachten" })],
-        errors: [el({}, "Vul een naam in")],
-      }),
-    );
-    timers[0].fn();
-    assert.equal(
-      region.textContent,
-      "3 opdrachten. Het formulier heeft 1 fout: Vul een naam in",
-    );
-  });
-
-  it("stays quiet for a fragment with nothing to say", () => {
-    const live = liveRegion();
-    assert.equal(live.handleSettle(container({})), false);
-    assert.equal(timers.length, 0);
-  });
-});
+// ─── modal sheet ─────────────────────────────────────────────
 
 describe("modal sheet", () => {
-  it("prepares an empty region in every sheet, once", () => {
-    const open = sheet(true);
-    doc = makeDoc([], [open]);
-    const live = liveRegion();
-    live.prepareSheets();
-    live.prepareSheets();
-    assert.equal(open.children.length, 1);
-    assert.equal(open.children[0].attributes.role, "status");
-  });
-
-  it("reads out inside the modal sheet, and in the body otherwise", () => {
+  it("prepares one region per sheet and reads out in the modal one, else in the body", () => {
     const modal = sheet(true);
-    const plain = sheet(false);
-    doc = makeDoc([], [plain, modal]);
-    const live = liveRegion();
-    live.prepareSheets();
-    assert.equal(live.region(), modal.children[0]);
+    doc.sheets = [sheet(false), modal];
+    const l = live();
+    l.prepareSheets();
+    l.prepareSheets();
+    assert.equal(modal.children.length, 1);
+    assert.equal(modal.children[0].attributes.role, "status");
+    assert.equal(l.region(), modal.children[0]);
 
-    doc = makeDoc([], [plain]);
-    const live2 = liveRegion();
-    live2.prepareSheets();
-    assert.equal(live2.region(), region);
-  });
-
-  it("raises the notification region above a modal sheet as a popover, every time", () => {
-    const modal = sheet(true);
-    const calls = [];
-    const notifications = {
-      attributes: {},
-      style: {},
-      open: false,
-      getAttribute(name) {
-        return this.attributes[name] || null;
-      },
-      setAttribute(name, value) {
-        this.attributes[name] = value;
-      },
-      matches(selector) {
-        return selector === ":popover-open" && this.open;
-      },
-      showPopover() {
-        this.open = true;
-        calls.push("show");
-      },
-      hidePopover() {
-        this.open = false;
-        calls.push("hide");
-      },
-    };
-    doc = makeDoc([], [modal]);
-    doc.getElementById = (id) =>
-      id === "nldd-notification-region" ? notifications : region;
-    const live = liveRegion();
-    live.raiseNotifications();
-    assert.equal(notifications.attributes.popover, "manual");
-    assert.equal(notifications.style.margin, "0");
-    assert.deepEqual(calls, ["show"]);
-
-    live.raiseNotifications();
-    assert.deepEqual(
-      calls,
-      ["show", "hide", "show"],
-      "restacked above a dialog opened since",
-    );
-  });
-
-  it("leaves the notification region alone without a modal sheet", () => {
-    const notifications = {
-      setAttribute() {
-        throw new Error("touched");
-      },
-      showPopover() {},
-    };
-    doc = makeDoc([], [sheet(false)]);
-    doc.getElementById = (id) =>
-      id === "nldd-notification-region" ? notifications : region;
-    liveRegion().raiseNotifications();
+    doc.sheets = [sheet(false)];
+    assert.equal(live().region(), region);
   });
 });
 
-describe("handleNotifications", () => {
-  it("announces the text of a notification that entered the document", () => {
-    const live = liveRegion();
-    live.handleNotifications([el({ text: "Opdrachtnaam opgeslagen" }), {}]);
-    timers[0].fn();
-    assert.equal(region.textContent, "Opdrachtnaam opgeslagen");
+// ─── notifications ───────────────────────────────────────────
+
+describe("notifications", () => {
+  it("tells NLDD about a sheet that was modal before the first notification", () => {
+    const modal = sheet(true);
+    const events = [];
+    modal.contains = () => false;
+    modal.dispatchEvent = (e) => events.push([e.type, e.bubbles]);
+    doc.sheets = [modal];
+    doc.getElementById = (id) =>
+      id === "nldd-notification-region" ? {} : region;
+    live().nudgeNotifications();
+    assert.deepEqual(events, [["open", true]]);
+
+    modal.contains = () => true;
+    live().nudgeNotifications();
+    assert.equal(
+      events.length,
+      1,
+      "already inside the sheet: nothing to nudge",
+    );
   });
 
-  it("finds the notifications inside an added wrapper, like the flash block", () => {
-    const live = liveRegion();
+  it("reads a notification once, nested in a wrapper or added and moved in one batch", () => {
     const wrapper = el({});
     wrapper.querySelectorAll = () => [el({ text: "Merk is toegevoegd." })];
-    live.handleNotifications([wrapper]);
-    timers[0].fn();
-    assert.equal(region.textContent, "Merk is toegevoegd.");
-  });
-
-  it("reads a notification once when it is added and moved in one batch", () => {
-    const live = liveRegion();
-    live.handleNotifications([
-      el({ text: "Opgeslagen" }),
-      el({ text: "Opgeslagen" }),
+    live().handleNotifications([
+      wrapper,
+      el({ text: "Merk is toegevoegd." }),
+      {},
     ]);
     timers[0].fn();
-    assert.equal(region.textContent, "Opgeslagen");
-  });
-
-  it("swallows the second arrival when the component moves itself", () => {
-    const live = liveRegion();
-    live.handleNotifications([el({ text: "Opgeslagen" })]);
-    assert.equal(
-      live.handleNotifications([el({ text: "Opgeslagen" })]),
-      undefined,
-    );
+    assert.equal(region.textContent, "Merk is toegevoegd.");
     assert.equal(timers.length, 1);
   });
 
-  it("ignores nodes without text", () => {
-    const live = liveRegion();
-    live.handleNotifications([el({ text: "  " }), null]);
-    assert.equal(timers.length, 0);
-  });
-});
-
-describe("watchNotifications", () => {
-  it("watches the whole document and reads a notification that is added", () => {
+  it("watches the whole document and does nothing where there is no MutationObserver", () => {
     const observed = [];
-    doc = makeDoc();
     function FakeObserver(callback) {
       this.observe = (node, options) =>
         observed.push({ node, options, callback });
     }
-    const live = new LiveRegion(doc, {
-      setTimeout: (fn, ms) => timers.push({ fn, ms }),
-      MutationObserver: FakeObserver,
-    });
-    live.watchNotifications();
-    assert.equal(observed.length, 1);
+    live({ MutationObserver: FakeObserver }).watchNotifications();
     assert.equal(observed[0].node, doc.body);
     assert.deepEqual(observed[0].options, { childList: true, subtree: true });
-
     observed[0].callback([
       { addedNodes: [el({ text: "Periode opgeslagen" })] },
     ]);
     timers[0].fn();
     assert.equal(region.textContent, "Periode opgeslagen");
-  });
 
-  it("does nothing where there is no MutationObserver", () => {
-    doc = makeDoc();
-    const live = new LiveRegion(doc, {
-      setTimeout: () => {},
-      MutationObserver: null,
-    });
-    live.watchNotifications();
+    live({ MutationObserver: null }).watchNotifications();
   });
 });
 
-describe("handleLoad", () => {
-  it("gives a flash message that came with the page focus, after a delay", () => {
-    doc = makeDoc([el({ text: "Gebruiker verwijderd" })]);
-    const live = liveRegion();
-    live.handleLoad();
+// ─── page load ───────────────────────────────────────────────
 
+describe("handleLoad", () => {
+  it("gives a flash message that came with the page focus, and keeps the watcher off it", () => {
+    doc.notifications = [el({ text: "Je naam is opgeslagen." })];
+    const l = live();
+    l.handleLoad();
+    // The component moves the notification into its region: the watcher sees
+    // it arrive and must stay quiet, or the message is heard twice.
+    l.handleNotifications([el({ text: "Je naam is opgeslagen." })]);
     assert.equal(timers.length, 1);
     assert.equal(timers[0].ms, 1000);
     timers[0].fn();
-    assert.equal(alertRegion.textContent, "Gebruiker verwijderd");
+    assert.equal(alertRegion.textContent, "Je naam is opgeslagen.");
     assert.equal(alertRegion.attributes.tabindex, "-1");
     assert.deepEqual(alertRegion.focusCalls, [{ preventScroll: true }]);
     assert.equal(
@@ -404,23 +268,9 @@ describe("handleLoad", () => {
       "",
       "not the polite region: that is not spoken after a load",
     );
-  });
-
-  it("keeps the watcher off the notifications it will announce itself", () => {
-    doc = makeDoc([el({ text: "Je naam is opgeslagen." })]);
-    let clock = 0;
-    const live = liveRegion({ now: () => clock });
-    live.handleLoad();
-    // The component moves the notification into its region: the watcher sees
-    // it arrive, and must not say it politely now, or the alert later is a repeat.
-    live.handleNotifications([el({ text: "Je naam is opgeslagen." })]);
-    assert.equal(timers.length, 1, "no polite announcement queued");
-    timers[0].fn();
-    assert.equal(alertRegion.textContent, "Je naam is opgeslagen.");
-    assert.equal(region.textContent, "");
 
     clock = 5000;
-    live.handleNotifications([el({ text: "Je naam is opgeslagen." })]);
+    l.handleNotifications([el({ text: "Je naam is opgeslagen." })]);
     assert.equal(
       timers.length,
       2,
@@ -429,8 +279,7 @@ describe("handleLoad", () => {
   });
 
   it("does nothing without flash messages", () => {
-    doc = makeDoc([]);
-    liveRegion().handleLoad();
+    live().handleLoad();
     assert.equal(timers.length, 0);
   });
 });

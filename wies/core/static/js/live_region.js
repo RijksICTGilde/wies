@@ -1,46 +1,27 @@
 "use strict";
 
 /**
- * Says what an htmx swap changed, for someone who cannot see it change.
- *
- * A filter refreshes the list in place, a save drops a notification in the
- * corner, a rejected form paints its errors under the fields. Sighted users see
- * all of that; a screen reader stays silent, because the parts arrive complete
- * and a live region only announces text that changes inside a region that was
- * already there. So base.html holds one empty region, and this module copies
- * into it whatever the swapped-in content asks to be read out, and every
- * notification that lands in the NLDD notification region, whether the server
- * sent it or a script made it.
- *
- * One complication: on a narrow viewport the side panel opens as a modal
- * dialog, and a modal makes everything outside it inert. For a screen reader
- * that content is not there, and the notification in the corner is painted
- * behind the backdrop. Slotted content, though, belongs to the dialog. So while
- * a sheet is modal, the region that is read out and the notification region
- * both live inside the sheet.
- *
- * DOM access goes through the injected document so the decisions are testable
- * without a browser; the wiring at the bottom binds an instance to htmx.
+ * Says what an htmx swap changed, for someone who cannot see it change: the
+ * result count, a notification, the errors of a rejected form. A live region
+ * only announces text that changes inside a region that was already there, so
+ * base.html holds one empty region and this module fills it. DOM access goes
+ * through the injected document so the decisions are testable without a browser.
  */
 
-// What a fragment asks to be read out. Templates put the count on the list they
-// render ("12 gebruikers", "Geen opdrachten gevonden"); error texts carry their
-// own words.
+// Templates put the count on the list they render ("12 gebruikers").
 var ANNOUNCE = "[data-announce]";
-// A notification is announced when it enters the document, wherever that is:
-// the server's flash block, a script's toast, or the region every
-// nldd-notification moves itself into a moment later. That move adds it a
-// second time, which the repeat window swallows.
+// A rejected control names the ids of its nldd-validation-items in `unmet`.
+var REJECTED = "[invalid][unmet]";
+// Announced when it enters the document: the server's flash block, a script's
+// toast, or the region every nldd-notification moves itself into a moment
+// later. That move adds it a second time, which the repeat window swallows.
 var NOTIFICATION = "nldd-notification[text]";
 var NOTIFICATION_REGION = "nldd-notification-region";
 var SHEET_REGION = "[data-wies-live]";
 // Not the ones inside a role="alert": those are read out by that already.
-var ERROR_TEXT = "nldd-form-field-error-text";
-var ALERT = "[role='alert']";
 
-// The same text within this window is one event heard from several sides: a
-// request settles once per swapped element, and a list can arrive both inside
-// the target and out of band.
+// A request settles once per swapped element, and a list can arrive both in
+// the target and out of band: the same text within this window is one event.
 var REPEAT_WINDOW = 1000;
 
 // Between emptying the region and filling it. Long enough that a focus move
@@ -49,12 +30,11 @@ var REPEAT_WINDOW = 1000;
 // each other.
 var FILL_DELAY = 300;
 
-// After a full page load the flash message is already in the page, and a live
-// region is no use: measured with VoiceOver in Chrome, a change to one, polite
-// or assertive, 1.5 s after the load is never spoken, the page announcement
-// wins. What has focus is always spoken, so the message gets focus instead,
-// the way the GOV.UK notification banner does on page load. It sits at the top
-// of the body, so the next Tab lands on the skip link as on any fresh page.
+// After a full page load a live region is no use: measured with VoiceOver in
+// Chrome, a change to one is never spoken then, the page announcement wins.
+// What has focus is always spoken, so the message gets focus instead, as the
+// GOV.UK notification banner does. It sits first in the body, so the next Tab
+// lands on the skip link as on any fresh page.
 var LOAD_DELAY = 1000;
 
 function LiveRegion(doc, options) {
@@ -79,8 +59,9 @@ function LiveRegion(doc, options) {
   this.loadTexts = [];
 }
 
-// The sheet whose dialog is modal right now, if any. The dialog sits in the
-// component's shadow root; :modal is the one thing about it we need to know.
+// On a narrow viewport the side panel is a modal dialog, and a modal makes
+// everything outside it inert: for a screen reader that content is not there.
+// Slotted content belongs to the dialog, so a modal sheet gets its own region.
 LiveRegion.prototype.modalSheet = function () {
   var sheets = this.doc.querySelectorAll("nldd-sheet");
   for (var i = 0; i < sheets.length; i++) {
@@ -97,8 +78,7 @@ LiveRegion.prototype.modalSheet = function () {
   return null;
 };
 
-// Every sheet gets its own empty region, ahead of time: a region only counts
-// once it exists before its text changes.
+// Ahead of time: a region only counts once it exists before its text changes.
 LiveRegion.prototype.prepareSheets = function () {
   var sheets = this.doc.querySelectorAll("nldd-sheet");
   for (var i = 0; i < sheets.length; i++) {
@@ -111,37 +91,25 @@ LiveRegion.prototype.prepareSheets = function () {
   }
 };
 
+// NLDD moves its notification box into the topmost modal overlay, but it only
+// starts listening for overlays opening once the first notification has
+// joined, so a sheet that was already open is unknown to it and the box stays
+// on the body, behind the backdrop and inert. Sending the `open` event that
+// sheet would have sent had it opened later puts it on NLDD's list, and NLDD
+// relocates the box itself, carrying the notifications along.
+LiveRegion.prototype.nudgeNotifications = function () {
+  var sheet = this.modalSheet();
+  var region = this.doc.getElementById(NOTIFICATION_REGION);
+  if (!sheet || !region || sheet.contains(region)) return;
+  if (typeof sheet.dispatchEvent !== "function" || typeof Event !== "function")
+    return;
+  sheet.dispatchEvent(new Event("open", { bubbles: true }));
+};
+
 LiveRegion.prototype.region = function () {
   var sheet = this.modalSheet();
   var inSheet = sheet && sheet.querySelector(SHEET_REGION);
   return inSheet || this.doc.getElementById("wies-live");
-};
-
-// The NLDD notification region is a fixed box in the body, and a modal sheet
-// paints its backdrop over it. Moving the box into the sheet is not an option:
-// a notification that is disconnected on the way counts as dismissed and
-// removes itself. So the box is raised into the top layer as a popover
-// instead, above the dialog, and raised again for every notification, because
-// a dialog opened later would stack above it. The popover user-agent styles
-// that would fight the box's own (centering margin, border, canvas background)
-// are neutralised inline.
-LiveRegion.prototype.raiseNotifications = function () {
-  var region = this.doc.getElementById(NOTIFICATION_REGION);
-  if (!region || !this.modalSheet() || typeof region.showPopover !== "function")
-    return;
-  if (region.getAttribute("popover") !== "manual") {
-    region.setAttribute("popover", "manual");
-    region.style.margin = "0";
-    region.style.border = "0";
-    region.style.padding = "0";
-    region.style.background = "transparent";
-    region.style.bottom = "auto";
-    region.style.overflow = "visible";
-  }
-  try {
-    if (region.matches(":popover-open")) region.hidePopover();
-    region.showPopover();
-  } catch (err) {}
 };
 
 function texts(container, selector, read) {
@@ -157,6 +125,26 @@ function texts(container, selector, read) {
   }
   return out;
 }
+
+// The messages the rejected controls in a fragment point at, each once: the
+// client picker's wrapper and its button name the same ids.
+LiveRegion.prototype.errorTexts = function (container) {
+  var self = this;
+  var seen = {};
+  var out = [];
+  texts(container, REJECTED, function (el) {
+    var ids = (el.getAttribute("unmet") || "").split(/\s+/);
+    for (var i = 0; i < ids.length; i++) {
+      if (!ids[i] || seen[ids[i]]) continue;
+      seen[ids[i]] = true;
+      var item = self.doc.getElementById(ids[i]);
+      var text = item && item.textContent ? item.textContent.trim() : "";
+      if (text) out.push(text);
+    }
+    return "";
+  });
+  return out;
+};
 
 // The errors of a rejected form as one sentence, so the user hears at once
 // that the save failed and why. Focus moves to the first field separately.
@@ -175,11 +163,7 @@ LiveRegion.prototype.messagesIn = function (container) {
   var out = texts(container, ANNOUNCE, function (el) {
     return el.getAttribute("data-announce");
   });
-  var errors = texts(container, ERROR_TEXT, function (el) {
-    if (typeof el.closest === "function" && el.closest(ALERT)) return "";
-    return el.textContent;
-  });
-  var sentence = errorSentence(errors);
+  var sentence = errorSentence(this.errorTexts(container));
   if (sentence) out.push(sentence);
   return out;
 };
@@ -206,8 +190,7 @@ LiveRegion.prototype.handleSettle = function (container) {
   return this.announce(messages.join(". "));
 };
 
-// The notifications among the added nodes, the ones nested in them included:
-// the flash block arrives as a wrapper with the notifications inside.
+// Nested ones included: the flash block is a wrapper with notifications inside.
 function notificationTexts(nodes) {
   var out = [];
   for (var i = 0; i < nodes.length; i++) {
@@ -235,7 +218,7 @@ LiveRegion.prototype.handleNotifications = function (nodes) {
     return self.loadTexts.indexOf(text) === -1;
   });
   if (!messages.length) return;
-  this.raiseNotifications();
+  this.nudgeNotifications();
   this.announce(messages.join(". "));
 };
 

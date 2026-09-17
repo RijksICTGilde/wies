@@ -10,7 +10,7 @@ const FocusRestore = require("../wies/core/static/js/focus_restore.js");
 
 let doc;
 
-const INVALID = "[invalid]:not(nldd-form-field-error-text)";
+const INVALID = "[invalid]";
 const AUTOFOCUS = "[autofocus]";
 
 function element(attributes, options) {

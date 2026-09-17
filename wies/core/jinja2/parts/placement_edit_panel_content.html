@@ -18,7 +18,7 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form hx-post="{{ panel_data.edit_url }}"
+<form novalidate hx-post="{{ panel_data.edit_url }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#side-panel-content"
       hx-swap="innerHTML"
@@ -28,17 +28,22 @@
     {# Combo box instead of the select widget: the role list is long enough
            that typing beats scrolling. #}
     {% set skill_value = form.skill.value() | string if form.skill.value() else "" %}
+    {% set skill_errors = wire_field_errors(form.skill) %}
     <nldd-form-field label="{{ form.skill.label }}">
-    <nldd-combo-box name="skill" value="{{ skill_value }}" accessible-label="{{ form.skill.label }}" {% if form.skill.errors %}invalid{% endif %}>
+    <nldd-combo-box name="skill" value="{{ skill_value }}" accessible-label="{{ form.skill.label }}" {% if form.skill.errors %}invalid unmet="{{ skill_errors|join(' ') }}"{% endif %}>
     <nldd-menu empty-text="Geen rollen gevonden">
     {% for value, label in form.skill.field.choices %}
       {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
     {% endfor %}
     </nldd-menu>
     </nldd-combo-box>
+    {% if form.skill.errors %}
+    <nldd-validation-list>
     {% for error in form.skill.errors %}
-      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+      <nldd-validation-item id="{{ skill_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
+    </nldd-validation-list>
+    {% endif %}
     </nldd-form-field>
   {% else %}
     {# No edit rights on the role: show it as a read-only field #}
@@ -83,9 +88,13 @@
     {% set start_errors = wire_field_errors(form.specific_start_date) %}
     <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
     {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
+{% if form.specific_start_date.errors %}
+    <nldd-validation-list>
     {% for error in form.specific_start_date.errors %}
-      <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+      <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
+    </nldd-validation-list>
+    {% endif %}
     </nldd-form-field>
     {# Off means no known end date, the placement runs on. The switch is not
            posted; it only drives the end date field. #}
@@ -95,13 +104,17 @@
     {% set end_errors = wire_field_errors(form.specific_end_date) %}
     <nldd-form-field label="{{ form.specific_end_date.label }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
     {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
+{% if form.specific_end_date.errors %}
+    <nldd-validation-list>
     {% for error in form.specific_end_date.errors %}
-      <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+      <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
+    </nldd-validation-list>
+    {% endif %}
     </nldd-form-field>
   {% endif %}
   {% for error in form.non_field_errors() %}
-    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
   {% endfor %}
   {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at
          the top pushes the first visible field down. #}

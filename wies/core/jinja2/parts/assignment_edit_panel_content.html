@@ -14,7 +14,7 @@
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
-<form hx-post="{{ panel_data.edit_url }}"
+<form novalidate hx-post="{{ panel_data.edit_url }}"
       hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
       hx-target="#side-panel-content"
       hx-swap="innerHTML">
@@ -28,7 +28,7 @@
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
   {% for error in form.non_field_errors() %}
-    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
   {% endfor %}
   {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at the
      top pushes the first visible field down. #}

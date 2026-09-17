@@ -34,7 +34,7 @@ var IDENTIFYING_ATTRIBUTES = ["id", "hx-get", "hx-post", "href", "data-status"];
 //
 // The tab bar uses a roving tabindex, so only the selected tab is the way in.
 // That tabindex sits in the shadow root where the selector cannot see it, hence
-// [selected].
+// [current].
 var FOCUSABLE = [
   "a[href]",
   "button",
@@ -59,7 +59,7 @@ var FOCUSABLE = [
   "nldd-combo-box",
   "nldd-token-field",
   "nldd-switch",
-  "nldd-tab-bar-item[selected]",
+  "nldd-tab-bar-item[current]",
   "nldd-menu-bar-item",
 ].join(",");
 
@@ -204,14 +204,11 @@ FocusRestore.prototype.handleSettle = function (container) {
   // where you were sent.
   //
   // `invalid` is the convention of wire_field_errors(): every widget puts it on
-  // the element nldd-form-field._findInput() returns. The error text carries it
-  // too but is not an input.
+  // the element nldd-form-field._findInput() returns.
   //
   // The client picker marks a plain <div> around its "Opdrachtgever toevoegen"
   // button, so the controls inside a rejected element are candidates too.
-  var invalid = container.querySelectorAll(
-    "[invalid]:not(nldd-form-field-error-text)",
-  );
+  var invalid = container.querySelectorAll("[invalid]");
   if (
     invalid.length &&
     this.focusFirst(this.withControls(invalid), { preventScroll: false })

@@ -4,7 +4,7 @@
    longer belong to the htmx form and are not submitted. #}
 <div id="{{ target }}">
   <nldd-form>
-  <form {% if bare %}data-inline-edit-form{% endif %}
+  <form novalidate {% if bare %}data-inline-edit-form{% endif %}
         hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
@@ -25,9 +25,13 @@
         {% set error_ids = wire_field_errors(bound) %}
         <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
         {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+{% if bound.errors %}
+        <nldd-validation-list>
         {% for error in bound.errors %}
-          <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+          <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
         {% endfor %}
+        </nldd-validation-list>
+        {% endif %}
         </nldd-form-field>
       {% endfor %}
     {% endif %}

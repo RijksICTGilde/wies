@@ -220,7 +220,7 @@ class InlineEditInfrastructureTest(TestCase):
         # non-null + has no blank=True).
         resp = self.client.post(self.url, {"name": ""})
         assert resp.status_code == 200
-        self.assertContains(resp, "nldd-form-field-error-text")
+        self.assertContains(resp, "nldd-validation-item")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original name"
 
@@ -591,7 +591,7 @@ class AssignmentPanelRenderTest(TestCase):
 
     def test_member_post_without_skill_blocks_instead_of_deleting(self):
         """An empty role is rejected by the required Rol field; the endpoint
-        re-renders with the error on the combo box (via its own error-message
+        re-renders with the error on the combo box (via its own unmet
         attribute), not a top banner, instead of a silent no-op."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
@@ -606,10 +606,10 @@ class AssignmentPanelRenderTest(TestCase):
             },
         )
         assert response.status_code == 200
-        # nldd-form-field only reveals the message when the combo reflects `invalid`
-        # and points at the error text by id via `error-message` (see forms/field.html).
-        self.assertContains(response, 'error-message="error-skill-1"')
-        self.assertContains(response, '<nldd-form-field-error-text id="error-skill-1" invalid>Dit veld is verplicht.')
+        # The validation list only shows the message when the combo reflects
+        # `invalid` and names the item's id in `unmet` (see forms/field.html).
+        self.assertContains(response, 'unmet="error-skill-1"')
+        self.assertContains(response, '<nldd-validation-item id="error-skill-1">Dit veld is verplicht.')
         self.assertNotContains(response, 'nldd-banner variant="critical"')
         assert self.assignment.services.filter(id=service.id).exists()
         # The re-render goes through the single-source builder, so the sheet still
@@ -1170,10 +1170,8 @@ class AssignmentServicesAuditTest(TestCase):
             )
         )
         assert response.status_code == 200
-        self.assertContains(response, 'error-message="error-colleague-1"')
-        self.assertContains(
-            response, '<nldd-form-field-error-text id="error-colleague-1" invalid>Selecteer een consultant.'
-        )
+        self.assertContains(response, 'unmet="error-colleague-1"')
+        self.assertContains(response, '<nldd-validation-item id="error-colleague-1">Selecteer een consultant.')
         # The silent save did not happen: no placement, no colleague.
         assert not Placement.objects.filter(service=self.vacant_service).exists()
 

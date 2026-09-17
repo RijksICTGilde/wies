@@ -127,7 +127,7 @@
 </nldd-window>
 {# Both "Overslaan" and "Aan de slag" POST this form via onboarding.js, so the
    buttons themselves can stay design-system buttons. #}
-<form id="onboardingCompleteForm"
+<form novalidate id="onboardingCompleteForm"
       method="post"
       action="{{ url('onboarding-complete') }}"
       hx-post="{{ url('onboarding-complete') }}"
