@@ -491,6 +491,27 @@
   .keys td:first-child {
     white-space: nowrap;
   }
+  .pages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 18px;
+    margin: 0;
+  }
+  .pages a {
+    text-decoration: none;
+  }
+  .pages a:hover {
+    text-decoration: underline;
+  }
+  .pages code {
+    margin-left: 0.15em;
+  }
+  .crit .keys {
+    font-size: 0.88rem;
+  }
+  .crit .keys td:first-child {
+    white-space: normal;
+  }
   .summary pre {
     background: var(--code-bg);
     border: 1px solid var(--rule);
@@ -582,20 +603,27 @@
 
     <h2 id="software">1. Software en versies</h2>
     <p>
-      Op de Mac heb je alles al: VoiceOver zit in macOS, Safari staat erop. Voor
-      de Windows-kant is NVDA gratis; installeer die op een Windows-machine of
-      in een virtuele machine. De checklist eist versienummers, geen "laatste
-      versie". Op de Mac: Apple-menu → Over deze Mac, en Safari → Over Safari.
-      In NVDA: Help → Over.
+      Je doet de ronde met VoiceOver in Chrome op de Mac. VoiceOver zit in
+      macOS, Chrome heb je al. De checklist eist versienummers, geen "laatste
+      versie": Apple-menu → Over deze Mac, en in Chrome het menu Chrome → Over
+      Google Chrome. Doe je later ook Safari of NVDA, vul die versies dan aan;
+      die combinaties zijn optioneel.
     </p>
 
     <div class="box warn">
       <p>
-        <strong>Safari is nu extra belangrijk.</strong> De instrumentele
-        metingen zijn gedaan in Chromium, Edge en Firefox; de WebKit-engine was
-        niet aan te sturen. Jouw VoiceOver-ronde in Safari is daarmee de enige
-        meting in die engine. Loop er dus ook kort de toetsenbordbediening na:
-        Tab-volgorde, focusring, en of het zijpaneel de focus vasthoudt.
+        <strong>Wat Chrome op de Mac wel en niet dekt.</strong> Chrome gebruikt
+        dezelfde engine als de instrumentele metingen (Chromium). De
+        WebKit-engine van Safari blijft daarmee ongemeten; wil je die alsnog
+        dekken, vul dan per criterium ook de optionele Safari-regel in.
+      </p>
+      <p>
+        <strong>Twee eigenaardigheden van VoiceOver in Chrome.</strong> Zet
+        VoiceOver aan vóór je de pagina laadt: Chrome schakelt zijn
+        toegankelijkheidslaag pas in als er een schermlezer draait. Blijft het
+        stil, herlaad dan met <kbd>⌘ R</kbd>. Zegt VoiceOver alleen
+        "HTML-inhoud" en leest het niet verder, stap dan met
+        <kbd>VO Shift ↓</kbd> de webinhoud in.
       </p>
     </div>
 
@@ -611,23 +639,40 @@
         <tbody>
           <tr>
             <td>
-              <strong>VoiceOver + Safari</strong><br /><span class="hint"
-                >macOS</span
+              <strong>VoiceOver + Chrome</strong><br /><span class="hint"
+                >macOS · bepaalt het oordeel</span
               >
             </td>
             <td>
-              De combinatie waar Apple op test. Veel rijksmedewerkers werken op
-              een Mac.
+              De combinatie die je hebt, in de engine waarin ook de
+              instrumentele metingen zijn gedaan.
             </td>
             <td>
-              Systeeminstellingen → Toegankelijkheid → VoiceOver. Aanzetten met
-              <kbd>⌘ F5</kbd>. Doorloop de ingebouwde training één keer.
+              Systeeminstellingen → Toegankelijkheid → VoiceOver, aan met
+              <kbd>⌘ F5</kbd>. Zet één keer in het VoiceOver-hulpprogramma (<kbd
+                >VO F8</kbd
+              >) onder Web → Navigatie de snelle navigatie met één toets aan;
+              dan werken <kbd>H</kbd>, <kbd>J</kbd>, <kbd>B</kbd>,
+              <kbd>G</kbd> en <kbd>L</kbd> net als in NVDA. Quick Nav zelf zet
+              je aan en uit met <kbd>←</kbd> en <kbd>→</kbd> tegelijk.
             </td>
           </tr>
           <tr>
             <td>
+              <strong>VoiceOver + Safari</strong><br /><span class="hint"
+                >macOS · optioneel</span
+              >
+            </td>
+            <td>
+              De enige meting in de WebKit-engine; de combinatie waar Apple op
+              test.
+            </td>
+            <td>Zelfde VoiceOver, andere browser.</td>
+          </tr>
+          <tr>
+            <td>
               <strong>NVDA + Firefox</strong><br /><span class="hint"
-                >Windows</span
+                >Windows · optioneel</span
               >
             </td>
             <td>
@@ -642,12 +687,12 @@
           <tr>
             <td>
               <strong>NVDA + Chrome</strong><br /><span class="hint"
-                >Windows</span
+                >Windows · optioneel</span
               >
             </td>
             <td>
-              Dekt de Chromium-kant. Werkt iets hier én in Firefox, dan werkt
-              het vrijwel zeker in Edge.
+              Werkt iets hier én in Firefox, dan werkt het vrijwel zeker in
+              Edge.
             </td>
             <td>Zelfde NVDA, andere browser.</td>
           </tr>
@@ -656,6 +701,17 @@
     </div>
 
     <div class="grid2" id="setup">
+      <div>
+        <label for="s-base">Wies-adres waar je toetst</label
+        ><input
+          type="text"
+          id="s-base"
+          data-setup="base"
+          placeholder="https://wies.rijksorganisatieodi.nl"
+          inputmode="url"
+          autocomplete="url"
+        />
+      </div>
       <div>
         <label for="s-tester">Wie toetst</label
         ><input
@@ -684,7 +740,16 @@
         />
       </div>
       <div>
-        <label for="s-safari">Safari</label
+        <label for="s-chrome-mac">Chrome (macOS)</label
+        ><input
+          type="text"
+          id="s-chrome-mac"
+          data-setup="chrome_mac"
+          placeholder="bv. 153.0.8010.48"
+        />
+      </div>
+      <div>
+        <label for="s-safari">Safari (optioneel)</label
         ><input
           type="text"
           id="s-safari"
@@ -715,7 +780,7 @@
         ><input type="text" id="s-firefox" data-setup="firefox" />
       </div>
       <div>
-        <label for="s-chrome">Chrome</label
+        <label for="s-chrome">Chrome (Windows)</label
         ><input type="text" id="s-chrome" data-setup="chrome" />
       </div>
     </div>
@@ -726,8 +791,8 @@
         <thead>
           <tr>
             <th>Wat</th>
-            <th>VoiceOver</th>
-            <th>NVDA</th>
+            <th>VoiceOver in Chrome (macOS)</th>
+            <th>NVDA (Windows)</th>
           </tr>
         </thead>
         <tbody>
@@ -737,13 +802,31 @@
             <td><kbd>Ctrl Alt N</kbd> / <kbd>Insert Q</kbd></td>
           </tr>
           <tr>
+            <td>Quick Nav aan/uit</td>
+            <td>
+              <kbd>←</kbd> en <kbd>→</kbd> tegelijk; de losse letters hieronder
+              vragen de instelling uit de tabel hierboven
+            </td>
+            <td>altijd aan in bladermodus</td>
+          </tr>
+          <tr>
             <td>Volgend element lezen</td>
             <td><kbd>VO →</kbd> (VO = <kbd>Ctrl ⌥</kbd>)</td>
             <td><kbd>↓</kbd></td>
           </tr>
           <tr>
+            <td>Naar het begin van de pagina</td>
+            <td><kbd>VO Fn ←</kbd></td>
+            <td><kbd>Ctrl Home</kbd></td>
+          </tr>
+          <tr>
+            <td>Alles vanaf hier voorlezen</td>
+            <td><kbd>VO A</kbd></td>
+            <td><kbd>Insert ↓</kbd></td>
+          </tr>
+          <tr>
             <td>Volgende kop</td>
-            <td><kbd>VO ⌘ H</kbd></td>
+            <td><kbd>VO ⌘ H</kbd>, of <kbd>H</kbd></td>
             <td><kbd>H</kbd></td>
           </tr>
           <tr>
@@ -753,18 +836,35 @@
           </tr>
           <tr>
             <td>Volgende knop</td>
-            <td>Rotor → Knoppen</td>
+            <td><kbd>B</kbd>; of Rotor → Knoppen</td>
             <td><kbd>B</kbd></td>
           </tr>
           <tr>
             <td>Volgend formulierveld</td>
-            <td>Rotor → Formulierregelaars</td>
+            <td><kbd>VO ⌘ J</kbd>, of <kbd>J</kbd></td>
             <td><kbd>F</kbd></td>
+          </tr>
+          <tr>
+            <td>Volgende afbeelding of icoon</td>
+            <td><kbd>VO ⌘ G</kbd>, of <kbd>G</kbd></td>
+            <td><kbd>G</kbd></td>
           </tr>
           <tr>
             <td>Lijst van alles op de pagina</td>
             <td>Rotor <kbd>VO U</kbd>, pijl links/rechts wisselt categorie</td>
             <td><kbd>Insert F7</kbd></td>
+          </tr>
+          <tr>
+            <td>Huidig element nog eens horen (naam, rol, toestand)</td>
+            <td><kbd>VO F3</kbd></td>
+            <td><kbd>Insert Tab</kbd></td>
+          </tr>
+          <tr>
+            <td>In een groep of veld stappen, en eruit</td>
+            <td><kbd>VO Shift ↓</kbd> erin, <kbd>VO Shift ↑</kbd> eruit</td>
+            <td>
+              <kbd>Insert Space</kbd> wisselt tussen blader- en focusmodus
+            </td>
           </tr>
           <tr>
             <td>Activeren</td>
@@ -790,9 +890,10 @@
 
     <h2 id="steekproef">3. De steekproef</h2>
     <p>
-      Dezelfde elf pagina's als het rapport, zodat de uitkomsten optellen. Voor
-      de open criteria zijn deze vier het zwaarst; begin daar. Doe daarna de
-      tekstpagina's, die zijn snel.
+      Dezelfde elf pagina's als het rapport, zodat de uitkomsten optellen. De
+      links openen in een nieuw tabblad en wijzen naar het Wies-adres dat je bij
+      de kopgegevens invult; leeg is productie. Voor de open criteria zijn deze
+      vier het zwaarst; begin daar. Doe daarna de tekstpagina's, die zijn snel.
     </p>
     <div class="tablewrap">
       <table>
@@ -806,7 +907,15 @@
         <tbody>
           <tr>
             <td>Wie zit waar?</td>
-            <td><code>/</code></td>
+            <td>
+              <a
+                href="https://wies.rijksorganisatieodi.nl/"
+                data-path="/"
+                target="_blank"
+                rel="noopener"
+                ><code>/</code></a
+              >
+            </td>
             <td>
               Filterzijbalk met "Meer…"-knoppen die een modal openen, zoeken,
               weergave Collega's/Opdrachten, sortering, kaarten die een
@@ -815,28 +924,97 @@
           </tr>
           <tr>
             <td>Aanvragen</td>
-            <td><code>/opdrachten/</code></td>
+            <td>
+              <a
+                href="https://wies.rijksorganisatieodi.nl/opdrachten/"
+                data-path="/opdrachten/"
+                target="_blank"
+                rel="noopener"
+                ><code>/opdrachten/</code></a
+              >
+            </td>
             <td>
               De "Opdracht invoeren"-flow, van knop tot opgeslagen; verwijderen
             </td>
           </tr>
           <tr>
             <td>Beheer, gebruikers</td>
-            <td><code>/beheer/gebruikers/</code></td>
+            <td>
+              <a
+                href="https://wies.rijksorganisatieodi.nl/beheer/gebruikers/"
+                data-path="/beheer/gebruikers/"
+                target="_blank"
+                rel="noopener"
+                ><code>/beheer/gebruikers/</code></a
+              >
+            </td>
             <td>Tabel, formulier in een modal, verwijderen</td>
           </tr>
           <tr>
             <td>Mijn profiel</td>
-            <td><code>/profiel/</code></td>
+            <td>
+              <a
+                href="https://wies.rijksorganisatieodi.nl/profiel/"
+                data-path="/profiel/"
+                target="_blank"
+                rel="noopener"
+                ><code>/profiel/</code></a
+              >
+            </td>
             <td>Naam en e-mail, inline bewerken, privacy-chips met tooltip</td>
           </tr>
           <tr>
             <td>Overige</td>
             <td>
-              <code>/faq/</code>, <code>/contact/</code>,
-              <code>/privacy/</code>, <code>/toegankelijkheid/</code>,
-              <code>/beheer/labels/</code>, <code>/beheer/merken/</code>,
-              <code>/beheer/organisaties/</code>
+              <a
+                href="https://wies.rijksorganisatieodi.nl/faq/"
+                data-path="/faq/"
+                target="_blank"
+                rel="noopener"
+                ><code>/faq/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/contact/"
+                data-path="/contact/"
+                target="_blank"
+                rel="noopener"
+                ><code>/contact/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/privacy/"
+                data-path="/privacy/"
+                target="_blank"
+                rel="noopener"
+                ><code>/privacy/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/toegankelijkheid/"
+                data-path="/toegankelijkheid/"
+                target="_blank"
+                rel="noopener"
+                ><code>/toegankelijkheid/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/beheer/labels/"
+                data-path="/beheer/labels/"
+                target="_blank"
+                rel="noopener"
+                ><code>/beheer/labels/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/beheer/merken/"
+                data-path="/beheer/merken/"
+                target="_blank"
+                rel="noopener"
+                ><code>/beheer/merken/</code></a
+              >,
+              <a
+                href="https://wies.rijksorganisatieodi.nl/beheer/organisaties/"
+                data-path="/beheer/organisaties/"
+                target="_blank"
+                rel="noopener"
+                ><code>/beheer/organisaties/</code></a
+              >
             </td>
             <td>Tekst, accordeon, lijsten met acties per rij, boomstructuur</td>
           </tr>
@@ -856,10 +1034,11 @@
 
     <h2 id="criteria">4. De veertien criteria</h2>
     <p>
-      Per criterium: waarom het nog open staat, wat je doet, wat je hoort te
-      horen, en per combinatie je oordeel. Eén falende combinatie telt als
-      "voldoet niet": het basisniveau in het rapport is "alle gangbare browsers
-      en hulpapparatuur". Het eindoordeel per criterium wordt daaruit afgeleid.
+      Per criterium: waarom het nog open staat, wat je doet, welke toetsen je
+      daarbij gebruikt, wat je hoort te horen, en je oordeel. VoiceOver + Chrome
+      bepaalt het oordeel; de andere combinaties zijn optioneel. Vul je er een
+      in en die faalt, dan telt dat wél als "voldoet niet": het basisniveau in
+      het rapport is "alle gangbare browsers en hulpapparatuur".
     </p>
 
     <div id="crit-list"></div>
@@ -885,15 +1064,31 @@
     "use strict";
 
     var SR = [
-      { key: "vo_safari", name: "VoiceOver + Safari", hint: "macOS" },
-      { key: "nvda_firefox", name: "NVDA + Firefox", hint: "Windows" },
-      { key: "nvda_chrome", name: "NVDA + Chrome", hint: "Windows" },
+      { key: "vo_chrome", name: "VoiceOver + Chrome", hint: "macOS" },
+      {
+        key: "vo_safari",
+        name: "VoiceOver + Safari",
+        hint: "macOS, optioneel",
+        optional: true,
+      },
+      {
+        key: "nvda_firefox",
+        name: "NVDA + Firefox",
+        hint: "Windows, optioneel",
+        optional: true,
+      },
+      {
+        key: "nvda_chrome",
+        name: "NVDA + Chrome",
+        hint: "Windows, optioneel",
+        optional: true,
+      },
     ];
     var VIS = [
       { key: "visueel", name: "Beoordeling", hint: "zonder schermlezer" },
     ];
     var CONTRAST = [
-      { key: "licht", name: "Licht thema", hint: "Safari of Chrome" },
+      { key: "licht", name: "Licht thema", hint: "Chrome" },
       { key: "donker", name: "Donker thema", hint: "zelfde browser" },
     ];
 
@@ -1145,6 +1340,354 @@
       },
     ];
 
+    // Toetsen per test. Kolom 1: VoiceOver in Chrome op macOS, kolom 2: NVDA op Windows.
+    var K = function (s) {
+      return "<kbd>" + s + "</kbd>";
+    };
+    var DEVTOOLS =
+      K("⌘ ⌥ I") +
+      " opent DevTools, " +
+      K("⌘ Shift P") +
+      ", typ <em>Rendering</em> en open dat paneel";
+    var KEYS = {
+      "2.4.6": [
+        [
+          "Naar de volgende kop",
+          K("VO ⌘ H") +
+            ", of " +
+            K("H") +
+            " met Quick Nav (" +
+            K("Shift H") +
+            " terug)",
+          K("H") + " (" + K("Shift H") + " terug)",
+        ],
+        [
+          "Alle koppen in één lijst",
+          "Rotor " + K("VO U") + ", kies Koppen",
+          K("Insert F7") + ", kies Koppen",
+        ],
+        [
+          "Naar het volgende formulierveld",
+          K("VO ⌘ J") + ", of " + K("J"),
+          K("F"),
+        ],
+        [
+          "Label van het huidige veld nog eens horen",
+          K("VO F3"),
+          K("Insert Tab"),
+        ],
+      ],
+      "1.3.2": [
+        ["Naar het begin van de pagina", K("VO Fn ←"), K("Ctrl Home")],
+        ["Alles vanaf hier voorlezen", K("VO A"), K("Insert ↓")],
+        [
+          "Stap voor stap lezen",
+          K("VO →") + " en " + K("VO ←"),
+          K("↓") + " en " + K("↑"),
+        ],
+        ["Een kaart openen", K("VO Space") + " op de kaart", K("Enter")],
+        [
+          'Een groep in- of uitstappen als VoiceOver "groep" zegt',
+          K("VO Shift ↓") + " erin, " + K("VO Shift ↑") + " eruit",
+          "niet nodig",
+        ],
+      ],
+      "1.1.1": [
+        [
+          "Alle afbeeldingen en iconen langs",
+          K("G") +
+            " met Quick Nav; of Rotor " +
+            K("VO U") +
+            ", kies Afbeeldingen",
+          K("G"),
+        ],
+        [
+          "Alle knoppen langs",
+          K("B") + " met Quick Nav; of Rotor " + K("VO U") + ", kies Knoppen",
+          K("B"),
+        ],
+        ["Element voor element", K("VO →"), K("↓")],
+        [
+          "Naam van het huidige element nog eens horen",
+          K("VO F3"),
+          K("Insert Tab"),
+        ],
+      ],
+      "1.4.1": [
+        ["Schermlezer uit", K("⌘ F5"), K("Insert Q")],
+        [
+          "Kleur wegnemen in Chrome",
+          DEVTOOLS +
+            "; kies bij <em>Emulate vision deficiencies</em> de optie <em>Achromatopsia</em>",
+          "zelfde paneel: " + K("Ctrl Shift I") + ", " + K("Ctrl Shift P"),
+        ],
+        [
+          "Door de pagina",
+          K("Tab") + " en " + K("Shift Tab") + ", pijltoetsen in lijsten",
+          K("Tab"),
+        ],
+      ],
+      "1.4.11": [
+        ["Schermlezer uit", K("⌘ F5"), K("Insert Q")],
+        [
+          "Focusring zien",
+          K("Tab") + " en " + K("Shift Tab") + " langs elk element",
+          K("Tab"),
+        ],
+        [
+          "Donker thema afdwingen in Chrome",
+          DEVTOOLS +
+            "; zet <em>Emulate CSS media feature prefers-color-scheme</em> op <em>dark</em>",
+          "zelfde paneel: " + K("Ctrl Shift I") + ", " + K("Ctrl Shift P"),
+        ],
+        [
+          "Een kleur meten",
+          "In DevTools, tab Elements, klik het kleurvlakje in Styles; de pipet meet elke pixel op het scherm",
+          "zelfde",
+        ],
+      ],
+      "1.4.13": [
+        ["Schermlezer uit", K("⌘ F5"), K("Insert Q")],
+        [
+          "Naar een chip of icoonknop",
+          K("Tab") + " en " + K("Shift Tab"),
+          K("Tab"),
+        ],
+        ["Tooltip sluiten", K("Esc"), K("Esc")],
+        [
+          "Tooltip aanwijzen",
+          "beweeg de muis van het icoon naar de tekst van de tooltip",
+          "muis",
+        ],
+      ],
+      "3.3.1": [
+        [
+          "Naar de knop Opdracht invoeren",
+          K("B") + " met Quick Nav, openen met " + K("VO Space"),
+          K("B") + ", dan " + K("Enter"),
+        ],
+        [
+          "Door de velden van het formulier",
+          K("Tab") + " en " + K("Shift Tab"),
+          K("Tab") +
+            " en " +
+            K("Shift Tab") +
+            "; NVDA schakelt zelf naar focusmodus",
+        ],
+        [
+          "Typen of wissen in een veld",
+          "gewoon typen; reageert het veld niet, stap erin met " +
+            K("VO Shift ↓"),
+          "typen; hoor je losse letters als navigatie, druk " +
+            K("Insert Space") +
+            " voor focusmodus",
+        ],
+        [
+          "Opslaan",
+          K("Tab") + " naar Opslaan, " + K("VO Space"),
+          K("Tab") + " naar Opslaan, " + K("Enter"),
+        ],
+        [
+          "De foutmelding terugvinden",
+          K("VO Fn ←") +
+            " naar boven, dan " +
+            K("VO →") +
+            "; of " +
+            K("J") +
+            " naar het veld",
+          K("Ctrl Home") +
+            ", dan " +
+            K("↓") +
+            "; of " +
+            K("F") +
+            " naar het veld",
+        ],
+        [
+          "Fout bij het veld nog eens horen",
+          K("VO F3") + " op het veld",
+          K("Insert Tab") + " op het veld",
+        ],
+      ],
+      "3.3.3": [
+        ["Zelfde toetsen als 3.3.1", "", ""],
+        [
+          "Een datum invoeren",
+          "typ de datum in het veld; reageert het niet, stap erin met " +
+            K("VO Shift ↓"),
+          "typen in focusmodus (" + K("Insert Space") + ")",
+        ],
+        [
+          "De melding nog eens horen",
+          K("VO F3") + " op het veld",
+          K("Insert Tab") + " op het veld",
+        ],
+      ],
+      "1.3.5": [
+        [
+          "Naar de velden op Mijn profiel",
+          K("VO ⌘ J") + ", of " + K("J"),
+          K("F") + " of " + K("E"),
+        ],
+        ["Type van het veld nog eens horen", K("VO F3"), K("Insert Tab")],
+        [
+          "Alle velden in één lijst",
+          "Rotor " + K("VO U") + ", kies Formulierregelaars",
+          K("Insert F7") + ", kies Formuliervelden",
+        ],
+      ],
+      "3.3.4": [
+        [
+          "Naar de knop Verwijderen",
+          K("B") + " met Quick Nav; of Rotor " + K("VO U") + ", kies Knoppen",
+          K("B"),
+        ],
+        ["Activeren", K("VO Space"), K("Enter")],
+        [
+          "De bevestigingsvraag lezen",
+          K("VO →") + ' door het venster; hoor je "dialoog"?',
+          K("↓") + '; hoor je "dialoog"?',
+        ],
+        [
+          "Annuleren",
+          K("Tab") + " naar Annuleren, " + K("VO Space") + "; of " + K("Esc"),
+          K("Tab") + " naar Annuleren, " + K("Enter") + "; of " + K("Esc"),
+        ],
+      ],
+      "4.1.2": [
+        [
+          "Langs alle bedienbare elementen",
+          K("Tab") + "; " + K("VO →") + " voor wat Tab overslaat",
+          K("Tab") + ", of " + K("↓"),
+        ],
+        [
+          "Naar de volgende checkbox",
+          K("VO ⌘ J") + " (formulierregelaar)",
+          K("X"),
+        ],
+        ["Aan- of uitvinken", K("VO Space"), K("Space")],
+        ["Rol en toestand nog eens horen", K("VO F3"), K("Insert Tab")],
+        [
+          "Tabs Gegevens / Updates",
+          K("Tab") +
+            " naar de tab, " +
+            K("VO Space") +
+            "; " +
+            K("VO →") +
+            " naar de volgende tab",
+          K("Tab") + ", dan " + K("←") + " en " + K("→"),
+        ],
+        [
+          "Sorteermenu openen, kiezen, sluiten",
+          K("VO Space") + ", " + K("VO ↓") + " door de opties, " + K("Esc"),
+          K("Enter") + ", " + K("↓") + ", " + K("Esc"),
+        ],
+        [
+          "Het potlood en het veld dat verschijnt",
+          K("B") + " naar het potlood, " + K("VO Space") + ", dan " + K("VO →"),
+          K("B") + ", " + K("Enter") + ", dan " + K("↓"),
+        ],
+      ],
+      "4.1.3": [
+        [
+          "Filter aanvinken",
+          K("VO Space") + "; druk daarna niets en wacht",
+          K("Space") + "; druk daarna niets en wacht",
+        ],
+        [
+          "Niet doen tijdens het wachten",
+          K("Ctrl") + ": die stopt de spraak, en dus ook de aankondiging",
+          K("Ctrl"),
+        ],
+        [
+          "Opdracht opslaan",
+          K("Tab") + " naar Opslaan, " + K("VO Space"),
+          K("Tab") + " naar Opslaan, " + K("Enter"),
+        ],
+        [
+          "Miste je het",
+          "herhaal de handeling; VoiceOver heeft geen spraakgeschiedenis",
+          "herhaal de handeling",
+        ],
+      ],
+      "3.2.2": [
+        ["Een filter wisselen", K("VO Space"), K("Space")],
+        [
+          "Sortering of keuzeveld veranderen",
+          K("VO Space") + " opent de lijst, " + K("↓") + ", " + K("Enter"),
+          K("Alt ↓") + " opent, " + K("↓") + ", " + K("Enter"),
+        ],
+        [
+          "Waar ben ik nu",
+          K("VO F3") + " direct na de wijziging",
+          K("Insert Tab") + " direct na de wijziging",
+        ],
+      ],
+      "3.1.2": [
+        [
+          "Nederlandse stem controleren",
+          "VoiceOver-hulpprogramma (" + K("VO F8") + ") → Spraak",
+          "NVDA-menu → Instellingen → Spraak",
+        ],
+        ["Regel voor regel lezen", K("VO →"), K("↓")],
+        ["Een term nog eens horen", K("VO F3"), K("Insert Tab")],
+      ],
+    };
+
+    var DEFAULT_BASE = "https://wies.rijksorganisatieodi.nl";
+    var PAGES = {
+      "/": "Wie zit waar?",
+      "/opdrachten/": "Aanvragen",
+      "/beheer/gebruikers/": "Beheer, gebruikers",
+      "/profiel/": "Mijn profiel",
+      "/faq/": "FAQ",
+      "/contact/": "Contact",
+      "/privacy/": "Privacy",
+      "/toegankelijkheid/": "Toegankelijkheid",
+      "/beheer/labels/": "Beheer, labels",
+      "/beheer/merken/": "Beheer, merken",
+      "/beheer/organisaties/": "Beheer, organisaties",
+    };
+    var ALL_PAGES = Object.keys(PAGES);
+    var PAGELINKS = {
+      "2.4.6": ALL_PAGES,
+      "1.3.2": ["/"],
+      "1.1.1": ["/beheer/gebruikers/", "/", "/toegankelijkheid/"],
+      "1.4.1": ["/", "/opdrachten/", "/beheer/gebruikers/"],
+      "1.4.11": ["/", "/opdrachten/", "/profiel/"],
+      "1.4.13": ["/profiel/", "/"],
+      "3.3.1": ["/opdrachten/"],
+      "3.3.3": ["/opdrachten/", "/beheer/gebruikers/"],
+      "1.3.5": ["/profiel/"],
+      "3.3.4": ["/opdrachten/", "/beheer/gebruikers/", "/beheer/labels/"],
+      "4.1.2": ["/"],
+      "4.1.3": ["/", "/opdrachten/"],
+      "3.2.2": ["/", "/opdrachten/"],
+      "3.1.2": ["/", "/beheer/gebruikers/"],
+    };
+    function base() {
+      return ((state.setup.base || "").trim() || DEFAULT_BASE).replace(
+        /\/+$/,
+        "",
+      );
+    }
+    function pageLinks(id) {
+      return (PAGELINKS[id] || [])
+        .map(function (p) {
+          return (
+            '<a href="' +
+            esc(base() + p) +
+            '" data-path="' +
+            esc(p) +
+            '" target="_blank" rel="noopener">' +
+            esc(PAGES[p]) +
+            " <code>" +
+            esc(p) +
+            "</code></a>"
+          );
+        })
+        .join("");
+    }
+
     var ALL = [];
     GROUPS.forEach(function (g) {
       g.items.forEach(function (c) {
@@ -1178,11 +1721,22 @@
         })
       )
         return "nok";
-      var filled = vals.filter(Boolean).length;
-      if (filled === 0) return "";
-      if (filled < vals.length) return "open";
+      if (vals.filter(Boolean).length === 0) return "";
+      var req = c.combos
+        .filter(function (k) {
+          return !k.optional;
+        })
+        .map(function (k) {
+          return s.verdicts[k.key] || "";
+        });
       if (
-        vals.every(function (v) {
+        req.some(function (v) {
+          return !v;
+        })
+      )
+        return "open";
+      if (
+        req.every(function (v) {
           return v === "na";
         })
       )
@@ -1280,6 +1834,9 @@
             "<h4>Waarom nog open</h4><p>" +
             esc(c.why) +
             "</p>" +
+            '<h4>Waar</h4><p class="pages">' +
+            pageLinks(c.id) +
+            "</p>" +
             "<h4>Wat je doet</h4><ol>" +
             c.steps
               .map(function (s) {
@@ -1287,6 +1844,27 @@
               })
               .join("") +
             "</ol>" +
+            (KEYS[c.id]
+              ? '<h4>Toetsen bij deze test</h4><div class="tablewrap"><table class="keys"><thead><tr><th>Wat</th><th>' +
+                (c.combos === SR ? "VoiceOver in Chrome" : "Mac") +
+                "</th><th>" +
+                (c.combos === SR ? "NVDA" : "Windows") +
+                "</th></tr></thead><tbody>" +
+                KEYS[c.id]
+                  .map(function (r) {
+                    return (
+                      "<tr><td>" +
+                      r[0] +
+                      "</td><td>" +
+                      r[1] +
+                      "</td><td>" +
+                      r[2] +
+                      "</td></tr>"
+                    );
+                  })
+                  .join("") +
+                "</tbody></table></div>"
+              : "") +
             "<h4>Wat je hoort te horen</h4><ul>" +
             c.expect
               .map(function (s) {
@@ -1344,6 +1922,10 @@
     }
 
     function refresh() {
+      var b = base();
+      document.querySelectorAll("a[data-path]").forEach(function (a) {
+        a.href = b + a.dataset.path;
+      });
       var n = { ok: 0, nok: 0, open: 0, na: 0, "": 0 };
       ALL.forEach(function (c) {
         var v = derive(c);
@@ -1385,16 +1967,19 @@
       lines.push(
         "VoiceOver op macOS " +
           (s.macos || "?") +
-          " met Safari " +
-          (s.safari || "?") +
-          "; NVDA " +
-          (s.nvda || "?") +
-          " op Windows " +
-          (s.windows || "?") +
-          " met Firefox " +
-          (s.firefox || "?") +
-          " en Chrome " +
-          (s.chrome || "?"),
+          " met Chrome " +
+          (s.chrome_mac || "?") +
+          (s.safari ? " en Safari " + s.safari : "") +
+          (s.nvda
+            ? "; NVDA " +
+              s.nvda +
+              " op Windows " +
+              (s.windows || "?") +
+              " met Firefox " +
+              (s.firefox || "?") +
+              " en Chrome " +
+              (s.chrome || "?")
+            : ""),
       );
       lines.push("");
       ALL.forEach(function (c) {
@@ -1429,9 +2014,46 @@
     }
 
     // ---- opslag: db als het kan, anders localStorage
+    // Opslag in drie lagen, zodat er nooit iets verloren gaat:
+    // 1. state, direct bij elke wijziging;
+    // 2. localStorage, meteen daarna, met per document het tijdstip van de laatste lokale wijziging;
+    // 3. de gedeelde opslag, na een korte typepauze, document voor document, met een tijdslimiet.
+    // dirty: per document een teller die bij elke wijziging oploopt. Een snapshot voor een document
+    // met openstaande wijzigingen wordt genegeerd, anders overschrijft de echo van een eigen opslag
+    // wat er daarna al is getypt. Bij het laden wint de kant met het jongste tijdstip.
     var db = null,
       saveTimer = null,
-      pending = {};
+      pending = {},
+      dirty = {},
+      localMeta = {},
+      inflight = false,
+      failures = 0,
+      reconciled = false;
+    var WRITE_TIMEOUT = 8000;
+    function touch(id) {
+      pending[id] = true;
+      dirty[id] = (dirty[id] || 0) + 1;
+      localMeta[id] = new Date().toISOString();
+    }
+    function bodyFor(id) {
+      return JSON.parse(
+        JSON.stringify(
+          id === "setup" ? state.setup : state.crit[id.replace(/^sc-/, "")],
+        ),
+      );
+    }
+    function mirror() {
+      try {
+        localStorage.setItem(
+          "toetsronde",
+          JSON.stringify({
+            setup: state.setup,
+            crit: state.crit,
+            meta: localMeta,
+          }),
+        );
+      } catch (err) {}
+    }
     var saveEl = document.getElementById("save"),
       saveText = document.getElementById("save-text");
     function status(cls, text) {
@@ -1441,6 +2063,23 @@
     function announce(t) {
       document.getElementById("live").textContent = t;
     }
+    function withTimeout(p, ms) {
+      return new Promise(function (res, rej) {
+        var t = setTimeout(function () {
+          rej({ code: "unavailable", message: "geen antwoord van de opslag" });
+        }, ms);
+        p.then(
+          function (v) {
+            clearTimeout(t);
+            res(v);
+          },
+          function (e) {
+            clearTimeout(t);
+            rej(e);
+          },
+        );
+      });
+    }
 
     function onInput(e) {
       var el = e.target;
@@ -1449,7 +2088,7 @@
       if (el.dataset.field === "verdict") s.verdicts[el.dataset.key] = el.value;
       else if (el.dataset.field === "heard") s.heard[el.dataset.key] = el.value;
       else if (el.dataset.field === "remark") s.remark = el.value;
-      pending[docId(el.dataset.crit)] = s;
+      touch(docId(el.dataset.crit));
       refresh();
       queue();
     }
@@ -1457,37 +2096,50 @@
       var el = e.target;
       if (!el.dataset.setup) return;
       state.setup[el.dataset.setup] = el.value;
-      pending["setup"] = state.setup;
+      touch("setup");
       refresh();
       queue();
     }
     function queue() {
+      mirror();
       status("saving", "Bewaren…");
       clearTimeout(saveTimer);
       saveTimer = setTimeout(flush, 600);
     }
     function flush() {
-      var batch = pending;
-      pending = {};
-      var ids = Object.keys(batch);
-      if (!ids.length) return;
+      if (!Object.keys(pending).length) return;
       if (!db) {
-        try {
-          localStorage.setItem("toetsronde", JSON.stringify(state));
-          status("local", "Bewaard in deze browser (geen gedeelde opslag)");
-        } catch (err) {
-          status("error", "Kon niet bewaren");
-        }
+        status(
+          "local",
+          "Nog geen verbinding met de gedeelde opslag; bewaard in deze browser, wordt verstuurd zodra er verbinding is",
+        );
         return;
       }
-      Promise.all(
-        ids.map(function (id) {
-          var body = JSON.parse(JSON.stringify(batch[id]));
-          body.updatedAt = new Date().toISOString();
-          return db.doc("toetsronde/" + id).set(body);
-        }),
-      )
+      if (inflight) return;
+      var ids = Object.keys(pending);
+      pending = {};
+      inflight = true;
+      var seq = {};
+      ids.forEach(function (id) {
+        seq[id] = dirty[id];
+      });
+      var chain = Promise.resolve();
+      ids.forEach(function (id) {
+        chain = chain.then(function () {
+          var body = bodyFor(id);
+          body.updatedAt = localMeta[id] || new Date().toISOString();
+          return withTimeout(
+            db.doc("toetsronde/" + id).set(body),
+            WRITE_TIMEOUT,
+          ).then(function () {
+            if (dirty[id] === seq[id]) delete dirty[id];
+          });
+        });
+      });
+      chain
         .then(function () {
+          inflight = false;
+          failures = 0;
           status(
             "saved",
             "Bewaard " +
@@ -1496,36 +2148,63 @@
                 minute: "2-digit",
               }),
           );
+          if (Object.keys(pending).length) flush();
         })
         .catch(function (err) {
-          if (err && err.code === "unavailable") {
-            ids.forEach(function (id) {
-              pending[id] = batch[id];
-            });
-            setTimeout(flush, 1500 + Math.random() * 1500);
-            status("saving", "Opnieuw proberen…");
-            return;
+          inflight = false;
+          failures++;
+          ids.forEach(function (id) {
+            if (dirty[id] !== undefined) pending[id] = true;
+          });
+          var why =
+            err && err.message
+              ? err.message
+              : err && err.code
+                ? err.code
+                : "onbekende fout";
+          if (failures >= 3) {
+            status(
+              "error",
+              "De gedeelde opslag reageert niet (" +
+                why +
+                "). Je invoer staat veilig in deze browser; herlaad de pagina, dan wordt hij alsnog verstuurd.",
+            );
+            announce(
+              "Opslag reageert niet; je invoer blijft in deze browser bewaard",
+            );
+          } else {
+            status(
+              "saving",
+              "Opslag reageert niet (" + why + "), opnieuw proberen…",
+            );
           }
-          status(
-            "error",
-            "Bewaren mislukt: " +
-              (err && err.message ? err.message : "onbekende fout"),
-          );
-          announce("Bewaren mislukt");
+          setTimeout(flush, 2000 * failures);
         });
     }
 
     function loadLocal() {
       try {
         var raw = localStorage.getItem("toetsronde");
-        if (raw) {
-          var st = JSON.parse(raw);
-          state.setup = st.setup || {};
-          Object.keys(st.crit || {}).forEach(function (k) {
-            if (state.crit[k]) state.crit[k] = st.crit[k];
-          });
-        }
+        if (!raw) return;
+        var st = JSON.parse(raw);
+        state.setup = st.setup || {};
+        localMeta = st.meta || {};
+        Object.keys(st.crit || {}).forEach(function (k) {
+          if (state.crit[k]) state.crit[k] = st.crit[k];
+        });
       } catch (err) {}
+    }
+
+    // Eerste snapshot: per document wint de jongste kant. Is de lokale kopie jonger dan de
+    // gedeelde (of ontbreekt het document daar), dan gaat de lokale kopie alsnog omhoog.
+    function reconcile(seen) {
+      Object.keys(localMeta).forEach(function (id) {
+        var remote = seen[id];
+        if (remote && remote >= localMeta[id]) return;
+        if (id !== "setup" && !state.crit[id.replace(/^sc-/, "")]) return;
+        touch(id);
+      });
+      if (Object.keys(pending).length) queue();
     }
 
     render();
@@ -1545,9 +2224,18 @@
         db = ns;
         db.collection("toetsronde").onSnapshot(
           function (snap) {
+            var seen = {};
             snap.docs.forEach(function (doc) {
               var body = doc.data();
               if (!body) return;
+              seen[doc.id] = body.updatedAt || "";
+              if (dirty[doc.id] !== undefined) return;
+              if (
+                !reconciled &&
+                localMeta[doc.id] &&
+                localMeta[doc.id] > (body.updatedAt || "")
+              )
+                return;
               if (doc.id === "setup") {
                 state.setup = body;
                 return;
@@ -1561,7 +2249,15 @@
               };
             });
             fill();
-            if (!snap.metadata.fromCache)
+            if (!reconciled) {
+              reconciled = true;
+              reconcile(seen);
+            }
+            if (
+              !snap.metadata.fromCache &&
+              !Object.keys(pending).length &&
+              !inflight
+            )
               status(
                 "saved",
                 "Gedeelde opslag verbonden; alles wat je invult wordt bewaard",
@@ -1571,8 +2267,16 @@
             status("error", "Opslag niet beschikbaar: " + err.code);
           },
         );
+        if (Object.keys(pending).length) flush();
       },
     );
+    setTimeout(function () {
+      if (!db)
+        status(
+          "local",
+          "Geen verbinding met de gedeelde opslag; alles wordt in deze browser bewaard en later verstuurd",
+        );
+    }, 6000);
 
     document.getElementById("copy").addEventListener("click", function () {
       var msg = document.getElementById("copy-msg");

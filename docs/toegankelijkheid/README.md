@@ -5,30 +5,38 @@ Onderbouwing bij toegankelijkheidsverklaring **29132**.
 ## Het rapport
 
 [`rapport-wcag22-2026-08.md`](rapport-wcag22-2026-08.md) — WCAG 2.2 niveau A en
-AA, versie 1.1. Volledig onderzoek op `main` @ `d072cf3b`, 19 augustus 2026;
-hertest op `main` @ `f4595a8`, 9 september 2026. Opbouw A tot en met D zoals
+AA, versie 2.0. Onderzoek van 19 augustus tot en met 17 september 2026 op
+`main` (laatste stand @ `58bb0f0`): geautomatiseerd, instrumenteel in drie
+browsers en met de schermlezer VoiceOver. Opbouw A tot en met D zoals
 DigiToegankelijk die voorschrijft.
 
-**Uitkomst na de hertest: 32 van de 55 succescriteria voldoen.** Eén afwijking,
-niveau A:
+**Uitkomst: alle 55 succescriteria beoordeeld, 41 voldoen.** Zes afwijkingen,
+in vijf bevindingen:
 
-| Succescriterium        | Bevinding                                       | Waar                              |
-| ---------------------- | ----------------------------------------------- | --------------------------------- |
-| 1.3.1 Info en relaties | Koppenstructuur slaat een niveau over (H1 → H3) | `parts/filter_sidebar.html:42,81` |
+| #   | Succescriterium                       | Bevinding                                                        |
+| --- | ------------------------------------- | ---------------------------------------------------------------- |
+| 1   | 1.3.1 Info en relaties (A)            | Koppenstructuur slaat een niveau over (H1 → H3)                  |
+| 2   | 1.3.5 Inputdoel identificeren (AA)    | Naamvelden op Mijn profiel zonder `autocomplete`                 |
+| 3   | 3.2.2 Bij input (A)                   | Focus springt naar het begin van de pagina na een filterwissel   |
+| 4   | 3.3.1 en 3.3.3 Fouten (A, AA)         | Foutmelding wordt niet bij het veld voorgelezen (shadow-grens)   |
+| 5   | 4.1.3 Statusberichten (AA)            | Aantal resultaten en bevestigingen worden niet aangekondigd      |
 
-Bevinding 2 (2.4.3, focus na een htmx-swap) is opgelost in PR #638 en bij de
-hertest bevestigd in Chromium, Edge en Firefox.
+Het herstel van alle vijf is voorbereid in branch `a11y-screenreader-fixes` en
+met VoiceOver gemeten; het staat nog niet op `main`. Na samenvoegen en één
+meting op `main` zijn er geen afwijkingen meer: 47 voldoen, 8 niet van toepassing.
 
-Veertien succescriteria konden niet worden vastgesteld: daarvoor is toetsing met
-een schermlezer nodig. [`toetsronde.html`](toetsronde.html) loopt die veertien af,
-met per criterium de stappen en invulvelden per schermlezer-combinatie. Open je
-het bestand lokaal, dan bewaart het alleen in je eigen browser; de gepubliceerde
-versie als Claude-artifact heeft gedeelde opslag.
+De schermlezertoets is gedaan met [`toetsronde.html`](toetsronde.html): per
+criterium de stappen, de toetsen en invulvelden per schermlezer-combinatie.
+VoiceOver + Chrome op macOS bepaalt het oordeel; Safari en NVDA staan als
+optionele kolommen klaar. Open je het bestand lokaal, dan bewaart het alleen in
+je eigen browser; de gepubliceerde versie als Claude-artifact heeft gedeelde
+opslag, waarin de uitkomsten van 17 september staan.
 
-> **Dit rapport is nog niet volledig.** Het is uitgevoerd door het eigen team,
-> zonder hulpsoftware en zonder gebruikers. Voor status A of B van de verklaring
-> moeten alle 55 criteria beoordeeld zijn; onafhankelijkheid eist DigiToegankelijk
-> niet, wel dat het rapport zegt wie het deed.
+> **Wat dit rapport wel en niet is.** Uitgevoerd door het eigen team, met één
+> schermlezer en zonder gebruikers. Alle 55 criteria zijn beoordeeld, dus het kan
+> de verklaring onderbouwen: status B nu, status A zodra het herstel op `main`
+> staat en daar is gemeten. Onafhankelijkheid eist DigiToegankelijk niet, wel dat
+> het rapport zegt wie het deed.
 
 ## De metingen herhalen
 
@@ -56,9 +64,9 @@ cd scripts && python3 scan.py              # axe-core over 11 pagina's
 | `extra2.py`            | niet-tekstueel contrast, toetsenbordval, live regions                                              |
 | `wcag22.py`            | de nieuwe 2.2-criteria: 2.4.11, 3.2.6, 3.3.7, 3.3.8                                                |
 | `parsen.py`            | dubbele ID's (4.1.1, vervallen in 2.2)                                                             |
-| `hertest_browsers.py`  | hertest: koppen, tabvolgorde, JS-fouten in Chromium, Edge en Firefox — vereist een sessie          |
-| `hertest_focusring.py` | hertest: focusring als pixelverschil (niet bruikbaar in Firefox, zie rapport) — vereist een sessie |
-| `hertest_swap.py`      | hertest: focus na een htmx-swap in drie browsers — vereist een sessie                              |
+| `hertest_browsers.py`  | koppen, tabvolgorde, JS-fouten in Chromium, Edge en Firefox — vereist een sessie          |
+| `hertest_focusring.py` | focusring als pixelverschil (niet bruikbaar in Firefox, zie rapport) — vereist een sessie |
+| `hertest_swap.py`      | focus na een htmx-swap in drie browsers — vereist een sessie                              |
 
 `focus_swap.py` is de uitzondering: de panelen zitten achter OIDC, dus het heeft
 een sessie nodig. Maak er een aan en geef de sleutel mee:
@@ -109,7 +117,8 @@ voordat je hem opschrijft.
 
 ## Vervolg
 
-1. Bevinding 1 oplossen (een kleine wijziging in één bestand)
-2. Issue #600 sluiten; bevinding 2 is opgelost
-3. De toetsronde met schermlezer doen voor de veertien openstaande criteria
-4. Het rapport openbaar publiceren als onderbouwing van de verklaring
+1. Branch `a11y-screenreader-fixes` samenvoegen en op `main` opnieuw meten
+2. De toetsronde herhalen met NVDA op Windows (optionele kolommen)
+3. Twee punten melden bij NLDD: `aria-describedby` over de shadow-grens en "1 of 1" in de weergavekeuze
+4. Issue #600 sluiten; skiplink en focus na een swap zijn in orde
+5. Het rapport openbaar publiceren als onderbouwing van de verklaring, status B

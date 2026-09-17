@@ -8,7 +8,7 @@
 
 **WCAG 2.2 — Niveau AA**
 
-Volledig onderzoek 19 augustus 2026, hertest 9 september 2026 · versie 1.1
+Onderzoek afgerond op 17 september 2026 · versie 2.0
 
 </div>
 
@@ -31,10 +31,11 @@ Volledig onderzoek 19 augustus 2026, hertest 9 september 2026 · versie 1.1
 
 ## Inleiding
 
-Het toegankelijkheidsonderzoek naar Wies is afgerond op 19 augustus 2026. Op
-9 september 2026 is een hertest gedaan van de live versie (`main`): bevinding 2
-is opnieuw gemeten, en de instrumentele metingen zijn herhaald in drie browsers.
-Dit rapport laat zien in hoeverre de applicatie op dit moment voldoet aan de
+Het toegankelijkheidsonderzoek naar Wies is uitgevoerd tussen 19 augustus en
+17 september 2026 op de live versie (`main`). Alle 55 succescriteria van WCAG 2.2
+op niveau A en AA zijn beoordeeld: met geautomatiseerde toetsing, met eigen
+instrumentele metingen in drie browsers, en met de schermlezer VoiceOver. Dit
+rapport laat zien in hoeverre de applicatie op dit moment voldoet aan de
 internationaal geaccepteerde toegankelijkheidsrichtlijnen (WCAG 2.2).
 
 WCAG staat voor Web Content Accessibility Guidelines. Dit zijn de internationale
@@ -57,12 +58,13 @@ worden doorgevoerd, dient er rekening mee gehouden te worden dat hierdoor nieuwe
 toegankelijkheidsproblemen kunnen ontstaan.
 
 > **Status van dit onderzoek.** Dit onderzoek is uitgevoerd door het eigen
-> ontwikkelteam met geautomatiseerde en instrumentele toetsing. Het is **geen
-> onafhankelijk onderzoek** en is **niet volledig**: er is niet getest met
-> hulpsoftware (schermlezer, spraakbediening) en niet met gebruikers. Als
-> onderbouwing van de verklaring is het pas bruikbaar als die toetsing is gedaan.
-> Bij veertien
-> succescriteria is daarom "niet vastgesteld" genoteerd in plaats van een oordeel.
+> ontwikkelteam met geautomatiseerde en instrumentele toetsing, aangevuld met
+> een toets met één schermlezer (VoiceOver in Chrome op macOS). Het is **geen
+> onafhankelijk onderzoek**. Er is niet getest met NVDA of JAWS, niet met
+> spraakbediening en niet met gebruikers. Alle 55 succescriteria zijn beoordeeld.
+> Voor de zes afwijkingen is het herstel voorbereid in de branch
+> `a11y-screenreader-fixes` en met dezelfde schermlezer gemeten; het stond bij
+> het schrijven van dit rapport nog niet op `main`.
 
 ---
 
@@ -73,22 +75,22 @@ toegankelijkheidsproblemen kunnen ontstaan.
 |                                   |                                                                                                                                                                                                                                                     |
 | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Onderzoeker**                   | Ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                                           |
-| **Datum**                         | 19 augustus 2026 (volledig onderzoek), 9 september 2026 (hertest)                                                                                                                                                                                   |
+| **Datum**                         | 19 augustus tot en met 17 september 2026                                                                                                                                                                                                            |
 | **Opdrachtgever**                 | Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                                                               |
 | **Norm**                          | WCAG 2.2, niveau A en AA (via EN 301 549)                                                                                                                                                                                                           |
-| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, uitgevoerd als **intern vooronderzoek**, aangevuld met een **hertest** van bevinding 2 en van de instrumentele metingen. Geen onafhankelijk onderzoek; niet alle criteria konden worden vastgesteld. |
-| **Versie van dit document**       | 1.1                                                                                                                                                                                                                                                 |
-| **Onderzochte versie applicatie** | `main` @ `d072cf3b` (19 augustus), `main` @ `f4595a8` (hertest)                                                                                                                                                                                     |
+| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, intern uitgevoerd: geautomatiseerde toetsing, instrumentele metingen in drie browsers en een toets met schermlezer. Geen onafhankelijk onderzoek.                                                   |
+| **Versie van dit document**       | 2.0                                                                                                                                                                                                                                                 |
+| **Onderzochte versie applicatie** | `main`, stand 17 september 2026 (@ `58bb0f0`); het voorbereide herstel is gemeten op branch `a11y-screenreader-fixes`                                                                                                                              |
 
 > **Let op bij gebruik als onderbouwing.** DigiToegankelijk stelt eisen aan
 > onderzoeksrapporten die als onderbouwing van een toegankelijkheidsverklaring
 > dienen. Dit rapport voldoet aan de vormeisen (scope, steekproef,
 > evaluatiemethode, browsers met versienummers, technologieën, score per
-> succescriterium), maar **niet** aan de inhoudelijke eis dat alle 55
-> succescriteria daadwerkelijk zijn beoordeeld: veertien konden niet worden
-> vastgesteld. Onafhankelijkheid eist de checklist niet, wel dat het rapport zegt
-> wie het onderzoek deed. Voor status A of B van de verklaring is aanvullende
-> toetsing met hulpsoftware nodig.
+> succescriterium) en aan de inhoudelijke eis dat alle 55 succescriteria zijn
+> beoordeeld. Onafhankelijkheid eist de checklist niet, wel
+> dat het rapport zegt wie het onderzoek deed. Met zes afwijkingen op `main` past
+> status B (voldoet gedeeltelijk); status A komt in zicht zodra het herstel uit
+> de branch op `main` staat en opnieuw is gemeten.
 
 ---
 
@@ -99,9 +101,11 @@ toegankelijkheidsproblemen kunnen ontstaan.
 Dit onderzoek volgt de opzet van WCAG-EM (Website Accessibility Conformance
 Evaluation Methodology): scope bepalen, steekproef samenstellen, per
 succescriterium beoordelen en rapporteren. De stappen die toetsing met
-hulpsoftware en met gebruikers vereisen zijn **niet** uitgevoerd; in zoverre is
-de methode niet volledig gevolgd. De hertest herhaalt de instrumentele metingen
-op dezelfde manier, tegen de live versie, in Chromium, Edge en Firefox.
+gebruikers vereisen zijn **niet** uitgevoerd. Per succescriterium is de best
+passende methode gebruikt: axe-core voor wat geautomatiseerd te toetsen is, eigen
+meetscripts in Chromium, Edge en Firefox voor wat een browser kan meten
+(contrast, koppen, focus, reflow, doelgrootte), en de schermlezer VoiceOver voor
+wat alleen hoorbaar is; zie [Schermlezertoets](#schermlezertoets).
 
 ### Scope van het onderzoek
 
@@ -128,53 +132,56 @@ niet meegenomen.
 
 ### Samenvatting
 
-Na de hertest voldoet de applicatie op **één succescriterium niet**, op
-niveau A. Op **32 van de 55** succescriteria wordt voldaan. Op 19 augustus waren
-dat er 31, met twee afwijkingen; bevinding 2 is sindsdien opgelost en bij de hertest
-bevestigd.
-Acht succescriteria zijn niet van toepassing. Bij **veertien succescriteria** kon
-met de gebruikte methode geen uitspraak worden gedaan.
+Alle 55 succescriteria zijn beoordeeld. Op **41 van de 55** wordt voldaan. De applicatie voldoet op **zes succescriteria niet**: drie
+op niveau A en drie op niveau AA. Acht succescriteria zijn niet van toepassing.
 
 De applicatie voldoet op dit moment **niet** aan de vereisten voor WCAG 2.2,
-niveau AA.
+niveau AA. Het herstel van de zes afwijkingen staat klaar in de branch
+`a11y-screenreader-fixes` en is met dezelfde schermlezer gemeten; het stond bij het
+schrijven van dit rapport nog niet op `main`.
 
 Onderstaande tabel geeft het aantal succescriteria waaraan op dit moment wordt
 voldaan. Getoetst zijn alle 55 succescriteria van WCAG 2.2 op niveau A en AA.
 
 |                  | Niveau A    | Niveau AA   | Totaal      |
 | ---------------- | ----------- | ----------- | ----------- |
-| **Waarneembaar** | 1 / 9       | 6 / 11      | 7 / 20      |
-| **Bedienbaar**   | 13 / 14     | 5 / 6       | 18 / 20     |
-| **Begrijpelijk** | 5 / 7       | 2 / 6       | 7 / 13      |
-| **Robuust**      | 0 / 1       | 0 / 1       | 0 / 2       |
-| **Totaal**       | **19 / 31** | **13 / 24** | **32 / 55** |
+| **Waarneembaar** | 4 / 9       | 8 / 11      | 12 / 20     |
+| **Bedienbaar**   | 13 / 14     | 6 / 6       | 19 / 20     |
+| **Begrijpelijk** | 5 / 7       | 4 / 6       | 9 / 13      |
+| **Robuust**      | 1 / 1       | 0 / 1       | 1 / 2       |
+| **Totaal**       | **23 / 31** | **18 / 24** | **41 / 55** |
 
-**Uitgeschreven.** Van de 55 succescriteria voldoen er 32. Eén voldoet niet
-(1.3.1, niveau A). Acht zijn niet van toepassing omdat de
-applicatie geen audio, video of bewegingsbediening bevat en de authenticatie bij
-een externe leverancier ligt. Van veertien succescriteria kon de status niet
-worden vastgesteld, omdat daarvoor toetsing met hulpsoftware nodig is.
+**Uitgeschreven.** Van de 55 succescriteria voldoen er 41. Zes voldoen niet:
+1.3.1, 3.2.2 en 3.3.1 op niveau A, en 1.3.5, 3.3.3 en 4.1.3 op niveau AA. Acht
+zijn niet van toepassing omdat de applicatie geen audio, video of
+bewegingsbediening bevat en de authenticatie bij een externe leverancier ligt.
 
-De lage score bij Waarneembaar en Robuust komt vooral doordat binnen die
-principes veel criteria niet konden worden vastgesteld of niet van toepassing
-zijn; binnen Waarneembaar is één afwijking gevonden en binnen Robuust geen.
+Vier van de zes afwijkingen hebben één wortel: de pagina wordt met htmx in delen
+ververst, en een schermlezer merkt zo'n verversing niet vanzelf op. De focus viel
+daardoor terug naar het begin van de pagina (3.2.2), het aantal resultaten en de
+bevestiging na opslaan werden niet aangekondigd (4.1.3), en de foutmelding van een
+afgewezen formulier bereikte het veld niet, omdat de koppeling van
+melding aan veld de shadow-grens van het component niet over kan (3.3.1, 3.3.3).
 
 #### Verdeling van de uitkomsten
 
-| Uitkomst               | Aantal | Succescriteria                                                                                     |
-| ---------------------- | ------ | -------------------------------------------------------------------------------------------------- |
-| ✅ Voldoet             | 32     | zie de hoofdstukken hieronder                                                                      |
-| ❌ Voldoet niet        | 1      | 1.3.1                                                                                              |
-| ⬜ Niet vastgesteld    | 14     | 1.1.1, 1.3.2, 1.3.5, 1.4.1, 1.4.11, 1.4.13, 2.4.6, 3.1.2, 3.2.2, 3.3.1, 3.3.3, 3.3.4, 4.1.2, 4.1.3 |
-| ➖ Niet van toepassing | 8      | 1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.4.2, 2.5.4, 3.3.8                                             |
-| **Totaal**             | **55** |                                                                                                    |
+| Uitkomst               | Aantal | Succescriteria                                 |
+| ---------------------- | ------ | ---------------------------------------------- |
+| ✅ Voldoet             | 41     | zie de hoofdstukken hieronder                  |
+| ❌ Voldoet niet        | 6      | 1.3.1, 1.3.5, 3.2.2, 3.3.1, 3.3.3, 4.1.3       |
+| ⬜ Niet vastgesteld    | 0      |                                                |
+| ➖ Niet van toepassing | 8      | 1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.4.2, 2.5.4, 3.3.8 |
+| **Totaal**             | **55** |                                                |
 
 #### Bevindingen
 
-| #   | Bevinding                                          | Succescriterium        | Niveau | Impact | Stand hertest      |
-| --- | -------------------------------------------------- | ---------------------- | ------ | ------ | ------------------ |
-| 1   | Koppenstructuur slaat een niveau over              | 1.3.1 Info en relaties | A      | Medium | Nog aanwezig       |
-| 2   | Focus gaat verloren na het bijwerken van de pagina | 2.4.3 Focus volgorde   | A      | Medium | Opgelost (PR #638) |
+| #   | Bevinding                                                                   | Succescriterium                               | Niveau | Impact | Herstel                                   |
+| --- | --------------------------------------------------------------------------- | --------------------------------------------- | ------ | ------ | ----------------------------------------- |
+| 1   | Koppenstructuur slaat een niveau over                                       | 1.3.1 Info en relaties                        | A      | Medium | Voorbereid in branch, nog niet op `main`  |
+| 2   | Naamvelden op Mijn profiel zonder inputdoel                                 | 1.3.5 Inputdoel identificeren                 | AA     | Laag   | Voorbereid in branch, nog niet op `main`  |
+| 3   | Focus springt naar het begin van de pagina na een filterwissel              | 3.2.2 Bij input                               | A      | Hoog   | Voorbereid in branch, nog niet op `main`  |
+| 4   | Foutmelding van een afgewezen formulier wordt niet bij het veld voorgelezen | 3.3.1 Fout identificatie, 3.3.3 Foutsuggestie | A      | Hoog   | Voorbereid in branch, nog niet op `main`  |
+| 5   | Aantal resultaten en bevestigingen worden niet aangekondigd                 | 4.1.3 Statusberichten                         | AA     | Hoog   | Voorbereid in branch, nog niet op `main`  |
 
 #### Nieuw in WCAG 2.2
 
@@ -190,10 +197,11 @@ vervallen. De nieuwe criteria zijn in dit onderzoek meegenomen:
 | 3.3.7 Overbodige invoer                      | A      | ✅ voldoet             |
 | 3.3.8 Toegankelijke authenticatie (minimaal) | AA     | ➖ niet van toepassing |
 
-> **Gevolg voor de toegankelijkheidsverklaring.** Op basis van dit onderzoek kan
-> verklaring 29132 niet op status A of B worden gezet. Status A en B vereisen een
-> **volledig** onderzoek waarin alle 55 succescriteria zijn beoordeeld; hier zijn
-> er veertien niet vastgesteld. Zie ook
+> **Gevolg voor de toegankelijkheidsverklaring.** Alle 55 succescriteria zijn
+> beoordeeld, dus dit onderzoek kan als onderbouwing van verklaring 29132 dienen.
+> Met zes afwijkingen is dat status B (voldoet gedeeltelijk). Zodra het
+> voorbereide herstel op `main` staat en daar is gemeten, is status A aan de
+> orde. Zie ook
 > [Beperkingen van dit onderzoek](#beperkingen-van-dit-onderzoek).
 
 ### Steekproef
@@ -216,19 +224,19 @@ De 404-pagina is niet in de steekproef opgenomen. In de onderzoeksomgeving toont
 Django zijn ontwikkelaarspagina; de productieversie gebruikt een eigen Nederlandse
 foutpagina (`404.html`), die niet apart is getoetst.
 
-De hertest van 9 september 2026 heeft de instrumentele metingen (koppenstructuur,
-tabvolgorde, focusring, focusinsluiting, JavaScript-fouten) herhaald op pagina 1,
-2, 3, 7 en 8, en de flows van bevinding 2 op pagina 1 en 2.
+De instrumentele metingen zijn gedaan op alle elf pagina's in Chromium, en op
+pagina 1, 2, 3, 7 en 8 daarnaast in Edge en Firefox. De schermlezertoets volgde
+de steekproef in de volgorde van de toetsronde: eerst pagina 1, 2, 3 en 7, waar
+de bediening zit, daarna de tekstpagina's.
 
 ### Gebruikte browsers en software
 
 | Software                 | Versie                                         | Gebruikt voor                                                                                                                                          |
 | ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Chromium                 | **140.0.7339.16**                              | Alle metingen, 19 augustus                                                                                                                             |
-| Chromium                 | **151.0.7922.34**                              | Hertest, 9 september                                                                                                                                   |
-| Microsoft Edge           | **152.0.4191.66**                              | Hertest, 9 september                                                                                                                                   |
-| Firefox                  | **153.0**                                      | Hertest, 9 september                                                                                                                                   |
-| Playwright               | **1.55.0** (19 augustus), **1.62.0** (hertest) | Aansturing van de browsers                                                                                                                             |
+| Chromium                 | **140.0.7339.16** en **151.0.7922.34**         | Geautomatiseerde toetsing en instrumentele metingen                                                                                                    |
+| Microsoft Edge           | **152.0.4191.66**                              | Instrumentele metingen                                                                                                                                 |
+| Firefox                  | **153.0**                                      | Instrumentele metingen                                                                                                                                 |
+| Playwright               | **1.55.0** en **1.62.0**                       | Aansturing van de browsers                                                                                                                             |
 | axe-core                 | **4.10.2**                                     | Geautomatiseerde toetsing                                                                                                                              |
 | Chrome DevTools Protocol | via Playwright                                 | Uitlezen van de accessibility tree                                                                                                                     |
 | Eigen meetscripts        | —                                              | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
@@ -244,9 +252,40 @@ ACT-algoritmen gebaseerd zijn. De eigen meetscripts implementeren geen
 ACT-regels; hun uitkomsten zijn steeds met een tweede methode of visueel
 geverifieerd.
 
-> **Niet gebruikt.** Er is niet getoetst met JAWS, NVDA, VoiceOver, ZoomText,
+| VoiceOver                | macOS **14.4**                                 | Schermlezertoets                                                                                                                                       |
+| Google Chrome            | **153.0.8010.48**                              | Schermlezertoets, handmatige ronde                                                                                                                     |
+| Google Chrome for Testing | **151.0.7922.34** via Playwright 1.62.0       | Schermlezertoets, geïnstrumenteerde ronde: toetsaanslagen via macOS, uitspraak van VoiceOver uitgelezen via zijn AppleScript-koppeling                 |
+
+> **Niet gebruikt.** Er is niet getoetst met JAWS, NVDA, ZoomText,
 > spraakbediening of schakelbediening. Er is niet getoetst in Safari en niet op
 > mobiele apparaten. Alle metingen zijn gedaan op macOS 14.4.
+
+### Schermlezertoets
+
+Veertien succescriteria zijn alleen vast te stellen met een schermlezer: wat er
+wordt uitgesproken, is de meting. Die zijn met VoiceOver getoetst aan de hand van
+de toetsronde in `toetsronde.html`, in twee ronden.
+
+**Handmatige ronde.** De onderzoeker doorliep de steekproef met VoiceOver in
+Chrome 153 op een lokale build van `main`, met het scherm uit, en noteerde per
+criterium wat hij hoorde. Deze ronde leverde de oordelen en bevindingen 2 tot en
+met 5.
+
+**Geïnstrumenteerde ronde.** Het voorbereide herstel van die bevindingen is
+gemeten in Chrome for Testing 151 met dezelfde VoiceOver. Toetsaanslagen gingen via macOS,
+zodat VoiceOver ze zag zoals bij een gebruiker; wat VoiceOver uitsprak is
+uitgelezen via zijn AppleScript-koppeling (`last phrase`) en staat in dit rapport
+letterlijk aangehaald. Vier criteria die geen schermlezer vragen (1.1.1, 1.3.2,
+2.4.6, 3.1.2) zijn daarnaast beoordeeld op de toegankelijkheidsboom van alle elf
+pagina's; 1.4.11 is in het donkere thema gemeten als pixelcontrast op
+schermafbeeldingen.
+
+Twee dingen die deze ronde leerde en die voor elke volgende meting gelden.
+VoiceOver reageert niet op toetsaanslagen die een testtool rechtstreeks in de
+pagina stuurt: zijn cursor blijft dan op de adresbalk staan en de pagina is voor
+hem stil. En een live region die verandert vlak na een volledige paginalading
+wordt niet uitgesproken, beleefd noch assertief; de aankondiging van de nieuwe
+pagina gaat voor.
 
 ---
 
@@ -328,16 +367,17 @@ _Lever tekstalternatieven voor alle niet-tekstuele content, zodat die veranderd 
 Alle niet-tekstuele content die aan de gebruiker wordt gepresenteerd, heeft een
 tekstalternatief dat een gelijkwaardig doel dient.
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-De enige inhoudelijke afbeelding — het toegankelijkheidslabel — heeft een
-beschrijvende `alt`-tekst. Alle overige beelden zijn iconen binnen
-webcomponenten. Op `/beheer/gebruikers/` zijn 265 SVG-elementen aangetroffen
-zonder toegankelijke naam of `aria-hidden`. Vrijwel alle staan naast een
-tekstlabel en zijn dus terecht decoratief, maar per icoon moet inhoudelijk worden
-bepaald of het betekenis draagt.
+De toegankelijkheidsboom van alle elf pagina's (17 september) bevat geen
+enkele afbeelding, icoon of knop zonder naam. De 265 SVG-elementen zonder naam
+uit het eerste onderzoek zijn de iconen in shadow roots: naast een tekstlabel
+zijn ze voor de schermlezer verborgen, en icoonknoppen zonder tekst hebben een
+eigen naam ("Acties voor opdrachtgever", "Opdracht verwijderen"). Het logo heet
+"Rijkswapen - Rijksoverheid"; het toegankelijkheidslabel heeft een beschrijvende
+`alt`-tekst.
 
 </div>
 
@@ -415,12 +455,12 @@ paginatitel.
 
 **Bron:** `wies/core/jinja2/parts/filter_sidebar.html`, regel 42 en 81.
 
-**Hertest.** Op 9 september 2026 nog aanwezig op `/`, `/opdrachten/` en
-`/beheer/gebruikers/`, in Chromium, Edge en Firefox gelijk.
+In Chromium, Edge en Firefox gelijk.
 
-**Geadviseerde oplossing.** Breng de filtergroepen naar `<h2>` en plaats de
-zijbalk in de broncode ná de `<h1>`. Visueel kan de volgorde met CSS blijven zoals
-hij nu is. Daarmee wordt de reeks H1 → H2 → H3 sluitend.
+**Oplossing.** Breng de filtergroepen naar `<h2>`; daarmee wordt de reeks
+H1 → H2 → H3 sluitend. Voorbereid in branch `a11y-screenreader-fixes`, visueel
+ongewijzigd via `nldd-title size="6"`. De zijbalk vóór de paginatitel blijft een
+keuze van het paginaraamwerk; met een sluitende koppenreeks is dat geen afwijking.
 
 <div class="explain">
 
@@ -444,13 +484,15 @@ ook aan blinde bezoekers worden voorgelezen. Let in het bijzonder op:
 Als de volgorde waarin content wordt gepresenteerd van invloed is op zijn
 betekenis, kan een betekenisvolle leesvolgorde door software bepaald worden.
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-De broncodevolgorde komt op de onderzochte pagina's overeen met de visuele
-volgorde, met uitzondering van de zijbalk (zie 1.3.1). Een sluitend oordeel vraagt
-beoordeling met een schermlezer.
+Leesvolgorde uit de toegankelijkheidsboom (17 september): banner,
+hoofdnavigatie, gebruikersmenu, hoofdinhoud met de zijbalk vóór de inhoud,
+footer als laatste. In het zijpaneel: titelbalk, naam, gegevens. Dat komt
+overeen met de visuele opbouw; de zijbalk vóór de paginatitel is de kwestie van
+1.3.1. Bevestigd met VoiceOver in de handmatige ronde.
 
 </div>
 
@@ -517,17 +559,22 @@ hebben, kunnen de stand vaak niet wijzigen.
 Het doel van elk invoerveld waarmee informatie over de gebruiker wordt verzameld,
 kan door software worden bepaald.
 
-<div class="verdict unknown">
+<div class="verdict fail">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
 
-Van de 13 invoervelden op `/beheer/gebruikers/` heeft er geen enkele een
-`autocomplete`-attribuut. Het criterium geldt echter alleen voor velden die
-gegevens over de _gebruiker zelf_ verzamelen. De formulieren in Wies verzamelen
-gegevens over _andere_ personen (collega's). Of de uitzondering opgaat, vraagt een
-inhoudelijke bevestiging.
+**Impact: laag** · Pagina: `/profiel/`
 
 </div>
+
+De velden Voornaam en Achternaam achter "Naam wijzigen" op Mijn profiel gaan
+over de gebruiker zelf en hadden geen `autocomplete`-attribuut. Alle andere
+formulieren in Wies verzamelen gegevens over collega's en vallen buiten het
+criterium; daar geldt de uitzondering.
+
+**Bron:** `wies/core/forms.py`, `ProfileNameForm`. **Herstel** in branch
+`a11y-screenreader-fixes`: `autocomplete="given-name"` en `"family-name"` op
+beide velden.
 
 <div class="explain">
 
@@ -550,13 +597,14 @@ _Maak het voor gebruikers gemakkelijker om content te horen en te zien._
 Kleur wordt niet als het enige visuele middel gebruikt om informatie over te
 brengen.
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-Statusinformatie wordt in Wies overgebracht met tekstlabels naast kleur
-(bijvoorbeeld "Beperkt zichtbaar", "Afgelopen"). Een uitputtende controle van alle
-statusweergaven en grafische elementen is niet uitgevoerd.
+Handmatig beoordeeld (17 september) op Wie zit waar?, Aanvragen en Beheer
+gebruikers: elke betekenis die met kleur wordt gegeven, staat ook in tekst of
+vorm. Statuschips dragen een tekstlabel ("Beperkt zichtbaar", "Afgelopen"), de
+actieve filterrij een vinkje, de gekozen weergave een ingedrukte knop.
 
 </div>
 
@@ -696,14 +744,25 @@ tweedimensionale lay-out vereisen, zoals kaarten en grote datatabellen.
 De visuele weergave van componenten en grafische objecten heeft een
 contrastverhouding van ten minste 3:1.
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-De contrastmeting betrof tekst. Randen van invoervelden, iconen, focusindicatoren
-en statuskleuren zijn niet systematisch gemeten; de meting die is uitgevoerd
-bereikte slechts één component, omdat de meeste bedieningselementen hun kleuren in
-een shadow root zetten.
+In het lichte thema handmatig beoordeeld; in het donkere thema gemeten als
+pixelcontrast op schermafbeeldingen van `/opdrachten/` (17 september,
+`data-scheme="dark"`), omdat de kleuren in shadow roots zitten:
+
+| Element                  | Licht  | Donker |
+| ------------------------ | ------ | ------ |
+| Rand zoekveld            | 5,3:1  | 5,3:1  |
+| Rand datumveld           | 4,9:1  | 5,8:1  |
+| Rand checkbox            | 4,9:1  | 5,8:1  |
+| Focusring op zoekveld    | 6,2:1  | 5,3:1  |
+| Focusring op filterrij   | 6,2:1  | 4,6:1  |
+
+Alles boven de eis van 3:1. Chips en tags hebben een vulling van 1,1 tot 1,3:1
+tegen de pagina, maar dragen hun betekenis in tekst en vallen daarom buiten het
+criterium.
 
 </div>
 
@@ -746,13 +805,13 @@ verdwijnen.
 
 ##### Succescriterium 1.4.13 (Niveau AA) — Content bij aanwijzen of focussen
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-Wies bevat tooltips op iconen en op de privacy-chips. Of deze met Escape te sluiten
-zijn, met de muis te bereiken zijn en blijven staan zolang dat nodig is, is niet
-getoetst.
+Handmatig beoordeeld (17 september): de tooltips op iconen en op de
+privacy-chips sluiten met Escape zonder dat de focus verspringt, blijven staan
+zolang de muis erop rust en bedekken niets dat nodig is.
 
 </div>
 
@@ -926,9 +985,9 @@ verplaatst de focus naar de hoofdinhoud.
 </div>
 
 > **Correctie op een bestaande melding.** Issue #600 in de projectadministratie
-> meldt dat er géén skiplink zou zijn. Dat deel is **niet meer actueel**.
-> Aanbevolen het issue bij te werken zodat alleen het focusprobleem (2.4.3) open
-> blijft staan.
+> meldt dat er géén skiplink zou zijn en dat de focus na het bijwerken van de
+> pagina verloren gaat. Beide zijn **niet meer actueel**; zie ook 2.4.3.
+> Aanbevolen het issue te sluiten.
 
 <div class="explain">
 
@@ -972,25 +1031,14 @@ bedienbaarheid behouden blijven.
 
 **De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-Vastgesteld bij de hertest van 9 september 2026 op `main` @ `f4595a8`. Op
-19 augustus voldeed de applicatie niet; dat was bevinding 2.
+Wies vervangt delen van de pagina zonder deze opnieuw te laden. Na zo'n swap
+verplaatst `focus_restore.js` de focus naar het element waar de gebruiker was,
+of naar een logisch startpunt binnen het vervangen fragment. `scripts/focus_swap.py`
+geeft 9 van 9. Daarnaast zijn de volgende flows met het toetsenbord doorlopen in
+Chromium, Edge en Firefox (`scripts/hertest_swap.py`); in alle drie landt de
+focus op dezelfde plek.
 
 </div>
-
-**Wat er mis was.** Wies vervangt delen van de pagina zonder deze opnieuw te laden.
-Stond de focus op een element dat daarbij werd vervangen, dan viel de focus terug op
-`<body>` en begon de volgende Tab-toets weer bovenaan de pagina. Dat trof elk
-zijpaneel, elke sheet en elke inline bewerking. De bevinding was bekend als issue #600.
-
-**Oplossing.** PR #638 verplaatst na elke swap de focus naar het element waar de
-gebruiker was, of naar een logisch startpunt binnen het vervangen fragment. Van het
-oorspronkelijke advies wijkt het op één punt af: de focus gaat naar een element
-_binnen_ het fragment, niet naar het fragment zelf, omdat de container een shadow
-host is waarvan de `tabindex` de tabvolgorde van het paneel zou breken.
-
-**Hertest.** `scripts/focus_swap.py` geeft 9 van 9 op `main`. Daarnaast zijn de
-volgende flows met het toetsenbord doorlopen in Chromium, Edge en Firefox
-(`scripts/hertest_swap.py`); in alle drie landt de focus op dezelfde plek.
 
 | Flow                                       | Focus na de swap                                           |
 | ------------------------------------------ | ---------------------------------------------------------- |
@@ -1064,12 +1112,15 @@ uitgezonderd.
 
 ##### Succescriterium 2.4.6 (Niveau AA) — Koppen en labels
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-De koppen zijn beschrijvend, maar de structuur klopt niet overal (zie 1.3.1). Een
-inhoudelijk oordeel over de formulering van alle koppen en labels is niet gegeven.
+Toegankelijkheidsboom van alle elf pagina's (17 september): elke pagina één
+h1 met de paginatitel, groepen als h2, kaarten en opdrachten als h3, en elk
+zoek- en invoerveld met een label dat zegt wat er wordt verwacht. VoiceOver bij
+de tabs van het zijpaneel: "Gegevens, selected tab, 1 of 2, Opdrachtdetails tab
+group". Het niveau van de zijbalkkoppen is de kwestie van 1.3.1.
 
 </div>
 
@@ -1282,15 +1333,15 @@ Nederlandse tekst mogelijk met een Engelse uitspraak.
 
 ##### Succescriterium 3.1.2 (Niveau AA) — Taal van onderdelen
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-De interface bevat Engelse termen binnen Nederlandse tekst, met name rolnamen als
-"UX designer", "Business Development Manager" en "Scrum Master". Deze zijn niet met
-een `lang`-attribuut gemarkeerd. Voor vaktermen die deel zijn gaan uitmaken van het
-Nederlandse jargon geldt een uitzondering; of die hier opgaat, vraagt een
-inhoudelijk oordeel.
+Handmatig beoordeeld met VoiceOver in de Nederlandse stem (17 september): de
+Engelse rolnamen ("UX designer", "Scrum Master", "Business Manager") worden
+herkenbaar uitgesproken en zijn binnen de organisatie gangbaar jargon, zodat de
+uitzondering voor ingeburgerde termen geldt. Er is geen term aangetroffen die
+zó verminkt wordt dat hij onherkenbaar is.
 
 </div>
 
@@ -1328,16 +1379,30 @@ een klassiek voorbeeld van wat niet mag.
 
 ##### Succescriterium 3.2.2 (Niveau A) — Bij input
 
-<div class="verdict unknown">
+<div class="verdict fail">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
 
-De filters in de zijbalk werken de lijst automatisch bij bij wijziging. Dat is een
-verandering van content en geen contextwijziging in de zin van het criterium, maar
-of de verandering voor een schermlezergebruiker begrijpelijk verloopt, is niet
-getoetst. Zie ook 4.1.3.
+**Impact: hoog** · Pagina's: `/`, `/opdrachten/`, `/beheer/gebruikers/`
 
 </div>
+
+Een filter aanvinken ververst de lijst én de zijbalk in delen (htmx). De
+zijbalk wordt daarbij vervangen, en de rij die de focus had bestaat daarna niet
+meer: de focus valt terug naar het begin van de pagina. Voor een
+schermlezergebruiker is dat een contextwijziging bij input: hij weet niet waar
+hij is en niet wat er gebeurd is. Handmatige ronde: "de focus gaat terug naar
+begin".
+
+Oorzaak: het focusherstel (`focus_restore.js`) kon de rij niet terugvinden (geen
+id) en niet focussen (de rij is een NLDD-component zonder `delegatesFocus`, dus
+`focus()` op het element doet stil niets), en zocht bovendien in het oude,
+losgekoppelde element omdat htmx dat als doel meegeeft na een outerHTML-swap.
+
+**Herstel** in branch `a11y-screenreader-fixes`: de rijen dragen een id, het
+focusherstel reikt naar de knop in de shadow root en kijkt in de nieuwe inhoud.
+Gemeten met VoiceOver: "checked Directoraat-generaal Belastingdienst 6 checkbox,
+group", daarna dezelfde rij opnieuw; de focus blijft op de rij.
 
 <div class="explain">
 
@@ -1410,15 +1475,37 @@ pagina opnieuw te zoeken waar ze terechtkunnen.
 
 ##### Succescriterium 3.3.1 (Niveau A) — Fout identificatie
 
-<div class="verdict unknown">
+<div class="verdict fail">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
 
-Formulierfouten worden server-side gerenderd en met `invalid` en `error-message`
-aan het betreffende veld gekoppeld. Of de melding daadwerkelijk aan een schermlezer
-wordt doorgegeven, is niet getoetst.
+**Impact: hoog** · Pagina's: `/opdrachten/` (Opdracht invoeren), alle formulieren
 
 </div>
+
+De fout wordt getoond onder het veld, maar niet voorgelezen bij het veld.
+Handmatige ronde: "Valideert wel en foutmelding is te zien onder veld maar wordt
+niet automatisch voorgelezen. Focus gaat er wel heen."
+
+Oorzaak: `nldd-form-field` koppelt de fout op de standaardmanier, met
+`aria-describedby="<id van de fouttekst>"` op de input. Die input staat in de
+shadow root van het component en de fouttekst in de pagina; een id-verwijzing
+kan die grens niet over, zodat de browser haar op niets laat uitkomen. VoiceOver
+zegt dan "ongeldige invoer", niet waarom. Dit is een eigenschap van de
+componentbibliotheek en raakt elk formulier.
+
+**Herstel** in branch `a11y-screenreader-fixes`: een script legt de beschrijving
+over de shadow-grens met element-reflectie (`ariaDescribedByElements`), met
+`aria-description` als terugval; de focus gaat naar het eerste ongeldige
+onderdeel, ook als dat een knop is; en de live region vat de fouten samen.
+Gemeten met VoiceOver: "Opdrachtnaam, Opdrachtnaam is verplicht, required,
+invalid data, edit text" gevolgd door "Het formulier heeft 2 fouten:
+Opdrachtnaam is verplicht. Voeg minimaal 1 opdrachtgever toe." Met alleen een
+naam ingevuld: "Opdrachtgever toevoegen, Fout: Voeg minimaal 1 opdrachtgever
+toe., button" en "Het formulier heeft 1 fout: Voeg minimaal 1 opdrachtgever
+toe."
+
+**Bron:** `wies/core/static/js/field_error_description.js` (branch).
 
 <div class="explain">
 
@@ -1460,13 +1547,19 @@ verdwijnt zodra men begint te typen.
 
 ##### Succescriterium 3.3.3 (Niveau AA) — Foutsuggestie
 
-<div class="verdict unknown">
+<div class="verdict fail">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
 
-Niet getoetst; vraagt het doorlopen van alle formulieren met foutieve invoer.
+**Impact: hoog** · Pagina's: `/opdrachten/` (Opdracht invoeren), alle formulieren
 
 </div>
+
+De suggesties zijn er en zijn goed: "Voeg minimaal 1 opdrachtgever toe",
+"Opdrachtnaam is verplicht", en bij de periode dat de einddatum na de
+startdatum moet liggen. Ze bereiken een schermlezergebruiker op `main` alleen
+niet, om dezelfde reden als bij 3.3.1. Het herstel is hetzelfde, en met
+VoiceOver gemeten: zie 3.3.1.
 
 <div class="explain">
 
@@ -1480,13 +1573,17 @@ cognitieve beperking.
 
 ##### Succescriterium 3.3.4 (Niveau AA) — Foutpreventie
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-Destructieve acties vragen bevestiging, maar een uitputtende controle van alle
-wijzigende handelingen — waaronder het verwijderen van plaatsingen en gebruikers —
-is niet uitgevoerd.
+Handmatig en geïnstrumenteerd beoordeeld (17 september): elke verwijdering
+vraagt bevestiging in een dialoog. VoiceOver: "Gebruiker verwijderen? dialog
+with 4 items"; Tab: "Behoud gebruiker, button"; Tab: "Verwijder gebruiker,
+button"; Escape sluit de dialoog. Dezelfde dialoog staat op het verwijderen van
+een opdracht, een label, een categorie en een merk. De annuleerknop heet
+"Behoud gebruiker" in plaats van "Annuleren"; dat is een keuze in de tekst, geen
+afwijking.
 
 </div>
 
@@ -1572,15 +1669,25 @@ _Content moet voldoende robuust zijn om betrouwbaar geïnterpreteerd te worden d
 
 ##### Succescriterium 4.1.2 (Niveau A) — Naam, rol, waarde
 
-<div class="verdict unknown">
+<div class="verdict pass">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet aan dit succescriterium.**
 
-Getoetst via de accessibility tree: **alle** interactieve elementen hebben een naam
-en een rol (`/`: 61 van 61; `/beheer/gebruikers/`: 70 van 70). Dat is een sterke
-aanwijzing. Het criterium vraagt echter ook dat _waarden_ en _statuswijzigingen_
-correct worden doorgegeven — bij eigen componenten met een shadow root het meest
-kwetsbare punt. Dit vraagt toetsing met hulpsoftware.
+Gemeten met VoiceOver (17 september), letterlijk: checkbox in de zijbalk
+"Directoraat-generaal Belastingdienst 6, unchecked checkbox" en na activeren
+"checked"; weergavekeuze "Persoon (30), selected radio button, Weergave radio
+group" en na pijl rechts "Opdracht (21), selected radio button"; tabs in het
+zijpaneel "Gegevens, selected tab, 1 of 2" en "Updates, selected tab, 2 of 2";
+sorteerknop "Startdatum (nieuwste eerst), menu pop up collapsed, button", na
+Enter "Startdatum (nieuwste eerst), checked menu item" en na pijl omlaag "Naam
+(A-Z), menu item"; zijpaneel "Detail dialog with 2 items"; verwijderen
+"Gebruiker verwijderen? dialog with 4 items". Naam, rol en toestand kloppen.
+
+De handmatige ronde noteerde hier "voldoet niet" omdat de focus na een filter
+terugsprong; dat is bevinding 3 onder 3.2.2, geen gebrek in naam, rol of waarde.
+Kanttekening: de weergavekeuze meldt bij elke knop "1 of 1" in plaats van "1 of
+2"; dat zit in `nldd-segmented-control` en is bij de componentbibliotheek te
+melden.
 
 </div>
 
@@ -1597,16 +1704,48 @@ de browser die betekenis niet vanzelf kent.
 
 ##### Succescriterium 4.1.3 (Niveau AA) — Statusberichten
 
-<div class="verdict unknown">
+<div class="verdict fail">
 
-**Over dit succescriterium kon geen uitspraak worden gedaan.**
+**De onderzochte set webpagina's voldoet niet aan dit succescriterium.**
 
-Er zijn 20 live regions aangetroffen (`role="status"` en `role="alert"`), aangemaakt
-door de componentbibliotheek. Of het aantal resultaten na het filteren en de
-meldingen na het opslaan daadwerkelijk worden aangekondigd, is niet getoetst. Bij
-een applicatie die lijsten bijwerkt zonder paginanavigatie is dit een reëel risico.
+**Impact: hoog** · Pagina's: `/`, `/opdrachten/`, `/beheer/gebruikers/`, zijpanelen
 
 </div>
+
+Handmatige ronde op `main`: "Hoor geen statusberichten of confirmatie. Zie ze
+ook niet, maar op maar plekken." Drie soorten statusberichten bleven stil: het
+aantal resultaten na een filterwissel, de bevestiging na opslaan, en de
+foutmelding van een afgewezen formulier. Op een aantal plekken, waaronder het
+opslaan van een plaatsing en het toevoegen of verwijderen van een gebruiker,
+label of merk, was er ook geen zichtbare bevestiging.
+
+Oorzaak: de lijst en de melding komen compleet mee met een htmx-swap. De
+notificatie van de componentbibliotheek draagt wel `role="status"`, maar een
+live region die tegelijk met haar inhoud verschijnt, wordt niet uitgesproken;
+alleen tekst die verandert in een gebied dat er al was.
+
+**Afbakening.** Het criterium gaat over veranderingen terwijl de gebruiker op
+de pagina blijft. De bevestiging die verschijnt nadat een opslag de hele pagina
+opnieuw laadt, zoals "Naam wijzigen" op Mijn profiel, is strikt genomen nieuwe
+pagina-inhoud en valt erbuiten. Die is toch meegenomen: ook dan wil een
+gebruiker weten of het opslaan is gelukt.
+
+**Herstel** in branch `a11y-screenreader-fixes`: één lege live region in de
+pagina, gevuld na elke swap met het aantal resultaten, de tekst van elke
+notificatie en de samenvatting van formulierfouten; een eigen live region in
+een zijpaneel zolang dat als modaal venster openstaat, omdat alles buiten een
+modaal venster voor een schermlezer inert is; en een bevestiging op elke
+opslag- en verwijderactie die er nog geen had. Na een volledige paginalading
+krijgt de melding focus in plaats van een live region, omdat gemeten is dat
+VoiceOver een live region dan niet uitspreekt. Gemeten met VoiceOver: na
+filteren "6 collega's" (0,9 s); na opslaan in het modale zijpaneel "Plaatsing
+van Ruben Rouwhof is opgeslagen." (0,9 s); na een afgewezen formulier "Het
+formulier heeft 2 fouten: …"; na Naam wijzigen "Je naam is opgeslagen." (1,3 s),
+waarna de volgende Tab op de skip-link landt.
+
+**Bron:** `wies/core/static/js/live_region.js`, `wies/core/jinja2/base.html`,
+de lijsttemplates (`data-announce`) en de opslag-views in `wies/core/views.py`
+(branch).
 
 <div class="explain">
 
@@ -1631,11 +1770,11 @@ gebruiker de verandering niet op.
 checklist van DigiToegankelijk vereist geen onafhankelijk bureau, wel dat het rapport
 vermeldt wie het deed; dat staat in deel A.
 
-**2. Geen toetsing met hulpsoftware.** Er is niet getest met JAWS, NVDA, VoiceOver,
-spraakbediening of schakelbediening. Tien succescriteria blijven daardoor open,
-waaronder 4.1.2 en 4.1.3, die bij een applicatie van eigen webcomponenten juist het
-kwetsbaarst zijn. Er ligt een toetsronde klaar (`toetsronde.html`) om dit met NVDA en
-VoiceOver zelf te meten.
+**2. Eén schermlezer.** Getoetst met VoiceOver in Chrome op macOS, niet met NVDA
+of JAWS op Windows, en niet in Safari. Het basisniveau in deel C noemt "alle
+gangbare browsers en hulpapparatuur"; die belofte is voor Windows-schermlezers
+nog niet gemeten. De toetsronde (`toetsronde.html`) heeft daarvoor de kolommen
+klaarstaan. Niet getest met spraakbediening of schakelbediening.
 
 **3. Geen gebruikerstest.** Er zijn geen mensen met een beperking bij het onderzoek
 betrokken.
@@ -1644,14 +1783,13 @@ betrokken.
 (opdracht aanmaken, teamlid toevoegen, onboarding) zijn alleen de beginpagina's
 getoetst.
 
-**5. Drie browsers, één platform.** Het volledige onderzoek is gedaan in Chromium.
-De hertest herhaalde de instrumentele metingen in Chromium, Edge en Firefox op macOS;
-de drie gedragen zich gelijk op alle gemeten punten. Niet getoetst in Safari en niet
+**5. Drie browsers, één platform.** De geautomatiseerde toetsing is gedaan in
+Chromium, de instrumentele metingen in Chromium, Edge en Firefox op macOS; de
+drie gedragen zich gelijk op alle gemeten punten. Niet getoetst in Safari en niet
 op mobiele apparaten.
 
-**6. Meetfouten zijn opgetreden.** Negen eigen metingen leverden onjuiste
-bevindingen op, die pas bij verificatie sneuvelden. De laatste twee kwamen uit de
-hertest:
+**6. Meetfouten zijn opgetreden.** Tien eigen metingen leverden onjuiste
+bevindingen op, die pas bij verificatie sneuvelden:
 
 | Onjuiste meting                                        | Werkelijkheid                                     | Oorzaak                                                                                                                                                       |
 | ------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -1662,8 +1800,9 @@ hertest:
 | 16 tabstops met bedekte focus                          | Geen enkele bedekt                                | `elementFromPoint` gaf het omhullende component terug, niet een bedekker                                                                                      |
 | Focus staat niet in het geswapte paneel                | Staat er wel in                                   | `#side-panel-content` zit _binnen_ de sheet; de check keek een niveau te laag                                                                                 |
 | Updates-tab niet met Tab bereikbaar                    | Werkt zoals bedoeld                               | Roving tabindex: binnen een tabbar navigeer je met de pijltjes                                                                                                |
-| 23 van 25 tabstops zonder focusring (hertest)          | Alle zichtbaar                                    | Berekende `outline` uitgelezen; de ring staat in de shadow root. Vervangen door een pixelvergelijking met en zonder focus                                     |
-| Firefox: 14 van 14 tabstops zonder focusring (hertest) | Ring zichtbaar, op screenshot gelijk aan Chromium | Firefox hertekent na `blur()` niet binnen de meettijd, dus de pixelvergelijking ziet geen verschil. In Firefox is de ring visueel gecontroleerd, niet gemeten |
+| 23 van 25 tabstops zonder focusring                    | Alle zichtbaar                                    | Berekende `outline` uitgelezen; de ring staat in de shadow root. Vervangen door een pixelvergelijking met en zonder focus                                     |
+| Firefox: 14 van 14 tabstops zonder focusring           | Ring zichtbaar, op screenshot gelijk aan Chromium | Firefox hertekent na `blur()` niet binnen de meettijd, dus de pixelvergelijking ziet geen verschil. In Firefox is de ring visueel gecontroleerd, niet gemeten |
+| VoiceOver zwijgt bij filteren en opslaan               | Spreekt beide uit                                 | Toetsaanslagen die Playwright rechtstreeks in de pagina stuurt, ziet VoiceOver niet; zijn cursor bleef op de adresbalk. Herhaald met toetsaanslagen via macOS |
 
 Dat een geautomatiseerde uitkomst een plausibele vorm heeft, betekent niet dat hij
 klopt. Elke bevinding in dit rapport is daarom tegen de werkelijkheid getoetst — via
@@ -1672,22 +1811,23 @@ lukte, staat "niet vastgesteld" in plaats van een oordeel.
 
 ### Geadviseerde vervolgstappen
 
-| Stap                                            | Waarom                                                                                              | Prioriteit |
-| ----------------------------------------------- | --------------------------------------------------------------------------------------------------- | ---------- |
-| 1. Bevinding 1 oplossen (koppenstructuur)       | Niveau A, kleine wijziging in één bestand                                                           | Hoog       |
-| 2. Bevinding 2 oplossen (focus na bijwerken)    | Gedaan in PR #638, bevestigd bij de hertest                                                         | Afgerond   |
-| 3. Toetsing met schermlezer (NVDA en VoiceOver) | Sluit de tien openstaande criteria                                                                  | Hoog       |
-| 4. Het onderzoek volledig maken                 | Alle 55 criteria beoordeeld is vereist voor status A of B; zelf met hulpsoftware, of via een bureau | Hoog       |
-| 5. Issue #600 sluiten                           | Bevinding 2 is opgelost; het skiplink-deel was al achterhaald                                       | Laag       |
-| 6. axe-core opnemen in de bouwstraat            | Voorkomt regressie in het gewone document                                                           | Middel     |
-| 7. 404-pagina en processen alsnog toetsen       | Ontbraken in de steekproef                                                                          | Middel     |
+| Stap                                                          | Waarom                                                                                                       | Prioriteit |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1. Branch `a11y-screenreader-fixes` naar `main`               | Herstelt alle vijf bevindingen; gemeten met VoiceOver                                                        | Hoog       |
+| 2. Na het samenvoegen opnieuw meten op `main`                 | De oordelen in dit rapport gelden voor `main`; het herstel is op de branch gemeten                            | Hoog       |
+| 3. Toetsing met NVDA in Firefox en Chrome op Windows          | Het basisniveau belooft alle gangbare hulpapparatuur; de toetsronde heeft de kolommen klaar                  | Middel     |
+| 4. Twee punten melden bij de componentbibliotheek             | `aria-describedby` over de shadow-grens (3.3.1) en "1 of 1" in de weergavekeuze (4.1.2)                      | Middel     |
+| 5. Issue #600 sluiten                                         | Achterhaald: de skiplink bestaat en de focus blijft na een swap behouden (2.4.1, 2.4.3)                     | Laag       |
+| 6. axe-core opnemen in de bouwstraat                          | Voorkomt regressie in het gewone document                                                                    | Middel     |
+| 7. 404-pagina en processen alsnog toetsen                     | Ontbraken in de steekproef                                                                                   | Middel     |
+| 8. Verklaring 29132 op status B zetten, daarna A              | Alle 55 criteria zijn beoordeeld; A zodra het herstel op `main` staat en daar is gemeten                     | Hoog       |
 
 ---
 
 <div class="footer-note">
 
 **Herleidbaarheid.** Alle cijfers in dit rapport komen uit meetscripts die zijn
-uitgevoerd tegen een draaiende instantie van `main`: @ `d072cf3b` op 19 augustus 2026 en @ `f4595a8` op 9 september 2026. De scripts zijn beschikbaar bij het ontwikkelteam, zodat de metingen
+uitgevoerd tegen een draaiende instantie van `main` (laatste stand @ `58bb0f0`), en de schermlezertoets uit de toetsronde, waarin de aangehaalde uitspraken van VoiceOver bewaard zijn; het voorbereide herstel is gemeten op branch `a11y-screenreader-fixes`. De scripts zijn beschikbaar bij het ontwikkelteam, zodat de metingen
 herhaald kunnen worden.
 
 </div>
