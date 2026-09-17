@@ -1494,10 +1494,12 @@ kan die grens niet over, zodat de browser haar op niets laat uitkomen. VoiceOver
 zegt dan "ongeldige invoer", niet waarom. Dit is een eigenschap van de
 componentbibliotheek en raakt elk formulier.
 
-**Herstel** in branch `a11y-screenreader-fixes`: een script legt de beschrijving
-over de shadow-grens met element-reflectie (`ariaDescribedByElements`), met
-`aria-description` als terugval; de focus gaat naar het eerste ongeldige
-onderdeel, ook als dat een knop is; en de live region vat de fouten samen.
+**Herstel** in branch `a11y-screenreader-fixes`: de componentbibliotheek is
+bijgewerkt naar 0.8.88, waarin een veld zijn foutlijst (`nldd-validation-list`)
+zelf als beschrijving aan de input in de shadow root doorgeeft; een klein
+script doet hetzelfde voor de knop van de opdrachtgever-kiezer, die geen
+invoerveld is; de focus gaat naar het eerste ongeldige onderdeel, ook als dat
+een knop is; en de live region vat de fouten samen.
 Gemeten met VoiceOver: "Opdrachtnaam, Opdrachtnaam is verplicht, required,
 invalid data, edit text" gevolgd door "Het formulier heeft 2 fouten:
 Opdrachtnaam is verplicht. Voeg minimaal 1 opdrachtgever toe." Met alleen een
@@ -1505,7 +1507,7 @@ naam ingevuld: "Opdrachtgever toevoegen, Fout: Voeg minimaal 1 opdrachtgever
 toe., button" en "Het formulier heeft 1 fout: Voeg minimaal 1 opdrachtgever
 toe."
 
-**Bron:** `wies/core/static/js/field_error_description.js` (branch).
+**Bron:** `wies/core/jinja2/forms/field.html` en `wies/core/static/js/field_error_description.js` (branch).
 
 <div class="explain">
 
@@ -1734,7 +1736,8 @@ gebruiker weten of het opslaan is gelukt.
 pagina, gevuld na elke swap met het aantal resultaten, de tekst van elke
 notificatie en de samenvatting van formulierfouten; een eigen live region in
 een zijpaneel zolang dat als modaal venster openstaat, omdat alles buiten een
-modaal venster voor een schermlezer inert is; en een bevestiging op elke
+modaal venster voor een schermlezer inert is; de notificatie zelf verhuist in
+componentbibliotheek 0.8.88 mee naar dat venster; en een bevestiging op elke
 opslag- en verwijderactie die er nog geen had. Na een volledige paginalading
 krijgt de melding focus in plaats van een live region, omdat gemeten is dat
 VoiceOver een live region dan niet uitspreekt. Gemeten met VoiceOver: na
