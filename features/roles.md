@@ -3,11 +3,11 @@
 Wies separates three kinds of authority. Each is named after what it lets you
 do, not after who holds it.
 
-| Authority | Where it lives | In short |
-|---|---|---|
-| Platformbeheer | `STAFF_EMAILS` (env var) | the platform pages, granting the privileged roles |
-| Gebruikersbeheer | role (Django group) | users, labels and merken |
-| Opdrachtbeheer | role (Django group) | any wies-sourced assignment, whoever owns it |
+| Authority        | Where it lives           | In short                                          |
+| ---------------- | ------------------------ | ------------------------------------------------- |
+| Platformbeheer   | `STAFF_EMAILS` (env var) | the platform pages, granting the privileged roles |
+| Gebruikersbeheer | role (Django group)      | users, labels and merken                          |
+| Opdrachtbeheer   | role (Django group)      | any wies-sourced assignment, whoever owns it      |
 
 The job roles `Consultant` and `Business Development Manager` (BDM) sit next
 to these. What each role may do is on the page **Beheer > Rollen** (see below).

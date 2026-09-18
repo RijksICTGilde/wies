@@ -124,12 +124,12 @@ just manage test wies.core.tests.test_roles
 
 ### User Roles
 
-| Role                 | Description                  | Permissions                                      |
-| -------------------- | ---------------------------- | ------------------------------------------------ |
-| **Gebruikersbeheer** | User administration          | User and label management                        |
-| **Opdrachtbeheer**   | Assignment administration    | Edit and delete any assignment, see all history  |
-| **Consultant**       | Employee                     | View-only access                                 |
-| **BDM**              | Business Development Manager | Create and manage assignments                    |
+| Role                 | Description                  | Permissions                                     |
+| -------------------- | ---------------------------- | ----------------------------------------------- |
+| **Gebruikersbeheer** | User administration          | User and label management                       |
+| **Opdrachtbeheer**   | Assignment administration    | Edit and delete any assignment, see all history |
+| **Consultant**       | Employee                     | View-only access                                |
+| **BDM**              | Business Development Manager | Create and manage assignments                   |
 
 Platform administration (database, errors, granting the two privileged roles)
 is the `STAFF_EMAILS` setting, not a role. See `features/roles.md`.
