@@ -36,6 +36,15 @@
   <nldd-text-cell text="Merken"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
+{% if user.has_perm('rijksauth.view_user') %}
+  <nldd-list-item href="{{ url('role-matrix') }}" {% if '/beheer/rollen/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="user-admin"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Rollen"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
 {% if show_staff_pages(request) %}
   <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">

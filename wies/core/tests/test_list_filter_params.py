@@ -174,7 +174,7 @@ class UserAdminRoleFilterTests(TestCase):
         assert self._shows_target({"rol": ""})
 
     def test_existing_group_still_filters_normally(self):
-        group = Group.objects.create(name="Beheerder")
+        group = Group.objects.create(name="Gebruikersbeheer")
         User.objects.get(last_name=self.TARGET).groups.add(group)
 
         assert self._shows_target({"rol": str(group.id)})

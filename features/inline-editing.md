@@ -250,7 +250,7 @@ UPDATE = Verb.UPDATE
 
 @rule(UPDATE, Assignment)                              # whole-object
 def update_assignment(user, a):
-    return _is_wies_sourced(a) and (_has_change_perm(user, a) or _is_assignment_owner(user, a))
+    return _is_wies_sourced(a) and (_is_assignment_owner(user, a) or is_assignment_admin(user))
 
 
 @rule(UPDATE, Placement)                               # delegate to parent
@@ -267,13 +267,16 @@ def update_assignment_extra_info(user, a):
 
 @rule(UPDATE, UserEditables.email)                     # field-level: stricter
 def update_user_email(user, target):
-    return _has_change_perm(user, target)              # admin-only, no self-edit branch
+    return _has_change_perm(user, target) and is_staff_member(user)  # no self-edit branch
 ```
 
 Predicates (`_is_wies_sourced`, `_has_change_perm`,
 `_is_assignment_owner`, …) are private helpers in the same file. Rule
 bodies are plain Python returning `bool` — no DSL, no operator
 overloading.
+
+A new `@rule` also needs a row on the role page (`role_matrix.SECTIONS`,
+see `features/roles.md`); `test_role_matrix.py` fails without one.
 
 ### Calling `has_permission`
 

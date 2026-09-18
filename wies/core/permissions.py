@@ -16,7 +16,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
-from wies.core.roles import is_bdm, is_staff_member
+from wies.core.roles import is_assignment_admin, is_bdm, is_staff_member
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
@@ -34,7 +34,7 @@ def _has_change_perm(user, obj) -> bool:
     """True iff `user` holds the standard Django change_<model> permission for `obj`.
 
     Uses ``app_label`` so models in ``rijksauth`` (User) and ``core``
-    (Assignment, Service, Placement, Colleague) both resolve correctly.
+    (Colleague) both resolve correctly.
     """
     return user.has_perm(f"{obj._meta.app_label}.change_{obj._meta.model_name}")  # noqa: SLF001 — _meta is Django's canonical model-introspection API
 
@@ -59,8 +59,8 @@ def _is_placed_on_service(user, service) -> bool:
 
 
 def _can_edit_assignment_text_field(user, assignment) -> bool:
-    """BM-owner, Beheerder (``change_assignment``) or a placed
-    consultant — but only on wies-sourced opdrachten."""
+    """Whoever may edit the whole assignment, or a placed consultant, but
+    only on wies-sourced opdrachten."""
     if not _is_wies_sourced(assignment):
         return False
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
@@ -71,15 +71,14 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
 
 @rule(UPDATE, Assignment)
 def update_assignment(user, a):
-    """Full edit: BDM owner of a wies-sourced assignment, holder of
-    core.change_assignment, or a support-staff member (``STAFF_EMAILS``).
+    """Full edit of a wies-sourced assignment: its BDM owner, or Opdrachtbeheer.
 
     Placed colleagues do NOT pass — they get narrower access via the
     field-level rules for description/extra_info below.
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or (_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user)
+    return (_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user)
 
 
 @rule(UPDATE, Service)
@@ -96,13 +95,13 @@ def update_placement(user, p):
 
 @rule(UPDATE, Colleague)
 def update_colleague(user, c):
-    """Admin (Beheerder via has_perm), or the colleague themselves."""
+    """Admin (Gebruikersbeheer via has_perm), or the colleague themselves."""
     return _has_change_perm(user, c) or getattr(user, "colleague", None) == c
 
 
 @rule(UPDATE, User)
 def update_user(user, target):
-    """Admin path (Beheerder holds rijksauth.change_user) or self-edit."""
+    """Admin path (Gebruikersbeheer holds rijksauth.change_user) or self-edit."""
     return _has_change_perm(user, target) or target == user
 
 
@@ -111,14 +110,10 @@ def update_user(user, target):
 
 @rule(DELETE, Assignment)
 def delete_assignment(user, a):
-    """The BDM owner of a wies-sourced opdracht, or a support-staff
-    member (``STAFF_EMAILS``) (issue #313).
-
-    Beheerder (``core.change_assignment``) is intentionally NOT
-    included here — deletion stays with the owner who has end-to-end
-    accountability for the opdracht, plus staff for support cases.
+    """The BDM owner of a wies-sourced opdracht, who has end-to-end
+    accountability for it, or Opdrachtbeheer for support cases (issue #313).
     """
-    return _is_wies_sourced(a) and ((_is_assignment_owner(user, a) and is_bdm(user)) or is_staff_member(user))
+    return _is_wies_sourced(a) and ((_is_assignment_owner(user, a) and is_bdm(user)) or is_assignment_admin(user))
 
 
 # --- Field-level UPDATE rules -----------------------------------------------
@@ -144,8 +139,9 @@ def update_service_description(user, s):
 
 @rule(UPDATE, UserEditables.email)
 def update_user_email(user, target):
-    """Email is admin-only — even on the user's own profile.
+    """Platform administration only, even on the user's own profile.
 
-    Stricter than the whole-object User rule: no self-edit branch.
+    The rule cannot see the new address, so ``may_change_email`` cannot apply;
+    Gebruikersbeheer changes email through the user form, which applies it.
     """
-    return _has_change_perm(user, target)
+    return _has_change_perm(user, target) and is_staff_member(user)

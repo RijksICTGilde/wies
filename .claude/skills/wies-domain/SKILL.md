@@ -15,7 +15,9 @@ description: Wies project domain knowledge including Dutch government terminolog
 
 ## User Roles
 
-- **Beheerder** - Administrator (user/label management)
+- **Gebruikersbeheer** - User administration (users/labels); granted only by platform administration
+- **Opdrachtbeheer** - May edit/delete any assignment and see all history; granted only by platform administration
+- Platform administration (`STAFF_EMAILS`) is not a role; see `features/roles.md`
 - **Consultant** - View-only access
 - **BDM** - Business Development Manager (creates assignments)
 

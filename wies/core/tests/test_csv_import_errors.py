@@ -56,7 +56,7 @@ class UserCsvImportGracefulErrorTests(TestCase):
     uncaught exception (which surfaces as a 500)."""
 
     def setUp(self):
-        Group.objects.create(name="Beheerder")
+        Group.objects.create(name="Gebruikersbeheer")
         Group.objects.create(name="Consultant")
         Group.objects.create(name=BDM_GROUP_NAME)
 

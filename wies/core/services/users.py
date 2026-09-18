@@ -5,13 +5,19 @@ from io import StringIO
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import (
+    BDM_GROUP_NAME,
+    STAFF_GRANTED_GROUPS,
+    USER_ADMIN_GROUP_NAME,
+    may_change_email,
+    may_grant,
+)
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
 
@@ -62,6 +68,15 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
+def _apply_groups(user, groups, updater) -> list:
+    """Sets the user's roles, keeping the ``STAFF_GRANTED_GROUPS`` the updater
+    may not change. Returns the roles the user ends up with."""
+    new = {g for g in groups if may_grant(updater, g.name)}
+    new |= {g for g in user.groups.filter(name__in=STAFF_GRANTED_GROUPS) if not may_grant(updater, g.name)}
+    user.groups.set(new)
+    return sorted(new, key=lambda g: g.name)
+
+
 def create_user(
     creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
 ):
@@ -94,8 +109,7 @@ def create_user(
     if suborganization is not None:
         colleague.suborganization = suborganization
         colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
+    groups = _apply_groups(user, groups, creator)
 
     context = {
         "email": email,
@@ -137,6 +151,12 @@ def update_user(
     if other_user is not None:
         raise EmailNotAvailableError(email)
 
+    # Read the stored address: a ModelForm has already written the new one onto ``user``.
+    stored_email = User.objects.values_list("email", flat=True).get(pk=user.pk)
+    if not may_change_email(updater, stored_email, email):
+        msg = "Only platform administration may move a STAFF_EMAILS address"
+        raise PermissionDenied(msg)
+
     user.first_name = first_name
     user.last_name = last_name
     user.email = email
@@ -150,8 +170,7 @@ def update_user(
         label_names = [label.name for label in labels]
     colleague.suborganization = suborganization
     colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
+    groups = _apply_groups(user, groups, updater)
 
     context = {
         "first_name": first_name,
@@ -182,7 +201,8 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     - last_name (required)
     - email (required)
     - brand (optional, merk name - assigned as the colleague's merk; must already exist)
-    - Beheerder (optional, "y" or "n")
+    - Gebruikersbeheer (optional, "y" or "n"; only applied when the importer does
+      platform administration, see ``_apply_groups``)
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
 
@@ -250,7 +270,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 domains_str = ", ".join(allowed_domains)
                 row_errors.append(f"Row {row_num}: email '{email}' has invalid domain. Allowed: {domains_str}")
 
-        for group_name in ["Beheerder", "Consultant", "BDM"]:
+        for group_name in [USER_ADMIN_GROUP_NAME, "Consultant", "BDM"]:
             if group_name in row:
                 value = row[group_name].strip().lower()
                 if value not in {"y", "n", ""}:
@@ -270,7 +290,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         if row_errors:
             errors.extend(row_errors)
         else:
-            rows.append(row)
+            rows.append((row_num, row))
 
     if errors:
         return {
@@ -286,12 +306,12 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         with transaction.atomic():
             # Get all groups once
             groups_dict = {
-                "Beheerder": Group.objects.get(name="Beheerder"),
+                USER_ADMIN_GROUP_NAME: Group.objects.get(name=USER_ADMIN_GROUP_NAME),
                 "Consultant": Group.objects.get(name="Consultant"),
                 "BDM": Group.objects.get(name=BDM_GROUP_NAME),
             }
 
-            for row in rows:
+            for row_num, row in rows:
                 first_name = row["first_name"].strip()
                 last_name = row["last_name"].strip()
                 email = row["email"].strip()
@@ -306,7 +326,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     suborganization = suborg_mapping[brand_name]
 
                 groups_to_assign = []
-                for group_name in ["Beheerder", "Consultant", "BDM"]:
+                for group_name in [USER_ADMIN_GROUP_NAME, "Consultant", "BDM"]:
                     if row.get(group_name, "").strip().lower() == "y":
                         group = groups_dict.get(group_name)
                         if group:
@@ -318,7 +338,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     errors.append(f"User with email '{email}' already exists, skipped")
                     continue
 
-                create_user(
+                user = create_user(
                     creator,
                     first_name=first_name,
                     last_name=last_name,
@@ -328,6 +348,12 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     request=request,
                 )
                 users_created += 1
+                dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
+                if dropped:
+                    errors.append(
+                        f"Row {row_num}: {', '.join(sorted(dropped))} not applied, "
+                        "only platform administration may grant it"
+                    )
     except (DataError, IntegrityError) as e:
         logger.warning("User-CSV import failed with a data error", exc_info=e)
         return {

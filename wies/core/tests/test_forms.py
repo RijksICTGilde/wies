@@ -23,7 +23,7 @@ class NlddUserFormRenderingTest(TestCase):
         self.label_a = Label.objects.create(name="AI", category=self.category)
         self.label_b = Label.objects.create(name="ICT", category=self.category)
 
-        self.admin_group = Group.objects.create(name="Beheerder")
+        self.admin_group = Group.objects.create(name="Gebruikersbeheer")
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
@@ -193,7 +193,7 @@ class UserFormEmailDomainValidationTest(TestCase):
 
     def setUp(self):
         """Creates the role groups UserForm renders."""
-        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Gebruikersbeheer")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
@@ -304,7 +304,7 @@ class NlddFormMixinTest(TestCase):
     )
 
     def setUp(self):
-        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Gebruikersbeheer")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name=BDM_GROUP_NAME)
         self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})

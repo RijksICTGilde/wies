@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Label, LabelCategory
@@ -12,31 +12,50 @@ User = get_user_model()
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
-    def test_setup_roles_creates_beheerder_group(self):
-        """Test that setup_roles creates the Beheerder group"""
+    def test_setup_roles_creates_assignment_admin_group_without_permissions(self):
+        """Opdrachtbeheer's rights are all rule-based, and nobody is put in it."""
+        Group.objects.filter(name="Opdrachtbeheer").delete()
         setup_roles()
 
-        # Beheerder group should exist
-        assert Group.objects.filter(name="Beheerder").exists()
+        group = Group.objects.get(name="Opdrachtbeheer")
+        assert not group.permissions.exists()
+        assert not group.user_set.exists()
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_setup_roles_does_not_grant_assignment_admin_to_staff(self):
+        """setup_roles() runs on every start; a staff member who removed
+        Opdrachtbeheer from themselves must not get it back."""
+        User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
+
+        setup_roles()
+
+        assert not Group.objects.get(name="Opdrachtbeheer").user_set.exists()
+
+    def test_setup_roles_creates_user_admin_group(self):
+        """Test that setup_roles creates the Gebruikersbeheer group"""
+        setup_roles()
+
+        # Gebruikersbeheer group should exist
+        assert Group.objects.filter(name="Gebruikersbeheer").exists()
 
     def test_setup_roles_grants_user_permissions(self):
-        """Test that Beheerder group has all user management permissions"""
+        """Test that Gebruikersbeheer group has all user management permissions"""
         setup_roles()
 
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name="Gebruikersbeheer")
 
         # Check all expected permissions
         expected_permissions = ["view_user", "add_user", "delete_user", "change_user"]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Beheerder group missing {codename} permission"
+                f"Gebruikersbeheer group missing {codename} permission"
             )
 
     def test_setup_roles_grants_suborganization_permissions(self):
-        """Test that Beheerder group can manage suborganizations (merken)"""
+        """Test that Gebruikersbeheer group can manage suborganizations (merken)"""
         setup_roles()
 
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name="Gebruikersbeheer")
 
         expected_permissions = [
             "view_suborganization",
@@ -46,20 +65,20 @@ class RBACSetupTest(TestCase):
         ]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Beheerder group missing {codename} permission"
+                f"Gebruikersbeheer group missing {codename} permission"
             )
 
     def test_beheerder_group_user_can_access_views(self):
-        """Test that a user in Beheerder group can access all user management views"""
+        """Test that a user in Gebruikersbeheer group can access all user management views"""
         setup_roles()
 
-        # Create user and add to Beheerder group
+        # Create user and add to Gebruikersbeheer group
         admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
         )
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name="Gebruikersbeheer")
         admin_user.groups.add(admin_group)
 
         client = Client()

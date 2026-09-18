@@ -16,7 +16,7 @@ class UserFilterRenderTest(TestCase):
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
         self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.merk = Suborganization.objects.create(name="Merk A")
-        self.beheerder = Group.objects.create(name="Beheerder")
+        self.beheerder = Group.objects.create(name="Gebruikersbeheer")
         u = User.objects.create_user(email="c@rijksoverheid.nl", first_name="Cor", last_name="Consultant")
         u.groups.add(self.beheerder)
         Colleague.objects.create(
@@ -26,7 +26,7 @@ class UserFilterRenderTest(TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        assert 'text="Beheerder"' in html  # role tag in the row
+        assert 'text="Gebruikersbeheer"' in html  # role tag in the row
 
     def test_filter_sheet_renders_role_and_merk(self):
         # The sheet lives in the page itself: its #filter-form drives the search
@@ -35,7 +35,7 @@ class UserFilterRenderTest(TestCase):
         html = self.client.get(reverse("admin-users")).content.decode()
         assert "user-filter-sheet" in html
         assert 'id="filter-form"' in html
-        assert "Beheerder" in html  # role option
+        assert "Gebruikersbeheer" in html  # role option
         assert "Merk A" in html  # merk option
         assert 'name="rol"' in html
         assert 'name="merk"' in html

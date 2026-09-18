@@ -26,8 +26,10 @@ class EnsureInitialUserTest(TestCase):
         user = User.objects.get(email="admin@rijksoverheid.nl")
         assert user.first_name == "Admin"
         assert user.last_name == "User"
+        # Every group, including those a data migration created (Opdrachtbeheer).
         group_names = set(user.groups.values_list("name", flat=True))
-        assert group_names == {"Admins", "Editors"}
+        assert {"Admins", "Editors"} <= group_names
+        assert group_names == set(Group.objects.values_list("name", flat=True))
 
     @patch.dict(
         "os.environ",

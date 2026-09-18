@@ -11,6 +11,7 @@ from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
 from .models import Colleague, Label, LabelCategory, Suborganization
+from .roles import STAFF_GRANTED_GROUPS, may_change_email, may_grant
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -252,10 +253,20 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         if qs.exists():
             msg = "Er bestaat al een gebruiker met dit e-mailadres."
             raise ValidationError(msg)
+        if self.instance.pk and not may_change_email(self._editor, self.instance.email, email):
+            msg = "Alleen platformbeheer mag dit e-mailadres wijzigen."
+            raise ValidationError(msg)
         return email
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self._editor = editor
+
+        # The queryset is also what submitted ids are validated against, so this
+        # enforces the grant rule server-side, not only in the rendered form.
+        withheld = [name for name in STAFF_GRANTED_GROUPS if not may_grant(editor, name)]
+        if withheld:
+            self.fields["groups"].queryset = Group.objects.exclude(name__in=withheld)
 
         instance = kwargs.get("instance")
 

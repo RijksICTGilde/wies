@@ -20,7 +20,7 @@ class DataImportIntegrationTest(TestCase):
 
     def setUp(self):
         """Create necessary groups for CSV import tests"""
-        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Gebruikersbeheer")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
@@ -29,7 +29,7 @@ class DataImportIntegrationTest(TestCase):
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
 
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Gebruikersbeheer,Consultant,BDM
 John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n
 Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n
 Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""

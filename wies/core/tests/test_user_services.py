@@ -404,7 +404,7 @@ class CreateUsersFromCSVEmailDomainTest(TestCase):
 
     def setUp(self):
         """Create required groups for CSV import"""
-        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Gebruikersbeheer")
         Group.objects.get_or_create(name="Consultant")
         Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
