@@ -499,7 +499,10 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
 
     for cat_id, cat_labels in labels_by_cat_display.items():
         cat_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter=cat_id)
-        counts = Counter(lid for lid in cat_qs.values_list("labels__id", flat=True) if lid is not None)
+        # Re-query by id to get proper filter numbers
+        # cat_qs contains distinct and values_list re-uses the filter JOIN
+        cat_colleagues = Colleague.objects.filter(id__in=cat_qs.values_list("id", flat=True))
+        counts = Counter(lid for lid in cat_colleagues.values_list("labels__id", flat=True) if lid is not None)
         options = [{"value": "", "label": ""}]
         selected_values = []
         for label in cat_labels:
@@ -521,7 +524,10 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
 
     # Merk: only suborganisations that have at least one consultant.
     merk_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter="merk")
-    merk_counts = Counter(mid for mid in merk_qs.values_list("suborganization_id", flat=True) if mid is not None)
+    # Same re-query as above: A fresh queryset by id counts one row per colleague.
+    merk_colleagues = Colleague.objects.filter(id__in=merk_qs.values_list("id", flat=True))
+    merk_ids = merk_colleagues.values_list("suborganization_id", flat=True)
+    merk_counts = Counter(mid for mid in merk_ids if mid is not None)
     merk_options = [{"value": "", "label": ""}]
     merk_selected = []
     used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=CONSULTANT_GROUP).distinct()
