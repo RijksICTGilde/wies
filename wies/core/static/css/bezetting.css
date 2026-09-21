@@ -527,7 +527,7 @@
 /* Sits on the hatched zone, so it carries a background of its own to stay
    readable over the stripes. */
 .bezetting-free__label {
-  flex-shrink: 0;
+  flex-shrink: 1;
   position: relative;
   z-index: 1;
   padding: 0 var(--primitives-space-6);

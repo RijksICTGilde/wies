@@ -500,6 +500,7 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
     for cat_id, cat_labels in labels_by_cat_display.items():
         cat_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter=cat_id)
         # Re-query by id to get proper filter numbers
+        # cat_qs contains distinct and values_list re-uses the filter JOIN
         cat_colleagues = Colleague.objects.filter(id__in=cat_qs.values_list("id", flat=True))
         counts = Counter(lid for lid in cat_colleagues.values_list("labels__id", flat=True) if lid is not None)
         options = [{"value": "", "label": ""}]
