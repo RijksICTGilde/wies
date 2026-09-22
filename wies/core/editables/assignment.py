@@ -177,8 +177,9 @@ def visible_service_rows(assignment, request) -> list[dict]:
     ``historical`` with a label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
-    description and hours of their own role from the team list too, through the
-    same sheet as on the placement panel.
+    description of their own role from the team list too, through the same
+    sheet as on the placement panel. The hours are not theirs to keep: those
+    follow the assignment's edit rights, like the role itself.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)

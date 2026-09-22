@@ -142,21 +142,15 @@ def update_service_description(user, s):
     )
 
 
-@rule(UPDATE, ServiceEditables.hours_per_week)
-def update_service_hours_per_week(user, s):
-    """As the description: the consultant on this service keeps their own hours."""
-    return update_service_description(user, s)
-
-
 @rule(UPDATE, ContractPeriod)
 def update_contract_period(user, _period):
-    """Beheerder (rijksauth.change_user) or support staff: keeping contracts is
-    user administration, like the user sheet it also lives on.
+    """Beheerder (rijksauth.change_user): keeping contracts is user
+    administration and happens in the user sheet, behind the same permission.
 
     A BDM plans with the hours and reads them in the colleague panel; a
     consultant reads only their own, on the profile.
     """
-    return user.has_perm("rijksauth.change_user") or is_staff_member(user)
+    return user.has_perm("rijksauth.change_user")
 
 
 @rule(UPDATE, UserEditables.email)

@@ -43,9 +43,9 @@
     </nldd-container>
   {% endif %}
   {# Contract hours are for who plans with them (BM, beheerder, staff); a
-     consultant sees only their own, on the profile. The block carries buttons
-     only for beheerder and staff. The hours of a role on an aanvraag are
-     another matter and stay visible to everyone. #}
+     consultant sees only their own, on the profile. Keeping them happens in
+     the user sheet. The hours of a role on an aanvraag are another matter and
+     stay visible to everyone. #}
   {% if panel_data.can_view_contract %}
     <nldd-spacer size="24" direction="vertical"></nldd-spacer>
     {% include "parts/contract_periods_block.html" %}

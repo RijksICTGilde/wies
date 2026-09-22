@@ -453,7 +453,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "contract_block": _contract_block(colleague, "panel", request.user),
+        "contract_block": _contract_block(colleague, "panel"),
         # Who plans with the hours may read them; keeping them is beheer.
         "can_view_contract": is_bdm(request.user)
         or is_staff_member(request.user)
@@ -2189,7 +2189,7 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, "user", request.user) if colleague else None
+    contract_block = _contract_block(colleague, "user") if colleague else None
 
     if request.method == "GET":
         form = UserForm(instance=edited_user)
@@ -2553,36 +2553,23 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-_CONTRACT_SURFACES = ("profile", "user", "panel")
-
-
-def _contract_surface(request):
-    """Where the block sits. The URLs carry it, so a save renders the block back
-    in the shape of the page it came from."""
-    surface = request.GET.get("in")
-    return surface if surface in _CONTRACT_SURFACES else "panel"
-
-
-def _contract_block(colleague, surface, user):
+def _contract_block(colleague, surface):
     """Context for parts/contract_periods_block.html.
 
-    One block for three places: the own profile (h2 on a page), the user sheet
-    and the colleague panel (h3). Only who may keep the periods gets the
-    buttons; a consultant reads their own.
+    One block for three places: the own profile (h2 on a page), the colleague
+    panel and the user sheet (h3). Only the user sheet carries the buttons:
+    keeping periods is user administration, and one place to do it keeps the
+    profile and the panel free of exceptions per role.
     """
-    can_edit = has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user)
-    if surface != "profile":
-        empty_text = "Nog niet ingevuld. Bezetting toont dan niet hoeveel uur deze collega beschikbaar is."
-    elif can_edit:
-        empty_text = "Nog niet ingevuld. Business managers zien dan niet hoeveel uur je beschikbaar bent."
+    if surface == "profile":
+        empty_text = "Nog niet ingevuld. Een beheerder kan je contracturen invullen."
     else:
-        empty_text = "Nog niet ingevuld. Je business manager kan je contracturen invullen."
+        empty_text = "Nog niet ingevuld. Bezetting toont dan niet hoeveel uur deze collega beschikbaar is."
     return {
         "colleague": colleague,
         "heading_tag": "h2" if surface == "profile" else "h3",
-        "can_edit": can_edit,
-        "add_url": reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}",
-        "url_suffix": f"?in={surface}",
+        "can_edit": surface == "user",
+        "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
     }
 
@@ -2641,9 +2628,8 @@ def contract_period_add(request, colleague_public_id):
     period = ContractPeriod(colleague=colleague)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    surface = _contract_surface(request)
-    post_url = reverse("contract-period-add", args=[colleague.public_id]) + f"?in={surface}"
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, surface, request.user))
+    post_url = reverse("contract-period-add", args=[colleague.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user"))
 
 
 @login_required
@@ -2651,10 +2637,8 @@ def contract_period_edit(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    surface = _contract_surface(request)
-    post_url = reverse("contract-period-edit", args=[period.public_id]) + f"?in={surface}"
-    block = _contract_block(period.colleague, surface, request.user)
-    return _contract_period_sheet(request, period, post_url, block)
+    post_url = reverse("contract-period-edit", args=[period.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user"))
 
 
 @login_required
@@ -2665,7 +2649,6 @@ def contract_period_delete(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    surface = _contract_surface(request)
     if request.method != "POST":
         return render(
             request,
@@ -2678,14 +2661,14 @@ def contract_period_delete(request, public_id):
                 ),
                 "confirm_label": "Verwijder periode",
                 "cancel_label": "Behoud periode",
-                "form_post_url": reverse("contract-period-delete", args=[period.public_id]) + f"?in={surface}",
+                "form_post_url": reverse("contract-period-delete", args=[period.public_id]),
             },
         )
     colleague = period.colleague
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, surface, request.user)
+    block = _contract_block(colleague, "user")
     return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 
@@ -3378,7 +3361,7 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
-            "contract_block": _contract_block(colleague, "profile", request.user) if colleague else None,
+            "contract_block": _contract_block(colleague, "profile") if colleague else None,
             "panel_data": panel_data,
         },
     )
