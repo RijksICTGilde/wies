@@ -35,6 +35,12 @@ DEFAULT_SUBORGANIZATIONS = {
 }
 
 
+# The label category that tells the gilde a colleague belongs to ("ICT", "AI").
+# Bezetting and the user list pick it out by this name; the base dummy data seeds
+# it. A beheerder can rename the category in the label admin, and then both
+# places go quiet, so the name lives here once and the dummy-data test guards it.
+SUBGROEP_CATEGORY = "Subgroep"
+
 DEFAULT_LABELS = {
     "Expertise": {
         "color": "#B3D7EE",

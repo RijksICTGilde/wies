@@ -5,12 +5,18 @@ from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Colleague, Label, LabelCategory, Suborganization
+from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, LabelCategory, Suborganization
 
 User = get_user_model()
 
 
-class UserFilterRenderTest(TestCase):
+class UserFilterFixture:
+    """One admin, one merk and one beheerder-colleague, for the render tests below.
+
+    A plain mixin, not a TestCase: inheriting from a TestCase would make pytest
+    collect the parent's tests again under every child class.
+    """
+
     def setUp(self):
         self.client = Client()
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
@@ -23,6 +29,8 @@ class UserFilterRenderTest(TestCase):
             user=u, name="Cor Consultant", email="c@rijksoverheid.nl", source="wies", suborganization=self.merk
         )
 
+
+class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
@@ -135,6 +143,15 @@ class UserListSortTest(TestCase):
         assert 'name="order"' in html
         assert 'value="-last_name"' in html
 
+    def test_sort_links_drop_the_page_number(self):
+        # Sorting from a paged URL must start the new order at page 1: the lists
+        # page on "pagina", which the sort links have to drop along with "page".
+        html = self.client.get(reverse("admin-users") + "?pagina=1&zoek=an").content.decode()
+        control = html[html.index('id="sort-control"') :].split("</nldd-menu>")[0]
+        assert "pagina=" not in control
+        assert "zoek=an" in control
+        assert "order=-last_name" in control
+
     def test_tussenvoegsel_sorts_on_the_name_proper(self):
         # "de Wit" stands under the W, and case does not count.
         User.objects.create_user(email="w@rijksoverheid.nl", first_name="Piet", last_name="de Wit")
@@ -151,6 +168,22 @@ class UserListSortTest(TestCase):
         ]
         html = self.client.get(reverse("admin-users") + "?order=-last_name").content.decode()
         assert self._names_in_order(html, "Demir", "de Wit", "hendriks") == ["de Wit", "hendriks", "Demir"]
+
+    def test_leading_space_and_apostrophe_prefixes_do_not_escape_the_strip(self):
+        # A leading space (CSV import, OIDC sync), "'s" and the spaceless "d'"
+        # all fall away: these sort under the W, the G and the A.
+        User.objects.create_user(email="w@rijksoverheid.nl", first_name="Piet", last_name="  de Wit")
+        User.objects.create_user(email="g@rijksoverheid.nl", first_name="Ada", last_name="'s Gravesande")
+        User.objects.create_user(email="d@rijksoverheid.nl", first_name="Luc", last_name="d'Anjou")
+        html = self.client.get(reverse("admin-users")).content.decode()
+        assert self._names_in_order(html, "Admin", "Anjou", "Bakker", "Gravesande", "Jansen", "de Wit") == [
+            "Admin",
+            "Anjou",
+            "Bakker",
+            "Gravesande",
+            "Jansen",
+            "de Wit",
+        ]
 
     def test_order_by_first_name(self):
         html = self.client.get(reverse("admin-users") + "?order=first_name").content.decode()
@@ -177,11 +210,11 @@ class UserListSortTest(TestCase):
         assert 'id="sort-control" slot="end" priority="-2" hx-swap-oob="outerHTML"' in html
 
 
-class UserRowProfileTest(UserFilterRenderTest):
+class UserRowProfileTest(UserFilterFixture, TestCase):
     """Merk and subgroep are visible on the row itself (#672)."""
 
     def test_row_shows_merk_and_subgroep_after_email(self):
-        subgroep = LabelCategory.objects.create(name="Subgroep", color="#0066CC")
+        subgroep = LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#0066CC")
         expertise = LabelCategory.objects.create(name="Expertise", color="#00CC66")
         colleague = Colleague.objects.get(email="c@rijksoverheid.nl")
         colleague.labels.add(

@@ -6,6 +6,11 @@ independent of which backend endpoint a request hit.
 
 from urllib.parse import parse_qsl, urlencode, urlparse
 
+# The page number in every list URL (the views' ``page_kwarg``). Dropped from
+# any URL that changes what the list shows, since page 2 of the old order or
+# selection means nothing in the new one.
+PAGE_PARAM = "pagina"
+
 
 def current_page_path(request) -> str:
     """Return the path of the page the user is currently viewing.
@@ -33,7 +38,7 @@ def url_with_param(request, name: str, value: str) -> str:
     """
     params = request.GET.copy()
     params[name] = value
-    params.pop("page", None)
+    params.pop(PAGE_PARAM, None)
     query = urlencode(params, doseq=True)
     path = current_page_path(request)
     return f"{path}?{query}" if query else path
@@ -48,7 +53,7 @@ def url_without_param(request, name: str) -> str:
     """
     params = request.GET.copy()
     params.pop(name, None)
-    params.pop("page", None)
+    params.pop(PAGE_PARAM, None)
     query = urlencode(params, doseq=True)
     path = current_page_path(request)
     return f"{path}?{query}" if query else path
@@ -65,6 +70,6 @@ def current_page_url_on(request, path: str) -> str:
     parsed = urlparse(request.headers.get("HX-Current-URL", ""))
     if parsed.path != path:
         return path
-    params = [(k, v) for k, v in parse_qsl(parsed.query) if k not in ("page", "pagina")]
+    params = [(k, v) for k, v in parse_qsl(parsed.query) if k != PAGE_PARAM]
     query = urlencode(params)
     return f"{path}?{query}" if query else path

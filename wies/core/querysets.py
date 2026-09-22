@@ -6,7 +6,7 @@ that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
 from django.db.models import Case, Count, F, Func, Prefetch, Value, When
-from django.db.models.functions import Lower
+from django.db.models.functions import Lower, Trim
 
 from wies.core.models import Label
 
@@ -71,15 +71,20 @@ def annotate_suborganization_usage_counts(queryset):
 
 
 # Dutch surnames sort on the name proper: "de Wit" under the W, not the D.
+# "d'" is written onto the name ("d'Anjou"), so it takes no space after it.
 TUSSENVOEGSELS = (
-    r"^((van|von|de|den|der|des|het|'t|ten|ter|te|op|in|aan|bij|uit|onder|over|voor"
-    r"|la|le|du|da|di|dos|del|della|el|al|d')\s+)+"
+    r"^((van|von|de|den|der|des|het|'t|'s|ten|ter|te|op|in|aan|bij|uit|onder|over|voor"
+    r"|la|le|du|da|di|dos|del|della|el|al)\s+|d'\s*)+"
 )
 
 
 def annotate_sort_names(queryset):
-    """Adds case-insensitive ``sort_last_name`` (tussenvoegsel skipped) and ``sort_first_name``."""
+    """Adds case-insensitive ``sort_last_name`` (tussenvoegsel skipped) and ``sort_first_name``.
+
+    Trimmed first: the form strips surrounding spaces, the CSV import and the
+    OIDC sync do not, and a leading space would sort the name above every letter.
+    """
     return queryset.annotate(
-        sort_last_name=Func(Lower("last_name"), Value(TUSSENVOEGSELS), Value(""), function="regexp_replace"),
+        sort_last_name=Func(Trim(Lower("last_name")), Value(TUSSENVOEGSELS), Value(""), function="regexp_replace"),
         sort_first_name=Lower("first_name"),
     )

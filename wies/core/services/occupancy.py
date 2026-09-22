@@ -19,7 +19,7 @@ from datetime import date, timedelta
 from django.db.models import Q
 from django.db.models.functions import Lower
 
-from wies.core.models import Colleague, Label, Placement, Suborganization
+from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, Placement, Suborganization
 from wies.core.querysets import annotate_placement_dates
 
 # Timeline horizon and "pressing" threshold. Four months ahead, not six: the far
@@ -43,13 +43,6 @@ NARROW_BAR_PCT = 8
 
 # Only colleagues in this role appear on the Bezetting page.
 CONSULTANT_GROUP = "Consultant"
-
-# The label category whose labels ride along on a row as chips. Its labels name
-# the gilde a colleague belongs to ("ICT", "AI"), which is the
-# subdivision this page is read by; the other categories stay in the filter sheet
-# only. Created by assign_random_labels_to_colleagues in demo data, and a
-# deliberate post-release action in production.
-GILDE_CATEGORY = "Subgroep"
 
 BUCKET_BENCH = "bench"  # no active placement today
 BUCKET_FULL = "full"  # at least one active placement today
@@ -361,7 +354,7 @@ def colleague_occupancy(
                 gilde_labels=[
                     (label.name, label.category.nldd_color)
                     for label in colleague.labels.all()
-                    if label.category.name == GILDE_CATEGORY
+                    if label.category.name == SUBGROEP_CATEGORY
                 ],
                 bucket=bucket,
                 ends_soon=ends_soon,

@@ -61,6 +61,7 @@ from .forms import (
     UserForm,
 )
 from .models import (
+    SUBGROEP_CATEGORY,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -165,6 +166,21 @@ def _url_drop_params(path, query, names, **overrides):
 def _build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
+
+
+def _sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
+    """The four keys parts/sort_control.html reads, built once for every list.
+
+    ``options`` are (value, label) pairs in menu order; ``active_order`` is ""
+    for the default, which has no ``?order=`` value of its own.
+    """
+    labels = dict(options)
+    return {
+        "active_order": active_order,
+        "sort_options": [{"value": value, "label": label} for value, label in options],
+        "default_sort_label": default_label,
+        "active_sort_label": labels.get(active_order, default_label),
+    }
 
 
 def _build_close_url(request):
@@ -1370,14 +1386,13 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         order_param = self.request.GET.get("order")
         active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
-        context["active_order"] = active_order
-        # Value and label travel together: keeping the labels in the template
-        # meant maintaining the same list in two places.
-        context["sort_options"] = [
-            {"value": value, "label": self.SORT_LABELS[value]} for value in self.SORT_OPTIONS[active_view]
-        ]
-        context["default_sort_label"] = self.DEFAULT_SORT_LABEL[active_view]
-        context["active_sort_label"] = self.SORT_LABELS.get(active_order) or self.DEFAULT_SORT_LABEL[active_view]
+        context.update(
+            _sort_control_context(
+                active_order,
+                [(value, self.SORT_LABELS[value]) for value in self.SORT_OPTIONS[active_view]],
+                self.DEFAULT_SORT_LABEL[active_view],
+            )
+        )
 
         context["filter_target_url"] = reverse("home")
         context["search_filter"] = self.request.GET.get("zoek")
@@ -1832,8 +1847,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
         "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
     }
-    # Label categories shown on the row next to the merk; names as managed in the label admin.
-    ROW_LABEL_CATEGORIES = ("Subgroep",)
+    # Label categories shown on the row next to the merk, by name (see SUBGROEP_CATEGORY).
+    ROW_LABEL_CATEGORIES = (SUBGROEP_CATEGORY,)
 
     @cached_property
     def active_order(self) -> str:
@@ -2042,11 +2057,12 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         _finalize_filter_groups(context["filter_groups"])
 
         context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
-        context["active_order"] = self.active_order
-        context["sort_options"] = [{"value": value, "label": label} for value, (label, _) in self.SORT_OPTIONS.items()]
-        context["default_sort_label"] = self.DEFAULT_SORT_LABEL
-        context["active_sort_label"] = (
-            self.SORT_OPTIONS[self.active_order][0] if self.active_order else self.DEFAULT_SORT_LABEL
+        context.update(
+            _sort_control_context(
+                self.active_order,
+                [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
+                self.DEFAULT_SORT_LABEL,
+            )
         )
 
         context["primary_button"] = {
