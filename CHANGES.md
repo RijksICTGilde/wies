@@ -11,6 +11,8 @@ This files lists the changes during the lifetime of this project.
 - 660: Bezetting no longer has the Business management sidebar: with one page in the section it only cost width, and on a narrow screen it disappeared without a way to open it
 - 660: the Bezetting filter row is a toolbar: the status cards give way on a narrow window while the same statuses stay reachable in the filter sheet and as chips (the "volledig ingezet" card goes, that status is sheet-only now), the Filters button and a new "Opdracht invoeren" action move into an overflow menu when they do not fit, and a filter change is announced to screen readers
 - 660: Bezetting shows per consultant, on a second line under the name, the role and how many contract hours are still free (or by how much the roles exceed the contract), with a new "deels beschikbaar" status card for people whose roles do not fill their contract; without hours recorded a placed consultant still counts as fully placed
+- 667: the "dagen vrij" label on a short bench bar in the Bezetting timeline no longer has its leading digit cut off
+- 667: the Bezetting filter options now show the correct number of matching consultants instead of always showing 1
 
 ## 2026-09-13
 

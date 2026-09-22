@@ -10,13 +10,16 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, Suborganization
+from wies.core.public_id import resolve_facet
 from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
     GILDE_CATEGORY,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
+    bezetting_filter_groups,
     colleague_occupancy,
+    labels_by_category,
     month_ticks,
     occupancy_summary,
     today_marker_pct,
@@ -508,6 +511,56 @@ class OccupancyLabelFilterTest(TestCase):
     def test_and_between_categories(self):
         # Thema=AI AND Niveau=Senior -> only Aïsha (Cora has AI but no Senior).
         assert self._ids({self.thema.id: [self.ai.id], self.niveau.id: [self.senior.id]}) == {self.a.id}
+
+
+class BezettingFilterGroupCountTest(TestCase):
+    """The cross-filtered counts on each filter option (issue #666: every count
+    collapsed to 1 because the counting queryset still carried the filter JOIN +
+    distinct that apply_colleague_filters leaves behind)."""
+
+    def setUp(self):
+        setup_roles()
+        self.thema = LabelCategory.objects.create(name="Thema", color="#0066CC")
+        self.niveau = LabelCategory.objects.create(name="Niveau", color="#00AA00")
+        self.ai = Label.objects.create(name="AI", category=self.thema)
+        self.data = Label.objects.create(name="Data", category=self.thema)
+        self.senior = Label.objects.create(name="Senior", category=self.niveau)
+
+        self.merk_a = Suborganization.objects.create(name="Merk A")
+        self.merk_b = Suborganization.objects.create(name="Merk B")
+
+        # Three AI-labelled consultants, all Senior, so an AND filter on Niveau is
+        # active while we count the Thema group.
+        for i in range(3):
+            c = _consultant(f"AI-{i}", f"ai{i}@x.nl", suborganization=self.merk_a)
+            c.labels.add(self.ai, self.senior)
+        # One Data consultant, also Senior, in the other merk.
+        d = _consultant("Data-0", "data0@x.nl", suborganization=self.merk_b)
+        d.labels.add(self.data, self.senior)
+
+    def _groups(self, merk_tokens=None, label_tokens=None):
+        merk = resolve_facet(Suborganization, merk_tokens or [])
+        labels = resolve_facet(Label, label_tokens or [])
+        return bezetting_filter_groups(merk, labels, labels_by_category(labels.ids))
+
+    def _count(self, groups, group_label, public_id):
+        group = next(g for g in groups if g["label"] == group_label)
+        option = next(o for o in group["options"] if o.get("value") == str(public_id))
+        return option["count"]
+
+    def test_label_counts_reflect_all_matching_consultants(self):
+        # Filtering on Niveau=Senior, the Thema group excludes its own filter and
+        # must count all three AI consultants -- not collapse to 1.
+        groups = self._groups(label_tokens=[str(self.senior.public_id)])
+        assert self._count(groups, "Thema", self.ai.public_id) == 3
+        assert self._count(groups, "Thema", self.data.public_id) == 1
+
+    def test_merk_counts_reflect_all_matching_consultants(self):
+        # With a label filter active, the merk group excludes its own filter and
+        # must count all three consultants in Merk A.
+        groups = self._groups(label_tokens=[str(self.senior.public_id)])
+        assert self._count(groups, "Merk", self.merk_a.public_id) == 3
+        assert self._count(groups, "Merk", self.merk_b.public_id) == 1
 
 
 class BezettingLabelFilterViewTest(TestCase):

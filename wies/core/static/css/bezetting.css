@@ -514,7 +514,7 @@
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  overflow: hidden;
+  overflow: visible;
   pointer-events: none;
 }
 
@@ -532,6 +532,9 @@
 /* Sits on the hatched zone, so it carries a background of its own to stay
    readable over the stripes. */
 .bezetting-free__label {
+  flex-shrink: 1;
+  position: relative;
+  z-index: 1;
   padding: 0 var(--primitives-space-6);
   background: var(--semantics-surfaces-base-background-color);
   border-radius: var(--primitives-corner-radius-xs, 4px);
