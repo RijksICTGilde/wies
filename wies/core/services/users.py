@@ -11,7 +11,8 @@ from django.db import DataError, IntegrityError, transaction
 from django.db.models import Q
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import Colleague, Suborganization
+from wies.core.models import Colleague, Placement, Suborganization
+from wies.core.querysets import annotate_placement_dates
 from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
@@ -367,3 +368,31 @@ def close_contract_periods(colleague, day):
     later = list(colleague.contract_periods.filter(start_date__gt=day))
     colleague.contract_periods.filter(pk__in=[p.pk for p in later]).delete()
     return running, later
+
+
+def close_placements(colleague, day):
+    """Ends the colleague's placements on ``day``: a running one stops there and
+    one still to start goes, like the contract periods.
+
+    Without this the placements run on after the person left, and Bezetting
+    (which no longer lists them) and any forecast built on the hours count work
+    nobody does. A placement that follows the opdracht's period gets its own
+    period first, with the start it had, so the opdracht and the team mates on
+    it keep theirs. One that ended before ``day`` is left as it was.
+
+    Returns the placements that now end on ``day`` and the ones that were dropped.
+    """
+    placements = annotate_placement_dates(colleague.placements.select_related("service__assignment", "service__skill"))
+    ended, dropped = [], []
+    for placement in placements:
+        start, end = placement.actual_start_date, placement.actual_end_date
+        if start is not None and start > day:
+            dropped.append(placement)
+        elif end is None or end > day:
+            placement.period_source = Placement.PLACEMENT
+            placement.specific_start_date = start
+            placement.specific_end_date = day
+            placement.save(update_fields=["period_source", "specific_start_date", "specific_end_date"])
+            ended.append(placement)
+    Placement.objects.filter(pk__in=[p.pk for p in dropped]).delete()
+    return ended, dropped

@@ -9,6 +9,24 @@
   {# Room between the running text and the field, and between the field and
      the buttons: the dialog stacks its slot content without any. #}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# What the chosen day does, measured against today (see _colleague_delete_overview). #}
+  {% if delete_overview and (delete_overview.ends or delete_overview.lapses) %}
+    <nldd-rich-text>
+    {% if delete_overview.ends %}
+      <p>Eindigt op de gekozen dag:</p>
+      <ul>
+      {% for item in delete_overview.ends %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    {% if delete_overview.lapses %}
+      <p>Vervalt:</p>
+      <ul>
+      {% for item in delete_overview.lapses %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    {% endif %}
+    </nldd-rich-text>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% endif %}
   <nldd-form>
   <form id="userDeleteForm"
         method="post"

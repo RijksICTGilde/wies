@@ -4,13 +4,12 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 660: form fields no longer show placeholder text such as "Toevoegen…" or "Kies of typ om te zoeken…"; the label above the field says what goes in it
-- 660: contract hours per week are recorded as periods with a start and end date, kept by a beheerder on the user sheet, so a change of hours keeps the history; a business manager and a beheerder read them in the colleague panel, a consultant sees only their own, on the profile
-- 660: deleting a user asks for the day they left; the colleague's contract period ends on that day and later ones go, while the colleague profile and its placements stay
-- 660: a role on an opdracht (aanvraag or placed consultant) records its hours per week (a new role starts at 36), kept by whoever edits the opdracht; the placed consultant reads them in the team list, the Aanvragen cards, the placement panel and the Bezetting bars
-- 660: Bezetting no longer has the Business management sidebar: with one page in the section it only cost width, and on a narrow screen it disappeared without a way to open it
-- 660: the Bezetting filter row is a toolbar: the status cards give way on a narrow window while the same statuses stay reachable in the filter sheet and as chips (the "volledig ingezet" card goes, that status is sheet-only now), the Filters button and a new "Opdracht invoeren" action move into an overflow menu when they do not fit, and a filter change is announced to screen readers
-- 660: Bezetting shows per consultant, on a second line under the name, the role and how many contract hours are still free (or by how much the roles exceed the contract), with a new "deels beschikbaar" status card for people whose roles do not fill their contract; without hours recorded a placed consultant still counts as fully placed
+- 660: (migration) contract hours per colleague as periods with a start and end date, kept by a beheerder on the user sheet; the colleague panel shows the running and coming ones
+- 660: hours per week on a role, visible to business managers, beheerders and the placed consultant, on an open aanvraag to everyone; no history is kept
+- 660: Bezetting shows per consultant the role and the free contract hours, with a "deels beschikbaar" status
+- 660: deleting a user asks for the day they left; the contract and the placements end on that day and the dialog lists what changes
+- 660: the Bezetting filter row is a toolbar with an "Opdracht invoeren" action; the Business management sidebar is gone
+- 660: form fields no longer show placeholder text; the label says what goes in
 - 667: the "dagen vrij" label on a short bench bar in the Bezetting timeline no longer has its leading digit cut off
 - 667: the Bezetting filter options now show the correct number of matching consultants instead of always showing 1
 

@@ -85,7 +85,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import is_bdm, is_staff_member
+from .roles import can_view_role_hours, is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -123,6 +123,7 @@ from .services.placements import (
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import (
     close_contract_periods,
+    close_placements,
     create_user,
     create_users_from_csv,
     is_allowed_email_domain,
@@ -525,6 +526,7 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "past_assignments": [a for a in other_assignments if a["historical"]],
         "can_edit_period": bool(placement_edit_specs(placement, request.user, only="period")),
         "can_edit_role": bool(placement_edit_specs(placement, request.user, only="skill")),
+        "show_hours": can_view_role_hours(request.user, placement),
         "edit_panel_url": _build_panel_url(request, plaatsing=placement.public_id, bewerken=1),
     }
 
@@ -2243,17 +2245,48 @@ def user_edit(request, public_id):
     return HttpResponse(status=405)
 
 
-def _colleague_delete_note(colleague):
-    """What deleting the user leaves behind, for the confirm dialog: the colleague
-    stays with their placements, and their contract ends on the chosen day."""
+def _placement_label(placement) -> str:
+    service = placement.service
+    skill = service.skill.name if service.skill else "rol"
+    return f"{skill} op {service.assignment.name}"
+
+
+def _colleague_delete_overview(colleague, today) -> dict | None:
+    """What ends and what lapses when the user goes, for the confirm dialog.
+
+    Measured against today: the dialog cannot know the day the beheerder will
+    pick, so it lists what runs today (ends on that day) and what is still to
+    start (lapses). The colleague profile itself stays, with this history.
+    """
     if colleague is None:
-        return ""
-    note = " Het collegaprofiel en de plaatsingen op opdrachten blijven bestaan."
-    if colleague.contract_periods.exists():
-        # In general terms: with a backdated day an earlier period may be the
-        # one that ends, and later ones go, so naming today's hours would lie.
-        return note + " Het contract eindigt op de dag hieronder."
-    return note
+        return None
+    periods = colleague.contract_periods.all()
+    placements = annotate_placement_dates(colleague.placements.select_related("service__assignment", "service__skill"))
+    ends, lapses = [], []
+    for period in periods:
+        if period.start_date > today:
+            lapses.append(
+                f"Contract vanaf {date_format(period.start_date, 'j b Y')}: {period.hours_per_week} uur per week"
+            )
+        elif period.end_date is None or period.end_date >= today:
+            ends.append(f"Contract: {period.hours_per_week} uur per week")
+    for placement in placements:
+        start, end = placement.actual_start_date, placement.actual_end_date
+        if start is not None and start > today:
+            lapses.append(f"Plaatsing vanaf {date_format(start, 'j b Y')}: {_placement_label(placement)}")
+        elif end is None or end >= today:
+            ends.append(f"Plaatsing: {_placement_label(placement)}")
+    return {"ends": ends, "lapses": lapses}
+
+
+def _placement_snapshot(placement) -> dict:
+    return {
+        "assignment": placement.service.assignment.name,
+        "assignment_id": placement.service.assignment_id,
+        "skill": placement.service.skill.name if placement.service.skill else None,
+        "start_date": placement.start_date.isoformat() if placement.start_date else None,
+        "end_date": placement.end_date.isoformat() if placement.end_date else None,
+    }
 
 
 @permission_required("rijksauth.delete_user", raise_exception=True)
@@ -2271,8 +2304,10 @@ def user_delete(request, public_id):
                 "content": form,
                 "dialog_supporting": (
                     f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Dit is niet terug te draaien." + _colleague_delete_note(colleague)
+                    "Dit is niet terug te draaien."
+                    + (" Het collegaprofiel blijft bestaan, met de geschiedenis van opdrachten." if colleague else "")
                 ),
+                "delete_overview": _colleague_delete_overview(colleague, today),
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
             },
         )
@@ -2284,9 +2319,9 @@ def user_delete(request, public_id):
         if form is not None and not form.is_valid():
             return render_modal(form)
         label_names = [label.name for label in colleague.labels.all()] if colleague else []
-        # The colleague outlives the user (SET_NULL) with their placements, and
-        # drops off Bezetting with the user. The contract ends here so the
-        # colleague panel and the history say when the hours stopped.
+        # The colleague outlives the user (SET_NULL) and drops off Bezetting with
+        # the user. The contract and the placements end here so the colleague
+        # panel, the opdrachten and the history say when the work stopped.
         # Capture the int PK before delete() nulls it; Event.object_id keeps
         # referencing the internal id, not the public_id.
         user_pk = user.id
@@ -2295,6 +2330,7 @@ def user_delete(request, public_id):
         with transaction.atomic():
             left_on = form.cleaned_data["left_on"] if colleague else None
             ended, dropped = close_contract_periods(colleague, left_on) if left_on else (None, [])
+            placements_ended, placements_dropped = close_placements(colleague, left_on) if left_on else ([], [])
             context = {
                 "email": user.email,
                 "first_name": user.first_name,
@@ -2304,6 +2340,8 @@ def user_delete(request, public_id):
                 "left_on": left_on.isoformat() if left_on else None,
                 "contract_ended": _contract_period_snapshot(ended) if ended else None,
                 "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+                "placements_ended": [_placement_snapshot(p) for p in placements_ended],
+                "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
             }
             user.delete()
             create_event(
@@ -2556,18 +2594,30 @@ def _own_colleague_or_404(request):
 def _contract_block(colleague, surface):
     """Context for parts/contract_periods_block.html.
 
-    One block for three places: the own profile (h2 on a page), the colleague
-    panel and the user sheet (h3). Only the user sheet carries the buttons:
-    keeping periods is user administration, and one place to do it keeps the
-    profile and the panel free of exceptions per role.
+    One block for two places: the colleague panel (read-only, for who plans
+    with the hours) and the user sheet, which carries the buttons: keeping
+    periods is user administration. A consultant does not see their own
+    contract hours in Wies; that is a matter for them and their manager.
+
+    The panel answers "how many hours now, and soon": it lists the running
+    period and the ones still to start. The sheet keeps the whole history,
+    since that is where it is kept.
     """
-    if surface == "profile":
-        empty_text = "Nog niet ingevuld. Een beheerder kan je contracturen invullen."
+    periods = colleague.contract_periods.all()
+    if surface == "panel":
+        today = timezone.now().date()
+        periods = periods.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+    # exists(), not bool(): the add/edit sheet builds this block before it saves
+    # and renders it after, so the queryset must stay unevaluated until then.
+    if periods.exists():
+        empty_text = ""
+    elif surface == "panel" and colleague.contract_periods.exists():
+        empty_text = "Geen lopend contract."
     else:
-        empty_text = "Nog niet ingevuld. Bezetting toont dan niet hoeveel uur deze collega beschikbaar is."
+        empty_text = "Niet ingevuld. De overzichten voor business managers rekenen dan zonder deze uren."
     return {
         "colleague": colleague,
-        "heading_tag": "h2" if surface == "profile" else "h3",
+        "periods": periods,
         "can_edit": surface == "user",
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
@@ -3361,7 +3411,6 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
-            "contract_block": _contract_block(colleague, "profile") if colleague else None,
             "panel_data": panel_data,
         },
     )

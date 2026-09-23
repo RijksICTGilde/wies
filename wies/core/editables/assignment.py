@@ -18,7 +18,7 @@ from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
+from wies.core.roles import BDM_GROUP_NAME, can_view_role_hours, is_bdm_or_staff
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
@@ -180,6 +180,9 @@ def visible_service_rows(assignment, request) -> list[dict]:
     description of their own role from the team list too, through the same
     sheet as on the placement panel. The hours are not theirs to keep: those
     follow the assignment's edit rights, like the role itself.
+
+    ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
+    aanvraag row shows them to everyone.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
@@ -197,6 +200,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             and placement.colleague_id == viewer.id
             and has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
         )
+        row["show_hours"] = can_view_role_hours(request.user, placement)
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],
@@ -253,7 +257,8 @@ def _service_audit_row(row: dict) -> dict:
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
         "description": row["description"] or "",
-        "hours_per_week": row.get("hours_per_week"),
+        # No hours_per_week: no history is kept of a role's hours (agreed with
+        # Patrick, 13 July 2026), so an hours-only edit leaves no timeline entry.
         # Included so a period-only edit registers as a change (#393).
         "has_custom_period": row["has_custom_period"],
         "start_date": _fmt_date(row["placement_start_date"]),
@@ -282,7 +287,6 @@ def placement_audit_row(placement) -> dict:
             "skill_name": service.skill.name if service.skill else "",
             "colleague": placement.colleague,
             "description": service.description,
-            "hours_per_week": service.hours_per_week,
             "has_custom_period": placement.period_source != Placement.PLACEMENT,
             "placement_start_date": placement.start_date,
             "placement_end_date": placement.end_date,
@@ -397,14 +401,6 @@ def _services_render_change(change: dict) -> dict:
     new_period = _period_label(new)
     if old_period != new_period:
         return {"text": f"de periode van {new_label} van {old_period} naar {new_period} gewijzigd"}
-    old_hours = old.get("hours_per_week")
-    new_hours = new.get("hours_per_week")
-    if old_hours != new_hours:
-        if old_hours is None:
-            return {"text": f"de uren van {new_label} op {new_hours} per week gezet"}
-        if new_hours is None:
-            return {"text": f"de uren van {new_label} ({old_hours} per week) verwijderd"}
-        return {"text": f"de uren van {new_label} van {old_hours} naar {new_hours} per week gewijzigd"}
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:

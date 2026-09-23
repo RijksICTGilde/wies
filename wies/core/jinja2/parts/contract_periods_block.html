@@ -1,22 +1,19 @@
-{# Contract periods of one colleague: read-only on the own profile and in the
-   colleague panel, with buttons in the user sheet. Every action opens in the
-   shared mount (the add/edit sheet, the delete confirmation) and swaps this
-   block back in afterwards, so the sheet stays as it is. #}
-{# The id carries the colleague: the own profile can show a colleague panel
-   beside its own block, and an out-of-band swap replaces every match. #}
+{# Contract periods of one colleague: read-only in the colleague panel, with
+   buttons in the user sheet. Every action opens in the shared mount (the
+   add/edit sheet, the delete confirmation) and swaps this block back in
+   afterwards, so the sheet stays as it is. #}
+{# The id carries the colleague: an out-of-band swap replaces every match, and
+   the panel and the sheet may show different colleagues. #}
 <div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"
      {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}>
   <nldd-title size="5">
-  {% if contract_block.heading_tag == "h2" %}
-    <h2>Contracturen</h2>
-  {% else %}
-    <h3>Contracturen</h3>
-  {% endif %}
+  <h3>Contracturen</h3>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-  {% set periods = contract_block.colleague.contract_periods.all() %}
+  {% set periods = contract_block.periods %}
   {% if periods %}
-    {# Newest first, as the model orders them; a running period has no end. #}
+    {# Newest first, as the model orders them; a running period has no end. The
+       panel gets only the running and coming periods, the sheet all of them. #}
     <nldd-list dividers="always" accessible-label="Contractperioden">
     {% for period in periods %}
       <nldd-list-item size="sm">

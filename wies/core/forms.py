@@ -303,18 +303,23 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
 
 class UserDeleteForm(NlddFormMixin, forms.Form):
-    """Asked when deleting a user with a colleague profile: the day the contract ends.
+    """Asked when deleting a user with a colleague profile: the day the contract
+    and the placements end.
 
-    Required only while there are contract periods to end; without them the
-    day is just recorded with the deletion.
+    Required only while there is something to end; without contract periods
+    and placements the day is just recorded with the deletion.
     """
 
-    left_on = forms.DateField(label="Uit dienst per", help_text="Perioden die na deze dag beginnen vervallen.")
+    left_on = forms.DateField(
+        label="Uit dienst per",
+        help_text="Het lopende contract en de lopende plaatsingen eindigen op deze dag. Wat later begint, vervalt.",
+    )
 
     def __init__(self, *args, colleague=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.periods = colleague.contract_periods.all() if colleague else ContractPeriod.objects.none()
-        if not self.periods.exists():
+        has_placements = colleague is not None and colleague.placements.exists()
+        if not self.periods.exists() and not has_placements:
             self.fields["left_on"].required = False
             self.fields["left_on"].help_text = "Wordt vastgelegd bij de verwijdering."
 

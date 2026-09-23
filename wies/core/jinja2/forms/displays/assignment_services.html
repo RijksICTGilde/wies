@@ -23,7 +23,8 @@ Rows are not clickable: every action runs through the row menu in the last cell.
         {{ row.colleague.name }}
         {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
       </span>
-      {% if pl.start_date or pl.end_date or row.hours_per_week %}
+      {% set hours = row.hours_per_week if row.show_hours else none %}
+      {% if pl.start_date or pl.end_date or hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
           {% if pl.start_date and pl.end_date %}
             {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
@@ -32,7 +33,7 @@ Rows are not clickable: every action runs through the row menu in the last cell.
           {% elif pl.end_date %}
             t/m {{ pl.end_date|datum_nl }}
           {% endif %}
-          {% if row.hours_per_week %}<span>{{ row.hours_per_week }} uur</span>{% endif %}
+          {% if hours %}<span>{{ hours }} uur</span>{% endif %}
           {# A visible non-active row always carries both label and note (see
              evaluate_placement_visibility). #}
           {% if row.period_label %}

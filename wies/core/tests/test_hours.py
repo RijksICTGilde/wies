@@ -288,7 +288,7 @@ class BezettingPartialStatusViewTest(TestCase):
 
 
 class ProfileContractPeriodTest(TestCase):
-    """Everyone reads their own periods on the profile; a beheerder keeps them in the user sheet."""
+    """Contract hours are not on the profile, for no role; a beheerder keeps them in the user sheet."""
 
     def setUp(self):
         setup_roles()
@@ -305,16 +305,14 @@ class ProfileContractPeriodTest(TestCase):
     def _make_beheerder(self):
         self.user.groups.add(Group.objects.get(name="Beheerder"))
 
-    def test_consultant_sees_own_periods_without_buttons(self):
+    def test_profile_shows_no_contract_hours_to_any_role(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        body = self.client.get(reverse("user-profile")).content.decode()
-        assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
-
-    def test_consultant_without_periods_is_pointed_to_the_beheerder(self):
-        body = self.client.get(reverse("user-profile")).content.decode()
-        assert "Een beheerder kan je contracturen invullen" in body
+        for group in (None, "Business Development Manager", "Beheerder"):
+            if group:
+                self.user.groups.add(Group.objects.get(name=group))
+            body = self.client.get(reverse("user-profile")).content.decode()
+            assert "Contracturen" not in body, group
+            assert "36 uur" not in body, group
 
     def test_consultant_may_not_keep_periods(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
@@ -326,22 +324,6 @@ class ProfileContractPeriodTest(TestCase):
         assert self.client.get(reverse("contract-period-edit", args=[period.public_id])).status_code == 403
         assert self.client.post(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
         assert ContractPeriod.objects.count() == 1
-
-    def test_beheerder_profile_is_read_only_too(self):
-        self._make_beheerder()
-        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        body = self.client.get(reverse("user-profile")).content.decode()
-        assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
-
-    def test_a_bdm_reads_their_own_periods_but_does_not_keep_them(self):
-        self.user.groups.add(Group.objects.get(name="Business Development Manager"))
-        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        body = self.client.get(reverse("user-profile")).content.decode()
-        assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert self.client.get(self.add_url).status_code == 403
 
     def test_colleague_panel_keeps_contract_hours_from_consultants(self):
         """Contract hours are for who plans with them; the hours of a role on an
@@ -366,6 +348,41 @@ class ColleaguePanelContractPeriodTest(TestCase):
         self.admin.groups.add(Group.objects.get(name="Beheerder"))
         self.client.force_login(self.admin)
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
+
+    def test_panel_lists_only_the_running_and_coming_periods(self):
+        """The panel answers "how many hours now, and soon"; the sheet keeps the history."""
+        ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=24,
+            start_date=self.today - timedelta(days=400),
+            end_date=self.today - timedelta(days=101),
+        )
+        ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=36,
+            start_date=self.today - timedelta(days=100),
+            end_date=self.today + timedelta(days=30),
+        )
+        ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=32, start_date=self.today + timedelta(days=31)
+        )
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        assert "36 uur" in panel
+        assert "32 uur" in panel
+        assert "24 uur" not in panel
+        sheet = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
+        assert "24 uur" in sheet
+
+    def test_panel_says_so_when_the_contract_has_ended(self):
+        ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=24,
+            start_date=self.today - timedelta(days=400),
+            end_date=self.today - timedelta(days=1),
+        )
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        assert "Geen lopend contract." in panel
+        assert "Niet ingevuld" not in panel
 
     def test_panel_shows_the_block_read_only_to_a_beheerder(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
@@ -551,7 +568,7 @@ class UserSheetContractPeriodTest(TestCase):
         assert period.hours_per_week == 24
         response = self.client.post(reverse("contract-period-delete", args=[period.public_id]))
         assert response.status_code == 200
-        assert "Nog niet ingevuld" in response.content.decode()
+        assert "Niet ingevuld" in response.content.decode()
         assert not ContractPeriod.objects.filter(pk=period.pk).exists()
 
     def test_overlap_keeps_the_sheet_open_with_the_error(self):
@@ -583,8 +600,9 @@ class UserSheetContractPeriodTest(TestCase):
         running.save()
         url = reverse("user-delete", args=[self.user.public_id])
         dialog = self.client.get(url).content.decode()
-        assert "Het collegaprofiel en de plaatsingen op opdrachten blijven bestaan." in dialog
-        assert "Het contract eindigt op de dag hieronder." in dialog
+        assert "Het collegaprofiel blijft bestaan" in dialog
+        assert "Contract: 36 uur per week" in dialog
+        assert f"Contract vanaf {date_format(planned.start_date, 'j b Y')}: 32 uur per week" in dialog
         assert 'name="left_on"' in dialog
 
         left_on = self.today - timedelta(days=10)
@@ -641,8 +659,58 @@ class UserSheetContractPeriodTest(TestCase):
 
     def test_deleting_a_user_without_contract_says_nothing_about_it(self):
         body = self.client.get(reverse("user-delete", args=[self.user.public_id])).content.decode()
-        assert "blijven bestaan" in body
-        assert "Het contract eindigt" not in body
+        assert "blijft bestaan" in body
+        assert "Contract:" not in body
+        assert "Eindigt op de gekozen dag" not in body
+
+    def test_deleting_the_user_ends_running_placements_and_drops_planned_ones(self):
+        """Placements follow the contract: a running one ends on the day (with
+        its own period, so the opdracht keeps its dates), a planned one goes,
+        an ended one stays as it was. The dialog says so beforehand."""
+        skill = Skill.objects.create(name="Scrum Master")
+        opdracht = Assignment.objects.create(
+            name="Lopende klus",
+            source="wies",
+            start_date=self.today - timedelta(days=100),
+            end_date=self.today + timedelta(days=200),
+        )
+        following = Placement.objects.create(
+            colleague=self.colleague,
+            service=Service.objects.create(assignment=opdracht, skill=skill, source="wies"),
+            period_source="SERVICE",
+            source="wies",
+        )
+        planned = _placement(self.colleague, "Volgende klus", self.today + timedelta(days=30), None)
+        done = _placement(
+            self.colleague, "Oude klus", self.today - timedelta(days=300), self.today - timedelta(days=200)
+        )
+        url = reverse("user-delete", args=[self.user.public_id])
+
+        dialog = self.client.get(url).content.decode()
+        assert "Plaatsing: Scrum Master op Lopende klus" in dialog
+        assert f"Plaatsing vanaf {date_format(planned.start_date, 'j b Y')}: rol op Volgende klus" in dialog
+        assert "Oude klus" not in dialog
+
+        left_on = self.today - timedelta(days=5)
+        response = self.client.post(url, {"left_on": left_on.isoformat()})
+        assert "HX-Redirect" in response
+        following.refresh_from_db()
+        assert following.period_source == "PLACEMENT"
+        assert (following.start_date, following.end_date) == (opdracht.start_date, left_on)
+        opdracht.refresh_from_db()
+        assert opdracht.end_date == self.today + timedelta(days=200)
+        assert not Placement.objects.filter(pk=planned.pk).exists()
+        done.refresh_from_db()
+        assert done.end_date == self.today - timedelta(days=200)
+        event = Event.objects.order_by("-id").first()
+        assert [p["assignment"] for p in event.context["placements_ended"]] == ["Lopende klus"]
+        assert [p["assignment"] for p in event.context["placements_dropped"]] == ["Volgende klus"]
+
+    def test_placements_alone_make_the_day_required(self):
+        _placement(self.colleague, "Klus", self.today - timedelta(days=10), None)
+        response = self.client.post(reverse("user-delete", args=[self.user.public_id]), {"left_on": ""})
+        assert "HX-Redirect" not in response
+        assert User.objects.filter(pk=self.user.pk).exists()
 
     def test_a_day_before_every_period_is_refused(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
@@ -727,11 +795,12 @@ class ServiceHoursPermissionTest(TestCase):
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
         assert "Rol wijzigen" not in body
 
-    def test_an_hours_only_edit_lands_on_the_assignment_timeline(self):
+    def test_an_hours_only_edit_leaves_no_trace_on_the_timeline(self):
+        # No history is kept of a role's hours (agreed with Patrick, 13 July 2026).
         client = Client()
         client.force_login(self.bdm)
         before = Event.objects.count()
-        client.post(
+        response = client.post(
             reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
             {
                 "description": "Eigen klus",
@@ -739,14 +808,46 @@ class ServiceHoursPermissionTest(TestCase):
                 "terug_url": f"/?plaatsing={self.placement.public_id}",
             },
         )
-        event = Event.objects.order_by("-id").first()
-        assert Event.objects.count() == before + 1
-        assert event.object_type == "Assignment"
-        assert event.object_id == self.service.assignment_id
-        timeline = client.get(
-            reverse("assignment-events-partial", args=[self.service.assignment.public_id])
+        assert response.status_code == 204, response.content
+        self.service.refresh_from_db()
+        assert self.service.hours_per_week == 32
+        assert Event.objects.count() == before
+
+    def test_hours_of_a_placed_colleague_are_hidden_from_team_mates(self):
+        """Team mates see each other's role and description, not the hours; an
+        open aanvraag shows its hours to everyone; a BDM sees them all."""
+        assignment = self.service.assignment
+        mate = _consultant("Team Maat", "maat@x.nl")
+        mate_service = Service.objects.create(
+            assignment=assignment, description="Maat", source="wies", hours_per_week=16
+        )
+        Placement.objects.create(
+            colleague=mate,
+            service=mate_service,
+            period_source="PLACEMENT",
+            specific_start_date=self.today,
+            specific_end_date=self.today + timedelta(days=90),
+            source="wies",
+        )
+        Service.objects.create(assignment=assignment, description="Open", source="wies", hours_per_week=8)
+        client = Client()
+
+        client.force_login(self.user)
+        team = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
+        assert "24 uur" in team  # own
+        assert "16 uur" not in team  # the team mate's
+        assert "8 uur" in team  # the aanvraag's
+        mate_panel = client.get(
+            reverse("home"), {"plaatsing": mate_service.placements.get().public_id}
         ).content.decode()
-        assert "van 24 naar 32 per week gewijzigd" in timeline
+        assert "Maat" in mate_panel
+        assert "16 uur" not in mate_panel
+
+        client.force_login(self.bdm)
+        team = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
+        assert "24 uur" in team
+        assert "16 uur" in team
+        assert "8 uur" in team
 
     def test_placement_panel_role_form_carries_the_hours_for_the_owner_only(self):
         names = [spec.name for (_, spec, _) in placement_edit_specs(self.placement, self.bdm, only="skill")]
