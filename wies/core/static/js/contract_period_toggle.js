@@ -12,7 +12,9 @@
     const endField = endInput.closest("nldd-form-field") || endInput;
     let lastEndDate = endInput.value;
     toggle.addEventListener("change", (e) => {
-      const known = e.detail ? e.detail.checked : toggle.hasAttribute("checked");
+      const known = e.detail
+        ? e.detail.checked
+        : toggle.hasAttribute("checked");
       endField.hidden = !known;
       if (!known) {
         if (endInput.value) lastEndDate = endInput.value;
@@ -24,7 +26,9 @@
   }
 
   function scan(root) {
-    (root || document).querySelectorAll("[data-contract-end-known]").forEach(init);
+    (root || document)
+      .querySelectorAll("[data-contract-end-known]")
+      .forEach(init);
   }
 
   document.addEventListener("DOMContentLoaded", () => scan(document));
