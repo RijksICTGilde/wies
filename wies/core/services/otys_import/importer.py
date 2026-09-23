@@ -92,9 +92,7 @@ def _resolve_skill(vacancy: OtysVacancy, counters: dict) -> Skill | None:
         return None
     max_length = Skill._meta.get_field("name").max_length  # noqa: SLF001 — read the model's own limit
     if len(role) > max_length:
-        raise OtysImportError(
-            f"Rol '{role}' voor opdracht {vacancy.reference} is te lang (max {max_length} tekens)."
-        )
+        raise OtysImportError(f"Rol '{role}' voor opdracht {vacancy.reference} is te lang (max {max_length} tekens).")
     skill, created = Skill.objects.get_or_create(name=role)
     if created:
         counters["skills_created"] += 1

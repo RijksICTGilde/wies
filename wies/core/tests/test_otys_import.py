@@ -28,31 +28,51 @@ from wies.core.services.otys_import.ministries import MINISTRY_SYSTEM_IDS
 # --- workbook builders -----------------------------------------------------
 
 VACANCY_HEADERS = [
-    "Referentie", "Functietitel", "Consultant", "Consultant Email",
-    "Startdatum", "Einddatum", "Functie omschrijving", "02. Ministerie(s)",
+    "Referentie",
+    "Functietitel",
+    "Consultant",
+    "Consultant Email",
+    "Startdatum",
+    "Einddatum",
+    "Functie omschrijving",
+    "02. Ministerie(s)",
     "03. Functies",
 ]
 VACANCY_ROW = [
-    "RIG03965", "Programma CIO ERTMS I&W", "Coen van Loon",
-    "Coen.Loon@rijksoverheid.nl", datetime.datetime(2026, 1, 1),
-    datetime.datetime(2027, 12, 31), "Toetst de ICT-realisatie.", "I&W",
+    "RIG03965",
+    "Programma CIO ERTMS I&W",
+    "Coen van Loon",
+    "Coen.Loon@rijksoverheid.nl",
+    datetime.datetime(2026, 1, 1),
+    datetime.datetime(2027, 12, 31),
+    "Toetst de ICT-realisatie.",
+    "I&W",
     "CIO",
 ]
 
 PLACEMENT_HEADERS = [
-    "Plaatsing - Plaatsingsnummer", "Plaatsing - Vacature referentienummer",
-    "Kandidaat - Achternaam", "Kandidaat - Voornaam", "Kandidaat – Email",
-    "Plaatsing - Startdatum", "Plaatsing - Einddatum",
+    "Plaatsing - Plaatsingsnummer",
+    "Plaatsing - Vacature referentienummer",
+    "Kandidaat - Achternaam",
+    "Kandidaat - Voornaam",
+    "Kandidaat – Email",
+    "Plaatsing - Startdatum",
+    "Plaatsing - Einddatum",
 ]
 PLACEMENT_ROW = [
-    "ARIPK2370", "RIG03965", "Kolkman", "Pascal",
-    "Pascal.Kolkman@rijksoverheid.nl", datetime.datetime(2026, 1, 1),
+    "ARIPK2370",
+    "RIG03965",
+    "Kolkman",
+    "Pascal",
+    "Pascal.Kolkman@rijksoverheid.nl",
+    datetime.datetime(2026, 1, 1),
     datetime.datetime(2027, 12, 31),
 ]
 
 
-def build_workbook(vacancy_headers=None, vacancy_row=None, placement_headers=None,
-                   placement_row=None, lead_blank_rows=0):
+def build_workbook(
+    vacancy_headers=None, vacancy_row=None, placement_headers=None, placement_row=None, lead_blank_rows=0
+):
     """Builds an OTYS-shaped workbook. Parameters let a test reorder or shift."""
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -102,21 +122,38 @@ class ParseExcelTest(TestCase):
     def test_layout_drift_reordered_columns_and_shifted_rows(self):
         """Columns reordered and tables shifted down still parse identically."""
         reordered_vacancy_headers = [
-            "02. Ministerie(s)", "Consultant Email", "Referentie", "Einddatum",
-            "Consultant", "Startdatum", "Functietitel", "Functie omschrijving",
+            "02. Ministerie(s)",
+            "Consultant Email",
+            "Referentie",
+            "Einddatum",
+            "Consultant",
+            "Startdatum",
+            "Functietitel",
+            "Functie omschrijving",
         ]
         reordered_vacancy_row = [
-            "I&W", "Coen.Loon@rijksoverheid.nl", "RIG03965",
-            datetime.datetime(2027, 12, 31), "Coen van Loon",
-            datetime.datetime(2026, 1, 1), "Programma CIO ERTMS I&W", "Toetst.",
+            "I&W",
+            "Coen.Loon@rijksoverheid.nl",
+            "RIG03965",
+            datetime.datetime(2027, 12, 31),
+            "Coen van Loon",
+            datetime.datetime(2026, 1, 1),
+            "Programma CIO ERTMS I&W",
+            "Toetst.",
         ]
         reordered_placement_headers = [
-            "Kandidaat – Email", "Plaatsing - Vacature referentienummer",
-            "Kandidaat - Voornaam", "Plaatsing - Plaatsingsnummer",
+            "Kandidaat – Email",
+            "Plaatsing - Vacature referentienummer",
+            "Kandidaat - Voornaam",
+            "Plaatsing - Plaatsingsnummer",
             "Kandidaat - Achternaam",
         ]
         reordered_placement_row = [
-            "Pascal.Kolkman@rijksoverheid.nl", "RIG03965", "Pascal", "ARIPK2370", "Kolkman",
+            "Pascal.Kolkman@rijksoverheid.nl",
+            "RIG03965",
+            "Pascal",
+            "ARIPK2370",
+            "Kolkman",
         ]
         data = build_workbook(
             vacancy_headers=reordered_vacancy_headers,
@@ -149,9 +186,7 @@ class ParseExcelTest(TestCase):
 
     def test_missing_required_column_raises(self):
         headers_without_email = [h for h in VACANCY_HEADERS if h != "Consultant Email"]
-        row_without_email = [
-            v for h, v in zip(VACANCY_HEADERS, VACANCY_ROW, strict=True) if h != "Consultant Email"
-        ]
+        row_without_email = [v for h, v in zip(VACANCY_HEADERS, VACANCY_ROW, strict=True) if h != "Consultant Email"]
         data = build_workbook(vacancy_headers=headers_without_email, vacancy_row=row_without_email)
 
         with pytest.raises(ExcelParseError) as exc_info:
