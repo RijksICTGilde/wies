@@ -2245,38 +2245,39 @@ def user_edit(request, public_id):
     return HttpResponse(status=405)
 
 
-def _placement_label(placement) -> str:
-    service = placement.service
-    skill = service.skill.name if service.skill else "rol"
-    return f"{skill} op {service.assignment.name}"
-
-
-def _colleague_delete_overview(colleague, today) -> dict | None:
+def _colleague_delete_overview(colleague, today) -> list[dict] | None:
     """What ends and what lapses when the user goes, for the confirm dialog.
 
     Measured against today: the dialog cannot know the day the beheerder will
     pick, so it lists what runs today (ends on that day) and what is still to
-    start (lapses). The colleague profile itself stays, with this history.
+    start (lapses). Three groups, each a heading with title/detail rows: the
+    contract and the placements apart, so they do not read as one kind of
+    thing. The colleague profile itself stays, with this history.
     """
     if colleague is None:
         return None
-    periods = colleague.contract_periods.all()
     placements = annotate_placement_dates(colleague.placements.select_related("service__assignment", "service__skill"))
-    ends, lapses = [], []
-    for period in periods:
+    contract, placed, lapses = [], [], []
+    for period in colleague.contract_periods.all():
+        hours = f"{period.hours_per_week} uur per week"
         if period.start_date > today:
-            lapses.append(
-                f"Contract vanaf {date_format(period.start_date, 'j b Y')}: {period.hours_per_week} uur per week"
-            )
+            lapses.append({"title": f"Contract vanaf {date_format(period.start_date, 'j b Y')}", "detail": hours})
         elif period.end_date is None or period.end_date >= today:
-            ends.append(f"Contract: {period.hours_per_week} uur per week")
+            contract.append({"title": hours, "detail": f"sinds {date_format(period.start_date, 'j b Y')}"})
     for placement in placements:
         start, end = placement.actual_start_date, placement.actual_end_date
+        service = placement.service
+        role = service.skill.name if service.skill else "Plaatsing"
         if start is not None and start > today:
-            lapses.append(f"Plaatsing vanaf {date_format(start, 'j b Y')}: {_placement_label(placement)}")
+            lapses.append({"title": service.assignment.name, "detail": f"{role} · vanaf {date_format(start, 'j b Y')}"})
         elif end is None or end >= today:
-            ends.append(f"Plaatsing: {_placement_label(placement)}")
-    return {"ends": ends, "lapses": lapses}
+            placed.append({"title": service.assignment.name, "detail": role})
+    groups = [
+        ("Contract eindigt op de gekozen dag", contract),
+        ("Plaatsingen eindigen op de gekozen dag", placed),
+        ("Vervalt", lapses),
+    ]
+    return [{"heading": heading, "rows": rows} for heading, rows in groups if rows]
 
 
 def _placement_snapshot(placement) -> dict:
@@ -2304,8 +2305,7 @@ def user_delete(request, public_id):
                 "content": form,
                 "dialog_supporting": (
                     f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Dit is niet terug te draaien."
-                    + (" Het collegaprofiel blijft bestaan, met de geschiedenis van opdrachten." if colleague else "")
+                    "Dit is niet terug te draaien." + (" Het collegaprofiel blijft bestaan." if colleague else "")
                 ),
                 "delete_overview": _colleague_delete_overview(colleague, today),
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),

@@ -9,24 +9,21 @@
   {# Room between the running text and the field, and between the field and
      the buttons: the dialog stacks its slot content without any. #}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {# What the chosen day does, measured against today (see _colleague_delete_overview). #}
-  {% if delete_overview and (delete_overview.ends or delete_overview.lapses) %}
-    <nldd-rich-text>
-    {% if delete_overview.ends %}
-      <p>Eindigt op de gekozen dag:</p>
-      <ul>
-        {% for item in delete_overview.ends %}<li>{{ item }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-    {% if delete_overview.lapses %}
-      <p>Vervalt:</p>
-      <ul>
-        {% for item in delete_overview.lapses %}<li>{{ item }}</li>{% endfor %}
-      </ul>
-    {% endif %}
-    </nldd-rich-text>
+  {# What the chosen day does, measured against today (see _colleague_delete_overview):
+     short lists in the shape of the contract-period block, not prose. The group
+     name is the list's header and accessible label, not a heading: the dialog's
+     own title is body text, so a heading here would outrank it. #}
+  {% for group in delete_overview or [] %}
+    <nldd-text-cell size="sm" color="secondary" text="{{ group.heading }}"></nldd-text-cell>
+    <nldd-list dividers="always" accessible-label="{{ group.heading }}">
+    {% for item in group.rows %}
+      <nldd-list-item size="sm">
+      <nldd-text-cell size="sm" text="{{ item.title }}" supporting-text="{{ item.detail }}"></nldd-text-cell>
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  {% endif %}
+  {% endfor %}
   <nldd-form>
   <form id="userDeleteForm"
         method="post"

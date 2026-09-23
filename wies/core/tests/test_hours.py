@@ -699,8 +699,13 @@ class UserSheetContractPeriodTest(TestCase):
         url = reverse("user-delete", args=[self.user.public_id])
         dialog = self.client.get(url).content.decode()
         assert "Het collegaprofiel blijft bestaan" in dialog
-        assert "Contract: 36 uur per week" in dialog
-        assert f"Contract vanaf {date_format(planned.start_date, 'j b Y')}: 32 uur per week" in dialog
+        assert "Contract eindigt op de gekozen dag" in dialog
+        assert f'text="36 uur per week" supporting-text="sinds {date_format(running.start_date, "j b Y")}"' in dialog
+        assert "Vervalt" in dialog
+        assert (
+            f'text="Contract vanaf {date_format(planned.start_date, "j b Y")}" supporting-text="32 uur per week"'
+            in dialog
+        )
         assert 'name="left_on"' in dialog
 
         left_on = self.today - timedelta(days=10)
@@ -758,8 +763,8 @@ class UserSheetContractPeriodTest(TestCase):
     def test_deleting_a_user_without_contract_says_nothing_about_it(self):
         body = self.client.get(reverse("user-delete", args=[self.user.public_id])).content.decode()
         assert "blijft bestaan" in body
-        assert "Contract:" not in body
-        assert "Eindigt op de gekozen dag" not in body
+        assert "Contract eindigt" not in body
+        assert "op de gekozen dag" not in body
 
     def test_deleting_the_user_ends_running_placements_and_drops_planned_ones(self):
         """Placements follow the contract: a running one ends on the day (with
@@ -785,8 +790,12 @@ class UserSheetContractPeriodTest(TestCase):
         url = reverse("user-delete", args=[self.user.public_id])
 
         dialog = self.client.get(url).content.decode()
-        assert "Plaatsing: Scrum Master op Lopende klus" in dialog
-        assert f"Plaatsing vanaf {date_format(planned.start_date, 'j b Y')}: rol op Volgende klus" in dialog
+        assert "Plaatsingen eindigen op de gekozen dag" in dialog
+        assert 'text="Lopende klus" supporting-text="Scrum Master"' in dialog
+        assert (
+            f'text="Volgende klus" supporting-text="Plaatsing · vanaf {date_format(planned.start_date, "j b Y")}"'
+            in dialog
+        )
         assert "Oude klus" not in dialog
 
         left_on = self.today - timedelta(days=5)
