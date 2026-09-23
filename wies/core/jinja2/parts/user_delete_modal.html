@@ -15,13 +15,13 @@
     {% if delete_overview.ends %}
       <p>Eindigt op de gekozen dag:</p>
       <ul>
-      {% for item in delete_overview.ends %}<li>{{ item }}</li>{% endfor %}
+        {% for item in delete_overview.ends %}<li>{{ item }}</li>{% endfor %}
       </ul>
     {% endif %}
     {% if delete_overview.lapses %}
       <p>Vervalt:</p>
       <ul>
-      {% for item in delete_overview.lapses %}<li>{{ item }}</li>{% endfor %}
+        {% for item in delete_overview.lapses %}<li>{{ item }}</li>{% endfor %}
       </ul>
     {% endif %}
     </nldd-rich-text>
