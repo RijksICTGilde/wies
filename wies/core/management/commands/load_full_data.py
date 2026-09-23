@@ -49,7 +49,7 @@ from wies.core.models import (
 )
 from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.events import create_event
-from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
+from wies.core.services.organizations import build_source_url, get_org_descendant_ids, sync_organizations
 
 logger = logging.getLogger(__name__)
 
@@ -613,18 +613,34 @@ def historic_dates(rng: random.Random, ref: date) -> tuple[date, date]:
 
 # ── Offline organizations (base profile) ─────────────────────────────────────
 # A small, fixed hierarchy so the base profile works without the network sync.
+# (name, tooi, organisaties.overheid.nl system_id). The system_id feeds the
+# source_url, which the OTYS import matches ministries against — so every
+# ministry the OTYS import can name must be seeded here to resolve offline.
+# The system_ids mirror ``services/otys_import/ministries.py``.
 BASE_MINISTRIES = [
-    ("Algemene Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010"),
-    ("Binnenlandse Zaken en Koninkrijksrelaties", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"),
-    ("Buitenlandse Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013"),
-    ("Defensie", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018"),
-    ("Economische Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045"),
-    ("Financiën", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090"),
-    ("Infrastructuur en Waterstaat", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130"),
-    ("Justitie en Veiligheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058"),
-    ("Onderwijs, Cultuur en Wetenschap", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109"),
-    ("Sociale Zaken en Werkgelegenheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073"),
-    ("Volksgezondheid, Welzijn en Sport", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025"),
+    ("Algemene Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010", "123"),
+    ("Binnenlandse Zaken en Koninkrijksrelaties", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034", "9632"),
+    ("Buitenlandse Zaken", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013", "2515"),
+    ("Defensie", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018", "4958"),
+    ("Economische Zaken en Klimaat", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045", "10621"),
+    ("Financiën", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090", "68820"),
+    ("Infrastructuur en Waterstaat", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130", "112773"),
+    ("Justitie en Veiligheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058", "11906"),
+    (
+        "Landbouw, Visserij, Voedselzekerheid en Natuur",
+        "https://identifier.overheid.nl/tooi/id/ministerie/mnre1150",
+        "22387697",
+    ),
+    ("Onderwijs, Cultuur en Wetenschap", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109", "71852"),
+    ("Sociale Zaken en Werkgelegenheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073", "19087"),
+    ("Volksgezondheid, Welzijn en Sport", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025", "8591"),
+    ("Klimaat en Groene Groei", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1329", "29481996"),
+    (
+        "Volkshuisvesting en Ruimtelijke Ordening",
+        "https://identifier.overheid.nl/tooi/id/ministerie/mnre1328",
+        "29481991",
+    ),
+    ("Asiel en Migratie", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1327", "29481986"),
 ]
 # (name, tooi, parent_ministry_name or None) — the agentschappen/onderdelen.
 BASE_SUBORGS = [
@@ -647,8 +663,16 @@ def seed_base_organizations() -> None:
     )
 
     ministries: dict[str, OrganizationUnit] = {}
-    for name, tooi in BASE_MINISTRIES:
-        unit = OrganizationUnit.objects.create(name=name, label=f"Ministerie van {name}", tooi_identifier=tooi)
+    for name, tooi, system_id in BASE_MINISTRIES:
+        # source_url matches what the real org sync stores, so the OTYS import
+        # (which resolves ministries by the system_id in this URL) works offline.
+        unit = OrganizationUnit.objects.create(
+            name=name,
+            label=f"Ministerie van {name}",
+            tooi_identifier=tooi,
+            system_id=system_id,
+            source_url=build_source_url(system_id, name),
+        )
         unit.organization_types.add(ministerie)
         ministries[name] = unit
 

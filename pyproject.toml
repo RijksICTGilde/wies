@@ -12,6 +12,7 @@ dependencies = [
   "jinja2==3.1.6",
   "psycopg[binary]>=3.3.4",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
+  "openpyxl>=3.1.5",  # read .xlsx uploads for the OTYS interim import
 ]
 
 [dependency-groups]
@@ -106,6 +107,12 @@ known-first-party = ["wies", "config"]
 
 [tool.ruff.lint.per-file-ignores]
 "wies/core/tests/*" = ["E501", "S101", "S106", "PLR2004"]
+# The OTYS-import tests build openpyxl-shaped fixtures: naive datetimes mirror
+# real .xlsx cells, and the en-dash header is exactly the ambiguous input under test.
+"wies/core/tests/test_otys_import.py" = ["E501", "S101", "S106", "PLR2004", "DTZ001", "RUF001"]
+# The OTYS Excel adapter raises user-facing Dutch messages inline (like the
+# inline-edit services) and keeps its dataclass-annotation imports at runtime.
+"wies/core/services/otys_import/*" = ["C901", "TRY003", "EM101", "EM102", "TC001", "TC003"]
 "wies/rijksauth/tests/*" = ["E501", "S101", "S106", "PLR2004"]
 "*/migrations/*" = ["E501", "Q000"]
 # `views.py` hosts the inline-edit endpoint (a generic view bridging the

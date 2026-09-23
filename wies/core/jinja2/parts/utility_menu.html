@@ -29,6 +29,9 @@
     {% if request.user.has_perm('core.view_suborganization') %}
       <nldd-menu-item text="Merken" icon="brand" data-href="{{ url('suborganization-admin') }}"></nldd-menu-item>
     {% endif %}
+    {% if request.user.has_perms(['core.add_assignment', 'core.add_service', 'core.add_placement', 'core.add_colleague']) %}
+      <nldd-menu-item text="OTYS-import" icon="square-arrow-right-top" data-href="{{ url('assignment-import-otys') }}"></nldd-menu-item>
+    {% endif %}
     {% if show_staff_pages(request) %}
       <nldd-menu-item text="Statistieken" icon="chart-x-y-axis-line" data-href="{{ url('staff-dashboard') }}"></nldd-menu-item>
       <nldd-menu-item text="Database" icon="database" data-href="{{ url('staff-database') }}"></nldd-menu-item>

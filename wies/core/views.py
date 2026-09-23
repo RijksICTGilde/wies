@@ -105,6 +105,7 @@ from .services.organizations import (
     get_org_breadcrumb,
     get_org_descendant_ids,
 )
+from .services.otys_import import ExcelParseError, import_batch, parse_excel
 from .services.placements import (
     create_assignments_from_csv,
     filter_visible_placements,
@@ -2217,6 +2218,14 @@ def _csv_too_large(csv_file) -> bool:
     return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
 
 
+# Format-agnostic aliases for the OTYS Excel upload, sharing the same ceiling.
+_UPLOAD_TOO_LARGE_MSG = f"Bestand te groot. Upload een bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def _upload_too_large(upload) -> bool:
+    return bool(upload.size) and upload.size > MAX_CSV_UPLOAD_BYTES
+
+
 @permission_required("rijksauth.add_user", raise_exception=True)
 def user_import_csv(request):
     """Imports users from a CSV file; see ``create_users_from_csv`` for the format."""
@@ -2311,6 +2320,63 @@ def assignment_import_csv(request):
         result = create_assignments_from_csv(request.user, csv_content, request=request)
 
         return render(request, "assignment_import.html", {"result": result})
+    return HttpResponse(status=405)
+
+
+@permission_required(
+    [
+        "core.add_assignment",
+        "core.add_service",
+        "core.add_placement",
+        "core.add_colleague",
+    ],
+    raise_exception=True,
+)
+def assignment_import_otys(request):
+    """Imports an OTYS Excel export (vacatures + plaatsingen) with their
+    assignments, services, placements and colleagues.
+
+    This is the interim manual step towards a live OTYS API coupling: the same
+    ``import_batch`` runs against records the API will later provide directly.
+    """
+    if request.method == "GET":
+        return render(request, "assignment_import_otys.html")
+    if request.method == "POST":
+        if "excel_file" not in request.FILES:
+            return render(
+                request,
+                "assignment_import_otys.html",
+                {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een Excel-bestand."]}},
+            )
+
+        excel_file = request.FILES["excel_file"]
+
+        if not excel_file.name.endswith(".xlsx"):
+            return render(
+                request,
+                "assignment_import_otys.html",
+                {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een .xlsx-bestand."]}},
+            )
+
+        if _upload_too_large(excel_file):
+            return render(
+                request,
+                "assignment_import_otys.html",
+                {"result": {"success": False, "errors": [_UPLOAD_TOO_LARGE_MSG]}},
+            )
+
+        try:
+            batch = parse_excel(excel_file.read())
+        except ExcelParseError as exc:
+            return render(
+                request,
+                "assignment_import_otys.html",
+                {"result": {"success": False, "errors": [str(exc)]}},
+            )
+
+        result = import_batch(batch, request.user, request=request)
+
+        return render(request, "assignment_import_otys.html", {"result": result})
     return HttpResponse(status=405)
 
 
