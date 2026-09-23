@@ -8,9 +8,31 @@
   {% for error in content.non_field_errors() %}
     <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
   {% endfor %}
+  {# When adding while a period runs: what applies now and what happens to it
+     (ContractPeriodForm.end_running_period), before the fields. #}
+  {% if content.running %}
+    {% set running = content.running %}
+    {% if running.end_date %}
+      <nldd-banner variant="neutral" text="Huidig contract: {{ running.hours_per_week }} uur per week, van {{ running.start_date|datum_nl }} t/m {{ running.end_date|datum_nl }}" supporting-text="Begint de nieuwe periode eerder, dan stopt dit contract op de dag ervoor."></nldd-banner>
+    {% else %}
+      <nldd-banner variant="neutral" text="Huidig contract: {{ running.hours_per_week }} uur per week, sinds {{ running.start_date|datum_nl }}" supporting-text="Dit contract stopt automatisch op de dag vóór de nieuwe startdatum."></nldd-banner>
+    {% endif %}
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% endif %}
   {{ content.hours_per_week.as_field_group() }}
   {{ content.start_date.as_field_group() }}
-  {{ content.end_date.as_field_group() }}
+  {# Off means the period runs on. The switch is not posted; it only shows the
+     end date field (contract_period_toggle.js), as in the placement forms. #}
+  <nldd-form-field>
+  <nldd-switch-field label="Einddatum is bekend" data-contract-end-known {% if content.end_date.value() %}checked{% endif %}></nldd-switch-field>
+  </nldd-form-field>
+  {% set end_errors = wire_field_errors(content.end_date) %}
+  <nldd-form-field label="{{ content.end_date.label }}"{% if not content.end_date.value() %} hidden{% endif %}>
+  {{ content.end_date.as_widget(attrs={"width": "full"}) }}
+  {% for error in content.end_date.errors %}
+    <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
   <nldd-form-actions>
   <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
   </nldd-form-actions>

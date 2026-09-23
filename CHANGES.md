@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 660: (migration) contract hours per colleague as periods with a start and end date, kept by a beheerder on the user sheet; the colleague panel shows the running and coming ones
+- 660: (migration) contract hours per colleague as periods with a start and end date, kept by a beheerder on the user sheet, where a new period can end the running one the day before it starts; the colleague panel shows the running and coming ones
 - 660: hours per week on a role, visible to business managers, beheerders and the placed consultant, on an open aanvraag to everyone; no history is kept
 - 660: Bezetting shows per consultant the role and the free contract hours, with a "deels beschikbaar" status
 - 660: deleting a user asks for the day they left; the contract and the placements end on that day and the dialog lists what changes

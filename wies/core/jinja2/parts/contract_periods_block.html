@@ -21,6 +21,8 @@
       <span slot="supporting-text">
         {% if period.end_date %}
           {{ period.start_date|datum_nl }} t/m {{ period.end_date|datum_nl }}
+        {% elif period.start_date <= contract_block.today %}
+          {{ period.start_date|datum_nl }} t/m heden
         {% else %}
           Vanaf {{ period.start_date|datum_nl }}
         {% endif %}

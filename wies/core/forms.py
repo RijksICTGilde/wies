@@ -1,10 +1,13 @@
 import logging
+from datetime import timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
 
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.service import ServiceEditables
@@ -334,19 +337,66 @@ class UserDeleteForm(NlddFormMixin, forms.Form):
 
 
 class ContractPeriodForm(NlddFormMixin, forms.ModelForm):
-    """One contract period, in a sheet on the profile or on the user sheet.
+    """One contract period, in a sheet on the user sheet.
 
     The colleague comes from the view as the instance; the model's clean() keeps
     the period inside the hours range and clear of the colleague's other periods.
+
+    Adding a period usually means a change of hours: the running period has no
+    end yet. The sheet says so, starts from that period's hours, and
+    ``end_running_period`` ends it the day before the new start, so the
+    beheerder does not have to close it by hand first. An empty end date means
+    the period runs on; the sheet hides the field behind an "Einddatum is
+    bekend" switch, like the placement forms.
     """
 
     start_date = forms.DateField(label="Startdatum")
-    end_date = forms.DateField(label="Einddatum", required=False, help_text="Leeg laten zolang de periode loopt.")
+    end_date = forms.DateField(label="Einddatum", required=False)
 
     class Meta:
         model = ContractPeriod
         fields = ["hours_per_week", "start_date", "end_date"]
         widgets = {"hours_per_week": forms.Select(choices=HOURS_PER_WEEK_CHOICES)}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.running = None if self.instance.pk else self._running_period()
+        if self.running is not None:
+            # On form.initial, not the field: the unsaved instance already puts
+            # hours_per_week=None in form.initial, and that wins over the field's.
+            self.initial["hours_per_week"] = self.running.hours_per_week
+
+    def _running_period(self):
+        """The colleague's period that covers today, if any."""
+        if self.instance.colleague_id is None:
+            return None
+        today = timezone.now().date()
+        return (
+            self.instance.colleague.contract_periods.filter(start_date__lte=today)
+            .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+            .first()
+        )
+
+    def end_running_period(self):
+        """Ends the running period the day before the new start.
+
+        Runs before validation, so the overlap check then sees the ended
+        period; the view wraps both in a transaction and rolls back when the
+        new period does not validate. Returns the ended period, or None.
+        """
+        if self.running is None:
+            return None
+        try:
+            start = self.fields["start_date"].clean(self.data.get(self.add_prefix("start_date")))
+        except ValidationError:
+            return None
+        # Only ever shortens: a period that already ends before the new start
+        # is left alone, so this never stretches a contract.
+        if start <= self.running.start_date or (self.running.end_date is not None and self.running.end_date < start):
+            return None
+        self.running.end_date = start - timedelta(days=1)
+        self.running.save(update_fields=["end_date"])
+        return self.running
 
 
 class ServiceForm(NlddFormMixin, forms.Form):

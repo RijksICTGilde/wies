@@ -373,6 +373,17 @@ class ColleaguePanelContractPeriodTest(TestCase):
         sheet = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
         assert "24 uur" in sheet
 
+    def test_period_labels_read_running_as_until_today_and_planned_as_from(self):
+        ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=10)
+        )
+        ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=32, start_date=self.today + timedelta(days=10)
+        )
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        assert f"{date_format(self.today - timedelta(days=10), 'j b Y')} t/m heden" in panel
+        assert f"Vanaf {date_format(self.today + timedelta(days=10), 'j b Y')}" in panel
+
     def test_panel_says_so_when_the_contract_has_ended(self):
         ContractPeriod.objects.create(
             colleague=self.colleague,
@@ -570,6 +581,93 @@ class UserSheetContractPeriodTest(TestCase):
         assert response.status_code == 200
         assert "Niet ingevuld" in response.content.decode()
         assert not ContractPeriod.objects.filter(pk=period.pk).exists()
+
+    def test_add_sheet_says_what_applies_now_and_starts_from_those_hours(self):
+        start = self.today - timedelta(days=100)
+        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=40, start_date=start)
+        sheet = self.client.get(self.add_url).content.decode()
+        assert f'text="Huidig contract: 40 uur per week, sinds {date_format(start, "j b Y")}"' in sheet
+        assert "stopt automatisch op de dag vóór de nieuwe startdatum" in sheet
+        assert re.search(r'<option value="40"[^>]*selected', sheet)
+
+    def test_add_sheet_hides_the_end_date_behind_the_switch(self):
+        sheet = self.client.get(self.add_url).content.decode()
+        assert "Huidig contract" not in sheet
+        assert 'label="Einddatum is bekend" data-contract-end-known >' in sheet
+        assert '<nldd-form-field label="Einddatum" hidden>' in sheet
+        period = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today, end_date=self.today + timedelta(days=9)
+        )
+        edit = self.client.get(reverse("contract-period-edit", args=[period.public_id])).content.decode()
+        assert "data-contract-end-known checked" in edit
+        assert '<nldd-form-field label="Einddatum">' in edit
+
+    def test_new_period_ends_the_running_one_the_day_before(self):
+        running = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
+        )
+        start = self.today + timedelta(days=7)
+        before = Event.objects.count()
+        response = self.client.post(
+            self.add_url, {"hours_per_week": "32", "start_date": start.isoformat(), "end_date": ""}
+        )
+        assert response.status_code == 200
+        assert "overlapt" not in response.content.decode()
+        running.refresh_from_db()
+        assert running.end_date == start - timedelta(days=1)
+        assert self.colleague.contract_periods.get(start_date=start).hours_per_week == 32
+        # Both changes are logged: the ended period and the new one.
+        events = list(Event.objects.order_by("id")[before:])
+        assert [e.context["action"] for e in events] == ["update", "create"]
+        assert events[0].context["after"]["end_date"] == (start - timedelta(days=1)).isoformat()
+
+    def test_ending_the_running_period_never_stretches_it(self):
+        running = ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=36,
+            start_date=self.today - timedelta(days=100),
+            end_date=self.today + timedelta(days=10),
+        )
+        start = self.today + timedelta(days=60)
+        self.client.post(self.add_url, {"hours_per_week": "32", "start_date": start.isoformat(), "end_date": ""})
+        running.refresh_from_db()
+        assert running.end_date == self.today + timedelta(days=10)
+        assert self.colleague.contract_periods.count() == 2
+
+    def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
+        running = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
+        )
+        response = self.client.post(
+            self.add_url,
+            {"hours_per_week": "32", "start_date": (self.today - timedelta(days=200)).isoformat(), "end_date": ""},
+        )
+        assert "overlapt" in response.content.decode()
+        running.refresh_from_db()
+        assert running.end_date is None
+        assert self.colleague.contract_periods.count() == 1
+
+    def test_an_invalid_new_period_does_not_end_the_running_one(self):
+        running = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
+        )
+        response = self.client.post(
+            self.add_url, {"hours_per_week": "41", "start_date": self.today.isoformat(), "end_date": ""}
+        )
+        assert response.status_code == 200
+        running.refresh_from_db()
+        assert running.end_date is None
+        assert self.colleague.contract_periods.count() == 1
+
+    def test_user_sheet_saves_from_its_footer(self):
+        sheet = self.client.get(reverse("user-edit", args=[self.user.public_id])).content.decode()
+        footer = sheet[sheet.index('slot="footer"') :]
+        assert 'hx-include="#userForm"' in footer
+        assert 'text="Opslaan"' in footer
+        # The form itself carries no visible submit button any more.
+        form = sheet[sheet.index('id="userForm"') : sheet.index("</form>")]
+        assert "<nldd-button" not in form
+        assert 'type="submit" hidden' in form
 
     def test_overlap_keeps_the_sheet_open_with_the_error(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)

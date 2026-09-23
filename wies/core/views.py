@@ -2603,9 +2603,9 @@ def _contract_block(colleague, surface):
     period and the ones still to start. The sheet keeps the whole history,
     since that is where it is kept.
     """
+    today = timezone.now().date()
     periods = colleague.contract_periods.all()
     if surface == "panel":
-        today = timezone.now().date()
         periods = periods.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
     # exists(), not bool(): the add/edit sheet builds this block before it saves
     # and renders it after, so the queryset must stay unevaluated until then.
@@ -2618,6 +2618,8 @@ def _contract_block(colleague, surface):
     return {
         "colleague": colleague,
         "periods": periods,
+        # For the label: a running period reads "t/m heden", one still to start "Vanaf".
+        "today": today,
         "can_edit": surface == "user",
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
@@ -2656,10 +2658,18 @@ def _contract_period_sheet(request, period, post_url, contract_block):
     if request.method == "POST":
         before = _contract_period_snapshot(period) if period.pk else None
         form = ContractPeriodForm(request.POST, instance=period)
-        if form.is_valid():
-            form.save()
-            _contract_period_event(request, period, "update" if before else "create", before)
-            return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+        # One transaction: ending the running period is undone when the new
+        # period turns out invalid (see ContractPeriodForm.end_running_period).
+        with transaction.atomic():
+            running_before = _contract_period_snapshot(form.running) if form.running else None
+            closed = form.end_running_period()
+            if form.is_valid():
+                form.save()
+                if closed is not None:
+                    _contract_period_event(request, closed, "update", running_before)
+                _contract_period_event(request, period, "update" if before else "create", before)
+                return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+            transaction.set_rollback(True)
     else:
         form = ContractPeriodForm(instance=period)
 
