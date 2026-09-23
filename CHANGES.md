@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- PR: new Beheer page "OTYS-import" that imports a manual OTYS Excel export.
 - 667: the "dagen vrij" label on a short bench bar in the Bezetting timeline no longer has its leading digit cut off
 - 667: the Bezetting filter options now show the correct number of matching consultants instead of always showing 1
 

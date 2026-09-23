@@ -29,6 +29,7 @@ from wies.core.views import (
     assignment_edit_view,
     assignment_events_partial,
     assignment_import_csv,
+    assignment_import_otys,
     assignment_member_delete_view,
     assignment_member_edit_view,
     bezetting,
@@ -94,6 +95,7 @@ urlpatterns = [
     path("opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
+    path("beheer/opdrachten/importeren-otys/", assignment_import_otys, name="assignment-import-otys"),
     path("opdrachten/<uuid:public_id>/events/", assignment_events_partial, name="assignment-events-partial"),
     path("opdrachten/<uuid:public_id>/verwijderen/", assignment_delete, name="assignment-delete"),
     path(

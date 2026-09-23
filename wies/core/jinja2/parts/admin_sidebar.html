@@ -36,6 +36,15 @@
   <nldd-text-cell text="Merken"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
+{% if user.has_perms(['core.add_assignment', 'core.add_service', 'core.add_placement', 'core.add_colleague']) %}
+  <nldd-list-item href="{{ url('assignment-import-otys') }}" {% if '/importeren-otys/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="square-arrow-right-top"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="OTYS-import"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
 {% if show_staff_pages(request) %}
   <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">

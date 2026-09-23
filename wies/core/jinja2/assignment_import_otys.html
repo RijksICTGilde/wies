@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}
+  OTYS-import · Wies
+{% endblock title %}
+{% block sidebar_title %}
+{% endblock sidebar_title %}
+{% block sidebar %}
+{% endblock sidebar %}
+{% block content %}
+  <nldd-container padding="24" style="max-width: 700px;">
+  <nldd-rich-text>
+  <h1>OTYS-import (Excel)</h1>
+  </nldd-rich-text>
+  <nldd-form>
+  <form method="post"
+        action="{{ url('assignment-import-otys') }}"
+        enctype="multipart/form-data">
+    {{ get_csrf_hidden_input(request) }}
+    <nldd-rich-text>
+    <p>
+      Upload een OTYS-export (.xlsx) met een <strong>Vacature module</strong>- en een
+      <strong>Plaatsingenmodule</strong>-tabel. <a href="{{ static('otys_import_example.xlsx') }}">Download het voorbeeldbestand</a> om het verwachte formaat te zien.
+      Deze import is een tijdelijke stap; later worden dezelfde gegevens via de OTYS-API opgehaald.
+    </p>
+    </nldd-rich-text>
+    <nldd-form-field label="Excel-bestand">
+    <nldd-file-field name="excel_file" accept=".xlsx"></nldd-file-field>
+    </nldd-form-field>
+    {% if result and result.success %}
+      <nldd-banner variant="success" text="Import geslaagd!" style="margin: 1rem 0;">
+      <nldd-rich-text>
+      <ul>
+        <li>
+          <strong>{{ result.assignments_created }}</strong> opdrachten aangemaakt,
+          <strong>{{ result.assignments_updated }}</strong> bijgewerkt
+        </li>
+        <li>
+          <strong>{{ result.services_created }}</strong> diensten aangemaakt,
+          <strong>{{ result.services_updated }}</strong> bijgewerkt
+        </li>
+        <li>
+          <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
+        </li>
+        <li>
+          <strong>{{ result.placements_created }}</strong> plaatsingen aangemaakt,
+          <strong>{{ result.placements_updated }}</strong> bijgewerkt
+        </li>
+        <li>
+          <strong>{{ result.colleagues_created }}</strong> collega's aangemaakt,
+          <strong>{{ result.colleagues_updated }}</strong> bijgewerkt
+        </li>
+        <li>
+          <strong>{{ result.organizations_linked }}</strong> opdrachtgevers gekoppeld
+        </li>
+      </ul>
+      </nldd-rich-text>
+      </nldd-banner>
+      {% if result.errors and result.errors|length > 0 %}
+        <nldd-banner variant="warning" text="Waarschuwingen" style="margin: 1rem 0;">
+        <nldd-rich-text>
+        <ul>
+          {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        </nldd-rich-text>
+        </nldd-banner>
+      {% endif %}
+    {% elif result %}
+      <nldd-banner variant="critical" text="Import mislukt" style="margin: 1rem 0;">
+      {% if result.errors and result.errors|length > 0 %}
+        <nldd-rich-text>
+        <p>De volgende fouten zijn gevonden:</p>
+        <ul>
+          {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        </nldd-rich-text>
+      {% endif %}
+      </nldd-banner>
+    {% endif %}
+    <nldd-form-actions>
+    <nldd-button variant="primary" type="submit" text="Importeren"></nldd-button>
+    </nldd-form-actions>
+  </form>
+  </nldd-form>
+  </nldd-container>
+{% endblock content %}
