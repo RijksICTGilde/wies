@@ -634,6 +634,28 @@ class UserSheetContractPeriodTest(TestCase):
         assert running.end_date == self.today + timedelta(days=10)
         assert self.colleague.contract_periods.count() == 2
 
+    def test_a_field_error_leaves_the_banner_on_the_running_period(self):
+        # The running period is ended before validation and rolled back after;
+        # the banner must render the rolled-back state, not the in-memory one.
+        running = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
+        )
+        start = self.today + timedelta(days=10)
+        response = self.client.post(
+            self.add_url,
+            {
+                "hours_per_week": "32",
+                "start_date": start.isoformat(),
+                "end_date": (start - timedelta(days=1)).isoformat(),
+            },
+        )
+        body = response.content.decode()
+        assert "Einddatum moet op of na de startdatum liggen" in body
+        assert f"sinds {date_format(running.start_date, 'j b Y')}" in body
+        assert " t/m " not in body.split("Huidig contract")[1].split('"')[0]
+        running.refresh_from_db()
+        assert running.end_date is None
+
     def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
         running = ContractPeriod.objects.create(
             colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
@@ -699,9 +721,9 @@ class UserSheetContractPeriodTest(TestCase):
         url = reverse("user-delete", args=[self.user.public_id])
         dialog = self.client.get(url).content.decode()
         assert "Het collegaprofiel blijft bestaan" in dialog
-        assert "Contract eindigt op de gekozen dag" in dialog
+        assert "Lopend contract" in dialog
         assert f'text="36 uur per week" supporting-text="sinds {date_format(running.start_date, "j b Y")}"' in dialog
-        assert "Vervalt" in dialog
+        assert "Begint later" in dialog
         assert (
             f'text="Contract vanaf {date_format(planned.start_date, "j b Y")}" supporting-text="32 uur per week"'
             in dialog
@@ -764,7 +786,7 @@ class UserSheetContractPeriodTest(TestCase):
         body = self.client.get(reverse("user-delete", args=[self.user.public_id])).content.decode()
         assert "blijft bestaan" in body
         assert "Contract eindigt" not in body
-        assert "op de gekozen dag" not in body
+        assert "Lopend contract" not in body
 
     def test_deleting_the_user_ends_running_placements_and_drops_planned_ones(self):
         """Placements follow the contract: a running one ends on the day (with
@@ -790,7 +812,7 @@ class UserSheetContractPeriodTest(TestCase):
         url = reverse("user-delete", args=[self.user.public_id])
 
         dialog = self.client.get(url).content.decode()
-        assert "Plaatsingen eindigen op de gekozen dag" in dialog
+        assert "Lopende plaatsingen" in dialog
         assert 'text="Lopende klus" supporting-text="Scrum Master"' in dialog
         assert (
             f'text="Volgende klus" supporting-text="Plaatsing · vanaf {date_format(planned.start_date, "j b Y")}"'
@@ -812,6 +834,34 @@ class UserSheetContractPeriodTest(TestCase):
         event = Event.objects.order_by("-id").first()
         assert [p["assignment"] for p in event.context["placements_ended"]] == ["Lopende klus"]
         assert [p["assignment"] for p in event.context["placements_dropped"]] == ["Volgende klus"]
+        # Each touched opdracht gets the same team event a manual change would,
+        # so its timeline says who ended or removed the placement, and when.
+        team_events = Event.objects.filter(object_type="Assignment", context__field_name="services")
+        assert {e.object_id for e in team_events} == {opdracht.id, planned.service.assignment_id}
+        ended_event = team_events.get(object_id=opdracht.id)
+        assert ended_event.user == self.admin
+        [change] = ended_event.context["changes"]
+        assert change["old"]["end_date"] == (self.today + timedelta(days=200)).isoformat()
+        assert change["new"]["end_date"] == left_on.isoformat()
+        dropped_event = team_events.get(object_id=planned.service.assignment_id)
+        [change] = dropped_event.context["changes"]
+        assert change["old"]["colleague_name"] == "Kees Bos"
+        assert change["new"]["colleague_name"] is None
+
+    def test_a_day_before_a_started_placement_is_refused(self):
+        """Backdating past the start of a placement that already ran would drop
+        it, and with it the record that the person worked there."""
+        placement = _placement(
+            self.colleague, "Gelopen klus", self.today - timedelta(days=100), self.today + timedelta(days=100)
+        )
+        response = self.client.post(
+            reverse("user-delete", args=[self.user.public_id]),
+            {"left_on": (self.today - timedelta(days=200)).isoformat()},
+        )
+        assert "HX-Redirect" not in response
+        assert "vóór een plaatsing die al is begonnen" in response.content.decode()
+        assert Placement.objects.filter(pk=placement.pk).exists()
+        assert User.objects.filter(pk=self.user.pk).exists()
 
     def test_placements_alone_make_the_day_required(self):
         _placement(self.colleague, "Klus", self.today - timedelta(days=10), None)

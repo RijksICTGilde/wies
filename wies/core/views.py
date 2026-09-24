@@ -473,10 +473,7 @@ def _build_colleague_panel_data(colleague, request):
         "close_url": _build_close_url(request),
         "colleague": colleague,
         "contract_block": _contract_block(colleague, "panel"),
-        # Who plans with the hours may read them; keeping them is beheer.
-        "can_view_contract": is_bdm(request.user)
-        or is_staff_member(request.user)
-        or request.user.has_perm("rijksauth.change_user"),
+        "can_view_contract": has_permission(Verb.READ, ContractPeriod(colleague=colleague), request.user),
         "assignments": assignments,
     }
 
@@ -2298,11 +2295,12 @@ def user_edit(request, public_id):
 def _colleague_delete_overview(colleague, today) -> list[dict] | None:
     """What ends and what lapses when the user goes, for the confirm dialog.
 
-    Measured against today: the dialog cannot know the day the beheerder will
-    pick, so it lists what runs today (ends on that day) and what is still to
-    start (lapses). Three groups, each a heading with title/detail rows: the
-    contract and the placements apart, so they do not read as one kind of
-    thing. The colleague profile itself stays, with this history.
+    Measured against today, and the headings say so: the dialog cannot know the
+    day the beheerder will pick, so it lists what runs now and what is still to
+    start, and the field's help text says what the chosen day does with each.
+    Three groups, each a heading with title/detail rows: the contract and the
+    placements apart, so they do not read as one kind of thing. The colleague
+    profile itself stays, with this history.
     """
     if colleague is None:
         return None
@@ -2323,9 +2321,9 @@ def _colleague_delete_overview(colleague, today) -> list[dict] | None:
         elif end is None or end >= today:
             placed.append({"title": service.assignment.name, "detail": role})
     groups = [
-        ("Contract eindigt op de gekozen dag", contract),
-        ("Plaatsingen eindigen op de gekozen dag", placed),
-        ("Vervalt", lapses),
+        ("Lopend contract", contract),
+        ("Lopende plaatsingen", placed),
+        ("Begint later", lapses),
     ]
     return [{"heading": heading, "rows": rows} for heading, rows in groups if rows]
 
@@ -2380,7 +2378,9 @@ def user_delete(request, public_id):
         with transaction.atomic():
             left_on = form.cleaned_data["left_on"] if colleague else None
             ended, dropped = close_contract_periods(colleague, left_on) if left_on else (None, [])
-            placements_ended, placements_dropped = close_placements(colleague, left_on) if left_on else ([], [])
+            placements_ended, placements_dropped = (
+                close_placements(colleague, left_on, request) if left_on else ([], [])
+            )
             context = {
                 "email": user.email,
                 "first_name": user.first_name,
@@ -2720,6 +2720,10 @@ def _contract_period_sheet(request, period, post_url, contract_block):
                 _contract_period_event(request, period, "update" if before else "create", before)
                 return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
             transaction.set_rollback(True)
+        if form.running is not None:
+            # The rollback undid the database write, not the end_date set on the
+            # object the banner renders from.
+            form.running.refresh_from_db()
     else:
         form = ContractPeriodForm(instance=period)
 

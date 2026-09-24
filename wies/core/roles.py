@@ -60,7 +60,9 @@ def can_view_role_hours(user, placement) -> bool:
     """
     if placement is None:
         return True
-    if user is None:  # the outsider view the timeline privacy note is measured against
+    # restricted_change_names builds the team rows with a request that has no
+    # user, to see what an outsider sees; that outsider sees no hours.
+    if user is None:
         return False
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:

@@ -711,7 +711,8 @@
       const live = document.getElementById("wies-live");
       if (!selector || !live) return;
       const n = results.querySelectorAll(selector).length;
-      live.textContent = n ? `${n} resultaten` : "Geen resultaten";
+      live.textContent =
+        n === 0 ? "Geen resultaten" : n === 1 ? "1 resultaat" : `${n} resultaten`;
     });
   }
 

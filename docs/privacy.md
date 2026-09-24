@@ -30,6 +30,7 @@ opdrachten. Het gaat om de volgende gegevens:
 - Gegevens over plaatsingen en opdrachten van de huidige opdracht (zoals opdrachtgever, looptijd en status)
 - Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en beheerders
 - Uren per week van je rol op een opdracht; zichtbaar voor business managers, beheerders en jezelf
+- De datum waarop je uit dienst bent gegaan, als einde van je laatste contractperiode
 
 ## Waarvoor gebruiken wij jouw gegevens?
 
@@ -59,7 +60,8 @@ of aan internationale organisaties.
 
 Wij bewaren jouw persoonsgegevens niet langer dan noodzakelijk is voor de doeleinden waarvoor
 ze zijn verzameld. Gegevens over afgeronde plaatsingen en opdrachten worden bewaard zolang dit
-nodig is voor de bedrijfsvoering en verantwoording.
+nodig is voor de bedrijfsvoering en verantwoording. Dat geldt ook voor je contracturen per periode:
+die blijven bewaard na je vertrek, zodat de bezetting van eerdere jaren te verantwoorden is.
 
 ## Cookies en tracking
 

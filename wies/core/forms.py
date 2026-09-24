@@ -15,6 +15,7 @@ from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
+from .querysets import annotate_placement_dates
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -315,11 +316,12 @@ class UserDeleteForm(NlddFormMixin, forms.Form):
 
     left_on = forms.DateField(
         label="Uit dienst per",
-        help_text="Het lopende contract en de lopende plaatsingen eindigen op deze dag. Wat later begint, vervalt.",
+        help_text="Wat op die dag loopt, eindigt dan. Wat daarna zou beginnen, vervalt.",
     )
 
     def __init__(self, *args, colleague=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.colleague = colleague
         self.periods = colleague.contract_periods.all() if colleague else ContractPeriod.objects.none()
         has_placements = colleague is not None and colleague.placements.exists()
         if not self.periods.exists() and not has_placements:
@@ -333,6 +335,17 @@ class UserDeleteForm(NlddFormMixin, forms.Form):
         # all, which is the history this model exists to keep.
         if day and self.periods.exists() and not self.periods.filter(start_date__lte=day).exists():
             self.add_error("left_on", "Deze dag ligt vóór elke contractperiode. Kies een dag binnen of na een periode.")
+        # Same for placements: a day before one that has already started would
+        # drop it, and with it the record that this person worked there.
+        if day and self.colleague is not None:
+            today = timezone.now().date()
+            started = [
+                p
+                for p in annotate_placement_dates(self.colleague.placements.all())
+                if p.actual_start_date is not None and p.actual_start_date <= today
+            ]
+            if any(p.actual_start_date > day for p in started):
+                self.add_error("left_on", "Deze dag ligt vóór een plaatsing die al is begonnen. Kies een dag daarna.")
         return cleaned
 
 
