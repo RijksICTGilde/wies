@@ -75,6 +75,10 @@
     if (depth) row.setAttribute("slot", "children");
     this.domNodes.set(node.id, row);
 
+    row.addEventListener("click", function (e) {
+      if (rowOf(e.composedPath()) === row) e.stopPropagation();
+    });
+
     for (var d = 0; d < depth; d++) {
       row.appendChild(cell("nldd-spacer-cell", { size: INDENT_STEP }));
     }
