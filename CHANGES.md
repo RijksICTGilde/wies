@@ -10,6 +10,7 @@ This files lists the changes during the lifetime of this project.
 - 660: deleting a user asks for the day they left; the contract and the placements end on that day and the dialog lists what changes
 - 660: the Bezetting filter row is a toolbar with an "Opdracht invoeren" action; the Business management sidebar is gone
 - 660: form fields no longer show placeholder text; the label says what goes in
+- 660: the privacy statement lists contract hours and the hours of a role, and who sees them
 - 672: the user list has a sort control in the toolbar; it names the current order (achternaam A-Z by default) and offers achternaam Z-A, voornaam and most recently added
 - 672: each row in the user list shows the colleague's merk and subgroep after the e-mail address
 - 672: saving, adding or deleting a user returns to the user list as it was filtered, searched and sorted, instead of the unfiltered list
