@@ -712,7 +712,11 @@
       if (!selector || !live) return;
       const n = results.querySelectorAll(selector).length;
       live.textContent =
-        n === 0 ? "Geen resultaten" : n === 1 ? "1 resultaat" : `${n} resultaten`;
+        n === 0
+          ? "Geen resultaten"
+          : n === 1
+            ? "1 resultaat"
+            : `${n} resultaten`;
     });
   }
 
