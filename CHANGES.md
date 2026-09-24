@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-09-24
+
 - 684: the organisation picker (opdracht form and filter sheet) keeps its scroll position when a nested organisation is expanded; a click in a child row no longer bubbles to the branch row above it
 - 660: (migration) contract hours per colleague, as periods with a start and end date kept by a beheerder on the user sheet, and hours per week on a role; Bezetting shows per consultant the role and the free contract hours, with a "deels beschikbaar" status; deleting a user asks for the day they left and ends the contract and the placements on that day; the privacy statement names both kinds of hours
 - 660: the Bezetting filter row is a toolbar with an "Opdracht invoeren" action; the Business management sidebar is gone
