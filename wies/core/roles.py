@@ -1,5 +1,5 @@
-"""Group/permission setup and role predicates for Office assistent, Opdrachtbeheer,
-Consultant and BDM. The authority model is described in ``features/roles.md``.
+"""Group/permission setup and role predicates for Office assistent, Consultant
+and BDM. The authority model is described in ``features/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
 ``wies/core/permissions.py``. This module owns the Django Group definitions,
@@ -33,7 +33,6 @@ User = get_user_model()
 ROLE_CONSULTANT = "consultant"
 ROLE_BDM = "bdm"
 ROLE_OFFICE_ASSISTANT = "office_assistant"
-ROLE_ASSIGNMENT_ADMIN = "assignment_admin"
 # Deliberately not a Django group: who holds this one lives in STAFF_EMAILS.
 ROLE_STAFF = "staff"
 
@@ -41,7 +40,6 @@ ROLE_LABELS = {
     ROLE_CONSULTANT: "Consultant",
     ROLE_BDM: "Business Development Manager",
     ROLE_OFFICE_ASSISTANT: "Office assistent",
-    ROLE_ASSIGNMENT_ADMIN: "Opdrachtbeheer",
     ROLE_STAFF: "Applicatiebeheer",
 }
 
@@ -55,11 +53,6 @@ def role_label(key: str) -> str:
     return ROLE_LABELS.get(key, key)
 
 
-# Office assistent is deliberately absent, so it may hand itself on; why that is
-# safe and Opdrachtbeheer is not: ``features/roles.md``.
-ROLES_ONLY_STAFF_MAY_GRANT = frozenset({ROLE_ASSIGNMENT_ADMIN})
-
-
 def is_bdm(user) -> bool:
     """Whether the user holds the BDM role (Django group ``ROLE_BDM``).
 
@@ -70,17 +63,11 @@ def is_bdm(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_BDM).exists()
 
 
-def is_assignment_admin(user) -> bool:
-    """Whether the user may act on any assignment (Django group
-    ``ROLE_ASSIGNMENT_ADMIN``)."""
-    return user.is_authenticated and user.groups.filter(name=ROLE_ASSIGNMENT_ADMIN).exists()
-
-
 def is_staff_member(user) -> bool:
     """Whether the user does application administration (``STAFF_EMAILS``).
 
     Gates the maintenance pages (``/beheer/statistieken/``, ``/beheer/database/``).
-    It carries no rights on assignments; those come from ``is_assignment_admin``.
+    It carries no rights on assignments; those come from the BDM role.
     """
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
@@ -89,7 +76,7 @@ def can_view_role_hours(user, placement) -> bool:
     """Whether the user may see the hours per week of a role.
 
     Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
-    are for who plans with them (BDM, Opdrachtbeheer, application administration)
+    are for who plans with them (BDM, Office assistent, application administration)
     and for the consultant themself, not for team mates. An open aanvraag has no
     one to protect, so its hours are visible to everyone who sees the opdracht.
     """
@@ -102,7 +89,7 @@ def can_view_role_hours(user, placement) -> bool:
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:
         return True
-    return is_bdm(user) or is_staff_member(user) or is_assignment_admin(user)
+    return is_bdm(user) or is_staff_member(user) or user.has_perm("rijksauth.change_user")
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
@@ -129,8 +116,8 @@ def may_view_role_matrix(user) -> bool:
 
 def may_administer_roles(user) -> bool:
     """Whether the user may change someone's roles, from the row menu on the users
-    page: Office assistent, which grants every role but Opdrachtbeheer, and application
-    administration, which grants them all. Which roles they are then offered is
+    page: Office assistent and application administration. Which roles they are
+    then offered is
     ``may_grant``'s answer, in ``UserForm``.
     """
     return user.has_perm("rijksauth.change_user") or is_staff_member(user)
@@ -145,27 +132,26 @@ def may_view_users(user) -> bool:
     return user.has_perm("rijksauth.view_user") or may_administer_roles(user)
 
 
-def may_grant(editor, role: str) -> bool:
+def may_grant(_editor, role: str) -> bool:
     """Whether ``editor`` may grant or revoke ``role``; ``editor=None`` is the system.
 
     The one place the policy lives: ask it about any role rather than testing the
-    set yourself, so a role that becomes restricted later needs no caller changed.
+    role yourself, so restricting one later needs no caller changed.
     """
-    if role == ROLE_STAFF:
-        return False  # an address list, not a group: change STAFF_EMAILS and deploy
-    return role not in ROLES_ONLY_STAFF_MAY_GRANT or (editor is not None and is_staff_member(editor))
+    # Applicatiebeheer is an address list, not a group: change STAFF_EMAILS and deploy.
+    return role != ROLE_STAFF
 
 
-def is_bdm_or_assignment_admin(request) -> bool:
-    """Whether the request's user holds the BDM or the Opdrachtbeheer role,
-    resolved once per request, cached because the audit timeline calls it once per event.
+def is_bdm_request(request) -> bool:
+    """Whether the request's user holds the BDM role, resolved once per request,
+    cached because the audit timeline calls it once per event.
     """
     user = getattr(request, "user", None)
     if user is None:
         return False
-    if not hasattr(request, "wies_is_bdm_or_assignment_admin"):
-        request.wies_is_bdm_or_assignment_admin = is_bdm(user) or is_assignment_admin(user)
-    return request.wies_is_bdm_or_assignment_admin
+    if not hasattr(request, "wies_is_bdm"):
+        request.wies_is_bdm = is_bdm(user)
+    return request.wies_is_bdm
 
 
 def setup_roles():
@@ -189,7 +175,6 @@ def setup_roles():
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         ROLE_CONSULTANT: [],
-        ROLE_ASSIGNMENT_ADMIN: [],
         ROLE_BDM: [
             (Assignment, ["add_assignment"]),
             (Service, ["add_service"]),

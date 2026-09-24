@@ -1,25 +1,25 @@
 # Roles and who may grant them
 
-Wies separates three kinds of authority, each named after what it lets you do.
+Wies separates authority by what it lets you do, not by seniority.
 
-| Authority        | Where it lives           | In short                                                  |
-| ---------------- | ------------------------ | --------------------------------------------------------- |
-| Applicatiebeheer | `STAFF_EMAILS` (env var) | the maintenance pages, granting every role                |
-| Office assistent | role (Django group)      | users, labels and merken, granting all but Opdrachtbeheer |
-| Opdrachtbeheer   | role (Django group)      | any wies-sourced assignment, whoever owns it              |
+| Authority        | Where it lives           | In short                                       |
+| ---------------- | ------------------------ | ---------------------------------------------- |
+| Applicatiebeheer | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional  |
+| Office assistent | role (Django group)      | users, labels, merken and contract hours       |
+| BDM              | role (Django group)      | any wies-sourced opdracht, and contract hours  |
+| Consultant       | role (Django group)      | the opdracht they are placed on, and Bezetting |
 
-The job roles `Consultant` and `Business Development Manager` (BDM) sit next to
-these. What each may do is on the page **Beheer > Rollen**, which reads the rules
+What each may do is on the page **Beheer > Rollen**, which reads the rules
 themselves.
 
 Applicatiebeheer carries **no** functional rights. An application administrator
-who also does assignment work holds `Opdrachtbeheer` as well, and can test the app
-as a normal user by unchecking it and checking it again; both steps are recorded
-as an `Event`.
+who also does assignment work holds `BDM` as well, and can test the app as a
+normal user by unchecking it and checking it again; both steps are recorded as an
+`Event`.
 
 `Consultant` is also a population: `occupancy.py` filters Bezetting on
 `user__groups__name=ROLE_CONSULTANT`, so a new colleague appears there only once
-somebody gives them the role. That is why Office assistent may grant the job roles;
+somebody gives them the role. That is why Office assistent may grant the roles;
 onboarding would otherwise stall on an application administrator.
 
 `STAFF_EMAILS` keeps the name it had when the authority was still called staff.
@@ -28,8 +28,8 @@ Code: `wies/core/roles.py`, rules in `wies/core/permissions.py`.
 
 ## A role's name is a key, its label is separate
 
-`Group.name` is a key that never changes (`consultant`, `bdm`, `office_assistant`,
-`assignment_admin`); the screen name is `ROLE_LABELS` in `roles.py`. Matching uses
+`Group.name` is a key that never changes (`consultant`, `bdm`, `office_assistant`);
+the screen name is `ROLE_LABELS` in `roles.py`. Matching uses
 the key, showing uses `role_label(key)`, so renaming a role is one string and no
 data migration.
 
@@ -47,26 +47,27 @@ Two places deliberately use the label instead:
 | Consultant       | Office assistent, Applicatiebeheer |
 | BDM              | Office assistent, Applicatiebeheer |
 | Office assistent | Office assistent, Applicatiebeheer |
-| Opdrachtbeheer   | Applicatiebeheer                   |
 | Applicatiebeheer | nobody inside the application      |
 
-`may_grant` answers the table: everything is grantable by whoever reaches the roles
-screen, except `ROLES_ONLY_STAFF_MAY_GRANT`, which is Applicatiebeheer's alone.
-Applicatiebeheer itself is not a role: change `STAFF_EMAILS` and deploy.
+`may_grant` answers the table and is the one place the policy lives: today it says
+yes to every role, and no to Applicatiebeheer, which is not a role at all but an
+address list. Restricting a role to Applicatiebeheer later is a line there and no
+caller changed.
 
-Office assistent hands itself on because it is narrow: it touches no assignment,
-sees no hidden placement, and `may_change_email` blocks taking over an application
-administrator's address. Opdrachtbeheer stays apart because it reaches other
-people's work and the ended placements of colleagues.
+**What that costs, deliberately.** Office assistent may grant BDM, and BDM carries
+every wies-sourced opdracht plus the ended and future placements of colleagues. So
+user administration can hand out assignment authority. The alternative was to keep
+BDM behind Applicatiebeheer, which would stall onboarding a Business Manager on a
+deploy-level address list; the team chose onboarding.
 
 Granting happens on the user sheet, Bewerken in the row menu on **Beheer >
 Gebruikers**, open to Office assistent and Applicatiebeheer
 (`may_administer_roles`). Nieuwe gebruiker is the same sheet under its own
 `rijksauth.add_user`, and hands out roles under the same narrowing.
-It is enforced twice: `UserForm(editor=...)` offers only
-the roles the editor may grant, and that queryset is what a submitted id is
-validated against; `_apply_groups` drops the rest and keeps the roles the user
-already holds, so setting someone's roles never strips their `Opdrachtbeheer`.
+It is enforced twice: `UserForm(editor=...)` offers only the roles the editor may
+grant, and that queryset is what a submitted id is validated against;
+`_apply_groups` drops the rest and keeps the roles the editor could not have
+handed out.
 
 The sheet has two halves and the form offers each on its own gate, because the two
 authorities do not overlap: the person (name, e-mail, merk, labels) on
@@ -93,20 +94,16 @@ write paths ask it (`UserForm.clean_email` so the editor sees the reason,
 because `create_user` would otherwise roll the whole file back from inside its
 transaction without saying which line was the problem.
 
-**Known tension:** BDM carries the visibility of colleagues' ended and future
-placements, and Office assistent may grant BDM. Separating the two is its own
-change.
-
 ## A rule, from declaration to answer
 
-`permissions.py` holds the rules and nothing else: ten `rule(...)` calls, no
+`permissions.py` holds the rules and nothing else: eleven `rule(...)` calls, no
 functions and no names anything refers to, which is why the file looks like it
 connects to nothing. It connects through a registry key, `(verb, model, field)`,
 and that key is visible on neither side: in `permissions.py` you see the target,
 at the call site you see the arguments.
 
 `apps.py` imports the module in `ready()` purely for the side effect: the import
-runs the ten calls and fills the registry. Everything else asks
+runs the eleven calls and fills the registry. Everything else asks
 `has_permission(verb, obj, user, field=None)`, which looks that key up: the
 inline-edit pencil and its POST, the delete and field routes, which fields a form
 offers, and the panel's Verwijderen. The role page reads the same registry, which
@@ -133,18 +130,18 @@ combination.
 
 ## Deploy
 
-- `setup_roles()` (every container start) creates the four role groups;
-  `Opdrachtbeheer` and `Consultant` get no Django permissions, all their rights
-  are rules. Applicatiebeheer has no group at all, it is the address list.
-- `rijksauth/0009_backfill_assignment_admin` gives everyone in `STAFF_EMAILS` the
-  `Opdrachtbeheer` role **once**, so an address added later does not get it and has
-  to be granted on the roles screen.
+- `setup_roles()` (every container start) creates the three role groups;
+  `Consultant` gets no Django permissions, all its rights are rules.
+  Applicatiebeheer has no group at all, it is the address list.
 - `rijksauth/0010` and `0011` move the groups from `Beheerder` to the key
   `office_assistant`, keeping members and permissions.
+- `rijksauth/0012` drops the `Opdrachtbeheer` group and gives everyone in
+  `STAFF_EMAILS` the `BDM` and `Office assistent` roles **once**, so an address
+  added later does not get them and has to be granted on the user sheet.
 - `ensure_initial_user` gives the first user of a fresh environment every group.
 
 Without `STAFF_EMAILS` set, an environment has no application administrator at
-all: nobody reaches the maintenance pages and nobody can grant `Opdrachtbeheer`.
+all and nobody reaches the maintenance pages.
 
 ## A person is a `User`, a `Colleague`, or both
 
@@ -165,12 +162,29 @@ as a `Scope`, like `OWN` and `PLACED`: the scope predicate already takes the gra
 as a third argument, unused today, because this is the first one that needs it.
 The question becomes "is this object's merk one you hold the role for".
 
-Two things are missing first:
+Two halves of that are already in place.
+
+`combined(OWN, BRANDS)` builds the relation that is both at once, so a grant can
+read "a BDM, for an opdracht of their own merk, that they own". Naming two grants
+with the same holder is the other combination, "either of these": `Grant(Role(X),
+scope=OWN)` next to `Grant(Role(X), scope=BRANDS)`. A combination must be a module
+constant in `SCOPES`, or the matrix walks past it and prints no row.
+
+`Scope.parts` is what makes that readable to the matrix: a grant answers a row when
+its parts are a subset of the row's, so `ANY` (no parts) covers every row and `OWN`
+also covers the `OWN, BRANDS` row, without either being a special case.
+
+`OWN` itself is named by no rule today, since a BDM carries every opdracht. It stays
+as the narrowing this will combine with, and `ScopeVocabularyTest` measures it so it
+cannot rot.
+
+Two things are still missing:
 
 - **An assignment has no merk.** It is derivable only via `owner.suborganization`,
   and both links are `SET_NULL`, so an assignment without an owner has no merk at
   all. Scoping needs a decision on that case, and on whether the merk follows the
   owner or is stored on the assignment.
-- **Group membership carries no merk.** A `Group` is held or not; there is nowhere
-  to say "for merk X and Y". The grant would need a model of its own, which reaches
-  the roles screen and `_apply_groups`.
+- **A person has one merk, and a role has none.** `Colleague.suborganization` is a
+  single FK and a `Group` is held or not, so "the merken this BDM holds the role
+  for" has nowhere to live. The grant would need a model of its own, which then
+  reaches the user sheet and `_apply_groups`.

@@ -29,7 +29,6 @@ from wies.core.permission_engine import (
     registered_rules,
 )
 from wies.core.roles import (
-    ROLE_ASSIGNMENT_ADMIN,
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
@@ -124,7 +123,7 @@ class RoleMatrixShapeTest(SimpleTestCase):
         """The rules on a dienst, a plaatsing and the opdracht's own fields each
         name the opdracht rule's audience instead of borrowing it, so this pins
         that they still agree."""
-        opdracht = {Grant(Role(ROLE_ASSIGNMENT_ADMIN)), Grant(Role(ROLE_BDM), scope=OWN)}
+        opdracht = {Grant(Role(ROLE_BDM))}
 
         for key, rule in registered_rules().items():
             verb, model, field = key
@@ -223,9 +222,9 @@ class RoleMatrixReaderTest(TestCase):
         """The rule branch behind them asks for the Consultant role on top of
         the placement, so no other role reaches them through the placement."""
         cells = _cells()
-        # The placement grants it to the consultant; Opdrachtbeheer is already through
-        # on the relation-free grant these field rules name alongside it.
-        allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_ASSIGNMENT_ADMIN)}
+        # The placement grants it to the consultant; BDM is already through on the
+        # relation-free grant these field rules name alongside it.
+        allowed = {role_label(ROLE_CONSULTANT), "BDM"}
 
         for label in (
             "Naam van een opdracht bewerken",
@@ -255,9 +254,8 @@ class RoleMatrixReaderTest(TestCase):
         a rule moves both at once and only a named cell notices."""
         cells = _cells()
 
-        assert cells[("Opdracht bewerken (eigen)", "BDM")]
-        assert not cells[("Opdracht bewerken (van een ander)", "BDM")]
-        assert cells[("Opdracht bewerken (van een ander)", role_label(ROLE_ASSIGNMENT_ADMIN))]
+        assert cells[("Opdracht bewerken (van een ander)", "BDM")]
+        assert not cells[("Opdracht bewerken (van een ander)", role_label(ROLE_OFFICE_ASSISTANT))]
 
         assert cells[("Gebruiker bewerken (je eigen)", "Consultant")]
         assert not cells[("Gebruiker bewerken (van een ander)", "Consultant")]
@@ -347,12 +345,8 @@ class RoleMatrixExtraRowTest(TestCase):
             "E-mailadres wijzigen (van een ander)": lambda u: self._form_accepts(
                 u, {"email": "nieuw-adres@rijksoverheid.nl"}
             ),
-            "Rol Consultant of BDM toekennen": lambda u: self._roles_screen_accepts(u, (ROLE_CONSULTANT, ROLE_BDM)),
-            f"Rol {role_label(ROLE_OFFICE_ASSISTANT)} toekennen": (
-                lambda u: self._roles_screen_accepts(u, (ROLE_OFFICE_ASSISTANT,))
-            ),
-            f"Rol {role_label(ROLE_ASSIGNMENT_ADMIN)} toekennen": (
-                lambda u: self._roles_screen_accepts(u, (ROLE_ASSIGNMENT_ADMIN,))
+            "Rollen toekennen": lambda u: self._roles_screen_accepts(
+                u, (ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT)
             ),
             "Statistieken en database": is_staff_member,
         }

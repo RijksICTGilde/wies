@@ -22,7 +22,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_assignment_admin, grant_bdm, grant_consultant
+from wies.core.tests.role_helpers import grant_bdm, grant_consultant
 
 User = get_user_model()
 
@@ -34,7 +34,7 @@ class AssignmentEditAttributeTest(TestCase):
         """Creates the users, colleagues and assignments used by the tests."""
         self.client = Client()
 
-        self.user_with_permission = grant_assignment_admin(
+        self.user_with_permission = grant_bdm(
             User.objects.create_user(
                 email="perm@rijksoverheid.nl",
                 first_name="User",
@@ -112,8 +112,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]))
         assert response.status_code in [302, 403]
 
-    def test_assignment_edit_as_assignment_admin(self):
-        """An Opdrachtbeheer user can edit."""
+    def test_assignment_edit_as_a_bdm(self):
+        """A BDM can edit."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -258,9 +258,9 @@ class AssignmentEditAttributeTest(TestCase):
         self.external_assignment.refresh_from_db()
         assert self.external_assignment.name == "External Assignment"
 
-    def test_assignment_admin_can_edit_assignment_owner(self):
-        """Opdrachtbeheer can edit an assignment they don't own (#392)."""
-        admin_user = grant_assignment_admin(
+    def test_a_bdm_can_edit_assignment_owner(self):
+        """A BDM can edit an assignment they don't own (#392)."""
+        admin_user = grant_bdm(
             User.objects.create_user(
                 email="opdrachtbeheer@rijksoverheid.nl",
                 first_name="Opdracht",
@@ -308,10 +308,10 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name != "Attempted Update"
 
-    def test_assignment_admin_cannot_edit_external_source_assignment(self):
-        """Opdrachtbeheer cannot edit non-wies-sourced assignments: the
+    def test_a_bdm_cannot_edit_external_source_assignment(self):
+        """A BDM cannot edit non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
-        admin_user = grant_assignment_admin(
+        admin_user = grant_bdm(
             User.objects.create_user(email="opdrachtbeheer@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)
@@ -1117,9 +1117,9 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.assignment.id).exists()
 
-    def test_assignment_admin_can_delete_wies_assignment(self):
-        """Opdrachtbeheer can delete an assignment they don't own (#313)."""
-        admin_user = grant_assignment_admin(
+    def test_a_bdm_can_delete_wies_assignment(self):
+        """A BDM can delete an assignment they don't own (#313)."""
+        admin_user = grant_bdm(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)
@@ -1142,10 +1142,10 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.assignment.id).exists()
 
-    def test_assignment_admin_cannot_delete_otys_iir_assignment(self):
-        """Opdrachtbeheer cannot delete non-wies-sourced assignments: the
+    def test_a_bdm_cannot_delete_otys_iir_assignment(self):
+        """A BDM cannot delete non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
-        admin_user = grant_assignment_admin(
+        admin_user = grant_bdm(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)

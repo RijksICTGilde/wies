@@ -19,11 +19,21 @@ from wies.core.editables import (
     UserEditables,
 )
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.permission_engine import WIES_SOURCED, Role, Verb, has_permission, registered_rules
+from wies.core.permission_engine import (
+    ANY,
+    OWN,
+    PLACED,
+    WIES_SOURCED,
+    Role,
+    Verb,
+    combined,
+    has_permission,
+    registered_rules,
+)
 from wies.core.roles import ROLE_OFFICE_ASSISTANT, ROLE_STAFF
 
 from .inline_edit_helpers import post_inline_edit
-from .role_helpers import grant_assignment_admin, grant_bdm, grant_consultant
+from .role_helpers import grant_bdm, grant_consultant
 
 User = get_user_model()
 
@@ -124,7 +134,7 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, ext, self.owner_user) is False
 
     def test_change_assignment_perm_does_not_grant_update(self):
-        # Assignment rights come from the BDM owner or Opdrachtbeheer only; a
+        # Assignment rights come from the BDM role only; a
         # direct Django permission grant opens nothing.
         u = User.objects.create_user(email="hp@x.nl", first_name="H", last_name="P")
         u.user_permissions.add(Permission.objects.get(codename="change_assignment"))
@@ -133,40 +143,38 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, u) is False
 
 
-class AssignmentAdminCanEditAssignmentTest(_Setup):
-    """Opdrachtbeheer can edit and delete wies-sourced assignments and their
+class BdmCanEditAnyAssignmentTest(_Setup):
+    """A BDM can edit and delete wies-sourced assignments and their
     chained Service/Placement records (issues #392, #313). External-source
     assignments stay read-only."""
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_assignment_admin(
-            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
-        )
+        self.admin_user = grant_bdm(User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B"))
 
-    def test_assignment_admin_can_update_assignment(self):
+    def test_a_bdm_can_update_assignment(self):
         assert has_permission(Verb.UPDATE, self.assignment, self.admin_user) is True
 
-    def test_assignment_admin_can_delete_assignment(self):
+    def test_a_bdm_can_delete_assignment(self):
         assert has_permission(Verb.DELETE, self.assignment, self.admin_user) is True
 
-    def test_assignment_admin_cannot_delete_external_assignment(self):
+    def test_a_bdm_cannot_delete_external_assignment(self):
         ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
         assert has_permission(Verb.DELETE, ext, self.admin_user) is False
 
-    def test_assignment_admin_can_update_service(self):
+    def test_a_bdm_can_update_service(self):
         assert has_permission(Verb.UPDATE, self.service, self.admin_user) is True
 
-    def test_assignment_admin_can_update_placement(self):
+    def test_a_bdm_can_update_placement(self):
         assert has_permission(Verb.UPDATE, self.placement, self.admin_user) is True
 
-    def test_assignment_admin_can_update_field_level_rules(self):
+    def test_a_bdm_can_update_field_level_rules(self):
         a, s = self.assignment, self.service
         assert has_permission(Verb.UPDATE, a, self.admin_user, field=AssignmentEditables.name) is True
         assert has_permission(Verb.UPDATE, a, self.admin_user, field=AssignmentEditables.extra_info) is True
         assert has_permission(Verb.UPDATE, s, self.admin_user, field=ServiceEditables.description) is True
 
-    def test_assignment_admin_cannot_update_external_assignment(self):
+    def test_a_bdm_cannot_update_external_assignment(self):
         ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
         assert has_permission(Verb.UPDATE, ext, self.admin_user) is False
 
@@ -178,15 +186,13 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
     """A dienst and a plaatsing are as read-only as the opdracht they hang under,
     because each rule states ``WIES_SOURCED`` for itself.
 
-    Opdrachtbeheer is the widest audience these rules name, so an opdracht managed
+    The BDM role is the widest audience these rules name, so an opdracht managed
     elsewhere shows here first if one of them stopped asking.
     """
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_assignment_admin(
-            User.objects.create_user(email="extern@x.nl", first_name="O", last_name="B")
-        )
+        self.admin_user = grant_bdm(User.objects.create_user(email="extern@x.nl", first_name="O", last_name="B"))
 
     def _targets(self):
         """One entry per UPDATE rule that requires ``WIES_SOURCED``, re-read from the
@@ -211,7 +217,7 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
                 assert has_permission(Verb.UPDATE, obj, self.admin_user, field) is False
 
     def test_the_same_rules_all_answer_yes_while_the_opdracht_comes_from_wies(self):
-        """Otherwise the refusals above could be Opdrachtbeheer falling short rather
+        """Otherwise the refusals above could be the BDM role falling short rather
         than the source of the opdracht."""
         for label, obj, field in self._targets():
             with self.subTest(rule=label):
@@ -222,38 +228,40 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
         out by hand: a rule that starts requiring ``WIES_SOURCED`` would be read-only
         in production and unwatched here."""
         # ``_targets`` only asks UPDATE; the DELETE rule is watched by
-        # ``AssignmentAdminCanEditAssignmentTest::test_assignment_admin_cannot_delete_external_assignment``.
+        # ``BdmCanEditAnyAssignmentTest::test_a_bdm_cannot_delete_external_assignment``.
         watched = {label for label, _obj, _field in self._targets()} | {"Opdracht verwijderen"}
 
         assert watched == {rule.label for rule in registered_rules().values() if WIES_SOURCED in rule.requires}
 
 
-class OwnershipDecidesWhichBdmReachesTheDienstAndPlaatsingTest(_Setup):
-    """A BDM reaches the diensten and plaatsingen of the opdracht they own and of no
-    other: ``OWN`` walks up to the opdracht from the object it is asked about."""
+class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
+    """The BDM role carries every wies-sourced opdracht, so a BDM reaches the
+    diensten and plaatsingen of one they do not own; without the role nobody does."""
 
     def setUp(self):
         super().setUp()
         stranger = grant_bdm(User.objects.create_user(email="bm2@x.nl", first_name="B", last_name="2"))
         Colleague.objects.create(user=stranger, name="B 2", email="bm2@x.nl", source="wies")
-        # Fresh, so the colleague the OWN scope reads is on the instance.
         self.other_bdm_user = User.objects.get(pk=stranger.pk)
 
     def test_the_owning_bdm_reaches_the_dienst(self):
-        # The plaatsing half of the same pair is
-        # ``PlacementPermissionTest::test_bdm_owner_can_update_placement_via_engine``.
         assert has_permission(Verb.UPDATE, self.service, self.owner_user) is True
 
-    def test_a_bdm_who_does_not_own_the_opdracht_reaches_neither(self):
+    def test_a_bdm_who_does_not_own_the_opdracht_reaches_both(self):
         for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
             with self.subTest(rule=label):
-                assert has_permission(Verb.UPDATE, obj, self.other_bdm_user) is False
+                assert has_permission(Verb.UPDATE, obj, self.other_bdm_user) is True
+
+    def test_without_the_role_neither_is_reached(self):
+        for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
+            with self.subTest(rule=label):
+                assert has_permission(Verb.UPDATE, obj, self.unrelated_user) is False
 
 
 @override_settings(STAFF_EMAILS=["staff@x.nl"])
 class StaffMemberHasNoAssignmentRightsTest(_Setup):
     """Application administration (``STAFF_EMAILS``) carries no functional rights:
-    without Opdrachtbeheer a staff member may not edit or delete an assignment."""
+    without the BDM role a staff member may not edit or delete an assignment."""
 
     def setUp(self):
         super().setUp()
@@ -269,15 +277,15 @@ class StaffMemberHasNoAssignmentRightsTest(_Setup):
         assert has_permission(Verb.UPDATE, self.service, self.staff_user) is False
         assert has_permission(Verb.UPDATE, self.placement, self.staff_user) is False
 
-    def test_staff_with_assignment_admin_can_update(self):
-        grant_assignment_admin(self.staff_user)
+    def test_staff_with_the_bdm_role_can_update(self):
+        grant_bdm(self.staff_user)
         assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is True
 
 
 class PlacementPermissionTest(_Setup):
     """A colleague placed on an assignment must not be able to update
     Placement records on the same assignment — only the assignment's
-    BDM owner (or Opdrachtbeheer) can.
+    a BDM can.
 
     The endpoint shape is ``POST /inline-edit/placement/<id>/colleague/``.
     """
@@ -362,22 +370,23 @@ class PlacedWithoutTheConsultantRoleTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        self.placed_bdm_user = grant_bdm(
-            User.objects.create_user(email="placed-bdm@x.nl", first_name="P", last_name="B")
-        )
-        placed_bdm = Colleague.objects.create(
-            user=self.placed_bdm_user, name="P B", email="placed-bdm@x.nl", source="wies"
+        # Office assistent: a role with no rights on an opdracht at all, so the
+        # placement is the only door left to try.
+        self.placed_other_user = User.objects.create_user(email="placed-other@x.nl", first_name="P", last_name="B")
+        self.placed_other_user.groups.add(Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)[0])
+        placed_other = Colleague.objects.create(
+            user=self.placed_other_user, name="P B", email="placed-other@x.nl", source="wies"
         )
         # Placed on the same dienst as the consultant, and not the owner of it.
-        Placement.objects.create(colleague=placed_bdm, service=self.service, source="wies")
+        Placement.objects.create(colleague=placed_other, service=self.service, source="wies")
 
     def test_a_placement_in_another_role_reaches_no_opdracht_text_field(self):
         for editable in (AssignmentEditables.name, AssignmentEditables.extra_info):
             with self.subTest(field=editable.name):
-                assert has_permission(Verb.UPDATE, self.assignment, self.placed_bdm_user, editable) is False
+                assert has_permission(Verb.UPDATE, self.assignment, self.placed_other_user, editable) is False
 
     def test_a_placement_in_another_role_reaches_no_dienstomschrijving(self):
-        assert has_permission(Verb.UPDATE, self.service, self.placed_bdm_user, ServiceEditables.description) is False
+        assert has_permission(Verb.UPDATE, self.service, self.placed_other_user, ServiceEditables.description) is False
 
 
 class UserEmailFieldRuleTest(TestCase):
@@ -516,35 +525,33 @@ class AssignmentMemberSheetPermissionTest(_Setup):
 
 
 class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
-    """Opdrachtbeheer can edit Service and Placement records end-to-end over the
+    """A BDM can edit Service and Placement records end-to-end over the
     inline-edit HTTP endpoint, not just at the engine level.
 
-    The engine-level equivalents live in ``AssignmentAdminCanEditAssignmentTest``;
+    The engine-level equivalents live in ``BdmCanEditAnyAssignmentTest``;
     these drive the real ``inline_edit_view`` request so the whole stack (lookup,
-    ``_permission_denied``, save) is exercised for an Opdrachtbeheer editor.
+    ``_permission_denied``, save) is exercised for a BDM editor.
     """
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_assignment_admin(
-            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
-        )
+        self.admin_user = grant_bdm(User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B"))
         self.client = Client()
         self.client.force_login(self.admin_user)
 
-    def test_assignment_admin_can_edit_service_description_inline(self):
+    def test_a_bdm_can_edit_service_description_inline(self):
         url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
 
-        resp = post_inline_edit(self.client, url, {"description": "Opdrachtbeheer-bewerking"})
+        resp = post_inline_edit(self.client, url, {"description": "Bdm-bewerking"})
 
         assert resp.status_code == 200
         self.assertNotContains(resp, "geen rechten")
         self.service.refresh_from_db()
-        assert self.service.description == "Opdrachtbeheer-bewerking"
+        assert self.service.description == "Bdm-bewerking"
 
-    def test_assignment_admin_can_edit_placement_period_inline(self):
+    def test_a_bdm_can_edit_placement_period_inline(self):
         # An unrelated user is refused this exact edit (see
-        # InlineEditExistenceOracleTest); Opdrachtbeheer must be able to save it.
+        # InlineEditExistenceOracleTest); a BDM must be able to save it.
         url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
 
         resp = post_inline_edit(
@@ -562,3 +569,52 @@ class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
         self.placement.refresh_from_db()
         assert str(self.placement.specific_start_date) == "2026-03-01"
         assert str(self.placement.specific_end_date) == "2026-06-30"
+
+
+class ScopeVocabularyTest(_Setup):
+    """The relations a rule can name, asked directly.
+
+    ``OWN`` is named by no rule today: a BDM carries every wies-sourced opdracht,
+    so nothing narrows to the one they own. It stays because merk scoping (#526)
+    combines with it, and it is measured here so it cannot rot unnoticed.
+    """
+
+    def test_own_is_the_business_manager_of_the_opdracht(self):
+        for obj in (self.assignment, self.service, self.placement):
+            with self.subTest(model=type(obj).__name__):
+                assert OWN.predicate(self.owner_user, obj, None) is True
+                assert OWN.predicate(self.placed_user, obj, None) is False
+
+    def test_any_asks_for_no_relation_at_all(self):
+        assert ANY.parts == frozenset()
+        assert ANY.predicate(self.unrelated_user, self.assignment, None) is True
+
+
+class CombinedScopeTest(_Setup):
+    """``combined`` builds the relation that is two relations at once, which is
+    what merk scoping (#526) needs: "eigen, en binnen je merk"."""
+
+    def setUp(self):
+        super().setUp()
+        self.own_and_placed = combined(OWN, PLACED)
+        # The owner is placed on their own opdracht; the consultant only placed.
+        Placement.objects.create(colleague=self.owner, service=self.service, source="wies")
+
+    def test_it_holds_only_when_every_part_holds(self):
+        assert self.own_and_placed.predicate(self.owner_user, self.assignment, None) is True
+        assert self.own_and_placed.predicate(self.placed_user, self.assignment, None) is False
+        assert self.own_and_placed.predicate(self.unrelated_user, self.assignment, None) is False
+
+    def test_it_carries_the_parts_of_both(self):
+        assert self.own_and_placed.parts == {"own", "placed"}
+
+    def test_its_label_names_both_relations(self):
+        assert self.own_and_placed.label == f"{OWN.label}, {PLACED.label}"
+
+    def test_a_part_covers_the_combination_but_not_the_other_way_round(self):
+        """What ``_rule_cell`` reads: a grant on "eigen" also answers the row for
+        "eigen, waarop je geplaatst bent", and a grant that needs both does not
+        answer the row that needs only one."""
+        assert OWN.parts <= self.own_and_placed.parts
+        assert not self.own_and_placed.parts <= OWN.parts
+        assert ANY.parts <= self.own_and_placed.parts

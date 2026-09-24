@@ -13,7 +13,6 @@ from django.urls import reverse
 from wies.core.forms import UserForm
 from wies.core.models import Event
 from wies.core.roles import (
-    ROLE_ASSIGNMENT_ADMIN,
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
@@ -22,7 +21,7 @@ from wies.core.roles import (
     role_label,
     setup_roles,
 )
-from wies.core.services.users import create_user, create_users_from_csv, set_user_roles, update_user
+from wies.core.services.users import create_users_from_csv, set_user_roles, update_user
 from wies.rijksauth.models import User
 
 from .inline_edit_helpers import post_inline_edit
@@ -51,7 +50,6 @@ class RoleGrantTest(TestCase):
     def setUp(self):
         setup_roles()
         self.user_admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
-        self.assignment_admin_group = Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN)
         self.consultant_group = Group.objects.get(name=ROLE_CONSULTANT)
         self.bdm_group = Group.objects.get(name=ROLE_BDM)
 
@@ -129,7 +127,7 @@ class RoleGrantTest(TestCase):
         assert (self.target.first_name, self.target.email) == ("T", "target@rijksoverheid.nl")
 
     def test_editing_the_person_saves_the_roles_in_the_same_submission(self):
-        self.target.groups.add(self.bdm_group, self.assignment_admin_group)
+        self.target.groups.add(self.bdm_group)
         self.client.force_login(self.user_admin)
         payload = {
             "first_name": "T",
@@ -141,22 +139,15 @@ class RoleGrantTest(TestCase):
         response = self.client.post(reverse("user-edit", args=[self.target.public_id]), payload, headers=HX)
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        # BDM was offered and left out, so it goes; Opdrachtbeheer was never offered and stays.
-        assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_ASSIGNMENT_ADMIN}
+        # Saving replaces the whole set: BDM was offered and left out, so it goes.
+        assert self._group_names(self.target) == {ROLE_CONSULTANT}
 
-    def test_user_admin_is_offered_every_role_but_assignment_admin(self):
-        assert self._offered(self.user_admin) == {ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT}
-
-    def test_staff_is_offered_every_role(self):
-        assert self._offered(self.staff) == {
-            ROLE_CONSULTANT,
-            ROLE_BDM,
-            ROLE_OFFICE_ASSISTANT,
-            ROLE_ASSIGNMENT_ADMIN,
-        }
-
-    def test_form_without_editor_offers_every_role_but_assignment_admin(self):
-        assert self._offered(None) == {ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT}
+    def test_every_editor_is_offered_every_role(self):
+        """No role is restricted to a granter of its own, and Applicatiebeheer is
+        not a group, so it cannot be offered at all."""
+        for editor in (self.user_admin, self.staff, None):
+            with self.subTest(editor=getattr(editor, "email", "system")):
+                assert self._offered(editor) == {ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT}
 
     def test_staff_reaches_the_user_sheet_without_the_office_assistant_role(self):
         """The users page opens for the list alone, which is where the sheet hangs."""
@@ -220,40 +211,32 @@ class RoleGrantTest(TestCase):
         self._post_roles(self.target, [self.consultant_group])
         assert self._group_names(self.target) == set()
 
-    def test_rendered_sheet_hides_assignment_admin_from_user_admin(self):
-        self.target.groups.add(self.assignment_admin_group)
-        self.client.force_login(self.user_admin)
-
-        response = self.client.get(self._roles_url(self.target), headers=HX)
-
-        assert response.status_code == 200
-        self.assertNotContains(response, role_label(ROLE_ASSIGNMENT_ADMIN))
-        self.assertContains(response, role_label(ROLE_OFFICE_ASSISTANT))
-        self.assertContains(response, role_label(ROLE_BDM))
-
-    def test_rendered_sheet_shows_assignment_admin_to_staff(self):
+    def test_the_rendered_sheet_never_offers_application_administration(self):
+        """It follows the email address, so a checkbox for it would be a lie."""
         self.client.force_login(self.staff)
 
         response = self.client.get(self._roles_url(self.target), headers=HX)
 
-        self.assertContains(response, role_label(ROLE_ASSIGNMENT_ADMIN))
+        assert response.status_code == 200
+        self.assertNotContains(response, role_label(ROLE_STAFF))
         self.assertContains(response, role_label(ROLE_OFFICE_ASSISTANT))
+        self.assertContains(response, role_label(ROLE_BDM))
 
     def test_the_sheet_arrives_with_the_roles_the_user_already_holds(self):
         """Saving replaces the whole set, so a sheet that opens unticked strips
         every role the moment someone presses Opslaan."""
-        self.target.groups.add(self.consultant_group, self.assignment_admin_group)
+        self.target.groups.add(self.consultant_group, self.bdm_group)
         self.client.force_login(self.staff)
 
         response = self.client.get(self._roles_url(self.target), headers=HX)
 
         assert _ticked(response.content.decode()) == {
             role_label(ROLE_CONSULTANT),
-            role_label(ROLE_ASSIGNMENT_ADMIN),
+            role_label(ROLE_BDM),
         }
 
     def test_the_sheet_lists_the_roles_by_label(self):
-        """By key Opdrachtbeheer would come first, so the order pins the label sort."""
+        """By key ``bdm`` would come first, so the order pins the label sort."""
         self.client.force_login(self.staff)
 
         content = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
@@ -262,7 +245,6 @@ class RoleGrantTest(TestCase):
             role_label(ROLE_BDM),
             role_label(ROLE_CONSULTANT),
             role_label(ROLE_OFFICE_ASSISTANT),
-            role_label(ROLE_ASSIGNMENT_ADMIN),
         ]
 
     def test_a_group_without_a_label_keeps_its_own_name(self):
@@ -276,18 +258,22 @@ class RoleGrantTest(TestCase):
 
         assert "support" in _labels_in_order(content), "the leftover group has no name on the sheet"
 
-    def test_the_sheet_opens_whole_and_a_rejected_role_returns_the_body_only(self):
+    def test_the_sheet_opens_whole_and_a_rejected_submission_returns_the_body_only(self):
         """A POST reaches the sheet template only on a validation error; a whole
         sheet back then stacks a second one over the one that is already open."""
         self.client.force_login(self.user_admin)
 
         opened = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
 
-        assert "<nldd-sheet" in opened, "the roles sheet did not come back as a sheet"
+        assert "<nldd-sheet" in opened, "the user sheet did not come back as a sheet"
         assert "data-auto-show" in opened, "dialog.js has nothing to open after the swap"
         assert f'hx-post="{self._roles_url(self.target)}"' in opened, "the sheet posts somewhere else"
 
-        rejected = self._post_roles(self.target, [self.assignment_admin_group]).content.decode()
+        rejected = self.client.post(
+            self._roles_url(self.target),
+            {"first_name": "", "last_name": "G", "email": self.target.email},
+            headers=HX,
+        ).content.decode()
 
         assert "<nldd-form>" in rejected, "the error re-render dropped the form"
         assert "<nldd-sheet" not in rejected, "a second sheet stacks over the open one"
@@ -368,35 +354,15 @@ class RoleGrantTest(TestCase):
         assert self._post_roles(superuser, [self.consultant_group]).status_code == 404
         assert self._group_names(superuser) == set()
 
-    def test_smuggled_privileged_role_fails_validation(self):
-        form = UserForm({"groups": [self.assignment_admin_group.pk]}, instance=self.target, editor=self.user_admin)
+    def test_a_group_id_that_is_not_a_role_is_refused(self):
+        """The queryset the form offers is also what a submitted id is validated
+        against, so a hand-built POST cannot reach a group it never showed."""
+        gone = Group.objects.create(name="verwijderd")
+        form = UserForm({"groups": [gone.pk]}, instance=self.target, editor=self.user_admin)
+        gone.delete()
 
         assert not form.is_valid()
         assert "groups" in form.errors
-
-    def test_smuggled_role_over_http_is_not_granted(self):
-        """Asks only whether the role was granted, so it stays honest with either
-        layer switched off: the form's queryset and ``_apply_groups`` each hold
-        this on their own, and only both gone makes it red."""
-        self.client.force_login(self.user_admin)
-        for user, group in (
-            (self.target, self.assignment_admin_group),
-            (self.user_admin, self.assignment_admin_group),  # self-elevation
-        ):
-            with self.subTest(user=user.email, group=group.name):
-                self._post_roles(user, [group])
-
-                assert not user.groups.filter(pk=group.pk).exists()
-
-    def test_the_form_rejects_a_smuggled_role_over_http(self):
-        """The first of the two layers, measured through the route: no redirect,
-        so nothing was saved at all."""
-        self.client.force_login(self.user_admin)
-
-        response = self._post_roles(self.target, [self.assignment_admin_group])
-
-        assert response.status_code == 200
-        assert "HX-Redirect" not in response
 
     def test_user_admin_may_grant_consultant_and_bdm(self):
         self.client.force_login(self.user_admin)
@@ -406,23 +372,20 @@ class RoleGrantTest(TestCase):
         assert response["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_BDM}
 
-    def test_user_admin_keeps_the_privileged_role_it_did_not_see(self):
-        self.target.groups.add(self.assignment_admin_group, self.user_admin_group, self.bdm_group)
+    def test_saving_replaces_the_whole_set(self):
+        self.target.groups.add(self.user_admin_group, self.bdm_group)
         self.client.force_login(self.user_admin)
 
-        # The form never offered Opdrachtbeheer, so it is not submitted; the roles it
-        # did offer are submitted in full, and what is missing from them is revoked.
         response = self._post_roles(self.target, [self.consultant_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_ASSIGNMENT_ADMIN}
+        assert self._group_names(self.target) == {ROLE_CONSULTANT}
         event = Event.objects.filter(object_type="User", action="update").last()
-        # In label order: on the key Opdrachtbeheer would come first.
-        assert event.context["group_names"] == [role_label(ROLE_CONSULTANT), role_label(ROLE_ASSIGNMENT_ADMIN)]
+        assert event.context["group_names"] == [role_label(ROLE_CONSULTANT)]
 
-    def test_user_admin_grants_and_revokes_user_admin_but_not_assignment_admin(self):
-        """The boundary of the policy: Office assistent hands itself on, Opdrachtbeheer
-        stays with application administration."""
+    def test_user_admin_grants_and_revokes_user_admin(self):
+        """Office assistent hands itself on, which is why onboarding does not stall
+        on an application administrator."""
         self.client.force_login(self.user_admin)
 
         granted = self._post_roles(self.target, [self.user_admin_group])
@@ -430,31 +393,26 @@ class RoleGrantTest(TestCase):
         assert granted["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == {ROLE_OFFICE_ASSISTANT}
 
-        both = self._post_roles(self.target, [self.user_admin_group, self.assignment_admin_group])
-
-        assert "HX-Redirect" not in both, "the form accepted Opdrachtbeheer from Office assistent"
-        assert self._group_names(self.target) == {ROLE_OFFICE_ASSISTANT}
-
         revoked = self._post_roles(self.target, [])
 
         assert revoked["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == set()
 
-    def test_staff_grants_assignment_admin_with_event(self):
+    def test_staff_grants_bdm_with_event(self):
         self.client.force_login(self.staff)
 
-        response = self._post_roles(self.target, [self.assignment_admin_group])
+        response = self._post_roles(self.target, [self.bdm_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.target) == {ROLE_ASSIGNMENT_ADMIN}
+        assert self._group_names(self.target) == {ROLE_BDM}
         event = Event.objects.filter(object_type="User", action="update").last()
         assert event.object_id == self.target.id
         assert event.user_id == self.staff.id
-        assert event.context["group_names"] == [role_label(ROLE_ASSIGNMENT_ADMIN)]
+        assert event.context["group_names"] == [role_label(ROLE_BDM)]
 
-    def test_staff_revokes_own_assignment_admin(self):
+    def test_staff_revokes_own_bdm(self):
         # The "switch it off and test as a normal user" workflow.
-        self.staff.groups.add(self.assignment_admin_group)
+        self.staff.groups.add(self.bdm_group)
         self.client.force_login(self.staff)
 
         response = self._post_roles(self.staff, [])
@@ -473,19 +431,9 @@ class RoleGrantTest(TestCase):
         assert f'text="{ROLE_CONSULTANT}"' not in content
         assert self._roles_url(self.target) in content
 
-    def test_service_drops_assignment_admin_from_non_staff(self):
-        set_user_roles(
-            self.user_admin, self.target, [self.assignment_admin_group, self.user_admin_group, self.consultant_group]
-        )
-        assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT}
-
-    def test_service_without_updater_cannot_grant_assignment_admin(self):
-        set_user_roles(None, self.target, [self.assignment_admin_group])
-        assert self._group_names(self.target) == set()
-
-    def test_service_lets_staff_grant_assignment_admin(self):
-        set_user_roles(self.staff, self.target, [self.assignment_admin_group, self.user_admin_group])
-        assert self._group_names(self.target) == {ROLE_ASSIGNMENT_ADMIN, ROLE_OFFICE_ASSISTANT}
+    def test_the_service_sets_the_roles_it_is_given(self):
+        set_user_roles(self.user_admin, self.target, [self.bdm_group, self.user_admin_group])
+        assert self._group_names(self.target) == {ROLE_BDM, ROLE_OFFICE_ASSISTANT}
 
     def test_creating_a_user_grants_the_roles_that_were_ticked(self):
         """The sheet hands out roles on create as well as on edit, so a new
@@ -502,34 +450,6 @@ class RoleGrantTest(TestCase):
         assert event.object_id == created.id
         # In label order: Business Development Manager before Consultant.
         assert event.context["group_names"] == [role_label(ROLE_BDM), role_label(ROLE_CONSULTANT)]
-
-    def test_the_create_service_drops_a_role_the_creator_may_not_grant(self):
-        """The second lock on the create path, the mirror of
-        ``test_service_drops_assignment_admin_from_non_staff``. Asked of the service
-        directly because the form's queryset refuses this one first, so over http
-        the answer would come from the layer above."""
-        created = create_user(
-            self.user_admin,
-            first_name="Nieuw",
-            last_name="Account",
-            email="nieuw@rijksoverheid.nl",
-            groups=[self.consultant_group, self.assignment_admin_group],
-        )
-
-        assert self._group_names(created) == {ROLE_CONSULTANT}
-
-    def test_the_create_service_lets_staff_grant_the_privileged_role(self):
-        """The counterweight: the refusal above is the grant rule, not a creator
-        who could not have handed out any role at all."""
-        created = create_user(
-            self.staff,
-            first_name="Nieuw",
-            last_name="Account",
-            email="nieuw@rijksoverheid.nl",
-            groups=[self.consultant_group, self.assignment_admin_group],
-        )
-
-        assert self._group_names(created) == {ROLE_CONSULTANT, ROLE_ASSIGNMENT_ADMIN}
 
     def test_the_beheer_menus_offer_the_users_page_to_whoever_may_open_it(self):
         """``may_view_users`` is wider than the ``view_user`` the entries used to
@@ -812,19 +732,10 @@ class StaffEmailChangeTest(TestCase):
 class MayGrantTest(SimpleTestCase):
     """``may_grant`` is the one place the policy lives, so ask it about any role."""
 
-    def test_the_job_roles_are_grantable_by_anyone_on_the_screen(self):
+    def test_every_role_is_grantable_by_anyone_on_the_screen(self):
         for role in (ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
             with self.subTest(role=role):
                 assert may_grant(None, role) is True
-
-    def test_the_restricted_role_asks_for_application_administration(self):
-        assert may_grant(None, ROLE_ASSIGNMENT_ADMIN) is False
-
-    @override_settings(STAFF_EMAILS=["app@rijksoverheid.nl"])
-    def test_application_administration_may_grant_the_restricted_role(self):
-        editor = SimpleNamespace(is_authenticated=True, email="app@rijksoverheid.nl")
-
-        assert may_grant(editor, ROLE_ASSIGNMENT_ADMIN) is True
 
     @override_settings(STAFF_EMAILS=["app@rijksoverheid.nl"])
     def test_application_administration_itself_is_never_grantable(self):

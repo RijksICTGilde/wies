@@ -9,7 +9,6 @@ from django.urls import reverse
 
 from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, LabelCategory, Suborganization
 from wies.core.roles import (
-    ROLE_ASSIGNMENT_ADMIN,
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
@@ -60,9 +59,8 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
 
     def test_role_filter_lists_the_roles_by_label(self):
         """The full list behind "Meer..." is the one the view builds: sorted on
-        ``Group.name`` it would open with Opdrachtbeheer, which is no reader's A-Z."""
-        # get_or_create: migration 0009 already leaves the Opdrachtbeheer group behind.
-        for key in (ROLE_ASSIGNMENT_ADMIN, ROLE_BDM, ROLE_CONSULTANT):
+        ``Group.name`` it would open with ``bdm``, which is no reader's A-Z."""
+        for key in (ROLE_BDM, ROLE_CONSULTANT):
             Group.objects.get_or_create(name=key)
         self.client.force_login(self.admin)
 
@@ -75,7 +73,6 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
             role_label(ROLE_BDM).lower(),
             role_label(ROLE_CONSULTANT).lower(),
             role_label(ROLE_OFFICE_ASSISTANT).lower(),
-            role_label(ROLE_ASSIGNMENT_ADMIN).lower(),
         ]
 
     def test_filter_sheet_collapses_long_group_behind_meer(self):
