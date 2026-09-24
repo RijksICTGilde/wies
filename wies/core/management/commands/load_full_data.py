@@ -34,6 +34,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 
 from wies.core.models import (
+    SUBGROEP_CATEGORY,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -723,7 +724,7 @@ def _seed_all_label_categories() -> None:
         for label_name in category_vals["labels"]:
             Label.objects.get_or_create(name=label_name, category=category)
 
-    subgroep, _ = LabelCategory.objects.get_or_create(name="Subgroep", defaults={"color": "#DCE3EA"})
+    subgroep, _ = LabelCategory.objects.get_or_create(name=SUBGROEP_CATEGORY, defaults={"color": "#DCE3EA"})
     for label_name in ("ICT", "AI"):
         Label.objects.get_or_create(name=label_name, category=subgroep)
 

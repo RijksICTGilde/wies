@@ -9,11 +9,20 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, Suborganization
+from wies.core.models import (
+    SUBGROEP_CATEGORY,
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    Placement,
+    Service,
+    Skill,
+    Suborganization,
+)
 from wies.core.public_id import resolve_facet
 from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
-    GILDE_CATEGORY,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
@@ -798,7 +807,7 @@ class BezettingStatusFilterViewTest(TestCase):
     def test_rows_show_only_the_gilde_category_as_chips(self):
         """The gilde is the subdivision this page is read by; the full expertise
         list would fill the row, so those stay in the filter sheet."""
-        gilde = LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        gilde = LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#DCE3EA")
         expertise = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
         self.bench.labels.add(Label.objects.create(name="ICT", category=gilde))
         self.bench.labels.add(Label.objects.create(name="Security en privacy", category=expertise))
@@ -811,7 +820,7 @@ class BezettingStatusFilterViewTest(TestCase):
         assert 'text="Security en privacy"></nldd-tag>' not in content
 
     def test_a_colleague_without_a_gilde_label_gets_no_chip(self):
-        LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#DCE3EA")
         rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
         assert rows[self.bench.id].gilde_labels == []
         assert self.client.get(self.url).status_code == 200

@@ -7,7 +7,16 @@
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   {# Role tags inline after the name, like the skill tag on a team member. #}
-  <nldd-text-cell divider-start width="full" supporting-text="{{ user.email }}">
+  {# Merk and subgroep as text after the e-mail: every label read as a blob,
+     tags next to the role tags was too much. user.colleague is Undefined for
+     a user without a profile. #}
+  {% set colleague = user.colleague %}
+  {% set profile = [] %}
+  {% if colleague %}
+    {% set labels = colleague.labels.all()|selectattr("category.name", "in", row_label_categories)|map(attribute="name")|list %}
+    {% set profile = [colleague.suborganization.name if colleague.suborganization else none] + labels %}
+  {% endif %}
+  <nldd-text-cell divider-start width="full" supporting-text="{{ ([user.email] + profile)|select|join(' · ') }}">
   <span>
     {{ user.first_name }} {{ user.last_name }}
     {% for group in user.groups.all() %}

@@ -101,3 +101,15 @@ class SortSwapTests(TestCase):
         # no hx-swap-oob on the sort-control element itself.
         sort_control_tag = content[content.index('id="sort-control"') - 40 : content.index('id="sort-control"') + 60]
         assert "hx-swap-oob" not in sort_control_tag
+
+    def test_filter_form_carries_the_chosen_order(self):
+        """The filter form (a fragment shared with the user list) posts the
+        active order along, so a filter change keeps the sort. Without the
+        hidden input a filter change silently fell back to the default order."""
+        self.client.force_login(self.user)
+
+        content = self.client.get(self.url + "?order=name").content.decode()
+        form = content[content.index('id="filter-form"') :].split("</form>")[0]
+
+        assert 'name="order"' in form
+        assert 'value="name"' in form
