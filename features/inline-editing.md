@@ -80,7 +80,7 @@ extra_info = Editable(
 
 ```python
 def _bdm_queryset():
-    return Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name")
+    return Colleague.objects.filter(user__groups__name=ROLE_BDM).order_by("name")  # the key, not the label
 
 owner = Editable(
     label="Business Manager",
@@ -226,8 +226,8 @@ has_permission(verb, obj, user, field=None) -> bool
 - `verb` may be a `Verb` enum member or a list/tuple of them
   (OR-composition).
 - Returns `False` for anonymous users.
-- Returns `True` for `is_superuser` users — single god-mode short-circuit;
-  rule bodies never repeat it.
+- `is_superuser` is **not** a short-circuit: the assignment rules ask for a
+  role, which the flag does not give (`test_permissions.py`).
 - Lookup order: `(verb, model, field.name)` → `(verb, model, None)`.
   Field rules override the whole-object rule for the same model.
 - Verbs available: `READ`, `UPDATE`, `DELETE`. Class-level access (LIST
@@ -240,40 +240,57 @@ has_permission(verb, obj, user, field=None) -> bool
 All rules live in `wies/core/permissions.py`, imported in
 `CoreConfig.ready()` so registrations happen at startup.
 
+A rule has no body and nothing to decorate, so `rule(...)` is a plain call. It
+declares what the object must be (`requires`) and who it serves (`grants`), each
+`Grant` pairing a holder with the relation it needs to the object (`Scope`):
+
 ```python
-from wies.core.editables import AssignmentEditables
+from wies.core.editables import AssignmentEditables, UserEditables
 from wies.core.models import Assignment, Placement
-from wies.core.permission_engine import Verb, has_permission, rule
+from wies.core.permission_engine import PLACED, WIES_SOURCED, Grant, Role, Verb, rule
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT
 
 UPDATE = Verb.UPDATE
 
+rule(UPDATE, Assignment,                               # whole-object
+     label="Opdracht bewerken",
+     requires=WIES_SOURCED,
+     grants=[Grant(Role(ROLE_BDM))])
 
-@rule(UPDATE, Assignment)                              # whole-object
-def update_assignment(user, a):
-    return _is_wies_sourced(a) and (_has_change_perm(user, a) or _is_assignment_owner(user, a))
+rule(UPDATE, Placement,                                # a plaatsing hangs under an opdracht,
+     label="Teamlid verplaatsen",                      # and WIES_SOURCED finds it
+     requires=WIES_SOURCED,
+     grants=[Grant(Role(ROLE_BDM))])
 
+rule(UPDATE, AssignmentEditables.extra_info,           # field-level: more permissive
+     label="Extra informatie bewerken",
+     requires=WIES_SOURCED,
+     grants=[Grant(Role(ROLE_BDM)),
+             Grant(Role(ROLE_CONSULTANT), scope=PLACED)])
 
-@rule(UPDATE, Placement)                               # delegate to parent
-def update_placement(user, p):
-    return has_permission(UPDATE, p.service.assignment, user)
-
-
-@rule(UPDATE, AssignmentEditables.extra_info)          # field-level: more permissive
-def update_assignment_extra_info(user, a):
-    if not _is_wies_sourced(a):
-        return False
-    return has_permission(UPDATE, a, user) or _is_placed_on_assignment(user, a)
-
-
-@rule(UPDATE, UserEditables.email)                     # field-level: stricter
-def update_user_email(user, target):
-    return _has_change_perm(user, target)              # admin-only, no self-edit branch
+rule(UPDATE, UserEditables.email,                      # field-level: stricter
+     label="E-mailadres inline wijzigen",
+     grants=[])                                        # nobody: see features/roles.md
 ```
 
-Predicates (`_is_wies_sourced`, `_has_change_perm`,
-`_is_assignment_owner`, …) are private helpers in the same file. Rule
-bodies are plain Python returning `bool` — no DSL, no operator
-overloading.
+No module-level names: nothing refers to a rule by name, `has_permission(...)`
+is how every caller reaches it. And no rule points at another one: a rule on a
+dienst or a plaatsing names its own audience, because `WIES_SOURCED` and the
+scopes resolve the opdracht themselves.
+
+The vocabulary is fixed and lives in `permission_engine.py`:
+
+- **Grants**: `Grant(holder, scope=...)`, and nothing else. An empty `grants`
+  says nobody may, and the role page prints that row as "no" in every column.
+- **Holders**: `Role(key)` and `Anyone()`. A holder answers only "who"; the
+  relation is the grant's.
+- **Scopes**: `ANY` (default), `OWN`, `PLACED`, `PLACED_ON_SERVICE`, `SELF`.
+  Each carries both the predicate behind it and the wording it gets on the role
+  page, so a sentence used by three rules is written once.
+- **Conditions**: `WIES_SOURCED`, about the object rather than the viewer.
+
+`label` and `grants` are mandatory keywords, so a right cannot be added without
+a row on the role page (`features/roles.md`).
 
 ### Calling `has_permission`
 

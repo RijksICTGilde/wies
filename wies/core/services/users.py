@@ -5,7 +5,7 @@ from io import StringIO
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
 from django.db.models import Q
@@ -13,7 +13,15 @@ from django.db.models import Q
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Placement, Suborganization
 from wies.core.querysets import annotate_placement_dates
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import (
+    ROLE_BDM,
+    ROLE_CONSULTANT,
+    ROLE_LABELS,
+    ROLE_OFFICE_ASSISTANT,
+    may_change_email,
+    may_grant,
+    role_label,
+)
 from wies.core.services.assignments import member_audit_event
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
@@ -21,6 +29,22 @@ from wies.core.services.suborganizations import get_suborganization_by_name
 User = get_user_model()
 
 logger = logging.getLogger(__name__)
+
+# The role columns of the user CSV, by the header a file writes: labels, not keys,
+# so an import file stays readable (``features/roles.md``). BDM keeps the short
+# form it has always had.
+CSV_ROLE_COLUMNS = {
+    ROLE_LABELS[ROLE_OFFICE_ASSISTANT]: ROLE_OFFICE_ASSISTANT,
+    ROLE_LABELS[ROLE_CONSULTANT]: ROLE_CONSULTANT,
+    "BDM": ROLE_BDM,
+}
+
+
+def _role_columns(fieldnames) -> dict[str, str]:
+    """``{header as the file writes it: role key}``, for the role columns present."""
+    wanted = {header.lower(): key for header, key in CSV_ROLE_COLUMNS.items()}
+    headers = ((name, (name or "").strip().lower()) for name in fieldnames or ())
+    return {name: wanted[key] for name, key in headers if key in wanted}
 
 
 def is_allowed_email_domain(email: str) -> bool:
@@ -65,10 +89,44 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
+def _apply_groups(user, groups, updater) -> list:
+    """Sets the user's roles, keeping the ones the updater may not grant.
+
+    Returns the roles the user ends up with, in label order."""
+    new = {g for g in groups if may_grant(updater, g.name)}
+    new |= {g for g in user.groups.all() if not may_grant(updater, g.name)}
+    user.groups.set(new)
+    return sorted(new, key=lambda g: role_label(g.name))
+
+
+def set_user_roles(updater, user, groups, request=None):
+    """Sets a user's roles and records the audit event: the write path for an
+    editor who may grant roles but not edit the person.
+
+    :param updater: user that performs the action. Can be None if done by system
+    :param request: optional, for logging client IP + User-Agent on the audit event
+    """
+    groups = _apply_groups(user, groups, updater)
+    create_event(
+        object_type="User",
+        action="update",
+        source="user",
+        object_id=user.id,
+        user=updater,
+        request=request,
+        context={"group_names": [role_label(group.name) for group in groups]},
+    )
+    return user
+
+
 def create_user(
     creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
 ):
-    """
+    """Creates the person and the roles asked for, by the user form or the CSV import.
+
+    Refuses an address in ``STAFF_EMAILS`` to anyone but application administration
+    (``may_change_email``, ``features/roles.md``).
+
     :param creator: can be None when user create is triggered from system itself
     :param request: optional, for logging client IP + User-Agent on the audit event
     """
@@ -78,6 +136,10 @@ def create_user(
 
     # Validate email domain
     validate_email_domain(email)
+
+    if not may_change_email(creator, "", email):
+        msg = "Only application administration may create a user on an application administrator's address"
+        raise PermissionDenied(msg)
 
     if User.objects.filter(email__iexact=email).exists():
         raise EmailNotAvailableError(email)
@@ -97,8 +159,7 @@ def create_user(
     if suborganization is not None:
         colleague.suborganization = suborganization
         colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
+    groups = _apply_groups(user, groups, creator)
 
     context = {
         "email": email,
@@ -106,7 +167,7 @@ def create_user(
         "last_name": last_name,
         "label_names": label_names,
         "suborganization_name": suborganization.name if suborganization else None,
-        "group_names": [group.name for group in groups],
+        "group_names": [role_label(group.name) for group in groups],
     }
     create_event(
         object_type="User",
@@ -124,14 +185,13 @@ def create_user(
 def update_user(
     updater, user, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
 ):
-    """
+    """Updates the person, and their roles when the caller passed any.
+
     :param updater: user that performs the update action. Can be None if done by system
+    :param groups: the roles the user must end up with, or None to leave them alone
     :param suborganization: the colleague's merk (a Suborganization), or None to clear it
     :param request: optional, for logging client IP + User-Agent on the audit event
     """
-
-    if groups is None:
-        groups = []
 
     # Validate email domain
     validate_email_domain(email)
@@ -139,6 +199,12 @@ def update_user(
     other_user = User.objects.filter(email__iexact=email).exclude(pk=user.pk).first()
     if other_user is not None:
         raise EmailNotAvailableError(email)
+
+    # Read the stored address: a ModelForm has already written the new one onto ``user``.
+    stored_email = User.objects.values_list("email", flat=True).get(pk=user.pk)
+    if not may_change_email(updater, stored_email, email):
+        msg = "Only application administration may move an application administrator's address"
+        raise PermissionDenied(msg)
 
     user.first_name = first_name
     user.last_name = last_name
@@ -153,8 +219,6 @@ def update_user(
         label_names = [label.name for label in labels]
     colleague.suborganization = suborganization
     colleague.save(update_fields=["suborganization"])
-    if groups is not None:
-        user.groups.set(groups)
 
     context = {
         "first_name": first_name,
@@ -162,8 +226,9 @@ def update_user(
         "email": email,
         "label_names": label_names,
         "suborganization_name": colleague.suborganization.name if colleague.suborganization else None,
-        "group_names": [group.name for group in groups],
     }
+    if groups is not None:
+        context["group_names"] = [role_label(group.name) for group in _apply_groups(user, groups, updater)]
     create_event(
         object_type="User",
         action="update",
@@ -185,9 +250,12 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     - last_name (required)
     - email (required)
     - brand (optional, merk name - assigned as the colleague's merk; must already exist)
-    - Beheerder (optional, "y" or "n")
-    - Consultant (optional, "y" or "n")
-    - BDM (optional, "y" or "n")
+    - one column per role in ``CSV_ROLE_COLUMNS``, each "y" or "n"
+
+    A role the importer may not grant is not applied and is reported per row
+    (``_apply_groups``); the row itself still lands. A row on a ``STAFF_EMAILS``
+    address fails validation instead and, like every other row error, stops the
+    whole file.
 
     Returns a dictionary with:
     - success: True if all users imported, False if validation errors
@@ -216,6 +284,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
             "errors": ["CSV file is empty or has no headers."],
         }
 
+    role_columns = _role_columns(csv_reader.fieldnames)
     csv_columns = set(csv_reader.fieldnames)
     missing_columns = required_columns - csv_columns
 
@@ -253,11 +322,16 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 domains_str = ", ".join(allowed_domains)
                 row_errors.append(f"Row {row_num}: email '{email}' has invalid domain. Allowed: {domains_str}")
 
-        for group_name in ["Beheerder", "Consultant", "BDM"]:
-            if group_name in row:
-                value = row[group_name].strip().lower()
-                if value not in {"y", "n", ""}:
-                    row_errors.append(f"Row {row_num}: {group_name} must be 'y' or 'n', got '{row[group_name]}'")
+            # ``create_user`` refuses this one as well, but from inside the atomic
+            # block: a single such row would roll the whole import back with nothing
+            # to show for it, so name the row here like every other check does.
+            if not may_change_email(creator, "", email):
+                row_errors.append(f"Row {row_num}: only application administration may create a user on '{email}'")
+
+        for column in role_columns:
+            value = (row.get(column) or "").strip()
+            if value.lower() not in {"y", "n", ""}:
+                row_errors.append(f"Row {row_num}: {column} must be 'y' or 'n', got '{row[column]}'")
 
         brand_name = row.get("brand", "").strip()
         if brand_name and not Suborganization.objects.filter(name__iexact=brand_name).exists():
@@ -273,7 +347,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         if row_errors:
             errors.extend(row_errors)
         else:
-            rows.append(row)
+            rows.append((row_num, row))
 
     if errors:
         return {
@@ -287,14 +361,10 @@ def create_users_from_csv(creator, csv_content: str, request=None):
 
     try:
         with transaction.atomic():
-            # Get all groups once
-            groups_dict = {
-                "Beheerder": Group.objects.get(name="Beheerder"),
-                "Consultant": Group.objects.get(name="Consultant"),
-                "BDM": Group.objects.get(name=BDM_GROUP_NAME),
-            }
+            # Get the groups of the file's role columns once
+            groups_dict = {key: Group.objects.get(name=key) for key in set(role_columns.values())}
 
-            for row in rows:
+            for row_num, row in rows:
                 first_name = row["first_name"].strip()
                 last_name = row["last_name"].strip()
                 email = row["email"].strip()
@@ -308,12 +378,11 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                         suborg_mapping[brand_name] = get_suborganization_by_name(brand_name)
                     suborganization = suborg_mapping[brand_name]
 
-                groups_to_assign = []
-                for group_name in ["Beheerder", "Consultant", "BDM"]:
-                    if row.get(group_name, "").strip().lower() == "y":
-                        group = groups_dict.get(group_name)
-                        if group:
-                            groups_to_assign.append(group)
+                groups_to_assign = [
+                    groups_dict[key]
+                    for column, key in role_columns.items()
+                    if (row.get(column) or "").strip().lower() == "y"
+                ]
 
                 existing_user = User.objects.filter(email__iexact=email).first()
                 if existing_user:
@@ -321,7 +390,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     errors.append(f"User with email '{email}' already exists, skipped")
                     continue
 
-                create_user(
+                user = create_user(
                     creator,
                     first_name=first_name,
                     last_name=last_name,
@@ -331,6 +400,14 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     request=request,
                 )
                 users_created += 1
+                # No column asks for a role the importer may not grant today; this
+                # keeps a privileged column added later from being dropped silently.
+                dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
+                if dropped:
+                    errors.append(
+                        f"Row {row_num}: {', '.join(sorted(role_label(name) for name in dropped))} not applied, "
+                        "only application administration may grant it"
+                    )
     except (DataError, IntegrityError) as e:
         logger.warning("User-CSV import failed with a data error", exc_info=e)
         return {

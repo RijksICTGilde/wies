@@ -11,16 +11,21 @@
       hx-target="#{{ body_id }}"
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
-  {{ content.first_name.as_field_group() }}
-  {{ content.last_name.as_field_group() }}
-  {{ content.email.as_field_group() }}
-  {{ content.groups.as_field_group() }}
-  {{ content.suborganization.as_field_group() }}
-  {% for field_name in content.fields %}
-    {% if field_name.startswith('category_') %}
-      {{ content[field_name].as_field_group() }}
-    {% endif %}
-  {% endfor %}
+  {# Both halves are optional: the form drops the one the editor may not touch. #}
+  {% if 'first_name' in content.fields %}
+    {{ content.first_name.as_field_group() }}
+    {{ content.last_name.as_field_group() }}
+    {{ content.email.as_field_group() }}
+    {{ content.suborganization.as_field_group() }}
+    {% for field_name in content.fields %}
+      {% if field_name.startswith('category_') %}
+        {{ content[field_name].as_field_group() }}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+  {% if 'groups' in content.fields %}
+    {{ content.groups.as_field_group() }}
+  {% endif %}
   <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>
 </nldd-form>

@@ -1,5 +1,6 @@
 import logging
 from datetime import timedelta
+from functools import cached_property
 
 from django import forms
 from django.contrib.auth import get_user_model
@@ -16,6 +17,7 @@ from wies.core.editables.user import UserEditables
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
 from .querysets import annotate_placement_dates
+from .roles import may_administer_roles, may_change_email, may_grant, role_label
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -216,22 +218,38 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
         return cleaned
 
 
+class RoleChoiceIterator(forms.models.ModelChoiceIterator):
+    """Sorts the checkboxes by label: the queryset can only order on ``Group.name``,
+    which is a key, so its A-Z is not the reader's."""
+
+    def __iter__(self):
+        yield from sorted(super().__iter__(), key=lambda choice: str(choice[1]))
+
+
+class RoleChoiceField(forms.ModelMultipleChoiceField):
+    """Roles as checkboxes, each shown by its label while the submitted value stays
+    the Group id."""
+
+    iterator = RoleChoiceIterator
+
+    def label_from_instance(self, obj):
+        return role_label(obj.name)
+
+
 class UserForm(NlddFormMixin, forms.ModelForm):
-    """Form for creating and updating User instances.
+    """Form for creating and updating User instances: the person and their roles.
 
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
+
+    The two halves are offered on their own gate and a half the editor may not
+    touch is left out of ``self.fields``, so a submitted value for it is ignored.
+    Why they are split: ``features/roles.md``.
     """
 
     first_name = UserEditables.first_name.form_field()
     last_name = UserEditables.last_name.form_field()
     email = UserEditables.email.form_field()
-    groups = forms.ModelMultipleChoiceField(
-        label="Rollen",
-        queryset=Group.objects.filter(),
-        required=False,
-        widget=forms.CheckboxSelectMultiple(),
-    )
     suborganization = forms.ModelChoiceField(
         label="Merk",
         queryset=Suborganization.objects.all(),
@@ -245,7 +263,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "groups"]
+        fields = ["first_name", "last_name", "email"]
         # label attribute is manually constructed and serialized below
 
     def clean_email(self):
@@ -257,13 +275,46 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         if qs.exists():
             msg = "Er bestaat al een gebruiker met dit e-mailadres."
             raise ValidationError(msg)
+        # Creating asks it too, with "" as the address it comes from (``features/roles.md``).
+        if not may_change_email(self._editor, self.instance.email, email):
+            msg = (
+                "Alleen applicatiebeheer mag dit e-mailadres wijzigen."
+                if self.instance.pk
+                else "Alleen applicatiebeheer mag een gebruiker op dit e-mailadres aanmaken."
+            )
+            raise ValidationError(msg)
         return email
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self._editor = editor
 
         instance = kwargs.get("instance")
+        self._category_field_names = set()
 
+        if self.edits_person:
+            self._add_person_fields(instance)
+        else:
+            for name in ("first_name", "last_name", "email", "suborganization"):
+                del self.fields[name]
+
+        if editor is None or may_administer_roles(editor):
+            self._add_role_field(editor, instance)
+
+    @cached_property
+    def edits_person(self) -> bool:
+        """Whether the editor may write name, email, merk and labels.
+
+        ``rijksauth.change_user``, the sibling of the ``add_user`` and
+        ``delete_user`` the other two user routes ask. Creating has nothing to ask
+        it about: that route is behind ``rijksauth.add_user`` and reaches no
+        existing person. ``editor=None`` is the system, as it is in ``may_grant``.
+        """
+        if self.instance is None or self.instance.pk is None or self._editor is None:
+            return True
+        return self._editor.has_perm("rijksauth.change_user")
+
+    def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
             current_merk = instance.colleague.suborganization
@@ -271,7 +322,6 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         self._configure_field("suborganization")
 
         # Map the labels m2m onto one dynamically built field per category.
-        self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
 
@@ -292,6 +342,22 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
             # Form init already ran, so configure here or the wrong templates apply.
             self._configure_field(field_name)
+
+    def _add_role_field(self, editor, instance):
+        """The roles the editor may grant, as checkboxes.
+
+        The queryset is also what submitted ids are validated against, so a role
+        the editor may not grant is refused server-side, not only left unrendered.
+        """
+        withheld = [name for name in Group.objects.values_list("name", flat=True) if not may_grant(editor, name)]
+        self.fields["groups"] = RoleChoiceField(
+            label="Rollen",
+            queryset=Group.objects.exclude(name__in=withheld).order_by("name"),
+            required=False,
+            initial=list(instance.groups.all()) if instance and instance.pk else [],
+            widget=forms.CheckboxSelectMultiple(),
+        )
+        self._configure_field("groups")
 
     def clean(self):
         cleaned_data = super().clean()

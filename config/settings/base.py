@@ -146,7 +146,7 @@ OIDC_POST_LOGOUT_COOKIE_NAME = "wies_post_logout"
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
-# Comma-separated emails that can access the staff dashboard / database pages.
+# Comma-separated emails of the application administrators, see features/roles.md.
 STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS", "").split(",") if email.strip()]
 
 # Toggle for destructive staff database actions (clear data, load dummy data).

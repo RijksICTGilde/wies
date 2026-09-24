@@ -8,6 +8,7 @@ from django.utils import timezone
 
 from wies.core.context_processors import onboarding
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill
+from wies.core.tests.role_helpers import grant_consultant
 
 User = get_user_model()
 
@@ -189,9 +190,9 @@ class OnboardingAssignmentStepTest(TestCase):
         self.bm = Colleague.objects.create(
             user=self.bm_user, name="Bea Manager", email="bm@rijksoverheid.nl", source="wies"
         )
-        # The placed user going through onboarding. No Consultant group is
-        # required — anyone with an active placement sees the step.
-        self.user = User.objects.create_user(email="con@rijksoverheid.nl", first_name="Cas")
+        # The placed user going through onboarding. The Consultant role is what
+        # opens the edit screen on the opdracht's fields.
+        self.user = grant_consultant(User.objects.create_user(email="con@rijksoverheid.nl", first_name="Cas"))
         self.colleague = Colleague.objects.create(
             user=self.user, name="Cas Consultant", email="con@rijksoverheid.nl", source="wies"
         )

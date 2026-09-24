@@ -1,11 +1,19 @@
 """Role tag in the user list and the filter sheet (rol/merk/labels) — #544."""
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, LabelCategory, Suborganization
+from wies.core.roles import (
+    ROLE_BDM,
+    ROLE_CONSULTANT,
+    ROLE_OFFICE_ASSISTANT,
+    role_label,
+)
 
 User = get_user_model()
 
@@ -22,9 +30,9 @@ class UserFilterFixture:
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
         self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.merk = Suborganization.objects.create(name="Merk A")
-        self.beheerder = Group.objects.create(name="Beheerder")
+        self.office_assistant, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
         u = User.objects.create_user(email="c@rijksoverheid.nl", first_name="Cor", last_name="Consultant")
-        u.groups.add(self.beheerder)
+        u.groups.add(self.office_assistant)
         Colleague.objects.create(
             user=u, name="Cor Consultant", email="c@rijksoverheid.nl", source="wies", suborganization=self.merk
         )
@@ -34,7 +42,8 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        assert 'text="Beheerder"' in html  # role tag in the row
+        assert f'text="{role_label(ROLE_OFFICE_ASSISTANT)}"' in html
+        assert f'text="{ROLE_OFFICE_ASSISTANT}"' not in html
 
     def test_filter_sheet_renders_role_and_merk(self):
         # The sheet lives in the page itself: its #filter-form drives the search
@@ -43,10 +52,28 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         html = self.client.get(reverse("admin-users")).content.decode()
         assert "user-filter-sheet" in html
         assert 'id="filter-form"' in html
-        assert "Beheerder" in html  # role option
+        assert role_label(ROLE_OFFICE_ASSISTANT) in html  # role option, by label
         assert "Merk A" in html  # merk option
         assert 'name="rol"' in html
         assert 'name="merk"' in html
+
+    def test_role_filter_lists_the_roles_by_label(self):
+        """The full list behind "Meer..." is the one the view builds: sorted on
+        ``Group.name`` it would open with ``bdm``, which is no reader's A-Z."""
+        for key in (ROLE_BDM, ROLE_CONSULTANT):
+            Group.objects.get_or_create(name=key)
+        self.client.force_login(self.admin)
+
+        html = self.client.get(
+            reverse("admin-users") + "?filter_modal=rol", headers={"hx-request": "true"}
+        ).content.decode()
+
+        # One per option row; the template lowercases it for the search box.
+        assert re.findall(r'data-option-label="([^"]*)"', html) == [
+            role_label(ROLE_BDM).lower(),
+            role_label(ROLE_CONSULTANT).lower(),
+            role_label(ROLE_OFFICE_ASSISTANT).lower(),
+        ]
 
     def test_filter_sheet_collapses_long_group_behind_meer(self):
         # More merken than top_n=3, so the rest collapses behind "Meer...".
@@ -65,7 +92,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_active_filter_renders_chip(self):
         # The chip strip replaced the button counter, which said how many but not what.
         self.client.force_login(self.admin)
-        html = self.client.get(reverse("admin-users") + f"?rol={self.beheerder.id}").content.decode()
+        html = self.client.get(reverse("admin-users") + f"?rol={self.office_assistant.id}").content.decode()
         assert 'data-wies-dismiss="filter"' in html
         assert 'data-filter-name="rol"' in html
         assert "data-clear-all-filters" in html
@@ -76,7 +103,7 @@ class UserFilterOobTest(UserFilterRenderTest):
         self.client.force_login(self.admin)
         # Simulate the apply swap: a filter GET with HX-Request.
         html = self.client.get(
-            reverse("admin-users") + f"?rol={self.beheerder.id}", headers={"hx-request": "true"}
+            reverse("admin-users") + f"?rol={self.office_assistant.id}", headers={"hx-request": "true"}
         ).content.decode()
         assert 'data-wies-dismiss="filter"' in html
         # The filter panel travels along OOB so the sheet shows the new counts.
@@ -87,7 +114,7 @@ class UserFilterFlowTest(UserFilterRenderTest):
     def test_filter_swap_returns_results_with_oob_sheet(self):
         self.client.force_login(self.admin)
         html = self.client.get(
-            reverse("admin-users") + f"?rol={self.beheerder.id}", headers={"hx-request": "true"}
+            reverse("admin-users") + f"?rol={self.office_assistant.id}", headers={"hx-request": "true"}
         ).content.decode()
         # The results fragment comes back with the filter panel as an OOB swap.
         assert 'id="results"' in html
@@ -96,11 +123,11 @@ class UserFilterFlowTest(UserFilterRenderTest):
 
     def test_role_filter_is_multiselect(self):
         # Two roles at once must work (getlist).
-        other = Group.objects.create(name="Consultant")
+        other, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
         u2 = User.objects.create_user(email="c2@rijksoverheid.nl", first_name="C2", last_name="T")
         u2.groups.add(other)
         self.client.force_login(self.admin)
-        resp = self.client.get(reverse("admin-users") + f"?rol={self.beheerder.id}&rol={other.id}")
+        resp = self.client.get(reverse("admin-users") + f"?rol={self.office_assistant.id}&rol={other.id}")
         assert resp.status_code == 200
 
 
