@@ -61,8 +61,12 @@ class Scope:
         return f"Scope.{self.name.upper()}"
 
 
-def combined(*scopes: Scope) -> Scope:
+def all_of(*scopes: Scope) -> Scope:
     """A relation that is every one of ``scopes`` at once.
+
+    The other way to combine is "either of these", and that is two ``Grant``
+    entries with the same holder; there is no ``any_of`` because a rule's grants
+    already add up.
 
     Name the result as a module constant and add it to ``SCOPES``: the role matrix
     walks that tuple, so a combination missing from it prints no row at all.
