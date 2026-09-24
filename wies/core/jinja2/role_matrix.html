@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}
+  Rollen · Wies
+{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ nldd_asset('css/rich-text.css') }}">
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/admin_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <nldd-title size="3">
+  <h1>Rollen</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>
+    Wat elke rol op zichzelf mag, rechtstreeks uit de regels van Wies. Wie meer rollen heeft, mag alles
+    uit die kolommen samen.
+  </p>
+  <p>
+    "Eigen" is een opdracht waarvan je de Business Manager bent. "Waarop je geplaatst bent" betekent dat je
+    op een dienst van die opdracht staat; die plaatsing vraagt daarbovenop nog een rol.
+  </p>
+  {% if may_assign_roles %}
+    <p>
+      Rollen ken je toe op <a href="{{ url('admin-users') }}">Gebruikers</a>, via het actiemenu achter een naam.
+    </p>
+  {% endif %}
+  {# Icon plus a visually hidden word: colour alone may not carry the meaning
+   (WCAG 1.4.1), and nldd-icon is aria-hidden, so a reader hears an empty cell. #}
+  {% macro allowed_cell(yes, role_free=false) -%}
+    <td>
+      {%- if yes and role_free -%}
+        <nldd-icon name="check-circle-filled" color="secondary-content" size="20"></nldd-icon><span class="wies-visually-hidden">Ja, ongeacht je rol</span>
+      {%- elif yes -%}
+        <nldd-icon name="check-circle-filled" color="success" size="20"></nldd-icon><span class="wies-visually-hidden">Ja</span>
+      {%- else -%}
+        <nldd-icon name="close-circle-filled" color="critical" size="20"></nldd-icon><span class="wies-visually-hidden">Nee</span>
+      {%- endif -%}
+    </td>
+  {%- endmacro %}
+  {% for title, rows in sections %}
+    <h2>{{ title }}</h2>
+    <table>
+      <caption class="wies-visually-hidden">{{ title }}: wat elke rol mag</caption>
+      <thead>
+        <tr>
+          <th scope="col">Handeling</th>
+          {% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for label, allowed in rows %}
+          <tr>
+            <th scope="row">{{ label }}</th>
+            {% set role_free = allowed|reject|list|length == 0 %}{% for yes in allowed %}{{ allowed_cell(yes, role_free) }}{% endfor %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endfor %}
+  <h2>Django-permissies per rol</h2>
+  <table>
+    <caption class="wies-visually-hidden">Django-permissies per rol</caption>
+    <thead>
+      <tr>
+        <th scope="col">Permissie</th>
+        {% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for name, held in group_permissions %}
+        <tr>
+          <th scope="row">{{ name }}</th>
+          {% for yes in held %}{{ allowed_cell(yes) }}{% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {# Copies of the cell icons: change these and allowed_cell together. #}
+  <h2>Legenda</h2>
+  <dl>
+    <dt>
+      <nldd-icon name="check-circle-filled" color="success" size="20"></nldd-icon>
+    </dt>
+    <dd>
+      Deze rol geeft je dit recht.
+    </dd>
+    <dt>
+      <nldd-icon name="check-circle-filled" color="secondary-content" size="20"></nldd-icon>
+    </dt>
+    <dd>
+      Je mag dit, maar niet dankzij deze rol: het gaat over jezelf, je eigen gegevens of je eigen plaatsing.
+    </dd>
+    <dt>
+      <nldd-icon name="close-circle-filled" color="critical" size="20"></nldd-icon>
+    </dt>
+    <dd>
+      Deze rol mag dit niet.
+    </dd>
+  </dl>
+  </nldd-rich-text>
+{% endblock content %}

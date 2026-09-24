@@ -1,10 +1,15 @@
+import importlib
+import os
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase
+from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 
+from config.settings import base
 from wies.core.models import Label, LabelCategory
-from wies.core.roles import setup_roles
+from wies.core.roles import ROLE_ASSIGNMENT_ADMIN, ROLE_OFFICE_ASSISTANT, setup_roles
 
 User = get_user_model()
 
@@ -12,31 +17,50 @@ User = get_user_model()
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
-    def test_setup_roles_creates_beheerder_group(self):
-        """Test that setup_roles creates the Beheerder group"""
+    def test_setup_roles_creates_assignment_admin_group_without_permissions(self):
+        """Opdrachtbeheer's rights are all rule-based, and nobody is put in it."""
+        Group.objects.filter(name=ROLE_ASSIGNMENT_ADMIN).delete()
         setup_roles()
 
-        # Beheerder group should exist
-        assert Group.objects.filter(name="Beheerder").exists()
+        group = Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN)
+        assert not group.permissions.exists()
+        assert not group.user_set.exists()
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_setup_roles_does_not_grant_assignment_admin_to_staff(self):
+        """setup_roles() runs on every start; a staff member who removed
+        Opdrachtbeheer from themselves must not get it back."""
+        User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
+
+        setup_roles()
+
+        assert not Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN).user_set.exists()
+
+    def test_setup_roles_creates_user_admin_group(self):
+        """Test that setup_roles creates the Office assistent group"""
+        setup_roles()
+
+        # Office assistent group should exist
+        assert Group.objects.filter(name=ROLE_OFFICE_ASSISTANT).exists()
 
     def test_setup_roles_grants_user_permissions(self):
-        """Test that Beheerder group has all user management permissions"""
+        """Test that Office assistent group has all user management permissions"""
         setup_roles()
 
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
 
         # Check all expected permissions
         expected_permissions = ["view_user", "add_user", "delete_user", "change_user"]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Beheerder group missing {codename} permission"
+                f"Office assistent group missing {codename} permission"
             )
 
     def test_setup_roles_grants_suborganization_permissions(self):
-        """Test that Beheerder group can manage suborganizations (merken)"""
+        """Test that Office assistent group can manage suborganizations (merken)"""
         setup_roles()
 
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
 
         expected_permissions = [
             "view_suborganization",
@@ -46,20 +70,20 @@ class RBACSetupTest(TestCase):
         ]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Beheerder group missing {codename} permission"
+                f"Office assistent group missing {codename} permission"
             )
 
     def test_beheerder_group_user_can_access_views(self):
-        """Test that a user in Beheerder group can access all user management views"""
+        """Test that a user in Office assistent group can access all user management views"""
         setup_roles()
 
-        # Create user and add to Beheerder group
+        # Create user and add to Office assistent group
         admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
         )
-        admin_group = Group.objects.get(name="Beheerder")
+        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
         admin_user.groups.add(admin_group)
 
         client = Client()
@@ -97,3 +121,24 @@ class RBACSetupTest(TestCase):
         response = client.post(reverse("user-delete", args=[user_to_delete.public_id]))
         assert response.status_code == 200
         assert not User.objects.filter(id=user_to_delete.id).exists()
+
+
+class StaffEmailsSettingTest(SimpleTestCase):
+    """``settings.STAFF_EMAILS`` in ``config/settings/base.py``.
+
+    Reloading the module re-runs the assignment; ``django.conf.settings`` copied
+    its values at startup, so the reload cannot leak into other tests.
+    """
+
+    def _emails_with(self, **env):
+        with patch.dict(os.environ, {"STAFF_EMAILS": "", **env}):
+            return importlib.reload(base).STAFF_EMAILS
+
+    def test_addresses_are_split_trimmed_and_lowercased(self):
+        emails = self._emails_with(STAFF_EMAILS=" Een@rijksoverheid.nl , Twee@rijksoverheid.nl ")
+
+        assert emails == ["een@rijksoverheid.nl", "twee@rijksoverheid.nl"]
+
+    def test_an_unset_key_gives_an_empty_list(self):
+        """Not [""]: an empty entry would match a user without an email address."""
+        assert self._emails_with() == []

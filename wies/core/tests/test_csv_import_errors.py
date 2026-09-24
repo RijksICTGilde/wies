@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.users import create_users_from_csv
 
@@ -56,9 +56,9 @@ class UserCsvImportGracefulErrorTests(TestCase):
     uncaught exception (which surfaces as a 500)."""
 
     def setUp(self):
-        Group.objects.create(name="Beheerder")
-        Group.objects.create(name="Consultant")
-        Group.objects.create(name=BDM_GROUP_NAME)
+        Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        Group.objects.get_or_create(name=ROLE_CONSULTANT)
+        Group.objects.get_or_create(name=ROLE_BDM)
 
     def test_value_longer_than_the_column_returns_graceful_error(self):
         # User.first_name is max_length=150; a longer value would raise a DataError

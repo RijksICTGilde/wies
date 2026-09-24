@@ -7,7 +7,7 @@ The rules decide who may see a row:
   Business Managers (the BDM role) also see ended and planned placements.
 - ``evaluate_assignment_visibility`` — the per-owned-assignment rule on the
   colleague profile: active and not-yet-started ones are public, an ended one is
-  shown only to a privileged viewer (BDM role or support staff).
+  shown only to a privileged viewer (BDM role or Opdrachtbeheer).
 - ``filter_visible_placements`` — the "Wie zit waar?" list, which shows only
   active placements, to every viewer alike.
 
@@ -40,7 +40,7 @@ TOMORROW = TODAY + timedelta(days=1)
 
 
 # The evaluate function reads the viewer off ``request.user.colleague`` (only its
-# ``id``) and the privileged flag off ``is_bdm_or_staff(request)``,
+# ``id``) and the privileged flag off ``is_bdm_or_assignment_admin(request)``,
 # which reads the user's BDM group membership. This fake request drives both
 # without a database user.
 @dataclass
@@ -106,7 +106,7 @@ class PeriodTimingTest(SimpleTestCase):
 
 
 # The privileged flag must come only from the fake groups, never from a stray
-# STAFF_EMAILS in the environment matching _request's viewer email — pin it empty
+# STAFF_EMAILS in the environment matching _request's viewer email: pin it empty
 # so the unprivileged cases stay unprivileged for the reason under test.
 @override_settings(STAFF_EMAILS=[])
 class EvaluatePlacementVisibilityTest(SimpleTestCase):

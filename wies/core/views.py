@@ -5,7 +5,7 @@ import urllib.parse
 from collections import Counter
 from contextlib import nullcontext
 from datetime import date, timedelta
-from functools import cached_property
+from functools import cached_property, wraps
 
 from django.conf import settings
 from django.contrib import messages
@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
@@ -29,6 +29,7 @@ from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
+from wies.core import role_matrix as role_matrix_rules
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import (
     Editable,
@@ -87,7 +88,16 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_view_role_hours, is_bdm, is_staff_member
+from .roles import (
+    can_view_role_hours,
+    is_assignment_admin,
+    is_bdm,
+    is_staff_member,
+    may_administer_roles,
+    may_view_role_matrix,
+    may_view_users,
+    role_label,
+)
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -130,6 +140,7 @@ from .services.users import (
     create_user,
     create_users_from_csv,
     is_allowed_email_domain,
+    set_user_roles,
     update_user,
 )
 
@@ -376,7 +387,7 @@ def _get_colleague_assignments(request, colleague):
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
         # visible to the placed colleague, the Business Managers (BDM role) and
-        # support staff.
+        # Opdrachtbeheer.
         result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
@@ -406,7 +417,7 @@ def _get_colleague_assignments(request, colleague):
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         # Active and not-yet-started owned assignments are public; ended ones are
-        # only shown to a privileged viewer (BDM role or support staff).
+        # only shown to a privileged viewer (BDM role or Opdrachtbeheer).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
 
         existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
@@ -596,10 +607,26 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
+def role_administration_required(view_func):
+    """Gate the user sheet; ``may_administer_roles`` says who.
+
+    Refuses the way the sibling user routes do, with a 403 rather than a redirect:
+    the sheet arrives through htmx, so a redirect would swap a page into it.
+    """
+
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        if not may_administer_roles(request.user):
+            raise PermissionDenied
+        return view_func(request, *args, **kwargs)
+
+    return _wrapped
+
+
 def business_management_access_required(view_func):
     """Gate the "Business management" section: Business Development Managers plus
-    support staff."""
-    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
+    Opdrachtbeheer."""
+    return user_passes_test(lambda u: is_bdm(u) or is_assignment_admin(u), login_url="/geen-toegang/")(view_func)
 
 
 def _assignment_create_button(request):
@@ -775,6 +802,24 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
+
+
+def role_matrix_access_required(view_func):
+    return user_passes_test(may_view_role_matrix, login_url="/geen-toegang/")(view_func)
+
+
+@role_matrix_access_required
+def role_matrix(request):
+    return render(
+        request,
+        "role_matrix.html",
+        {
+            "columns": [heading for heading, _groups, _staff in role_matrix_rules.COLUMNS],
+            "sections": role_matrix_rules.build_matrix(),
+            "group_permissions": role_matrix_rules.group_permissions(),
+            "may_assign_roles": may_administer_roles(request.user),
+        },
+    )
 
 
 ERRORS_PER_PAGE = 10
@@ -1915,7 +1960,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     template_name = "user_admin.html"
     paginate_by = 60
     page_kwarg = "pagina"
-    permission_required = "rijksauth.view_user"
+
+    def has_permission(self) -> bool:
+        """``may_view_users``: application administration reaches this page without
+        holding Office assistent, because the roles sheet opens from a row here."""
+        return may_view_users(self.request.user)
 
     # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
     DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
@@ -2106,8 +2155,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         role_options = [{"value": "", "label": ""}]
         role_selected_values = []
-        for group in Group.objects.all().order_by("name"):
-            role_options.append({"value": str(group.id), "label": group.name, "count": role_counts.get(group.id, 0)})
+        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
+        for group in sorted(Group.objects.all(), key=lambda g: role_label(g.name)):
+            role_options.append(
+                {"value": str(group.id), "label": role_label(group.name), "count": role_counts.get(group.id, 0)}
+            )
             # ?rol= holds a single Group id, so compare exactly.
             if str(group.id) == self.role_filter:
                 role_options[-1]["selected"] = True
@@ -2178,7 +2230,7 @@ def user_create(request):
     element_id = "userFormModal"
 
     if request.method == "GET":
-        form = UserForm()
+        form = UserForm(editor=request.user)
         form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
             request,
@@ -2193,7 +2245,7 @@ def user_create(request):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST)
+        form = UserForm(request.POST, editor=request.user)
         if form.is_valid():
             create_user(
                 request.user,
@@ -2227,9 +2279,13 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-@permission_required("rijksauth.change_user", raise_exception=True)
+@role_administration_required
 def user_edit(request, public_id):
-    """Edits a user: GET returns the populated form modal, POST processes the update."""
+    """Edits a user: GET returns the populated form modal, POST processes the update.
+
+    Gated on ``may_administer_roles``, not on ``rijksauth.change_user``:
+    application administration reaches this sheet for the Rollen half alone.
+    """
     edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
     form_post_url = reverse("user-edit", args=[edited_user.public_id])
     modal_title = "Gebruiker bewerken"
@@ -2241,7 +2297,7 @@ def user_edit(request, public_id):
     contract_block = _contract_block(colleague, "user") if colleague else None
 
     if request.method == "GET":
-        form = UserForm(instance=edited_user)
+        form = UserForm(instance=edited_user, editor=request.user)
         return render(
             request,
             "parts/user_form_modal.html",
@@ -2256,19 +2312,22 @@ def user_edit(request, public_id):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST, instance=edited_user)
+        form = UserForm(request.POST, instance=edited_user, editor=request.user)
         if form.is_valid():
-            update_user(
-                updater=request.user,
-                user=edited_user,
-                first_name=form.cleaned_data["first_name"],
-                last_name=form.cleaned_data["last_name"],
-                email=form.cleaned_data["email"],
-                labels=form.cleaned_data.get("labels"),
-                groups=form.cleaned_data.get("groups"),
-                suborganization=form.cleaned_data.get("suborganization"),
-                request=request,
-            )
+            if form.edits_person:
+                update_user(
+                    updater=request.user,
+                    user=edited_user,
+                    first_name=form.cleaned_data["first_name"],
+                    last_name=form.cleaned_data["last_name"],
+                    email=form.cleaned_data["email"],
+                    labels=form.cleaned_data.get("labels"),
+                    groups=form.cleaned_data.get("groups"),
+                    suborganization=form.cleaned_data.get("suborganization"),
+                    request=request,
+                )
+            else:
+                set_user_roles(request.user, edited_user, form.cleaned_data["groups"], request=request)
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
@@ -2386,7 +2445,7 @@ def user_delete(request, public_id):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "label_names": label_names,
-                "group_names": [g.name for g in user.groups.all()],
+                "group_names": [role_label(g.name) for g in user.groups.all()],
                 "left_on": left_on.isoformat() if left_on else None,
                 "contract_ended": _contract_period_snapshot(ended) if ended else None,
                 "contract_dropped": [_contract_period_snapshot(p) for p in dropped],

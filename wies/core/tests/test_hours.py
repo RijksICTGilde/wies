@@ -18,7 +18,7 @@ from django.utils.formats import date_format
 from wies.core.editables.service import ServiceEditables
 from wies.core.models import Assignment, Colleague, ContractPeriod, Event, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import setup_roles
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, setup_roles
 from wies.core.services.occupancy import BUCKET_FULL, BUCKET_PARTIAL, colleague_occupancy, occupancy_summary
 from wies.core.services.placements import placement_edit_specs
 
@@ -27,7 +27,7 @@ User = get_user_model()
 
 def _consultant(name, email):
     user = User.objects.create(email=email, onboarding_completed_at=timezone.now())
-    user.groups.add(Group.objects.get(name="Consultant"))
+    user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
     return Colleague.objects.create(name=name, email=email, source="wies", user=user)
 
 
@@ -212,7 +212,7 @@ class BezettingPartialStatusViewTest(TestCase):
         self.client = Client()
         self.url = reverse("bezetting")
         bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.client.force_login(bdm)
         today = timezone.now().date()
         start, end = today - timedelta(days=10), today + timedelta(days=200)
@@ -295,7 +295,7 @@ class ProfileContractPeriodTest(TestCase):
         self.client = Client()
         self.today = timezone.now().date()
         self.user = User.objects.create(email="me@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.user.groups.add(Group.objects.get(name="Consultant"))
+        self.user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
         self.colleague = Colleague.objects.create(
             name="Ik Zelf", email="me@rijksoverheid.nl", source="wies", user=self.user
         )
@@ -303,11 +303,11 @@ class ProfileContractPeriodTest(TestCase):
         self.add_url = reverse("contract-period-add", args=[self.colleague.public_id])
 
     def _make_beheerder(self):
-        self.user.groups.add(Group.objects.get(name="Beheerder"))
+        self.user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
 
     def test_profile_shows_no_contract_hours_to_any_role(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        for group in (None, "Business Development Manager", "Beheerder"):
+        for group in (None, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
             if group:
                 self.user.groups.add(Group.objects.get(name=group))
             body = self.client.get(reverse("user-profile")).content.decode()
@@ -343,9 +343,9 @@ class ColleaguePanelContractPeriodTest(TestCase):
         self.client = Client()
         self.today = timezone.now().date()
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
         self.client.force_login(self.admin)
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
 
@@ -430,7 +430,7 @@ class ServiceHoursTest(TestCase):
         setup_roles()
         self.client = Client()
         self.bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.owner = Colleague.objects.create(
             name="Bas BDM", email="bdm@rijksoverheid.nl", source="wies", user=self.bdm
         )
@@ -502,7 +502,7 @@ class UserSheetContractPeriodTest(TestCase):
         self.client = Client()
         self.today = timezone.now().date()
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
         self.client.force_login(self.admin)
         self.user = User.objects.create(
             email="kees@rijksoverheid.nl", first_name="Kees", last_name="Bos", onboarding_completed_at=timezone.now()
@@ -907,14 +907,14 @@ class ServiceHoursPermissionTest(TestCase):
         setup_roles()
         self.today = timezone.now().date()
         self.user = User.objects.create(email="c@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.user.groups.add(Group.objects.get(name="Consultant"))
+        self.user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
         self.colleague = Colleague.objects.create(
             name="Con Sultant", email="c@rijksoverheid.nl", source="wies", user=self.user
         )
         self.placement = _placement(self.colleague, "Eigen klus", self.today, self.today + timedelta(days=90), hours=24)
         self.service = self.placement.service
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         owner = Colleague.objects.create(name="Bas BDM", email="bm@rijksoverheid.nl", source="wies", user=self.bdm)
         self.service.assignment.owner = owner
         self.service.assignment.save(update_fields=["owner"])

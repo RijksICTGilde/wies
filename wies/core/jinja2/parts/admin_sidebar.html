@@ -4,13 +4,17 @@
 </nldd-title>
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 <nldd-list type="navigation" accessible-label="Beheer">
-<nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
-<nldd-icon-cell size="20">
-<nldd-icon name="users"></nldd-icon>
-</nldd-icon-cell>
-<nldd-spacer-cell size="8"></nldd-spacer-cell>
-<nldd-text-cell text="Gebruikers"></nldd-text-cell>
-</nldd-list-item>
+{# Gated one by one: application administration reaches this sidebar through the
+   roles and maintenance pages without holding Office assistent. #}
+{% if may_view_users(user) %}
+  <nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="users"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Gebruikers"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
 {% if DEBUG %}
   <nldd-list-item href="{{ url('organization-admin') }}" {% if '/organisaties/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">
@@ -20,13 +24,15 @@
   <nldd-text-cell text="Opdrachtgevers"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
-<nldd-list-item href="{{ url('label-admin') }}" {% if '/beheer/labels/' in request.path %}selected{% endif %}>
-<nldd-icon-cell size="20">
-<nldd-icon name="labels"></nldd-icon>
-</nldd-icon-cell>
-<nldd-spacer-cell size="8"></nldd-spacer-cell>
-<nldd-text-cell text="Labels"></nldd-text-cell>
-</nldd-list-item>
+{% if user.has_perm('core.view_labelcategory') %}
+  <nldd-list-item href="{{ url('label-admin') }}" {% if '/beheer/labels/' in request.path %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="labels"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Labels"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
 {% if user.has_perm('core.view_suborganization') %}
   <nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">
@@ -34,6 +40,15 @@
   </nldd-icon-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell text="Merken"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+{% if may_view_role_matrix(user) %}
+  <nldd-list-item href="{{ url('role-matrix') }}" {% if request.path == url('role-matrix') %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="user-admin"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Rollen"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
 {% if show_staff_pages(request) %}
