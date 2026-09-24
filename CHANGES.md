@@ -13,7 +13,7 @@ This files lists the changes during the lifetime of this project.
 - 672: changing a filter on "Wie zit waar?" no longer resets the chosen sort order
 - 667: the "dagen vrij" label on a short bench bar in the Bezetting timeline no longer has its leading digit cut off
 - 667: the Bezetting filter options now show the correct number of matching consultants instead of always showing 1
-- 674: authority is split into three: Applicatiebeheer (the address list `STAFF_EMAILS`, unchanged), the renamed role `Office assistent` (was `Beheerder`) for users, labels and merken, and the new role `Opdrachtbeheer` for any opdracht, whoever owns it. See `features/roles.md`
+- 674: (migration) authority is split by what it lets you do: Applicatiebeheer (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, the renamed role `Office assistent` (was `Beheerder`) keeps users, labels, merken and contract hours, and `BDM` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives `BDM` and `Office assistent` once. See `features/roles.md`
 - 674: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant; Applicatiebeheer gets that sheet for the roles alone
 - 674: new page Beheer > Rollen shows what each role may do, read from the rules themselves
 - 674: only Applicatiebeheer may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed

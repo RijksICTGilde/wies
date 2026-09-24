@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from config.settings import base
 from wies.core.models import Label, LabelCategory
-from wies.core.roles import ROLE_ASSIGNMENT_ADMIN, ROLE_OFFICE_ASSISTANT, setup_roles
+from wies.core.roles import ROLE_BDM, ROLE_OFFICE_ASSISTANT, setup_roles
 
 User = get_user_model()
 
@@ -17,24 +17,15 @@ User = get_user_model()
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
-    def test_setup_roles_creates_assignment_admin_group_without_permissions(self):
-        """Opdrachtbeheer's rights are all rule-based, and nobody is put in it."""
-        Group.objects.filter(name=ROLE_ASSIGNMENT_ADMIN).delete()
-        setup_roles()
-
-        group = Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN)
-        assert not group.permissions.exists()
-        assert not group.user_set.exists()
-
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_setup_roles_does_not_grant_assignment_admin_to_staff(self):
-        """setup_roles() runs on every start; a staff member who removed
-        Opdrachtbeheer from themselves must not get it back."""
+    def test_setup_roles_does_not_grant_bdm_to_staff(self):
+        """setup_roles() runs on every start; a staff member who removed BDM from
+        themselves must not get it back."""
         User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
 
         setup_roles()
 
-        assert not Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN).user_set.exists()
+        assert not Group.objects.get(name=ROLE_BDM).user_set.exists()
 
     def test_setup_roles_creates_user_admin_group(self):
         """Test that setup_roles creates the Office assistent group"""

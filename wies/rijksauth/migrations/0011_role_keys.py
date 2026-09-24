@@ -1,4 +1,4 @@
-"""Renames the four role groups to their key, so ``Group.name`` stops being a label.
+"""Renames the three role groups to their key, so ``Group.name`` stops being a label.
 
 What a role is called on screen lives in ``ROLE_LABELS`` (``wies/core/roles.py``).
 The names are spelled out here rather than imported: a migration is frozen in time
@@ -15,7 +15,6 @@ RENAMES = [
     ("Consultant", "consultant"),
     ("Business Development Manager", "bdm"),
     ("Gebruikersbeheer", "office_assistant"),
-    ("Opdrachtbeheer", "assignment_admin"),
 ]
 
 

@@ -25,7 +25,6 @@ from wies.core.permission_engine import (
     registered_rules,
 )
 from wies.core.roles import (
-    ROLE_ASSIGNMENT_ADMIN,
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
@@ -33,7 +32,6 @@ from wies.core.roles import (
     is_staff_member,
     may_administer_roles,
     may_change_email,
-    may_grant,
     may_view_users,
     role_label,
 )
@@ -48,7 +46,6 @@ STAFF = role_label(ROLE_STAFF)
 COLUMNS = [
     (role_label(ROLE_CONSULTANT), (ROLE_CONSULTANT,), False),
     ("BDM", (ROLE_BDM,), False),
-    (role_label(ROLE_ASSIGNMENT_ADMIN), (ROLE_ASSIGNMENT_ADMIN,), False),
     (role_label(ROLE_OFFICE_ASSISTANT), (ROLE_OFFICE_ASSISTANT,), False),
     (STAFF, (), True),
 ]
@@ -89,9 +86,9 @@ def _reaches(grant, rule, user) -> bool:
 
 
 def _rule_cell(rule, scope, user) -> bool:
-    """A grant without a relation (``ANY``) also covers the narrower rows: whoever
+    """A grant covers a row when its relation asks no more than the row's: whoever
     may edit any opdracht may edit the one they own."""
-    return any(grant.scope in (ANY, scope) and _reaches(grant, rule, user) for grant in rule.grants)
+    return any(grant.scope.parts <= scope.parts and _reaches(grant, rule, user) for grant in rule.grants)
 
 
 def row_scopes(rule) -> set:
@@ -170,11 +167,6 @@ def _in_user_screen(u, *, allowed: bool) -> bool:
     return u.has_perm("rijksauth.change_user") and allowed
 
 
-def _in_roles_screen(u, *, allowed: bool) -> bool:
-    """``allowed`` behind the Rollen half of the user sheet, where the form asks it."""
-    return may_administer_roles(u) and allowed
-
-
 def _sees_ended_placement(u, *, own: bool) -> bool:
     placed = u.colleague.pk if own else _OTHER
     request = SimpleNamespace(user=u)
@@ -213,22 +205,9 @@ EXTRA_ROWS = [
         "E-mailadres wijzigen (van een ander)",
         lambda u: _in_user_screen(u, allowed=may_change_email(u, "a@example.invalid", "b@example.invalid")),
     ),
-    Row(
-        "Gebruikers en collega's",
-        "Rol Consultant of BDM toekennen",
-        lambda u: _in_roles_screen(u, allowed=may_grant(u, ROLE_CONSULTANT) and may_grant(u, ROLE_BDM)),
-    ),
-    # Two rows: these two roles do not share a granter.
-    Row(
-        "Gebruikers en collega's",
-        f"Rol {role_label(ROLE_OFFICE_ASSISTANT)} toekennen",
-        lambda u: _in_roles_screen(u, allowed=may_grant(u, ROLE_OFFICE_ASSISTANT)),
-    ),
-    Row(
-        "Gebruikers en collega's",
-        f"Rol {role_label(ROLE_ASSIGNMENT_ADMIN)} toekennen",
-        lambda u: _in_roles_screen(u, allowed=may_grant(u, ROLE_ASSIGNMENT_ADMIN)),
-    ),
+    # One row: no role is restricted to a granter of its own, so a row per role
+    # would print the same answer four times.
+    Row("Gebruikers en collega's", "Rollen toekennen", may_administer_roles),
     Row("Applicatie", "Statistieken en database", is_staff_member),
 ]
 

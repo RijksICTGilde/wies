@@ -247,28 +247,25 @@ declares what the object must be (`requires`) and who it serves (`grants`), each
 ```python
 from wies.core.editables import AssignmentEditables, UserEditables
 from wies.core.models import Assignment, Placement
-from wies.core.permission_engine import OWN, PLACED, WIES_SOURCED, Grant, Role, Verb, rule
-from wies.core.roles import ROLE_ASSIGNMENT_ADMIN, ROLE_BDM, ROLE_CONSULTANT
+from wies.core.permission_engine import PLACED, WIES_SOURCED, Grant, Role, Verb, rule
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT
 
 UPDATE = Verb.UPDATE
 
 rule(UPDATE, Assignment,                               # whole-object
      label="Opdracht bewerken",
      requires=WIES_SOURCED,
-     grants=[Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-             Grant(Role(ROLE_BDM), scope=OWN)])
+     grants=[Grant(Role(ROLE_BDM))])
 
 rule(UPDATE, Placement,                                # a plaatsing hangs under an opdracht,
-     label="Teamlid verplaatsen",                      # and OWN and WIES_SOURCED find it
+     label="Teamlid verplaatsen",                      # and WIES_SOURCED finds it
      requires=WIES_SOURCED,
-     grants=[Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-             Grant(Role(ROLE_BDM), scope=OWN)])
+     grants=[Grant(Role(ROLE_BDM))])
 
 rule(UPDATE, AssignmentEditables.extra_info,           # field-level: more permissive
      label="Extra informatie bewerken",
      requires=WIES_SOURCED,
-     grants=[Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-             Grant(Role(ROLE_BDM), scope=OWN),
+     grants=[Grant(Role(ROLE_BDM)),
              Grant(Role(ROLE_CONSULTANT), scope=PLACED)])
 
 rule(UPDATE, UserEditables.email,                      # field-level: stricter

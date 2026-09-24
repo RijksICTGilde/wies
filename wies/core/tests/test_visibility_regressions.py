@@ -24,7 +24,7 @@ from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import _RULES, Verb, registered_rules
-from wies.core.tests.role_helpers import grant_bdm, make_assignment_admin_user
+from wies.core.tests.role_helpers import grant_bdm, make_other_bdm_user
 from wies.core.views import _team_event_privacy_note
 from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
 from wies.rijksauth.models import User
@@ -68,7 +68,7 @@ class MemberSheetHiddenRowTest(TestCase):
         )
 
         # An edit-but-not-see user: UPDATE via a stand-in rule, no visibility
-        # (not placed, not a BDM, not Opdrachtbeheer).
+        # (not placed, not a BDM).
         self.editor_user = User.objects.create_user(email="editor@rijksoverheid.nl")
         Colleague.objects.create(name="Editor", email="editor@rijksoverheid.nl", source="wies", user=self.editor_user)
         update_assignment = registered_rules()[(Verb.UPDATE, Assignment, None)]
@@ -117,11 +117,11 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, "Teamlid bewerken")
         self.assertContains(response, "Hidden Member")
 
-    def test_assignment_admin_opens_the_hidden_row_sheet(self):
-        # Opdrachtbeheer is a privileged viewer, so unlike the stand-in
+    def test_a_bdm_opens_the_hidden_row_sheet(self):
+        # A BDM is a privileged viewer, so unlike the stand-in
         # editor above it DOES see the hidden row and its edit sheet.
         admin_client = Client()
-        admin_client.force_login(make_assignment_admin_user())
+        admin_client.force_login(make_other_bdm_user())
 
         response = admin_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 

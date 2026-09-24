@@ -48,9 +48,31 @@ class Scope:
     # ``predicate(user, obj, grant)``. No scope reads the grant today; a merk
     # scope will (#526), and adding the argument then means visiting every scope.
     predicate: Callable[[object, object, object], bool]
+    # The relations this one asks for at once. A grant covers a row when its parts
+    # are a subset of the row's, which is how ANY covers every row and how "eigen"
+    # covers "eigen, binnen je merk".
+    parts: frozenset[str] | None = None
+
+    def __post_init__(self):
+        if self.parts is None:
+            object.__setattr__(self, "parts", frozenset({self.name}))
 
     def __repr__(self) -> str:
         return f"Scope.{self.name.upper()}"
+
+
+def combined(*scopes: Scope) -> Scope:
+    """A relation that is every one of ``scopes`` at once.
+
+    Name the result as a module constant and add it to ``SCOPES``: the role matrix
+    walks that tuple, so a combination missing from it prints no row at all.
+    """
+    return Scope(
+        "+".join(scope.name for scope in scopes),
+        ", ".join(scope.label for scope in scopes),
+        lambda user, obj, grant: all(scope.predicate(user, obj, grant) for scope in scopes),
+        frozenset().union(*(scope.parts for scope in scopes)),
+    )
 
 
 _ASSIGNMENT_PATH = {Assignment: (), Service: ("assignment",), Placement: ("service", "assignment")}
@@ -96,8 +118,10 @@ def _is_self(user, obj, _grant) -> bool:
     return obj == user or (isinstance(obj, Colleague) and obj == getattr(user, "colleague", None))
 
 
-# One signature for every scope, so no caller special-cases ANY.
-ANY = Scope("any", "van een ander", lambda _user, _obj, _grant: True)
+# One signature for every scope, so no caller special-cases ANY. Its parts are
+# empty because it asks for no relation at all, which is what makes it cover
+# every row without the matrix naming it.
+ANY = Scope("any", "van een ander", lambda _user, _obj, _grant: True, frozenset())
 OWN = Scope("own", "eigen", _is_assignment_owner)
 PLACED = Scope("placed", "waarop je geplaatst bent", _is_placed_on_assignment)
 PLACED_ON_SERVICE = Scope("placed_on_service", "waarop je geplaatst bent", _is_placed_on_service)

@@ -90,7 +90,6 @@ from .querysets import (
 )
 from .roles import (
     can_view_role_hours,
-    is_assignment_admin,
     is_bdm,
     is_staff_member,
     may_administer_roles,
@@ -386,8 +385,7 @@ def _get_colleague_assignments(request, colleague):
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague, the Business Managers (BDM role) and
-        # Opdrachtbeheer.
+        # visible to the placed colleague and the Business Managers (BDM role).
         result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
@@ -417,7 +415,7 @@ def _get_colleague_assignments(request, colleague):
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         # Active and not-yet-started owned assignments are public; ended ones are
-        # only shown to a privileged viewer (BDM role or Opdrachtbeheer).
+        # only shown to a privileged viewer (the BDM role).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
 
         existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
@@ -483,7 +481,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "contract_block": _contract_block(colleague, "panel"),
+        "contract_block": _contract_block(colleague, "panel", request.user),
         "can_view_contract": has_permission(Verb.READ, ContractPeriod(colleague=colleague), request.user),
         "assignments": assignments,
     }
@@ -624,9 +622,8 @@ def role_administration_required(view_func):
 
 
 def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Development Managers plus
-    Opdrachtbeheer."""
-    return user_passes_test(lambda u: is_bdm(u) or is_assignment_admin(u), login_url="/geen-toegang/")(view_func)
+    """Gate the "Business management" section: Business Development Managers."""
+    return user_passes_test(is_bdm, login_url="/geen-toegang/")(view_func)
 
 
 def _assignment_create_button(request):
@@ -2294,7 +2291,7 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, "user") if colleague else None
+    contract_block = _contract_block(colleague, "user", request.user) if colleague else None
 
     if request.method == "GET":
         form = UserForm(instance=edited_user, editor=request.user)
@@ -2700,12 +2697,11 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-def _contract_block(colleague, surface):
+def _contract_block(colleague, surface, user):
     """Context for parts/contract_periods_block.html.
 
-    One block for two places: the colleague panel (read-only, for who plans
-    with the hours) and the user sheet, which carries the buttons: keeping
-    periods is user administration. A consultant does not see their own
+    One block for two places, and the rule decides who gets the buttons on
+    either of them, not which place it is. A consultant does not see their own
     contract hours in Wies; that is a matter for them and their manager.
 
     The panel answers "how many hours now, and soon": it lists the running
@@ -2729,7 +2725,7 @@ def _contract_block(colleague, surface):
         "periods": periods,
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
-        "can_edit": surface == "user",
+        "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
     }
@@ -2802,7 +2798,7 @@ def contract_period_add(request, colleague_public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user"))
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user", request.user))
 
 
 @login_required
@@ -2811,7 +2807,7 @@ def contract_period_edit(request, public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user"))
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user", request.user))
 
 
 @login_required
@@ -2841,7 +2837,7 @@ def contract_period_delete(request, public_id):
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, "user")
+    block = _contract_block(colleague, "user", request.user)
     return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 

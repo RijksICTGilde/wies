@@ -17,7 +17,6 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import (
-    OWN,
     PLACED,
     PLACED_ON_SERVICE,
     SELF,
@@ -29,7 +28,6 @@ from wies.core.permission_engine import (
     rule,
 )
 from wies.core.roles import (
-    ROLE_ASSIGNMENT_ADMIN,
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
@@ -49,8 +47,7 @@ rule(
     label="Opdracht bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
     ],
 )
 
@@ -60,8 +57,7 @@ rule(
     label="Dienst bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
     ],
 )
 
@@ -71,8 +67,7 @@ rule(
     label="Teamlid verplaatsen",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
     ],
 )
 
@@ -105,8 +100,7 @@ rule(
     label="Opdracht verwijderen",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
     ],
 )
 
@@ -119,8 +113,7 @@ rule(
     label="Naam van een opdracht bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
         Grant(Role(ROLE_CONSULTANT), scope=PLACED),
     ],
 )
@@ -131,8 +124,7 @@ rule(
     label="Extra informatie bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
         Grant(Role(ROLE_CONSULTANT), scope=PLACED),
     ],
 )
@@ -143,8 +135,7 @@ rule(
     label="Dienstomschrijving bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_ASSIGNMENT_ADMIN)),
-        Grant(Role(ROLE_BDM), scope=OWN),
+        Grant(Role(ROLE_BDM)),
         Grant(Role(ROLE_CONSULTANT), scope=PLACED_ON_SERVICE),
     ],
 )
@@ -164,7 +155,10 @@ rule(
     UPDATE,
     ContractPeriod,
     label="Contracturen van een collega bijhouden",
-    grants=[Grant(Role(ROLE_OFFICE_ASSISTANT))],
+    grants=[
+        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_OFFICE_ASSISTANT)),
+    ],
 )
 
 # Nobody: an address is changed on the user form, which is where ``may_change_email``

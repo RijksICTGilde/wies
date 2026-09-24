@@ -21,7 +21,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.public_id import resolve_facet
-from wies.core.roles import ROLE_ASSIGNMENT_ADMIN, ROLE_BDM, ROLE_CONSULTANT, setup_roles
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, setup_roles
 from wies.core.services.occupancy import (
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
@@ -98,11 +98,10 @@ class BezettingAuthTest(TestCase):
         assert response.status_code == 200
         assert b"Bezetting" in response.content
 
-    def test_assignment_admin_gets_page(self):
-        # Opdrachtbeheer may reach the business-management section too,
-        # even without the Business Development Manager role.
-        admin = User.objects.create(email="opdrachtbeheer@rijksoverheid.nl")
-        admin.groups.add(Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN))
+    def test_a_bdm_who_owns_nothing_gets_page(self):
+        # The section follows the role, not ownership.
+        admin = User.objects.create(email="bdm-ander@rijksoverheid.nl")
+        admin.groups.add(Group.objects.get(name=ROLE_BDM))
         self.client.force_login(admin)
         response = self.client.get(self.url)
         assert response.status_code == 200
@@ -179,9 +178,9 @@ class BezettingNavVisibilityTest(TestCase):
         response = self.client.get(reverse("home"))
         assert b"Business management" not in response.content
 
-    def test_tab_visible_for_assignment_admin(self):
+    def test_tab_visible_for_a_bdm(self):
         admin = User.objects.create(email="opdrachtbeheer@rijksoverheid.nl")
-        admin.groups.add(Group.objects.get(name=ROLE_ASSIGNMENT_ADMIN))
+        admin.groups.add(Group.objects.get(name=ROLE_BDM))
         self.client.force_login(admin)
         response = self.client.get(reverse("home"))
         assert b"Business management" in response.content

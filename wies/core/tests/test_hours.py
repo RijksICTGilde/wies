@@ -395,25 +395,27 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Geen lopend contract." in panel
         assert "Niet ingevuld" not in panel
 
-    def test_panel_shows_the_block_read_only_to_a_beheerder(self):
+    def test_panel_lets_a_beheerder_keep_the_hours(self):
+        """The buttons follow the rule, not the surface: the same block carries
+        them in the panel and in the user sheet."""
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
+        assert "Contractperiode toevoegen" in body
 
-    def test_panel_shows_the_block_read_only_to_a_bdm(self):
+    def test_panel_lets_a_bdm_keep_the_hours(self):
+        """A BDM plans with the hours, so a BDM keeps them, from the panel where
+        they already read them."""
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
+        assert "Contractperiode toevoegen" in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])
-        assert self.client.get(url).status_code == 403
-        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
+        assert self.client.get(url).status_code == 200
+        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 200
 
     def test_a_beheerder_saves_a_period_for_another_colleague(self):
         url = reverse("contract-period-add", args=[self.colleague.public_id])

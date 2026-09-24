@@ -1,5 +1,6 @@
 """Tests for the role data migrations: the Opdrachtbeheer backfill (0009), the
-Beheerder -> Gebruikersbeheer rename (0010) and the move to role keys (0011)."""
+Beheerder -> Gebruikersbeheer rename (0010), the move to role keys (0011) and
+dropping Opdrachtbeheer for the roles that replace it (0012)."""
 
 import os
 from unittest.mock import patch
@@ -14,6 +15,7 @@ BEFORE_BACKFILL = "0008_user_public_id"
 BACKFILL = "0009_backfill_assignment_admin"
 RENAME = "0010_rename_beheerder_group"
 KEYS = "0011_role_keys"
+DROP = "0012_drop_assignment_admin_group"
 
 
 class _MigrationTestCase(TransactionTestCase):
@@ -122,7 +124,7 @@ class RoleKeyMigrationTest(_MigrationTestCase):
         self.permission_model = apps.get_model("auth", "Permission")
         user_model = apps.get_model(APP, "User")
         self.user_id = user_model.objects.create(email="office@rijksoverheid.nl").pk
-        # All four spelled out: 0009's Opdrachtbeheer row is gone once an earlier
+        # Spelled out: 0009's Opdrachtbeheer row is gone once an earlier
         # TransactionTestCase has flushed the database.
         for name in ("Consultant", "Business Development Manager", "Gebruikersbeheer", "Opdrachtbeheer"):
             self.group_model.objects.get_or_create(name=name)
@@ -144,10 +146,8 @@ class RoleKeyMigrationTest(_MigrationTestCase):
     def test_every_role_group_is_renamed_to_its_key(self):
         self._migrate(KEYS)
 
-        assert {"consultant", "bdm", "office_assistant", "assignment_admin"} <= self._names(KEYS)
-        assert not {"Consultant", "Business Development Manager", "Gebruikersbeheer", "Opdrachtbeheer"} & self._names(
-            KEYS
-        )
+        assert {"consultant", "bdm", "office_assistant"} <= self._names(KEYS)
+        assert not {"Consultant", "Business Development Manager", "Gebruikersbeheer"} & self._names(KEYS)
 
     def test_members_and_permissions_survive_the_rename(self):
         self._migrate(KEYS)
@@ -170,3 +170,49 @@ class RoleKeyMigrationTest(_MigrationTestCase):
 
         assert self._group(RENAME, "office_assistant") is None
         self._assert_carries_members_and_permissions(self._group(RENAME, "Gebruikersbeheer"))
+
+
+class DropAssignmentAdminMigrationTest(_MigrationTestCase):
+    """0012 removes Opdrachtbeheer and hands its addresses the roles that replace it."""
+
+    STAFF = "applicatiebeheer@rijksoverheid.nl"
+
+    def setUp(self):
+        self._migrate(KEYS)
+        apps = self._apps_at(KEYS)
+        self.group_model = apps.get_model("auth", "Group")
+        user_model = apps.get_model(APP, "User")
+        self.staff_id = user_model.objects.create(email=self.STAFF).pk
+        self.other_id = user_model.objects.create(email="ander@rijksoverheid.nl").pk
+        self.group_model.objects.get_or_create(name="assignment_admin")
+
+    def _names(self, target, user_id):
+        apps = self._apps_at(target)
+        user = apps.get_model(APP, "User").objects.get(pk=user_id)
+        return set(user.groups.values_list("name", flat=True))
+
+    def _migrate_with_staff(self):
+        with patch.dict(os.environ, {"STAFF_EMAILS": self.STAFF}):
+            self._migrate(DROP)
+
+    def test_the_group_is_gone(self):
+        self._migrate_with_staff()
+
+        groups = self._apps_at(DROP).get_model("auth", "Group").objects
+        assert not groups.filter(name__in=("assignment_admin", "Opdrachtbeheer")).exists()
+
+    def test_staff_emails_receive_the_replacing_roles(self):
+        self._migrate_with_staff()
+
+        assert self._names(DROP, self.staff_id) == {"bdm", "office_assistant"}
+
+    def test_an_address_outside_the_list_is_left_alone(self):
+        self._migrate_with_staff()
+
+        assert self._names(DROP, self.other_id) == set()
+
+    def test_without_configured_addresses_nobody_is_granted_anything(self):
+        with patch.dict(os.environ, {"STAFF_EMAILS": ""}):
+            self._migrate(DROP)
+
+        assert self._names(DROP, self.staff_id) == set()
