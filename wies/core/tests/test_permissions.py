@@ -26,7 +26,7 @@ from wies.core.permission_engine import (
     WIES_SOURCED,
     Role,
     Verb,
-    combined,
+    all_of,
     has_permission,
     registered_rules,
 )
@@ -590,13 +590,13 @@ class ScopeVocabularyTest(_Setup):
         assert ANY.predicate(self.unrelated_user, self.assignment, None) is True
 
 
-class CombinedScopeTest(_Setup):
-    """``combined`` builds the relation that is two relations at once, which is
+class AllOfScopeTest(_Setup):
+    """``all_of`` builds the relation that is two relations at once, which is
     what merk scoping (#526) needs: "eigen, en binnen je merk"."""
 
     def setUp(self):
         super().setUp()
-        self.own_and_placed = combined(OWN, PLACED)
+        self.own_and_placed = all_of(OWN, PLACED)
         # The owner is placed on their own opdracht; the consultant only placed.
         Placement.objects.create(colleague=self.owner, service=self.service, source="wies")
 

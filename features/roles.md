@@ -164,11 +164,17 @@ The question becomes "is this object's merk one you hold the role for".
 
 Two halves of that are already in place.
 
-`combined(OWN, BRANDS)` builds the relation that is both at once, so a grant can
-read "a BDM, for an opdracht of their own merk, that they own". Naming two grants
-with the same holder is the other combination, "either of these": `Grant(Role(X),
-scope=OWN)` next to `Grant(Role(X), scope=BRANDS)`. A combination must be a module
-constant in `SCOPES`, or the matrix walks past it and prints no row.
+`all_of(OWN, BRANDS)` builds the relation that is both at once, so one grant reads
+"a BDM, for an opdracht of their own merk, that they own":
+
+```python
+Grant(Role(ROLE_BDM), all_of(OWN, BRANDS))
+```
+
+"Either of these" is the other combination, and that is two grants with the same
+holder: `Grant(Role(X), scope=OWN)` next to `Grant(Role(X), scope=BRANDS)`. There
+is no `any_of`, because a rule's grants already add up. A combination must be a
+module constant in `SCOPES`, or the matrix walks past it and prints no row.
 
 `Scope.parts` is what makes that readable to the matrix: a grant answers a row when
 its parts are a subset of the row's, so `ANY` (no parts) covers every row and `OWN`
