@@ -286,21 +286,30 @@
     });
   }
 
-  // The status cards (Bezetting summary) live in #results, not the filter form,
-  // but their hidden checkboxes carry data-filter-input so hx-include submits
-  // them. Toggling one flips the checkbox + aria-pressed and re-filters.
-  function statusCardInput(card) {
-    return card.querySelector('input[name="status"]');
+  // The status cards (Bezetting summary) live in #results, not the filter form.
+  // The card shows the state; the checkbox that actually submits lives in the
+  // filter sheet's "Status" group. One input per status, so a toggle cannot send
+  // the value twice.
+  function setStatusCard(card, active) {
+    syncSheetStatus(card.dataset.status, active);
+    card.setAttribute("aria-pressed", active ? "true" : "false");
   }
 
-  function setStatusCard(card, active) {
-    const input = statusCardInput(card);
-    if (input) {
-      input.checked = active;
-      if (active) input.setAttribute("checked", "");
-      else input.removeAttribute("checked");
-    }
-    card.setAttribute("aria-pressed", active ? "true" : "false");
+  // The sheet renders its own hidden checkbox per option, plus a visible row.
+  function syncSheetStatus(value, active) {
+    if (!value) return;
+    const slot = document.querySelector('[data-hidden-inputs="status"]');
+    slot
+      ?.querySelectorAll(`input[value="${CSS.escape(value)}"]`)
+      .forEach((input) => {
+        input.checked = active;
+        if (active) input.setAttribute("checked", "");
+        else input.removeAttribute("checked");
+      });
+    const row = document.querySelector(
+      `[data-wies-fieldset][data-name="status"] nldd-list-item[data-value="${CSS.escape(value)}"]`,
+    );
+    if (row) setRowChecked(row, active);
   }
 
   function setupStatusCards() {
@@ -312,8 +321,8 @@
             el instanceof Element && el.hasAttribute?.("data-status-card"),
         );
       if (!card) return;
-      const input = statusCardInput(card);
-      setStatusCard(card, input ? !input.checked : true);
+      const pressed = card.getAttribute("aria-pressed") === "true";
+      setStatusCard(card, !pressed);
       dispatchFormChange(document.getElementById("filter-form"));
     });
   }
@@ -327,7 +336,10 @@
       const card = document.querySelector(
         `[data-status-card][data-status="${CSS.escape(value)}"]`,
       );
-      if (card) setStatusCard(card, false);
+      if (card) card.setAttribute("aria-pressed", "false");
+      // Also when no card is on the row: on a narrow window they are hidden, and
+      // the chip is then the only way to switch the filter off.
+      syncSheetStatus(value, false);
       dispatchFormChange(form);
       return;
     }
@@ -684,6 +696,30 @@
     return panel ? findScroller(panel) : null;
   }
 
+  // A filter change swaps the results in silence; say what is left (WCAG 4.1.3).
+  // Only on pages whose #results names its row selector: every list swaps into
+  // #results, and counting the wrong selector would announce "Geen resultaten"
+  // over a full list.
+  function setupFilterAnnounce() {
+    document.addEventListener("htmx:afterSettle", (e) => {
+      const target = e.detail?.target;
+      if (!target || target.id !== "results") return;
+      // The swap replaces #results, so read the document, not the detached
+      // element the event still points at.
+      const results = document.getElementById("results");
+      const selector = results?.dataset.wiesAnnounceRows;
+      const live = document.getElementById("wies-live");
+      if (!selector || !live) return;
+      const n = results.querySelectorAll(selector).length;
+      live.textContent =
+        n === 0
+          ? "Geen resultaten"
+          : n === 1
+            ? "1 resultaat"
+            : `${n} resultaten`;
+    });
+  }
+
   function setupFilterScrollPreserve() {
     let saved = null;
     document.addEventListener("htmx:beforeSwap", (e) => {
@@ -725,6 +761,7 @@
     setupTokenDismiss();
     setupClearAllFilters();
     setupStatusCards();
+    setupFilterAnnounce();
     setupFilterScrollPreserve();
     setupFilterRows();
     setupOrgQuickOptions();

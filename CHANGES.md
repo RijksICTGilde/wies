@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 660: (migration) contract hours per colleague, as periods with a start and end date kept by a beheerder on the user sheet, and hours per week on a role; Bezetting shows per consultant the role and the free contract hours, with a "deels beschikbaar" status; deleting a user asks for the day they left and ends the contract and the placements on that day; the privacy statement names both kinds of hours
+- 660: the Bezetting filter row is a toolbar with an "Opdracht invoeren" action; the Business management sidebar is gone
+- 660: form fields no longer show placeholder text; the label says what goes in
 - 672: the user list has a sort control in the toolbar; it names the current order (achternaam A-Z by default) and offers achternaam Z-A, voornaam and most recently added
 - 672: each row in the user list shows the colleague's merk and subgroep after the e-mail address
 - 672: saving, adding or deleting a user returns to the user list as it was filtered, searched and sorted, instead of the unfiltered list

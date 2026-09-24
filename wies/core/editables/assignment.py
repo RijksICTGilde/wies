@@ -13,10 +13,12 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
 
+from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.roles import BDM_GROUP_NAME, is_bdm_or_staff
+from wies.core.permission_engine import Verb, has_permission
+from wies.core.roles import BDM_GROUP_NAME, can_view_role_hours, is_bdm_or_staff
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
@@ -152,6 +154,7 @@ def _services_initial(assignment):
                 "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
+                "hours_per_week": service.hours_per_week,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
                 "has_custom_period": inherits_assignment_period,
@@ -172,8 +175,17 @@ def visible_service_rows(assignment, request) -> list[dict]:
     currently active is hidden from unrelated viewers — only the placed colleague,
     Business Managers (the BDM role) and support staff see it, flagged
     ``historical`` with a label and privacy note.
+
+    ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
+    description of their own role from the team list too, through the same
+    sheet as on the placement panel. The hours are not theirs to keep: those
+    follow the assignment's edit rights, like the role itself.
+
+    ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
+    aanvraag row shows them to everyone.
     """
     today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
@@ -181,6 +193,14 @@ def visible_service_rows(assignment, request) -> list[dict]:
         if placement is None:  # vacancy → visible to everyone
             visible.append(row)
             continue
+        # Only the viewer's own row can qualify, so the rule (a query) runs for
+        # that one and not for every member of the team.
+        row["can_edit_role"] = (
+            viewer is not None
+            and placement.colleague_id == viewer.id
+            and has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
+        )
+        row["show_hours"] = can_view_role_hours(request.user, placement)
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],
@@ -237,6 +257,8 @@ def _service_audit_row(row: dict) -> dict:
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
         "description": row["description"] or "",
+        # No hours_per_week: no history is kept of a role's hours (agreed with
+        # Patrick, 13 July 2026), so an hours-only edit leaves no timeline entry.
         # Included so a period-only edit registers as a change (#393).
         "has_custom_period": row["has_custom_period"],
         "start_date": _fmt_date(row["placement_start_date"]),

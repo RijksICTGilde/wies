@@ -14,11 +14,12 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
-from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import Verb, has_permission, rule
 from wies.core.roles import is_bdm, is_staff_member
 from wies.rijksauth.models import User
 
+READ = Verb.READ
 UPDATE = Verb.UPDATE
 DELETE = Verb.DELETE
 
@@ -140,6 +141,25 @@ def update_service_description(user, s):
     return _is_wies_sourced(s.assignment) and (
         has_permission(UPDATE, s.assignment, user) or _is_placed_on_service(user, s)
     )
+
+
+@rule(READ, ContractPeriod)
+def read_contract_period(user, _period):
+    """Who plans with the hours (BDM, support staff) and who keeps them (the
+    beheerder). A consultant does not see contract hours at all, not even their
+    own."""
+    return is_bdm(user) or is_staff_member(user) or user.has_perm("rijksauth.change_user")
+
+
+@rule(UPDATE, ContractPeriod)
+def update_contract_period(user, _period):
+    """Beheerder (rijksauth.change_user): keeping contracts is user
+    administration and happens in the user sheet, behind the same permission.
+
+    A BDM and staff read the hours in the colleague panel; a consultant does
+    not see them at all.
+    """
+    return user.has_perm("rijksauth.change_user")
 
 
 @rule(UPDATE, UserEditables.email)

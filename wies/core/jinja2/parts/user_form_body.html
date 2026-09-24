@@ -1,31 +1,32 @@
 {# User sheet content split from the sheet itself: on a validation error the view
-   returns only this part. Deleting lives in the row's more menu, not here. #}
+   returns only this part. Deleting lives in the row's more menu, not here. The
+   save button is in the sheet's footer (user_form_modal.html), so it stays at
+   the bottom under the contract periods; the hidden submit keeps Enter working. #}
 {% set body_id = modal_element_id ~ "Body" %}
 <nldd-form>
-<form method="post"
+<form id="userForm"
+      method="post"
       action="{{ form_post_url }}"
       hx-post="{{ form_post_url }}"
       hx-target="#{{ body_id }}"
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
-  {% if delete_warning %}
-    <nldd-rich-text>
-    <p>{{ delete_warning }}</p>
-    </nldd-rich-text>
-  {% else %}
-    {{ content.first_name.as_field_group() }}
-    {{ content.last_name.as_field_group() }}
-    {{ content.email.as_field_group() }}
-    {{ content.groups.as_field_group() }}
-    {{ content.suborganization.as_field_group() }}
-    {% for field_name in content.fields %}
-      {% if field_name.startswith('category_') %}
-        {{ content[field_name].as_field_group() }}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-  <nldd-form-actions>
-  <nldd-button variant="{{ 'destructive' if warning_modal else 'primary' }}" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
-  </nldd-form-actions>
+  {{ content.first_name.as_field_group() }}
+  {{ content.last_name.as_field_group() }}
+  {{ content.email.as_field_group() }}
+  {{ content.groups.as_field_group() }}
+  {{ content.suborganization.as_field_group() }}
+  {% for field_name in content.fields %}
+    {% if field_name.startswith('category_') %}
+      {{ content[field_name].as_field_group() }}
+    {% endif %}
+  {% endfor %}
+  <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>
 </nldd-form>
+{# Below the form, not in it: the periods save on their own from a sheet on top
+   of this one, and their delete post must not carry the user's fields along. #}
+{% if contract_block is defined and contract_block %}
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  {% include "parts/contract_periods_block.html" %}
+{% endif %}

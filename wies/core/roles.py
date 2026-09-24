@@ -50,6 +50,26 @@ def is_staff_member(user) -> bool:
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
+def can_view_role_hours(user, placement) -> bool:
+    """Whether the user may see the hours per week of a role.
+
+    Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
+    are for who plans with them (BDM, beheerder, support staff) and for the
+    consultant themself, not for team mates. An open aanvraag has no one to
+    protect, so its hours are visible to everyone who sees the opdracht.
+    """
+    if placement is None:
+        return True
+    # restricted_change_names builds the team rows with a request that has no
+    # user, to see what an outsider sees; that outsider sees no hours.
+    if user is None:
+        return False
+    colleague = getattr(user, "colleague", None)
+    if colleague is not None and placement.colleague_id == colleague.id:
+        return True
+    return is_bdm(user) or is_staff_member(user) or user.has_perm("core.change_assignment")
+
+
 def is_bdm_or_staff(request) -> bool:
     """Whether the request's user holds the BDM role or is a support-staff member,
     resolved once per request, cached because the audit timeline calls it once per event.
