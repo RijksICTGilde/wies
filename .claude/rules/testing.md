@@ -14,7 +14,7 @@
 ## Coverage
 
 - Test views with authenticated users (use `self.client.force_login()`)
-- Test permission checks for each role (Beheerder, Consultant, BDM)
+- Test permission checks for each role (Office assistent, Opdrachtbeheer, Consultant, BDM, and application administration via `STAFF_EMAILS`)
 - Test form validation
 
 ## Before Completing Work

@@ -18,7 +18,7 @@ from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import BDM_GROUP_NAME, can_view_role_hours, is_bdm_or_staff
+from wies.core.roles import ROLE_BDM, can_view_role_hours, is_bdm_or_assignment_admin
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
@@ -30,7 +30,7 @@ def _bdm_queryset(assignment=None):
     # The current owner is always included, even outside the BDM group: without a
     # matching option the combo box renders empty and saving clears the Business
     # Manager. Owners are usually in that group, but the odd one isn't.
-    in_group = Q(user__groups__name=BDM_GROUP_NAME)
+    in_group = Q(user__groups__name=ROLE_BDM)
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:
         in_group |= Q(pk=owner_id)
@@ -173,7 +173,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``_services_initial`` returns every placement; here a placement that is not
     currently active is hidden from unrelated viewers — only the placed colleague,
-    Business Managers (the BDM role) and support staff see it, flagged
+    Business Managers (the BDM role) and Opdrachtbeheer see it, flagged
     ``historical`` with a label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
@@ -376,8 +376,8 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if is_bdm_or_staff(request):
-        # A privileged viewer (BDM or support staff) sees the unfiltered list;
+    if is_bdm_or_assignment_admin(request):
+        # A privileged viewer (BDM or Opdrachtbeheer) sees the unfiltered list;
         # they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)

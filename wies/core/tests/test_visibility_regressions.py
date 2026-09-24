@@ -3,10 +3,12 @@
 Two holes found in review:
 
 - The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
-  team list, so a viewer with UPDATE rights but without visibility (a
-  ``change_assignment`` holder, staff) could read a hidden ended placement's
-  colleague and dates through a crafted URL — data the 404 anti-oracle in
-  ``_resolve_placement_panel`` exists to withhold.
+  team list, so a viewer with UPDATE rights but without visibility could read
+  a hidden ended placement's colleague and dates through a crafted URL: data
+  the 404 anti-oracle in ``_resolve_placement_panel`` exists to withhold. No
+  role combines the two today (both assignment roles are privileged viewers),
+  so the tests stand one in with a rule; the guard stays in case a future rule
+  splits them again.
 - The timeline's privacy note was taken from the *first* noted row of the
   viewer's current team list, so an event about one colleague could carry
   another row's note ("jou"-wording on someone else's event), and an event
@@ -14,14 +16,15 @@ Two holes found in review:
 """
 
 from datetime import timedelta
+from unittest import mock
 
-from django.contrib.auth.models import Permission
-from django.test import Client, RequestFactory, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.tests.role_helpers import STAFF_EMAIL, grant_bdm, make_staff_user
+from wies.core.permission_engine import _RULES, Verb, registered_rules
+from wies.core.tests.role_helpers import grant_bdm, make_assignment_admin_user
 from wies.core.views import _team_event_privacy_note
 from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
 from wies.rijksauth.models import User
@@ -64,11 +67,17 @@ class MemberSheetHiddenRowTest(TestCase):
             self.assignment, self.skill, hidden, start=today - timedelta(days=100), end=today - timedelta(days=10)
         )
 
-        # The surviving edit-but-not-see class: UPDATE via change_assignment,
-        # no visibility (not placed, not a BDM).
+        # An edit-but-not-see user: UPDATE via a stand-in rule, no visibility
+        # (not placed, not a BDM, not Opdrachtbeheer).
         self.editor_user = User.objects.create_user(email="editor@rijksoverheid.nl")
         Colleague.objects.create(name="Editor", email="editor@rijksoverheid.nl", source="wies", user=self.editor_user)
-        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        update_assignment = registered_rules()[(Verb.UPDATE, Assignment, None)]
+        patcher = mock.patch.dict(
+            _RULES,
+            {(Verb.UPDATE, Assignment, None): lambda u, a: u == self.editor_user or update_assignment(u, a)},
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.editor_client = Client()
         self.editor_client.force_login(self.editor_user)
 
@@ -108,15 +117,13 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, "Teamlid bewerken")
         self.assertContains(response, "Hidden Member")
 
-    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    def test_staff_opens_the_hidden_row_sheet(self):
-        # Support staff are privileged viewers, so unlike the change_assignment
-        # editor above they DO see the hidden row and its edit sheet.
-        staff_user = make_staff_user()
-        staff_client = Client()
-        staff_client.force_login(staff_user)
+    def test_assignment_admin_opens_the_hidden_row_sheet(self):
+        # Opdrachtbeheer is a privileged viewer, so unlike the stand-in
+        # editor above it DOES see the hidden row and its edit sheet.
+        admin_client = Client()
+        admin_client.force_login(make_assignment_admin_user())
 
-        response = staff_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
+        response = admin_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
         self.assertContains(response, "Teamlid bewerken")

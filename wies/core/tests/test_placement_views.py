@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
+from django.contrib.auth.models import Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.db import connection
 from django.test import Client, RequestFactory, TestCase
@@ -23,9 +23,8 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.organizations import get_org_descendant_ids
-from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
+from wies.core.tests.role_helpers import grant_bdm, grant_consultant, make_bdm_user
 from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
@@ -44,11 +43,6 @@ class PlacementImportTest(TestCase):
         """Create test data"""
         self.client = Client()
         self.import_url = reverse("assignment-import-csv")
-
-        # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create_user(
@@ -836,7 +830,7 @@ class PlacementPanelPencilPermissionTest(TestCase):
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
-        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.user_alice = grant_consultant(User.objects.create_user(email="alice@rijksoverheid.nl"))
         self.colleague_alice = Colleague.objects.create(
             name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
         )

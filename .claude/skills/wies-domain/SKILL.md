@@ -15,9 +15,11 @@ description: Wies project domain knowledge including Dutch government terminolog
 
 ## User Roles
 
-- **Beheerder** - Administrator (user/label management)
-- **Consultant** - View-only access
+- **Office assistent** - User administration (users/labels); may grant every role except Opdrachtbeheer, including its own
+- **Opdrachtbeheer** - May edit/delete any assignment and see all history; granted only by application administration
+- **Consultant** - View-only, plus the text fields of an opdracht they are placed on
 - **BDM** - Business Development Manager (creates assignments)
+- Application administration (`STAFF_EMAILS`) is not a role; see `features/roles.md`
 
 ## Date Inheritance
 

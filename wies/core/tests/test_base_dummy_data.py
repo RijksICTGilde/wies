@@ -16,6 +16,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from wies.core.models import SUBGROEP_CATEGORY, Assignment, Colleague, LabelCategory, Placement
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT
 from wies.core.services.occupancy import colleague_occupancy
 
 User = get_user_model()
@@ -36,17 +37,17 @@ class BaseDummyDataFixtureTest(TestCase):
     def test_most_colleagues_are_consultants(self):
         """The Bezetting page shows Consultants only. A handful would render a
         page that looks broken rather than a demo of the timeline."""
-        consultants = Colleague.objects.filter(user__groups__name="Consultant").count()
+        consultants = Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT).count()
         assert consultants >= 20, f"only {consultants} consultants in the fixture"
 
     def test_the_other_roles_are_represented(self):
         """Roles drive permissions, so the demo data has to exercise more than one."""
-        for role in ("Business Development Manager", "Beheerder"):
+        for role in (ROLE_BDM, ROLE_OFFICE_ASSISTANT):
             assert Colleague.objects.filter(user__groups__name=role).exists(), f"no {role}"
 
     def test_consultants_have_placements_to_draw(self):
         """Without placements every timeline row is empty and the page proves nothing."""
-        placed = Placement.objects.filter(colleague__user__groups__name="Consultant").count()
+        placed = Placement.objects.filter(colleague__user__groups__name=ROLE_CONSULTANT).count()
         assert placed >= 20, f"only {placed} placements on consultants"
         assert Assignment.objects.count() >= 10
 

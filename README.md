@@ -124,11 +124,16 @@ just manage test wies.core.tests.test_roles
 
 ### User Roles
 
-| Role           | Description                  | Permissions                   |
-| -------------- | ---------------------------- | ----------------------------- |
-| **Beheerder**  | Administrator                | User and label management     |
-| **Consultant** | Employee                     | View-only access              |
-| **BDM**        | Business Development Manager | Create and manage assignments |
+| Role                 | Description                  | Permissions                                                       |
+| -------------------- | ---------------------------- | ----------------------------------------------------------------- |
+| **Office assistent** | User administration          | User and label management                                         |
+| **Opdrachtbeheer**   | Assignment administration    | Edit and delete any assignment, see all history                   |
+| **Consultant**       | Employee                     | View-only, plus the text fields of an opdracht they are placed on |
+| **BDM**              | Business Development Manager | Create and manage assignments                                     |
+
+Application administration (database, errors, granting `Opdrachtbeheer`) is the
+`STAFF_EMAILS` setting, not a role. The names above are labels; a role is
+stored under a key. See `features/roles.md`.
 
 ### Core Concepts
 

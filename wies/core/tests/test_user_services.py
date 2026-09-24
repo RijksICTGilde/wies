@@ -5,11 +5,12 @@ from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Event
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_CONSULTANT, role_label
 from wies.core.services.users import (
     create_user,
     create_users_from_csv,
     is_allowed_email_domain,
+    set_user_roles,
     update_user,
     validate_email_domain,
 )
@@ -59,6 +60,22 @@ class CreateUserServiceTest(TestCase):
         assert event2.context["email"] == "newuser2@rijksoverheid.nl"
         assert event2.context["first_name"] == "New2"
         assert event2.context["last_name"] == "User2"
+
+    def test_create_user_records_the_roles_by_label(self):
+        """The audit trail reads as the role was called at the time, so it holds
+        the label and not ``Group.name``, which is a key."""
+        consultant, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
+
+        user = create_user(
+            None,
+            first_name="New",
+            last_name="User",
+            email="newuser@rijksoverheid.nl",
+            groups=[consultant],
+        )
+
+        event = Event.objects.filter(object_type="User", action="create", object_id=user.id).first()
+        assert event.context["group_names"] == [role_label(ROLE_CONSULTANT)]
 
     def test_create_user_duplicate_email(self):
         """Test that creating user with duplicate email raises EmailNotAvailableError"""
@@ -327,9 +344,9 @@ class UpdateUserServiceTest(TestCase):
         user.refresh_from_db()
         assert user.email == "test@rijksoverheid.nl"
 
-    def test_update_user_removing_only_role_clears_it(self):
+    def test_removing_the_only_role_clears_it(self):
         """Deselecting the last remaining role must actually remove it."""
-        consultant = Group.objects.create(name="Consultant")
+        consultant, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
         user = create_user(
             None,
             first_name="Sole",
@@ -337,16 +354,9 @@ class UpdateUserServiceTest(TestCase):
             email="sole@rijksoverheid.nl",
             groups=[consultant],
         )
-        assert set(user.groups.values_list("name", flat=True)) == {"Consultant"}
+        assert set(user.groups.values_list("name", flat=True)) == {ROLE_CONSULTANT}
 
-        update_user(
-            None,
-            user=user,
-            first_name="Sole",
-            last_name="Consultant",
-            email="sole@rijksoverheid.nl",
-            groups=[],
-        )
+        set_user_roles(None, user, [])
 
         user.refresh_from_db()
         assert list(user.groups.all()) == []
@@ -401,12 +411,6 @@ class ValidateEmailDomainTest(TestCase):
 
 class CreateUsersFromCSVEmailDomainTest(TestCase):
     """Tests for email domain validation in CSV import"""
-
-    def setUp(self):
-        """Create required groups for CSV import"""
-        Group.objects.get_or_create(name="Beheerder")
-        Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
     def test_csv_import_valid_emails(self):
         """Test CSV import with valid ODI email addresses"""
