@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.test import Client, TestCase, override_settings
@@ -1145,8 +1145,7 @@ class ApplicationAdministrationHoursTest(TestCase):
 
 class RoleHoursForUserAdministrationTest(TestCase):
     """The authority ``can_view_role_hours`` names beside the BDM role and the
-    placed colleague: whoever administers users (``rijksauth.change_user``, held
-    by Office assistent).
+    placed colleague: the Office assistent role.
 
     It is the audience this split added to these hours. An Office assistent is
     placed nowhere and holds no BDM role, so without that branch of the predicate
@@ -1176,6 +1175,23 @@ class RoleHoursForUserAdministrationTest(TestCase):
 
         assert "Kees Bos" in body
         assert "16 uur" in body
+
+    def test_the_permission_the_role_happens_to_carry_is_not_the_audience(self):
+        """One audience, spelled once on both rights over the same data.
+
+        ``rule(READ, ContractPeriod)`` names ``Grant(Role(ROLE_OFFICE_ASSISTANT))``,
+        so this predicate names the role too. Asking ``rijksauth.change_user``
+        instead — the permission the role happens to carry — would answer yes here
+        and no there for anyone who holds the permission without the role, a
+        superuser above all.
+        """
+        holder = User.objects.create(email="perm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        holder.user_permissions.add(Permission.objects.get(content_type__app_label="rijksauth", codename="change_user"))
+        holder = User.objects.get(pk=holder.pk)  # fresh, no cached permissions
+        assert holder.has_perm("rijksauth.change_user") is True
+
+        assert can_view_role_hours(holder, self.placement) is False
+        assert has_permission(Verb.READ, ContractPeriod(colleague=self.colleague), holder) is False
 
 
 class ContractHoursAudienceTest(TestCase):

@@ -29,6 +29,7 @@ from wies.core.roles import (
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
     ROLE_STAFF,
+    can_view_role_hours,
     is_staff_member,
     may_administer_roles,
     may_change_email,
@@ -191,6 +192,14 @@ EXTRA_ROWS = [
         lambda u: evaluate_assignment_visibility(_PAST_START, _PAST_END, SimpleNamespace(user=u), _TODAY).visible,
     ),
     Row("Zichtbaarheid", "Business management-sectie", lambda u: show_bm_page(SimpleNamespace(user=u))),
+    # The hours on someone else's role; the own row is not a question, the
+    # consultant always sees their own. Same audience as "Contracturen van een
+    # collega zien", which the rules above already print.
+    Row(
+        "Zichtbaarheid",
+        "Uren van de rol van een collega zien",
+        lambda u: can_view_role_hours(u, Placement(colleague_id=_OTHER)),
+    ),
     # Not derivable from the Django permission underneath: since the sheet that
     # hands out roles hangs off this page, it opens for ``may_administer_roles``
     # too, and application administration holds that without ``view_user``.
