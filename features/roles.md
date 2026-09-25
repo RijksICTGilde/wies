@@ -83,6 +83,14 @@ the buttons for whoever may keep them, on the user sheet and in the colleague
 panel alike. That matters here because the sheet opens wider than the hours do:
 Applicatiebeheer reaches it for the Rollen half and sees no hours.
 
+*Which* periods it shows is the surface's question and not the rule's: the panel
+lists the running and coming ones, the sheet the whole history. The two share the
+three write routes, which cannot tell them apart, so every button carries the
+surface it sits on (`?vanuit=paneel`) and the sheet posts back to the url it was
+opened with. A save or a delete from the panel then swaps the panel's slice back
+in. Guessing the surface from the route swaps the sheet's history into the panel,
+ended periods and all.
+
 The users page itself opens for `may_view_users`, which is `rijksauth.view_user`
 or `may_administer_roles`: Applicatiebeheer needs the list to pick a person. That
 is all it gets. Nieuwe gebruiker and Verwijderen ask their own Django permission,

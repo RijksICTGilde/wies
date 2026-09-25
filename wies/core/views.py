@@ -2696,6 +2696,28 @@ def _own_colleague_or_404(request):
     return colleague
 
 
+PANEL_SURFACE_QUERY = "?vanuit=paneel"
+
+
+def _contract_surface(request):
+    """Which surface the contract-period button was pressed on.
+
+    The panel and the user sheet show a different slice of the same periods, so
+    a save has to swap back the slice the button sat on. Both surfaces share the
+    three write routes, which cannot tell them apart: the surface travels with
+    the request instead. The panel's buttons carry ``?vanuit=paneel``, the sheet
+    posts back to the url it was opened with, and the query survives the round
+    trip. Reading it off the route guesses "user" and drops the panel's filter,
+    showing ended periods it deliberately leaves out.
+    """
+    return "panel" if request.GET.get("vanuit") == "paneel" else "user"
+
+
+def _contract_url(name, args, surface):
+    """A contract-period url that keeps the surface it was reached from."""
+    return reverse(name, args=args) + (PANEL_SURFACE_QUERY if surface == "panel" else "")
+
+
 def _contract_block(colleague, surface, user):
     """Context for parts/contract_periods_block.html, or None for a viewer who
     may not read the hours.
@@ -2707,7 +2729,8 @@ def _contract_block(colleague, surface, user):
 
     The panel answers "how many hours now, and soon": it lists the running
     period and the ones still to start. The sheet keeps the whole history,
-    since that is where it is kept.
+    since that is where it is kept. The buttons carry ``surface`` onwards, so
+    the block that swaps back after a save is the one that was there.
     """
     if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
         return None
@@ -2729,7 +2752,9 @@ def _contract_block(colleague, surface, user):
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
         "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
-        "add_url": reverse("contract-period-add", args=[colleague.public_id]),
+        "add_url": _contract_url("contract-period-add", [colleague.public_id], surface),
+        # Appended to the per-period urls the template builds, for the same reason.
+        "surface_query": PANEL_SURFACE_QUERY if surface == "panel" else "",
         "empty_text": empty_text,
     }
 
@@ -2800,8 +2825,9 @@ def contract_period_add(request, colleague_public_id):
     period = ContractPeriod(colleague=colleague)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user", request.user))
+    surface = _contract_surface(request)
+    post_url = _contract_url("contract-period-add", [colleague.public_id], surface)
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, surface, request.user))
 
 
 @login_required
@@ -2809,8 +2835,9 @@ def contract_period_edit(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user", request.user))
+    surface = _contract_surface(request)
+    post_url = _contract_url("contract-period-edit", [period.public_id], surface)
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, surface, request.user))
 
 
 @login_required
@@ -2821,6 +2848,7 @@ def contract_period_delete(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
+    surface = _contract_surface(request)
     if request.method != "POST":
         return render(
             request,
@@ -2833,14 +2861,14 @@ def contract_period_delete(request, public_id):
                 ),
                 "confirm_label": "Verwijder periode",
                 "cancel_label": "Behoud periode",
-                "form_post_url": reverse("contract-period-delete", args=[period.public_id]),
+                "form_post_url": _contract_url("contract-period-delete", [period.public_id], surface),
             },
         )
     colleague = period.colleague
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, "user", request.user)
+    block = _contract_block(colleague, surface, request.user)
     return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 
