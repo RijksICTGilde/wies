@@ -7,9 +7,10 @@ lookup) and the production rules in ``permissions.py``.
 import uuid
 from datetime import timedelta
 
+import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, SimpleTestCase, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -23,14 +24,17 @@ from wies.core.permission_engine import (
     ANY,
     OWN,
     PLACED,
+    SCOPES,
     WIES_SOURCED,
+    Grant,
     Role,
     Verb,
     all_of,
     has_permission,
     registered_rules,
+    rule,
 )
-from wies.core.roles import ROLE_OFFICE_ASSISTANT, ROLE_STAFF
+from wies.core.roles import ROLE_BDM, ROLE_OFFICE_ASSISTANT, ROLE_STAFF
 
 from .inline_edit_helpers import post_inline_edit
 from .role_helpers import grant_bdm, grant_consultant
@@ -618,3 +622,37 @@ class AllOfScopeTest(_Setup):
         assert OWN.parts <= self.own_and_placed.parts
         assert not self.own_and_placed.parts <= OWN.parts
         assert ANY.parts <= self.own_and_placed.parts
+
+
+class RuleRegistrationTest(SimpleTestCase):
+    """What ``rule()`` refuses, and why it refuses it there.
+
+    The role page lays its rows out by walking ``SCOPES``, so a relation that is
+    not in that tuple would be enforced while printing no row at all. Registration
+    is the last moment where the mistake is still visible, since it happens at
+    import and takes the whole app down with it.
+    """
+
+    def test_a_combination_that_is_not_a_named_scope_is_refused(self):
+        """The trap ``all_of`` warns about: built inline it equals no constant, so
+        ``in SCOPES`` says no even when the very same call appears in ``SCOPES``.
+
+        The target is not a model on purpose: a grant that got through would be
+        registered under a key nothing looks up rather than replace a real rule.
+        """
+
+        class _Target:
+            pass
+
+        with pytest.raises(ValueError, match="not in SCOPES"):
+            rule(Verb.UPDATE, _Target, label="Iets bewerken", grants=[Grant(Role(ROLE_BDM), all_of(OWN, PLACED))])
+
+        assert (Verb.UPDATE, _Target, None) not in registered_rules()
+
+    def test_every_relation_the_rules_name_is_in_the_vocabulary(self):
+        """The other half, and the invariant the guard exists for: the production
+        rules pass it, so this is not a guard that refuses everything."""
+        for key, registered in registered_rules().items():
+            for grant in registered.grants:
+                with self.subTest(rule=registered.label, scope=grant.scope, key=key):
+                    assert grant.scope in SCOPES

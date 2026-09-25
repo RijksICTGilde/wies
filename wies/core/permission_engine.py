@@ -249,6 +249,18 @@ def rule(verb: Verb, target, *, label: str, grants, requires=()) -> Rule:
     if not all(isinstance(condition, _Condition) for condition in requires):
         msg = f"Rule {label!r} must state its requirements as conditions, got {requires!r}."
         raise TypeError(msg)
+    # The role matrix walks SCOPES to lay out its rows, so a relation that is not
+    # in there prints no row and the right disappears from the page while it is
+    # enforced. Refuse it here, where the rule is written, rather than let the
+    # page go quiet. An ``all_of`` built inline is never equal to a constant, so
+    # this also catches the combination that was not named.
+    unknown = [grant.scope for grant in grants if grant.scope not in SCOPES]
+    if unknown:
+        msg = (
+            f"Rule {label!r} names a relation that is not in SCOPES: {unknown!r}. "
+            "Name it as a module constant in permission_engine.py and add it to SCOPES."
+        )
+        raise ValueError(msg)
 
     if isinstance(target, type):
         model, field_name = target, None

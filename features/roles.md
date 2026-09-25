@@ -118,7 +118,8 @@ How a rule itself is written is in `features/inline-editing.md`, under
 what it may do on its own. `role_matrix.py` **reads** the rules rather than
 repeating them: one row per relation, one column per authority. Completeness is
 structural: `rule()` demands a `label` and a `grants`, so a right cannot be
-registered without a row.
+registered without a row, and it refuses a relation outside `SCOPES`, which the
+page would have no row to print.
 
 There is one column per authority and never one per combination: roles add up, so
 holding two means holding both columns. The rows underneath about visibility and
@@ -174,7 +175,10 @@ Grant(Role(ROLE_BDM), all_of(OWN, BRANDS))
 "Either of these" is the other combination, and that is two grants with the same
 holder: `Grant(Role(X), OWN)` next to `Grant(Role(X), BRANDS)`. There
 is no `any_of`, because a rule's grants already add up. A combination must be a
-module constant in `SCOPES`, or the matrix walks past it and prints no row.
+module constant in `SCOPES`: the matrix lays its rows out by walking that tuple,
+so one that is missing would be enforced while printing no row. `rule()` refuses
+such a scope at import time rather than let the page go quiet, and an `all_of`
+written inline is never equal to a constant, so it is refused too.
 
 `Scope.parts` is what makes that readable to the matrix: a grant answers a row when
 its parts are a subset of the row's, so `ANY` (no parts) covers every row and `OWN`

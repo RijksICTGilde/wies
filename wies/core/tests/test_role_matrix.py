@@ -100,6 +100,19 @@ class RoleMatrixShapeTest(SimpleTestCase):
 
         assert in_the_table == set(registered_rules().values())
 
+    def test_every_relation_a_rule_names_gets_a_row_of_its_own(self):
+        """``rule_rows`` lays the rows out by walking ``SCOPES``, so a relation
+        outside that tuple is named by ``row_scopes`` and printed by nothing. The
+        rule would still be enforced, and the page would be quiet about it;
+        ``rule()`` refuses such a scope, and this is that refusal seen from the
+        page's end."""
+        printed = {(rule, scope) for _section, _label, rule, scope in role_matrix.rule_rows()}
+
+        for rule in registered_rules().values():
+            for scope in role_matrix.row_scopes(rule):
+                with self.subTest(rule=rule.label, scope=scope):
+                    assert (rule, scope) in printed
+
     def test_every_rule_lands_in_a_section_that_is_rendered(self):
         for rule in registered_rules().values():
             with self.subTest(rule=rule.label):
