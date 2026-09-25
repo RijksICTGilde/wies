@@ -139,9 +139,6 @@ rule(
     ],
 )
 
-# Not Applicatiebeheer: it runs the platform and carries nothing functional, and
-# contract hours are as functional as data gets. Whoever does both holds a role
-# for the second half; 0012 hands the addresses in STAFF_EMAILS both roles once.
 rule(
     READ,
     ContractPeriod,

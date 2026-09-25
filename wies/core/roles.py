@@ -81,7 +81,7 @@ def can_view_role_hours(user, placement) -> bool:
     hours are visible to everyone who sees the opdracht.
 
     Application administration is not in that list: it runs the platform and
-    carries nothing functional. Whoever does both holds one of the two roles.
+    carries nothing functional.
     """
     if placement is None:
         return True
@@ -120,8 +120,7 @@ def may_view_role_matrix(user) -> bool:
 def may_administer_roles(user) -> bool:
     """Whether the user may change someone's roles, from the row menu on the users
     page: Office assistent and application administration. Which roles they are
-    then offered is
-    ``may_grant``'s answer, in ``UserForm``.
+    then offered is ``may_grant``'s answer, in ``UserForm``.
     """
     return user.has_perm("rijksauth.change_user") or is_staff_member(user)
 

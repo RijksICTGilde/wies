@@ -2,12 +2,12 @@
 
 Wies separates authority by what it lets you do, not by seniority.
 
-| Authority        | Where it lives           | In short                                       |
-| ---------------- | ------------------------ | ---------------------------------------------- |
-| Applicatiebeheer | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional  |
-| Office assistent | role (Django group)      | users, labels, merken and contract hours       |
-| BDM              | role (Django group)      | any wies-sourced opdracht, and contract hours  |
-| Consultant       | role (Django group)      | the opdracht they are placed on, and Bezetting |
+| Authority        | Where it lives           | In short                                          |
+| ---------------- | ------------------------ | ------------------------------------------------- |
+| Applicatiebeheer | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional     |
+| Office assistent | role (Django group)      | users, labels, merken and contract hours          |
+| BDM              | role (Django group)      | any wies-sourced opdracht, and contract hours     |
+| Consultant       | role (Django group)      | the text fields of an opdracht they are placed on |
 
 What each may do is on the page **Beheer > Rollen**, which reads the rules
 themselves.
@@ -77,11 +77,11 @@ else. A half the editor is not offered is not in `self.fields`, so it is absent
 from `cleaned_data` and a submitted value for it is never written.
 
 Under the form sits a third thing that is not part of it: the contract hours of
-the linked colleague. It asks the rule and not the surface, in both directions —
-`_contract_block` returns nothing at all to someone who may not read them, and
-carries the buttons for whoever may keep them, on the user sheet and in the
-colleague panel alike. That matters here because the sheet opens wider than the
-hours do: Applicatiebeheer reaches it for the Rollen half and sees no hours.
+the linked colleague. `_contract_block` asks the rule and not the surface, in both
+directions: it returns nothing to someone who may not read the hours, and carries
+the buttons for whoever may keep them, on the user sheet and in the colleague
+panel alike. That matters here because the sheet opens wider than the hours do:
+Applicatiebeheer reaches it for the Rollen half and sees no hours.
 
 The users page itself opens for `may_view_users`, which is `rijksauth.view_user`
 or `may_administer_roles`: Applicatiebeheer needs the list to pick a person. That
@@ -103,14 +103,14 @@ transaction without saying which line was the problem.
 
 ## A rule, from declaration to answer
 
-`permissions.py` holds the rules and nothing else: eleven `rule(...)` calls, no
+`permissions.py` holds the rules and nothing else: a list of `rule(...)` calls, no
 functions and no names anything refers to, which is why the file looks like it
 connects to nothing. It connects through a registry key, `(verb, model, field)`,
 and that key is visible on neither side: in `permissions.py` you see the target,
 at the call site you see the arguments.
 
 `apps.py` imports the module in `ready()` purely for the side effect: the import
-runs the eleven calls and fills the registry. Everything else asks
+runs those calls and fills the registry. Everything else asks
 `has_permission(verb, obj, user, field=None)`, which looks that key up: the
 inline-edit pencil and its POST, the delete and field routes, which fields a form
 offers, and the panel's Verwijderen. The role page reads the same registry, which
@@ -182,13 +182,8 @@ Two halves of that are already in place.
 Grant(Role(ROLE_BDM), all_of(OWN, BRANDS))
 ```
 
-"Either of these" is the other combination, and that is two grants with the same
-holder: `Grant(Role(X), OWN)` next to `Grant(Role(X), BRANDS)`. There
-is no `any_of`, because a rule's grants already add up. A combination must be a
-module constant in `SCOPES`: the matrix lays its rows out by walking that tuple,
-so one that is missing would be enforced while printing no row. `rule()` refuses
-such a scope at import time rather than let the page go quiet, and an `all_of`
-written inline is never equal to a constant, so it is refused too.
+How a combination is named, and why "either of these" needs no `any_of`, is in
+`features/inline-editing.md`.
 
 `Scope.parts` is what makes that readable to the matrix: a grant answers a row when
 its parts are a subset of the row's, so `ANY` (no parts) covers every row and `OWN`
