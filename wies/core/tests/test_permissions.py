@@ -21,6 +21,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import (
+    _RULES,  # the registry itself, to undo a registration this test provokes
     ANY,
     OWN,
     PLACED,
@@ -643,6 +644,12 @@ class RuleRegistrationTest(SimpleTestCase):
 
         class _Target:
             pass
+
+        # The registry is module state: if the refusal ever stops happening the
+        # rule below lands in it and every later test reads a registry with a row
+        # for a model the role page has no section for. Undone after the
+        # assertion, so the regression stays in this test.
+        self.addCleanup(_RULES.pop, (Verb.UPDATE, _Target, None), None)
 
         with pytest.raises(ValueError, match="not in SCOPES"):
             rule(Verb.UPDATE, _Target, label="Iets bewerken", grants=[Grant(Role(ROLE_BDM), all_of(OWN, PLACED))])
