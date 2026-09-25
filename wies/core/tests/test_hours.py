@@ -311,9 +311,6 @@ class ProfileContractPeriodTest(TestCase):
         self.client.force_login(self.user)
         self.add_url = reverse("contract-period-add", args=[self.colleague.public_id])
 
-    def _make_office_assistant(self):
-        self.user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
-
     def test_profile_shows_no_contract_hours_to_any_role(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         for group in (None, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
@@ -1080,6 +1077,41 @@ class ApplicationAdministrationHoursTest(TestCase):
         assert "16 uur" not in body
 
 
+class RoleHoursForUserAdministrationTest(TestCase):
+    """The authority ``can_view_role_hours`` names beside the BDM role and the
+    placed colleague: whoever administers users (``rijksauth.change_user``, held
+    by Office assistent).
+
+    It is the audience this split added to these hours. An Office assistent is
+    placed nowhere and holds no BDM role, so without that branch of the predicate
+    they read the page a team mate gets, with the hours blanked.
+    """
+
+    def setUp(self):
+        setup_roles()
+        self.today = timezone.now().date()
+        self.office_assistant = User.objects.create(
+            email="office@rijksoverheid.nl", onboarding_completed_at=timezone.now()
+        )
+        self.office_assistant.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.colleague = _consultant("Kees Bos", "kees@x.nl")
+        self.placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
+
+    def test_the_predicate_names_user_administration(self):
+        assert can_view_role_hours(self.office_assistant, self.placement) is True
+
+    def test_the_team_list_prints_the_hours_of_a_colleagues_role(self):
+        """The surface the predicate feeds: without the branch the row renders
+        without its hours, which is what a team mate sees."""
+        client = Client()
+        client.force_login(self.office_assistant)
+
+        body = client.get(reverse("home"), {"opdracht": self.placement.service.assignment.public_id}).content.decode()
+
+        assert "Kees Bos" in body
+        assert "16 uur" in body
+
+
 class ContractHoursAudienceTest(TestCase):
     """The two contract-hours rules against each other."""
 
@@ -1096,9 +1128,15 @@ class ContractHoursAudienceTest(TestCase):
         alone. A role that could write without reading would get an empty block
         swapped back in.
         """
+        keepers = []
         for role in (ROLE_BDM, ROLE_OFFICE_ASSISTANT, ROLE_CONSULTANT):
             user = User.objects.create(email=f"{role}@rijksoverheid.nl", onboarding_completed_at=timezone.now())
             user.groups.add(Group.objects.get(name=role))
-            with self.subTest(role=role):
-                if has_permission(Verb.UPDATE, self.period, user):
+            if has_permission(Verb.UPDATE, self.period, user):
+                keepers.append(role)
+                with self.subTest(role=role):
                     assert has_permission(Verb.READ, self.period, user) is True
+
+        # The assertion above only runs for a role that reached UPDATE, so a rule
+        # granting it to nobody would leave every branch unentered and the loop silent.
+        assert keepers, "No role reached UPDATE, so the loop above asserted nothing."

@@ -227,14 +227,22 @@ class DropAssignmentAdminMembersTest(_MigrationTestCase):
     loss and the reason 0012 reads the group and not only ``STAFF_EMAILS``.
     """
 
+    #: Both names the group can carry when 0012 arrives, and both are swept: the
+    #: label 0009 creates, and the key an environment that deployed the earlier
+    #: 0011 renamed it to. A member is only reachable through one of them.
+    SPELLINGS = ("Opdrachtbeheer", "assignment_admin")
+
     def setUp(self):
         self._migrate(KEYS)
         apps = self._apps_at(KEYS)
         self.group_model = apps.get_model("auth", "Group")
         user_model = apps.get_model(APP, "User")
-        self.member_id = user_model.objects.create(email="opdrachtbeheer@rijksoverheid.nl").pk
-        group, _ = self.group_model.objects.get_or_create(name="Opdrachtbeheer")
-        group.user_set.add(self.member_id)
+        self.member_ids = {}
+        for spelling in self.SPELLINGS:
+            member_id = user_model.objects.create(email=f"{spelling.lower()}@rijksoverheid.nl").pk
+            group, _ = self.group_model.objects.get_or_create(name=spelling)
+            group.user_set.add(member_id)
+            self.member_ids[spelling] = member_id
 
     def _names(self, user_id):
         user = self._apps_at(DROP).get_model(APP, "User").objects.get(pk=user_id)
@@ -244,7 +252,9 @@ class DropAssignmentAdminMembersTest(_MigrationTestCase):
         with patch.dict(os.environ, {"STAFF_EMAILS": ""}):
             self._migrate(DROP)
 
-        assert self._names(self.member_id) == {"bdm"}
+        for spelling, member_id in self.member_ids.items():
+            with self.subTest(group=spelling):
+                assert self._names(member_id) == {"bdm"}
 
     def test_a_member_gains_no_user_administration(self):
         """BDM and nothing else: user administration is what Opdrachtbeheer never
@@ -252,7 +262,9 @@ class DropAssignmentAdminMembersTest(_MigrationTestCase):
         with patch.dict(os.environ, {"STAFF_EMAILS": ""}):
             self._migrate(DROP)
 
-        assert "office_assistant" not in self._names(self.member_id)
+        for spelling, member_id in self.member_ids.items():
+            with self.subTest(group=spelling):
+                assert "office_assistant" not in self._names(member_id)
 
 
 class RoleMigrationChainTest(_MigrationTestCase):

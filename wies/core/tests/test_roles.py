@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from config.settings import base
 from wies.core.models import Label, LabelCategory
-from wies.core.roles import ROLE_BDM, ROLE_OFFICE_ASSISTANT, setup_roles
+from wies.core.roles import ROLE_BDM, ROLE_LABELS, ROLE_OFFICE_ASSISTANT, ROLE_STAFF, setup_roles
 
 User = get_user_model()
 
@@ -26,6 +26,23 @@ class RBACSetupTest(TestCase):
         setup_roles()
 
         assert not Group.objects.get(name=ROLE_BDM).user_set.exists()
+
+    def test_setup_roles_creates_exactly_the_roles_that_have_a_label(self):
+        """Both sides of a role's name, which drift apart in silence: a group with
+        no entry in ``ROLE_LABELS`` prints its key on the user sheet, and a label
+        with no group can never be granted. Applicatiebeheer is absent on purpose:
+        an address list rather than a group.
+
+        It is also what keeps ``rijksauth/0012`` done. That migration drops the
+        Opdrachtbeheer group, and ``setup_roles()`` runs on every container start,
+        so a role put back here would return on the next deploy and stand on the
+        user sheet under its key.
+        """
+        Group.objects.all().delete()
+
+        setup_roles()
+
+        assert set(Group.objects.values_list("name", flat=True)) == set(ROLE_LABELS) - {ROLE_STAFF}
 
     def test_setup_roles_creates_user_admin_group(self):
         """Test that setup_roles creates the Office assistent group"""
