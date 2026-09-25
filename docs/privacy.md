@@ -28,8 +28,8 @@ opdrachten. Het gaat om de volgende gegevens:
 - Zakelijk e-mailadres
 - Functie en rol binnen ODI
 - Gegevens over plaatsingen en opdrachten van de huidige opdracht (zoals opdrachtgever, looptijd en status)
-- Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en beheerders
-- Uren per week van je rol op een opdracht; zichtbaar voor business managers, beheerders en jezelf
+- Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en office assistenten
+- Uren per week van je rol op een opdracht; zichtbaar voor business managers, office assistenten en jezelf
 - De datum waarop je uit dienst bent gegaan, als einde van je laatste contractperiode
 
 ## Waarvoor gebruiken wij jouw gegevens?

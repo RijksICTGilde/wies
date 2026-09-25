@@ -37,8 +37,10 @@ Two places deliberately use the label instead:
 
 - **The audit trail.** `Event.context['group_names']` stores the label as it was
   then. An event records how something was called when it happened.
-- **The CSV import.** Column headers are labels, matched case-insensitively
-  (`CSV_ROLE_COLUMNS`), so an import file stays readable.
+- **The CSV import.** Column headers are names a person reads rather than keys,
+  matched case-insensitively (`CSV_ROLE_COLUMNS`), so an import file stays
+  readable. Not all of them are the label: the BDM column is spelled `BDM`, as
+  existing import files have it. `example_users_import.csv` carries the header row.
 
 ## Who may grant what
 

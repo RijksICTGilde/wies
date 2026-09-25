@@ -39,8 +39,8 @@ wies/core/
 │   ├── placement.py
 │   ├── service.py
 │   └── user.py
-├── permission_engine.py     # Verb, has_permission, @rule
-└── permissions.py           # all row-level @rule(...) declarations
+├── permission_engine.py     # Verb, has_permission, rule
+└── permissions.py           # all row-level rule(...) declarations
 
 wies/core/jinja2/
 ├── parts/inline_edit/       # display.html, form.html, collection_form.html
