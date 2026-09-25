@@ -32,6 +32,7 @@ from wies.core.roles import (
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
+    can_view_role_hours,
     is_staff_member,
     role_label,
     setup_roles,
@@ -353,6 +354,11 @@ class RoleMatrixExtraRowTest(TestCase):
                 evaluate_assignment_visibility(*PAST, SimpleNamespace(user=u), TODAY).visible
             ),
             "Business management-sectie": lambda u: show_bm_page(SimpleNamespace(user=u)),
+            # The predicate reads only ``colleague_id``, so the placement need not be
+            # saved; the user is, which is what this test compares against.
+            "Uren van de rol van een collega zien": lambda u: can_view_role_hours(
+                u, Placement(colleague_id=self.other.pk)
+            ),
             "Gebruikerslijst openen": lambda u: self._page_opens(u, reverse("admin-users")),
             "Gebruiker aanmaken en verwijderen": lambda u: u.has_perms(["rijksauth.add_user", "rijksauth.delete_user"]),
             "E-mailadres wijzigen (van een ander)": lambda u: self._form_accepts(

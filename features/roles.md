@@ -139,6 +139,10 @@ page would have no row to print.
 There is one column per authority and never one per combination: roles add up, so
 holding two means holding both columns. The rows underneath about visibility and
 the screens are not rules; they ask their own predicate with a stand-in viewer.
+Every such predicate has a row, `can_view_role_hours` (the hours on a colleague's
+role, "Uren van de rol van een collega zien") included: a right nobody can look up
+drifts unseen, and this one names the same audience as `rule(READ,
+ContractPeriod)`, which the rows above print.
 
 `test_role_matrix.py` fails when a printed cell differs from what the engine
 answers a saved user, when a rule produces no row, or when a column stands for a

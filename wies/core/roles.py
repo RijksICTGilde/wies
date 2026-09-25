@@ -63,6 +63,19 @@ def is_bdm(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_BDM).exists()
 
 
+def is_office_assistant(user) -> bool:
+    """Whether the user holds the Office assistent role (Django group
+    ``ROLE_OFFICE_ASSISTANT``).
+
+    Spelled as the role, not as the Django permission the role happens to carry:
+    ``rule(READ, ContractPeriod)`` names the same audience as
+    ``Grant(Role(ROLE_OFFICE_ASSISTANT))``, and one audience answers the same on
+    both sides. Asking ``rijksauth.change_user`` instead would let a superuser
+    through here and not there.
+    """
+    return user.is_authenticated and user.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+
+
 def is_staff_member(user) -> bool:
     """Whether the user does application administration (``STAFF_EMAILS``).
 
@@ -82,6 +95,10 @@ def can_view_role_hours(user, placement) -> bool:
 
     Application administration is not in that list: it runs the platform and
     carries nothing functional.
+
+    The same audience as ``rule(READ, ContractPeriod)`` in ``permissions.py``,
+    and spelled the same way; the role matrix prints it as "Uren van de rol van
+    een collega zien".
     """
     if placement is None:
         return True
@@ -92,7 +109,7 @@ def can_view_role_hours(user, placement) -> bool:
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:
         return True
-    return is_bdm(user) or user.has_perm("rijksauth.change_user")
+    return is_bdm(user) or is_office_assistant(user)
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
