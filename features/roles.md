@@ -145,7 +145,10 @@ combination.
   `office_assistant`, keeping members and permissions.
 - `rijksauth/0012` drops the `Opdrachtbeheer` group and gives everyone in
   `STAFF_EMAILS` the `BDM` and `Office assistent` roles **once**, so an address
-  added later does not get them and has to be granted on the user sheet.
+  added later does not get them and has to be granted on the user sheet. Whoever
+  held the group itself gets `BDM`, address list or not: the roles screen handed
+  `Opdrachtbeheer` out too, and dropping the group would otherwise take their
+  rights along in silence.
 - `ensure_initial_user` gives the first user of a fresh environment every group.
 
 Without `STAFF_EMAILS` set, an environment has no application administrator at

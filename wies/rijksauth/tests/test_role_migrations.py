@@ -216,3 +216,84 @@ class DropAssignmentAdminMigrationTest(_MigrationTestCase):
             self._migrate(DROP)
 
         assert self._names(DROP, self.staff_id) == set()
+
+
+class DropAssignmentAdminMembersTest(_MigrationTestCase):
+    """The members of the group that goes, as opposed to the address list.
+
+    0009 is not the only way into Opdrachtbeheer: the roles screen hands it out
+    too, so an environment that ran the earlier chain can have members no address
+    list names. Deleting the group takes their rights with it, which is a silent
+    loss and the reason 0012 reads the group and not only ``STAFF_EMAILS``.
+    """
+
+    def setUp(self):
+        self._migrate(KEYS)
+        apps = self._apps_at(KEYS)
+        self.group_model = apps.get_model("auth", "Group")
+        user_model = apps.get_model(APP, "User")
+        self.member_id = user_model.objects.create(email="opdrachtbeheer@rijksoverheid.nl").pk
+        group, _ = self.group_model.objects.get_or_create(name="Opdrachtbeheer")
+        group.user_set.add(self.member_id)
+
+    def _names(self, user_id):
+        user = self._apps_at(DROP).get_model(APP, "User").objects.get(pk=user_id)
+        return set(user.groups.values_list("name", flat=True))
+
+    def test_a_member_outside_the_address_list_keeps_the_opdracht_rights_as_bdm(self):
+        with patch.dict(os.environ, {"STAFF_EMAILS": ""}):
+            self._migrate(DROP)
+
+        assert self._names(self.member_id) == {"bdm"}
+
+    def test_a_member_gains_no_user_administration(self):
+        """BDM and nothing else: user administration is what Opdrachtbeheer never
+        carried, so inheriting it would widen the rights of whoever held it."""
+        with patch.dict(os.environ, {"STAFF_EMAILS": ""}):
+            self._migrate(DROP)
+
+        assert "office_assistant" not in self._names(self.member_id)
+
+
+class RoleMigrationChainTest(_MigrationTestCase):
+    """The chain as a deploy runs it, and as a rollback runs it.
+
+    The three starting points that exist: a fresh database (0008 up), one that
+    already has the earlier chain (0011 up, covered by the tests above), and
+    backwards to where the chain began.
+    """
+
+    STAFF = "applicatiebeheer@rijksoverheid.nl"
+
+    def setUp(self):
+        self._migrate(BEFORE_BACKFILL)
+        user_model = self._apps_at(BEFORE_BACKFILL).get_model(APP, "User")
+        self.staff_id = user_model.objects.create(email=self.STAFF).pk
+
+    def _names(self, target, user_id):
+        user = self._apps_at(target).get_model(APP, "User").objects.get(pk=user_id)
+        return set(user.groups.values_list("name", flat=True))
+
+    def _group_names(self, target):
+        return set(self._apps_at(target).get_model("auth", "Group").objects.values_list("name", flat=True))
+
+    def test_a_fresh_database_ends_on_the_keys_and_no_gone_group(self):
+        with patch.dict(os.environ, {"STAFF_EMAILS": self.STAFF}):
+            self._migrate(DROP)
+
+        assert self._names(DROP, self.staff_id) == {"bdm", "office_assistant"}
+        assert not {"Opdrachtbeheer", "assignment_admin"} & self._group_names(DROP)
+
+    def test_the_whole_chain_runs_backwards_and_forwards_again(self):
+        """Backwards is where a hardcoded target bites: every step declares its own
+        reverse, and the two renames put the labels back. The backfills are noop
+        both ways, so what they granted stays granted."""
+        with patch.dict(os.environ, {"STAFF_EMAILS": self.STAFF}):
+            self._migrate(DROP)
+            self._migrate(BEFORE_BACKFILL)
+
+            assert not {"office_assistant", "bdm", "consultant"} & self._group_names(BEFORE_BACKFILL)
+
+            self._migrate(DROP)
+
+        assert self._names(DROP, self.staff_id) == {"bdm", "office_assistant"}
