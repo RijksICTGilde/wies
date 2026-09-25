@@ -18,6 +18,7 @@ This files lists the changes during the lifetime of this project.
 - 674: new page Beheer > Rollen shows what each role may do, read from the rules themselves
 - 674: only Applicatiebeheer may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
 - 674: the user CSV import column `Beheerder` is now `Office assistent`: update the header of existing import files
+- 674: contract hours are kept by a BDM as well as by an Office assistent, and from the colleague panel as well as the user sheet; the block is shown only to who may read the hours, so Applicatiebeheer opening the user sheet for the roles does not see them
 
 ## 2026-09-13
 

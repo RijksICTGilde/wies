@@ -31,7 +31,6 @@ from wies.core.roles import (
     ROLE_BDM,
     ROLE_CONSULTANT,
     ROLE_OFFICE_ASSISTANT,
-    ROLE_STAFF,
 )
 from wies.rijksauth.models import User
 
@@ -140,6 +139,9 @@ rule(
     ],
 )
 
+# Not Applicatiebeheer: it runs the platform and carries nothing functional, and
+# contract hours are as functional as data gets. Whoever does both holds a role
+# for the second half; 0012 hands the addresses in STAFF_EMAILS both roles once.
 rule(
     READ,
     ContractPeriod,
@@ -147,7 +149,6 @@ rule(
     grants=[
         Grant(Role(ROLE_BDM)),
         Grant(Role(ROLE_OFFICE_ASSISTANT)),
-        Grant(Role(ROLE_STAFF)),
     ],
 )
 
