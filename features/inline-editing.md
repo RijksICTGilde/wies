@@ -266,7 +266,7 @@ rule(UPDATE, AssignmentEditables.extra_info,           # field-level: more permi
      label="Extra informatie bewerken",
      requires=WIES_SOURCED,
      grants=[Grant(Role(ROLE_BDM)),
-             Grant(Role(ROLE_CONSULTANT), scope=PLACED)])
+             Grant(Role(ROLE_CONSULTANT), PLACED)])
 
 rule(UPDATE, UserEditables.email,                      # field-level: stricter
      label="E-mailadres inline wijzigen",
@@ -280,13 +280,16 @@ scopes resolve the opdracht themselves.
 
 The vocabulary is fixed and lives in `permission_engine.py`:
 
-- **Grants**: `Grant(holder, scope=...)`, and nothing else. An empty `grants`
-  says nobody may, and the role page prints that row as "no" in every column.
+- **Grants**: `Grant(holder, relation)`, and nothing else; the relation defaults to
+  `ANY`. The keyword form is `Grant(holder=..., scope=...)`, so spell it out where
+  that reads better. An empty `grants` says nobody may, and the role page prints
+  that row as "no" in every column.
 - **Holders**: `Role(key)` and `Anyone()`. A holder answers only "who"; the
   relation is the grant's.
-- **Scopes**: `ANY` (default), `OWN`, `PLACED`, `PLACED_ON_SERVICE`, `SELF`.
-  Each carries both the predicate behind it and the wording it gets on the role
-  page, so a sentence used by three rules is written once.
+- **Scopes**: `ANY` (default), `OWN`, `PLACED`, `PLACED_ON_SERVICE`, `SELF`. Each
+  carries both the predicate behind it and the wording it gets on the role page, so
+  a sentence used by three rules is written once. `all_of(A, B)` builds the relation
+  that is both at once; "either of these" is two grants with the same holder.
 - **Conditions**: `WIES_SOURCED`, about the object rather than the viewer.
 
 `label` and `grants` are mandatory keywords, so a right cannot be added without

@@ -77,7 +77,7 @@ rule(
     label="Collega bewerken",
     grants=[
         Grant(Role(ROLE_OFFICE_ASSISTANT)),
-        Grant(Anyone(), scope=SELF),
+        Grant(Anyone(), SELF),
     ],
 )
 
@@ -87,7 +87,7 @@ rule(
     label="Gebruiker bewerken",
     grants=[
         Grant(Role(ROLE_OFFICE_ASSISTANT)),
-        Grant(Anyone(), scope=SELF),
+        Grant(Anyone(), SELF),
     ],
 )
 
@@ -114,7 +114,7 @@ rule(
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BDM)),
-        Grant(Role(ROLE_CONSULTANT), scope=PLACED),
+        Grant(Role(ROLE_CONSULTANT), PLACED),
     ],
 )
 
@@ -125,7 +125,7 @@ rule(
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BDM)),
-        Grant(Role(ROLE_CONSULTANT), scope=PLACED),
+        Grant(Role(ROLE_CONSULTANT), PLACED),
     ],
 )
 
@@ -136,7 +136,7 @@ rule(
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BDM)),
-        Grant(Role(ROLE_CONSULTANT), scope=PLACED_ON_SERVICE),
+        Grant(Role(ROLE_CONSULTANT), PLACED_ON_SERVICE),
     ],
 )
 
