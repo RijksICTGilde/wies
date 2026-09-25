@@ -295,6 +295,12 @@ The vocabulary is fixed and lives in `permission_engine.py`:
 `label` and `grants` are mandatory keywords, so a right cannot be added without
 a row on the role page (`features/roles.md`).
 
+A scope has to be one of the constants in `SCOPES`, and `rule()` refuses one that
+is not, at import time. The role page lays its rows out by walking that tuple, so
+a relation missing from it would be enforced while printing no row at all. That is
+the trap an `all_of(...)` written inline falls into: give the combination a module
+constant, add it to `SCOPES`, and name that.
+
 ### Calling `has_permission`
 
 ```python
