@@ -172,9 +172,9 @@ def visible_service_rows(assignment, request) -> list[dict]:
     """Returns viewer-filtered team rows for display.
 
     ``_services_initial`` returns every placement; here a placement that is not
-    currently active is hidden from unrelated viewers — only the placed colleague,
-    Business Managers (the BDM role) see it, flagged
-    ``historical`` with a label and privacy note.
+    currently active is hidden from unrelated viewers — only the placed colleague
+    and Business Managers (the BDM role) see it, flagged ``historical`` with a
+    label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
     description of their own role from the team list too, through the same
@@ -377,8 +377,6 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     if is_bdm_request(request):
-        # A privileged viewer (a BDM) sees the unfiltered list;
-        # they may see any team row.
         return changes
     allowed = _visible_colleague_names(assignment, request, viewer)
     return [change for change in changes if _change_colleague_names(change) <= allowed]

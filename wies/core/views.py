@@ -2700,12 +2700,10 @@ def _contract_block(colleague, surface, user):
     """Context for parts/contract_periods_block.html, or None for a viewer who
     may not read the hours.
 
-    One block for two places, and the rule decides who gets it and who gets the
-    buttons on either of them, not which place it is. A consultant does not see
-    their own contract hours in Wies; that is a matter for them and their
-    manager. The user sheet is the surface that needs the first half: it opens
-    for ``may_administer_roles``, so application administration reaches it for
-    the Rollen half without holding anything on these hours.
+    The guard matters on the user sheet, which opens for ``may_administer_roles``:
+    application administration reaches it for the Rollen half and holds nothing on
+    these hours. A consultant does not see their own contract hours in Wies; that
+    is a matter for them and their manager.
 
     The panel answers "how many hours now, and soon": it lists the running
     period and the ones still to start. The sheet keeps the whole history,

@@ -8,12 +8,10 @@ group. A group nothing names would otherwise stay on the user sheet under its ke
 Both roles for those addresses, not only BDM: an application administrator starts
 out able to do everything and takes off what they do not need.
 
-Whoever holds the group itself gets BDM and nothing more, whether or not their
-address is on the list. 0009 is not the only way in: the roles screen hands out
-Opdrachtbeheer too, so an environment that ran the earlier chain can have members
-the address list never named, and deleting the group would take their rights with
-it without a word. BDM alone, because user administration is what Opdrachtbeheer
-never carried.
+Whoever holds the group itself gets BDM, address list or not: the roles screen
+handed Opdrachtbeheer out too, so dropping the group would otherwise take rights
+from members 0009 never named. BDM alone, because user administration is what
+Opdrachtbeheer never carried.
 
 Not in setup_roles(): that runs on every start and would re-grant a role to
 someone who removed it from themselves.

@@ -205,8 +205,8 @@ EXTRA_ROWS = [
         "E-mailadres wijzigen (van een ander)",
         lambda u: _in_user_screen(u, allowed=may_change_email(u, "a@example.invalid", "b@example.invalid")),
     ),
-    # One row: no role is restricted to a granter of its own, so a row per role
-    # would print the same answer four times.
+    # One row: no role has a granter of its own, so a row per role would repeat
+    # the same answer.
     Row("Gebruikers en collega's", "Rollen toekennen", may_administer_roles),
     Row("Applicatie", "Statistieken en database", is_staff_member),
 ]

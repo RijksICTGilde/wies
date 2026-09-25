@@ -67,9 +67,6 @@ def all_of(*scopes: Scope) -> Scope:
     The other way to combine is "either of these", and that is two ``Grant``
     entries with the same holder; there is no ``any_of`` because a rule's grants
     already add up.
-
-    Name the result as a module constant and add it to ``SCOPES``: the role matrix
-    walks that tuple, so a combination missing from it prints no row at all.
     """
     return Scope(
         "+".join(scope.name for scope in scopes),
@@ -122,9 +119,8 @@ def _is_self(user, obj, _grant) -> bool:
     return obj == user or (isinstance(obj, Colleague) and obj == getattr(user, "colleague", None))
 
 
-# One signature for every scope, so no caller special-cases ANY. Its parts are
-# empty because it asks for no relation at all, which is what makes it cover
-# every row without the matrix naming it.
+# One signature for every scope, so no caller special-cases ANY. It asks for no
+# relation at all, hence no parts.
 ANY = Scope("any", "van een ander", lambda _user, _obj, _grant: True, frozenset())
 OWN = Scope("own", "eigen", _is_assignment_owner)
 PLACED = Scope("placed", "waarop je geplaatst bent", _is_placed_on_assignment)
@@ -249,11 +245,8 @@ def rule(verb: Verb, target, *, label: str, grants, requires=()) -> Rule:
     if not all(isinstance(condition, _Condition) for condition in requires):
         msg = f"Rule {label!r} must state its requirements as conditions, got {requires!r}."
         raise TypeError(msg)
-    # The role matrix walks SCOPES to lay out its rows, so a relation that is not
-    # in there prints no row and the right disappears from the page while it is
-    # enforced. Refuse it here, where the rule is written, rather than let the
-    # page go quiet. An ``all_of`` built inline is never equal to a constant, so
-    # this also catches the combination that was not named.
+    # The role matrix lays its rows out by walking SCOPES, so a relation missing
+    # from it would be enforced while the page prints nothing about it.
     unknown = [grant.scope for grant in grants if grant.scope not in SCOPES]
     if unknown:
         msg = (

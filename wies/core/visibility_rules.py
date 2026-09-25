@@ -4,8 +4,7 @@ Two rules over shared primitives (the ``Visibility`` result and ``period_timing`
 
 - ``evaluate_placement_visibility`` — a currently active placement is visible to
   everyone; an ended or future one is private to the placed colleague and to
-  privileged viewers (Business Managers, i.e. the BDM role),
-  each with a note.
+  privileged viewers (Business Managers, i.e. the BDM role), each with a note.
 - ``evaluate_assignment_visibility`` — an assignment a colleague *owns* as
   Business Manager: active and not-yet-started ones are public, an ended one is
   shown only to privileged viewers.
@@ -64,10 +63,9 @@ def evaluate_placement_visibility(start, end, placed_colleague_id, request, toda
     """Decides visibility for one placement, for the request's viewer.
 
     A non-active placement is visible to the placed colleague (``PRIVACY_OWN``)
-    and to a privileged viewer, a Business Manager
-    (``PRIVACY_BDM``). The placed-colleague check runs first, so a placed
-    colleague who is also privileged keeps the more specific ``PRIVACY_OWN``
-    note.
+    and to a privileged viewer, a Business Manager (``PRIVACY_BDM``). The
+    placed-colleague check runs first, so a placed colleague who is also
+    privileged keeps the more specific ``PRIVACY_OWN`` note.
     """
     timing = period_timing(start, end, today)
     if timing == "active":
@@ -84,11 +82,11 @@ def evaluate_assignment_visibility(start, end, request, today) -> Visibility:
     """Decides visibility for one owned (BM-role) assignment, for the request's viewer.
 
     An active or not-yet-started assignment is public. An ended one is visible
-    only to a privileged viewer, a Business Manager
-    (``PRIVACY_BM_OWNED``). Unlike a placement there is no placed consultant, so
-    no ``PRIVACY_OWN`` branch and the owner gets no special visibility; the gate
-    is purely the role. A future (planned) owned assignment is treated as public,
-    matching the profile's long-standing behaviour.
+    only to a privileged viewer, a Business Manager (``PRIVACY_BM_OWNED``).
+    Unlike a placement there is no placed consultant, so no ``PRIVACY_OWN``
+    branch and the owner gets no special visibility; the gate is purely the
+    role. A future (planned) owned assignment is treated as public, matching the
+    profile's long-standing behaviour.
     """
     timing = period_timing(start, end, today)
     if timing != "ended":
