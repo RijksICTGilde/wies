@@ -172,7 +172,7 @@ Grant(Role(ROLE_BDM), all_of(OWN, BRANDS))
 ```
 
 "Either of these" is the other combination, and that is two grants with the same
-holder: `Grant(Role(X), scope=OWN)` next to `Grant(Role(X), scope=BRANDS)`. There
+holder: `Grant(Role(X), OWN)` next to `Grant(Role(X), BRANDS)`. There
 is no `any_of`, because a rule's grants already add up. A combination must be a
 module constant in `SCOPES`, or the matrix walks past it and prints no row.
 
