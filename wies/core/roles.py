@@ -152,10 +152,12 @@ def may_view_users(user) -> bool:
 
 
 def may_grant(_editor, role: str) -> bool:
-    """Whether ``editor`` may grant or revoke ``role``; ``editor=None`` is the system.
+    """Whether ``role`` may be granted or revoked from inside the application.
 
     The one place the policy lives: ask it about any role rather than testing the
-    role yourself, so restricting one later needs no caller changed.
+    role yourself, so restricting one later needs no caller changed. That later
+    restriction is what the editor parameter is for; today no role depends on who
+    asks, so the answer is the same for everyone and the argument is unread.
     """
     # Applicatiebeheer is an address list, not a group: change STAFF_EMAILS and deploy.
     return role != ROLE_STAFF
