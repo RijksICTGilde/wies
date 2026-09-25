@@ -76,6 +76,13 @@ holds the second without the first, so it gets a sheet with Rollen and nothing
 else. A half the editor is not offered is not in `self.fields`, so it is absent
 from `cleaned_data` and a submitted value for it is never written.
 
+Under the form sits a third thing that is not part of it: the contract hours of
+the linked colleague. It asks the rule and not the surface, in both directions —
+`_contract_block` returns nothing at all to someone who may not read them, and
+carries the buttons for whoever may keep them, on the user sheet and in the
+colleague panel alike. That matters here because the sheet opens wider than the
+hours do: Applicatiebeheer reaches it for the Rollen half and sees no hours.
+
 The users page itself opens for `may_view_users`, which is `rijksauth.view_user`
 or `may_administer_roles`: Applicatiebeheer needs the list to pick a person. That
 is all it gets. Nieuwe gebruiker and Verwijderen ask their own Django permission,

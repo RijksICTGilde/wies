@@ -76,9 +76,12 @@ def can_view_role_hours(user, placement) -> bool:
     """Whether the user may see the hours per week of a role.
 
     Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
-    are for who plans with them (BDM, Office assistent, application administration)
-    and for the consultant themself, not for team mates. An open aanvraag has no
-    one to protect, so its hours are visible to everyone who sees the opdracht.
+    are for who plans with them (BDM, Office assistent) and for the consultant
+    themself, not for team mates. An open aanvraag has no one to protect, so its
+    hours are visible to everyone who sees the opdracht.
+
+    Application administration is not in that list: it runs the platform and
+    carries nothing functional. Whoever does both holds one of the two roles.
     """
     if placement is None:
         return True
@@ -89,7 +92,7 @@ def can_view_role_hours(user, placement) -> bool:
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:
         return True
-    return is_bdm(user) or is_staff_member(user) or user.has_perm("rijksauth.change_user")
+    return is_bdm(user) or user.has_perm("rijksauth.change_user")
 
 
 def may_change_email(editor, old: str, new: str) -> bool:

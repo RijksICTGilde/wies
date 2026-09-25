@@ -1,7 +1,8 @@
-{# Contract periods of one colleague: read-only in the colleague panel, with
-   buttons in the user sheet. Every action opens in the shared mount (the
-   add/edit sheet, the delete confirmation) and swaps this block back in
-   afterwards, so the sheet stays as it is. #}
+{# Contract periods of one colleague, in the colleague panel and in the user
+   sheet. The buttons follow the rule and not the surface, so the same block
+   carries them in both places for whoever may keep the hours. Every action opens
+   in the shared mount (the add/edit sheet, the delete confirmation) and swaps
+   this block back in afterwards, so the sheet stays as it is. #}
 {# The id carries the colleague: an out-of-band swap replaces every match, and
    the panel and the sheet may show different colleagues. #}
 <div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"

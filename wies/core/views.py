@@ -482,7 +482,6 @@ def _build_colleague_panel_data(colleague, request):
         "close_url": _build_close_url(request),
         "colleague": colleague,
         "contract_block": _contract_block(colleague, "panel", request.user),
-        "can_view_contract": has_permission(Verb.READ, ContractPeriod(colleague=colleague), request.user),
         "assignments": assignments,
     }
 
@@ -2698,16 +2697,22 @@ def _own_colleague_or_404(request):
 
 
 def _contract_block(colleague, surface, user):
-    """Context for parts/contract_periods_block.html.
+    """Context for parts/contract_periods_block.html, or None for a viewer who
+    may not read the hours.
 
-    One block for two places, and the rule decides who gets the buttons on
-    either of them, not which place it is. A consultant does not see their own
-    contract hours in Wies; that is a matter for them and their manager.
+    One block for two places, and the rule decides who gets it and who gets the
+    buttons on either of them, not which place it is. A consultant does not see
+    their own contract hours in Wies; that is a matter for them and their
+    manager. The user sheet is the surface that needs the first half: it opens
+    for ``may_administer_roles``, so application administration reaches it for
+    the Rollen half without holding anything on these hours.
 
     The panel answers "how many hours now, and soon": it lists the running
     period and the ones still to start. The sheet keeps the whole history,
     since that is where it is kept.
     """
+    if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
+        return None
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
     if surface == "panel":
