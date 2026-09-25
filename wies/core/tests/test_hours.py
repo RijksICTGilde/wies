@@ -433,6 +433,72 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "36 uur" in body
         assert self.colleague.contract_periods.count() == 1
 
+    def _ended_period(self):
+        return ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=24,
+            start_date=self.today - timedelta(days=400),
+            end_date=self.today - timedelta(days=101),
+        )
+
+    def test_the_panel_buttons_carry_the_surface_they_sit_on(self):
+        """The two surfaces share the three write routes, so the button says which
+        one it is on; the sheet posts back to the url it was opened with."""
+        period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        add_url = reverse("contract-period-add", args=[self.colleague.public_id])
+        edit_url = reverse("contract-period-edit", args=[period.public_id])
+        delete_url = reverse("contract-period-delete", args=[period.public_id])
+        assert f'{add_url}?vanuit=paneel"' in panel
+        assert f'{edit_url}?vanuit=paneel"' in panel
+        assert f'{delete_url}?vanuit=paneel"' in panel
+
+        sheet = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
+        assert "vanuit=paneel" not in sheet
+        assert f'{add_url}"' in sheet
+
+        # The sheet posts back to the same url, so a validation error and a save
+        # both keep the surface.
+        opened = self.client.get(add_url + "?vanuit=paneel").content.decode()
+        assert f'{add_url}?vanuit=paneel"' in opened
+        confirm = self.client.get(delete_url + "?vanuit=paneel").content.decode()
+        assert f'{delete_url}?vanuit=paneel"' in confirm
+
+    def test_saving_from_the_panel_swaps_the_panel_slice_back(self):
+        """Not the sheet's whole history: the panel leaves ended periods out on
+        purpose, and a save must not put them back."""
+        self._ended_period()
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        assert "24 uur" not in panel
+
+        url = reverse("contract-period-add", args=[self.colleague.public_id])
+        form = {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""}
+        body = self.client.post(url + "?vanuit=paneel", form).content.decode()
+        assert "36 uur" in body
+        assert "24 uur" not in body
+
+    def test_saving_from_the_user_sheet_keeps_the_history(self):
+        self._ended_period()
+        url = reverse("contract-period-add", args=[self.colleague.public_id])
+        form = {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""}
+        body = self.client.post(url, form).content.decode()
+        assert "36 uur" in body
+        assert "24 uur" in body
+
+    def test_deleting_from_the_panel_swaps_the_panel_slice_back(self):
+        """Including the empty text, which differs per surface: the panel says the
+        contract has ended where the sheet would say nothing is filled in."""
+        ended = self._ended_period()
+        period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+        body = self.client.post(
+            reverse("contract-period-delete", args=[period.public_id]) + "?vanuit=paneel"
+        ).content.decode()
+        assert "24 uur" not in body
+        assert "Geen lopend contract." in body
+
+        sheet_body = self.client.post(reverse("contract-period-delete", args=[ended.public_id])).content.decode()
+        assert "Niet ingevuld" in sheet_body
+
 
 class ServiceHoursTest(TestCase):
     def setUp(self):

@@ -1,7 +1,9 @@
 {# Contract periods of one colleague, in the colleague panel and in the user
    sheet; the buttons follow the rule, not the surface. Every action opens in
    the shared mount (the add/edit sheet, the delete confirmation) and swaps
-   this block back in afterwards, so the sheet stays as it is. #}
+   this block back in afterwards, so the sheet stays as it is. The buttons carry
+   the surface they sit on (``surface_query``), since the two surfaces show a
+   different slice of the same periods and the routes are shared. #}
 {# The id carries the colleague: an out-of-band swap replaces every match, and
    the panel and the sheet may show different colleagues. #}
 <div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"
@@ -30,10 +32,10 @@
       </nldd-text-cell>
       {% if contract_block.can_edit %}
         <nldd-cell>
-        <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Wijzigen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} wijzigen" hx-get="{{ url('contract-period-edit', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+        <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Wijzigen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} wijzigen" hx-get="{{ url('contract-period-edit', args=[period.public_id]) }}{{ contract_block.surface_query }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
         </nldd-cell>
         <nldd-cell>
-        <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-get="{{ url('contract-period-delete', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+        <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-get="{{ url('contract-period-delete', args=[period.public_id]) }}{{ contract_block.surface_query }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
         </nldd-cell>
       {% endif %}
       </nldd-list-item>
