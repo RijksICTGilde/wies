@@ -308,7 +308,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         ``rijksauth.change_user``, the sibling of the ``add_user`` and
         ``delete_user`` the other two user routes ask. Creating has nothing to ask
         it about: that route is behind ``rijksauth.add_user`` and reaches no
-        existing person. ``editor=None`` is the system, as it is in ``may_grant``.
+        existing person. ``editor=None`` is the system, which writes the person
+        unasked: the CSV import creates one without an editor to gate.
         """
         if self.instance is None or self.instance.pk is None or self._editor is None:
             return True

@@ -66,8 +66,11 @@ Gebruikers**, open to Office assistent and Applicatiebeheer
 `rijksauth.add_user`, and hands out roles under the same narrowing.
 It is enforced twice: `UserForm(editor=...)` offers only the roles the editor may
 grant, and that queryset is what a submitted id is validated against;
-`_apply_groups` drops the rest and keeps the roles the editor could not have
-handed out.
+`_apply_groups` runs the same filter again and is the only `groups.set` in the
+tree, so the sheet and the CSV import both pass it. It also keeps the roles the
+editor may not grant, which today keeps nothing: the only thing `may_grant`
+refuses is Applicatiebeheer, and that is an address list, not a `Group` anyone
+holds. The half is the seam a future restriction would land in.
 
 The sheet has two halves and the form offers each on its own gate, because the two
 authorities do not overlap: the person (name, e-mail, merk, labels) on
