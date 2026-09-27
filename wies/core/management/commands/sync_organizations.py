@@ -8,6 +8,7 @@ from wies.core.services.organizations import sync_organizations
 
 class Command(TaskCommand):
     help = "Sync organizations from organisaties.overheid.nl"
+    task_label = "Organisaties synchroniseren"
 
     def add_arguments(self, parser):
         parser.add_argument("--url", type=str, help="Custom XML URL (e.g. a dated archive)")

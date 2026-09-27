@@ -80,6 +80,27 @@
   <nldd-box>
   <nldd-container padding="16">
   <nldd-title size="5">
+  <h2>Kennisbank publiceren</h2>
+  </nldd-title>
+  <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>Publiceer de laatste versie van de kennisbank vanuit de content-repository.</p>
+  </nldd-rich-text>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <form method="post"
+        hx-post="{{ url('staff-database') }}"
+        hx-target="#task-list"
+        hx-swap="innerHTML">
+    {{ get_csrf_hidden_input(request) }}
+    <input type="hidden" name="action" value="publish_knowledge_base" />
+    <nldd-button variant="secondary" type="submit" text="Kennisbank publiceren"></nldd-button>
+  </form>
+  </nldd-container>
+  </nldd-box>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-box>
+  <nldd-container padding="16">
+  <nldd-title size="5">
   <h2>Dubbele opdrachten samenvoegen</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
