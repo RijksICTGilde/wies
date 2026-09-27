@@ -1,3 +1,14 @@
+# Local knowledge-base MinIO config, shared by django + db_worker so both reach
+# the same bucket. Set here (not only in .env*) so a fresh checkout works after
+# `just setup` regardless of what the copied .env files contain — compose
+# `environment:` overrides `env_file`. These are dev-only credentials.
+x-object-store-env: &object-store-env
+  OBJECT_STORE_HOST: minio
+  OBJECT_STORE_PORT: "9000"
+  OBJECT_STORE_USER: minioadmin
+  OBJECT_STORE_PASSWORD: minioadmin
+  OBJECT_STORE_BUCKET_NAME: wies-kb
+
 services:
   postgres:
     image: postgres:17
@@ -11,6 +22,29 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  minio:
+    # Docker Hub removed minio/minio (Oct 2025, Community Edition archived); pull
+    # from quay.io instead. Pinned to a release that still ships the web console
+    # at :9001 — later community releases stripped it. Only affects local dev;
+    # production MinIO is a ZAD platform service.
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # web console
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      # The image ships mc; `mc ready local` reports when the server is live.
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   django:
     build:
@@ -26,9 +60,12 @@ services:
     command: python manage.py runserver 0.0.0.0:8080
     env_file: .env
     environment:
+      <<: *object-store-env
       APP_VERSION: ${APP_VERSION:-}
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
   db_worker:
     build:
@@ -40,9 +77,17 @@ services:
     command: python manage.py db_worker
     env_file: .env.worker
     environment:
+      <<: *object-store-env
       APP_VERSION: ${APP_VERSION:-}
+      # The content repo (public) publishes token-free, so no token default here —
+      # an empty token means kb_publish sends no auth header (a bogus one would 401,
+      # see wies/kb/publish.py). Override both when the repo goes private.
+      KB_CONTENT_GITHUB_REPO: ${KB_CONTENT_GITHUB_REPO:-rubenrouwhof/odi-startpagina}
+      KB_CONTENT_GITHUB_TOKEN: ${KB_CONTENT_GITHUB_TOKEN:-}
     depends_on:
       postgres:
+        condition: service_healthy
+      minio:
         condition: service_healthy
     healthcheck:
       test:
@@ -59,3 +104,4 @@ services:
 
 volumes:
   postgres_data:
+  minio_data:

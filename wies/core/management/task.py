@@ -24,6 +24,8 @@ class TaskCommand(BaseCommand):
     failed immediately instead of hanging in ``running`` until its timeout.
     """
 
+    task_label: str = ""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = None

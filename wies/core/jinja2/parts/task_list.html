@@ -32,13 +32,27 @@
     {% else %}
       {% set status_label = task.status|capitalize %}
     {% endif %}
-    {# djlint:off T028 #} {% set supporting = task.created_at.strftime("%Y-%m-%d
+    {# The list mixes task types, so the row is titled by what the task is (its
+       label, snapshotted at creation); status and timestamp move to the supporting
+       line. #}
+    {% set task_label = task.label or task.command %}
+    {# djlint:off T028 #} {% set supporting = status_label ~ " · " ~ task.created_at.strftime("%Y-%m-%d
       %H:%M:%S") %}
     {% if task.created_by %}
       {% set supporting = supporting ~ " door " ~ (task.created_by.get_full_name() or task.created_by.username) %}
     {% endif %}
-    <nldd-title-cell divider-start text="{{ status_label }}" supporting-text="{{ supporting }}"></nldd-title-cell>
-    {% if task.result %}
+    <nldd-title-cell divider-start text="{{ task_label }}" supporting-text="{{ supporting }}"></nldd-title-cell>
+    {# The result payload differs per command: kb_publish reports a release + file
+       count (or an error message), sync_organizations reports record counts. #}
+    {% if task.command == 'kb_publish' %}
+      {% if task.status == 'completed' and task.result %}
+        {% set result_text = "Release " ~ (task.result.release ~ ", " if task.result.release else "") ~ task.result.objects ~ " bestanden gepubliceerd" %}
+      {% elif task.status == 'failed' and task.error_message %}
+        {% set result_text = task.error_message %}
+      {% else %}
+        {% set result_text = "-" %}
+      {% endif %}
+    {% elif task.result %}
       {% set result_text = "Aangemaakt: " ~ task.result.created ~
         ", Bijgewerkt: " ~ task.result.updated ~
         ", Ongewijzigd: " ~ task.result.unchanged ~

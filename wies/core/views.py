@@ -50,6 +50,7 @@ from wies.core.visibility_rules import (
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
 )
+from wies.kb.views import KB_PUBLISH_COMMAND, KB_PUBLISH_TIMEOUT_MINUTES
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -788,6 +789,23 @@ def staff_database(request):
                 messages.success(request, "Organisatiesynchronisatie is gestart")
 
             # If this is an HTMX request, return partial HTML
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "parts/task_list.html", context)
+
+        elif action == "publish_knowledge_base":
+            # Publish the knowledge base from the content repo — the db_worker runs
+            # the kb_publish task. Shares the same task list as the other actions.
+            if has_active_task(KB_PUBLISH_COMMAND):
+                messages.error(request, "Er is al een publicatietaak actief. Wacht tot deze is afgerond.")
+            else:
+                create_task(
+                    command=KB_PUBLISH_COMMAND,
+                    created_by=request.user,
+                    timeout_minutes=KB_PUBLISH_TIMEOUT_MINUTES,
+                )
+                messages.success(request, "Publicatie is gestart")
+
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)

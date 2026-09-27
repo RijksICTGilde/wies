@@ -3,6 +3,7 @@
 from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
+from django.core import management
 from django.utils import timezone
 
 if TYPE_CHECKING:
@@ -31,6 +32,7 @@ def create_task(command: str, created_by: User, timeout_minutes: int, parameters
 
     return Task.objects.create(
         command=command,
+        label=get_task_label(command),
         created_by=created_by,
         timeout_minutes=timeout_minutes,
         parameters=parameters,
@@ -49,6 +51,19 @@ def get_latest_tasks(limit: int = 3) -> QuerySet[Task]:
         QuerySet of Task objects ordered by creation date (newest first)
     """
     return Task.objects.select_related("created_by").order_by("-created_at")[:limit]
+
+
+def get_task_label(command: str) -> str:
+    """Human-readable label for a task command; falls back to the command name.
+
+    Reads the ``task_label`` a TaskCommand declares for itself, loaded the same way
+    the worker resolves the command (by ``wies.core`` app label).
+    """
+    try:
+        cmd = management.load_command_class("wies.core", command)
+    except Exception:  # noqa: BLE001 — an unknown/unloadable command still gets a usable label
+        return command
+    return getattr(cmd, "task_label", "") or command
 
 
 def has_active_task(command: str) -> bool:
