@@ -19,7 +19,7 @@ the app code is identical, only the mount point and infra items differ, and a 30
 `/start/` bookmark alive.
 
 The full decision analysis (every architectural fork, both sides, the deciding factor)
-lives in `ODI-KB-ARCHITECTURE-COMPARISON.md` at the repo root. This plan is the chosen
+lives in `kb-architecture-comparison.md` (same folder). This plan is the chosen
 design only.
 
 **Decisions taken (this session):**

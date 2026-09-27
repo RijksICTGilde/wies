@@ -40,8 +40,8 @@ uploads it under a new `sites/<tag>` prefix, and flips the pointer.
 
 The content repo now exists: `rubenrouwhof/odi-startpagina` (public for now,
 moving to a private repo later). Its CI attaches the built site as a `.tar.gz`
-release artifact on every merge to `main` (see `ODI-KB-CONTENT-REPO-CHANGES.md`),
-so the release side is real. One thing remains to test the flow end-to-end:
+release artifact on every merge to `main`, so the release side is real. One thing
+remains to test the flow end-to-end:
 
 - **A GitHub read token** able to download the repo's release artifacts.
   - Local: set `KB_CONTENT_GITHUB_REPO=rubenrouwhof/odi-startpagina` and
