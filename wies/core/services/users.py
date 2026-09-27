@@ -8,10 +8,13 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
+from django.db.models import Q
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import Colleague, Suborganization
+from wies.core.models import Colleague, Placement, Suborganization
+from wies.core.querysets import annotate_placement_dates
 from wies.core.roles import BDM_GROUP_NAME
+from wies.core.services.assignments import member_audit_event
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name
 
@@ -341,3 +344,68 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         "users_created": users_created,
         "errors": errors,  # May contain warnings when success is True
     }
+
+
+def close_contract_periods(colleague, day):
+    """Ends the colleague's contract on ``day``: the running period stops there
+    and periods still to start go.
+
+    Called when the user is removed. The colleague stays with their placements
+    and leaves Bezetting with the user; ending the contract keeps the colleague
+    panel and the history honest about when the hours stopped.
+
+    Returns what changed, for the audit event: the period that now ends on
+    ``day`` (or None) and the periods that were dropped. With ``day`` before the
+    start of the current period that one is dropped and an earlier one ends.
+    """
+    running = (
+        colleague.contract_periods.filter(start_date__lte=day)
+        .filter(Q(end_date__isnull=True) | Q(end_date__gt=day))
+        .first()
+    )
+    if running is not None:
+        running.end_date = day
+        running.save(update_fields=["end_date"])
+    later = list(colleague.contract_periods.filter(start_date__gt=day))
+    colleague.contract_periods.filter(pk__in=[p.pk for p in later]).delete()
+    return running, later
+
+
+def close_placements(colleague, day, request):
+    """Ends the colleague's placements on ``day``: a running one stops there and
+    one still to start goes, like the contract periods.
+
+    Without this the placements run on after the person left, and Bezetting
+    (which no longer lists them) and any forecast built on the hours count work
+    nobody does. A placement that follows the opdracht's period gets its own
+    period first, with the start it had, so the opdracht and the team mates on
+    it keep theirs. One that ended before ``day`` is left as it was.
+
+    Per opdracht the changes run inside ``member_audit_event``, so its timeline
+    shows them exactly as it would a team change made by hand, with the
+    beheerder who removed the user as the author.
+
+    Returns the placements that now end on ``day`` and the ones that were dropped.
+    """
+    placements = annotate_placement_dates(colleague.placements.select_related("service__assignment", "service__skill"))
+    by_assignment: dict = {}
+    for placement in placements:
+        by_assignment.setdefault(placement.service.assignment, []).append(placement)
+
+    ended, dropped = [], []
+    for assignment, group in by_assignment.items():
+        with member_audit_event(request, assignment):
+            to_drop = []
+            for placement in group:
+                start, end = placement.actual_start_date, placement.actual_end_date
+                if start is not None and start > day:
+                    to_drop.append(placement)
+                elif end is None or end > day:
+                    placement.period_source = Placement.PLACEMENT
+                    placement.specific_start_date = start
+                    placement.specific_end_date = day
+                    placement.save(update_fields=["period_source", "specific_start_date", "specific_end_date"])
+                    ended.append(placement)
+            Placement.objects.filter(pk__in=[p.pk for p in to_drop]).delete()
+            dropped.extend(to_drop)
+    return ended, dropped

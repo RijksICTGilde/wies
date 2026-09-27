@@ -15,8 +15,8 @@ from django.core.management import call_command
 from django.test import TestCase
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, LabelCategory, Placement
-from wies.core.services.occupancy import GILDE_CATEGORY, colleague_occupancy
+from wies.core.models import SUBGROEP_CATEGORY, Assignment, Colleague, LabelCategory, Placement
+from wies.core.services.occupancy import colleague_occupancy
 
 User = get_user_model()
 
@@ -80,7 +80,7 @@ class BaseDummyDataFixtureTest(TestCase):
 
     def test_every_colleague_carries_a_gilde_label(self):
         """The Bezetting rows chip that category, and the filter sheet offers it."""
-        assert LabelCategory.objects.filter(name=GILDE_CATEGORY).exists()
+        assert LabelCategory.objects.filter(name=SUBGROEP_CATEGORY).exists()
         rows = colleague_occupancy(timezone.now().date())
         assert all(row.gilde_labels for row in rows), "a consultant without a gilde label"
 

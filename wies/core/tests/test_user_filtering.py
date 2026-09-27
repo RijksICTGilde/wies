@@ -5,12 +5,18 @@ from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Colleague, Suborganization
+from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, LabelCategory, Suborganization
 
 User = get_user_model()
 
 
-class UserFilterRenderTest(TestCase):
+class UserFilterFixture:
+    """One admin, one merk and one beheerder-colleague, for the render tests below.
+
+    A plain mixin, not a TestCase: inheriting from a TestCase would make pytest
+    collect the parent's tests again under every child class.
+    """
+
     def setUp(self):
         self.client = Client()
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
@@ -23,6 +29,8 @@ class UserFilterRenderTest(TestCase):
             user=u, name="Cor Consultant", email="c@rijksoverheid.nl", source="wies", suborganization=self.merk
         )
 
+
+class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
@@ -103,3 +111,122 @@ class UserFilterSlotTest(UserFilterRenderTest):
         # Inside the sheet the filter panel must not carry slot="sidebar".
         panel = html.split('id="filter-panel"')[1].split(">")[0]
         assert 'slot="sidebar"' not in panel, panel
+
+
+class UserListSortTest(TestCase):
+    """The toolbar sort control (#672): the order is named and can be changed."""
+
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="Zed", last_name="Admin")
+        self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
+        User.objects.create_user(email="b@rijksoverheid.nl", first_name="Anna", last_name="Bakker")
+        User.objects.create_user(email="j@rijksoverheid.nl", first_name="Mo", last_name="Jansen")
+        self.client.force_login(self.admin)
+
+    def _names_in_order(self, html: str, *names: str) -> list[str]:
+        # From the list on: the signed-in admin's name is in the page header too.
+        rows = html[html.index('id="user-table"') :]
+        return sorted(names, key=rows.index)
+
+    def test_default_order_is_last_name_and_says_so(self):
+        html = self.client.get(reverse("admin-users")).content.decode()
+        assert self._names_in_order(html, "Admin", "Bakker", "Jansen") == ["Admin", "Bakker", "Jansen"]
+        assert 'id="sort-control"' in html
+        assert 'text="Achternaam (A-Z)"' in html
+
+    def test_order_param_reverses_last_name(self):
+        html = self.client.get(reverse("admin-users") + "?order=-last_name").content.decode()
+        assert self._names_in_order(html, "Admin", "Bakker", "Jansen") == ["Jansen", "Bakker", "Admin"]
+        assert 'text="Achternaam (Z-A)"' in html
+        # The filter form carries the order along, so a filter change keeps it.
+        assert 'name="order"' in html
+        assert 'value="-last_name"' in html
+
+    def test_sort_links_drop_the_page_number(self):
+        # Sorting from a paged URL must start the new order at page 1: the lists
+        # page on "pagina", which the sort links have to drop along with "page".
+        html = self.client.get(reverse("admin-users") + "?pagina=1&zoek=an").content.decode()
+        control = html[html.index('id="sort-control"') :].split("</nldd-menu>")[0]
+        assert "pagina=" not in control
+        assert "zoek=an" in control
+        assert "order=-last_name" in control
+
+    def test_tussenvoegsel_sorts_on_the_name_proper(self):
+        # "de Wit" stands under the W, and case does not count.
+        User.objects.create_user(email="w@rijksoverheid.nl", first_name="Piet", last_name="de Wit")
+        User.objects.create_user(email="d@rijksoverheid.nl", first_name="Ali", last_name="Demir")
+        User.objects.create_user(email="h@rijksoverheid.nl", first_name="Kim", last_name="hendriks")
+        User.objects.create_user(email="v@rijksoverheid.nl", first_name="Ans", last_name="In 't Veld")
+        html = self.client.get(reverse("admin-users")).content.decode()
+        assert self._names_in_order(html, "Demir", "de Wit", "hendriks", "Veld", "Jansen") == [
+            "Demir",
+            "hendriks",
+            "Jansen",
+            "Veld",
+            "de Wit",
+        ]
+        html = self.client.get(reverse("admin-users") + "?order=-last_name").content.decode()
+        assert self._names_in_order(html, "Demir", "de Wit", "hendriks") == ["de Wit", "hendriks", "Demir"]
+
+    def test_leading_space_and_apostrophe_prefixes_do_not_escape_the_strip(self):
+        # A leading space (CSV import, OIDC sync), "'s" and the spaceless "d'"
+        # all fall away: these sort under the W, the G and the A.
+        User.objects.create_user(email="w@rijksoverheid.nl", first_name="Piet", last_name="  de Wit")
+        User.objects.create_user(email="g@rijksoverheid.nl", first_name="Ada", last_name="'s Gravesande")
+        User.objects.create_user(email="d@rijksoverheid.nl", first_name="Luc", last_name="d'Anjou")
+        html = self.client.get(reverse("admin-users")).content.decode()
+        assert self._names_in_order(html, "Admin", "Anjou", "Bakker", "Gravesande", "Jansen", "de Wit") == [
+            "Admin",
+            "Anjou",
+            "Bakker",
+            "Gravesande",
+            "Jansen",
+            "de Wit",
+        ]
+
+    def test_order_by_first_name(self):
+        html = self.client.get(reverse("admin-users") + "?order=first_name").content.decode()
+        assert self._names_in_order(html, "Zed", "Anna", "Mo") == ["Anna", "Mo", "Zed"]
+
+    def test_order_by_date_joined(self):
+        # Newest first: the users of setUp were created admin, Bakker, Jansen.
+        html = self.client.get(reverse("admin-users") + "?order=-date_joined").content.decode()
+        assert self._names_in_order(html, "Admin", "Bakker", "Jansen") == ["Jansen", "Bakker", "Admin"]
+        assert 'text="Toegevoegd (nieuwste eerst)"' in html
+
+    def test_unknown_order_falls_back_to_default(self):
+        html = self.client.get(reverse("admin-users") + "?order=email").content.decode()
+        assert self._names_in_order(html, "Admin", "Bakker", "Jansen") == ["Admin", "Bakker", "Jansen"]
+        assert 'text="Achternaam (A-Z)"' in html
+        assert 'name="order"' not in html
+
+    def test_sort_swap_carries_sort_control_oob(self):
+        # The toolbar does not re-render on a swap, so the control travels OOB
+        # to show the new order on the button.
+        html = self.client.get(
+            reverse("admin-users") + "?order=-last_name", headers={"hx-request": "true"}
+        ).content.decode()
+        assert 'id="sort-control" slot="end" priority="-2" hx-swap-oob="outerHTML"' in html
+
+
+class UserRowProfileTest(UserFilterFixture, TestCase):
+    """Merk and subgroep are visible on the row itself (#672)."""
+
+    def test_row_shows_merk_and_subgroep_after_email(self):
+        subgroep = LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#0066CC")
+        expertise = LabelCategory.objects.create(name="Expertise", color="#00CC66")
+        colleague = Colleague.objects.get(email="c@rijksoverheid.nl")
+        colleague.labels.add(
+            Label.objects.create(name="AI", category=subgroep),
+            Label.objects.create(name="Cloud", category=expertise),
+        )
+        self.client.force_login(self.admin)
+        html = self.client.get(reverse("admin-users")).content.decode()
+        # Merk first, then the subgroep; other categories stay in the panel and the filters.
+        assert 'supporting-text="c@rijksoverheid.nl · Merk A · AI"' in html
+
+    def test_row_without_colleague_shows_only_email(self):
+        self.client.force_login(self.admin)
+        html = self.client.get(reverse("admin-users")).content.decode()
+        assert 'supporting-text="a@rijksoverheid.nl"' in html

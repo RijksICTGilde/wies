@@ -4,52 +4,66 @@
 /* Filters use the shared filter sheet (parts/filter_sidebar.html), so no
    Bezetting-specific filter styling lives here. */
 
-/* The filter row: three status toggles and the sheet that holds the rest. The
-   cards ARE filters (each is an OR-toggle on a status), so they sit on the row
-   with the Filters button rather than reading as a passive header above it.
-
-   A single flex row of four. It does not wrap: the cards give up width first
-   (they carry a short count and a caption that can ellipsis), while the button
-   keeps its full label, because "Alle filters" is the way back to everything the
-   row cannot show. */
-.bezetting-toolbar {
+/* The status cards and the Filters button on one row. The cards sit outside
+   nldd-toolbar (see the template) but must read as one row with it: the wrapper
+   is the flex row, the toolbar follows the cards and takes the remaining width. */
+.bezetting-toolbar-row {
   display: flex;
   align-items: center;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.bezetting-toolbar-row > nldd-toolbar {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bezetting-toolbar__stats {
+  display: flex;
+  flex: 1 1 auto;
   gap: var(--primitives-space-8, 8px);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* The three cards share the free space and shrink together; min-width: 0 lets
-   them go below their content width so the caption ellipsises instead of
-   pushing the button off the row. */
-.bezetting-toolbar > li {
-  flex: 1 1 0;
-  min-width: 0;
+/* Equal width, and no wider than the caption needs: in their own list the cards
+   would take every pixel the toolbar leaves over and dwarf the button beside
+   them. The floor is where the short captions still read in full. */
+.bezetting-toolbar__stats > li {
   display: flex;
+  flex: 1 1 0;
+  min-width: 150px;
+  max-width: 220px;
   /* The height nldd-button resolves to. The cards are the same kind of control
      as the button beside them, so they match it rather than sizing themselves
      from their own padding. */
   height: 44px;
 }
 
-/* The button is the one item that must stay readable at every width: it is how
-   you reach the filters that do not fit on the row. */
-.bezetting-toolbar > li:last-child {
-  flex: 0 0 auto;
+/* Hidden here rather than left to the toolbar's overflow: the cards have no
+   menu twin (their statuses are a group in the filter sheet), and an overflowed
+   item with nothing to show gave a ⋯ button reading "Geen opties beschikbaar".
+
+   The cards must be gone before nldd-toolbar starts pushing its own items into
+   the menu: they are a shortcut, "Opdracht invoeren" is not reachable anywhere
+   else on the page. Three cards at their floor width beside both buttons hold
+   the row down to 850px; at 800px the create action goes first (measured). */
+@media (max-width: 840px) {
+  .bezetting-toolbar__stats {
+    display: none;
+  }
 }
 
 /* Summary cards double as status filters. The clickable element is a native
    <button> (free keyboard + focus semantics) wrapping an nldd-card, so reset the
-   button chrome and let the card size the control.
-
-   No height: 100% here. It made sense while the cards sat in a collection's grid
-   cells, which have a height to fill; on a plain list item there is nothing to
-   resolve the percentage against, so the button collapsed to zero and took the
-   visible card with it. */
+   button chrome. The list item it sits in has a fixed height (see above), so
+   height: 100% resolves against that and the button fills it. */
 .bezetting-stat {
-  display: block;
+  /* Flex, not block: the nldd-card inside has to stretch to the button's height,
+     and on a block it kept its own 40px against the 44px of the button beside
+     it, leaving the cards visibly shorter than the rest of the row. */
+  display: flex;
   width: 100%;
   height: 100%;
   padding: 0;
@@ -62,6 +76,25 @@
   /* The card's own radius token, so the focus ring keeps hugging the card edge
      if the design system ever changes that corner. */
   border-radius: var(--components-card-corner-radius);
+}
+
+/* The card is a flex item of our button, which lives outside its shadow root:
+   only from here can it be told to take the button's width and to give way
+   instead of pushing the button off the row. */
+.bezetting-stat > nldd-card {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* The card stretches, but its container keeps its own 40px, which left the
+   count and caption two pixels above the middle of a 44px row. Stretch that
+   too, and centre what is inside it. */
+.bezetting-stat nldd-card,
+.bezetting-stat nldd-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
 }
 
 /* nldd-card sets its own radius; match it so the focus ring hugs the card edge.
@@ -152,7 +185,9 @@
 
 /* ── Tijdlijn layout ──────────────────────────────────────────────────────── */
 .bezetting-timeline {
-  --bezetting-side-width: 360px;
+  /* Two lines of identity plus the gilde tags: at 360px a longer role wrapped
+     onto a third line on a third of the rows. */
+  --bezetting-side-width: 400px;
   /* The row is taller than its 28px avatar: the bars are the content, and a
      row squeezed to avatar height left them no room to breathe. */
   --bezetting-row-height: 52px;
@@ -348,21 +383,16 @@
   align-items: center;
   gap: var(--primitives-space-8);
   min-width: 0;
+  width: 100%;
 }
 
-.bezetting-person__name {
-  font-weight: var(--primitives-font-weight-body-extra-bold, 700);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* flex-shrink applies to the host element as a flex item, which lives outside
-   the component's shadow root — nldd-tag can't set its own shrink behaviour
-   relative to our layout. Keep the "eindigt binnenkort" tag at full size so the
-   name (not the date) is what ellipsizes when the cell is narrow. */
-.bezetting-person nldd-tag {
-  flex-shrink: 0;
+/* The identity host sets its own width to 100%, which as a flex item leaves
+   the gilde tags beside it no room; sized from zero it takes what the tags
+   leave over and wraps its text before a tag gives way, since a tag that
+   ellipsizes says nothing. */
+.bezetting-person nldd-identity {
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 /* Timeline bars are purely visual: let clicks fall through to the stretched
@@ -455,31 +485,6 @@
 
 /* ── Op de bank ───────────────────────────────────────────────────────────── */
 
-/* A bench row differs only in its name cell: a smaller avatar, since nothing
-   runs today and the row never stacks lanes.
-
-   The bar geometry is deliberately NOT changed here. With a smaller lane height
-   the very same opdracht drew thinner on a bench row than on a placed row two
-   lines down, which read as "this one matters less" rather than "this person is
-   free". Bench rows still come out shorter, because the row height follows its
-   lane stack and a bench row only ever has one lane. */
-.bezetting-row--compact .bezetting-person {
-  gap: var(--primitives-space-6);
-}
-
-/* The role, right after the name it belongs to. Secondary and smaller so the
-   name still leads the row; it truncates before the name does, since which
-   person this is matters more than what they are called in. */
-.bezetting-person__role {
-  flex-shrink: 999;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--semantics-content-secondary-color);
-  font-size: var(--primitives-font-size-70);
-}
-
 /* The free stretch on a bench row, running up to today.
 
    A zone, not a bar: full row height, no border of its own, so the placements
@@ -539,23 +544,20 @@
   white-space: nowrap;
 }
 
-/* Merk and expertise chips on a row. They sit after the role and give way
-   before it does: the name identifies the person, the role says what they do,
-   and the chips only explain why a filtered view includes them. Hidden below md
-   — the name cell is 200px there and the chips would take all of it. */
+/* Gilde chips on a row. They keep their size; the identity beside them takes
+   what is left and wraps a long role onto a third line rather than losing a
+   chip to an ellipsis, which would say nothing. The chips only explain why a
+   filtered view includes someone, so they are the first to go once the name
+   cell itself shrinks: at 200px (below 800px, see the timeline rules) they
+   would take all of it. Until then the cell is 400px whatever the window is,
+   so a wider breakpoint would hide them while nothing was gained. */
 .bezetting-person__labels {
   display: flex;
   gap: var(--primitives-space-4);
-  flex-shrink: 1000;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.bezetting-person__labels nldd-tag {
   flex-shrink: 0;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 800px) {
   .bezetting-person__labels {
     display: none;
   }

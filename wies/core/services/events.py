@@ -5,6 +5,7 @@ from wies.rijksauth.request_meta import get_request_metadata
 
 SUPPORTED_OBJECT_TYPES = {
     "User",
+    "Colleague",
     "OrganizationUnit",
     "Assignment",
 }

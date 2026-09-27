@@ -1,16 +1,21 @@
 import logging
+from datetime import timedelta
 
 from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
 
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
+from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
-from .models import Colleague, Label, LabelCategory, Suborganization
+from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
+from .querysets import annotate_placement_dates
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -301,6 +306,112 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         return cleaned_data
 
 
+class UserDeleteForm(NlddFormMixin, forms.Form):
+    """Asked when deleting a user with a colleague profile: the day the contract
+    and the placements end.
+
+    Required only while there is something to end; without contract periods
+    and placements the day is just recorded with the deletion.
+    """
+
+    left_on = forms.DateField(
+        label="Uit dienst per",
+        help_text="Wat op die dag loopt, eindigt dan. Wat daarna zou beginnen, vervalt.",
+    )
+
+    def __init__(self, *args, colleague=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.colleague = colleague
+        self.periods = colleague.contract_periods.all() if colleague else ContractPeriod.objects.none()
+        has_placements = colleague is not None and colleague.placements.exists()
+        if not self.periods.exists() and not has_placements:
+            self.fields["left_on"].required = False
+            self.fields["left_on"].help_text = "Wordt vastgelegd bij de verwijdering."
+
+    def clean(self):
+        cleaned = super().clean()
+        day = cleaned.get("left_on")
+        # A day before every period would leave nothing to end and drop them
+        # all, which is the history this model exists to keep.
+        if day and self.periods.exists() and not self.periods.filter(start_date__lte=day).exists():
+            self.add_error("left_on", "Deze dag ligt vóór elke contractperiode. Kies een dag binnen of na een periode.")
+        # Same for placements: a day before one that has already started would
+        # drop it, and with it the record that this person worked there.
+        if day and self.colleague is not None:
+            today = timezone.now().date()
+            started = [
+                p
+                for p in annotate_placement_dates(self.colleague.placements.all())
+                if p.actual_start_date is not None and p.actual_start_date <= today
+            ]
+            if any(p.actual_start_date > day for p in started):
+                self.add_error("left_on", "Deze dag ligt vóór een plaatsing die al is begonnen. Kies een dag daarna.")
+        return cleaned
+
+
+class ContractPeriodForm(NlddFormMixin, forms.ModelForm):
+    """One contract period, in a sheet on the user sheet.
+
+    The colleague comes from the view as the instance; the model's clean() keeps
+    the period inside the hours range and clear of the colleague's other periods.
+
+    Adding a period usually means a change of hours: the running period has no
+    end yet. The sheet says so, starts from that period's hours, and
+    ``end_running_period`` ends it the day before the new start, so the
+    beheerder does not have to close it by hand first. An empty end date means
+    the period runs on; the sheet hides the field behind an "Einddatum is
+    bekend" switch, like the placement forms.
+    """
+
+    start_date = forms.DateField(label="Startdatum")
+    end_date = forms.DateField(label="Einddatum", required=False)
+
+    class Meta:
+        model = ContractPeriod
+        fields = ["hours_per_week", "start_date", "end_date"]
+        widgets = {"hours_per_week": forms.Select(choices=HOURS_PER_WEEK_CHOICES)}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.running = None if self.instance.pk else self._running_period()
+        if self.running is not None:
+            # On form.initial, not the field: the unsaved instance already puts
+            # hours_per_week=None in form.initial, and that wins over the field's.
+            self.initial["hours_per_week"] = self.running.hours_per_week
+
+    def _running_period(self):
+        """The colleague's period that covers today, if any."""
+        if self.instance.colleague_id is None:
+            return None
+        today = timezone.now().date()
+        return (
+            self.instance.colleague.contract_periods.filter(start_date__lte=today)
+            .filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+            .first()
+        )
+
+    def end_running_period(self):
+        """Ends the running period the day before the new start.
+
+        Runs before validation, so the overlap check then sees the ended
+        period; the view wraps both in a transaction and rolls back when the
+        new period does not validate. Returns the ended period, or None.
+        """
+        if self.running is None:
+            return None
+        try:
+            start = self.fields["start_date"].clean(self.data.get(self.add_prefix("start_date")))
+        except ValidationError:
+            return None
+        # Only ever shortens: a period that already ends before the new start
+        # is left alone, so this never stretches a contract.
+        if start <= self.running.start_date or (self.running.end_date is not None and self.running.end_date < start):
+            return None
+        self.running.end_date = start - timedelta(days=1)
+        self.running.save(update_fields=["end_date"])
+        return self.running
+
+
 class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
@@ -323,6 +434,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
         widget=forms.Textarea(attrs={"rows": 2}),
     )
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
+    # Hours belong to the role, so an open aanvraag carries them too. A list,
+    # not a number input: nldd-text-field has no number type.
+    hours_per_week = ServiceEditables.hours_per_week.form_field()
     is_filled = forms.ChoiceField(
         label="Status",
         choices=[("aanvraag", "Aanvraag"), ("ingevuld", "Geplaatste consultant")],

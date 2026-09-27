@@ -11,6 +11,7 @@
 {% set error_ids = wire_field_errors(field) %}
 <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
+{% if field.help_text %}<nldd-form-field-help-text>{{ field.help_text }}</nldd-form-field-help-text>{% endif %}
 {% for error in field.errors %}
   <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
 {% endfor %}

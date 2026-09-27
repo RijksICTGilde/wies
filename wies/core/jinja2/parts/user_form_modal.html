@@ -4,11 +4,17 @@
   {% include "parts/user_form_body.html" %}
 {% else %}
   <nldd-sheet id="{{ modal_element_id }}" data-auto-show placement="right" width="480px" accessible-label="{{ modal_title }}">
-  <nldd-page sticky-header>
+  <nldd-page sticky-header sticky-footer>
   <nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
   <div id="{{ modal_element_id }}Body">{% include "parts/user_form_body.html" %}</div>
   </nldd-simple-section>
+  {# The save button sits under everything, also under the contract periods
+     that live outside the form. It posts the form from here with hx-include,
+     like the destructive button of user_delete_modal.html. #}
+  <nldd-container slot="footer" padding="16" padding-top="0">
+  <nldd-button variant="primary" width="full" text="{{ form_button_label }}" hx-post="{{ form_post_url }}" hx-include="#userForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#{{ modal_element_id }}Body" hx-swap="innerHTML"></nldd-button>
+  </nldd-container>
   </nldd-page>
   </nldd-sheet>
 {% endif %}
