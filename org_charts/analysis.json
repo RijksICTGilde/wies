@@ -3233,5 +3233,3 @@
   ],
   "method_note": "Parent-toewijzing per onderdeel handmatig bepaald. Voor organogrammen met kolommen (JenV, BZK) is de kolom geverifieerd via de x-coördinaat van de PDF-tekst (pymupdf 'dict'), NIET via de leesvolgorde van platte tekstextractie — die gooit kolommen door elkaar en veroorzaakte eerder een foute IND-plaatsing. Waar de parent als bestaande node in de export voorkomt is parent_url gevuld."
 }
-
-
