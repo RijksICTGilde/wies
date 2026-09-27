@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0013_colleague_theme"),
+        ("core", "0014_contractperiod_service_hours"),
     ]
 
     operations = [
