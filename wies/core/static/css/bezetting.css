@@ -29,11 +29,13 @@
 
 /* Equal width, and no wider than the caption needs: in their own list the cards
    would take every pixel the toolbar leaves over and dwarf the button beside
-   them. The floor is where the short captions still read in full. */
+   them. The floor is where the short captions still read in full: at 150px
+   "102 eindigt bijna" already truncated once the search field claimed its
+   share of the row. */
 .bezetting-toolbar__stats > li {
   display: flex;
   flex: 1 1 0;
-  min-width: 150px;
+  min-width: 190px;
   max-width: 220px;
   /* The height nldd-button resolves to. The cards are the same kind of control
      as the button beside them, so they match it rather than sizing themselves
@@ -47,9 +49,10 @@
 
    The cards must be gone before nldd-toolbar starts pushing its own items into
    the menu: they are a shortcut, "Opdracht invoeren" is not reachable anywhere
-   else on the page. Three cards at their floor width beside both buttons hold
-   the row down to 850px; at 800px the create action goes first (measured). */
-@media (max-width: 840px) {
+   else on the page. Three cards at their floor width beside the search field
+   and both buttons hold the row down to about 1000px (measured); below that
+   the toolbar overflows its buttons and the cards would squeeze. */
+@media (max-width: 1000px) {
   .bezetting-toolbar__stats {
     display: none;
   }
@@ -462,6 +465,14 @@
    is absolutely positioned so it cannot reserve the space itself. */
 .bezetting-seg--ending-soon .bezetting-seg__label {
   padding-right: 6rem;
+}
+
+/* "uren niet ingevuld" reads as a note, not as part of the assignment name.
+   Opacity rather than a colour token, so it dims whatever the bar's phase and
+   ending level gave the text, in both schemes. */
+.bezetting-seg__gap {
+  font-style: italic;
+  opacity: 0.7;
 }
 
 .bezetting-seg__label {

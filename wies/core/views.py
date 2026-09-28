@@ -98,7 +98,6 @@ from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
     STATUS_BENCH,
     STATUS_ENDS_SOON,
-    STATUS_FULL,
     STATUS_PARTIAL,
     STATUS_VALUES,
     bezetting_filter_groups,
@@ -630,7 +629,6 @@ def _bezetting_status_group(selected, summary):
     for value, label, count in (
         (STATUS_BENCH, "Op de bank", summary["bench_count"]),
         (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
-        (STATUS_FULL, "Volledig ingezet", summary["full_count"]),
         (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
     ):
         option = {"value": value, "label": label, "count": count}
@@ -653,13 +651,18 @@ def _bezetting_status_group(selected, summary):
     }
 
 
+BEZETTING_PAGE_SIZE = 60
+
+
 @business_management_access_required
 def bezetting(request):
     """ "Bezetting" — the business-manager occupancy timeline.
 
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
     opens the shared colleague side panel via the ``collega`` param, exactly like
-    the "Wie zit waar?" table.
+    the "Wie zit waar?" table. Pages of BEZETTING_PAGE_SIZE rows, appended by a
+    "Meer tonen" button like the card lists; the rows are built in memory, so
+    the page is cut from the sorted list rather than from a queryset.
     """
     today = timezone.now().date()
 
@@ -696,8 +699,9 @@ def bezetting(request):
     merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_cat = labels_by_category(labels.ids)
+    search = request.GET.get("zoek", "").strip()
 
-    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat)
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat, search=search)
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
@@ -730,10 +734,20 @@ def bezetting(request):
         active_filters["status"] = selected_statuses
 
     bench_rows, timeline_rows = split_bench_and_timeline(rows)
+    # One list, bench first, cut into pages: a page boundary may fall inside
+    # either section, and the template draws both the same way.
+    page = Paginator(bench_rows + timeline_rows, BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
+    next_page_url = (
+        _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
+        if page.has_next()
+        else None
+    )
 
     context = {
-        "rows": timeline_rows,
-        "bench_rows": bench_rows,
+        "rows": page.object_list,
+        "row_count": page.paginator.count,
+        "next_page_url": next_page_url,
+        "search_filter": search,
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
         "today": today,
@@ -753,6 +767,9 @@ def bezetting(request):
     if "HX-Request" in request.headers:
         if request.GET.get("filter_modal"):
             return render(request, "parts/filter_options_modal.html", context)
+        # "Meer tonen" replaces itself with the next page of rows.
+        if request.GET.get("pagina"):
+            return render(request, "parts/bezetting_rows.html", context)
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
