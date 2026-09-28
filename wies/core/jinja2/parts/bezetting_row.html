@@ -1,8 +1,5 @@
-{# The row macro, in its own file so both the results block and the "Meer
-   tonen" partial (parts/bezetting_rows.html) draw rows the same way. Imported
-   with context: the free stretch needs today_pct from the view. #}
-{# One row shape for both sections: a bench row is the same row plus its
-   free-since line, so the two cannot drift apart. #}
+{# One row shape for bench and placed rows, shared by the results block and
+   the "Meer tonen" partial. Imported with context: needs today_pct. #}
 {% macro timeline_row(row) %}
   <div class="bezetting-row bezetting-row--{{ row.bucket }}"
        style="--bezetting-lanes: {{ row.lane_count }}">
@@ -11,14 +8,9 @@
        hx-get="{{ row.colleague.panel_url }}"
        hx-target="#side-panel-content"
        hx-swap="innerHTML">
-      {# The "eindigt" date sits on the bar it belongs to, not next to the
-           name: there it read as if the COLLEAGUE stopped, while someone on
-           two opdrachten may have one wrapping up and another running on for
-           months. Which section a row is in says bench vs. ingezet. #}
-      {# Two lines per person, as an nldd-identity: the name, then what they
-           do and what is still free. Someone exactly full shows no hours at
-           all, someone over their contract shows by how much. A role without
-           hours counted as 0; its own bar says so, where the hours would be. #}
+      {# Second line: role and what is still free. Exactly full shows no hours.
+           End dates sit on the bar, not here: one of two opdrachten ending is
+           not the colleague ending. #}
       {% if row.next_contract %}
         {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
       {% elif row.contract_hours is none and row.contract_ended %}
@@ -33,15 +25,12 @@
         {% set hours_text = none %}
       {% endif %}
       <div class="bezetting-person">
-        {# On the bench the role is the most recent one rather than a current
-             one; the row already sits under "Op de bank", so no qualifier. #}
+        {# On the bench the role is the most recent one; the bench bar says so. #}
         <nldd-identity text="{{ row.colleague.name }}" supporting-text="{{ [row.role, hours_text]|select|join(' · ') }}">
         <nldd-avatar slot="avatars" name="{{ row.colleague.name }}" decorative></nldd-avatar>
         </nldd-identity>
-        {# The gilde a colleague belongs to, and only that category: showing
-             it on the row is what makes a filtered view explainable ("why is
-             this person here"), while the full expertise list would fill the
-             cell. The other facets stay in the filter sheet. #}
+        {# Only the gilde labels: they explain why a filtered row is here, and
+             the full expertise list would fill the cell. #}
         {% if row.gilde_labels %}
           <span class="bezetting-person__labels">
             {%- for name, colour in row.gilde_labels -%}
@@ -66,19 +55,16 @@
                     width: {{ row.bench_bar[1] }}%"
              title="{{ row.bench_days|bankduur }}, sinds {{ row.bench_since|datum_nl('j b Y') }}">
           {# djlint:on #}
-          {# Plain days, not the rounded "5 maanden" of bankduur: on a
-               timeline the bar's own length already says roughly how long,
-               and what it cannot say is the exact number. The title keeps
-               the rounded phrasing plus the date it started. #}
+          {# Exact days here; the title keeps bankduur's rounded phrasing and
+               the start date. #}
           <span class="bezetting-free__label">{{ row.bench_days }} {{ "dag" if row.bench_days == 1 else "dagen" }} vrij</span>
         </div>
       {% endif %}
       {# Lane stack, vertically centred so a single bar sits mid-row. #}
       <div class="bezetting-lanes">
         {% for seg in row.segments %}
-          {# The hours where they belong, on the role's own bar; a bar without
-               them says so, since that role counted as 0 in the free hours.
-               Finished work is left alone: nobody fills those in anymore. #}
+          {# A bar without hours says so: that role counted as 0 in the free
+               hours (#687). Finished work is left alone. #}
           {% if seg.hours_per_week %}
             {% set seg_hours = " · " ~ seg.hours_per_week ~ " uur" %}
             {% set seg_gap = false %}
@@ -102,13 +88,8 @@
               <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg_gap %}<span class="bezetting-seg__gap">{{ seg_hours }}</span>{% else %}{{ seg_hours }}{% endif %}</span>
             {% endif %}
             {% if seg.ending_level != "calm" %}
-              {# Days remaining rather than the end date: how soon someone
-                   frees up is the question this page is read for, and a date
-                   makes the reader subtract it from today themselves. On the
-                   bar that ends, so it is unambiguous which opdracht is
-                   wrapping up — and so the level is not carried by colour
-                   alone, which no colour-blind reader can rank. The exact
-                   date stays in the title. #}
+              {# Days left rather than a date, on the bar that ends, so the
+                   level is not carried by colour alone. The date is in the title. #}
               <span class="bezetting-seg__end">nog {{ seg.days_left }} {{ "dag" if seg.days_left == 1 else "dagen" }}</span>
             {% endif %}
           </div>

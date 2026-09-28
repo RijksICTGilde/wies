@@ -1,7 +1,5 @@
-{# One page of rows plus the button that fetches the next. Full page and
-   filter swaps include this inside .bezetting-rows; the "Meer tonen" button
-   targets itself, so a page request returns just this and the new rows land
-   where the button was. Click instead of auto-load: see placement_cards.html. #}
+{# One page of rows plus the "Meer tonen" button, which replaces itself with
+   the next page. Click instead of auto-load: see placement_cards.html. #}
 {% from "parts/bezetting_row.html" import timeline_row with context %}
 {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
 {% if next_page_url %}

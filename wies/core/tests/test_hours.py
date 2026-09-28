@@ -137,7 +137,7 @@ class OccupancyHoursTest(TestCase):
         assert row.bucket == BUCKET_FULL
         assert row.unfilled_hours == 0
 
-    def test_a_role_without_hours_counts_as_zero_and_is_flagged(self):
+    def test_a_role_without_hours_counts_as_zero(self):
         colleague = _consultant("Onno Onbekend", "onno@x.nl")
         ContractPeriod.objects.create(colleague=colleague, hours_per_week=36, start_date=self.start)
         _placement(colleague, "Met uren", self.start, self.end, hours=8)
@@ -146,7 +146,7 @@ class OccupancyHoursTest(TestCase):
         [row] = colleague_occupancy(self.today)
 
         assert row.bucket == BUCKET_PARTIAL
-        assert (row.active_hours, row.unfilled_hours, row.roles_without_hours) == (8, 28, 1)
+        assert (row.active_hours, row.unfilled_hours) == (8, 28)
 
     def test_only_roles_without_hours_leave_the_whole_contract_free(self):
         colleague = _consultant("Nel Niks", "nel@x.nl")
@@ -157,9 +157,9 @@ class OccupancyHoursTest(TestCase):
         [row] = colleague_occupancy(self.today)
 
         assert row.bucket == BUCKET_PARTIAL
-        assert (row.active_hours, row.unfilled_hours, row.roles_without_hours) == (0, 32, 2)
+        assert (row.active_hours, row.unfilled_hours) == (0, 32)
 
-    def test_a_planned_role_without_hours_is_not_flagged(self):
+    def test_a_planned_role_without_hours_does_not_count(self):
         colleague = _consultant("Toon Toekomst", "toon@x.nl")
         ContractPeriod.objects.create(colleague=colleague, hours_per_week=36, start_date=self.start)
         _placement(colleague, "Nu", self.start, self.end, hours=36)
@@ -167,7 +167,7 @@ class OccupancyHoursTest(TestCase):
 
         [row] = colleague_occupancy(self.today)
 
-        assert (row.bucket, row.unfilled_hours, row.roles_without_hours) == (BUCKET_FULL, 0, 0)
+        assert (row.bucket, row.unfilled_hours) == (BUCKET_FULL, 0)
 
     def test_without_contract_hours_a_placed_colleague_is_full(self):
         colleague = _consultant("Geen Contract", "geen@x.nl")
