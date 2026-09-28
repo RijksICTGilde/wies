@@ -4,9 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: Bezetting counts a role without hours as 0 instead of leaving the free hours unknown; the role's own bar says "uren niet ingevuld"
-- ?: Bezetting has a search box on name or e-mail, shows 60 rows at a time with a "Meer tonen" button, and no longer offers the "Volledig ingezet" status filter
-- ?: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
+- 692: Bezetting counts a role without hours as 0 instead of leaving the free hours unknown; the role's own bar says "uren niet ingevuld"
+- 692: Bezetting has a search box on name or e-mail, shows 60 rows at a time with a "Meer tonen" button, and no longer offers the "Volledig ingezet" status filter
+- 692: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
 
 ## 2026-09-24
 
