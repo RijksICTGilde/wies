@@ -148,10 +148,15 @@
       node =
         node.assignedSlot ||
         node.parentElement ||
-        (node.getRootNode() instanceof ShadowRoot ? node.getRootNode().host : null);
+        (node.getRootNode() instanceof ShadowRoot
+          ? node.getRootNode().host
+          : null);
       if (!node || node === document.documentElement) return null;
       const style = getComputedStyle(node);
-      if (/(auto|scroll)/.test(style.overflowY) && node.scrollHeight > node.clientHeight) {
+      if (
+        /(auto|scroll)/.test(style.overflowY) &&
+        node.scrollHeight > node.clientHeight
+      ) {
         return node;
       }
     }
@@ -176,10 +181,16 @@
         const scroller = scrollParent(row);
         if (!scroller) return;
         const offset =
-          row.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+          row.getBoundingClientRect().top -
+          scroller.getBoundingClientRect().top;
         const top =
-          scroller.scrollTop + offset - (scroller.clientHeight - row.offsetHeight) / 2;
-        scroller.scrollTo({ top: Math.max(0, top), behavior: reduce ? "auto" : "smooth" });
+          scroller.scrollTop +
+          offset -
+          (scroller.clientHeight - row.offsetHeight) / 2;
+        scroller.scrollTo({
+          top: Math.max(0, top),
+          behavior: reduce ? "auto" : "smooth",
+        });
       });
   }
 
