@@ -147,7 +147,10 @@
       if (selectable) action.setAttribute("button", "");
       var boxCell = cell("nldd-cell", {});
       // Decorative: the button segment carries role and state (_syncRow).
-      var placeholderBox = cell("nldd-checkbox", { "aria-hidden": "true", tabindex: "-1" });
+      var placeholderBox = cell("nldd-checkbox", {
+        "aria-hidden": "true",
+        tabindex: "-1",
+      });
       boxCell.appendChild(placeholderBox);
       // A group folder is structural: its checkbox is only a spacer, kept for
       // alignment but hidden and unclickable.

@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="nl">
   <head>
     <meta charset="utf-8" />
@@ -9,7 +9,11 @@
     <link rel="stylesheet" href="/vendor/nldd/css/colors.generated.css" />
     <script type="module" src="/vendor/nldd/nldd.min.js"></script>
     <style>
-      body { padding: 24px; max-width: 640px; font-family: system-ui; }
+      body {
+        padding: 24px;
+        max-width: 640px;
+        font-family: system-ui;
+      }
     </style>
   </head>
   <body>
@@ -46,10 +50,16 @@
                   label: "Adviescolleges",
                   group: true,
                   children: [
-                    { id: "adv-1", label: "Adviesraad Internationale Vraagstukken" },
+                    {
+                      id: "adv-1",
+                      label: "Adviesraad Internationale Vraagstukken",
+                    },
                   ],
                 },
-                { id: "dg-1", label: "Directoraat-Generaal Europese Samenwerking" },
+                {
+                  id: "dg-1",
+                  label: "Directoraat-Generaal Europese Samenwerking",
+                },
                 { id: "dg-2", label: "Directoraat-Generaal Politieke Zaken" },
               ],
             },
@@ -62,10 +72,18 @@
                   label: "Agentschappen",
                   group: true,
                   children: [
-                    { id: "odi", label: "Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" },
+                    {
+                      id: "odi",
+                      label:
+                        "Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie",
+                    },
                   ],
                 },
-                { id: "kmp", label: "Kabinet Minister-President", children: [{ id: "kmp-1", label: "Bestuursraad" }] },
+                {
+                  id: "kmp",
+                  label: "Kabinet Minister-President",
+                  children: [{ id: "kmp-1", label: "Bestuursraad" }],
+                },
               ],
             },
           ],
@@ -76,14 +94,28 @@
         state: state,
         container: document.getElementById("client-tree-container"),
         accessibleLabel: "Opdrachtgevers",
-        isSelectable: function (node) { return !node.group; },
+        isSelectable: function (node) {
+          return !node.group;
+        },
       });
       tree.render();
       // Expand everything for the screenshot.
-      ["group-top-Adviescollege", "group-top-Agentschap", "ministeries", "m-bz", "m-bzk", "group-uuid-Adviescollege", "group-uuid-Agentschap", "kmp"].forEach(function (id) {
+      [
+        "group-top-Adviescollege",
+        "group-top-Agentschap",
+        "ministeries",
+        "m-bz",
+        "m-bzk",
+        "group-uuid-Adviescollege",
+        "group-uuid-Agentschap",
+        "kmp",
+      ].forEach(function (id) {
         tree.expandAncestorsOf(id);
         var row = tree.domNodes.get(id);
-        if (row) { tree._ensureChildren(state.getNode(id)); row.setAttribute("expanded", ""); }
+        if (row) {
+          tree._ensureChildren(state.getNode(id));
+          row.setAttribute("expanded", "");
+        }
       });
       window.__ready = true;
     </script>
