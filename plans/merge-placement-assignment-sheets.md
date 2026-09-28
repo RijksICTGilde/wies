@@ -8,19 +8,19 @@ Drie panelen delen één `nldd-sheet` (`id="side-panel"`, `width="640px"`, vier 
 
 ### Wat de panelen tonen
 
-| Onderdeel | Opdrachtpaneel (`?opdracht=`) | Plaatsingspaneel (`?plaatsing=`) | Collega-paneel (`?collega=`) |
-| --- | --- | --- | --- |
-| Titel | opdrachtnaam (overline "Opdracht") | collega-naam | collega-naam |
-| Avatar, e-mail, merk, labels | – | ja | ja |
-| Contracturen (BM/beheerder/staff) | – | – | ja |
-| Externe bron, omschrijving opdracht, opdrachtgever(s), periode, plaatsingsdatum, business manager | ja, met rijmenu's (org-filter, profiel, e-mailen) | alleen naam + primaire opdrachtgever, als klikbare rij naar `?opdracht=` | – |
-| Team | volledige lijst: avatar, naam, rol-tag, periode, uren (per rechten), Afgelopen/Gepland-chip, rijmenu | alleen de namen van actieve teamleden, komma-gescheiden | – |
-| Periode van déze plaatsing | in de teamrij | eigen rij, met chip en privacy-chip; menu "Periode wijzigen" | – |
-| Rol van déze plaatsing | tag in de teamrij; uren als supporting text | rij "Rol": naam + **omschrijving** · uren; menu "Rol wijzigen" | – |
-| Andere opdrachten van de collega | – | "Lopende opdrachten" / "Eerdere opdrachten" als kaarten | "Opdrachten" als kaarten (actief eerst, dan afgelopen) |
-| Tabblad Updates | ja (niet voor OTYS IIR) | – | – |
-| Bewerken / verwijderen opdracht | toolbar (potlood, prullenbak) | – | – |
-| Teamlid toevoegen/wijzigen/verwijderen | ja (`?teamlid=`) | – | – |
+| Onderdeel                                                                                         | Opdrachtpaneel (`?opdracht=`)                                                                        | Plaatsingspaneel (`?plaatsing=`)                                         | Collega-paneel (`?collega=`)                           |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------ |
+| Titel                                                                                             | opdrachtnaam (overline "Opdracht")                                                                   | collega-naam                                                             | collega-naam                                           |
+| Avatar, e-mail, merk, labels                                                                      | –                                                                                                    | ja                                                                       | ja                                                     |
+| Contracturen (BM/beheerder/staff)                                                                 | –                                                                                                    | –                                                                        | ja                                                     |
+| Externe bron, omschrijving opdracht, opdrachtgever(s), periode, plaatsingsdatum, business manager | ja, met rijmenu's (org-filter, profiel, e-mailen)                                                    | alleen naam + primaire opdrachtgever, als klikbare rij naar `?opdracht=` | –                                                      |
+| Team                                                                                              | volledige lijst: avatar, naam, rol-tag, periode, uren (per rechten), Afgelopen/Gepland-chip, rijmenu | alleen de namen van actieve teamleden, komma-gescheiden                  | –                                                      |
+| Periode van déze plaatsing                                                                        | in de teamrij                                                                                        | eigen rij, met chip en privacy-chip; menu "Periode wijzigen"             | –                                                      |
+| Rol van déze plaatsing                                                                            | tag in de teamrij; uren als supporting text                                                          | rij "Rol": naam + **omschrijving** · uren; menu "Rol wijzigen"           | –                                                      |
+| Andere opdrachten van de collega                                                                  | –                                                                                                    | "Lopende opdrachten" / "Eerdere opdrachten" als kaarten                  | "Opdrachten" als kaarten (actief eerst, dan afgelopen) |
+| Tabblad Updates                                                                                   | ja (niet voor OTYS IIR)                                                                              | –                                                                        | –                                                      |
+| Bewerken / verwijderen opdracht                                                                   | toolbar (potlood, prullenbak)                                                                        | –                                                                        | –                                                      |
+| Teamlid toevoegen/wijzigen/verwijderen                                                            | ja (`?teamlid=`)                                                                                     | –                                                                        | –                                                      |
 
 Het plaatsingspaneel is dus een collega-paneel met één opdrachtblokje erin. Het enige gegeven dat nergens anders staat is de **omschrijving van de rol** (`Service.description`, bijvoorbeeld "Uitvoeren van risicoanalyses en penetratietesten"). De teamrij in het opdrachtpaneel toont alleen de rol-tag. Verder uniek zijn de twee snelbewerkingen ("Rol wijzigen", "Periode wijzigen") via `placement_edit_view`; voor een BM bestaat dezelfde functionaliteit al in "Teamlid wijzigen", voor een geplaatste consultant bestaat "Rol wijzigen" ook al in het rijmenu van het opdrachtpaneel (`assignment_services_row_menu.html`).
 
@@ -28,15 +28,15 @@ De rondgang die het verwarrend maakt: opdrachtpaneel → rijmenu "Bekijk teamlid
 
 ### Waar het plaatsingspaneel vandaan komt
 
-| Instappunt | Bestand | URL nu |
-| --- | --- | --- |
-| Persoonskaart op "Wie zit waar?" met precies één opdracht | `PlacementListView._person_cards` | `?plaatsing=P` (met meer opdrachten: `?collega=C`) |
-| Opdrachtkaart in collega-paneel en op de profielpagina | `_make_assignment_entry` via `_get_colleague_assignments` | `?plaatsing=P` (eerste plaatsing van die collega op die opdracht); BM-opdrachten `?opdracht=A` |
-| Rijmenu team, "Bekijk teamlid" | `forms/displays/assignment_services_row_menu.html` | `?plaatsing=P` |
-| Rijmenu team, eigen rij, "Rol wijzigen" (niet-editor) | idem | `?plaatsing=P&bewerken=1&veld=skill` |
-| Bezetting | `bezetting_results.html` | rij → `?collega=C`; vandaar de kaarten hierboven |
-| Bookmarks, browsergeschiedenis | – | `?plaatsing=P` |
-| Event-teksten en mails | `services/event_text.py` `Subject`, `_owner_display_context` mailto, flash "Bekijk opdracht" | **nooit** `?plaatsing=`; altijd `?opdracht=` of `?collega=` |
+| Instappunt                                                | Bestand                                                                                      | URL nu                                                                                         |
+| --------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Persoonskaart op "Wie zit waar?" met precies één opdracht | `PlacementListView._person_cards`                                                            | `?plaatsing=P` (met meer opdrachten: `?collega=C`)                                             |
+| Opdrachtkaart in collega-paneel en op de profielpagina    | `_make_assignment_entry` via `_get_colleague_assignments`                                    | `?plaatsing=P` (eerste plaatsing van die collega op die opdracht); BM-opdrachten `?opdracht=A` |
+| Rijmenu team, "Bekijk teamlid"                            | `forms/displays/assignment_services_row_menu.html`                                           | `?plaatsing=P`                                                                                 |
+| Rijmenu team, eigen rij, "Rol wijzigen" (niet-editor)     | idem                                                                                         | `?plaatsing=P&bewerken=1&veld=skill`                                                           |
+| Bezetting                                                 | `bezetting_results.html`                                                                     | rij → `?collega=C`; vandaar de kaarten hierboven                                               |
+| Bookmarks, browsergeschiedenis                            | –                                                                                            | `?plaatsing=P`                                                                                 |
+| Event-teksten en mails                                    | `services/event_text.py` `Subject`, `_owner_display_context` mailto, flash "Bekijk opdracht" | **nooit** `?plaatsing=`; altijd `?opdracht=` of `?collega=`                                    |
 
 `_resolve_placement_panel` past de zichtbaarheidsregel van #636 toe (`evaluate_placement_visibility`): een afgelopen of geplande plaatsing is voor de geplaatste collega, de BDM-rol en staff; voor anderen is `?plaatsing=P` een 404 (HTMX) of een pagina zonder paneel (volledige load), niet te onderscheiden van "bestaat niet".
 
@@ -68,17 +68,19 @@ Per instappunt, voor alle rollen tenzij anders vermeld.
 **Opdrachtkaart op "Wie zit waar?"** (weergave Opdracht) en **kaart op Aanvragen**. Ongewijzigd: `?opdracht=A`.
 
 **Teamrij in het opdrachtpaneel.** De rij toont naam, rol-tag, daaronder de omschrijving van de rol, daaronder periode · uren · chips. Een korte omschrijving staat er in zijn geheel; een lange wordt afgekapt met een uitklapper ("Meer") die de rest toont. Waar de grens ligt (aantal regels) is een prototype-keuze. Rijmenu:
+
 - editor (BM-eigenaar, staff): "Teamlid wijzigen" (bestaand), "Bekijk profiel" (nieuw, `?collega=C`), "Uit team verwijderen" (bestaand);
 - geplaatste consultant op de eigen rij: "Omschrijving wijzigen" (was "Rol wijzigen"; opent de bestaande plaatsingsbewerksheet als kind van het opdrachtpaneel, `?opdracht=A&teamlid=S`), "Bekijk profiel";
 - ieder ander bij een geplaatste rij: alleen "Bekijk profiel";
 - aanvraag-rij: ongewijzigd.
-"Bekijk teamlid" vervalt: wat het toonde staat nu in de rij zelf of in het profiel.
+  "Bekijk teamlid" vervalt: wat het toonde staat nu in de rij zelf of in het profiel.
 
 **Opdrachtkaart in het collega-paneel of op de profielpagina.** Klik → `?opdracht=A&collega=C`: opdrachtpaneel, rijen van C gemarkeerd, eerste gemarkeerde rij in beeld gescrold. Kaart van een opdracht waar de collega business manager van is: `?opdracht=A`, geen markering (er is geen rij). Lege staat: heeft C op A alleen rijen die deze kijker niet mag zien (afgelopen plaatsing, kijker is buitenstaander), dan is er geen markering en geen melding; de kaart zelf was dan trouwens ook al onzichtbaar.
 
 **Bezetting.** Rij → collega-paneel (ongewijzigd) → kaart → zoals hierboven.
 
 **Directe URL.**
+
 - `?opdracht=A&collega=C`: canoniek. Onbekende of niet-geplaatste C: paneel zonder markering.
 - `?plaatsing=P` (bookmark, geschiedenis): alias. De view zoekt de plaatsing op, past `evaluate_placement_visibility` toe zoals nu, en toont bij zichtbaar het opdrachtpaneel met de collega van P uitgelicht. Volledige paginalading: 302 naar de canonieke URL met behoud van filters. HTMX-verzoek: direct de paneelinhoud. Niet zichtbaar of onbekend: 404 (HTMX) / pagina zonder paneel (volledig), precies als nu, zodat een verborgen plaatsing niets prijsgeeft. Een meegegeven `&bewerken=1&veld=…` wordt genegeerd.
 - `?opdracht=A` alleen: ongewijzigd.
@@ -88,6 +90,7 @@ Per instappunt, voor alle rollen tenzij anders vermeld.
 ## Schermen en visuele keuzes
 
 **Opdrachtpaneel (verandert).** Patroon: het bestaande `assignment_panel_content.html`; de teamrij uit `forms/displays/assignment_services.html`.
+
 - **prototype** — de indeling van de teamrij met drie regels (naam + tag / omschrijving / periode · uren · chips), en de uitklapper voor een lange omschrijving: na hoeveel regels hij begint (één of twee), hoe de knop heet en waar hij staat.
 - **prototype** — hoe een uitgelichte rij eruitziet: achtergrondtint plus een niet-alleen-kleur-signaal (een chip "Jij" op de eigen rij, anders een korte visueel verborgen tekst "uitgelicht"), en of er iets in de kop komt te staan (aanbeveling: niets; de terugknop "Anke Jacobs" van de paneelstapel geeft de context al, en bij een directe link moet de markering het alleen doen).
 - **prototype** — het rijmenu met "Bekijk profiel" in plaats van "Bekijk teamlid".
@@ -109,24 +112,24 @@ Geen wijzigingen. Geen migratie, geen `public_id`-werk (Assignment, Colleague, P
 
 Kolommen: Beheerder (groep Beheerder zonder BDM-rol; heeft geen `core.change_assignment`, dus op opdrachten gelijk aan een consultant), Consultant eigen rij (geplaatst op deze opdracht), Consultant overig (niet geplaatst, of andermans rij), BDM niet-eigenaar, BDM-eigenaar (`Assignment.owner` én BDM-rol), Staff (`STAFF_EMAILS`). Alles geldt voor wies-opdrachten; bij een externe bron (`source != "wies"`) is niets bewerkbaar (`_is_wies_sourced`).
 
-| Actie | Beheerder | Consultant eigen rij | Consultant overig | BDM niet-eigenaar | BDM-eigenaar | Staff | Regel |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Opdrachtgegevens en Updates-tab zien | mag | mag | mag | mag | mag | mag | geen regel; elke ingelogde gebruiker (`test_events_partial_accessible_to_unrelated_user`) |
-| Naam en omschrijving opdracht bewerken | mag niet | mag | mag niet | mag niet | mag | mag | `update_assignment_name`, `update_assignment_extra_info` → `_can_edit_assignment_text_field` |
-| Opdrachtgevers, periode, business manager bewerken | mag niet | mag niet | mag niet | mag niet | mag | mag | geen veldregel → `update_assignment` |
-| Opdracht verwijderen | mag niet | mag niet | mag niet | mag niet | mag | mag | `delete_assignment` |
-| Actieve teamrijen zien | mag | mag | mag | mag | mag | mag | `evaluate_placement_visibility`, timing `active` |
-| Afgelopen/geplande rij zien (#636) | mag niet | alleen eigen | mag niet | mag | mag | mag | `evaluate_placement_visibility` (`PRIVACY_OWN` / `PRIVACY_BDM`) |
-| Uitlichting via `?collega=` | alleen zichtbare rijen | idem | idem | idem | idem | idem | volgt uit `visible_service_rows`; geen eigen regel |
-| Alias `?plaatsing=P` | alleen zichtbare P, anders 404 | idem | idem | idem | idem | idem | `evaluate_placement_visibility` in de alias-resolver |
-| Rol-omschrijving op een rij zien | mag | mag | mag | mag | mag | mag | geen regel (stond al voor iedereen in het plaatsingspaneel) |
-| Uren van een geplaatste rij zien | mag niet | alleen eigen | mag niet | mag | mag | mag | `can_view_role_hours` (`roles.py`) |
-| Uren van een aanvraag zien | mag | mag | mag | mag | mag | mag | `can_view_role_hours(user, None)` |
-| Omschrijving van de eigen rol bewerken | – | mag | – | – | mag | mag | `update_service_description` |
-| Rol (skill) en uren van een rij bewerken | mag niet | mag niet | mag niet | mag niet | mag | mag | geen veldregel → `update_service` → `update_assignment` |
-| Periode van een plaatsing bewerken | mag niet | mag niet | mag niet | mag niet | mag | mag | `update_placement` → `update_assignment` |
-| Teamlid toevoegen, wijzigen, verwijderen | mag niet | mag niet | mag niet | mag niet | mag | mag | `AssignmentEditables.services` zonder veldregel → `update_assignment`; rij via `visible_service_or_404` |
-| "Bekijk profiel" (collega-paneel openen) | mag | mag | mag | mag | mag | mag | geen regel; contracturen daar via `read_contract_period` |
+| Actie                                              | Beheerder                      | Consultant eigen rij | Consultant overig | BDM niet-eigenaar | BDM-eigenaar | Staff | Regel                                                                                                   |
+| -------------------------------------------------- | ------------------------------ | -------------------- | ----------------- | ----------------- | ------------ | ----- | ------------------------------------------------------------------------------------------------------- |
+| Opdrachtgegevens en Updates-tab zien               | mag                            | mag                  | mag               | mag               | mag          | mag   | geen regel; elke ingelogde gebruiker (`test_events_partial_accessible_to_unrelated_user`)               |
+| Naam en omschrijving opdracht bewerken             | mag niet                       | mag                  | mag niet          | mag niet          | mag          | mag   | `update_assignment_name`, `update_assignment_extra_info` → `_can_edit_assignment_text_field`            |
+| Opdrachtgevers, periode, business manager bewerken | mag niet                       | mag niet             | mag niet          | mag niet          | mag          | mag   | geen veldregel → `update_assignment`                                                                    |
+| Opdracht verwijderen                               | mag niet                       | mag niet             | mag niet          | mag niet          | mag          | mag   | `delete_assignment`                                                                                     |
+| Actieve teamrijen zien                             | mag                            | mag                  | mag               | mag               | mag          | mag   | `evaluate_placement_visibility`, timing `active`                                                        |
+| Afgelopen/geplande rij zien (#636)                 | mag niet                       | alleen eigen         | mag niet          | mag               | mag          | mag   | `evaluate_placement_visibility` (`PRIVACY_OWN` / `PRIVACY_BDM`)                                         |
+| Uitlichting via `?collega=`                        | alleen zichtbare rijen         | idem                 | idem              | idem              | idem         | idem  | volgt uit `visible_service_rows`; geen eigen regel                                                      |
+| Alias `?plaatsing=P`                               | alleen zichtbare P, anders 404 | idem                 | idem              | idem              | idem         | idem  | `evaluate_placement_visibility` in de alias-resolver                                                    |
+| Rol-omschrijving op een rij zien                   | mag                            | mag                  | mag               | mag               | mag          | mag   | geen regel (stond al voor iedereen in het plaatsingspaneel)                                             |
+| Uren van een geplaatste rij zien                   | mag niet                       | alleen eigen         | mag niet          | mag               | mag          | mag   | `can_view_role_hours` (`roles.py`)                                                                      |
+| Uren van een aanvraag zien                         | mag                            | mag                  | mag               | mag               | mag          | mag   | `can_view_role_hours(user, None)`                                                                       |
+| Omschrijving van de eigen rol bewerken             | –                              | mag                  | –                 | –                 | mag          | mag   | `update_service_description`                                                                            |
+| Rol (skill) en uren van een rij bewerken           | mag niet                       | mag niet             | mag niet          | mag niet          | mag          | mag   | geen veldregel → `update_service` → `update_assignment`                                                 |
+| Periode van een plaatsing bewerken                 | mag niet                       | mag niet             | mag niet          | mag niet          | mag          | mag   | `update_placement` → `update_assignment`                                                                |
+| Teamlid toevoegen, wijzigen, verwijderen           | mag niet                       | mag niet             | mag niet          | mag niet          | mag          | mag   | `AssignmentEditables.services` zonder veldregel → `update_assignment`; rij via `visible_service_or_404` |
+| "Bekijk profiel" (collega-paneel openen)           | mag                            | mag                  | mag               | mag               | mag          | mag   | geen regel; contracturen daar via `read_contract_period`                                                |
 
 Niets in deze tabel is nieuw: de samenvoeging voegt geen recht toe en neemt er geen weg. De enige verschuiving is dat de rol-omschrijving nu in de teamlijst staat in plaats van achter een klik; die was al voor iedereen zichtbaar.
 
@@ -203,4 +206,3 @@ Aannames zonder vraag:
 - **Review en toegankelijkheid (28 september 2026).** Reviewer: blocker (de #576-regels voor "Toon meer" waren bij het opruimen van de varianten verdwenen) hersteld; `color="blue"` op de chip bestond niet. Toegankelijkheid: de tint alleen was geen zichtbaar signaal (1.4.1), en na "Bekijk profiel" landt de focus midden in het collegapaneel (2.4.3, ouder dan deze branch). Ruben vond de tint op een vastzittende hover lijken en wilde "Toon meer" kleiner: de knop is nu `size="xs"`, en de uitlichting is op zijn verzoek helemaal weggehaald om te zien of scrollen naar de rij alleen genoeg is. `?collega=` blijft de rij in beeld scrollen; geen tint, balk of chip. Wordt bekeken in de app vóór de beslissing.
 - **Beslissingen na de review (28 september 2026).** Ruben: geen uitlichting, ook geen chip "Jij"; de scroll naar de rij is het enige spoor van `?collega=`. Omschrijving: twee regels (afkap op 180 tekens), periode-regel erboven, "Toon meer" op maat `xs` inline achter de afkap. De chip "Gepland" (sinds #410) gaat weg op teamrij en opdrachtkaart; de datums zeggen het al, het oogje blijft. Reviewpunten: "Omschrijving wijzigen" houdt `collega` in de URL zodat Opslaan op de rij landt; de htmx-alias negeert `bewerken`/`veld` (test); `aria-expanded` op "Toon meer"; drie docstrings bijgewerkt; de POST-only takken van de bewerksheet blijven met een docstring die dat zegt. Toegankelijkheid: een paneel landt de toetsenbordfocus op zijn titel als niets in het nieuwe paneel matcht (focus_restore.js, `#panel-title[tabindex=-1]`); de scroll-focus op de rij is niet gedaan, omdat een focusring op de rij weer als uitlichting zou ogen. Blijft liggen: icoon "user" vs "person" (beide geldig, "user" is wat het opdrachtpaneel al gebruikt); de open vraag over een rol met twee plaatsingen (oude link toont dan alleen de nieuwste rij) ligt bij Ruben.
 - **Bekende beperking (Ruben, 28 september 2026).** Een rol die opnieuw is ingevuld heeft twee plaatsingen; de teamlijst toont per rol alleen de nieuwste. Een oude `?plaatsing=`-link naar de vervangen plaatsing opent nu het opdrachtpaneel zonder rij van die collega, waar het oude paneel de plaatsing zelf toonde. Komt voor in de data, geaccepteerd: de afgelopen plaatsing staat nog op het collegapaneel onder de eerdere opdrachten, en nieuwe links wijzen nergens meer naar een plaatsing.
-

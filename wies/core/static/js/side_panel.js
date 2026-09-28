@@ -147,11 +147,17 @@
     const row = content && content.querySelector(".wies-team-row--highlighted");
     if (!row || typeof row.scrollIntoView !== "function") return;
     const reduce =
-      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     customElements
       .whenDefined("nldd-list-item")
       .then(() => row.updateComplete)
-      .then(() => row.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }));
+      .then(() =>
+        row.scrollIntoView({
+          block: "center",
+          behavior: reduce ? "auto" : "smooth",
+        }),
+      );
   }
 
   function init() {

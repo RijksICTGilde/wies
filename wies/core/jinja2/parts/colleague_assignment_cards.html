@@ -73,7 +73,7 @@
          when the viewer sees it under the limited-visibility rule. #}
       <nldd-text-cell size="sm">
       <span class="wies-team-row-meta">
-        {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} t/m {{ assignment.end_date|datum_nl('b Y') }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}{% else %}t/m {{ assignment.end_date|datum_nl('b Y') }}{% endif %}
+        {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} t/m {{ assignment.end_date|datum_nl("b Y") }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}{% else %}t/m {{ assignment.end_date|datum_nl("b Y") }}{% endif %}
         {%- if assignment.privacy_warning_text %} {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif -%}
       </span>
       </nldd-text-cell>
