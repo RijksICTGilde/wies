@@ -31,7 +31,9 @@
   </nldd-title>
   <nldd-spacer size="2" direction="vertical"></nldd-spacer>
   <nldd-title size="3">
-  <h2 id="panel-title">{{ panel_data.assignment.name }}</h2>
+  {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
+     in the new panel matches where they came from. #}
+  <h2 id="panel-title" tabindex="-1">{{ panel_data.assignment.name }}</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}

@@ -15,7 +15,7 @@
   <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
   </nldd-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-title-cell id="panel-title" size="3" text="{{ colleague.name }}">
+  <nldd-title-cell id="panel-title" tabindex="-1" size="3" text="{{ colleague.name }}">
   <span slot="supporting-text">
     {% if colleague.email %}
       <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>

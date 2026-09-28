@@ -13,7 +13,9 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {% set pl = row.placement %}
       {% set svc = row.service %}
       {% set member_name = row.colleague.name %}
-      <nldd-list-item>
+      {# The row of the colleague you came in on (?collega=) is not marked, only
+         scrolled into view by side_panel.js; the class is that hook. #}
+      <nldd-list-item {% if row.highlighted %}class="wies-team-row--highlighted"{% endif %}>
       <nldd-cell>
       <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
       </nldd-cell>
@@ -34,11 +36,26 @@ Rows are not clickable: every action runs through the row menu in the last cell.
             t/m {{ pl.end_date|datum_nl }}
           {% endif %}
           {% if hours %}<span>{{ hours }} uur</span>{% endif %}
-          {# A visible non-active row always carries both label and note (see
-             evaluate_placement_visibility). #}
-          {% if row.period_label %}
-            <nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>
-            {{ privacy_chip(row.privacy_warning_text, size="sm") }}
+          {# A visible non-active row carries a note; only an ended one also a
+             label (see visibility_rules.LABELS). #}
+          {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
+          {% if row.privacy_warning_text %}{{ privacy_chip(row.privacy_warning_text, size="sm") }}{% endif %}
+        </span>
+      {% endif %}
+      {% if row.description %}
+        {# About two lines, then the same "Toon meer" as the opdracht
+           description (inline_edit.js), inline after the cut. The cut is by
+           characters: the server cannot know where a line wraps, and 180 is
+           about two lines at 800px. #}
+        <span slot="supporting-text" class="wies-team-row-description">
+          {% if row.description|length > 180 %}
+            <span class="inline-edit-long-text">
+              <span class="inline-edit-long-text__truncated">{{ row.description[:180]|trim }}…</span>
+              <span class="inline-edit-long-text__full" hidden>{{ row.description }}</span>
+              <nldd-button class="inline-edit-show-more" size="xs" variant="accent-transparent" text="Toon meer"></nldd-button>
+            </span>
+          {% else %}
+            {{ row.description }}
           {% endif %}
         </span>
       {% endif %}

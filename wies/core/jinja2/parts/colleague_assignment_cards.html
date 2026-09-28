@@ -38,7 +38,7 @@
       </nldd-container>
     {% endif %}
     </nldd-container>
-    {% set has_period = assignment.historical or assignment.start_date or assignment.end_date %}
+    {% set has_period = assignment.period_label or assignment.start_date or assignment.end_date %}
     {% macro chevron() %}
       <span class="assignment-card__chevron" aria-hidden="true">
         <nldd-icon size="20" name="chevron-right"></nldd-icon>
@@ -54,7 +54,7 @@
       {% if not has_period %}<nldd-cell>{{ chevron() }}</nldd-cell>{% endif %}
       </nldd-list-item>
     {% endif %}
-    {% if assignment.historical %}
+    {% if assignment.period_label %}
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -69,9 +69,14 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      {# djlint:off T028 #}
-      <nldd-text-cell size="sm" text="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} t/m {{ assignment.end_date|datum_nl('b Y') }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}{% elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl('b Y') }}{% else %}Geen periode opgegeven{% endif %}"></nldd-text-cell>
-      {# djlint:on #}
+      {# A future placement shows its dates, with the privacy chip beside them
+         when the viewer sees it under the limited-visibility rule. #}
+      <nldd-text-cell size="sm">
+      <span class="wies-team-row-meta">
+        {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} t/m {{ assignment.end_date|datum_nl('b Y') }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}{% else %}t/m {{ assignment.end_date|datum_nl('b Y') }}{% endif %}
+        {%- if assignment.privacy_warning_text %} {{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif -%}
+      </span>
+      </nldd-text-cell>
       <nldd-cell>{{ chevron() }}</nldd-cell>
       </nldd-list-item>
     {% endif %}

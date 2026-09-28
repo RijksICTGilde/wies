@@ -138,6 +138,22 @@
     }
   }
 
+  // The team rows of the colleague you came in on (?collega=) sit below the
+  // opdracht details, so a link straight to them scrolls the first one into
+  // view once the list item has rendered. Centred, so the rows around it
+  // give context; no animation for who asked for none.
+  function revealHighlightedRow() {
+    const content = document.getElementById(CONTENT_ID);
+    const row = content && content.querySelector(".wies-team-row--highlighted");
+    if (!row || typeof row.scrollIntoView !== "function") return;
+    const reduce =
+      window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    customElements
+      .whenDefined("nldd-list-item")
+      .then(() => row.updateComplete)
+      .then(() => row.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" }));
+  }
+
   function init() {
     // Open the sheet when the content was server-rendered (?collega=N on load).
     const content = document.getElementById(CONTENT_ID);
@@ -148,7 +164,8 @@
         customElements
           .whenDefined("nldd-sheet")
           .then(() => sheet.updateComplete)
-          .then(() => openSheet());
+          .then(() => openSheet())
+          .then(revealHighlightedRow);
       }
       syncPanelBackButton();
     }
@@ -327,6 +344,7 @@
 
     const sheet = getSheet();
     if (sheet && !isSheetOpen(sheet)) openSheet();
+    revealHighlightedRow();
 
     if (_skipNextPush) {
       _skipNextPush = false;

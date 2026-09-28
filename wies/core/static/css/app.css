@@ -284,6 +284,25 @@ a > nldd-icon:last-child {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
+/* The role description on a team row: cut after about two lines, with the
+   opdracht description's "Toon meer" (inline_edit.js) running on inline after
+   the cut instead of on its own line. */
+.wies-team-row-description {
+  display: block;
+  margin-top: var(--primitives-space-4, 4px);
+}
+
+.wies-team-row-description .inline-edit-long-text__truncated:not([hidden]),
+.wies-team-row-description .inline-edit-long-text__full:not([hidden]) {
+  display: inline;
+  white-space: normal;
+}
+
+.wies-team-row-description .inline-edit-show-more {
+  margin: 0 0 0 var(--primitives-space-4, 4px);
+  vertical-align: baseline;
+}
+
 /* A Van/Naar value below a timeline sentence, as its own block so long text does
    not run on behind "Naar:". */
 .wies-event-value {

@@ -99,7 +99,7 @@ class PlacementEditViewTest(TestCase):
 
     def test_invalid_post_rerenders_the_edit_sheet(self):
         """An invalid submit returns the edit sheet (200) with the submitted
-        terug_url preserved as parent_url and the placement's colleague in context
+        terug_url preserved as parent_url and the opdracht on the back button
         — the single-source builder feeds both the open and the re-render path.
         """
         self.client.force_login(self.owner_user)
@@ -111,9 +111,9 @@ class PlacementEditViewTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        # The edit template rendered (its back button names the colleague), and
+        # The edit template rendered (its back button names the opdracht), and
         # the sanitised return address survived the failed submit.
-        assert self.owner.name in content
+        assert 'back-text="Test Opdracht"' in content
         assert f'name="terug_url" value="{terug}"' in content
 
     def test_happy_path_records_team_event_on_parent_assignment(self):

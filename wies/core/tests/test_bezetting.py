@@ -145,9 +145,11 @@ class BezettingPanelTest(TestCase):
         assert b"Optimalisatie API" in response.content
         assert b"bezetting-timeline" not in response.content
 
-    def test_plaatsing_panel_returns_placement_fragment(self):
+    def test_plaatsing_link_returns_the_opdracht_fragment_with_the_colleague_highlighted(self):
         response = self.client.get(self.url, {"plaatsing": str(self.placement.public_id)}, headers=self.panel_headers)
         assert response.status_code == 200
+        assert b"Optimalisatie API" in response.content
+        assert b"wies-team-row--highlighted" in response.content
         assert b"bezetting-timeline" not in response.content
 
 

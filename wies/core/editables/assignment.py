@@ -177,8 +177,8 @@ def visible_service_rows(assignment, request) -> list[dict]:
     ``historical`` with a label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
-    description of their own role from the team list too, through the same
-    sheet as on the placement panel. The hours are not theirs to keep: those
+    description of their own role from the team list ("Omschrijving wijzigen"
+    in the row menu). The hours are not theirs to keep: those
     follow the assignment's edit rights, like the role itself.
 
     ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
@@ -217,7 +217,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
                 {
                     **row,
                     "historical": True,
-                    "period_label": LABELS[result.timing],
+                    "period_label": LABELS.get(result.timing),
                     "privacy_warning_text": result.privacy_note,
                 }
             )

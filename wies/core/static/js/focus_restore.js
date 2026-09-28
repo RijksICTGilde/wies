@@ -188,6 +188,12 @@ FocusRestore.prototype.handleSettle = function (container) {
 
   if (this.focusFromTrail()) return;
 
+  // A panel names its own landing: the title, made focusable for this. A menu
+  // item that opens another panel leaves no trail into it, and the first
+  // operable element there is halfway down (a chip in a card), not the start.
+  var landing = container.querySelector("#panel-title[tabindex='-1']");
+  if (landing && this.focusFirst([landing])) return;
+
   // The first operable element inside the new content, explicitly not the
   // container itself. That container is a component (`nldd-page`, `nldd-sheet`)
   // and so a shadow host, where the host's tabindex decides whether its content

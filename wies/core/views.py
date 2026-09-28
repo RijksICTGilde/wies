@@ -87,7 +87,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_view_role_hours, is_bdm, is_staff_member
+from .roles import is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -219,7 +219,7 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
     A miss (including a malformed public_id) raises Http404 only for the HTMX
     panel request; a full-page load gets None and renders without a panel. Only
     for models whose panel has no per-object visibility rule — Placement has one
-    and keeps ``_resolve_placement_panel``.
+    and keeps ``_resolve_placement_alias``.
     """
     qs = model.objects.select_related(*select_related) if select_related else model.objects.all()
     try:
@@ -230,8 +230,14 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
         return None
 
 
-def _build_assignment_panel_data(assignment, request):
-    """Builds the assignment panel context, shared by both views."""
+def _build_assignment_panel_data(assignment, request, *, highlight=None, child_sheets=True):
+    """Builds the assignment panel context, shared by both views.
+
+    ``highlight`` (a Colleague public_id) marks that colleague's team rows so
+    the panel scrolls to them; it defaults to ``?collega=``, the way in from a
+    person card, a colleague panel or an old ``?plaatsing=`` link. With
+    ``child_sheets`` off, ``?bewerken=`` and ``?teamlid=`` are ignored.
+    """
     from wies.core.editables.assignment import (  # noqa: PLC0415
         AssignmentEditables,
         _organizations_initial,
@@ -240,6 +246,10 @@ def _build_assignment_panel_data(assignment, request):
     )
 
     team_rows = visible_service_rows(assignment, request)
+    # An unknown or unplaced colleague just leaves nothing to scroll to.
+    highlighted = highlight or request.GET.get("collega", "")
+    for row in team_rows:
+        row["highlighted"] = bool(row["colleague"]) and str(row["colleague"].public_id) == highlighted
     data = {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -264,15 +274,34 @@ def _build_assignment_panel_data(assignment, request):
     # Child sheets: ?bewerken= opens the combined assignment form, ?teamlid= the
     # form for one team member. Without the rights the param falls back to the
     # read-only panel.
+    if not child_sheets:
+        return data
     if request.GET.get("bewerken"):
         edit_panel = _build_assignment_edit_panel_data(assignment, request)
         if edit_panel is not None:
             data.update(edit_panel)
     elif request.GET.get("teamlid"):
-        member_panel = _build_assignment_member_panel_data(assignment, request)
+        member_panel = _build_assignment_member_panel_data(assignment, request) or _build_own_role_panel_data(
+            request, team_rows
+        )
         if member_panel is not None:
             data.update(member_panel)
     return data
+
+
+def _build_own_role_panel_data(request, team_rows):
+    """The "Omschrijving wijzigen" sheet for a placed consultant's own row
+    (``?teamlid=`` without team edit rights), or None when the row is not theirs."""
+    teamlid = request.GET.get("teamlid", "")
+    row = next((r for r in team_rows if r["service_public_id"] == teamlid and r.get("can_edit_role")), None)
+    if row is None:
+        return None
+    return _build_placement_edit_panel_data(
+        row["placement"],
+        request,
+        only="skill",
+        parent_url=_url_drop_params(request.path, request.GET, ("teamlid",)),
+    )
 
 
 def _build_assignment_create_panel_data(request, form, *, parent_url=None):
@@ -325,14 +354,17 @@ def _merge_date_range(existing: dict, start, end):
 
 
 def _make_assignment_entry(
-    name, aid, request, public_id=None, start_date=None, end_date=None, placement_id=None, **extra
+    name, aid, request, public_id=None, start_date=None, end_date=None, colleague_public_id=None, **extra
 ):
-    """Build a standard assignment dict for panel display."""
-    url = (
-        _build_panel_url(request, plaatsing=placement_id)
-        if placement_id
-        else _build_panel_url(request, opdracht=public_id)
-    )
+    """Build a standard assignment dict for panel display.
+
+    With ``colleague_public_id`` the card opens the opdracht panel with that
+    colleague's rows highlighted; without it, the plain opdracht panel.
+    """
+    params = {"opdracht": public_id}
+    if colleague_public_id:
+        params["collega"] = colleague_public_id
+    url = _build_panel_url(request, **params)
     return {
         "name": name,
         "id": aid,
@@ -361,6 +393,7 @@ def _get_colleague_assignments(request, colleague):
             "id",
             "public_id",
             "service__assignment__id",
+            "service__assignment__public_id",
             "service__assignment__name",
             "service__assignment__start_date",
             "service__assignment__end_date",
@@ -392,7 +425,8 @@ def _get_colleague_assignments(request, colleague):
                 historical=result.timing != "active",
                 privacy_warning_text=result.privacy_note,
                 period_label=LABELS.get(result.timing),
-                placement_id=placement["public_id"],
+                public_id=placement["service__assignment__public_id"],
+                colleague_public_id=colleague.public_id,
             )
         else:
             _merge_date_range(bucket[assignment_id], start, end)
@@ -478,111 +512,56 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-def _build_placement_panel_data(placement, request, *, visibility=None):
-    """Builds the panel context for a single placement.
+def _resolve_placement_alias(request, public_id):
+    """Resolves an old ``?plaatsing=`` link to its placement, if the viewer may see it.
 
-    ``visibility`` (a Visibility) flags a non-active placement so the
-    card shows the timing chip and privacy note. Access control is the caller's
-    job — see ``_resolve_placement_panel``.
-    """
-    assignment = placement.service.assignment
-    colleague = placement.colleague
-    service = placement.service
-    today = timezone.now().date()
-
-    # Build assignment card in the same format as colleague_assignment_cards.html expects
-    primary_org = (
-        AssignmentOrganizationUnit.objects.filter(assignment=assignment, role="PRIMARY")
-        .values_list("organization__name", flat=True)
-        .first()
-    )
-
-    # Only currently-active colleagues, so the avatar list can't leak ended or
-    # not-yet-started placements of others.
-    team_members = list(
-        annotate_placement_dates(Placement.objects.filter(service__assignment=assignment))
-        .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today))
-        .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=today))
-        .select_related("colleague")
-        .values_list("colleague__name", flat=True)
-        .distinct()
-    )
-
-    assignment_card = {
-        "name": assignment.name,
-        "id": assignment.id,
-        "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
-        "start_date": None,
-        "end_date": None,
-        "organization": primary_org,
-        "tags": [],
-        "historical": visibility is not None and visibility.timing != "active",
-        "privacy_warning_text": visibility.privacy_note if visibility else None,
-        "period_label": LABELS.get(visibility.timing) if visibility else None,
-        "team_members": team_members,
-        "show_read_more": True,
-    }
-
-    # The colleague's other assignments live in this same panel, under the same
-    # visibility rules as the colleague panel — it is the same source.
-    other_assignments = [
-        entry for entry in _get_colleague_assignments(request, colleague) if entry["id"] != assignment.id
-    ]
-
-    return {
-        "panel_content_template": "parts/placement_panel_content.html",
-        "panel_title": f"{colleague.name} - {assignment.name}",
-        "close_url": _build_close_url(request),
-        "placement": placement,
-        "colleague": colleague,
-        "service": service,
-        "assignment_card": assignment_card,
-        "other_active_assignments": [a for a in other_assignments if not a["historical"]],
-        "past_assignments": [a for a in other_assignments if a["historical"]],
-        "can_edit_period": bool(placement_edit_specs(placement, request.user, only="period")),
-        "can_edit_role": bool(placement_edit_specs(placement, request.user, only="skill")),
-        "show_hours": can_view_role_hours(request.user, placement),
-        "edit_panel_url": _build_panel_url(request, plaatsing=placement.public_id, bewerken=1),
-    }
-
-
-def _resolve_placement_panel(request, public_id):
-    """Fetches a placement for the side panel, enforcing the team list's rule.
-
-    Ended or not-yet-started placements are only shown to the placed colleague
-    and Business Managers (the BDM role). Not-found, malformed and not-visible are
-    indistinguishable — all raise Http404 for the HTMX panel request, so a hidden
-    placement's existence is never revealed, and return None for a full-page load.
+    The placement panel is gone (it was the opdracht panel with one colleague
+    picked out), but its links live on in bookmarks and mails. Same rule as the
+    team list: an ended or not-yet-started placement only for the placed
+    colleague, Business Managers (the BDM role) and staff. Not-found, malformed
+    and hidden are indistinguishable: Http404 for the HTMX panel request, None
+    for a full-page load, so a hidden placement's existence is never revealed.
     """
     try:
-        placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
-            public_id=public_id
-        )
+        placement = Placement.objects.select_related("colleague", "service__assignment").get(public_id=public_id)
     except Placement.DoesNotExist, ValidationError, ValueError:
-        # A malformed or unknown ?plaatsing= is treated as "not found" (see the
-        # anti-oracle below) rather than escaping as a 500.
         placement = None
-    result = None
     if placement is not None:
         result = evaluate_placement_visibility(
-            placement.start_date,
-            placement.end_date,
-            placement.colleague_id,
-            request,
-            timezone.now().date(),
+            placement.start_date, placement.end_date, placement.colleague_id, request, timezone.now().date()
         )
-    if result is None or not result.visible:
-        if _is_side_panel_request(request):
-            raise Http404 from None
+        if result.visible:
+            return placement
+    if _is_side_panel_request(request):
+        raise Http404 from None
+    return None
+
+
+def _placement_alias_panel(request, public_id):
+    """Panel data for an old ``?plaatsing=`` link: the opdracht panel with the
+    placed colleague highlighted, or None when the placement may not be shown."""
+    placement = _resolve_placement_alias(request, public_id)
+    if placement is None:
         return None
-    panel_data = _build_placement_panel_data(placement, request, visibility=result)
-    if request.GET.get("bewerken"):
-        edit_panel = _build_placement_edit_panel_data(placement, request)
-        # Without edit rights, ?bewerken= falls back to the read-only panel
-        # instead of an empty or forbidden sheet.
-        if edit_panel is not None:
-            panel_data.update(edit_panel)
-    return panel_data
+    # An old link may carry &bewerken=1&veld=…; those meant the placement
+    # sheet, not the opdracht's, so they are dropped like on the redirect.
+    return _build_assignment_panel_data(
+        placement.service.assignment, request, highlight=str(placement.colleague.public_id), child_sheets=False
+    )
+
+
+def _placement_alias_redirect(request):
+    """A full-page load on ``?plaatsing=`` moves to the canonical
+    ``?opdracht=&collega=`` URL, filters kept and ``bewerken``/``veld`` dropped;
+    an HTMX request renders in place. None when there is nothing to redirect."""
+    public_id = request.GET.get("plaatsing")
+    if not public_id or "HX-Request" in request.headers:
+        return None
+    placement = _resolve_placement_alias(request, public_id)
+    if placement is None:
+        return None
+    assignment = placement.service.assignment
+    return redirect(_build_panel_url(request, opdracht=assignment.public_id, collega=placement.colleague.public_id))
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -683,8 +662,11 @@ def bezetting(request):
     today = timezone.now().date()
 
     # Side panel: reuse the shared machinery. A row click opens the colleague
-    # panel (?collega); links inside that panel open an opdracht (?opdracht) or
-    # plaatsing (?plaatsing) panel, exactly like on "Wie zit waar?".
+    # panel (?collega); links inside that panel open an opdracht (?opdracht)
+    # panel, exactly like on "Wie zit waar?". ?plaatsing= is an old link.
+    alias = _placement_alias_redirect(request)
+    if alias is not None:
+        return alias
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
@@ -692,7 +674,7 @@ def bezetting(request):
     # object, so it is checked before the id lookups.
     panel_data = _assignment_create_panel(request)
     if panel_data is None and placement_id:
-        panel_data = _resolve_placement_panel(request, placement_id)
+        panel_data = _placement_alias_panel(request, placement_id)
     elif panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
@@ -1144,6 +1126,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         "opdracht": "Laatst gewijzigd",
     }
 
+    def get(self, request, *args, **kwargs):
+        # An old ?plaatsing= link lands on the canonical ?opdracht=&collega= URL.
+        return _placement_alias_redirect(request) or super().get(request, *args, **kwargs)
+
     @property
     def active_view(self) -> str:
         """The requested ?weergave=, falling back to the default for unknown values."""
@@ -1354,7 +1340,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 panel_data = getattr(self, "_panel_data", None)
                 if panel_data:
                     return [panel_data["panel_content_template"]]
-                return ["parts/placement_panel_content.html"]
+                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_cards.html"]
             return ["parts/filter_and_table_container.html"]
@@ -1397,9 +1383,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "assignment": single,
                     "assignments": assignments,
                     "roles": roles,
+                    # One opdracht: straight to it, this person highlighted.
+                    # More: the colleague panel lists them.
                     "panel_url": _build_panel_url(
                         self.request,
-                        **({"plaatsing": rows[0].public_id} if single else {"collega": rows[0].colleague.public_id}),
+                        collega=rows[0].colleague.public_id,
+                        **({"opdracht": single.public_id} if single else {}),
                     ),
                 }
             )
@@ -1651,7 +1640,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            panel_data = _resolve_placement_panel(self.request, placement_id)
+            panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
@@ -1675,6 +1664,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
     template_name = "assignments.html"
     paginate_by = 60
     page_kwarg = "pagina"
+
+    def get(self, request, *args, **kwargs):
+        # An old ?plaatsing= link lands on the canonical ?opdracht=&collega= URL.
+        return _placement_alias_redirect(request) or super().get(request, *args, **kwargs)
 
     def _get_base_queryset(self):
         has_unfilled_open_service = Exists(
@@ -1891,7 +1884,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         if create_panel is not None:
             context["panel_data"] = create_panel
         elif placement_id:
-            panel_data = _resolve_placement_panel(self.request, placement_id)
+            panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
@@ -3411,8 +3404,8 @@ def _page_url_behind_panel(request) -> str:
     if not current:
         return reverse("assignment-list")
     parsed = urllib.parse.urlparse(current)
-    # Keep collega/pagina/filters — only the opdracht panel is closing.
-    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "plaatsing"))
+    # Keep pagina/filters; collega goes too, or the colleague panel would open.
+    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "plaatsing", "collega"))
 
 
 def _assignment_audit_snapshot(assignment) -> dict:
@@ -3439,13 +3432,16 @@ def user_profile(request):
     colleague = getattr(user, "colleague", None)
 
     # Side panel handling
+    alias = _placement_alias_redirect(request)
+    if alias is not None:
+        return alias
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
     placement_id = request.GET.get("plaatsing")
     panel_data = None
 
     if placement_id:
-        panel_data = _resolve_placement_panel(request, placement_id)
+        panel_data = _placement_alias_panel(request, placement_id)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
@@ -4435,6 +4431,10 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
 def placement_edit_view(request, public_id):
     """Saves the combined edit form of the placement child sheet.
 
+    Reached from the UI only by a placed consultant ("Omschrijving wijzigen",
+    ``?veld=skill``); the role, hours and period branches stay for a business
+    manager's POST, whose sheet is "Teamlid wijzigen" now.
+
     On success the client is sent back to the parent URL via HX-Location, which
     re-renders the panel through the normal panel route. Rendering the parent
     panel here is not possible: panel URLs are built from ``request.path``, which
@@ -4447,8 +4447,8 @@ def placement_edit_view(request, public_id):
         .filter(public_id=public_id)
         .first()
     )
-    # _resolve_placement_panel enforces the visibility rules.
-    if placement is None or _resolve_placement_panel(request, placement.public_id) is None:
+    # _resolve_placement_alias enforces the visibility rules.
+    if placement is None or _resolve_placement_alias(request, placement.public_id) is None:
         raise Http404("Unknown placement")
 
     # ?veld= limits the save to that one field, so a single-field sheet does not
@@ -4458,7 +4458,9 @@ def placement_edit_view(request, public_id):
     if not specs:
         return HttpResponseForbidden()
 
-    fallback = _build_panel_url(request, plaatsing=placement.public_id)
+    fallback = _build_panel_url(
+        request, opdracht=placement.service.assignment.public_id, collega=placement.colleague.public_id
+    )
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
     form_cls, _ = build_combined_form_class(specs)
@@ -4474,37 +4476,39 @@ def placement_edit_view(request, public_id):
     return response
 
 
-# Headings for the single-field sheet. Not derived from the spec labels as the
-# assignment does: "Rol" covers two specs here, so the first one would decide the
-# heading and that reads as half a title.
-PLACEMENT_FIELD_HEADINGS = {"skill": "Rol bewerken", "period": "Periode bewerken"}
-
-
-def _build_placement_edit_panel_data(placement, request, *, form=None, parent_url=None):
+def _build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None):
     """Context for the placement edit child sheet, or None without edit rights.
 
     The single source for this sheet: the open-GET path merges the returned dict
-    onto the read-only panel, and the invalid-POST path renders it directly. Pass
+    onto the opdracht panel, and the invalid-POST path renders it directly. Pass
     the bound ``form`` (and the sanitised ``parent_url``) to re-render a submitted
-    form with its errors instead of a fresh one.
+    form with its errors instead of a fresh one. ``only`` narrows the form to one
+    row of the panel (``?veld=`` on a POST).
     """
-    only = request.GET.get("veld") or None
+    only = only or request.GET.get("veld") or None
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
     if form is None:
         form_cls, initial = build_combined_form_class(specs)
         form = form_cls(initial=initial)
+    # A placed consultant keeps only the description of their role; the role
+    # itself is read-only in the sheet, so the title says what they can change.
+    if only == "skill":
+        heading = "Rol wijzigen" if "skill" in form.fields else "Omschrijving wijzigen"
+    else:
+        heading = "Teamlid bewerken"
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "colleague": placement.colleague,
         "service": placement.service,
         "form": form,
-        # Single-field sheet: the title names that field ("Periode bewerken").
-        "edit_heading": PLACEMENT_FIELD_HEADINGS.get(only) if only else None,
+        "edit_heading": heading,
+        # The sheet is a child of the opdracht panel; the back button names it.
+        "back_text": placement.service.assignment.name,
         "parent_url": parent_url
         if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        else _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid")),
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 

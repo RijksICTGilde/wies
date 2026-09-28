@@ -38,5 +38,10 @@ document.addEventListener("click", (event) => {
   truncated.hidden = !expanded;
   full.hidden = expanded;
   toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
-  toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
+  // nldd-button forwards `expanded` as aria-expanded on its inner button.
+  toggle.toggleAttribute("expanded", !expanded);
+  // The team-row toggle has no icon; only flip one that is there.
+  if (toggle.hasAttribute("start-icon")) {
+    toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
+  }
 });
