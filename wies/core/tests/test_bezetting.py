@@ -922,7 +922,7 @@ class BezettingPaginationTest(TestCase):
         assert "pagina=2" in content
 
     def test_next_page_is_just_the_rows_without_the_button(self):
-        content = self.client.get(self.url, {"pagina": 2}, HTTP_HX_REQUEST="true").content.decode()
+        content = self.client.get(self.url, {"pagina": 2}, headers={"hx-request": "true"}).content.decode()
         assert content.count('class="bezetting-row ') == 1
         assert "Zoë Zet" in content
         assert "Meer tonen" not in content
