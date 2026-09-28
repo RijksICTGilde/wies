@@ -4,11 +4,11 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: the placement panel is gone: a person card with one opdracht, an opdracht card on a colleague's profile and an old `?plaatsing=` link all open the opdracht panel, with that colleague's team rows highlighted and scrolled into view
-- ?: every team row shows the role's description, one line with "Toon meer" past that; the row menu offers "Bekijk profiel" instead of "Bekijk teamlid", and a placed consultant edits their own description via "Omschrijving wijzigen"
-- ?: the side panel is 800px wide instead of 640px, on every page that opens it
-- ?: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
-- ?: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
+- 693: the placement panel is gone: a person card with one opdracht, an opdracht card on a colleague's profile and an old `?plaatsing=` link all open the opdracht panel, with that colleague's team rows highlighted and scrolled into view
+- 693: every team row shows the role's description, one line with "Toon meer" past that; the row menu offers "Bekijk profiel" instead of "Bekijk teamlid", and a placed consultant edits their own description via "Omschrijving wijzigen"
+- 693: the side panel is 800px wide instead of 640px, on every page that opens it
+- 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
+- 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
 
 ## 2026-09-24
 
