@@ -9,9 +9,8 @@ A colleague is "op de bank" (``bench``: no active placement today), "deels
 beschikbaar" (``partial``: placed, but the hours of their active roles add up to
 less than their contract) or "volledig ingezet" (``full``). Hours are optional:
 without contract hours the row cannot be split and counts as full, exactly as
-before hours existed. An active role without hours counts as 0 and is flagged on
-the row: the free hours still add up for the roles that do have them, and the
-flag says the number is an upper bound until the gap is filled in.
+before hours existed. An active role without hours counts as 0, so the free
+hours are an upper bound until it is filled in.
 """
 
 from __future__ import annotations
@@ -60,9 +59,8 @@ _BUCKET_RANK = {BUCKET_BENCH: 0, BUCKET_PARTIAL: 1, BUCKET_FULL: 2}
 STATUS_BENCH = "bench"
 STATUS_PARTIAL = "partial"
 STATUS_ENDS_SOON = "ends_soon"
-# No "volledig ingezet" status: the page is read for who is free, and with
-# contract hours a placed colleague is either partial or not worth filtering on
-# (issue #687). The full bucket still exists for sorting.
+# No "volledig ingezet" status (#687): the page is read for who is free. The
+# full bucket stays for sorting.
 STATUS_VALUES = (STATUS_BENCH, STATUS_PARTIAL, STATUS_ENDS_SOON)
 
 
@@ -140,9 +138,6 @@ class OccupancyRow:
     # Hours per week of the active roles added up, a role without hours counting
     # as 0; None on the bench.
     active_hours: int | None = None
-    # How many active roles have no hours recorded. Above 0, active_hours is a
-    # lower bound and unfilled_hours an upper bound.
-    roles_without_hours: int = 0
     # Contract minus active hours, or the whole contract on the bench; negative
     # when the roles add up to more than the contract. None when the contract
     # hours are unknown.
@@ -344,7 +339,6 @@ def colleague_occupancy(
         active_count = 0
         active_ends: list[date] = []
         active_hours = 0
-        roles_without_hours = 0
         segments: list[TimelineSegment] = []
         for placement in placements:
             start = placement.actual_start_date
@@ -355,12 +349,9 @@ def colleague_occupancy(
                 active_count += 1
                 if end is not None:
                     active_ends.append(end)
-                # A role without hours counts as 0 rather than voiding the sum:
-                # the roles that do have hours still say something, and the
-                # count keeps the gap visible on the row (issue #687).
-                if hours is None:
-                    roles_without_hours += 1
-                else:
+                # A role without hours counts as 0 rather than voiding the sum
+                # (#687); its bar says so.
+                if hours is not None:
                     active_hours += hours
             left, width = _position(start, end, horizon_start, horizon_end)
             segments.append(
@@ -449,7 +440,6 @@ def colleague_occupancy(
                 next_contract=next_contract,
                 contract_ended=contract_ended,
                 active_hours=active_hours if active_count else None,
-                roles_without_hours=roles_without_hours,
                 unfilled_hours=unfilled_hours,
             )
         )

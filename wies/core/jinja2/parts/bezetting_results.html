@@ -62,13 +62,10 @@
     <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
   </ul>
   <nldd-toolbar label="Filters en acties">
-  {# data-wies-search-input: filter_interactions.js writes to #search-hidden in
-     the filter form and runs the filter, as on the user list. Enter commits;
-     there is no suggestion menu on this page. Highest priority: a search field
-     has no menu twin, so it must be the last item the toolbar overflows. #}
+  {# Same search bridge as the user list (filter_interactions.js). Highest
+     priority: a search field has no menu twin, so it must overflow last. No
+     placeholder, like the form fields since #660. #}
   <nldd-toolbar-item slot="start" priority="4" width="320px" max-width="320px" min-width="200px">
-  {# No placeholder, like the form fields since #660; the accessible label
-     names the field for a screen reader. #}
   <nldd-search-field id="search-input" accessible-label="Zoeken op naam of e-mail" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input name="zoek">
   </nldd-search-field>
   </nldd-toolbar-item>
@@ -118,8 +115,7 @@
        scanned for, and their row shows whether anything is already booked — the
        thing a list of names could not answer. No headings between the two: the
        hatched free stretch already says which rows are the empty ones, and the
-       counts they carried are on the cards above. The view cuts the list into
-       pages; the partial ends in the "Meer tonen" button that fetches the next. #}
+       counts they carried are on the cards above. Paged by the view. #}
     {% include "parts/bezetting_rows.html" %}
     {% if not row_count %}
       {# nldd-inline-dialog is the empty state across the app (see

@@ -679,9 +679,8 @@ def bezetting(request):
 
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
     opens the shared colleague side panel via the ``collega`` param, exactly like
-    the "Wie zit waar?" table. Pages of BEZETTING_PAGE_SIZE rows, appended by a
-    "Meer tonen" button like the card lists; the rows are built in memory, so
-    the page is cut from the sorted list rather than from a queryset.
+    the "Wie zit waar?" table. Paged like the card lists, but from the in-memory
+    row list rather than a queryset.
     """
     today = timezone.now().date()
 
@@ -753,8 +752,7 @@ def bezetting(request):
         active_filters["status"] = selected_statuses
 
     bench_rows, timeline_rows = split_bench_and_timeline(rows)
-    # One list, bench first, cut into pages: a page boundary may fall inside
-    # either section, and the template draws both the same way.
+    # One list, bench first: a page boundary may fall inside either section.
     page = Paginator(bench_rows + timeline_rows, BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
     next_page_url = (
         _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
