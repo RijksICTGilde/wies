@@ -35,6 +35,13 @@ EXCLUDED_ORG_NAMES: set[str] = {
 }
 EXCLUDED_ORG_ABBREVIATIONS: set[str] = {"aivd", "mivd"}
 
+# Types that nest under their ministry. A unit nests only when its MAIN type
+# (first-listed = overheid.nl breadcrumb category) is one of these and its
+# related_ministry_tooi resolves to a ministry. Others keep their top-level type
+# folder in the picker and a plain parent-chain breadcrumb. Used by both the
+# picker (_build_org_hierarchy) and the breadcrumb (resolve_related_ministry).
+NESTED_ORG_TYPES: frozenset[str] = frozenset({"Agentschap", "Zelfstandig bestuursorgaan", "Adviescollege", "Inspectie"})
+
 
 def build_source_url(system_id: str, name: str) -> str:
     """Build URL to organisaties.overheid.nl page."""
@@ -587,15 +594,46 @@ def find_orgs_by_abbreviation(search_term: str) -> list[dict]:
     return results
 
 
+def resolve_related_ministry(org: OrganizationUnit) -> OrganizationUnit | None:
+    """The ministry a root org nests under, via ``related_ministry_tooi``.
+
+    Only for roots whose main type is nestable (mirrors the picker's nesting in
+    ``_build_org_hierarchy``); returns ``None`` otherwise, so a normal org keeps
+    its plain parent-chain breadcrumb. Also ``None`` when the tooi resolves to no
+    org (e.g. an excluded/unsynced ministry) — a graceful, unchanged breadcrumb.
+    """
+    if org.parent_id or not org.related_ministry_tooi:
+        return None
+    main = org.main_type
+    if main is None or main.name not in NESTED_ORG_TYPES:
+        return None
+    return OrganizationUnit.objects.filter(tooi_identifier=org.related_ministry_tooi).exclude(id=org.id).first()
+
+
 def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
     """Build breadcrumb data for an organization: label + clickable ancestor path."""
     ancestors = []
+    root = org
     current = org.parent
     while current:
         label = current.abbreviation or current.label or current.name
         ancestors.append({"label": label, "url": f"{base_url}?org={current.public_id}"})
+        root = current  # the last ancestor reached is the chain root
         current = current.parent
     ancestors.reverse()
+
+    # The ministry link lives on the ROOT of the chain (e.g. RVB), not the leaf
+    # (Atelier Rijksbouwmeester). Resolve from the root so a descendant of a
+    # nestable root also shows the ministry the picker nests that root under.
+    ministry = resolve_related_ministry(root)
+    if ministry is not None:
+        ancestors.insert(
+            0,
+            {
+                "label": ministry.abbreviation or ministry.label or ministry.name,
+                "url": f"{base_url}?org={ministry.public_id}",
+            },
+        )
 
     is_self = org.children.filter(assignment_relations__isnull=False).exists()
     label = org.label or org.name

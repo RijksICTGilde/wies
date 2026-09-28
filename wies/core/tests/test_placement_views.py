@@ -2308,6 +2308,61 @@ class ScopedOrgTypeInFilterTest(TestCase):
         assert self.odi.id not in matched
 
 
+class AssignmentPanelBreadcrumbMinistryTest(TestCase):
+    """The opdracht panel shows the ministry a nestable-root opdrachtgever nests under."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="test@rijksoverheid.nl")
+        self.agentschap = OrganizationType.objects.create(name="Agentschap", label="Agentschap")
+        self.ministerie = OrganizationType.objects.create(name="Ministerie", label="Ministerie")
+        self.bzk = OrganizationUnit.objects.create(
+            name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
+        )
+        self.bzk.organization_types.add(self.ministerie)
+        self.odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
+        OrganizationUnitType.objects.create(organization_unit=self.odi, organization_type=self.agentschap, position=0)
+        self.involved = OrganizationUnit.objects.create(name="Betrokken Org", label="Betrokken Org")
+        self.assignment = Assignment.objects.create(
+            name="Opdracht", source="wies", start_date=date(2025, 1, 1), end_date=date(2030, 1, 1)
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=self.odi, role="PRIMARY")
+        AssignmentOrganizationUnit.objects.create(
+            assignment=self.assignment, organization=self.involved, role="INVOLVED"
+        )
+
+    def test_panel_breadcrumb_starts_at_ministry_and_keeps_role_suffix(self):
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("assignment-list"), {"opdracht": str(self.assignment.public_id)})
+        content = response.content.decode()
+        assert response.status_code == 200
+        # The ODI row now reads "BZK <sep> ODI" with the ministry prepended, where
+        # <sep> is the U+203A separator render_org_line emits between crumbs.
+        separator = chr(0x203A)
+        assert f"BZK {separator} ODI" in content
+        assert "(primair)" in content  # two opdrachtgevers, so the role suffix shows
+
+    def test_panel_breadcrumb_for_descendant_of_nestable_root(self):
+        # The screenshot case: the opdrachtgever is a CHILD of a nestable root
+        # (Atelier under RVB), so the row must read BZK, then RVB, then Atelier.
+        rvb = OrganizationUnit.objects.create(
+            name="RVB", label="Rijksvastgoedbedrijf", abbreviations=["RVB"], related_ministry_tooi=MNRE_BZK
+        )
+        OrganizationUnitType.objects.create(organization_unit=rvb, organization_type=self.agentschap, position=0)
+        atelier = OrganizationUnit.objects.create(name="Atelier", label="Atelier Rijksbouwmeester", parent=rvb)
+        assignment = Assignment.objects.create(
+            name="Opdracht 2", source="wies", start_date=date(2025, 1, 1), end_date=date(2030, 1, 1)
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=atelier, role="PRIMARY")
+
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("assignment-list"), {"opdracht": str(assignment.public_id)})
+        content = response.content.decode()
+        assert response.status_code == 200
+        separator = chr(0x203A)
+        assert f"BZK {separator} RVB {separator} Atelier Rijksbouwmeester" in content
+
+
 def _modal_org_self_counts(response) -> dict[int, int]:
     """Extract {org_id: self placement count} from the client-modal json_script blob.
 

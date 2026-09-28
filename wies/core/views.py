@@ -111,6 +111,7 @@ from .services.occupancy import (
     today_marker_pct,
 )
 from .services.organizations import (
+    NESTED_ORG_TYPES,
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
     get_org_breadcrumb,
@@ -138,13 +139,6 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # Singular → plural display names for organization type group headers.
-# Types that nest under their ministry in the org picker. A unit nests only when
-# its MAIN type (first-listed = overheid.nl breadcrumb category) is one of these,
-# and its related_ministry_tooi resolves to a ministry in the tree. Others keep
-# their top-level type folder. See _build_org_hierarchy.
-NESTED_ORG_TYPES: frozenset[str] = frozenset({"Agentschap", "Zelfstandig bestuursorgaan", "Adviescollege", "Inspectie"})
-
-
 ORG_TYPE_PLURAL: dict[str, str] = {
     "Adviescollege": "Adviescolleges",
     "Agentschap": "Agentschappen",
