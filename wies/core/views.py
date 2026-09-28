@@ -138,6 +138,13 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 # Singular → plural display names for organization type group headers.
+# Types that nest under their ministry in the org picker. A unit nests only when
+# its MAIN type (first-listed = overheid.nl breadcrumb category) is one of these,
+# and its related_ministry_tooi resolves to a ministry in the tree. Others keep
+# their top-level type folder. See _build_org_hierarchy.
+NESTED_ORG_TYPES: frozenset[str] = frozenset({"Agentschap", "Zelfstandig bestuursorgaan", "Adviescollege", "Inspectie"})
+
+
 ORG_TYPE_PLURAL: dict[str, str] = {
     "Adviescollege": "Adviescolleges",
     "Agentschap": "Agentschappen",
@@ -975,14 +982,21 @@ def staff_database(request):
 UNKNOWN_FACET_LABELS = {
     "org": "Onbekende opdrachtgever",
     "org_self": "Onbekende opdrachtgever",
+    "org_type_in": "Onbekende opdrachtgever",
     "rol": "Onbekende rol",
     "labels": "Onbekend label",
     "merk": "Onbekend merk",
 }
 
 
-def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: list[str]) -> list[dict]:
+def _org_chip_data(
+    org: ResolvedFacet,
+    org_self: ResolvedFacet,
+    type_labels: list[str],
+    type_in: list[tuple[str, str]] | None = None,
+) -> list[dict]:
     """Chips for the opdrachtgever facets, in the order they appear in the URL."""
+    type_in = type_in or []
     labels: dict[str, str] = {}
     if org.ids or org_self.ids:
         labels = {
@@ -990,6 +1004,15 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
             for public_id, label in OrganizationUnit.objects.filter(id__in=[*org.ids, *org_self.ids]).values_list(
                 "public_id", "label"
             )
+        }
+    # Ministry labels for the scoped nested-folder chips ("BZK - Agentschappen").
+    ministry_labels: dict[str, str] = {}
+    if type_in:
+        ministry_labels = {
+            str(public_id): ((abbreviations[0] if abbreviations else "") or label)
+            for public_id, label, abbreviations in OrganizationUnit.objects.filter(
+                public_id__in=parse_public_ids([pid for pid, _ in type_in])
+            ).values_list("public_id", "label", "abbreviations")
         }
     chips: list[dict] = [
         {
@@ -1015,6 +1038,18 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
         }
         for type_label in type_labels
     )
+    chips.extend(
+        {
+            "param_name": "org_type_in",
+            "param_value": f"{ministry_public_id}:{type_label}",
+            "label": (
+                f"{ministry_labels[ministry_public_id]} - {ORG_TYPE_PLURAL.get(type_label, type_label)}"
+                if ministry_public_id in ministry_labels
+                else UNKNOWN_FACET_LABELS["org_type_in"]
+            ),
+        }
+        for ministry_public_id, type_label in type_in
+    )
     return chips
 
 
@@ -1034,20 +1069,50 @@ class PublicIdFacetsMixin:
     def org_type_filter(self) -> list[str]:
         return [x for x in self.request.GET.getlist("org_type") if x]
 
+    @cached_property
+    def org_type_in_filter(self) -> list[tuple[str, str]]:
+        """The scoped nested-folder facet: ``org_type_in=<ministry_public_id>:<type>``.
+
+        One entry per selected nested folder (e.g. BZK → Agentschappen). Parsed
+        into ``(ministry_public_id, type_label)`` pairs; malformed values drop.
+        """
+        pairs: list[tuple[str, str]] = []
+        for value in self.request.GET.getlist("org_type_in"):
+            ministry_public_id, sep, type_label = value.partition(":")
+            if sep and ministry_public_id and type_label:
+                pairs.append((ministry_public_id, type_label))
+        return pairs
+
     def apply_org_filter(self, qs, lookup: str):
-        """Applies the opdrachtgever facets (``org``/``org_self``/``org_type``).
+        """Applies the opdrachtgever facets (``org``/``org_self``/``org_type``/``org_type_in``).
 
         ``lookup`` is the queryset path to the organization id, which differs per
-        list view. ``org`` matches the whole subtree, ``org_self`` only the org
-        itself, ``org_type`` every org of that type plus its subtree.
+        list view. ``org`` matches the whole subtree (plus units linked to it as
+        their ministry, since those are not DB descendants), ``org_self`` only the
+        org itself, ``org_type`` every org of that type plus its subtree, and
+        ``org_type_in`` every org of a type that is linked to a given ministry.
         """
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
-        if not (org.requested or org_self.requested or self.org_type_filter):
+        if not (org.requested or org_self.requested or self.org_type_filter or self.org_type_in_filter):
             return qs
         matching_ids: set[int] = set(org_self.ids)
         if org.ids:
             matching_ids |= get_org_descendant_ids(org.ids)
+            # Units that nest under a selected ministry are DB roots, not
+            # descendants, so pull them (and their subtrees) in via the tooi link.
+            ministry_toois = [
+                tooi
+                for tooi in OrganizationUnit.objects.filter(id__in=org.ids).values_list("tooi_identifier", flat=True)
+                if tooi
+            ]
+            if ministry_toois:
+                linked_ids = list(
+                    OrganizationUnit.objects.filter(related_ministry_tooi__in=ministry_toois).values_list(
+                        "id", flat=True
+                    )
+                )
+                matching_ids |= get_org_descendant_ids(linked_ids)
         if self.org_type_filter:
             type_root_ids = list(
                 OrganizationUnit.objects.filter(organization_types__label__in=self.org_type_filter).values_list(
@@ -1055,6 +1120,20 @@ class PublicIdFacetsMixin:
                 )
             )
             matching_ids |= get_org_descendant_ids(type_root_ids)
+        for ministry_public_id, type_label in self.org_type_in_filter:
+            ministry_tooi = (
+                OrganizationUnit.objects.filter(public_id=ministry_public_id)
+                .values_list("tooi_identifier", flat=True)
+                .first()
+            )
+            if not ministry_tooi:
+                continue  # fail closed: unknown ministry matches nothing
+            scoped_ids = list(
+                OrganizationUnit.objects.filter(
+                    organization_types__label=type_label, related_ministry_tooi=ministry_tooi
+                ).values_list("id", flat=True)
+            )
+            matching_ids |= get_org_descendant_ids(scoped_ids)
         return qs.filter(**{lookup: matching_ids})
 
     def add_org_filter_context(self, context: dict, active_filters: dict) -> None:
@@ -1067,7 +1146,9 @@ class PublicIdFacetsMixin:
             active_filters["org_self"] = org_self.active_values
         if self.org_type_filter:
             active_filters["org_type"] = self.org_type_filter
-        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter)
+        if self.org_type_in_filter:
+            active_filters["org_type_in"] = [f"{pid}:{label}" for pid, label in self.org_type_in_filter]
+        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter, self.org_type_in_filter)
 
     def add_unknown_filter_chips(self, context: dict, facets: dict[str, type[Model]]) -> None:
         """Chips for the values of ``facets`` that match no row.
@@ -2550,9 +2631,9 @@ def organization_admin(request):
     # Organization types for the root nodes only, via the M2M through table.
     root_ids = {u["id"] for u in roots}
     type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
-        .select_related("organizationtype")
-        .values_list("organizationunit_id", "organizationtype__label")
+        OrganizationUnit.organization_types.through.objects.filter(organization_unit_id__in=root_ids)
+        .select_related("organization_type")
+        .values_list("organization_unit_id", "organization_type__label")
     )
     root_types: dict[int, list[str]] = {}
     for unit_id, type_label in type_links:
@@ -3848,7 +3929,7 @@ def _build_org_hierarchy(
     """Builds the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
-            "id", "public_id", "parent_id", "name", "label", "abbreviations"
+            "id", "public_id", "parent_id", "name", "label", "abbreviations", "tooi_identifier", "related_ministry_tooi"
         )
     )
 
@@ -3866,6 +3947,56 @@ def _build_org_hierarchy(
             units_by_id[parent_id]["children_data"].append(unit)
         else:
             roots.append(unit)
+
+    # Each root's types in source order (position 0 = main type). Read before
+    # counting/pruning so we can re-parent the nestable roots first.
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organization_unit_id__in=root_ids)
+        .select_related("organization_type")
+        .order_by("position")
+        .values_list("organization_unit_id", "organization_type__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    # Presentation-only nesting: a root whose MAIN type is nestable and whose
+    # related_ministry_tooi resolves to a ministry in the tree is moved under a
+    # synthetic per-ministry type folder. The DB parent FK is untouched. Done
+    # before compute_total/prune so counts roll up into the ministry naturally.
+    ministry_by_tooi: dict[str, dict] = {}
+    for unit in roots:
+        if "Ministerie" in root_types.get(unit["id"], []) and unit["tooi_identifier"]:
+            ministry_by_tooi[unit["tooi_identifier"]] = unit
+
+    synthetic_folders: dict[tuple[int, str], dict] = {}
+    nested_unit_ids: set[int] = set()
+    for unit in roots:
+        labels = root_types.get(unit["id"], [])
+        main_type = labels[0] if labels else None
+        if main_type not in NESTED_ORG_TYPES:
+            continue
+        ministry = ministry_by_tooi.get(unit["related_ministry_tooi"])
+        if ministry is None or ministry["id"] == unit["id"]:
+            continue  # no resolvable ministry (or self) → keep at top level
+        key = (ministry["id"], main_type)
+        folder = synthetic_folders.get(key)
+        if folder is None:
+            folder = {
+                "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped
+                "type_label": main_type,
+                "synthetic_group": True,
+                "self_count": 0,
+                "total_count": 0,
+                "children_data": [],
+            }
+            synthetic_folders[key] = folder
+            ministry["children_data"].append(folder)
+        folder["children_data"].append(unit)
+        nested_unit_ids.add(unit["id"])
+
+    roots = [r for r in roots if r["id"] not in nested_unit_ids]
 
     def compute_total(node: dict) -> int:
         total = node["self_count"]
@@ -3889,9 +4020,19 @@ def _build_org_hierarchy(
         roots = [r for r in roots if r["total_count"] > 0]
 
     def sort_key(node: dict) -> str:
+        if node.get("synthetic_group"):
+            return ORG_TYPE_PLURAL.get(node["type_label"], node["type_label"])
         return node.get("label") or node.get("name") or ""
 
     def to_json(node: dict) -> dict:
+        if node.get("synthetic_group"):
+            return {
+                "id": node["id"],
+                "label": ORG_TYPE_PLURAL.get(node["type_label"], node["type_label"]),
+                "nr_of_placements": node["total_count"],
+                "group": True,
+                "children": [to_json(c) for c in sorted(node["children_data"], key=sort_key)],
+            }
         children_data = sorted(node["children_data"], key=sort_key)
         children_json = []
         has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
@@ -3916,17 +4057,7 @@ def _build_org_hierarchy(
             result["children"] = children_json
         return result
 
-    # Group roots by OrganizationUnit type
-    root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
-        .select_related("organizationtype")
-        .values_list("organizationunit_id", "organizationtype__label")
-    )
-    root_types: dict[int, list[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
-
+    # Top-level grouping for the remaining roots (nested units already removed).
     grouped: dict[str, list[dict]] = {}
     ungrouped: list[dict] = []
     for unit in roots:
@@ -3973,6 +4104,12 @@ def _build_current_selections(request) -> dict[str, str]:
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    # Scoped nested folders: re-check the "group-<ministry_public_id>-<type>" node.
+    for value in request.GET.getlist("org_type_in"):
+        ministry_public_id, sep, type_label = value.partition(":")
+        if sep and ministry_public_id and type_label:
+            current_selections[f"group-{ministry_public_id}-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
 
     return current_selections
 

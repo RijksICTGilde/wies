@@ -5,9 +5,8 @@
  * assignment form's org picker (assignment_org_tree.js). Owns the tree only.
  */
 (function () {
-  var LEAF_CHEVRON_ZONE = "44";
-  var CHEVRON_ICON = "20";
-  var GROUP_CHEVRON_GAP = "12";
+  var LEAF_CHEVRON_ZONE = 44;
+  var CHEVRON_ICON = 20;
   var INDENT_STEP = "16";
   // Shorter queries match nearly every org and would force-build the tree.
   var MIN_SEARCH_LENGTH = 2;
@@ -96,13 +95,18 @@
 
     if (rowIsControl) {
       row.setAttribute("button", "");
-      var groupChevron = cell("nldd-icon-cell", {
-        size: CHEVRON_ICON,
+      // Same chevron structure as a selectable branch (below), so a group folder
+      // nested among selectable rows lines its chevron up with theirs. No own
+      // click handler: the whole row is the toggle (handled below), and a second
+      // handler here would fire too and cancel it out.
+      var groupChevron = cell("nldd-list-item-action", {
         disclosure: "",
+        "accessible-label": node.label + " in- of uitklappen",
       });
-      groupChevron.appendChild(cell("nldd-icon", { name: "chevron-right" }));
+      var groupIconCell = cell("nldd-icon-cell", { size: CHEVRON_ICON });
+      groupIconCell.appendChild(cell("nldd-icon", { name: "chevron-right" }));
+      groupChevron.appendChild(groupIconCell);
       row.appendChild(groupChevron);
-      row.appendChild(cell("nldd-spacer-cell", { size: GROUP_CHEVRON_GAP }));
       row.addEventListener("click", function (e) {
         // Child rows sit inside this row, so their clicks bubble through it.
         if (rowOf(e.composedPath()) !== row) return;
@@ -127,19 +131,27 @@
 
     // A `button` action, not a `checkbox` action: the latter paints an
     // unsuppressable grey fill on every checked row, cascaded children included.
-    var action = rowIsControl
-      ? row
-      : cell("nldd-list-item-action", {
-          width: "full",
-          "accessible-label": label,
-        });
-    if (selectable) {
-      action.setAttribute("button", "");
+    // A group folder uses the same full-width action + checkbox column as a
+    // selectable row (checkbox hidden), so its label lines up with the org rows
+    // it sits among; the row itself, not this action, drives the toggle.
+    var action = cell("nldd-list-item-action", {
+      width: "full",
+      "accessible-label": label,
+    });
+    // A nested group folder reserves the checkbox column (hidden) so its label
+    // lines up with the selectable org rows it sits among. A top-level group has
+    // no selectable siblings — every root there is a type folder — so it skips
+    // the column and keeps the tight chevron-to-label spacing.
+    var reserveCheckbox = selectable || (rowIsControl && depth > 0);
+    if (reserveCheckbox) {
+      if (selectable) action.setAttribute("button", "");
       var boxCell = cell("nldd-cell", {});
       // Decorative: the button segment carries role and state (_syncRow).
-      boxCell.appendChild(
-        cell("nldd-checkbox", { "aria-hidden": "true", tabindex: "-1" }),
-      );
+      var placeholderBox = cell("nldd-checkbox", { "aria-hidden": "true", tabindex: "-1" });
+      boxCell.appendChild(placeholderBox);
+      // A group folder is structural: its checkbox is only a spacer, kept for
+      // alignment but hidden and unclickable.
+      if (rowIsControl) boxCell.style.visibility = "hidden";
       action.appendChild(boxCell);
       action.appendChild(cell("nldd-spacer-cell", { size: "8" }));
     }
@@ -174,7 +186,7 @@
         self.onToggle(node, checked);
       });
     }
-    if (action !== row) row.appendChild(action);
+    row.appendChild(action);
 
     // A branch can be built long after selections were restored.
     if (selectable) this._syncRow(node, row);

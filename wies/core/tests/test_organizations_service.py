@@ -522,6 +522,43 @@ class SyncOrganizationTreeTest(TestCase):
         assert OrganizationType.objects.count() == 1
         assert OrganizationType.objects.first() == existing_type
 
+    def _multi_type_org(self, type_names):
+        return {
+            "name": "Multi",
+            "label": "Multi",
+            "abbreviations": ["M"],
+            "org_type_names": list(type_names),
+            "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg99999",
+            "system_id": "1",
+            "source_url": "http://x.nl",
+            "related_ministry_tooi": "",
+            "children": [],
+            "end_date": None,
+        }
+
+    def test_types_are_stored_in_source_order(self):
+        """The first-listed type is the main type (position 0)."""
+        sync_organization_tree(self._multi_type_org(["Inspectie", "Zelfstandig bestuursorgaan"]), None, dry_run=False)
+
+        org = OrganizationUnit.objects.get(name="Multi")
+        ordered = list(org.organization_types.order_by("organizationunittype__position").values_list("name", flat=True))
+        assert ordered == ["Inspectie", "Zelfstandig bestuursorgaan"]
+        assert org.main_type.name == "Inspectie"
+
+    def test_resync_with_reordered_types_updates_positions_and_logs_change(self):
+        sync_organization_tree(self._multi_type_org(["Inspectie", "Zelfstandig bestuursorgaan"]), None, dry_run=False)
+        org = OrganizationUnit.objects.get(name="Multi")
+        assert org.main_type.name == "Inspectie"
+
+        # Re-sync with the order swapped: main type changes, and it's a real change.
+        result = sync_organization_tree(
+            self._multi_type_org(["Zelfstandig bestuursorgaan", "Inspectie"]), None, dry_run=False
+        )
+        assert result.updated == 1
+
+        org.refresh_from_db()
+        assert org.main_type.name == "Zelfstandig bestuursorgaan"
+
     # Hierarchical Processing
 
     def test_syncs_nested_organizations(self):

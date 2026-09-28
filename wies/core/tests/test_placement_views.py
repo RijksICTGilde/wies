@@ -1,5 +1,6 @@
 import json
 import re
+from collections import Counter
 from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
@@ -18,7 +19,9 @@ from wies.core.models import (
     AssignmentOrganizationUnit,
     Colleague,
     Event,
+    OrganizationType,
     OrganizationUnit,
+    OrganizationUnitType,
     Placement,
     Service,
     Skill,
@@ -29,6 +32,7 @@ from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
+    _build_org_hierarchy,
     _get_colleague_assignments,
     _resolve_placement_panel,
 )
@@ -2165,6 +2169,143 @@ class ClientModalCountModeTest(TestCase):
     def test_unknown_count_mode_is_bad_request(self):
         self.client.force_login(self.auth_user)
         assert self.client.get(reverse("client-modal"), {"count_mode": "bogus"}).status_code == 400
+
+
+MNRE_BZK = "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"
+MNRE_IENW = "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130"
+
+
+class NestedOrgHierarchyTest(TestCase):
+    """The four ministry-related types nest under their ministry by main type."""
+
+    def setUp(self):
+        self.ministerie = OrganizationType.objects.create(name="Ministerie", label="Ministerie")
+        self.agentschap = OrganizationType.objects.create(name="Agentschap", label="Agentschap")
+        self.inspectie = OrganizationType.objects.create(name="Inspectie", label="Inspectie")
+        self.zbo = OrganizationType.objects.create(
+            name="Zelfstandig bestuursorgaan", label="Zelfstandig bestuursorgaan"
+        )
+        self.gemeente = OrganizationType.objects.create(name="Gemeente", label="Gemeente")
+
+        self.bzk = OrganizationUnit.objects.create(name="BZK", label="Ministerie van BZK", tooi_identifier=MNRE_BZK)
+        self.bzk.organization_types.add(self.ministerie)
+
+    def _typed(self, unit, *types):
+        for position, org_type in enumerate(types):
+            OrganizationUnitType.objects.create(organization_unit=unit, organization_type=org_type, position=position)
+
+    def _find(self, hierarchy, label):
+        for node in hierarchy:
+            if node.get("label") == label:
+                return node
+            found = self._find(node.get("children", []), label)
+            if found:
+                return found
+        return None
+
+    def test_agentschap_nests_under_its_ministry(self):
+        odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
+        self._typed(odi, self.agentschap)
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+
+        ministeries = self._find(hierarchy, "Ministeries")
+        bzk_node = self._find(ministeries["children"], "Ministerie van BZK")
+        folder = self._find(bzk_node["children"], "Agentschappen")
+        assert folder is not None
+        assert folder["group"] is True
+        assert folder["id"] == f"group-{self.bzk.public_id}-Agentschap"
+        assert self._find(folder["children"], "ODI") is not None
+        # And NOT in a top-level Agentschappen folder.
+        assert self._find([n for n in hierarchy if n.get("label") != "Ministeries"], "Agentschappen") is None
+
+    def test_multi_type_unit_nests_under_its_main_type_only(self):
+        anvs = OrganizationUnit.objects.create(name="ANVS", label="ANVS", related_ministry_tooi=MNRE_BZK)
+        self._typed(anvs, self.inspectie, self.zbo)  # main type = Inspectie
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        bzk_node = self._find(hierarchy, "Ministerie van BZK")
+
+        assert self._find(bzk_node["children"], "Inspecties") is not None
+        assert self._find(bzk_node["children"], "Zelfstandige bestuursorganen") is None
+        # Exactly one nested occurrence of the unit.
+        inspecties = self._find(bzk_node["children"], "Inspecties")
+        assert len(inspecties["children"]) == 1
+
+    def test_unresolvable_ministry_falls_back_to_top_level(self):
+        orphan = OrganizationUnit.objects.create(name="Orphan", label="Orphan", related_ministry_tooi="")
+        self._typed(orphan, self.agentschap)
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        top_agentschappen = self._find(hierarchy, "Agentschappen")
+        assert top_agentschappen is not None
+        assert self._find(top_agentschappen["children"], "Orphan") is not None
+
+    def test_non_nestable_type_stays_top_level(self):
+        gem = OrganizationUnit.objects.create(name="Gem", label="Gemeente X", related_ministry_tooi=MNRE_BZK)
+        self._typed(gem, self.gemeente)
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        gemeenten = self._find(hierarchy, "Gemeenten")
+        assert gemeenten is not None
+        assert self._find(gemeenten["children"], "Gemeente X") is not None
+        bzk_node = self._find(hierarchy, "Ministerie van BZK")
+        assert self._find(bzk_node.get("children", []), "Gemeente X") is None
+
+    def test_nested_placements_roll_up_into_ministry(self):
+        odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
+        self._typed(odi, self.agentschap)
+        counts = Counter({odi.id: 3})
+
+        hierarchy = _build_org_hierarchy(counts, [], prune_empty=True)
+        bzk_node = self._find(hierarchy, "Ministerie van BZK")
+        assert bzk_node["nr_of_placements"] == 3
+        folder = self._find(bzk_node["children"], "Agentschappen")
+        assert folder["nr_of_placements"] == 3
+
+    def test_prune_drops_empty_nested_folder_and_ministry(self):
+        odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
+        self._typed(odi, self.agentschap)
+
+        # No placements anywhere → BZK (no direct placements) and its folder prune away.
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=True)
+        assert self._find(hierarchy, "Ministerie van BZK") is None
+
+
+class ScopedOrgTypeInFilterTest(TestCase):
+    """org_type_in scopes a type filter to one ministry's linked units."""
+
+    def setUp(self):
+        self.agentschap = OrganizationType.objects.create(name="Agentschap", label="Agentschap")
+        self.bzk = OrganizationUnit.objects.create(name="BZK", tooi_identifier=MNRE_BZK)
+        self.ienw = OrganizationUnit.objects.create(name="IenW", tooi_identifier=MNRE_IENW)
+        self.odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
+        self.odi.organization_types.add(self.agentschap)
+        self.other_agentschap = OrganizationUnit.objects.create(name="Other", related_ministry_tooi=MNRE_IENW)
+        self.other_agentschap.organization_types.add(self.agentschap)
+
+    def _matched_ids(self, params):
+        view = PlacementListView()
+        view.request = RequestFactory().get("/", params)
+        return set(view.apply_org_filter(OrganizationUnit.objects.all(), "id__in").values_list("id", flat=True))
+
+    def test_selecting_ministry_includes_its_linked_units(self):
+        matched = self._matched_ids({"org": str(self.bzk.public_id)})
+        assert self.odi.id in matched
+        assert self.other_agentschap.id not in matched
+
+    def test_org_type_in_scopes_to_the_ministry(self):
+        matched = self._matched_ids({"org_type_in": f"{self.bzk.public_id}:Agentschap"})
+        assert self.odi.id in matched
+        assert self.other_agentschap.id not in matched
+
+    def test_global_org_type_still_matches_all(self):
+        matched = self._matched_ids({"org_type": "Agentschap"})
+        assert {self.odi.id, self.other_agentschap.id} <= matched
+
+    def test_unknown_ministry_matches_nothing(self):
+        matched = self._matched_ids({"org_type_in": "00000000-0000-0000-0000-000000000000:Agentschap"})
+        assert self.odi.id not in matched
 
 
 def _modal_org_self_counts(response) -> dict[int, int]:

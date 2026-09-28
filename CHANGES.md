@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 690: (migration) the organisation picker nests agentschappen, zbo's, adviescolleges and inspecties under their ministry instead of in separate top-level type folders
 
 ## 2026-09-24
 

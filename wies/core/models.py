@@ -462,6 +462,31 @@ class OrganizationType(models.Model):
         return f"{self.label} ({self.name})"
 
 
+class OrganizationUnitType(models.Model):
+    """Ordered through table for ``OrganizationUnit.organization_types``.
+
+    ``position`` records the order the types were listed in the source
+    (organisaties.overheid.nl). Position 0 is the "main" type — the one the
+    overheid.nl breadcrumb files the organization under (e.g. an org that is
+    both Inspectie and Zelfstandig bestuursorgaan, listed in that order, is
+    shown under Inspecties). A plain M2M would lose this order.
+    """
+
+    organization_unit = models.ForeignKey("OrganizationUnit", on_delete=models.CASCADE)
+    organization_type = models.ForeignKey("OrganizationType", on_delete=models.CASCADE)
+    # Default so ``.add()``/``.set()`` keep working; the sync sets it explicitly.
+    position = models.PositiveSmallIntegerField(default=0)
+
+    class Meta:
+        ordering = ["position"]
+        constraints = [
+            models.UniqueConstraint(fields=["organization_unit", "organization_type"], name="uniq_unit_type")
+        ]
+
+    def __str__(self):
+        return f"{self.organization_unit} → {self.organization_type} (#{self.position})"
+
+
 class OrganizationUnit(models.Model):
     """Hierarchical organization model for Dutch government organizations."""
 
@@ -477,7 +502,7 @@ class OrganizationUnit(models.Model):
         verbose_name="Afkortingen",
         help_text='Lijst van afkortingen, bijv. ["BZK", "MinBZK"]',
     )
-    organization_types = models.ManyToManyField("OrganizationType", blank=True)
+    organization_types = models.ManyToManyField("OrganizationType", through="OrganizationUnitType", blank=True)
     related_ministry_tooi = models.CharField(
         max_length=200,
         default="",
@@ -575,6 +600,15 @@ class OrganizationUnit(models.Model):
         if self.abbreviations and len(self.abbreviations) > 0:
             return self.abbreviations[0]
         return ""
+
+    @property
+    def main_type(self) -> OrganizationType | None:
+        """The primary type: the one listed first in the source (position 0).
+
+        Mirrors the overheid.nl breadcrumb convention — an org with several
+        types is filed under its first-listed type.
+        """
+        return self.organization_types.order_by("organizationunittype__position").first()
 
 
 class OrganizationUnitRole(models.TextChoices):

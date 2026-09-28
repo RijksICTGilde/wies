@@ -1,4 +1,36 @@
-(function () {
+"use strict";
+
+// Maps a tree node id to the filter input (name + value) it submits:
+//   "self-<uuid>"               → org_self=<uuid>   (the org itself, not its subtree)
+//   "group-<uuid>-<type>"       → org_type_in=<uuid>:<type>  (a ministry's orgs of that type)
+//   "group-<type>"              → org_type=<type>   (every org of that type)
+//   "<uuid>" (a plain org node) → org=<uuid>        (the org and its subtree)
+// The scoped nested-folder form is matched before the plain group form because
+// a ministry uuid contains hyphens that would otherwise be read as the type.
+var _SCOPED_GROUP_RE = /^group-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})-(.+)$/;
+
+function orgNodeIdToFilter(nodeId) {
+  var scoped = nodeId.match(_SCOPED_GROUP_RE);
+  if (nodeId.indexOf("self-") === 0) {
+    return { name: "org_self", value: nodeId.slice(5) };
+  }
+  if (scoped) {
+    return { name: "org_type_in", value: scoped[1] + ":" + scoped[2] };
+  }
+  if (nodeId.indexOf("group-") === 0) {
+    return { name: "org_type", value: nodeId.slice(6) };
+  }
+  return { name: "org", value: nodeId };
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { orgNodeIdToFilter: orgNodeIdToFilter };
+}
+
+// Skip the DOM wiring when loaded outside a browser (e.g. the node test runner
+// requires this file for orgNodeIdToFilter).
+if (typeof document !== "undefined")
+  (function () {
   "use strict";
 
   var dataEl = document.getElementById("client-data");
@@ -78,20 +110,13 @@
         for (var entry of treeState.explicitSelections) {
           var nodeId = entry[0];
           var label = entry[1];
+          var mapped = orgNodeIdToFilter(nodeId);
           var input = document.createElement("input");
           input.type = "hidden";
           input.dataset.filterInput = "";
           input.dataset.label = label;
-          if (nodeId.startsWith("self-")) {
-            input.name = "org_self";
-            input.value = nodeId.slice(5);
-          } else if (nodeId.startsWith("group-")) {
-            input.name = "org_type";
-            input.value = nodeId.slice(6);
-          } else {
-            input.name = "org";
-            input.value = nodeId;
-          }
+          input.name = mapped.name;
+          input.value = mapped.value;
           orgInputsContainer.appendChild(input);
         }
       }

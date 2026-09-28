@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from django.db.models import Q
 from django.utils import timezone
 
-from wies.core.models import OrganizationType, OrganizationUnit
+from wies.core.models import OrganizationType, OrganizationUnit, OrganizationUnitType
 from wies.core.services.events import create_event
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,21 @@ class SyncResult:
             deleted=self.deleted + other.deleted,
             errors=self.errors + other.errors,
         )
+
+
+def set_ordered_types(unit: OrganizationUnit, organization_types: list[OrganizationType]) -> None:
+    """Replace a unit's types, recording the source order as ``position``.
+
+    Position 0 is the main type (the overheid.nl breadcrumb category). A plain
+    ``.set()`` would lose this order, so we rewrite the through rows explicitly.
+    """
+    OrganizationUnitType.objects.filter(organization_unit=unit).delete()
+    OrganizationUnitType.objects.bulk_create(
+        [
+            OrganizationUnitType(organization_unit=unit, organization_type=org_type, position=position)
+            for position, org_type in enumerate(organization_types)
+        ]
+    )
 
 
 def parse_organization_element(
@@ -249,8 +264,6 @@ def sync_organization_tree(
             organization_types.append(organization_type)
 
     try:
-        # Separate ManyToMany fields from regular attributes
-        m2m_fields = {"organization_types": organization_types}
         new_org_attributes = {
             "name": org_data["name"],
             "label": org_data["label"],
@@ -285,15 +298,16 @@ def sync_organization_tree(
                 if not dry_run:
                     setattr(db_org, attribute, new_value)
 
-            # Check ManyToMany fields separately
-            for m2m_field, new_value in m2m_fields.items():
-                # Compare by PK sets to avoid order-dependent comparison
-                current_pks = set(getattr(db_org, m2m_field).values_list("pk", flat=True))
-                new_pks = {obj.pk for obj in new_value}
-                if current_pks != new_pks:
-                    changes[m2m_field] = {"old": sorted(current_pks), "new": sorted(new_pks)}
-                if not dry_run:
-                    getattr(db_org, m2m_field).set(new_value)
+            # organization_types is ordered (position 0 = main type), so compare
+            # the ordered PK list — a reordering is a real change worth logging.
+            current_type_pks = list(
+                db_org.organization_types.order_by("organizationunittype__position").values_list("pk", flat=True)
+            )
+            new_type_pks = [obj.pk for obj in organization_types]
+            if current_type_pks != new_type_pks:
+                changes["organization_types"] = {"old": current_type_pks, "new": new_type_pks}
+            if not dry_run:
+                set_ordered_types(db_org, organization_types)
 
             if changes:
                 if not dry_run:
@@ -348,9 +362,8 @@ def sync_organization_tree(
 
             if not dry_run:
                 new_org = OrganizationUnit.objects.create(**new_org_attributes)
-                # Set ManyToMany fields after creation
-                for m2m_field, value in m2m_fields.items():
-                    getattr(new_org, m2m_field).set(value)
+                # Set the types in source order (position 0 = main type).
+                set_ordered_types(new_org, organization_types)
                 logger.info("Created: %s", new_org)
                 create_event(
                     object_type="OrganizationUnit",
