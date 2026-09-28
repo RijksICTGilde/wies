@@ -10,24 +10,24 @@
     <nldd-list-item>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-icon-cell size="20">
-    {% if task.status == 'completed' %}
+    {% if task.status == "completed" %}
       <nldd-icon name="check-circle-filled" color="success"></nldd-icon>
-    {% elif task.status == 'failed' %}
+    {% elif task.status == "failed" %}
       <nldd-icon name="exclamation-triangle-filled" color="error"></nldd-icon>
-    {% elif task.status == 'running' %}
+    {% elif task.status == "running" %}
       <nldd-icon size="inherit" name="arrow-2-counter-clockwise"></nldd-icon>
     {% else %}
       <nldd-icon size="inherit" name="clock"></nldd-icon>
     {% endif %}
     </nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    {% if task.status == 'pending' %}
+    {% if task.status == "pending" %}
       {% set status_label = "Wachtend" %}
-    {% elif task.status == 'running' %}
+    {% elif task.status == "running" %}
       {% set status_label = "Bezig" %}
-    {% elif task.status == 'completed' %}
+    {% elif task.status == "completed" %}
       {% set status_label = "Voltooid" %}
-    {% elif task.status == 'failed' %}
+    {% elif task.status == "failed" %}
       {% set status_label = "Mislukt" %}
     {% else %}
       {% set status_label = task.status|capitalize %}
