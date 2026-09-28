@@ -12,7 +12,8 @@
     </nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-text-cell vertical-alignment="top" divider-start>
-    <span slot="overline" title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</span>
+    <span slot="overline"
+          title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</span>
     <div>
       {{ event.sentence }}
       {# Only for a team entry naming someone not everyone may see; other fields
