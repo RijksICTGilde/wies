@@ -316,7 +316,8 @@ class Service(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
-    description = models.CharField(max_length=500, blank=True)
+    # Markdown; long enough for a role profile, short enough for the team row.
+    description = models.TextField(max_length=2000, blank=True)
     # The vacancy text of an aanvraag, apart from ``description`` (the role's
     # "Taken"), so a long posting does not become the placed colleague's cv text.
     request_description = models.TextField("Aanvraagomschrijving", blank=True, max_length=10000)

@@ -6,7 +6,6 @@ Permissions live in ``wies/core/permissions.py``.
 import urllib.parse
 from types import SimpleNamespace
 
-from django import forms
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import Http404
@@ -22,7 +21,7 @@ from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_busin
 from wies.core.services.dates import request_period_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
-from wies.core.widgets import ComboBoxSelect
+from wies.core.widgets import ComboBoxSelect, MarkdownEditorWidget
 
 
 def _business_manager_queryset(assignment=None):
@@ -487,7 +486,8 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Opdrachtomschrijving",
         help_text="Waar gaat de opdracht over?",
-        widget=forms.Textarea(attrs={"rows": 2}),
+        # Markdown source; rendered by the display partial (services/markdown.py).
+        widget=MarkdownEditorWidget(attrs={"rows": 4}),
         display="forms/displays/textarea.html",
     )
 

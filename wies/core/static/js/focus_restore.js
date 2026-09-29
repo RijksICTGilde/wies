@@ -53,6 +53,7 @@ var FOCUSABLE = [
   "nldd-search-field",
   "nldd-text-field",
   "nldd-multi-line-text-field",
+  "nldd-text-editor",
   "nldd-date-field",
   "nldd-number-field",
   "nldd-password-field",

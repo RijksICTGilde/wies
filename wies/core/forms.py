@@ -13,6 +13,7 @@ from django.utils import timezone
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
+from wies.core.widgets import MarkdownEditorWidget
 
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
@@ -517,9 +518,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
     description = forms.CharField(
         label="Taken",
         help_text="Wat doet deze collega op de opdracht?",
-        max_length=500,
+        max_length=2000,
         required=False,
-        widget=forms.Textarea(attrs={"rows": 2}),
+        widget=MarkdownEditorWidget(attrs={"rows": 3}),
     )
     request_description = ServiceEditables.request_description.form_field()
     location = ServiceEditables.location.form_field()

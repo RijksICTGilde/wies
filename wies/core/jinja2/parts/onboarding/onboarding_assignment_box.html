@@ -37,7 +37,7 @@
     <nldd-list-item>
     <nldd-text-cell width="120px" text="{{ 'Jouw rol' if entry.services|length == 1 else 'Rol' }}"></nldd-text-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
-    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
+    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description|markdown_text }}"></nldd-text-cell>
     </nldd-list-item>
   {% endfor %}
   </nldd-list>

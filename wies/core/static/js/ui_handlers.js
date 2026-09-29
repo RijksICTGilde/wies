@@ -20,21 +20,18 @@
     else window.location.assign("/");
   }
 
-  // Long free text (#576): a truncated and a full copy, one of them hidden.
-  // The toggle is an nldd-button, so its text, icon and state are attributes.
+  // Long free text (#576): rendered Markdown in one block, collapsed by a
+  // class on the wrapper. The toggle is an nldd-button, so its text, icon and
+  // state are set via attributes.
   function toggleLongText(toggle) {
-    var wrapper = toggle.closest(".inline-edit-long-text");
+    var wrapper = toggle.closest(".wies-long-text");
     if (!wrapper) return;
-    var truncated = wrapper.querySelector(".inline-edit-long-text__truncated");
-    var full = wrapper.querySelector(".inline-edit-long-text__full");
-    if (!truncated || !full) return;
-    var open = full.hidden;
-    full.hidden = !open;
-    truncated.hidden = open;
-    toggle.setAttribute("text", open ? "Toon minder" : "Toon meer");
-    toggle.setAttribute("start-icon", open ? "chevron-up" : "chevron-down");
+    var expanded = !wrapper.classList.contains("wies-long-text--collapsed");
+    wrapper.classList.toggle("wies-long-text--collapsed", expanded);
+    toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
+    toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
     // nldd-button forwards `expanded` as aria-expanded on its inner button.
-    toggle.toggleAttribute("expanded", open);
+    toggle.toggleAttribute("expanded", !expanded);
   }
 
   // "Toon meer" on an opdracht entry in a colleague's cv list unfolds the role

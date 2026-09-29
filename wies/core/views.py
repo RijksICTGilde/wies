@@ -58,6 +58,7 @@ from wies.core.inline_edit.forms import (
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.services import role_matrix as role_matrix_rules
+from wies.core.services.markdown import markdown_text
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
@@ -609,8 +610,11 @@ def _cv_taken(roles: list[dict], *, open_requested: bool) -> dict:
     """The Taken row: every role's text run together as the preview, one block
     per role behind "Toon meer", and the viewer's own pencil."""
     described = [role for role in roles if role["description"]]
-    preview = " ".join(role["description"] for role in described)
-    has_more = len(preview) > _CV_PREVIEW_CHARS
+    preview = " ".join(markdown_text(role["description"]) for role in described)
+    # The preview is plain words; a list or a second paragraph only shows in
+    # the per-role blocks, so those need "Toon meer" even when short.
+    multiline = any("\n" in role["description"].strip() for role in described)
+    has_more = len(preview) > _CV_PREVIEW_CHARS or multiline
     # The sheet is per role, so with several roles the pencil could not say which.
     own = roles[0] if len(roles) == 1 and roles[0]["edit_url"] else None
     return {
