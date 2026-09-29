@@ -263,7 +263,18 @@ a > nldd-icon:last-child {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--primitives-space-16, 16px);
+  gap: var(--primitives-space-24, 24px);
+  margin-top: var(--primitives-space-4, 4px);
+  /* Period and hours are facts, not commentary: the primary text colour, not
+     the muted one the supporting-text slot gives them. */
+  color: var(--semantics-content-color);
+}
+
+/* Icon and its value read as one unit; the icon inherits the muted text colour. */
+.wies-team-row-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
 }
 
 /* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the

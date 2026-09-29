@@ -250,6 +250,8 @@ def _build_assignment_panel_data(assignment, request, *, highlight=None, child_s
     highlighted = highlight or request.GET.get("collega", "")
     for row in team_rows:
         row["highlighted"] = bool(row["colleague"]) and str(row["colleague"].public_id) == highlighted
+        # The viewer's own row: its menu speaks of "mijn", not "teamlid".
+        row["is_viewer"] = bool(row["colleague"]) and row["colleague"].user_id == request.user.id
     data = {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -1383,13 +1385,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "assignment": single,
                     "assignments": assignments,
                     "roles": roles,
-                    # One opdracht: straight to it, this person highlighted.
-                    # More: the colleague panel lists them.
-                    "panel_url": _build_panel_url(
-                        self.request,
-                        collega=rows[0].colleague.public_id,
-                        **({"opdracht": single.public_id} if single else {}),
-                    ),
+                    # A person opens the colleague panel, whatever their number
+                    # of opdrachten; its cards lead on to each opdracht.
+                    "panel_url": _build_panel_url(self.request, collega=rows[0].colleague.public_id),
                 }
             )
         return cards

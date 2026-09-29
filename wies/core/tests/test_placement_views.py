@@ -894,6 +894,30 @@ class OwnRoleSheetPermissionTest(TestCase):
         assert "Omschrijving wijzigen" not in body
 
     @patch("wies.core.views.timezone")
+    def test_own_row_menu_says_mijn(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        grant_bdm(self.user_bob)
+        pl = self._placement(owner=self.colleague_bob)
+        panel = reverse("home") + f"?opdracht={pl.service.assignment.public_id}"
+
+        def row(body):
+            # Alice's row menu only: the panel head has a "Bekijk profiel" of
+            # its own, for the business manager.
+            return body.split("Acties voor Alice")[1].split("</nldd-menu>")[0]
+
+        self.client.force_login(self.user_alice)
+        alice = row(self.client.get(panel, headers=self.HX).content.decode())
+        assert "Mijn omschrijving wijzigen" in alice
+        assert "Mijn profiel" in alice
+        assert "Bekijk profiel" not in alice
+
+        self.client.force_login(self.user_bob)
+        bob = row(self.client.get(panel, headers=self.HX).content.decode())
+        assert "Teamlid wijzigen" in bob
+        assert "Bekijk profiel" in bob
+        assert "Mijn" not in bob
+
+    @patch("wies.core.views.timezone")
     def test_someone_elses_row_stays_the_read_only_panel(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(owner=self.colleague_bob)

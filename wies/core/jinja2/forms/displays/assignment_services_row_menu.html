@@ -5,16 +5,18 @@
   <nldd-cell>
   <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ member_name }}">
   <nldd-menu slot="popup" placement="bottom-end">
+  {# On the viewer's own row the items say "mijn": "Teamlid wijzigen" and
+     "Bekijk profiel" read as if about someone else. #}
   {% if user_can_edit %}
-    <nldd-menu-item text="{{ 'Teamlid wijzigen' if pl else 'Aanvraag wijzigen' }}" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&teamlid={{ svc.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+    <nldd-menu-item text="{{ 'Mijn rol wijzigen' if row.is_viewer else ('Teamlid wijzigen' if pl else 'Aanvraag wijzigen') }}" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&teamlid={{ svc.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}
   {# The placed consultant's own row: the description sheet, a child of this
      panel. A team editor already has the fuller item above. #}
   {% if pl and row.can_edit_role and not user_can_edit %}
-    <nldd-menu-item text="Omschrijving wijzigen" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&collega={{ row.colleague.public_id }}&teamlid={{ svc.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+    <nldd-menu-item text="Mijn omschrijving wijzigen" icon="edit" hx-get="?opdracht={{ row.assignment_public_id }}&collega={{ row.colleague.public_id }}&teamlid={{ svc.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}
   {% if pl %}
-    <nldd-menu-item text="Bekijk profiel" icon="user" hx-get="?collega={{ row.colleague.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+    <nldd-menu-item text="{{ 'Mijn profiel' if row.is_viewer else 'Bekijk profiel' }}" icon="user" hx-get="?collega={{ row.colleague.public_id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}
   {% if user_can_edit %}
     <nldd-menu-divider></nldd-menu-divider>

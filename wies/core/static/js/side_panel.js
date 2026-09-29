@@ -194,9 +194,27 @@
       });
   }
 
+  // Reserve the scrollbar's width inside the panel. With sticky-header the
+  // scroller is a div in nldd-page's shadow root, out of reach of app.css, and
+  // the component sets no scrollbar-gutter itself; without it "Toon meer"
+  // shifts the whole panel a bar's width to the left when the bar appears.
+  // An adopted sheet, not an injected <style>: CSP allows no inline styles.
+  function reserveScrollbarGutter(page) {
+    if (!page.shadowRoot || !("adoptedStyleSheets" in page.shadowRoot)) return;
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(".page__scroll { scrollbar-gutter: stable; }");
+    page.shadowRoot.adoptedStyleSheets = [...page.shadowRoot.adoptedStyleSheets, sheet];
+  }
+
   function init() {
     // Open the sheet when the content was server-rendered (?collega=N on load).
     const content = document.getElementById(CONTENT_ID);
+    if (content) {
+      customElements
+        .whenDefined("nldd-page")
+        .then(() => content.updateComplete)
+        .then(() => reserveScrollbarGutter(content));
+    }
     if (content && content.innerHTML.trim()) {
       // show() before the first render leaves the dialog closed.
       const sheet = getSheet();

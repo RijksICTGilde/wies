@@ -21,21 +21,19 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       </nldd-cell>
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
       <nldd-text-cell divider-start>
-      <span>
-        {{ row.colleague.name }}
-        {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
-      </span>
+      <span>{{ row.colleague.name }}</span>
       {% set hours = row.hours_per_week if row.show_hours else none %}
-      {% if pl.start_date or pl.end_date or hours %}
+      {% if row.skill_name or pl.start_date or pl.end_date or hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
-          {% if pl.start_date and pl.end_date %}
-            {{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}
-          {% elif pl.start_date %}
-            Vanaf {{ pl.start_date|datum_nl }}
-          {% elif pl.end_date %}
-            t/m {{ pl.end_date|datum_nl }}
+          {# The role leads the second line, so the name stands alone. Icons
+             are decorative: the text says what the number is. #}
+          {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
+          {% if pl.start_date or pl.end_date %}
+            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+              {%- if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}{% elif pl.start_date %}Vanaf {{ pl.start_date|datum_nl }}{% else %}t/m {{ pl.end_date|datum_nl }}{% endif -%}
+            </span>
           {% endif %}
-          {% if hours %}<span>{{ hours }} uur</span>{% endif %}
+          {% if hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ hours }} uur</span>{% endif %}
           {# A visible non-active row carries a note; only an ended one also a
              label (see visibility_rules.LABELS). #}
           {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
@@ -79,14 +77,12 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       <span>Aanvraag: {{ row.skill_name }}</span>
       {% if (svc and (svc.start_date or svc.end_date)) or row.hours_per_week %}
         <span slot="supporting-text" class="wies-team-row-meta">
-          {% if svc and svc.start_date and svc.end_date %}
-            {{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}
-          {% elif svc and svc.start_date %}
-            Vanaf {{ svc.start_date|datum_nl }}
-          {% elif svc and svc.end_date %}
-            t/m {{ svc.end_date|datum_nl }}
+          {% if svc and (svc.start_date or svc.end_date) %}
+            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+              {%- if svc.start_date and svc.end_date %}{{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}{% elif svc.start_date %}Vanaf {{ svc.start_date|datum_nl }}{% else %}t/m {{ svc.end_date|datum_nl }}{% endif -%}
+            </span>
           {% endif %}
-          {% if row.hours_per_week %}<span>{{ row.hours_per_week }} uur</span>{% endif %}
+          {% if row.hours_per_week %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.hours_per_week }} uur</span>{% endif %}
         </span>
       {% endif %}
       </nldd-text-cell>

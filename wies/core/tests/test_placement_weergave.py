@@ -262,16 +262,16 @@ class TestPersonCards:
         assert list(cards) == ["Jan de Vries"]
         assert len(cards["Jan de Vries"]["assignments"]) == 2
 
-    def test_single_assignment_card_opens_the_opdracht_with_the_person_highlighted(self):
-        """One assignment: straight to its panel, this person's row picked out."""
+    def test_single_assignment_card_links_to_the_colleague(self):
+        """A person opens the colleague panel, also with one assignment; the
+        opdracht is one click on from there."""
         colleague = _make_colleague("Jan de Vries")
-        assignment = _make_assignment("Cloud Migratie")
-        _place(colleague, assignment, self.skill)
+        _place(colleague, _make_assignment("Cloud Migratie"), self.skill)
 
         card = self._cards()["Jan de Vries"]
         assert card["assignment"] is not None
-        assert f"opdracht={assignment.public_id}" in card["panel_url"]
         assert f"collega={colleague.public_id}" in card["panel_url"]
+        assert "opdracht=" not in card["panel_url"]
         assert "plaatsing=" not in card["panel_url"]
 
     def test_multiple_assignments_card_links_to_the_colleague(self):

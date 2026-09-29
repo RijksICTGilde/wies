@@ -947,7 +947,7 @@ class ServiceHoursPermissionTest(TestCase):
             f"?opdracht={assignment.public_id}&collega={self.colleague.public_id}&teamlid={self.service.public_id}"
         )
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "Omschrijving wijzigen" in body
+        assert "Mijn omschrijving wijzigen" in body
         assert edit_link in body
         other = _consultant("Ander", "ander@x.nl")
         client.force_login(other.user)
