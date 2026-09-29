@@ -43,6 +43,7 @@
        document, and long texts also arrive in panels and the timeline via htmx
        swaps. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
+    <script src="{{ app_asset('js/text_editor.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
     {# Not deferred: member_form.js ships inside the teamlid sheet and runs
        during parse on a direct load, before deferred scripts. #}

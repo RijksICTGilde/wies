@@ -109,6 +109,7 @@ class _BaseFormMixin:
             "CheckboxInput": "accessible-label",
             "ComboBoxSelect": "accessible-label",
             "MultiselectDropdown": "accessible-label",
+            "MarkdownEditorWidget": "accessible-label",
         }.get(field.widget.__class__.__name__)
         if label_attr and field.label:
             field.widget.attrs.setdefault(label_attr, str(field.label))
@@ -157,6 +158,7 @@ class NlddFormMixin(_BaseFormMixin):
         "RadioSelect": "forms/widgets/radio.html",
         "DateInput": "forms/widgets/date.html",
         "Textarea": "forms/widgets/textarea.html",
+        "MarkdownEditorWidget": "forms/widgets/text_editor.html",
         "CheckboxInput": "forms/widgets/checkbox.html",
         "OrgPickerWidget": "widgets/org_picker.html",
     }

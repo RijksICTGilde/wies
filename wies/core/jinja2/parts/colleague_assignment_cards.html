@@ -74,7 +74,7 @@
          CSS ellipsis if it is long; open, the full text below takes over. The
          first line and not the whole text run together: what you see closed
          is then exactly how the open text starts. #}
-      <p class="wies-card__preview"{% if open %} hidden{% endif %}><span class="wies-card__preview-text">{{ taken_label() }} {{ (described[0].description|trim).splitlines()[0] }}</span></p>
+      <p class="wies-card__preview"{% if open %} hidden{% endif %}><span class="wies-card__preview-text">{{ taken_label() }} {{ (described[0].description|trim).splitlines()[0]|markdown_text }}</span></p>
     {% endif %}
     {% if has_more %}
     <div class="wies-card__more"{% if not open %} hidden{% endif %}>
@@ -92,10 +92,9 @@
             </div>
           {% endif %}
           {% if role.description %}
-            {# The same "Taken:" as the closed preview, inline before the text.
-               pre-wrap keeps the description's line breaks; the template's own
-               whitespace is trimmed. #}
-            <p class="wies-role-description"><span class="wies-role-description__text">{{ taken_label((" als " ~ role.skill) if roles|length > 1 else "") }} {{ role.description -}}</span></p>
+            {# The same "Taken:" as the closed preview, then the description
+               rendered from Markdown (services/markdown.py). #}
+            <div class="wies-role-description">{{ taken_label((" als " ~ role.skill) if roles|length > 1 else "") }} <nldd-rich-text spacing="tight">{{ role.description|markdown }}</nldd-rich-text></div>
           {% endif %}
         </div>
       {% endfor %}

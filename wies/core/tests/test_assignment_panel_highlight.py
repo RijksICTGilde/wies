@@ -116,10 +116,12 @@ class AssignmentPanelHighlightTest(TestCase):
         )
         assert '<div class="wies-card__more" hidden>' in closed
         assert '<p class="wies-card__preview" hidden>' in opened
+        # Open, the description is rendered from Markdown.
         assert (
-            '<span class="wies-role-description__text"><span class="wies-text-secondary">Taken:</span> '
-            "Begeleidt de overgang.\n\nEn stemt af met de directie.</span></p>" in opened
+            '<div class="wies-role-description"><span class="wies-text-secondary">Taken:</span> '
+            '<nldd-rich-text spacing="tight"><p>Begeleidt de overgang.</p>' in opened
         )
+        assert "<p>En stemt af met de directie.</p>" in opened
         placement = Placement.objects.get(colleague=self.anke)
         # The placement's own dates on the card, not the opdracht's period.
         assert f"{placement.start_date.day} " in closed.split("wies-card__meta")[1].split("</div>")[0]

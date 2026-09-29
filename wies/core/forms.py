@@ -12,6 +12,7 @@ from django.utils import timezone
 from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
+from wies.core.widgets import MarkdownEditorWidget
 
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
@@ -429,9 +430,9 @@ class ServiceForm(NlddFormMixin, forms.Form):
     skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
         label="Omschrijving rol",
-        max_length=500,
+        max_length=2000,
         required=False,
-        widget=forms.Textarea(attrs={"rows": 2}),
+        widget=MarkdownEditorWidget(attrs={"rows": 3}),
     )
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     # Hours belong to the role, so an open aanvraag carries them too. A list,

@@ -97,3 +97,13 @@ class OrgPickerWidget(forms.Widget):
         ctx["widget"]["prefix"] = self.prefix
         ctx["widget"]["selections"] = selections
         return ctx
+
+
+class MarkdownEditorWidget(forms.Textarea):
+    """nldd-text-editor for a Markdown description.
+
+    A Textarea subclass on purpose: the audit text treats a Textarea field as
+    long text and shows a Van/Naar block for it (the audit renderer in views.py).
+    """
+
+    template_name = "forms/widgets/text_editor.html"

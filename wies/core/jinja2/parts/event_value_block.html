@@ -1,19 +1,11 @@
-{# An audit value with its label ("Van:" / "Naar:") and a show-more toggle above
-   300 characters.
+{# An audit value with its label ("Van:" / "Naar:"), rendered like the
+   description it came from, collapsed past 300 characters or 5 lines.
 
    Params:
      label (required): "Van" or "Naar".
-     value (required): the text to show.
+     value (required): the Markdown source to show.
 #}
 <div class="wies-event-value">
   <span class="wies-text-secondary">{{ label }}:</span>
-  {% if value|length > 300 %}
-    <span class="inline-edit-long-text">
-      <span class="inline-edit-long-text__truncated">{{ value[:300] }}…</span>
-      <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
-      <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text"></nldd-button>
-    </span>
-  {% else %}
-    <span class="inline-edit-long-text__truncated">{{ value }}</span>
-  {% endif %}
+  {% include "forms/displays/textarea.html" %}
 </div>

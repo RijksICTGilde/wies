@@ -15,28 +15,18 @@
     else window.location.assign("/");
   }
 
-  // Long free text (#576): two spans swapped via hidden. The toggle is an
-  // nldd-button, so its text, icon and state are set via attributes.
+  // Long free text (#576): rendered Markdown in one block, collapsed by a
+  // class on the wrapper. The toggle is an nldd-button, so its text, icon and
+  // state are set via attributes.
   function toggleLongText(toggle) {
-    var wrapper = toggle.parentElement;
-    var truncated = wrapper && wrapper.querySelector(".inline-edit-long-text__truncated");
-    var full = wrapper && wrapper.querySelector(".inline-edit-long-text__full");
-    if (!truncated || !full) return;
-    var expanded = full.hidden === false;
-    truncated.hidden = !expanded;
-    full.hidden = expanded;
-    var text = expanded ? "Toon meer" : "Toon minder";
-    toggle.setAttribute("text", text);
-    // A card toggle names its subject ("Toon meer over de rol ..."); the verb
-    // in that name follows the state too.
-    var label = toggle.getAttribute("accessible-label");
-    if (label) toggle.setAttribute("accessible-label", label.replace(/^Toon (meer|minder)/, text));
+    var wrapper = toggle.closest(".wies-long-text");
+    if (!wrapper) return;
+    var expanded = !wrapper.classList.contains("wies-long-text--collapsed");
+    wrapper.classList.toggle("wies-long-text--collapsed", expanded);
+    toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
+    toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
     // nldd-button forwards `expanded` as aria-expanded on its inner button.
     toggle.toggleAttribute("expanded", !expanded);
-    // The role-description toggle has no icon; only flip one that is there.
-    if (toggle.hasAttribute("start-icon")) {
-      toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
-    }
   }
 
   // An opdracht card on a colleague panel or profile: a click anywhere on the
@@ -54,7 +44,10 @@
     toggle.toggleAttribute("expanded", open);
     toggle.setAttribute("icon", open ? "chevron-up" : "chevron-down");
     var label = toggle.getAttribute("text") || "";
-    toggle.setAttribute("text", label.replace(/^(Meer|Minder) over/, open ? "Minder over" : "Meer over"));
+    toggle.setAttribute(
+      "text",
+      label.replace(/^(Meer|Minder) over/, open ? "Minder over" : "Meer over"),
+    );
   }
 
   var CLICK_ACTIONS = {

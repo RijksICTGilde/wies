@@ -23,6 +23,7 @@ from wies.core.editables import (
 from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.services.markdown import markdown_excerpt, markdown_text, render_markdown
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
 from wies.core.services.version import get_app_version, get_nldd_version
@@ -228,6 +229,9 @@ def environment(**options):
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["markdown"] = render_markdown
+    env.filters["markdown_excerpt"] = markdown_excerpt
+    env.filters["markdown_text"] = markdown_text
     env.filters["bankduur"] = bankduur
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
