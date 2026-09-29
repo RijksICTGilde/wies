@@ -22,3 +22,30 @@ function showSavedToast(label) {
 document.addEventListener("inline-edit-saved", (e) =>
   showSavedToast(e.detail?.label),
 );
+
+// The server collapses a rendered description on a guess (source length and
+// line count); only the browser knows whether anything is actually hidden.
+// A block that fits opens up and loses its toggle.
+function uncollapseWhatFits(root) {
+  var blocks = root.querySelectorAll
+    ? root.querySelectorAll(".wies-long-text--collapsed")
+    : [];
+  blocks.forEach(function (block) {
+    var body = block.querySelector(".wies-long-text__body");
+    if (!body || body.scrollHeight > body.clientHeight + 1) return;
+    block.classList.remove("wies-long-text--collapsed");
+    var toggle = block.querySelector(".inline-edit-show-more");
+    if (toggle) toggle.remove();
+  });
+}
+
+document.addEventListener("htmx:afterSettle", function (event) {
+  if (event.detail && event.detail.target)
+    uncollapseWhatFits(event.detail.target);
+});
+// A panel rendered with the page: measure once the components have laid out.
+customElements.whenDefined("nldd-rich-text").then(function () {
+  requestAnimationFrame(function () {
+    uncollapseWhatFits(document);
+  });
+});

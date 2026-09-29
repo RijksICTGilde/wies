@@ -631,6 +631,74 @@ class AssignmentPanelRenderTest(TestCase):
         assert keep.id in ids
         assert gone.id not in ids
 
+    def test_edit_sheet_offers_the_markdown_editor_with_its_formatting_bar(self):
+        body = self.client.get(
+            f"/?opdracht={self.assignment.public_id}&bewerken=1",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        ).content.decode()
+        assert '<nldd-text-editor variant="input-field" name="extra_info"' in body
+        assert 'data-editor-group="inline"' in body
+        assert 'data-editor-group="list"' in body
+        assert 'data-editor-toggle="link"' in body
+        assert "data-editor-heading" in body
+        assert "<nldd-multi-line-text-field" not in body
+
+    def test_edit_post_with_too_long_description_marks_the_editor_invalid(self):
+        body = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
+            {
+                "name": "Hernoemd",
+                "extra_info": "x" * 5001,
+                "owner": str(self.colleague.public_id),
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.public_id),
+                "org-0-role": "PRIMARY",
+                "terug_url": f"/?opdracht={self.assignment.public_id}",
+            },
+        ).content.decode()
+        editor = body.split("<nldd-text-editor")[1].split(">")[0]
+        assert "invalid" in editor
+        assert 'error-message="' in editor
+
+    def test_markdown_is_stored_as_source_and_shown_rendered(self):
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/bewerken/",
+            {
+                "name": "Hernoemd",
+                "extra_info": "Eerst **vet**\n\n- punt",
+                "owner": str(self.colleague.public_id),
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.public_id),
+                "org-0-role": "PRIMARY",
+                "terug_url": f"/?opdracht={self.assignment.public_id}",
+            },
+        )
+        assert response.status_code == 204
+        self.assignment.refresh_from_db()
+        assert self.assignment.extra_info == "Eerst **vet**\n\n- punt"
+        panel = self.client.get(
+            f"/?opdracht={self.assignment.public_id}",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        ).content.decode()
+        assert "<strong>vet</strong>" in panel
+        assert "<li>punt</li>" in panel
+        # The editor gets the source back, not the HTML.
+        sheet = self.client.get(
+            f"/?opdracht={self.assignment.public_id}&bewerken=1",
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        ).content.decode()
+        assert 'value="Eerst **vet**' in sheet
+
     def test_edit_post_saves_and_redirects_back(self):
         """A valid POST saves every field and sends the client back to the
         parent panel via HX-Location."""

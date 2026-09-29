@@ -36,7 +36,9 @@
       {# A link inside the card: hx_link_guard.js catches the click so htmx
          fills the panel; ui_handlers.js leaves a click on a link alone. #}
       <nldd-title size="5">
-      <h3><nldd-link class="wies-card__link" href="{{ assignment.assignment_url }}" text="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML"></nldd-link></h3>
+      <h3>
+        <nldd-link class="wies-card__link" href="{{ assignment.assignment_url }}" text="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML"></nldd-link>
+      </h3>
       </nldd-title>
       {% if has_more %}
         <nldd-icon-button class="wies-card__toggle" size="sm" variant="neutral-transparent" icon="{{ 'chevron-up' if open else 'chevron-down' }}" tooltip-timing="never" text="{{ 'Minder over' if open else 'Meer over' }} {{ assignment.name }}" {% if open %}expanded{% endif %} data-action="toggle-card"></nldd-icon-button>
@@ -74,32 +76,33 @@
          CSS ellipsis if it is long; open, the full text below takes over. The
          first line and not the whole text run together: what you see closed
          is then exactly how the open text starts. #}
-      <p class="wies-card__preview"{% if open %} hidden{% endif %}><span class="wies-card__preview-text">{{ taken_label() }} {{ (described[0].description|trim).splitlines()[0] }}</span></p>
+      <p class="wies-card__preview"{% if open %} hidden{% endif %}><span class="wies-card__preview-text">{{ taken_label() }} {{ (described[0].description|trim).splitlines()[0] |markdown_text }}</span></p>
     {% endif %}
     {% if has_more %}
-    <div class="wies-card__more"{% if not open %} hidden{% endif %}>
-      {% for role in roles %}
-        <div class="wies-card__role">
-          {# With one role the card's own line already has the dates and
+      <div class="wies-card__more"{% if not open %} hidden{% endif %}>
+        {% for role in roles %}
+          <div class="wies-card__role">
+            {# With one role the card's own line already has the dates and
              hours; with several, each role gets its own. #}
-          {% if roles|length > 1 %}
-            {% if not role.description %}<p class="wies-card__label">{{ role.skill }}</p>{% endif %}
-            <div class="wies-team-row-meta">
-              <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-                {%- if role.start and role.end %}{{ role.start|datum_nl }} t/m {{ role.end|datum_nl }}{% elif role.start %}Vanaf {{ role.start|datum_nl }}{% elif role.end %}t/m {{ role.end|datum_nl }}{% else %}Geen periode{% endif -%}
-              </span>
-              {% if role.hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ role.hours }} uur per week</span>{% endif %}
-            </div>
-          {% endif %}
-          {% if role.description %}
-            {# The same "Taken:" as the closed preview, inline before the text.
-               pre-wrap keeps the description's line breaks; the template's own
-               whitespace is trimmed. #}
-            <p class="wies-role-description"><span class="wies-role-description__text">{{ taken_label((" als " ~ role.skill) if roles|length > 1 else "") }} {{ role.description -}}</span></p>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
+            {% if roles|length > 1 %}
+              {% if not role.description %}<p class="wies-card__label">{{ role.skill }}</p>{% endif %}
+              <div class="wies-team-row-meta">
+                <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+                  {%- if role.start and role.end %}{{ role.start|datum_nl }} t/m {{ role.end|datum_nl }}{% elif role.start %}Vanaf {{ role.start|datum_nl }}{% elif role.end %}t/m {{ role.end|datum_nl }}{% else %}Geen periode{% endif -%}
+                </span>
+                {% if role.hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ role.hours }} uur per week</span>{% endif %}
+              </div>
+            {% endif %}
+            {% if role.description %}
+              {# The same "Taken:" as the closed preview, then the description
+               rendered from Markdown (services/markdown.py). #}
+              <div class="wies-role-description">
+                {{ taken_label((" als " ~ role.skill) if roles|length > 1 else "") }} <nldd-rich-text spacing="tight">{{ role.description|markdown }}</nldd-rich-text>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
     {% endif %}
     </nldd-container>
     </nldd-card>
