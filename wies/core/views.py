@@ -4052,13 +4052,17 @@ def _build_org_hierarchy(
         return result
 
     # Top-level grouping for the remaining roots (nested units already removed).
+    # A unit lands under its MAIN type only (type_labels is ordered by position,
+    # so [0] is the overheid.nl breadcrumb type). Grouping a multi-type org under
+    # every one of its types would emit the same node id in several folders, and
+    # the tree keys nodes/rows by id — the duplicates then collapse and break
+    # checkbox sync. One folder per unit mirrors the nested-folder rule.
     grouped: dict[str, list[dict]] = {}
     ungrouped: list[dict] = []
     for unit in roots:
         type_labels = root_types.get(unit["id"], [])
         if type_labels:
-            for type_label in type_labels:
-                grouped.setdefault(type_label, []).append(unit)
+            grouped.setdefault(type_labels[0], []).append(unit)
         else:
             ungrouped.append(unit)
 

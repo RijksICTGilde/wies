@@ -460,3 +460,69 @@ describe("collapseToParent: false (filter picker behaviour)", function () {
     assert.ok(!ts.explicitSelections.has("child"));
   });
 });
+
+describe("groupSelectsChildren (assignment picker: virtual folders)", function () {
+  // Ministeries(group) > AZ(org) > Agentschappen(group) > ODI(org), Logius(org)
+  function groupTree() {
+    return [
+      {
+        id: "group-Min",
+        label: "Ministeries",
+        group: true,
+        children: [
+          {
+            id: "az",
+            label: "AZ",
+            children: [
+              {
+                id: "group-Ag",
+                label: "Agentschappen",
+                group: true,
+                children: [
+                  { id: "odi", label: "ODI" },
+                  { id: "logius", label: "Logius" },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+
+  var opts = { collapseToParent: false, groupSelectsChildren: true };
+
+  it("ticking a group selects the concrete orgs, not the folder", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Ag");
+    // Folder ticks (checkbox) but is not itself a selection (no grey fill).
+    assert.equal(ts.getNode("group-Ag").checked, true);
+    assert.ok(!ts.explicitSelections.has("group-Ag"));
+    // The concrete orgs beneath it are the selection.
+    assert.ok(ts.explicitSelections.has("odi"));
+    assert.ok(ts.explicitSelections.has("logius"));
+  });
+
+  it("ticking a real-org parent keeps the org itself as the selection", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("az");
+    assert.ok(ts.explicitSelections.has("az"));
+    assert.ok(!ts.explicitSelections.has("odi"));
+  });
+
+  it("descends through nested groups to the concrete orgs", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Min"); // top group over AZ (a real org)
+    assert.ok(ts.explicitSelections.has("az"));
+    assert.ok(!ts.explicitSelections.has("group-Min"));
+  });
+
+  it("unticking one child leaves the rest selected, folder unticked", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Ag");
+    ts.uncheck("odi");
+    assert.ok(ts.explicitSelections.has("logius"));
+    assert.ok(!ts.explicitSelections.has("odi"));
+    assert.ok(!ts.explicitSelections.has("group-Ag"));
+  });
+});

@@ -2241,6 +2241,41 @@ class NestedOrgHierarchyTest(TestCase):
         assert top_agentschappen is not None
         assert self._find(top_agentschappen["children"], "Orphan") is not None
 
+    def _count(self, hierarchy, label):
+        total = 0
+        for node in hierarchy:
+            if node.get("label") == label:
+                total += 1
+            total += self._count(node.get("children", []), label)
+        return total
+
+    def test_top_level_multi_type_root_appears_once_under_main_type(self):
+        # A multi-type root whose ministry does NOT resolve (NEa-like). It must
+        # land under its MAIN type only, not once per type — a duplicate node id
+        # across folders breaks the tree's checkbox sync.
+        nea = OrganizationUnit.objects.create(name="NEa", label="NEa", related_ministry_tooi="")
+        self._typed(nea, self.inspectie, self.agentschap, self.zbo)  # main = Inspectie
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+
+        assert self._count(hierarchy, "NEa") == 1
+        inspecties = self._find(hierarchy, "Inspecties")
+        assert inspecties is not None
+        assert self._find(inspecties["children"], "NEa") is not None
+        # Not under the other type folders.
+        assert self._find(hierarchy, "Agentschappen") is None
+        assert self._find(hierarchy, "Zelfstandige bestuursorganen") is None
+
+    def test_single_type_root_still_appears_under_its_type(self):
+        raad = OrganizationUnit.objects.create(name="Raad", label="Raad voor Energie", related_ministry_tooi="")
+        self._typed(raad, self.agentschap)
+
+        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        agentschappen = self._find(hierarchy, "Agentschappen")
+        assert agentschappen is not None
+        assert self._find(agentschappen["children"], "Raad voor Energie") is not None
+        assert self._count(hierarchy, "Raad voor Energie") == 1
+
     def test_non_nestable_type_stays_top_level(self):
         gem = OrganizationUnit.objects.create(name="Gem", label="Gemeente X", related_ministry_tooi=MNRE_BZK)
         self._typed(gem, self.gemeente)
