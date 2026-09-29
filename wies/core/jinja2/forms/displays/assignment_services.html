@@ -31,7 +31,12 @@ profiel" with the actions. #}
       <nldd-text-cell divider-start>
       {% if has_actions %}
         {# htmx cancels the anchor's own navigation. #}
-        <a class="wies-quiet-link" href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false">{{ row.colleague.name }}</a>
+        <a class="wies-quiet-link"
+           href="{{ person_url }}"
+           hx-get="{{ person_url }}"
+           hx-target="#side-panel-content"
+           hx-swap="innerHTML"
+           hx-push-url="false">{{ row.colleague.name }}</a>
       {% else %}
         <span>{{ row.colleague.name }}</span>
       {% endif %}
