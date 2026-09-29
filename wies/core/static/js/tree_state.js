@@ -6,12 +6,20 @@
  * `collapseToParent` (default true): a fully checked parent replaces its
  * children as the selection. Off on the assignment form, where a parent means
  * only itself and collapsing would drop the children the user picked.
+ *
+ * `groupSelectsChildren` (default false): a checked GROUP node (a virtual type
+ * folder, `node.group`) is not itself a selection — it stands in for the
+ * concrete orgs under it. So the explicit selection lands on those concrete
+ * descendants, not the folder: the folder shows a tick but no "selected" fill,
+ * and the real orgs are what the form receives. On the assignment form only; the
+ * filter sidebar keeps the group node itself (it submits it as a type filter).
  */
 function TreeState(data, options) {
   this.nodes = new Map();
   this.roots = [];
   this.explicitSelections = new Map(); // nodeId → label
   this.collapseToParent = !options || options.collapseToParent !== false;
+  this.groupSelectsChildren = !!(options && options.groupSelectsChildren);
 
   this._buildIndex(data, null);
 }
@@ -59,7 +67,28 @@ TreeState.prototype.check = function (nodeId) {
       this.explicitSelections.delete(desc.id);
     }.bind(this),
   );
+  // A virtual group is not a selection itself: hand it down to the concrete
+  // orgs beneath it, so the folder ticks but does not read as "selected".
+  if (this.groupSelectsChildren && node.group) {
+    this.explicitSelections.delete(node.id);
+    this._selectConcreteDescendants(node);
+  }
   this._promoteAncestors(node);
+};
+
+// Put the explicit selection on the concrete (non-group) checked orgs under a
+// node, descending THROUGH nested groups. Used when a virtual folder is ticked.
+TreeState.prototype._selectConcreteDescendants = function (node) {
+  for (var i = 0; i < node.children.length; i++) {
+    var child = node.children[i];
+    if (child.group) {
+      this._selectConcreteDescendants(child);
+    } else if (child.checked && !child.indeterminate) {
+      this.explicitSelections.set(child.id, this._getLabel(child));
+    } else if (child.indeterminate) {
+      this._selectConcreteDescendants(child);
+    }
+  }
 };
 
 TreeState.prototype.uncheck = function (nodeId) {
