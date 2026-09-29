@@ -88,7 +88,7 @@ the buttons for whoever may keep them, on the user sheet and in the colleague
 panel alike. That matters here because the sheet opens wider than the hours do:
 Applicatiebeheer reaches it for the Rollen half and sees no hours.
 
-*Which* periods it shows is the surface's question and not the rule's: the panel
+_Which_ periods it shows is the surface's question and not the rule's: the panel
 lists the running and coming ones, the sheet the whole history. The two share the
 three write routes, which cannot tell them apart, so every button carries the
 surface it sits on (`?vanuit=paneel`) and the sheet posts back to the url it was
