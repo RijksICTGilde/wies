@@ -203,7 +203,10 @@
     if (!page.shadowRoot || !("adoptedStyleSheets" in page.shadowRoot)) return;
     const sheet = new CSSStyleSheet();
     sheet.replaceSync(".page__scroll { scrollbar-gutter: stable; }");
-    page.shadowRoot.adoptedStyleSheets = [...page.shadowRoot.adoptedStyleSheets, sheet];
+    page.shadowRoot.adoptedStyleSheets = [
+      ...page.shadowRoot.adoptedStyleSheets,
+      sheet,
+    ];
   }
 
   function init() {
