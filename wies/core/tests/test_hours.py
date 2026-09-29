@@ -395,11 +395,12 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Geen lopend contract." in panel
         assert "Niet ingevuld" not in panel
 
-    def test_panel_shows_the_block_read_only_to_a_beheerder(self):
+    def test_panel_shows_the_hours_as_one_line_read_only_to_a_beheerder(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "<h3>Contracturen</h3>" in body
-        assert "36 uur" in body
+        assert "<h3>Contracturen</h3>" not in body
+        assert 'class="wies-contract-line"' in body
+        assert "36 uur per week" in body
         assert "Contractperiode toevoegen" not in body
         assert "Verwijderen" not in body
 
@@ -407,8 +408,7 @@ class ColleaguePanelContractPeriodTest(TestCase):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "<h3>Contracturen</h3>" in body
-        assert "36 uur" in body
+        assert "36 uur per week" in body
         assert "Contractperiode toevoegen" not in body
         assert "Verwijderen" not in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])

@@ -430,10 +430,10 @@ class AssignmentEditAttributeTest(TestCase):
         )
         body = response.content.decode()
         assert 'text="Omschrijving"' in body
-        # "Toon meer" is bound by a delegated listener in inline_edit.js; loading
+        # "Toon meer" is bound by a delegated listener in ui_handlers.js; loading
         # that script only behind show_onboarding left the button dead here.
         page = self.client.get("/opdrachten/").content.decode()
-        assert "js/inline_edit.js" in page
+        assert "js/ui_handlers.js" in page
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
         # Editing runs via "Gegevens bewerken" at the top, not per row.
         assert "&veld=extra_info" not in body

@@ -15,8 +15,52 @@
     else window.location.assign("/");
   }
 
+  // Long free text (#576): two spans swapped via hidden. The toggle is an
+  // nldd-button, so its text, icon and state are set via attributes.
+  function toggleLongText(toggle) {
+    var wrapper = toggle.parentElement;
+    var truncated = wrapper && wrapper.querySelector(".inline-edit-long-text__truncated");
+    var full = wrapper && wrapper.querySelector(".inline-edit-long-text__full");
+    if (!truncated || !full) return;
+    var expanded = full.hidden === false;
+    truncated.hidden = !expanded;
+    full.hidden = expanded;
+    var text = expanded ? "Toon meer" : "Toon minder";
+    toggle.setAttribute("text", text);
+    // A card toggle names its subject ("Toon meer over de rol ..."); the verb
+    // in that name follows the state too.
+    var label = toggle.getAttribute("accessible-label");
+    if (label) toggle.setAttribute("accessible-label", label.replace(/^Toon (meer|minder)/, text));
+    // nldd-button forwards `expanded` as aria-expanded on its inner button.
+    toggle.toggleAttribute("expanded", !expanded);
+    // The role-description toggle has no icon; only flip one that is there.
+    if (toggle.hasAttribute("start-icon")) {
+      toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
+    }
+  }
+
+  // An opdracht card on a colleague panel or profile: a click anywhere on the
+  // card opens or closes it; the chevron button carries the state.
+  function toggleCard(el) {
+    var card = el.closest("nldd-card");
+    var more = card && card.querySelector(".wies-card__more");
+    if (!more) return;
+    var open = more.hidden;
+    more.hidden = !open;
+    var preview = card.querySelector(".wies-card__preview");
+    if (preview) preview.hidden = open;
+    var toggle = card.querySelector(".wies-card__toggle");
+    if (!toggle) return;
+    toggle.toggleAttribute("expanded", open);
+    toggle.setAttribute("icon", open ? "chevron-up" : "chevron-down");
+    var label = toggle.getAttribute("text") || "";
+    toggle.setAttribute("text", label.replace(/^(Meer|Minder) over/, open ? "Minder over" : "Meer over"));
+  }
+
   var CLICK_ACTIONS = {
     "history-back": goBack,
+    "toggle-long-text": toggleLongText,
+    "toggle-card": toggleCard,
   };
 
   function closestFrom(event, selector) {
@@ -33,9 +77,15 @@
     }
   });
 
+  var INTERACTIVE = "a, button, [href], [hx-get], [hx-post], [data-action]";
+
   document.addEventListener("click", function (event) {
     var el = closestFrom(event, "[data-action]");
     if (!el) return;
+    // A whole card can carry an action; a link or button inside it is its
+    // own click and must not also trigger the card's.
+    var inner = closestFrom(event, INTERACTIVE);
+    if (inner && inner !== el && el.contains(inner)) return;
     var action = CLICK_ACTIONS[el.getAttribute("data-action")];
     if (action) action(el);
   });

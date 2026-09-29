@@ -87,7 +87,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import is_bdm, is_staff_member
+from .roles import can_view_role_hours, is_bdm, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -164,7 +164,17 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` puts the panel in edit mode (the child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
+PANEL_PARAMS = (
+    "pagina",
+    "collega",
+    "opdracht",
+    "plaatsing",
+    "bewerken",
+    "teamlid",
+    "veld",
+    "nieuwe-opdracht",
+    "uitgeklapt",
+)
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -370,6 +380,7 @@ def _make_assignment_entry(
     return {
         "name": name,
         "id": aid,
+        "public_id": public_id,
         "tags": {},
         "assignment_url": url,
         "start_date": start_date,
@@ -401,10 +412,13 @@ def _get_colleague_assignments(request, colleague):
             "service__assignment__end_date",
             "service__skill__name",
             "service__description",
+            "service__hours_per_week",
         )
         .distinct()
     )
     placement_qs = annotate_placement_dates(placement_qs)
+    # Every placement here is this colleague's, so the hours rule is one answer.
+    show_hours = can_view_role_hours(request.user, Placement(colleague_id=colleague.id))
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
         start = placement.get("actual_start_date")
@@ -434,7 +448,14 @@ def _get_colleague_assignments(request, colleague):
             _merge_date_range(bucket[assignment_id], start, end)
         skill_name = placement["service__skill__name"]
         if skill_name:
-            bucket[assignment_id]["tags"][skill_name] = placement["service__description"]
+            # The open card shows the placement itself: its own dates, hours
+            # (under the hours rule) and the role description.
+            bucket[assignment_id]["tags"][skill_name] = {
+                "description": placement["service__description"],
+                "start": start,
+                "end": end,
+                "hours": placement["service__hours_per_week"] if show_hours else None,
+            }
 
     # BM roles (active and ended)
     bm_assignments = Assignment.objects.filter(owner=colleague).values_list(
@@ -488,7 +509,7 @@ def _get_colleague_assignments(request, colleague):
     # Convert tag sets to sorted lists for deterministic template rendering
     for assignment in (*active_by_id.values(), *historical_by_id.values()):
         assignment["tags"] = sorted(
-            [{"skill": name, "description": desc} for name, desc in assignment["tags"].items()],
+            [{"skill": name, **(info or {})} for name, info in assignment["tags"].items()],
             key=lambda t: t["skill"],
         )
         assignment["organization"] = primary_orgs.get(assignment["id"])
@@ -500,8 +521,15 @@ def _get_colleague_assignments(request, colleague):
 
 
 def _build_colleague_panel_data(colleague, request):
-    """Builds the colleague panel context, shared by both views."""
+    """Builds the colleague panel context, shared by both views.
+
+    ``?uitgeklapt=`` (an Assignment public_id) opens that opdracht card: the
+    way in from a team row, so the role you came from is in view at once.
+    """
     assignments = _get_colleague_assignments(request, colleague)
+    opened = request.GET.get("uitgeklapt", "")
+    for assignment in assignments:
+        assignment["expanded"] = str(assignment["public_id"]) == opened
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
@@ -2661,6 +2689,8 @@ def _contract_block(colleague, surface):
         "periods": periods,
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
+        # The panel shows the hours as one quiet line; the sheet keeps the list.
+        "surface": surface,
         "can_edit": surface == "user",
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,

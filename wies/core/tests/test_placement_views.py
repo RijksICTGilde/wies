@@ -901,8 +901,6 @@ class OwnRoleSheetPermissionTest(TestCase):
         panel = reverse("home") + f"?opdracht={pl.service.assignment.public_id}"
 
         def row(body):
-            # Alice's row menu only: the panel head has a "Bekijk profiel" of
-            # its own, for the business manager.
             return body.split("Acties voor Alice")[1].split("</nldd-menu>")[0]
 
         self.client.force_login(self.user_alice)
@@ -916,6 +914,35 @@ class OwnRoleSheetPermissionTest(TestCase):
         assert "Teamlid wijzigen" in bob
         assert "Bekijk profiel" in bob
         assert "Mijn" not in bob
+
+    @patch("wies.core.views.timezone")
+    def test_a_row_without_actions_is_one_link_to_the_person_with_a_chevron(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        grant_bdm(self.user_bob)
+        pl = self._placement(owner=self.colleague_bob)
+        panel = reverse("home") + f"?opdracht={pl.service.assignment.public_id}"
+        person_url = (
+            f'href="?collega={self.colleague_alice.public_id}&amp;uitgeklapt={pl.service.assignment.public_id}"'
+        )
+
+        def alice_row(body):
+            return next(r for r in body.split("<nldd-list-item")[1:] if "Alice" in r)
+
+        self.client.force_login(self.user_carol)
+        carol = alice_row(self.client.get(panel, headers=self.HX).content.decode())
+        # The opening tag carries the link; no name link, no menu.
+        assert person_url in carol.split(">")[0]
+        assert 'icon="chevron-right"' in carol
+        assert "<nldd-link" not in carol
+        assert "Acties voor Alice" not in carol
+
+        self.client.force_login(self.user_bob)
+        bob = alice_row(self.client.get(panel, headers=self.HX).content.decode())
+        assert person_url not in bob.split(">")[0]
+        assert f'<a class="wies-quiet-link" {person_url}' in bob
+        assert 'text="Bekijk profiel" icon="user" ' + person_url.replace("href=", "hx-get=") in bob
+        assert "Acties voor Alice" in bob
+        assert 'icon="chevron-right"' not in bob
 
     @patch("wies.core.views.timezone")
     def test_someone_elses_row_stays_the_read_only_panel(self, mock_tz):

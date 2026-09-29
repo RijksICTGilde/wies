@@ -5,7 +5,12 @@ vacancies-first via _services_display_context). Edit mode swaps the inline-edit
 wrapper for the formset and back. Historical placements carry a privacy note for
 the placed colleague and Business Managers (BDM role), hidden from other viewers.
 
-Rows are not clickable: every action runs through the row menu in the last cell. #}
+The team list is the way to the person: the colleague panel holds the role
+description. A row with nothing to do on it (a consultant looking at a team) is
+one link with a chevron, like the cards on a profile. A row with actions cannot
+be: nldd-list-item wraps its slots in one anchor, and the row menu cannot sit
+inside that, so there the name is a quiet link and the menu also holds "Bekijk
+profiel" with the actions. #}
 {% if value %}
   <nldd-list variant="box-tinted">
   {% for row in value %}
@@ -13,15 +18,23 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {% set pl = row.placement %}
       {% set svc = row.service %}
       {% set member_name = row.colleague.name %}
+      {% set has_actions = user_can_edit or row.can_edit_role %}
+      {# uitgeklapt: the colleague panel opens this opdracht's card. #}
+      {% set person_url = "?collega=" ~ row.colleague.public_id ~ "&uitgeklapt=" ~ row.assignment_public_id %}
       {# The row of the colleague you came in on (?collega=) is not marked, only
          scrolled into view by side_panel.js; the class is that hook. #}
-      <nldd-list-item {% if row.highlighted %}class="wies-team-row--highlighted"{% endif %}>
+      <nldd-list-item {% if row.highlighted %}class="wies-team-row--highlighted"{% endif %} {% if not has_actions %}href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>
       <nldd-cell>
       <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
       </nldd-cell>
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
       <nldd-text-cell divider-start>
-      <span>{{ row.colleague.name }}</span>
+      {% if has_actions %}
+        {# htmx cancels the anchor's own navigation. #}
+        <a class="wies-quiet-link" href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false">{{ row.colleague.name }}</a>
+      {% else %}
+        <span>{{ row.colleague.name }}</span>
+      {% endif %}
       {% set hours = row.hours_per_week if row.show_hours else none %}
       {% if row.skill_name or pl.start_date or pl.end_date or hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
@@ -40,26 +53,14 @@ Rows are not clickable: every action runs through the row menu in the last cell.
           {% if row.privacy_warning_text %}{{ privacy_chip(row.privacy_warning_text, size="sm") }}{% endif %}
         </span>
       {% endif %}
-      {% if row.description %}
-        {# About two lines, then the same "Toon meer" as the opdracht
-           description (inline_edit.js), inline after the cut. The cut is by
-           characters: the server cannot know where a line wraps, and 180 is
-           about two lines at 800px. #}
-        <span slot="supporting-text" class="wies-team-row-description">
-          {% if row.description|length > 180 %}
-            <span class="inline-edit-long-text">
-              <span class="inline-edit-long-text__truncated">{{ row.description[:180]|trim }}…</span>
-              <span class="inline-edit-long-text__full" hidden>{{ row.description }}</span>
-              <nldd-button class="inline-edit-show-more" size="xs" variant="accent-transparent" text="Toon meer"></nldd-button>
-            </span>
-          {% else %}
-            {{ row.description }}
-          {% endif %}
-        </span>
-      {% endif %}
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      {% include "forms/displays/assignment_services_row_menu.html" %}
+      {% if has_actions %}
+        {% include "forms/displays/assignment_services_row_menu.html" %}
+      {% else %}
+        {# Decorative, as on the cards: the whole row is the link. #}
+        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20"></nldd-icon-cell>
+      {% endif %}
       </nldd-list-item>
     {% else %}
       {% set svc = row.service %}
@@ -87,7 +88,9 @@ Rows are not clickable: every action runs through the row menu in the last cell.
       {% endif %}
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      {% include "forms/displays/assignment_services_row_menu.html" %}
+      {% if user_can_edit %}
+        {% include "forms/displays/assignment_services_row_menu.html" %}
+      {% endif %}
       </nldd-list-item>
     {% endif %}
   {% endfor %}

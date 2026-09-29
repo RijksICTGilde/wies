@@ -87,16 +87,64 @@ class AssignmentPanelHighlightTest(TestCase):
         body = self._panel(collega=ended.public_id)
         assert HIGHLIGHT in _row_of(body, "Eva Eind")
 
-    def test_the_description_is_on_every_row_with_a_toggle_past_two_lines(self):
-        long_text = "Begeleidt de overgang naar het nieuwe platform. " * 5
-        Service.objects.filter(placements__colleague=self.anke).update(description=long_text.strip())
+    def test_a_viewer_without_actions_gets_the_row_as_a_link_without_description(self):
+        Service.objects.filter(placements__colleague=self.anke).update(description="Begeleidt de overgang.")
+
+        row = _row_of(self._panel(), "Anke Jacobs")
+
+        assert f'href="?collega={self.anke.public_id}&amp;uitgeklapt={self.assignment.public_id}"' in row.split(">")[0]
+        assert 'icon="chevron-right"' in row
+        assert "<nldd-link" not in row
+        assert "Acties voor" not in row
+        assert f"collega={self.anke.id}" not in row
+        assert "Begeleidt de overgang." not in row
+
+    def test_the_opdracht_card_holds_the_placement_and_opens_for_uitgeklapt(self):
+        Service.objects.filter(placements__colleague=self.anke).update(
+            description="Begeleidt de overgang.\n\nEn stemt af met de directie.", hours_per_week=24
+        )
+        headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+        panel = reverse("home") + f"?collega={self.anke.public_id}"
+
+        closed = self.client.get(panel, headers=headers).content.decode()
+        opened = self.client.get(panel + f"&uitgeklapt={self.assignment.public_id}", headers=headers).content.decode()
+
+        assert "Begeleidt de overgang." in closed
+        assert (
+            '<span class="wies-card__preview-text"><span class="wies-text-secondary">Taken:</span> '
+            "Begeleidt de overgang.</span></p>" in closed
+        )
+        assert '<div class="wies-card__more" hidden>' in closed
+        assert '<p class="wies-card__preview" hidden>' in opened
+        assert (
+            '<span class="wies-role-description__text"><span class="wies-text-secondary">Taken:</span> '
+            "Begeleidt de overgang.\n\nEn stemt af met de directie.</span></p>" in opened
+        )
+        placement = Placement.objects.get(colleague=self.anke)
+        # The placement's own dates on the card, not the opdracht's period.
+        assert f"{placement.start_date.day} " in closed.split("wies-card__meta")[1].split("</div>")[0]
+        # The viewer is a team mate, not a planner: no hours for them.
+        assert "uur per week" not in closed
+        self.client.force_login(self.anke_user)
+        own = self.client.get(panel, headers=headers).content.decode()
+        # On the card's own line, not behind the fold.
+        assert "24 uur per week" in own.split("wies-card__more")[0]
+        # A description that fits the preview line has nothing behind the fold.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")
-
-        body = self._panel()
-
-        assert "Toon meer" in _row_of(body, "Anke Jacobs")
-        assert "Kort." in _row_of(body, "Bram Smit")
-        assert "Toon meer" not in _row_of(body, "Bram Smit")
+        bram = self.client.get(reverse("home") + f"?collega={self.bram.public_id}", headers=headers).content.decode()
+        assert "Taken:</span> Kort.</span></p>" in bram
+        assert "wies-card__toggle" not in bram
+        assert "wies-card__more" not in bram
+        self.client.force_login(self.viewer)
+        assert 'icon="chevron-down"' in closed
+        assert " expanded" not in closed.split("wies-card__toggle")[1].split(">")[0]
+        assert '<div class="wies-card__more">' in opened
+        assert 'icon="chevron-up"' in opened
+        assert " expanded" in opened.split("wies-card__toggle")[1].split(">")[0]
+        assert (
+            f'<nldd-link class="wies-card__link" href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}" text="Zaaksysteem"'
+            in closed
+        )
 
 
 class SidePanelSheetTest(TestCase):
