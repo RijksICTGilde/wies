@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: the opdracht description and the role description are a text editor with Markdown formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; they are shown formatted on the panel, the team row, in onboarding and on the timeline
-- ?: (migration) a role description may be 2000 characters instead of 500, and may be left empty
+- 694: the opdracht description and the role description are a text editor with Markdown formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; they are shown formatted on the panel, the team row, in onboarding and on the timeline
+- 694: (migration) a role description may be 2000 characters instead of 500, and may be left empty
 - 693: the placement panel is gone: a person card opens the colleague panel; an opdracht card on a colleague's profile and an old `?plaatsing=` link open the opdracht panel, scrolled to that colleague's team row
 - 693: the opdracht cards on the colleague panel and the profile are compact and open on a click (name, role, the placement's dates and hours, the client and one line of the role description as "Taken:"; open: the description in full; the name links to the opdracht), one card per row; the team row opens the colleague panel with that opdracht's card open: for a viewer without actions on the row it is one link with a chevron, like the cards on a profile, and for a team editor the name is a quiet link and the row menu offers "Bekijk profiel" (was "Bekijk teamlid") next to the actions; a placed consultant edits their own description via "Omschrijving wijzigen"
 - 693: the side panel is 800px wide instead of 640px, on every page that opens it
