@@ -195,26 +195,6 @@ describe("modal sheet", () => {
 // ─── notifications ───────────────────────────────────────────
 
 describe("notifications", () => {
-  it("tells NLDD about a sheet that was modal before the first notification", () => {
-    const modal = sheet(true);
-    const events = [];
-    modal.contains = () => false;
-    modal.dispatchEvent = (e) => events.push([e.type, e.bubbles]);
-    doc.sheets = [modal];
-    doc.getElementById = (id) =>
-      id === "nldd-notification-region" ? {} : region;
-    live().nudgeNotifications();
-    assert.deepEqual(events, [["open", true]]);
-
-    modal.contains = () => true;
-    live().nudgeNotifications();
-    assert.equal(
-      events.length,
-      1,
-      "already inside the sheet: nothing to nudge",
-    );
-  });
-
   it("reads a notification once, nested in a wrapper or added and moved in one batch", () => {
     const wrapper = el({});
     wrapper.querySelectorAll = () => [el({ text: "Merk is toegevoegd." })];

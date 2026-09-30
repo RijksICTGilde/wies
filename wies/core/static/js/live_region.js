@@ -16,7 +16,6 @@ var REJECTED = "[invalid][unmet]";
 // toast, or the region every nldd-notification moves itself into a moment
 // later. That move adds it a second time, which the repeat window swallows.
 var NOTIFICATION = "nldd-notification[text]";
-var NOTIFICATION_REGION = "nldd-notification-region";
 var SHEET_REGION = "[data-wies-live]";
 // Not the ones inside a role="alert": those are read out by that already.
 
@@ -89,21 +88,6 @@ LiveRegion.prototype.prepareSheets = function () {
     region.setAttribute("data-wies-live", "");
     sheets[i].appendChild(region);
   }
-};
-
-// NLDD moves its notification box into the topmost modal overlay, but it only
-// starts listening for overlays opening once the first notification has
-// joined, so a sheet that was already open is unknown to it and the box stays
-// on the body, behind the backdrop and inert. Sending the `open` event that
-// sheet would have sent had it opened later puts it on NLDD's list, and NLDD
-// relocates the box itself, carrying the notifications along.
-LiveRegion.prototype.nudgeNotifications = function () {
-  var sheet = this.modalSheet();
-  var region = this.doc.getElementById(NOTIFICATION_REGION);
-  if (!sheet || !region || sheet.contains(region)) return;
-  if (typeof sheet.dispatchEvent !== "function" || typeof Event !== "function")
-    return;
-  sheet.dispatchEvent(new Event("open", { bubbles: true }));
 };
 
 LiveRegion.prototype.region = function () {
@@ -218,7 +202,6 @@ LiveRegion.prototype.handleNotifications = function (nodes) {
     return self.loadTexts.indexOf(text) === -1;
   });
   if (!messages.length) return;
-  this.nudgeNotifications();
   this.announce(messages.join(". "));
 };
 
