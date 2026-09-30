@@ -221,7 +221,8 @@ class AssignmentCreateTest(TestCase):
         assert "hx-swap-oob" in html
         assert "Banner Opdracht" in html
         assert "is aangemaakt" in html
-        assert "Bekijk opdracht" in html
+        # The panel that opens is the opdracht, so the banner carries no link to it.
+        assert 'text="Bekijk opdracht"' not in html
 
 
 class AssignmentListButtonTest(TestCase):

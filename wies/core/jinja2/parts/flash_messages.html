@@ -8,14 +8,7 @@
 <div id="flash-messages"
      {% if flash_oob %}hx-swap-oob="outerHTML"{% endif %}>
   {% for message in get_messages(request) %}
-    {% set link = message.extra_tags|parse_message_link %}
     {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
-    {% if link %}
-      <nldd-notification variant="{{ _variant }}" text="{{ message }}">
-      <nldd-button slot="actions" size="sm" variant="inherit-tinted" text="{{ link.text }}" href="{{ link.url }}"></nldd-button>
-      </nldd-notification>
-    {% else %}
-      <nldd-notification variant="{{ _variant }}" text="{{ message }}"></nldd-notification>
-    {% endif %}
+    <nldd-notification variant="{{ _variant }}" text="{{ message }}"></nldd-notification>
   {% endfor %}
 </div>

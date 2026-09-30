@@ -4636,11 +4636,8 @@ def assignment_create_sheet(request):
         path = f"{return_to}{sep}opdracht={assignment.public_id}"
         # base.html does not reload on the panel swap that follows HX-Location,
         # so assignment_panel_content.html swaps the banner in separately (OOB).
-        messages.success(
-            request,
-            f'Opdracht "{assignment.name}" is aangemaakt.',
-            extra_tags=f"link:{path}|Bekijk opdracht",
-        )
+        # No link to the opdracht: HX-Location opens its panel already.
+        messages.success(request, f'Opdracht "{assignment.name}" is aangemaakt.')
         response = HttpResponse(status=204)
         response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
         return response
