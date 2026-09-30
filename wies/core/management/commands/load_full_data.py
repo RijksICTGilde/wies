@@ -694,7 +694,7 @@ def seed_base_organizations() -> None:
 
     # Nestable units: DB roots (no parent) linked to a ministry only via
     # related_ministry_tooi. The picker nests them under that ministry by their
-    # main type. See _build_org_hierarchy. The dual-type unit's main type is
+    # main type. See build_org_hierarchy. The dual-type unit's main type is
     # Inspectie, so it nests under Inspecties (mirrors overheid.nl).
     ministry_tooi = dict(BASE_MINISTRIES)
     bzk = ministry_tooi["Binnenlandse Zaken en Koninkrijksrelaties"]

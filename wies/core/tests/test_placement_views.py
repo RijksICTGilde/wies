@@ -26,12 +26,11 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.roles import BDM_GROUP_NAME
-from wies.core.services.organizations import get_org_descendant_ids
+from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
-    _build_org_hierarchy,
     _get_colleague_assignments,
     _resolve_placement_panel,
 )
@@ -2210,7 +2209,7 @@ class NestedOrgHierarchyTest(TestCase):
         odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
         self._typed(odi, self.agentschap)
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
 
         ministeries = self._find(hierarchy, "Ministeries")
         bzk_node = self._find(ministeries["children"], "Ministerie van BZK")
@@ -2226,7 +2225,7 @@ class NestedOrgHierarchyTest(TestCase):
         anvs = OrganizationUnit.objects.create(name="ANVS", label="ANVS", related_ministry_tooi=MNRE_BZK)
         self._typed(anvs, self.inspectie, self.zbo)  # main type = Inspectie
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
         bzk_node = self._find(hierarchy, "Ministerie van BZK")
 
         assert self._find(bzk_node["children"], "Inspecties van BZK") is not None
@@ -2239,7 +2238,7 @@ class NestedOrgHierarchyTest(TestCase):
         orphan = OrganizationUnit.objects.create(name="Orphan", label="Orphan", related_ministry_tooi="")
         self._typed(orphan, self.agentschap)
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
         top_agentschappen = self._find(hierarchy, "Agentschappen")
         assert top_agentschappen is not None
         assert self._find(top_agentschappen["children"], "Orphan") is not None
@@ -2259,7 +2258,7 @@ class NestedOrgHierarchyTest(TestCase):
         nea = OrganizationUnit.objects.create(name="NEa", label="NEa", related_ministry_tooi="")
         self._typed(nea, self.inspectie, self.agentschap, self.zbo)  # main = Inspectie
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
 
         assert self._count(hierarchy, "NEa") == 1
         inspecties = self._find(hierarchy, "Inspecties")
@@ -2273,7 +2272,7 @@ class NestedOrgHierarchyTest(TestCase):
         raad = OrganizationUnit.objects.create(name="Raad", label="Raad voor Energie", related_ministry_tooi="")
         self._typed(raad, self.agentschap)
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
         agentschappen = self._find(hierarchy, "Agentschappen")
         assert agentschappen is not None
         assert self._find(agentschappen["children"], "Raad voor Energie") is not None
@@ -2283,7 +2282,7 @@ class NestedOrgHierarchyTest(TestCase):
         gem = OrganizationUnit.objects.create(name="Gem", label="Gemeente X", related_ministry_tooi=MNRE_BZK)
         self._typed(gem, self.gemeente)
 
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
         gemeenten = self._find(hierarchy, "Gemeenten")
         assert gemeenten is not None
         assert self._find(gemeenten["children"], "Gemeente X") is not None
@@ -2295,7 +2294,7 @@ class NestedOrgHierarchyTest(TestCase):
         self._typed(odi, self.agentschap)
         counts = Counter({odi.id: 3})
 
-        hierarchy = _build_org_hierarchy(counts, [], prune_empty=True)
+        hierarchy = build_org_hierarchy(counts, [], prune_empty=True)
         bzk_node = self._find(hierarchy, "Ministerie van BZK")
         assert bzk_node["nr_of_placements"] == 3
         folder = self._find(bzk_node["children"], "Agentschappen van BZK")
@@ -2306,7 +2305,7 @@ class NestedOrgHierarchyTest(TestCase):
         self._typed(odi, self.agentschap)
 
         # No placements anywhere → BZK (no direct placements) and its folder prune away.
-        hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=True)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=True)
         assert self._find(hierarchy, "Ministerie van BZK") is None
 
 
