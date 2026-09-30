@@ -44,7 +44,6 @@ from wies.core.models import (
     LabelCategory,
     OrganizationType,
     OrganizationUnit,
-    OrganizationUnitType,
     Placement,
     Service,
     Skill,
@@ -681,6 +680,8 @@ def seed_base_organizations() -> None:
             tooi_identifier=tooi,
         )
         unit.organization_types.add(ministerie)
+        unit.main_type = ministerie
+        unit.save(update_fields=["main_type"])
         ministries[name] = unit
 
     for name, tooi, parent_name in BASE_SUBORGS:
@@ -688,11 +689,13 @@ def seed_base_organizations() -> None:
             name=name, label=name, tooi_identifier=tooi, parent=ministries.get(parent_name)
         )
         unit.organization_types.add(onderdeel)
+        unit.main_type = onderdeel
+        unit.save(update_fields=["main_type"])
 
     # Nestable units: DB roots (no parent) linked to a ministry only via
     # related_ministry_tooi. The picker nests them under that ministry by their
-    # main type (position 0). See _build_org_hierarchy. The dual-type unit lists
-    # Inspectie first, so it nests under Inspecties (mirrors overheid.nl).
+    # main type. See _build_org_hierarchy. The dual-type unit's main type is
+    # Inspectie, so it nests under Inspecties (mirrors overheid.nl).
     ministry_tooi = dict(BASE_MINISTRIES)
     bzk = ministry_tooi["Binnenlandse Zaken en Koninkrijksrelaties"]
     ienw = ministry_tooi["Infrastructuur en Waterstaat"]
@@ -722,9 +725,9 @@ def seed_base_organizations() -> None:
             abbreviations=abbrevs,
             tooi_identifier=tooi,
             related_ministry_tooi=related_tooi,
+            main_type=ordered_types[0],  # first-listed is the main type
         )
-        for position, org_type in enumerate(ordered_types):
-            OrganizationUnitType.objects.create(organization_unit=unit, organization_type=org_type, position=position)
+        unit.organization_types.set(ordered_types)
 
 
 def assign_roles(rng: random.Random, count: int) -> list[str]:

@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 from django.db.models import Q
 from django.utils import timezone
 
-from wies.core.models import OrganizationType, OrganizationUnit, OrganizationUnitType
+from wies.core.models import OrganizationType, OrganizationUnit
 from wies.core.services.events import create_event
 
 logger = logging.getLogger(__name__)
@@ -76,19 +76,18 @@ class SyncResult:
         )
 
 
-def set_ordered_types(unit: OrganizationUnit, organization_types: list[OrganizationType]) -> None:
-    """Replace a unit's types, recording the source order as ``position``.
+def set_types_and_main(unit: OrganizationUnit, organization_types: list[OrganizationType]) -> None:
+    """Replace a unit's types (unordered set) and record its main type.
 
-    Position 0 is the main type (the overheid.nl breadcrumb category). A plain
-    ``.set()`` would lose this order, so we rewrite the through rows explicitly.
+    The main type is the first-listed source type — the overheid.nl breadcrumb
+    category the org is filed under. It is stored as its own ``main_type`` FK;
+    ``organization_types`` itself carries no order.
     """
-    OrganizationUnitType.objects.filter(organization_unit=unit).delete()
-    OrganizationUnitType.objects.bulk_create(
-        [
-            OrganizationUnitType(organization_unit=unit, organization_type=org_type, position=position)
-            for position, org_type in enumerate(organization_types)
-        ]
-    )
+    unit.organization_types.set(organization_types)
+    main_type = organization_types[0] if organization_types else None
+    if unit.main_type_id != (main_type.pk if main_type else None):
+        unit.main_type = main_type
+        unit.save(update_fields=["main_type"])
 
 
 def parse_organization_element(
@@ -305,16 +304,18 @@ def sync_organization_tree(
                 if not dry_run:
                     setattr(db_org, attribute, new_value)
 
-            # organization_types is ordered (position 0 = main type), so compare
-            # the ordered PK list — a reordering is a real change worth logging.
-            current_type_pks = list(
-                db_org.organization_types.order_by("organizationunittype__position").values_list("pk", flat=True)
-            )
-            new_type_pks = [obj.pk for obj in organization_types]
+            # The type set is unordered; log a change when its membership differs.
+            current_type_pks = set(db_org.organization_types.values_list("pk", flat=True))
+            new_type_pks = {obj.pk for obj in organization_types}
             if current_type_pks != new_type_pks:
-                changes["organization_types"] = {"old": current_type_pks, "new": new_type_pks}
+                changes["organization_types"] = {"old": sorted(current_type_pks), "new": sorted(new_type_pks)}
+            # The main type (first-listed source type) is its own field, so a
+            # change there — even without a set change — is worth logging.
+            new_main_pk = organization_types[0].pk if organization_types else None
+            if db_org.main_type_id != new_main_pk:
+                changes["main_type"] = {"old": db_org.main_type_id, "new": new_main_pk}
             if not dry_run:
-                set_ordered_types(db_org, organization_types)
+                set_types_and_main(db_org, organization_types)
 
             if changes:
                 if not dry_run:
@@ -369,8 +370,8 @@ def sync_organization_tree(
 
             if not dry_run:
                 new_org = OrganizationUnit.objects.create(**new_org_attributes)
-                # Set the types in source order (position 0 = main type).
-                set_ordered_types(new_org, organization_types)
+                # First-listed source type becomes main_type; the rest form the set.
+                set_types_and_main(new_org, organization_types)
                 logger.info("Created: %s", new_org)
                 create_event(
                     object_type="OrganizationUnit",
@@ -604,7 +605,8 @@ def resolve_related_ministry(org: OrganizationUnit) -> OrganizationUnit | None:
     """
     if org.parent_id or not org.related_ministry_tooi:
         return None
-    main = org.main_type
+    # Fall back to any type when main_type is unset (e.g. not yet synced).
+    main = org.main_type or org.organization_types.first()
     if main is None or main.name not in NESTED_ORG_TYPES:
         return None
     return OrganizationUnit.objects.filter(tooi_identifier=org.related_ministry_tooi).exclude(id=org.id).first()
@@ -614,14 +616,14 @@ def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_label: str |
     """Root org ids that nest under the given ministries in the picker (boom).
 
     Same rule as ``_build_org_hierarchy`` and ``resolve_related_ministry``: an org
-    nests under a ministry only when it is a DB root (no parent), its MAIN type
-    (the type at ``position`` 0, the overheid.nl breadcrumb category) is in
-    ``NESTED_ORG_TYPES``, and its ``related_ministry_tooi`` points at one of the
-    given ministries. Pass ``type_label`` to restrict to a single nestable type
-    (the ``org_type_in`` facet); it is ignored when not itself nestable.
+    nests under a ministry only when it is a DB root (no parent), its ``main_type``
+    (the overheid.nl breadcrumb category) is in ``NESTED_ORG_TYPES``, and its
+    ``related_ministry_tooi`` points at one of the given ministries. Pass
+    ``type_label`` to restrict to a single nestable type (the ``org_type_in``
+    facet); it is ignored when not itself nestable.
 
     Callers wrap the result in ``get_org_descendant_ids`` to include subtrees.
-    Checking the MAIN type (not any attached type) is what keeps orgs merely
+    Keying on the MAIN type (not any attached type) is what keeps orgs merely
     linked via ``related_ministry_tooi`` — e.g. a stichting — out of the results.
     """
     if not ministry_toois:
@@ -629,26 +631,13 @@ def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_label: str |
     allowed_types = NESTED_ORG_TYPES if type_label is None else (NESTED_ORG_TYPES & {type_label})
     if not allowed_types:
         return []
-    candidate_ids = list(
-        OrganizationUnit.objects.filter(parent__isnull=True, related_ministry_tooi__in=ministry_toois).values_list(
-            "id", flat=True
-        )
+    return list(
+        OrganizationUnit.objects.filter(
+            parent__isnull=True,
+            related_ministry_tooi__in=ministry_toois,
+            main_type__label__in=allowed_types,
+        ).values_list("id", flat=True)
     )
-    if not candidate_ids:
-        return []
-    # Main type = the type at position 0 (first-listed). Read it via the through
-    # table, mirroring _build_org_hierarchy, so we key on the main type rather
-    # than any attached type.
-    main_type_by_unit: dict[int, str] = {}
-    type_links = (
-        OrganizationUnitType.objects.filter(organization_unit_id__in=candidate_ids)
-        .select_related("organization_type")
-        .order_by("position")
-        .values_list("organization_unit_id", "organization_type__label")
-    )
-    for unit_id, label in type_links:
-        main_type_by_unit.setdefault(unit_id, label)  # first seen = position 0
-    return [uid for uid in candidate_ids if main_type_by_unit.get(uid) in allowed_types]
 
 
 def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:

@@ -3893,7 +3893,15 @@ def _build_org_hierarchy(
     """Builds the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
-            "id", "public_id", "parent_id", "name", "label", "abbreviations", "tooi_identifier", "related_ministry_tooi"
+            "id",
+            "public_id",
+            "parent_id",
+            "name",
+            "label",
+            "abbreviations",
+            "tooi_identifier",
+            "related_ministry_tooi",
+            "main_type__label",
         )
     )
 
@@ -3912,18 +3920,23 @@ def _build_org_hierarchy(
         else:
             roots.append(unit)
 
-    # Each root's types in source order (position 0 = main type). Read before
-    # counting/pruning so we can re-parent the nestable roots first.
+    # Each root's full (unordered) type set. Read before counting/pruning so we
+    # can re-parent the nestable roots first. The set drives the "is this a
+    # Ministerie?" check; main_type (loaded above with all_orgs) drives nesting.
     root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organization_unit_id__in=root_ids)
-        .select_related("organization_type")
-        .order_by("position")
-        .values_list("organization_unit_id", "organization_type__label")
-    )
-    root_types: dict[int, list[str]] = {}
+    type_links = OrganizationUnit.organization_types.through.objects.filter(
+        organizationunit_id__in=root_ids
+    ).values_list("organizationunit_id", "organizationtype__label")
+    root_types: dict[int, set[str]] = {}
     for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
+        root_types.setdefault(unit_id, set()).add(type_label)
+
+    # main_type per root, falling back to any type only while it is unset (the
+    # brief window before the first sync); once set, this is a pure dict read.
+    root_main_type: dict[int, str | None] = {}
+    for unit in roots:
+        types = root_types.get(unit["id"])
+        root_main_type[unit["id"]] = unit["main_type__label"] or (next(iter(types)) if types else None)
 
     # Presentation-only nesting: a root whose MAIN type is nestable and whose
     # related_ministry_tooi resolves to a ministry in the tree is moved under a
@@ -3937,8 +3950,7 @@ def _build_org_hierarchy(
     synthetic_folders: dict[tuple[int, str], dict] = {}
     nested_unit_ids: set[int] = set()
     for unit in roots:
-        labels = root_types.get(unit["id"], [])
-        main_type = labels[0] if labels else None
+        main_type = root_main_type.get(unit["id"])
         if main_type not in NESTED_ORG_TYPES:
             continue
         ministry = ministry_by_tooi.get(unit["related_ministry_tooi"])
@@ -4026,17 +4038,16 @@ def _build_org_hierarchy(
         return result
 
     # Top-level grouping for the remaining roots (nested units already removed).
-    # A unit lands under its MAIN type only (type_labels is ordered by position,
-    # so [0] is the overheid.nl breadcrumb type). Grouping a multi-type org under
-    # every one of its types would emit the same node id in several folders, and
-    # the tree keys nodes/rows by id — the duplicates then collapse and break
-    # checkbox sync. One folder per unit mirrors the nested-folder rule.
+    # A unit lands under its MAIN type only. Grouping a multi-type org under every
+    # one of its types would emit the same node id in several folders, and the tree
+    # keys nodes/rows by id — the duplicates then collapse and break checkbox sync.
+    # One folder per unit mirrors the nested-folder rule.
     grouped: dict[str, list[dict]] = {}
     ungrouped: list[dict] = []
     for unit in roots:
-        type_labels = root_types.get(unit["id"], [])
-        if type_labels:
-            grouped.setdefault(type_labels[0], []).append(unit)
+        main_type = root_main_type.get(unit["id"])
+        if main_type:
+            grouped.setdefault(main_type, []).append(unit)
         else:
             ungrouped.append(unit)
 

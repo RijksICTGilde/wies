@@ -21,7 +21,6 @@ from wies.core.models import (
     Event,
     OrganizationType,
     OrganizationUnit,
-    OrganizationUnitType,
     Placement,
     Service,
     Skill,
@@ -2190,11 +2189,13 @@ class NestedOrgHierarchyTest(TestCase):
         self.bzk = OrganizationUnit.objects.create(
             name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
         )
-        self.bzk.organization_types.add(self.ministerie)
+        self._typed(self.bzk, self.ministerie)
 
     def _typed(self, unit, *types):
-        for position, org_type in enumerate(types):
-            OrganizationUnitType.objects.create(organization_unit=unit, organization_type=org_type, position=position)
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def _find(self, hierarchy, label):
         for node in hierarchy:
@@ -2317,9 +2318,15 @@ class ScopedOrgTypeInFilterTest(TestCase):
         self.bzk = OrganizationUnit.objects.create(name="BZK", tooi_identifier=MNRE_BZK)
         self.ienw = OrganizationUnit.objects.create(name="IenW", tooi_identifier=MNRE_IENW)
         self.odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
-        self.odi.organization_types.add(self.agentschap)
+        self._typed(self.odi, self.agentschap)
         self.other_agentschap = OrganizationUnit.objects.create(name="Other", related_ministry_tooi=MNRE_IENW)
-        self.other_agentschap.organization_types.add(self.agentschap)
+        self._typed(self.other_agentschap, self.agentschap)
+
+    def _typed(self, unit, *types):
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def _matched_ids(self, params):
         view = PlacementListView()
@@ -2352,7 +2359,7 @@ class ScopedOrgTypeInFilterTest(TestCase):
             name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
         )
         stichting = OrganizationUnit.objects.create(name="Stichting X", related_ministry_tooi=MNRE_BZK)
-        stichting.organization_types.add(stichting_type)
+        self._typed(stichting, stichting_type)
 
         matched = self._matched_ids({"org": str(self.bzk.public_id)})
         assert stichting.id not in matched
@@ -2372,8 +2379,7 @@ class ScopedOrgTypeInFilterTest(TestCase):
             name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
         )
         stichting = OrganizationUnit.objects.create(name="Stichting Y", related_ministry_tooi=MNRE_BZK)
-        OrganizationUnitType.objects.create(organization_unit=stichting, organization_type=stichting_type, position=0)
-        OrganizationUnitType.objects.create(organization_unit=stichting, organization_type=self.agentschap, position=1)
+        self._typed(stichting, stichting_type, self.agentschap)  # main type = stichting
 
         matched = self._matched_ids({"org_type_in": f"{self.bzk.public_id}:Agentschap"})
         assert stichting.id not in matched
@@ -2391,9 +2397,9 @@ class AssignmentPanelBreadcrumbMinistryTest(TestCase):
         self.bzk = OrganizationUnit.objects.create(
             name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
         )
-        self.bzk.organization_types.add(self.ministerie)
+        self._typed(self.bzk, self.ministerie)
         self.odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
-        OrganizationUnitType.objects.create(organization_unit=self.odi, organization_type=self.agentschap, position=0)
+        self._typed(self.odi, self.agentschap)
         self.involved = OrganizationUnit.objects.create(name="Betrokken Org", label="Betrokken Org")
         self.assignment = Assignment.objects.create(
             name="Opdracht", source="wies", start_date=date(2025, 1, 1), end_date=date(2030, 1, 1)
@@ -2402,6 +2408,12 @@ class AssignmentPanelBreadcrumbMinistryTest(TestCase):
         AssignmentOrganizationUnit.objects.create(
             assignment=self.assignment, organization=self.involved, role="INVOLVED"
         )
+
+    def _typed(self, unit, *types):
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def test_panel_breadcrumb_starts_at_ministry_and_keeps_role_suffix(self):
         self.client.force_login(self.user)
@@ -2420,7 +2432,7 @@ class AssignmentPanelBreadcrumbMinistryTest(TestCase):
         rvb = OrganizationUnit.objects.create(
             name="RVB", label="Rijksvastgoedbedrijf", abbreviations=["RVB"], related_ministry_tooi=MNRE_BZK
         )
-        OrganizationUnitType.objects.create(organization_unit=rvb, organization_type=self.agentschap, position=0)
+        self._typed(rvb, self.agentschap)
         atelier = OrganizationUnit.objects.create(name="Atelier", label="Atelier Rijksbouwmeester", parent=rvb)
         assignment = Assignment.objects.create(
             name="Opdracht 2", source="wies", start_date=date(2025, 1, 1), end_date=date(2030, 1, 1)

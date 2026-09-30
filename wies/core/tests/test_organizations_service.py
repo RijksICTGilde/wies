@@ -13,7 +13,6 @@ from wies.core.models import (
     Event,
     OrganizationType,
     OrganizationUnit,
-    OrganizationUnitType,
 )
 from wies.core.services.organizations import (
     get_excluded_org_ids,
@@ -540,16 +539,18 @@ class SyncOrganizationTreeTest(TestCase):
             "end_date": None,
         }
 
-    def test_types_are_stored_in_source_order(self):
-        """The first-listed type is the main type (position 0)."""
+    def test_stores_full_type_set_and_first_as_main(self):
+        """All types are stored (unordered); the first-listed is the main type."""
         sync_organization_tree(self._multi_type_org(["Inspectie", "Zelfstandig bestuursorgaan"]), None, dry_run=False)
 
         org = OrganizationUnit.objects.get(name="Multi")
-        ordered = list(org.organization_types.order_by("organizationunittype__position").values_list("name", flat=True))
-        assert ordered == ["Inspectie", "Zelfstandig bestuursorgaan"]
+        assert set(org.organization_types.values_list("name", flat=True)) == {
+            "Inspectie",
+            "Zelfstandig bestuursorgaan",
+        }
         assert org.main_type.name == "Inspectie"
 
-    def test_resync_with_reordered_types_updates_positions_and_logs_change(self):
+    def test_resync_with_reordered_types_updates_main_and_logs_change(self):
         sync_organization_tree(self._multi_type_org(["Inspectie", "Zelfstandig bestuursorgaan"]), None, dry_run=False)
         org = OrganizationUnit.objects.get(name="Multi")
         assert org.main_type.name == "Inspectie"
@@ -1119,11 +1120,13 @@ class ResolveRelatedMinistryTest(TestCase):
         self.bzk = OrganizationUnit.objects.create(
             name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
         )
-        self.bzk.organization_types.add(self.ministerie)
+        self._typed(self.bzk, self.ministerie)
 
     def _typed(self, unit, *types):
-        for position, org_type in enumerate(types):
-            OrganizationUnitType.objects.create(organization_unit=unit, organization_type=org_type, position=position)
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def test_root_agentschap_resolves_to_its_ministry(self):
         odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
@@ -1163,14 +1166,20 @@ class MinistryNestedRootIdsTest(TestCase):
             name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
         )
         self.odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
-        self.odi.organization_types.add(self.agentschap)
+        self._typed(self.odi, self.agentschap)
+
+    def _typed(self, unit, *types):
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def test_includes_nestable_root(self):
         assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
 
     def test_excludes_non_nestable_main_type(self):
         foundation = OrganizationUnit.objects.create(name="Stichting", related_ministry_tooi=MNRE_BZK)
-        foundation.organization_types.add(self.stichting)
+        self._typed(foundation, self.stichting)
         assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
 
     def test_excludes_db_child(self):
@@ -1178,25 +1187,24 @@ class MinistryNestedRootIdsTest(TestCase):
         # here; the caller reaches it via get_org_descendant_ids of its parent.
         parent = OrganizationUnit.objects.create(name="Parent")
         child = OrganizationUnit.objects.create(name="Child", parent=parent, related_ministry_tooi=MNRE_BZK)
-        child.organization_types.add(self.agentschap)
+        self._typed(child, self.agentschap)
         assert child.id not in get_ministry_nested_root_ids([MNRE_BZK])
 
     def test_excludes_other_ministrys_units(self):
         other = OrganizationUnit.objects.create(name="Other", related_ministry_tooi=MNRE_IENW)
-        other.organization_types.add(self.agentschap)
+        self._typed(other, self.agentschap)
         assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
 
     def test_type_label_scopes_to_that_nestable_type(self):
         inspectie_type = OrganizationType.objects.create(name="Inspectie", label="Inspectie")
         inspectie = OrganizationUnit.objects.create(name="Inspectie X", related_ministry_tooi=MNRE_BZK)
-        inspectie.organization_types.add(inspectie_type)
+        self._typed(inspectie, inspectie_type)
         assert get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap") == [self.odi.id]
 
     def test_type_label_keys_on_main_type_not_any_type(self):
         # Non-nestable main type + incidental Agentschap type → still excluded.
         mixed = OrganizationUnit.objects.create(name="Mixed", related_ministry_tooi=MNRE_BZK)
-        OrganizationUnitType.objects.create(organization_unit=mixed, organization_type=self.stichting, position=0)
-        OrganizationUnitType.objects.create(organization_unit=mixed, organization_type=self.agentschap, position=1)
+        self._typed(mixed, self.stichting, self.agentschap)
         assert mixed.id not in get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap")
 
     def test_non_nestable_type_label_returns_nothing(self):
@@ -1216,11 +1224,13 @@ class OrgBreadcrumbMinistryTest(TestCase):
         self.bzk = OrganizationUnit.objects.create(
             name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
         )
-        self.bzk.organization_types.add(self.ministerie)
+        self._typed(self.bzk, self.ministerie)
 
     def _typed(self, unit, *types):
-        for position, org_type in enumerate(types):
-            OrganizationUnitType.objects.create(organization_unit=unit, organization_type=org_type, position=position)
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
 
     def test_nestable_root_gets_ministry_as_first_crumb(self):
         odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
