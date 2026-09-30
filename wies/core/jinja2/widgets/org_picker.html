@@ -6,10 +6,12 @@
   renderSelection() in assignment_org_picker.js builds. #}
 {% set selections = widget.selections %}
 {% set prefix = widget.prefix %}
-{# nldd-form-field only shows the error when its "input" (this div, via
-   _findInput) carries invalid + error-message; without them it has height 0. #}
+{# The picker is no form input, so nldd-form-field cannot hand its validation
+   list a control. The list in field.html points at the trigger button with
+   `for`, and the button carries `invalid` + `unmet`; the wrapper keeps them too
+   for focus_restore.js, which sends the focus into a rejected block. #}
 <div id="assignment-org-picker"
-     {% if widget.attrs.invalid %} invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+     {% if widget.attrs.invalid %} invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %}>
   <div id="assignment-org-selections">
     {% if selections %}
       <nldd-list variant="box-tinted" accessible-label="Gekozen opdrachtgevers">
@@ -45,7 +47,7 @@
   {% if selections %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}
-  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
+  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen"{% if widget.attrs.invalid %} invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %} hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
   <div id="assignment-org-inputs">
     {% if selections %}
       <input type="hidden"

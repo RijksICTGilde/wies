@@ -7,6 +7,15 @@ This files lists the changes during the lifetime of this project.
 - 692: Bezetting counts a role without hours as 0 instead of leaving the free hours unknown; the role's own bar says "uren niet ingevuld"
 - 692: Bezetting has a search box on name or e-mail, shows 60 rows at a time with a "Meer tonen" button, and no longer offers the "Volledig ingezet" status filter
 - 692: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
+- 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
+- 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
+- 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
+- 673: the notification after editing something says "is aangepast" instead of "is opgeslagen", so it reads differently from adding ("is toegevoegd") and deleting ("is verwijderd")
+- 673: the notification after creating an opdracht no longer carries a "Bekijk opdracht" button: the opdracht's panel opens by itself
+- 673: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
+- 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
+- 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
+- ?
 
 ## 2026-09-24
 
