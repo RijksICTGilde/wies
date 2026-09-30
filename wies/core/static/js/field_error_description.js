@@ -7,6 +7,11 @@
  * recognise, so its list points at the button with `for` and nobody describes
  * the button. This does, with "Fout:" in front because a button, unlike a
  * field, does not say "ongeldig" itself.
+ *
+ * TODO: delete this file once nldd-form-field describes the control that an
+ * nldd-validation-list names in `for`. Reported to NLDD; not in 0.8.92. Check:
+ * submit the opdracht form with only a name, and VoiceOver should read "Fout:
+ * Voeg minimaal 1 opdrachtgever toe." on the picker button without this script.
  */
 
 var BORROWED = "nldd-validation-list[for]";
