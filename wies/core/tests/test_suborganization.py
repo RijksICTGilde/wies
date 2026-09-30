@@ -68,7 +68,7 @@ class GetSuborganizationByNameTest(TestCase):
 
 
 class SuborganizationInlineEditPermissionTest(TestCase):
-    """Suborganization keeps the same permission as labels: self-edit + Office assistent."""
+    """Suborganization keeps the same permission as labels: self-edit + Gebruikersbeheer."""
 
     def setUp(self):
         setup_roles()
@@ -450,7 +450,7 @@ class SuborganizationAdminTest(TestCase):
 
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):
-    """Each endpoint is gated by its own permission, not just 'is Office assistent'."""
+    """Each endpoint is gated by its own permission, not just 'is Gebruikersbeheer'."""
 
     def setUp(self):
         setup_roles()

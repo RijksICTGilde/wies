@@ -5,7 +5,7 @@ import urllib.parse
 from collections import Counter
 from contextlib import nullcontext
 from datetime import date, timedelta
-from functools import cached_property, wraps
+from functools import cached_property
 
 from django.conf import settings
 from django.contrib import messages
@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
@@ -92,9 +92,7 @@ from .roles import (
     can_view_role_hours,
     is_bdm,
     is_staff_member,
-    may_administer_roles,
     may_view_role_matrix,
-    may_view_users,
     role_label,
 )
 from .services.assignments import (
@@ -139,7 +137,6 @@ from .services.users import (
     create_user,
     create_users_from_csv,
     is_allowed_email_domain,
-    set_user_roles,
     update_user,
 )
 
@@ -604,24 +601,8 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
-def role_administration_required(view_func):
-    """Gate the user sheet; ``may_administer_roles`` says who.
-
-    Refuses the way the sibling user routes do, with a 403 rather than a redirect:
-    the sheet arrives through htmx, so a redirect would swap a page into it.
-    """
-
-    @wraps(view_func)
-    def _wrapped(request, *args, **kwargs):
-        if not may_administer_roles(request.user):
-            raise PermissionDenied
-        return view_func(request, *args, **kwargs)
-
-    return _wrapped
-
-
 def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Development Managers."""
+    """Gate the "Business management" section: Business Managers."""
     return user_passes_test(is_bdm, login_url="/geen-toegang/")(view_func)
 
 
@@ -813,7 +794,7 @@ def role_matrix(request):
             "columns": [heading for heading, _groups, _staff in role_matrix_rules.COLUMNS],
             "sections": role_matrix_rules.build_matrix(),
             "group_permissions": role_matrix_rules.group_permissions(),
-            "may_assign_roles": may_administer_roles(request.user),
+            "may_assign_roles": request.user.has_perm("rijksauth.change_user"),
         },
     )
 
@@ -1957,10 +1938,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     paginate_by = 60
     page_kwarg = "pagina"
 
-    def has_permission(self) -> bool:
-        """``may_view_users``: application administration reaches this page without
-        holding Office assistent, because the roles sheet opens from a row here."""
-        return may_view_users(self.request.user)
+    permission_required = "rijksauth.view_user"
 
     # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
     DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
@@ -2275,13 +2253,9 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-@role_administration_required
+@permission_required("rijksauth.change_user", raise_exception=True)
 def user_edit(request, public_id):
-    """Edits a user: GET returns the populated form modal, POST processes the update.
-
-    Gated on ``may_administer_roles``, not on ``rijksauth.change_user``:
-    application administration reaches this sheet for the Rollen half alone.
-    """
+    """Edits a user: GET returns the populated form modal, POST processes the update."""
     edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
     form_post_url = reverse("user-edit", args=[edited_user.public_id])
     modal_title = "Gebruiker bewerken"
@@ -2310,20 +2284,17 @@ def user_edit(request, public_id):
     if request.method == "POST":
         form = UserForm(request.POST, instance=edited_user, editor=request.user)
         if form.is_valid():
-            if form.edits_person:
-                update_user(
-                    updater=request.user,
-                    user=edited_user,
-                    first_name=form.cleaned_data["first_name"],
-                    last_name=form.cleaned_data["last_name"],
-                    email=form.cleaned_data["email"],
-                    labels=form.cleaned_data.get("labels"),
-                    groups=form.cleaned_data.get("groups"),
-                    suborganization=form.cleaned_data.get("suborganization"),
-                    request=request,
-                )
-            else:
-                set_user_roles(request.user, edited_user, form.cleaned_data["groups"], request=request)
+            update_user(
+                updater=request.user,
+                user=edited_user,
+                first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"],
+                email=form.cleaned_data["email"],
+                labels=form.cleaned_data.get("labels"),
+                groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
+                request=request,
+            )
             # HTMX needs HX-Redirect to force a full page redirect.
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
@@ -2722,10 +2693,8 @@ def _contract_block(colleague, surface, user):
     """Context for parts/contract_periods_block.html, or None for a viewer who
     may not read the hours.
 
-    The guard matters on the user sheet, which opens for ``may_administer_roles``:
-    application administration reaches it for the Rollen half and holds nothing on
-    these hours. A consultant does not see their own contract hours in Wies; that
-    is a matter for them and their manager.
+    A consultant does not see their own contract hours in Wies; that is a matter
+    for them and their manager.
 
     The panel answers "how many hours now, and soon": it lists the running
     period and the ones still to start. The sheet keeps the whole history,

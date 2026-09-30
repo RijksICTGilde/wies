@@ -1,6 +1,5 @@
 import logging
 from datetime import timedelta
-from functools import cached_property
 
 from django import forms
 from django.contrib.auth import get_user_model
@@ -17,7 +16,7 @@ from wies.core.editables.user import UserEditables
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
 from .querysets import annotate_placement_dates
-from .roles import may_administer_roles, may_change_email, may_grant, role_label
+from .roles import may_change_email, may_grant, role_label
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -242,9 +241,9 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
 
-    The two halves are offered on their own gate and a half the editor may not
-    touch is left out of ``self.fields``, so a submitted value for it is ignored.
-    Why they are split: ``features/roles.md``.
+    The roles are a field here too: the route that opens this form is the same
+    ``rijksauth.change_user`` that decides who may hand them out. Which roles are
+    offered is ``may_grant``'s answer; see ``features/roles.md``.
     """
 
     first_name = UserEditables.first_name.form_field()
@@ -291,29 +290,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
         instance = kwargs.get("instance")
         self._category_field_names = set()
-
-        if self.edits_person:
-            self._add_person_fields(instance)
-        else:
-            for name in ("first_name", "last_name", "email", "suborganization"):
-                del self.fields[name]
-
-        if editor is None or may_administer_roles(editor):
-            self._add_role_field(editor, instance)
-
-    @cached_property
-    def edits_person(self) -> bool:
-        """Whether the editor may write name, email, merk and labels.
-
-        ``rijksauth.change_user``, the sibling of the ``add_user`` and
-        ``delete_user`` the other two user routes ask. Creating has nothing to ask
-        it about: that route is behind ``rijksauth.add_user`` and reaches no
-        existing person. ``editor=None`` is the system, which writes the person
-        unasked: the CSV import creates one without an editor to gate.
-        """
-        if self.instance is None or self.instance.pk is None or self._editor is None:
-            return True
-        return self._editor.has_perm("rijksauth.change_user")
+        self._add_person_fields(instance)
+        self._add_role_field(editor, instance)
 
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.

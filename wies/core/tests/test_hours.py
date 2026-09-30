@@ -342,7 +342,7 @@ class ProfileContractPeriodTest(TestCase):
 
 
 class ColleaguePanelContractPeriodTest(TestCase):
-    """A BDM and an Office assistent read any colleague's periods in the panel,
+    """A BDM and an Gebruikersbeheer read any colleague's periods in the panel,
     and keep them from there: the block asks the rule, not which screen it is on."""
 
     def setUp(self):
@@ -411,18 +411,18 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "36 uur" in body
         assert "Contractperiode toevoegen" in body
 
-    def test_panel_lets_a_bdm_keep_the_hours(self):
-        """A BDM plans with the hours, so a BDM keeps them, from the panel where
-        they already read them."""
+    def test_panel_shows_the_block_read_only_to_a_bdm(self):
+        """A BDM plans with the hours and so reads them; keeping a contract is
+        beheer and stays with an Gebruikersbeheer."""
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
-        assert "Contractperiode toevoegen" in body
+        assert "Contractperiode toevoegen" not in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])
-        assert self.client.get(url).status_code == 200
-        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 200
+        assert self.client.get(url).status_code == 403
+        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
 
     def test_an_office_assistant_saves_a_period_for_another_colleague(self):
         url = reverse("contract-period-add", args=[self.colleague.public_id])
@@ -570,7 +570,7 @@ class GeneratorHoursTest(TestCase):
 
 
 class UserSheetContractPeriodTest(TestCase):
-    """An Office assistent keeps contract periods on the user sheet (beheer/gebruikers)."""
+    """An Gebruikersbeheer keeps contract periods on the user sheet (beheer/gebruikers)."""
 
     def setUp(self):
         setup_roles()
@@ -1143,13 +1143,12 @@ class ApplicationAdministrationHoursTest(TestCase):
         assert "16 uur" not in body
 
 
-class RoleHoursForUserAdministrationTest(TestCase):
-    """The authority ``can_view_role_hours`` names beside the BDM role and the
-    placed colleague: the Office assistent role.
+class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
+    """``can_view_role_hours`` is not the audience of ``rule(READ, ContractPeriod)``.
 
-    It is the audience this split added to these hours. An Office assistent is
-    placed nowhere and holds no BDM role, so without that branch of the predicate
-    they read the page a team mate gets, with the hours blanked.
+    A contract is beheer, so an Gebruikersbeheer reads it. The hours on an
+    opdracht are planning, so the BDM reads those and an Gebruikersbeheer gets the
+    page a team mate gets, with the hours blanked.
     """
 
     def setUp(self):
@@ -1162,28 +1161,26 @@ class RoleHoursForUserAdministrationTest(TestCase):
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
         self.placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
 
-    def test_the_predicate_names_user_administration(self):
-        assert can_view_role_hours(self.office_assistant, self.placement) is True
+    def test_the_office_assistant_reads_the_contract_but_not_the_role_hours(self):
+        assert has_permission(Verb.READ, ContractPeriod(colleague=self.colleague), self.office_assistant) is True
+        assert can_view_role_hours(self.office_assistant, self.placement) is False
 
-    def test_the_team_list_prints_the_hours_of_a_colleagues_role(self):
-        """The surface the predicate feeds: without the branch the row renders
-        without its hours, which is what a team mate sees."""
+    def test_the_team_list_blanks_the_hours_for_an_office_assistant(self):
+        """The surface the predicate feeds: the row renders without its hours,
+        which is what a team mate sees."""
         client = Client()
         client.force_login(self.office_assistant)
 
         body = client.get(reverse("home"), {"opdracht": self.placement.service.assignment.public_id}).content.decode()
 
         assert "Kees Bos" in body
-        assert "16 uur" in body
+        assert "16 uur" not in body
 
-    def test_the_permission_the_role_happens_to_carry_is_not_the_audience(self):
-        """One audience, spelled once on both rights over the same data.
+    def test_the_permission_a_role_happens_to_carry_is_not_an_audience(self):
+        """Both rights name a role, not the Django permission it happens to carry.
 
-        ``rule(READ, ContractPeriod)`` names ``Grant(Role(ROLE_OFFICE_ASSISTANT))``,
-        so this predicate names the role too. Asking ``rijksauth.change_user``
-        instead — the permission the role happens to carry — would answer yes here
-        and no there for anyone who holds the permission without the role, a
-        superuser above all.
+        Asking ``rijksauth.change_user`` instead would let anyone holding the bare
+        permission through, a superuser above all.
         """
         holder = User.objects.create(email="perm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
         holder.user_permissions.add(Permission.objects.get(content_type__app_label="rijksauth", codename="change_user"))

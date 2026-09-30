@@ -33,9 +33,12 @@ logger = logging.getLogger(__name__)
 # The role columns of the user CSV, by the header a file writes: labels, not keys,
 # so an import file stays readable (``features/roles.md``). BDM keeps the short
 # form it has always had.
+# Header as the file writes it -> role key. Two headers for the BDM role: the
+# label it carries today, and the abbreviation existing import files use.
 CSV_ROLE_COLUMNS = {
     ROLE_LABELS[ROLE_OFFICE_ASSISTANT]: ROLE_OFFICE_ASSISTANT,
     ROLE_LABELS[ROLE_CONSULTANT]: ROLE_CONSULTANT,
+    ROLE_LABELS[ROLE_BDM]: ROLE_BDM,
     "BDM": ROLE_BDM,
 }
 
@@ -97,26 +100,6 @@ def _apply_groups(user, groups, updater) -> list:
     new |= {g for g in user.groups.all() if not may_grant(updater, g.name)}
     user.groups.set(new)
     return sorted(new, key=lambda g: role_label(g.name))
-
-
-def set_user_roles(updater, user, groups, request=None):
-    """Sets a user's roles and records the audit event: the write path for an
-    editor who may grant roles but not edit the person.
-
-    :param updater: user that performs the action. Can be None if done by system
-    :param request: optional, for logging client IP + User-Agent on the audit event
-    """
-    groups = _apply_groups(user, groups, updater)
-    create_event(
-        object_type="User",
-        action="update",
-        source="user",
-        object_id=user.id,
-        user=updater,
-        request=request,
-        context={"group_names": [role_label(group.name) for group in groups]},
-    )
-    return user
 
 
 def create_user(

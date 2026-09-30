@@ -31,9 +31,7 @@ from wies.core.roles import (
     ROLE_STAFF,
     can_view_role_hours,
     is_staff_member,
-    may_administer_roles,
     may_change_email,
-    may_view_users,
     role_label,
 )
 from wies.core.visibility_rules import evaluate_assignment_visibility, evaluate_placement_visibility, show_bm_page
@@ -46,7 +44,7 @@ STAFF = role_label(ROLE_STAFF)
 # (column heading, Django groups, application administration)
 COLUMNS = [
     (role_label(ROLE_CONSULTANT), (ROLE_CONSULTANT,), False),
-    ("BDM", (ROLE_BDM,), False),
+    (role_label(ROLE_BDM), (ROLE_BDM,), False),
     (role_label(ROLE_OFFICE_ASSISTANT), (ROLE_OFFICE_ASSISTANT,), False),
     (STAFF, (), True),
 ]
@@ -200,10 +198,6 @@ EXTRA_ROWS = [
         "Uren van de rol van een collega zien",
         lambda u: can_view_role_hours(u, Placement(colleague_id=_OTHER)),
     ),
-    # Not derivable from the Django permission underneath: since the sheet that
-    # hands out roles hangs off this page, it opens for ``may_administer_roles``
-    # too, and application administration holds that without ``view_user``.
-    Row("Gebruikers en collega's", "Gebruikerslijst openen", may_view_users),
     Row(
         "Gebruikers en collega's",
         "Gebruiker aanmaken en verwijderen",
@@ -216,7 +210,11 @@ EXTRA_ROWS = [
     ),
     # One row: no role has a granter of its own, so a row per role would repeat
     # the same answer.
-    Row("Gebruikers en collega's", "Rollen toekennen", may_administer_roles),
+    Row(
+        "Gebruikers en collega's",
+        "Rollen toekennen",
+        lambda u: _in_user_screen(u, allowed=True),
+    ),
     Row("Applicatie", "Statistieken en database", is_staff_member),
 ]
 

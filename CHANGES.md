@@ -4,13 +4,14 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 674: (migration) authority is split by what it lets you do: Applicatiebeheer (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, the renamed role `Office assistent` (was `Beheerder`) keeps users, labels, merken and contract hours, and `BDM` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives `BDM` and `Office assistent` once. See `features/roles.md`
-- 674: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant; Applicatiebeheer gets that sheet for the roles alone
+- 674: (migration) authority is split by what it lets you do: Applicatiebeheer (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, `Gebruikersbeheer` (was `Beheerder`) keeps users, labels, merken and contract hours, and `Business Manager` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives both roles once, and anyone who held the dropped `Opdrachtbeheer` role becomes a `Business Manager`. See `features/roles.md`
+- 674: the roles `Beheerder` and `Business Development Manager` are now called `Gebruikersbeheer` and `Business Manager`; a role's screen name is separate from the key it is stored under, so this is a rename and not a reassignment
+- 674: the user CSV import column `Beheerder` is now `Gebruikersbeheer`: update the header of existing import files. The `BDM` column keeps working and `Business Manager` is accepted too
+- 674: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant
 - 674: new page Beheer > Rollen shows what each role may do, read from the rules themselves
 - 674: only Applicatiebeheer may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
-- 674: the user CSV import column `Beheerder` is now `Office assistent`: update the header of existing import files
-- 674: contract hours are kept by a BDM as well as by an Office assistent, and from the colleague panel as well as the user sheet; the block is shown only to who may read the hours, so Applicatiebeheer opening the user sheet for the roles does not see them
-- 674: the hours on a team member's role are visible to a BDM and an Office assistent instead of to a BDM and Applicatiebeheer, the same audience that reads the contract hours those hours are planned against; Beheer > Rollen lists it
+- 674: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with Gebruikersbeheer and a Business Manager reads them
+- 674: the hours on a team member's role are visible to a Business Manager and the placed colleague instead of to a Business Manager and Applicatiebeheer; Beheer > Rollen lists it
 
 ## 2026-09-24
 

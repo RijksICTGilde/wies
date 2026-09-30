@@ -126,8 +126,8 @@ just manage test wies.core.tests.test_roles
 
 | Role                 | Description                  | Permissions                                                       |
 | -------------------- | ---------------------------- | ----------------------------------------------------------------- |
-| **Office assistent** | User administration          | Users, labels, merken and contract hours                          |
-| **BDM**              | Business Development Manager | Any wies-sourced opdracht, and contract hours                     |
+| **Gebruikersbeheer** | User administration          | Users, labels, merken and contract hours                          |
+| **Business Manager** | Business Manager (key `bdm`) | Any wies-sourced opdracht, and reading the hours on a role        |
 | **Consultant**       | Employee                     | View-only, plus the text fields of an opdracht they are placed on |
 
 Application administration (database, errors) is the `STAFF_EMAILS` setting, not a

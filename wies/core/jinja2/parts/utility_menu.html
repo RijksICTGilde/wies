@@ -22,7 +22,7 @@
        gate the sidebar does not, because this menu renders on every page. #}
     <nldd-menu-item text="Beheer" icon="user-admin">
     <nldd-menu>
-    {% if may_view_users(request.user) %}
+    {% if request.user.has_perm('rijksauth.view_user') %}
       <nldd-menu-item text="Gebruikers" icon="users" data-href="{{ url('admin-users') }}"></nldd-menu-item>
     {% endif %}
     {% if DEBUG %}

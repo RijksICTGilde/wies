@@ -31,7 +31,7 @@
   {# Each item asks the gate of its own route. A divider only ever sits BETWEEN
      two items that render, or a reader who may just look gets a menu that ends
      in a line with nothing under it. #}
-  {% set can_edit = may_administer_roles(request.user) %}
+  {% set can_edit = request.user.has_perm('rijksauth.change_user') %}
   {% set can_delete = request.user.has_perm('rijksauth.delete_user') %}
   {% if user.email %}
     <nldd-menu-item text="E-mailen" icon="envelope" href="mailto:{{ user.email }}"></nldd-menu-item>

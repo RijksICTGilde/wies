@@ -84,7 +84,7 @@ RIJKSOVERHEID_RATIO = 0.90
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
 # Role mix for the dummy users, by role key: most consultants, some BDMs, a few office assistants.
 # Assignment owners are drawn only from the BDM colleagues, matching production
-# where the owner is a Business Development Manager.
+# where the owner is a Business Manager.
 ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BDM: 15, ROLE_OFFICE_ASSISTANT: 5}
 # Contract hours per week: mostly 36, the rijksoverheid norm.
 CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
@@ -669,7 +669,7 @@ def seed_base_organizations() -> None:
 def assign_roles(rng: random.Random, count: int) -> list[str]:
     """A shuffled list of ``count`` role keys in roughly ``ROLE_WEIGHTS``
     proportion, but guaranteeing at least one of every role when ``count``
-    allows it: a weighted per-item draw can leave a rare role (Office assistent)
+    allows it: a weighted per-item draw can leave a rare role (Gebruikersbeheer)
     empty at the small base-profile size."""
     roles = list(ROLE_WEIGHTS)
     if count <= len(roles):
@@ -885,7 +885,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             end_date=end,
             extra_info="",
             # Owners are drawn only from BDM colleagues, matching production
-            # where the assignment owner is a Business Development Manager.
+            # where the assignment owner is a Business Manager.
             owner=rng.choice(bdm_colleagues),
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",

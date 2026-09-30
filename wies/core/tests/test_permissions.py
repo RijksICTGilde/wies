@@ -375,7 +375,7 @@ class PlacedWithoutTheConsultantRoleTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        # Office assistent: a role with no rights on an opdracht at all, so the
+        # Gebruikersbeheer: a role with no rights on an opdracht at all, so the
         # placement is the only door left to try.
         self.placed_other_user = User.objects.create_user(email="placed-other@x.nl", first_name="P", last_name="B")
         self.placed_other_user.groups.add(Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)[0])

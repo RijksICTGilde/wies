@@ -2,7 +2,7 @@
 
 A BDM now carries every wies-sourced opdracht, which is exactly what Opdrachtbeheer
 granted, so the role is gone. 0009 handed it to the addresses in STAFF_EMAILS; this
-gives those same addresses BDM and Office assistent instead, once, and drops the
+gives those same addresses BDM and Gebruikersbeheer instead, once, and drops the
 group. A group nothing names would otherwise stay on the user sheet under its key.
 
 Both roles for those addresses, not only BDM: an application administrator starts

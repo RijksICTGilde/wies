@@ -10,7 +10,6 @@ from wies.core.services.users import (
     create_user,
     create_users_from_csv,
     is_allowed_email_domain,
-    set_user_roles,
     update_user,
     validate_email_domain,
 )
@@ -356,7 +355,14 @@ class UpdateUserServiceTest(TestCase):
         )
         assert set(user.groups.values_list("name", flat=True)) == {ROLE_CONSULTANT}
 
-        set_user_roles(None, user, [])
+        update_user(
+            updater=None,
+            user=user,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            email=user.email,
+            groups=[],
+        )
 
         user.refresh_from_db()
         assert list(user.groups.all()) == []

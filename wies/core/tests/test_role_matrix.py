@@ -238,7 +238,7 @@ class RoleMatrixReaderTest(TestCase):
         cells = _cells()
         # The placement grants it to the consultant; BDM is already through on the
         # relation-free grant these field rules name alongside it.
-        allowed = {role_label(ROLE_CONSULTANT), "BDM"}
+        allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BDM)}
 
         for label in (
             "Naam van een opdracht bewerken",
@@ -268,7 +268,7 @@ class RoleMatrixReaderTest(TestCase):
         a rule moves both at once and only a named cell notices."""
         cells = _cells()
 
-        assert cells[("Opdracht bewerken (van een ander)", "BDM")]
+        assert cells[("Opdracht bewerken (van een ander)", role_label(ROLE_BDM))]
         assert not cells[("Opdracht bewerken (van een ander)", role_label(ROLE_OFFICE_ASSISTANT))]
 
         assert cells[("Gebruiker bewerken (je eigen)", "Consultant")]
@@ -301,7 +301,7 @@ class RoleMatrixExtraRowTest(TestCase):
         self.other_user = User.objects.create_user(email="ander-account@rijksoverheid.nl")
         self.users = {}
         for heading, groups, staff in role_matrix.COLUMNS:
-            # A heading is a label, which may hold a space ("Office assistent").
+            # A heading is a label, which may hold a space ("Gebruikersbeheer").
             email = STAFF_EMAIL if staff else f"{heading.lower().replace(' ', '-')}@rijksoverheid.nl"
             user = User.objects.create_user(email=email)
             Colleague.objects.create(name=heading, email=email, source="wies", user=user)
@@ -359,7 +359,6 @@ class RoleMatrixExtraRowTest(TestCase):
             "Uren van de rol van een collega zien": lambda u: can_view_role_hours(
                 u, Placement(colleague_id=self.other.pk)
             ),
-            "Gebruikerslijst openen": lambda u: self._page_opens(u, reverse("admin-users")),
             "Gebruiker aanmaken en verwijderen": lambda u: u.has_perms(["rijksauth.add_user", "rijksauth.delete_user"]),
             "E-mailadres wijzigen (van een ander)": lambda u: self._form_accepts(
                 u, {"email": "nieuw-adres@rijksoverheid.nl"}
@@ -543,15 +542,15 @@ class RoleMatrixViewTest(TestCase):
                 assert aside not in content
 
     def test_who_may_grant_sees_the_link_to_the_users_page(self):
-        """The third case reads the page and may grant nothing, so the link would
-        lead to a closed door. Matched on the anchor the page text renders, not on
-        the url: the sidebar carries that one under the same condition."""
+        """The two who may not grant read the page but would land on a closed door,
+        so they are offered no link. Matched on the anchor the page text renders and
+        not on the url: the sidebar carries that one under its own condition."""
         in_page_link = f'<a href="{reverse("admin-users")}">Gebruikers</a>'
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
         for user, shown in (
             (self._user_admin(), True),
-            (User.objects.create_user(email=STAFF_EMAIL), True),
+            (User.objects.create_user(email=STAFF_EMAIL), False),
             (User.objects.get(pk=reader.pk), False),
         ):
             with self.subTest(email=user.email):

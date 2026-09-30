@@ -21,7 +21,7 @@ from wies.core.roles import (
     role_label,
     setup_roles,
 )
-from wies.core.services.users import create_users_from_csv, set_user_roles, update_user
+from wies.core.services.users import create_users_from_csv, update_user
 from wies.rijksauth.models import User
 
 from .inline_edit_helpers import post_inline_edit
@@ -53,13 +53,14 @@ class RoleGrantTest(TestCase):
         self.consultant_group = Group.objects.get(name=ROLE_CONSULTANT)
         self.bdm_group = Group.objects.get(name=ROLE_BDM)
 
-        # Office assistent, not application administration.
+        # Gebruikersbeheer, not application administration.
         self.user_admin = User.objects.create_user(
             email="gebruikersbeheer@rijksoverheid.nl", first_name="G", last_name="B"
         )
         self.user_admin.groups.add(self.user_admin_group)
 
-        # Application administration and nothing else: reaching the roles screen must not need Office assistent.
+        # Application administration and nothing else: it runs the platform and
+        # holds nothing on users or roles.
         self.staff = User.objects.create_user(email=STAFF_EMAIL, first_name="P", last_name="B")
 
         self.target = User.objects.create_user(email="target@rijksoverheid.nl", first_name="T", last_name="G")
@@ -72,10 +73,7 @@ class RoleGrantTest(TestCase):
         return set(user.groups.values_list("name", flat=True))
 
     def _post_roles(self, user, groups):
-        """The sheet posts one form, so the person half rides along unchanged.
-
-        An editor who is not offered that half never has it read back, which is
-        what ``test_the_user_sheet_gives_staff_the_roles_and_not_the_person`` measures."""
+        """The sheet posts one form, so the person rides along unchanged."""
         payload = {
             "first_name": user.first_name,
             "last_name": user.last_name,
@@ -105,27 +103,6 @@ class RoleGrantTest(TestCase):
         assert 'label="Voornaam"' in content
         assert 'label="Rollen"' in content
 
-    def test_the_user_sheet_gives_staff_the_roles_and_not_the_person(self):
-        """Application administration holds no right on the User object, so the
-        person half is not offered and a submitted value for it is not written."""
-        self.client.force_login(self.staff)
-
-        content = self.client.get(reverse("user-edit", args=[self.target.public_id]), headers=HX).content.decode()
-
-        assert 'label="Rollen"' in content
-        assert 'label="Voornaam"' not in content
-        assert 'label="E-mail (ODI)"' not in content
-
-        response = self.client.post(
-            reverse("user-edit", args=[self.target.public_id]),
-            {"first_name": "Gekaapt", "last_name": "G", "email": "gekaapt@rijksoverheid.nl", "groups": []},
-            headers=HX,
-        )
-
-        self.target.refresh_from_db()
-        assert response["HX-Redirect"] == reverse("admin-users")
-        assert (self.target.first_name, self.target.email) == ("T", "target@rijksoverheid.nl")
-
     def test_editing_the_person_saves_the_roles_in_the_same_submission(self):
         self.target.groups.add(self.bdm_group)
         self.client.force_login(self.user_admin)
@@ -149,22 +126,26 @@ class RoleGrantTest(TestCase):
             with self.subTest(editor=getattr(editor, "email", "system")):
                 assert self._offered(editor) == {ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT}
 
-    def test_staff_reaches_the_user_sheet_without_the_office_assistant_role(self):
-        """The users page opens for the list alone, which is where the sheet hangs."""
+    def test_application_administration_reaches_neither_the_page_nor_the_sheet(self):
+        """It runs the platform and holds nothing functional. The way into a fresh
+        environment is ``ensure_initial_user``, which creates its account with every
+        role, not a right handed to the address list."""
         self.client.force_login(self.staff)
 
-        assert self.client.get(reverse("admin-users")).status_code == 200
-        assert self.client.get(self._roles_url(self.target), headers=HX).status_code == 200
+        assert self.client.get(reverse("admin-users")).status_code == 403
+        assert self.client.get(self._roles_url(self.target), headers=HX).status_code == 403
 
-    def test_the_users_page_gives_staff_the_list_and_the_sheet_only(self):
-        """Application administration opens the page to hand out roles: Nieuwe
-        gebruiker and Verwijderen are offered to nobody who cannot reach them."""
-        self.client.force_login(self.staff)
+    def test_a_reader_is_offered_no_action_they_cannot_carry_out(self):
+        """``view_user`` opens the list; Bewerken, Nieuwe gebruiker and Verwijderen
+        each ask their own permission, in the template as well as on the route."""
+        reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
+        reader.user_permissions.add(Permission.objects.get(codename="view_user"))
+        self.client.force_login(reader)
 
         content = self.client.get(reverse("admin-users")).content.decode()
 
-        assert self._roles_url(self.target) in content
         for name, url in (
+            ("user-edit", self._roles_url(self.target)),
             ("user-create", reverse("user-create")),
             ("user-delete", reverse("user-delete", args=[self.target.public_id])),
         ):
@@ -179,7 +160,7 @@ class RoleGrantTest(TestCase):
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
 
-        for viewer in (reader, self.staff, self.user_admin):
+        for viewer in (reader, self.user_admin):
             with self.subTest(viewer=viewer.email):
                 self.client.force_login(User.objects.get(pk=viewer.pk))
 
@@ -213,7 +194,7 @@ class RoleGrantTest(TestCase):
 
     def test_the_rendered_sheet_never_offers_application_administration(self):
         """It follows the email address, so a checkbox for it would be a lie."""
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         response = self.client.get(self._roles_url(self.target), headers=HX)
 
@@ -226,7 +207,7 @@ class RoleGrantTest(TestCase):
         """Saving replaces the whole set, so a sheet that opens unticked strips
         every role the moment someone presses Opslaan."""
         self.target.groups.add(self.consultant_group, self.bdm_group)
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         response = self.client.get(self._roles_url(self.target), headers=HX)
 
@@ -237,7 +218,7 @@ class RoleGrantTest(TestCase):
 
     def test_the_sheet_lists_the_roles_by_label(self):
         """By key ``bdm`` would come first, so the order pins the label sort."""
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         content = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
 
@@ -252,7 +233,7 @@ class RoleGrantTest(TestCase):
         It still has members and is still offered, so it has to stay readable
         instead of rendering as a nameless checkbox."""
         Group.objects.get_or_create(name="support")
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         content = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
 
@@ -312,18 +293,14 @@ class RoleGrantTest(TestCase):
         assert self.client.get(self._roles_url(self.target)).status_code == 403
 
     def test_granting_the_roles_is_not_reading_them(self):
-        """The mirror of the case above: ``rijksauth.change_user`` opens the screen
-        that changes roles but not the matrix, so nothing on it may link there."""
+        """The mirror of the case above: ``rijksauth.change_user`` opens the sheet
+        that changes roles, and neither the matrix nor the list it usually hangs off."""
         granter = User.objects.create_user(email="toekenner@rijksoverheid.nl", first_name="T", last_name="K")
         granter.user_permissions.add(Permission.objects.get(codename="change_user"))
         self.client.force_login(granter)
 
-        response = self.client.get(reverse("admin-users"))
-
-        assert response.status_code == 200
-        content = response.content.decode()
-        assert self._roles_url(self.target) in content, "withheld Bewerken from someone who may grant roles"
-        assert f'href="{reverse("role-matrix")}"' not in content, "offered Rollen to someone the matrix turns away"
+        assert self.client.get(self._roles_url(self.target), headers=HX).status_code == 200
+        assert self.client.get(reverse("admin-users")).status_code == 403
         assert self.client.get(reverse("role-matrix")).status_code == 302
 
     def test_the_matrix_points_a_granter_at_the_users_page(self):
@@ -345,7 +322,7 @@ class RoleGrantTest(TestCase):
         superuser = User.objects.create_user(
             email="su@rijksoverheid.nl", first_name="S", last_name="U", is_superuser=True
         )
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         content = self.client.get(reverse("admin-users")).content.decode()
 
@@ -384,7 +361,7 @@ class RoleGrantTest(TestCase):
         assert event.context["group_names"] == [role_label(ROLE_CONSULTANT)]
 
     def test_user_admin_grants_and_revokes_user_admin(self):
-        """Office assistent hands itself on, which is why onboarding does not stall
+        """Gebruikersbeheer hands itself on, which is why onboarding does not stall
         on an application administrator."""
         self.client.force_login(self.user_admin)
 
@@ -398,8 +375,8 @@ class RoleGrantTest(TestCase):
         assert revoked["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == set()
 
-    def test_staff_grants_bdm_with_event(self):
-        self.client.force_login(self.staff)
+    def test_an_office_assistant_grants_bdm_with_event(self):
+        self.client.force_login(self.user_admin)
 
         response = self._post_roles(self.target, [self.bdm_group])
 
@@ -407,22 +384,22 @@ class RoleGrantTest(TestCase):
         assert self._group_names(self.target) == {ROLE_BDM}
         event = Event.objects.filter(object_type="User", action="update").last()
         assert event.object_id == self.target.id
-        assert event.user_id == self.staff.id
+        assert event.user_id == self.user_admin.id
         assert event.context["group_names"] == [role_label(ROLE_BDM)]
 
-    def test_staff_revokes_own_bdm(self):
+    def test_an_editor_revokes_their_own_bdm(self):
         # The "switch it off and test as a normal user" workflow.
-        self.staff.groups.add(self.bdm_group)
-        self.client.force_login(self.staff)
+        self.user_admin.groups.add(self.bdm_group)
+        self.client.force_login(self.user_admin)
 
-        response = self._post_roles(self.staff, [])
+        response = self._post_roles(self.user_admin, [self.user_admin_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.staff) == set()
+        assert self._group_names(self.user_admin) == {ROLE_OFFICE_ASSISTANT}
 
     def test_users_page_lists_users_with_their_roles(self):
         self.target.groups.add(self.consultant_group)
-        self.client.force_login(self.staff)
+        self.client.force_login(self.user_admin)
 
         content = self.client.get(reverse("admin-users")).content.decode()
 
@@ -432,7 +409,14 @@ class RoleGrantTest(TestCase):
         assert self._roles_url(self.target) in content
 
     def test_the_service_sets_the_roles_it_is_given(self):
-        set_user_roles(self.user_admin, self.target, [self.bdm_group, self.user_admin_group])
+        update_user(
+            updater=self.user_admin,
+            user=self.target,
+            first_name=self.target.first_name,
+            last_name=self.target.last_name,
+            email=self.target.email,
+            groups=[self.bdm_group, self.user_admin_group],
+        )
         assert self._group_names(self.target) == {ROLE_BDM, ROLE_OFFICE_ASSISTANT}
 
     def test_creating_a_user_grants_the_roles_that_were_ticked(self):
@@ -448,18 +432,16 @@ class RoleGrantTest(TestCase):
         assert self._group_names(created) == {ROLE_CONSULTANT, ROLE_BDM}
         event = Event.objects.filter(object_type="User", action="create").last()
         assert event.object_id == created.id
-        # In label order: Business Development Manager before Consultant.
+        # In label order: Business Manager before Consultant.
         assert event.context["group_names"] == [role_label(ROLE_BDM), role_label(ROLE_CONSULTANT)]
 
     def test_the_beheer_menus_offer_the_users_page_to_whoever_may_open_it(self):
-        """``may_view_users`` is wider than the ``view_user`` the entries used to
-        ask: application administration and a plain granter both reach the page for
-        the roles sheet that hangs off it, and would otherwise have no way in but
-        the url bar."""
-        granter = User.objects.create_user(email="toekenner@rijksoverheid.nl", first_name="T", last_name="K")
-        granter.user_permissions.add(Permission.objects.get(codename="change_user"))
+        """The entries ask the same ``view_user`` the page does, so a reader who may
+        open it is offered it and does not need the url bar."""
+        reader = User.objects.create_user(email="lezer2@rijksoverheid.nl", first_name="L", last_name="Z")
+        reader.user_permissions.add(Permission.objects.get(codename="view_user"))
         sidebar_entry = f'<nldd-list-item href="{reverse("admin-users")}"'
-        for viewer in (self.staff, granter):
+        for viewer in (self.user_admin, reader):
             with self.subTest(viewer=viewer.email):
                 self.client.force_login(User.objects.get(pk=viewer.pk))
 
@@ -469,14 +451,14 @@ class RoleGrantTest(TestCase):
 
         # The utility menu's whole Beheer section sits behind the role matrix gate,
         # so only a visitor who passes that one can be asked about the entry inside.
-        self.client.force_login(User.objects.get(pk=self.staff.pk))
+        self.client.force_login(User.objects.get(pk=self.user_admin.pk))
 
         content = self.client.get(reverse("admin-users")).content.decode()
 
         assert f'data-href="{reverse("admin-users")}"' in content, "the utility menu withheld Gebruikers"
 
     def test_csv_import_by_user_admin_grants_user_admin(self):
-        """Every role column of the import is one Office assistent may grant."""
+        """Every role column of the import is one Gebruikersbeheer may grant."""
         csv_content = (
             f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,y,n\n"

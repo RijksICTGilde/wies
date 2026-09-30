@@ -45,14 +45,14 @@ class RBACSetupTest(TestCase):
         assert set(Group.objects.values_list("name", flat=True)) == set(ROLE_LABELS) - {ROLE_STAFF}
 
     def test_setup_roles_creates_user_admin_group(self):
-        """Test that setup_roles creates the Office assistent group"""
+        """Test that setup_roles creates the Gebruikersbeheer group"""
         setup_roles()
 
-        # Office assistent group should exist
+        # Gebruikersbeheer group should exist
         assert Group.objects.filter(name=ROLE_OFFICE_ASSISTANT).exists()
 
     def test_setup_roles_grants_user_permissions(self):
-        """Test that Office assistent group has all user management permissions"""
+        """Test that Gebruikersbeheer group has all user management permissions"""
         setup_roles()
 
         admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
@@ -61,11 +61,11 @@ class RBACSetupTest(TestCase):
         expected_permissions = ["view_user", "add_user", "delete_user", "change_user"]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Office assistent group missing {codename} permission"
+                f"Gebruikersbeheer group missing {codename} permission"
             )
 
     def test_setup_roles_grants_suborganization_permissions(self):
-        """Test that Office assistent group can manage suborganizations (merken)"""
+        """Test that Gebruikersbeheer group can manage suborganizations (merken)"""
         setup_roles()
 
         admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
@@ -78,14 +78,14 @@ class RBACSetupTest(TestCase):
         ]
         for codename in expected_permissions:
             assert admin_group.permissions.filter(codename=codename).exists(), (
-                f"Office assistent group missing {codename} permission"
+                f"Gebruikersbeheer group missing {codename} permission"
             )
 
     def test_beheerder_group_user_can_access_views(self):
-        """Test that a user in Office assistent group can access all user management views"""
+        """Test that a user in Gebruikersbeheer group can access all user management views"""
         setup_roles()
 
-        # Create user and add to Office assistent group
+        # Create user and add to Gebruikersbeheer group
         admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",

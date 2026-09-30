@@ -1,4 +1,4 @@
-"""Group/permission setup and role predicates for Office assistent, Consultant
+"""Group/permission setup and role predicates for Gebruikersbeheer, Consultant
 and BDM. The authority model is described in ``features/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
@@ -38,8 +38,8 @@ ROLE_STAFF = "staff"
 
 ROLE_LABELS = {
     ROLE_CONSULTANT: "Consultant",
-    ROLE_BDM: "Business Development Manager",
-    ROLE_OFFICE_ASSISTANT: "Office assistent",
+    ROLE_BDM: "Business Manager",
+    ROLE_OFFICE_ASSISTANT: "Gebruikersbeheer",
     ROLE_STAFF: "Applicatiebeheer",
 }
 
@@ -63,19 +63,6 @@ def is_bdm(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_BDM).exists()
 
 
-def is_office_assistant(user) -> bool:
-    """Whether the user holds the Office assistent role (Django group
-    ``ROLE_OFFICE_ASSISTANT``).
-
-    Spelled as the role, not as the Django permission the role happens to carry:
-    ``rule(READ, ContractPeriod)`` names the same audience as
-    ``Grant(Role(ROLE_OFFICE_ASSISTANT))``, and one audience answers the same on
-    both sides. Asking ``rijksauth.change_user`` instead would let a superuser
-    through here and not there.
-    """
-    return user.is_authenticated and user.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
-
-
 def is_staff_member(user) -> bool:
     """Whether the user does application administration (``STAFF_EMAILS``).
 
@@ -89,16 +76,13 @@ def can_view_role_hours(user, placement) -> bool:
     """Whether the user may see the hours per week of a role.
 
     Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
-    are for who plans with them (BDM, Office assistent) and for the consultant
-    themself, not for team mates. An open aanvraag has no one to protect, so its
-    hours are visible to everyone who sees the opdracht.
+    are for who plans the work (the BDM) and for the consultant themself, not for
+    team mates. An open aanvraag has no one to protect, so its hours are visible
+    to everyone who sees the opdracht.
 
-    Application administration is not in that list: it runs the platform and
-    carries nothing functional.
-
-    The same audience as ``rule(READ, ContractPeriod)`` in ``permissions.py``,
-    and spelled the same way; the role matrix prints it as "Uren van de rol van
-    een collega zien".
+    Narrower than ``rule(READ, ContractPeriod)``, which Gebruikersbeheer also
+    reads: a contract is beheer, the hours on an opdracht are planning. The role
+    matrix prints this one as "Uren van de rol van een collega zien".
     """
     if placement is None:
         return True
@@ -109,7 +93,7 @@ def can_view_role_hours(user, placement) -> bool:
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:
         return True
-    return is_bdm(user) or is_office_assistant(user)
+    return is_bdm(user)
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
@@ -127,28 +111,11 @@ def may_change_email(editor, old: str, new: str) -> bool:
 
 
 def may_view_role_matrix(user) -> bool:
-    """Whether the user may read the role matrix (``/beheer/rollen/``): Office assistent,
+    """Whether the user may read the role matrix (``/beheer/rollen/``): Gebruikersbeheer,
     whose Beheer section it sits in, and application administration, which owns the roles.
     The page shows no data, so the gate is wide.
     """
     return user.has_perm("rijksauth.view_user") or is_staff_member(user)
-
-
-def may_administer_roles(user) -> bool:
-    """Whether the user may change someone's roles, from the row menu on the users
-    page: Office assistent and application administration. Which roles they are
-    then offered is ``may_grant``'s answer, in ``UserForm``.
-    """
-    return user.has_perm("rijksauth.change_user") or is_staff_member(user)
-
-
-def may_view_users(user) -> bool:
-    """Whether the user may open the users page (``/beheer/gebruikers/``): Office
-    assistent, and whoever may grant roles, who picks the person there. Seeing the
-    list is all that follows; Nieuwe gebruiker and Verwijderen ask their own Django
-    permission, Bewerken asks ``may_administer_roles``.
-    """
-    return user.has_perm("rijksauth.view_user") or may_administer_roles(user)
 
 
 def may_grant(_editor, role: str) -> bool:

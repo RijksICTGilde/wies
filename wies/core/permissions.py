@@ -149,14 +149,12 @@ rule(
     ],
 )
 
+# A BDM plans with the hours and so reads them, but keeping them is beheer.
 rule(
     UPDATE,
     ContractPeriod,
     label="Contracturen van een collega bijhouden",
-    grants=[
-        Grant(Role(ROLE_BDM)),
-        Grant(Role(ROLE_OFFICE_ASSISTANT)),
-    ],
+    grants=[Grant(Role(ROLE_OFFICE_ASSISTANT))],
 )
 
 # Nobody: an address is changed on the user form, which is where ``may_change_email``

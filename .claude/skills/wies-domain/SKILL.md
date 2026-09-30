@@ -15,9 +15,9 @@ description: Wies project domain knowledge including Dutch government terminolog
 
 ## User Roles
 
-- **Office assistent** - User administration (users, labels, merken, contract hours); may grant every role, including its own
+- **Gebruikersbeheer** - User administration (users, labels, merken, contract hours); may grant every role, including its own
 - **Consultant** - View-only, plus the text fields of an opdracht they are placed on
-- **BDM** - Business Development Manager; every wies-sourced opdracht, and contract hours
+- **Business Manager** (key `bdm`) - every wies-sourced opdracht, and reading the hours on a role
 - Application administration (`STAFF_EMAILS`) is not a role; see `features/roles.md`
 
 ## Date Inheritance
