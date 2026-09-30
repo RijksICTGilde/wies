@@ -1,0 +1,100 @@
+{# One row shape for bench and placed rows, shared by the results block and
+   the "Meer tonen" partial. Imported with context: needs today_pct. #}
+{% macro timeline_row(row) %}
+  <div class="bezetting-row bezetting-row--{{ row.bucket }}"
+       style="--bezetting-lanes: {{ row.lane_count }}">
+    <a class="bezetting-row__side"
+       href="{{ row.colleague.panel_url }}"
+       hx-get="{{ row.colleague.panel_url }}"
+       hx-target="#side-panel-content"
+       hx-swap="innerHTML">
+      {# Second line: role and what is still free. Exactly full shows no hours.
+           End dates sit on the bar, not here: one of two opdrachten ending is
+           not the colleague ending. #}
+      {% if row.next_contract %}
+        {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
+      {% elif row.contract_hours is none and row.contract_ended %}
+        {% set hours_text = "geen lopend contract" %}
+      {% elif row.contract_hours is none %}
+        {% set hours_text = "contracturen onbekend" %}
+      {% elif row.unfilled_hours > 0 %}
+        {% set hours_text = row.unfilled_hours ~ " uur vrij" %}
+      {% elif row.unfilled_hours < 0 %}
+        {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" %}
+      {% else %}
+        {% set hours_text = none %}
+      {% endif %}
+      <div class="bezetting-person">
+        {# On the bench the role is the most recent one; the bench bar says so. #}
+        <nldd-identity text="{{ row.colleague.name }}" supporting-text="{{ [row.role, hours_text]|select|join(' · ') }}">
+        <nldd-avatar slot="avatars" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+        </nldd-identity>
+        {# Only the gilde labels: they explain why a filtered row is here, and
+             the full expertise list would fill the cell. #}
+        {% if row.gilde_labels %}
+          <span class="bezetting-person__labels">
+            {%- for name, colour in row.gilde_labels -%}
+              <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
+            {%- endfor -%}
+          </span>
+        {% endif %}
+      </div>
+    </a>
+    <div class="bezetting-track">
+      {% for tick in month_ticks %}
+        <div class="bezetting-gridline {% if tick.month == 1 %}bezetting-gridline--year{% endif %}"
+             style="left: {{ tick.left }}%"></div>
+      {% endfor %}
+      <div class="bezetting-today-line" style="left: {{ today_pct }}%"></div>
+      {# The free stretch, up to today. Behind the lane stack so a planned
+           placement drawn on the same row still reads on top. #}
+      {% if row.bench_bar %}
+        {# djlint:off T028 #}
+        <div class="bezetting-free{% if row.bench_bar_clipped %} bezetting-free--clipped{% endif %}"
+             style="left: {{ row.bench_bar[0] }}%;
+                    width: {{ row.bench_bar[1] }}%"
+             title="{{ row.bench_days|bankduur }}, sinds {{ row.bench_since|datum_nl('j b Y') }}">
+          {# djlint:on #}
+          {# Exact days here; the title keeps bankduur's rounded phrasing and
+               the start date. #}
+          <span class="bezetting-free__label">{{ row.bench_days }} {{ "dag" if row.bench_days == 1 else "dagen" }} vrij</span>
+        </div>
+      {% endif %}
+      {# Lane stack, vertically centred so a single bar sits mid-row. #}
+      <div class="bezetting-lanes">
+        {% for seg in row.segments %}
+          {# A bar without hours says so: that role counted as 0 in the free
+               hours (#687). Finished work is left alone. #}
+          {% if seg.hours_per_week %}
+            {% set seg_hours = " · " ~ seg.hours_per_week ~ " uur" %}
+            {% set seg_gap = false %}
+          {% elif seg.phase != "completed" %}
+            {% set seg_hours = " · uren niet ingevuld" %}
+            {% set seg_gap = true %}
+          {% else %}
+            {% set seg_hours = "" %}
+            {% set seg_gap = false %}
+          {% endif %}
+          {# djlint:off T028 #}
+          <div class="bezetting-seg bezetting-seg--{{ seg.phase }} bezetting-seg--ending-{{ seg.ending_level }}"
+               style="left: {{ seg.left_pct }}%;
+                      width: {{ seg.width_pct }}%;
+                      top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
+               title="{{ seg.assignment_name }}{{ seg_hours }}{% if seg.end %} — loopt tot {{ seg.end|datum_nl('j b Y') }}{% endif %}">
+            {# djlint:on #}
+            {# A bar too narrow for its name renders a stray "I..."; the
+                 title attribute still carries it. #}
+            {% if not seg.too_narrow %}
+              <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg_gap %}<span class="bezetting-seg__gap">{{ seg_hours }}</span>{% else %}{{ seg_hours }}{% endif %}</span>
+            {% endif %}
+            {% if seg.ending_level != "calm" %}
+              {# Days left rather than a date, on the bar that ends, so the
+                   level is not carried by colour alone. The date is in the title. #}
+              <span class="bezetting-seg__end">nog {{ seg.days_left }} {{ "dag" if seg.days_left == 1 else "dagen" }}</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endmacro %}

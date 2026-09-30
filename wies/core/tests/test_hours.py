@@ -137,7 +137,7 @@ class OccupancyHoursTest(TestCase):
         assert row.bucket == BUCKET_FULL
         assert row.unfilled_hours == 0
 
-    def test_a_role_without_hours_keeps_the_row_full(self):
+    def test_a_role_without_hours_counts_as_zero(self):
         colleague = _consultant("Onno Onbekend", "onno@x.nl")
         ContractPeriod.objects.create(colleague=colleague, hours_per_week=36, start_date=self.start)
         _placement(colleague, "Met uren", self.start, self.end, hours=8)
@@ -145,9 +145,29 @@ class OccupancyHoursTest(TestCase):
 
         [row] = colleague_occupancy(self.today)
 
-        assert row.bucket == BUCKET_FULL
-        assert row.active_hours is None
-        assert row.unfilled_hours is None
+        assert row.bucket == BUCKET_PARTIAL
+        assert (row.active_hours, row.unfilled_hours) == (8, 28)
+
+    def test_only_roles_without_hours_leave_the_whole_contract_free(self):
+        colleague = _consultant("Nel Niks", "nel@x.nl")
+        ContractPeriod.objects.create(colleague=colleague, hours_per_week=32, start_date=self.start)
+        _placement(colleague, "Zonder uren", self.start, self.end)
+        _placement(colleague, "Ook zonder", self.start, self.end)
+
+        [row] = colleague_occupancy(self.today)
+
+        assert row.bucket == BUCKET_PARTIAL
+        assert (row.active_hours, row.unfilled_hours) == (0, 32)
+
+    def test_a_planned_role_without_hours_does_not_count(self):
+        colleague = _consultant("Toon Toekomst", "toon@x.nl")
+        ContractPeriod.objects.create(colleague=colleague, hours_per_week=36, start_date=self.start)
+        _placement(colleague, "Nu", self.start, self.end, hours=36)
+        _placement(colleague, "Straks", self.end + timedelta(days=1), None)
+
+        [row] = colleague_occupancy(self.today)
+
+        assert (row.bucket, row.unfilled_hours) == (BUCKET_FULL, 0)
 
     def test_without_contract_hours_a_placed_colleague_is_full(self):
         colleague = _consultant("Geen Contract", "geen@x.nl")
@@ -231,6 +251,24 @@ class BezettingPartialStatusViewTest(TestCase):
         # Someone exactly full shows no hours at all on the second line.
         fenna = body.split("Fenna Full")[1].split("</nldd-identity>")[0]
         assert "uur" not in fenna
+
+    def test_a_role_without_hours_says_so_on_its_own_bar(self):
+        today = timezone.now().date()
+        start, end = today - timedelta(days=10), today + timedelta(days=200)
+        gap = _consultant("Gerda Gat", "gerda@x.nl")
+        ContractPeriod.objects.create(colleague=gap, hours_per_week=36, start_date=start)
+        _placement(gap, "Met uren", start, end, hours=16)
+        _placement(gap, "Zonder uren", start, end)
+        _placement(gap, "Afgerond zonder", start - timedelta(days=100), start - timedelta(days=50))
+
+        body = self.client.get(self.url).content.decode()
+
+        gerda = body.split("Gerda Gat")[1].split("</nldd-identity>")[0]
+        assert "20 uur vrij" in gerda
+        assert "zonder uren" not in gerda
+        assert "Zonder uren · uren niet ingevuld" in body
+        assert "Met uren · 16 uur" in body
+        assert "Afgerond zonder · uren niet ingevuld" not in body
 
     def test_a_role_ending_today_still_counts_and_ended_yesterday_does_not(self):
         today = timezone.now().date()
@@ -938,6 +976,23 @@ class ServiceHoursPermissionTest(TestCase):
         assert response.status_code == 204, response.content
         self.service.refresh_from_db()
         assert (self.service.description, self.service.hours_per_week) == ("Eigen klus, bijgewerkt", 24)
+
+    def test_role_form_saves_without_a_description(self):
+        # The member form creates a role without one, so the edit sheet must not
+        # demand one for the role it opened on.
+        client = Client()
+        client.force_login(self.bdm)
+        response = client.post(
+            reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
+            {
+                "description": "",
+                "hours_per_week": "24",
+                "terug_url": f"/?plaatsing={self.placement.public_id}",
+            },
+        )
+        assert response.status_code == 204, response.content
+        self.service.refresh_from_db()
+        assert self.service.description == ""
 
     def test_team_list_offers_the_role_sheet_on_the_own_row_only(self):
         client = Client()

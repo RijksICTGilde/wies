@@ -33,6 +33,7 @@ from wies.core.services.occupancy import (
     occupancy_summary,
     today_marker_pct,
 )
+from wies.core.views import BEZETTING_PAGE_SIZE
 
 User = get_user_model()
 
@@ -390,13 +391,13 @@ class OccupancySummaryTest(TestCase):
         _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
         rows = colleague_occupancy(self.today)
         summary = occupancy_summary(rows)
-        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 1}
+        assert summary == {"bench_count": 1, "partial_count": 0, "ends_soon_count": 1}
 
     def test_ends_soon_is_independent_of_bucket(self):
         # A far-ending active placement is "full" but not "ends_soon".
         _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
         summary = occupancy_summary(colleague_occupancy(self.today))
-        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 0}
+        assert summary == {"bench_count": 1, "partial_count": 0, "ends_soon_count": 0}
 
 
 class TimelineGeometryTest(TestCase):
@@ -664,13 +665,21 @@ class BezettingFilterChipTest(TestCase):
         assert 'data-name="status"' in content
 
     def test_every_status_has_a_sheet_input_whatever_its_count(self):
-        # Four statuses, and the sheet's top-3 cut must not drop the fourth: the
-        # sheet checkbox is the only input its card can tick.
+        # The sheet checkbox is the only input a card can tick, so every status
+        # needs one whatever its count.
         content = self.client.get(self.url).content.decode()
         hidden = re.search(r'data-hidden-inputs="status".*?</span>', content, re.DOTALL).group(0)
-        for value in ("bench", "partial", "full", "ends_soon"):
+        for value in ("bench", "partial", "ends_soon"):
             assert f'value="{value}"' in hidden, value
         assert "filter_modal=status" not in content
+
+    def test_volledig_ingezet_is_no_longer_a_status(self):
+        # Neither in the sheet nor as a filter value: ?status=full is ignored
+        # like any unknown status, so every row shows.
+        content = self.client.get(self.url, {"status": "full"}).content.decode()
+        assert "Volledig ingezet" not in content
+        assert 'value="full"' not in content
+        assert "Wis alle filters" not in content
 
     def test_status_card_carries_no_input_of_its_own(self):
         # The sheet's checkbox submits; a second one on the card sent the value
@@ -719,13 +728,6 @@ class BezettingStatusFilterViewTest(TestCase):
         assert b"Fred Full" not in response.content
         assert b"Ellen Eind" not in response.content
 
-    def test_full_status_shows_all_placed(self):
-        # ends_soon colleagues are also 'full', so both placed rows appear.
-        response = self.client.get(self.url, {"status": "full"})
-        assert b"Bea Bank" not in response.content
-        assert b"Fred Full" in response.content
-        assert b"Ellen Eind" in response.content
-
     def test_ends_soon_status_is_subset_of_full(self):
         response = self.client.get(self.url, {"status": "ends_soon"})
         assert b"Ellen Eind" in response.content
@@ -748,8 +750,6 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert re.search(r">1</span>.*?eindigt bijna", content, re.DOTALL)
         assert re.search(r">1</span>.*?op de bank", content, re.DOTALL)
-        # "Volledig ingezet" has no card; it is only a sheet option.
-        assert 'data-status="full"' not in content
 
     def test_empty_result_uses_the_shared_empty_state(self):
         """An nldd-inline-dialog, like the other lists: a bare paragraph read as body copy."""
@@ -865,3 +865,77 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert re.search(r'data-status="bench"[^>]*\s+aria-pressed="true"', content, re.DOTALL)
         assert re.search(r'data-status="ends_soon"[^>]*\s+aria-pressed="false"', content, re.DOTALL)
+
+
+class BezettingSearchTest(TestCase):
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        _consultant("Anna Appel", "anna.appel@x.nl")
+        _consultant("Bert Boom", "bert@x.nl")
+
+    def test_search_matches_name_or_email_case_insensitively(self):
+        by_name = self.client.get(self.url, {"zoek": "appel"}).content.decode()
+        assert "Anna Appel" in by_name
+        assert "Bert Boom" not in by_name
+        by_email = self.client.get(self.url, {"zoek": "BERT@"}).content.decode()
+        assert "Bert Boom" in by_email
+        assert "Anna Appel" not in by_email
+
+    def test_search_field_and_hidden_input_carry_the_term(self):
+        content = self.client.get(self.url, {"zoek": "appel"}).content.decode()
+        assert 'data-wies-search-input name="zoek"' in content
+        assert 'id="search-hidden"' in content
+        assert content.count('value="appel"') == 2
+
+    def test_no_match_shows_the_empty_state_and_keeps_the_counts(self):
+        content = self.client.get(self.url, {"zoek": "niemand"}).content.decode()
+        assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
+        assert re.search(r">0</span>.*?op de bank", content, re.DOTALL)
+
+
+class BezettingPaginationTest(TestCase):
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        today = timezone.now().date()
+        # 61 consultants: one bench row more than a page holds, then one placed
+        # colleague who sorts after every bench row and so lands on page two.
+        for i in range(BEZETTING_PAGE_SIZE):
+            _consultant(f"Bank {i:02d}", f"bank{i}@x.nl")
+        placed = _consultant("Zoë Zet", "zoe@x.nl")
+        _placement(placed, "Klus", today - timedelta(days=10), today + timedelta(days=200))
+
+    def test_first_page_holds_the_bench_rows_and_a_load_more_button(self):
+        content = self.client.get(self.url).content.decode()
+        assert content.count('class="bezetting-row ') == BEZETTING_PAGE_SIZE
+        assert "Zoë Zet" not in content
+        assert 'text="Meer tonen"' in content
+        assert "pagina=2" in content
+
+    def test_next_page_is_just_the_rows_without_the_button(self):
+        content = self.client.get(self.url, {"pagina": 2}, headers={"hx-request": "true"}).content.decode()
+        assert content.count('class="bezetting-row ') == 1
+        assert "Zoë Zet" in content
+        assert "Meer tonen" not in content
+        assert 'id="results"' not in content
+
+    def test_next_page_url_keeps_the_filters_but_not_the_panel(self):
+        # Every consultant matches the search, so page two still exists.
+        content = self.client.get(self.url, {"zoek": "x.nl", "collega": "x"}).content.decode()
+        button = re.search(r'text="Meer tonen" hx-get="([^"]+)"', content).group(1)
+        assert "zoek=x.nl" in button
+        assert "collega=" not in button
+        assert "pagina=2" in button
+
+    def test_summary_counts_the_whole_population_not_the_page(self):
+        content = self.client.get(self.url).content.decode()
+        assert re.search(rf">{BEZETTING_PAGE_SIZE}</span>.*?op de bank", content, re.DOTALL)

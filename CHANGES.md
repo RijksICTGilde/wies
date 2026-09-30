@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 692: Bezetting counts a role without hours as 0 instead of leaving the free hours unknown; the role's own bar says "uren niet ingevuld"
+- 692: Bezetting has a search box on name or e-mail, shows 60 rows at a time with a "Meer tonen" button, and no longer offers the "Volledig ingezet" status filter
+- 692: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
 - 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
 - 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
 - 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did

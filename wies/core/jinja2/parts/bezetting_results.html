@@ -62,6 +62,13 @@
     <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
   </ul>
   <nldd-toolbar label="Filters en acties">
+  {# Same search bridge as the user list (filter_interactions.js). Highest
+     priority: a search field has no menu twin, so it must overflow last. No
+     placeholder, like the form fields since #660. #}
+  <nldd-toolbar-item slot="start" priority="4" width="320px" max-width="320px" min-width="200px">
+  <nldd-search-field id="search-input" accessible-label="Zoeken op naam of e-mail" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input name="zoek">
+  </nldd-search-field>
+  </nldd-toolbar-item>
   {# Last to go: the cards are a shortcut, this is the way to every filter. #}
   <nldd-toolbar-item slot="end" priority="3">
   <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
@@ -103,124 +110,17 @@
       </div>
     </div>
   </div>
-  {# One row shape for both sections: a bench row is the same row plus its
-     free-since line, so the two cannot drift apart. #}
-  {% macro timeline_row(row) %}
-    <div class="bezetting-row bezetting-row--{{ row.bucket }}"
-         style="--bezetting-lanes: {{ row.lane_count }}">
-      <a class="bezetting-row__side"
-         href="{{ row.colleague.panel_url }}"
-         hx-get="{{ row.colleague.panel_url }}"
-         hx-target="#side-panel-content"
-         hx-swap="innerHTML">
-        {# The "eindigt" date sits on the bar it belongs to, not next to the
-             name: there it read as if the COLLEAGUE stopped, while someone on
-             two opdrachten may have one wrapping up and another running on for
-             months. Which section a row is in says bench vs. ingezet. #}
-        {# Two lines per person, as an nldd-identity: the name, then what they
-             do and what is still free. Someone exactly full shows no hours at
-             all, someone over their contract shows by how much; unknown stays
-             visible, as that is what keeps them out of the "deels beschikbaar"
-             count. #}
-        {% if row.next_contract %}
-          {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
-        {% elif row.contract_hours is none and row.contract_ended %}
-          {% set hours_text = "geen lopend contract" %}
-        {% elif row.contract_hours is none %}
-          {% set hours_text = "contracturen onbekend" %}
-        {% elif row.unfilled_hours is none %}
-          {% set hours_text = "uren van rol onbekend" %}
-        {% elif row.unfilled_hours > 0 %}
-          {% set hours_text = row.unfilled_hours ~ " uur vrij" %}
-        {% elif row.unfilled_hours < 0 %}
-          {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" %}
-        {% else %}
-          {% set hours_text = none %}
-        {% endif %}
-        <div class="bezetting-person">
-          {# On the bench the role is the most recent one rather than a current
-               one; the row already sits under "Op de bank", so no qualifier. #}
-          <nldd-identity text="{{ row.colleague.name }}" supporting-text="{{ [row.role, hours_text]|select|join(' · ') }}">
-          <nldd-avatar slot="avatars" name="{{ row.colleague.name }}" decorative></nldd-avatar>
-          </nldd-identity>
-          {# The gilde a colleague belongs to, and only that category: showing
-               it on the row is what makes a filtered view explainable ("why is
-               this person here"), while the full expertise list would fill the
-               cell. The other facets stay in the filter sheet. #}
-          {% if row.gilde_labels %}
-            <span class="bezetting-person__labels">
-              {%- for name, colour in row.gilde_labels -%}
-                <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
-              {%- endfor -%}
-            </span>
-          {% endif %}
-        </div>
-      </a>
-      <div class="bezetting-track">
-        {% for tick in month_ticks %}
-          <div class="bezetting-gridline {% if tick.month == 1 %}bezetting-gridline--year{% endif %}"
-               style="left: {{ tick.left }}%"></div>
-        {% endfor %}
-        <div class="bezetting-today-line" style="left: {{ today_pct }}%"></div>
-        {# The free stretch, up to today. Behind the lane stack so a planned
-             placement drawn on the same row still reads on top. #}
-        {% if row.bench_bar %}
-          {# djlint:off T028 #}
-          <div class="bezetting-free{% if row.bench_bar_clipped %} bezetting-free--clipped{% endif %}"
-               style="left: {{ row.bench_bar[0] }}%;
-                      width: {{ row.bench_bar[1] }}%"
-               title="{{ row.bench_days|bankduur }}, sinds {{ row.bench_since|datum_nl('j b Y') }}">
-            {# djlint:on #}
-            {# Plain days, not the rounded "5 maanden" of bankduur: on a
-                 timeline the bar's own length already says roughly how long,
-                 and what it cannot say is the exact number. The title keeps
-                 the rounded phrasing plus the date it started. #}
-            <span class="bezetting-free__label">{{ row.bench_days }} {{ "dag" if row.bench_days == 1 else "dagen" }} vrij</span>
-          </div>
-        {% endif %}
-        {# Lane stack, vertically centred so a single bar sits mid-row. #}
-        <div class="bezetting-lanes">
-          {% for seg in row.segments %}
-            {# djlint:off T028 #}
-            <div class="bezetting-seg bezetting-seg--{{ seg.phase }} bezetting-seg--ending-{{ seg.ending_level }}"
-                 style="left: {{ seg.left_pct }}%;
-                        width: {{ seg.width_pct }}%;
-                        top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))"
-                 title="{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} uur{% endif %}{% if seg.end %} — loopt tot {{ seg.end|datum_nl('j b Y') }}{% endif %}">
-              {# djlint:on #}
-              {# A bar too narrow for its name renders a stray "I..."; the
-                   title attribute still carries it. #}
-              {% if not seg.too_narrow %}
-                <span class="bezetting-seg__label">{{ seg.assignment_name }}{% if seg.hours_per_week %} · {{ seg.hours_per_week }} uur{% endif %}</span>
-              {% endif %}
-              {% if seg.ending_level != "calm" %}
-                {# Days remaining rather than the end date: how soon someone
-                     frees up is the question this page is read for, and a date
-                     makes the reader subtract it from today themselves. On the
-                     bar that ends, so it is unambiguous which opdracht is
-                     wrapping up — and so the level is not carried by colour
-                     alone, which no colour-blind reader can rank. The exact
-                     date stays in the title. #}
-                <span class="bezetting-seg__end">nog {{ seg.days_left }} {{ "dag" if seg.days_left == 1 else "dagen" }}</span>
-              {% endif %}
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  {% endmacro %}
   <div class="bezetting-rows">
     {# One list, bench rows first: an unstaffed colleague is what this page is
        scanned for, and their row shows whether anything is already booked — the
        thing a list of names could not answer. No headings between the two: the
        hatched free stretch already says which rows are the empty ones, and the
-       counts they carried are on the cards above. #}
-    {% for row in bench_rows %}{{ timeline_row(row) }}{% endfor %}
-    {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
-    {% if not bench_rows and not rows %}
+       counts they carried are on the cards above. Paged by the view. #}
+    {% include "parts/bezetting_rows.html" %}
+    {% if not row_count %}
       {# nldd-inline-dialog is the empty state across the app (see
          parts/placement_card_grid.html); a bare paragraph reads as body copy. #}
-      <nldd-inline-dialog icon="magnifier" text="Geen collega's gevonden" supporting-text="Pas de filters aan."></nldd-inline-dialog>
+      <nldd-inline-dialog icon="magnifier" text="Geen collega's gevonden" supporting-text="Pas de filters of zoekopdracht aan."></nldd-inline-dialog>
     {% endif %}
   </div>
 </div>

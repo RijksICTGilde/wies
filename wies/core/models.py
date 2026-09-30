@@ -317,7 +317,7 @@ class Service(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
-    description = models.CharField(max_length=500)
+    description = models.CharField(max_length=500, blank=True)
     skill = models.ForeignKey("Skill", models.SET_NULL, related_name="services", null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True)  # do not use directly, see property below
