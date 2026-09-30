@@ -2605,63 +2605,6 @@ def assignment_import_csv(request):
     return HttpResponse(status=405)
 
 
-@permission_required("core.view_organizationunit", raise_exception=True)
-def organization_admin(request):
-    """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
-    if not settings.DEBUG:
-        raise Http404
-    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
-
-    today = timezone.now().date()
-    units_by_id: dict[int, dict] = {}
-    for row in rows:
-        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
-        row["tree_children"] = []
-        units_by_id[row["id"]] = row
-
-    roots: list[dict] = []
-    for unit in units_by_id.values():
-        parent_id = unit["parent_id"]
-        if parent_id and parent_id in units_by_id:
-            units_by_id[parent_id]["tree_children"].append(unit)
-        else:
-            roots.append(unit)
-
-    def sort_key(u):
-        return u["label"] or u["name"]
-
-    for unit in units_by_id.values():
-        unit["tree_children"].sort(key=sort_key)
-    roots.sort(key=sort_key)
-
-    # Organization types for the root nodes only, via the M2M through table.
-    root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organization_unit_id__in=root_ids)
-        .select_related("organization_type")
-        .values_list("organization_unit_id", "organization_type__label")
-    )
-    root_types: dict[int, list[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
-
-    grouped: dict[str, list[dict]] = {}
-    ungrouped: list[dict] = []
-    for unit in roots:
-        type_labels = root_types.get(unit["id"], [])
-        if type_labels:
-            for type_label in type_labels:
-                grouped.setdefault(type_label, []).append(unit)
-        else:
-            ungrouped.append(unit)
-
-    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
-    if ungrouped:
-        type_groups.append(("Overig", ungrouped))
-
-    return render(request, "organization_admin.html", {"type_groups": type_groups})
-
-
 @permission_required("core.view_labelcategory", raise_exception=True)
 def label_admin(request):
     """Main label admin page."""
