@@ -40,10 +40,15 @@ CSRF-token uit de markup — zie `wies/core/static/js/menu_nav.js`.
 
 ## 4. Formuliervalidatie koppelt zichzelf niet
 
-De foutweergave werkt op `invalid` + `error-message="<id>"`. Django-widgets
-die we zelf renderen zetten die attributen niet, dus de melding krijgt hoogte
-0 en is onzichtbaar — ook voor een screenreader. Elke custom widget rendert ze
-expliciet mee.
+De foutweergave is een `nldd-validation-list` met `nldd-validation-item`s in
+de `nldd-form-field`; een item zonder regel is pas zichtbaar als het veld
+`invalid` heeft en het item-id in `unmet` noemt. Django-widgets die we zelf
+renderen zetten die attributen niet, dus de melding blijft onzichtbaar, ook
+voor een screenreader. Elke custom widget rendert ze expliciet mee
+(`wire_field_errors`). Een widget dat geen invoerveld is (de opdrachtgever-
+kiezer) geeft de lijst een `for` naar zijn knop. Elk `<form>` draagt
+`novalidate`: sinds 0.8.88 melden de velden `required` aan de browser, die de
+inzending dan zonder tekst tegenhoudt; in Wies oordeelt de server.
 
 ## Eigen CSS op een `nldd-*` element
 

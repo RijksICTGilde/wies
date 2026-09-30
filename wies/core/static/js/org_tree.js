@@ -110,7 +110,7 @@
       });
     } else if (hasChildren) {
       // `disclosure` makes the chevron announce the ROW's expanded state.
-      var chevron = cell("nldd-list-item-action", {
+      var chevron = cell("nldd-list-item-segment", {
         button: "",
         disclosure: "",
         "accessible-label": node.label + " in- of uitklappen",
@@ -129,7 +129,7 @@
     // unsuppressable grey fill on every checked row, cascaded children included.
     var action = rowIsControl
       ? row
-      : cell("nldd-list-item-action", {
+      : cell("nldd-list-item-segment", {
           width: "full",
           "accessible-label": label,
         });
@@ -187,7 +187,7 @@
   OrgTree.prototype._syncRow = function (node, row) {
     // The selection button, not the chevron (the `disclosure` one).
     var action = row.querySelector(
-      ":scope > nldd-list-item-action[button]:not([disclosure])",
+      ":scope > nldd-list-item-segment[button]:not([disclosure])",
     );
     var box = action && action.querySelector("nldd-checkbox");
     if (box) {

@@ -81,7 +81,7 @@
   {% endfor %}
   {# In the flow below the lists, not a sticky footer: you confirm only after
    reading the finite overview. #}
-  <form method="post" action="{{ url('staff-database') }}">
+  <form novalidate method="post" action="{{ url('staff-database') }}">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="merge_duplicates_apply" />
     <nldd-button variant="primary" type="submit" text="Voeg projecten samen"></nldd-button>
