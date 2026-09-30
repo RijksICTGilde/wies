@@ -1,6 +1,11 @@
 {# `href` keeps the card a real link (status bar, cmd/middle click opens a
    tab); hx_link_guard.js catches the plain click so htmx fills the panel
-   instead of navigating. Same pattern as assignment_card_rows.html. #}
+   instead of navigating. Same pattern as assignment_card_rows.html.
+
+   The card titles are h2: they follow the page h1 directly, so an h3 skips a
+   level (finding 1 of the WCAG audit). The sidebar's own h2s cannot fill that
+   gap -- they precede the h1, sit in another landmark, and drop out of the
+   accessibility tree on a narrow screen. size="5" keeps the visual size. #}
 {% macro chevron() %}
   <span class="assignment-card__chevron" aria-hidden="true">
     <nldd-icon size="20" name="chevron-right"></nldd-icon>
@@ -11,7 +16,7 @@
   <nldd-container padding="16">
   {% if active_view == 'opdracht' %}
     <nldd-title size="5">
-    <h3>{{ card.name }}</h3>
+    <h2>{{ card.name }}</h2>
     </nldd-title>
     {# The whole team, not just who passed the filters: a rol filter would
        otherwise silently show half a team. #}
@@ -37,7 +42,7 @@
     <nldd-container layout="row" gap="12" vertical-alignment="center">
     <nldd-avatar size="40" name="{{ card.name }}" decorative></nldd-avatar>
     <nldd-title size="5">
-    <h3>{{ card.name }}</h3>
+    <h2>{{ card.name }}</h2>
     </nldd-title>
     </nldd-container>
     {% if card.roles %}
