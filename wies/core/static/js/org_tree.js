@@ -99,7 +99,7 @@
       // nested among selectable rows lines its chevron up with theirs. No own
       // click handler: the whole row is the toggle (handled below), and a second
       // handler here would fire too and cancel it out.
-      var groupChevron = cell("nldd-list-item-action", {
+      var groupChevron = cell("nldd-list-item-segment", {
         disclosure: "",
         "accessible-label": node.label + " in- of uitklappen",
       });
@@ -114,7 +114,7 @@
       });
     } else if (hasChildren) {
       // `disclosure` makes the chevron announce the ROW's expanded state.
-      var chevron = cell("nldd-list-item-action", {
+      var chevron = cell("nldd-list-item-segment", {
         button: "",
         disclosure: "",
         "accessible-label": node.label + " in- of uitklappen",
@@ -131,10 +131,10 @@
 
     // A `button` action, not a `checkbox` action: the latter paints an
     // unsuppressable grey fill on every checked row, cascaded children included.
-    // A group folder uses the same full-width action + checkbox column as a
+    // A group folder uses the same full-width segment + checkbox column as a
     // selectable row (checkbox hidden), so its label lines up with the org rows
-    // it sits among; the row itself, not this action, drives the toggle.
-    var action = cell("nldd-list-item-action", {
+    // it sits among; the row itself, not this segment, drives the toggle.
+    var action = cell("nldd-list-item-segment", {
       width: "full",
       "accessible-label": label,
     });
@@ -202,7 +202,7 @@
   OrgTree.prototype._syncRow = function (node, row) {
     // The selection button, not the chevron (the `disclosure` one).
     var action = row.querySelector(
-      ":scope > nldd-list-item-action[button]:not([disclosure])",
+      ":scope > nldd-list-item-segment[button]:not([disclosure])",
     );
     var box = action && action.querySelector("nldd-checkbox");
     if (box) {

@@ -47,6 +47,11 @@ class OrgPickerWidget(forms.Widget):
     # The JS expects fixed element IDs (assignment-org-*), so one picker per page.
     prefix: str = "org"
 
+    def __init__(self, attrs=None):
+        # The picker is no form input, so nldd-form-field cannot hand its
+        # validation list a control; field.html points the list at the button.
+        super().__init__({"validation-for": "assignment-org-trigger-btn", **(attrs or {})})
+
     def format_value(self, value):
         """Normalises ``value`` to a list of ``{"organization", "role"}`` dicts.
 
