@@ -2274,7 +2274,7 @@ def user_edit(request, public_id):
             )
             # HTMX needs HX-Redirect to force a full page redirect.
             messages.success(
-                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is opgeslagen."
+                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is aangepast."
             )
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
@@ -2622,7 +2622,7 @@ def profile_name_edit(request):
         if form.is_valid():
             UserEditables.first_name.save(user, form.cleaned_data["first_name"])
             UserEditables.last_name.save(user, form.cleaned_data["last_name"])
-            messages.success(request, "Je naam is opgeslagen.")
+            messages.success(request, "Je naam is aangepast.")
             response = HttpResponse(status=200)
             response["HX-Redirect"] = reverse("user-profile")
             return response
@@ -2808,7 +2808,7 @@ def profile_labels_edit(request):
         form = ProfileLabelsForm(request.POST, colleague=colleague, categories=categories)
         if form.is_valid():
             form.save()
-            messages.success(request, "Je labels zijn opgeslagen.")
+            messages.success(request, "Je labels zijn aangepast.")
             response = HttpResponse(status=200)
             response["HX-Redirect"] = reverse("user-profile")
             return response
@@ -2864,7 +2864,7 @@ def label_category_manage(request):
         formset = LabelCategoryFormSet(request.POST, queryset=queryset)
         if formset.is_valid():
             formset.save()
-            messages.success(request, "De categorieën zijn opgeslagen.")
+            messages.success(request, "De categorieën zijn aangepast.")
             response = HttpResponse(status=200)
             response["HX-Redirect"] = reverse("label-admin")
             return response
@@ -2941,7 +2941,7 @@ def label_form(request, public_id=None):
         form = LabelForm(request.POST, instance=label)
         if form.is_valid():
             label = form.save()
-            messages.success(request, f'Label "{label.name}" is {"opgeslagen" if is_edit else "toegevoegd"}.')
+            messages.success(request, f'Label "{label.name}" is {"aangepast" if is_edit else "toegevoegd"}.')
             response = HttpResponse(status=200)
             response["HX-Redirect"] = reverse("label-admin")
             return response
@@ -3125,7 +3125,7 @@ def suborganization_edit(request, public_id):
         form = SuborganizationForm(request.POST, instance=suborganization)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Merk "{suborganization.name}" is opgeslagen.')
+            messages.success(request, f'Merk "{suborganization.name}" is aangepast.')
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#suborganization_list_container"
@@ -4486,7 +4486,7 @@ def placement_edit_view(request, public_id):
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
     # The panel that HX-Location fetches swaps the banner in out of band.
-    messages.success(request, f"Plaatsing van {placement.colleague.name} is opgeslagen.")
+    messages.success(request, f"Plaatsing van {placement.colleague.name} is aangepast.")
 
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
@@ -4595,7 +4595,7 @@ def assignment_edit_view(request, public_id):
 
     # The panel that HX-Location fetches swaps the banner in out of band.
     assignment.refresh_from_db(fields=["name"])
-    messages.success(request, f'Opdracht "{assignment.name}" is opgeslagen.')
+    messages.success(request, f'Opdracht "{assignment.name}" is aangepast.')
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
@@ -4754,7 +4754,7 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
-    verb = "opgeslagen" if form.cleaned_data.get("service_public_id") else "toegevoegd"
+    verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})

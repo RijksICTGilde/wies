@@ -68,16 +68,16 @@ class SuccessMessageTest(TestCase):
 
         jan = User.objects.get(email="jan@rijksoverheid.nl")
         response = self.client.post(reverse("user-edit", args=[jan.public_id]), {**data, "last_name": "Jans"}, **HX)
-        assert last_message(response) == "Gebruiker Jan Jans is opgeslagen."
+        assert last_message(response) == "Gebruiker Jan Jans is aangepast."
 
         response = self.client.post(reverse("user-delete", args=[jan.public_id]), **HX)
         assert last_message(response) == "Jan Jans is verwijderd."
 
     def test_profile_name_and_labels(self):
         response = self.client.post(reverse("profile-name-edit"), {"first_name": "Be", "last_name": "Heerder"}, **HX)
-        assert last_message(response) == "Je naam is opgeslagen."
+        assert last_message(response) == "Je naam is aangepast."
         response = self.client.post(reverse("profile-labels-edit"), {}, **HX)
-        assert last_message(response) == "Je labels zijn opgeslagen."
+        assert last_message(response) == "Je labels zijn aangepast."
 
     def test_label_add_edit_delete(self):
         category = LabelCategory.objects.create(name="Thema", color="#0066CC")
@@ -87,7 +87,7 @@ class SuccessMessageTest(TestCase):
         response = self.client.post(
             reverse("label-form-edit", args=[label.public_id]), {"category": category.pk, "name": "Django"}, **HX
         )
-        assert last_message(response) == 'Label "Django" is opgeslagen.'
+        assert last_message(response) == 'Label "Django" is aangepast.'
         response = self.client.post(reverse("label-delete", args=[label.public_id]), **HX)
         assert last_message(response) == 'Label "Django" is verwijderd.'
 
@@ -101,7 +101,7 @@ class SuccessMessageTest(TestCase):
     def test_suborganization_edit_and_delete(self):
         merk = Suborganization.objects.create(name="Merk B")
         response = self.client.post(reverse("suborganization-edit", args=[merk.public_id]), {"name": "Merk C"}, **HX)
-        self.assertContains(response, 'text="Merk &#34;Merk C&#34; is opgeslagen."')
+        self.assertContains(response, 'text="Merk &#34;Merk C&#34; is aangepast."')
         response = self.client.post(reverse("suborganization-delete", args=[merk.public_id]), **HX)
         assert last_message(response) == 'Merk "Merk C" is verwijderd.'
 
@@ -137,7 +137,7 @@ class SuccessMessageTest(TestCase):
         panel = self.client.get(f"/?plaatsing={placement.public_id}", HTTP_HX_TARGET="side-panel-content", **HX)
         assert panel.status_code == 200
         self.assertContains(panel, 'hx-swap-oob="outerHTML"')
-        self.assertContains(panel, f'text="Plaatsing van {owner.name} is opgeslagen."')
+        self.assertContains(panel, f'text="Plaatsing van {owner.name} is aangepast."')
 
     def test_team_member_delete(self):
         self.user.user_permissions.add(*Permission.objects.filter(codename__in=["change_assignment", "delete_service"]))
