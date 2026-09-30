@@ -242,7 +242,8 @@ a > nldd-icon:last-child {
   margin-top: 0.5rem;
 }
 
-.assignment-card__chevron {
+.assignment-card__chevron,
+.wies-team-row__chevron {
   pointer-events: none;
   color: var(--semantics-content-secondary-color, #64748b);
 }
@@ -263,7 +264,18 @@ a > nldd-icon:last-child {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--primitives-space-16, 16px);
+  gap: var(--primitives-space-24, 24px);
+  margin-top: var(--primitives-space-4, 4px);
+  /* Period and hours are facts, not commentary: the primary text colour, not
+     the muted one the supporting-text slot gives them. */
+  color: var(--semantics-content-color);
+}
+
+/* Icon and its value read as one unit; the icon inherits the muted text colour. */
+.wies-team-row-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
 }
 
 /* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
@@ -284,6 +296,90 @@ a > nldd-icon:last-child {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
+/* The contract hours in the colleague panel: one line, the parts spaced like
+   the meta line of a team row. */
+.wies-contract-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+  margin: 0;
+  font: var(--primitives-font-body-sm-regular-snug);
+}
+
+/* A name that opens the colleague panel, on a row that already has a menu:
+   text colour and no underline until hover or focus, so the row stays quiet;
+   plain <a>, so no component styling to fight. */
+.wies-quiet-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wies-quiet-link:hover,
+.wies-quiet-link:focus-visible {
+  text-decoration: underline;
+}
+
+/* An opdracht card on a colleague panel or profile: compact until opened.
+   The card is ours to lay out inside; the component gives no header slot with
+   a control at the end. */
+.wies-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--primitives-space-8, 8px);
+}
+
+/* The toggle sits above nldd-card's own surface, like the privacy chip. */
+.wies-card__toggle,
+.wies-card__link {
+  position: relative;
+  z-index: 1;
+}
+
+/* A long client name wraps to a second line; the row gap stays small so the
+   line still reads as one. */
+.wies-card__meta {
+  margin-top: var(--primitives-space-8, 8px);
+  row-gap: var(--primitives-space-4, 4px);
+  font: var(--primitives-font-body-sm-regular-snug);
+}
+
+/* The description lines of a card, closed (one line, ellipsis) and open (the
+   full text), in the size of the date and client lines above them.
+   :not([hidden]): a display from the stylesheet would beat the hidden
+   attribute the toggle sets. */
+.wies-card__preview:not([hidden]),
+.wies-role-description {
+  display: block;
+  margin: var(--primitives-space-4, 4px) 0 0;
+  font: var(--primitives-font-body-sm-regular-snug);
+}
+
+.wies-card__preview-text {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.wies-role-description__text {
+  white-space: pre-wrap;
+}
+
+.wies-card__more:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--primitives-space-8, 8px);
+}
+
+.wies-card__role {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
+}
+
 /* A Van/Naar value below a timeline sentence, as its own block so long text does
    not run on behind "Naar:". */
 .wies-event-value {
@@ -301,8 +397,15 @@ a > nldd-icon:last-child {
    DOM. An attribute selector tests for presence, not content, so `[href]`
    matched them all. */
 nldd-card[href]:not([href=""]):hover,
-nldd-card[button]:hover {
+nldd-card[button]:hover,
+nldd-card[data-action]:hover {
   --_background-color: var(--primitives-color-neutral-50);
+}
+
+/* A card that opens on click (data-action) is clickable without href or
+   button, so the component does not set the cursor. */
+nldd-card[data-action] {
+  cursor: pointer;
 }
 
 /* "Meer tonen" button below a list or card grid. grid-column spans every column

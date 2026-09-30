@@ -220,8 +220,9 @@ class PlacementPublicIdTests(TestCase):
 
 
 class PlacementPanelParamTests(TestCase):
-    """The ?plaatsing= panel resolves by public_id and keeps placement visibility,
-    so a placement the viewer may not see looks like a nonexistent one."""
+    """An old ?plaatsing= link resolves by public_id to the opdracht panel with
+    the placed colleague highlighted, and keeps placement visibility, so a
+    placement the viewer may not see looks like a nonexistent one."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
@@ -257,6 +258,32 @@ class PlacementPanelParamTests(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
+        self.assertContains(response, "wies-team-row--highlighted")
+
+    def test_htmx_alias_ignores_the_old_sheet_params(self):
+        # The owner with BDM rights would get an edit sheet on ?opdracht=&bewerken=1;
+        # an old placement link with those params opens the read-only panel.
+        owner_user = grant_bdm(User.objects.create_user(email="o@rijksoverheid.nl"))
+        self.owner.user = owner_user
+        self.owner.save(update_fields=["user"])
+        self.client.force_login(owner_user)
+        active = self._placement(start_offset=-5, end_offset=5)
+
+        body = self._panel(f"{active.public_id}&bewerken=1&veld=period").content.decode()
+
+        assert "Placed Person" in body
+        assert 'name="specific_start_date"' not in body
+        assert "Opdracht bewerken" not in body
+
+    def test_full_page_load_redirects_to_the_canonical_url_with_filters_kept(self):
+        active = self._placement(start_offset=-5, end_offset=5)
+
+        response = self.client.get(reverse("home") + f"?zoek=x&plaatsing={active.public_id}&bewerken=1&veld=skill")
+
+        assert response.status_code == 302
+        assert response["Location"] == (
+            reverse("home") + f"?zoek=x&opdracht={self.assignment.public_id}&collega={self.placed.public_id}"
+        )
 
     def test_hidden_placement_indistinguishable_from_missing(self):
         """A hidden placement returns the same 404 as a nonexistent public_id, so

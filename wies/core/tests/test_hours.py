@@ -395,11 +395,12 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Geen lopend contract." in panel
         assert "Niet ingevuld" not in panel
 
-    def test_panel_shows_the_block_read_only_to_a_beheerder(self):
+    def test_panel_shows_the_hours_as_one_line_read_only_to_a_beheerder(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "<h3>Contracturen</h3>" in body
-        assert "36 uur" in body
+        assert "<h3>Contracturen</h3>" not in body
+        assert 'class="wies-contract-line"' in body
+        assert "36 uur per week" in body
         assert "Contractperiode toevoegen" not in body
         assert "Verwijderen" not in body
 
@@ -407,8 +408,7 @@ class ColleaguePanelContractPeriodTest(TestCase):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "<h3>Contracturen</h3>" in body
-        assert "36 uur" in body
+        assert "36 uur per week" in body
         assert "Contractperiode toevoegen" not in body
         assert "Verwijderen" not in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])
@@ -943,14 +943,16 @@ class ServiceHoursPermissionTest(TestCase):
         client = Client()
         client.force_login(self.user)
         assignment = self.service.assignment
-        edit_link = f"?plaatsing={self.placement.public_id}&bewerken=1&veld=skill"
+        edit_link = (
+            f"?opdracht={assignment.public_id}&collega={self.colleague.public_id}&teamlid={self.service.public_id}"
+        )
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "Rol wijzigen" in body
+        assert "Mijn omschrijving wijzigen" in body
         assert edit_link in body
         other = _consultant("Ander", "ander@x.nl")
         client.force_login(other.user)
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "Rol wijzigen" not in body
+        assert "Omschrijving wijzigen" not in body
 
     def test_an_hours_only_edit_leaves_no_trace_on_the_timeline(self):
         # No history is kept of a role's hours (agreed with Patrick, 13 July 2026).
@@ -995,7 +997,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "16 uur" not in team  # the team mate's
         assert "8 uur" in team  # the aanvraag's
         mate_panel = client.get(
-            reverse("home"), {"plaatsing": mate_service.placements.get().public_id}
+            reverse("home"), {"opdracht": assignment.public_id, "collega": mate.public_id}
         ).content.decode()
         assert "Maat" in mate_panel
         assert "16 uur" not in mate_panel
@@ -1014,5 +1016,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "description" in names
         client = Client()
         client.force_login(self.user)
-        body = client.get(reverse("home"), {"plaatsing": self.placement.public_id}).content.decode()
+        body = client.get(
+            reverse("home"), {"opdracht": self.service.assignment.public_id, "collega": self.colleague.public_id}
+        ).content.decode()
         assert "24 uur" in body

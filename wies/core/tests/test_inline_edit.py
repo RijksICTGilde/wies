@@ -956,17 +956,18 @@ class AssignmentServicesDisplayTest(TestCase):
         )
         self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
-    def test_filled_row_is_clickable_to_placement_panel(self):
+    def test_filled_row_offers_the_colleague_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         # Renders inside the open NLDD side panel, so it swaps the inner
         # content (#side-panel-content) rather than rebuilding the sheet.
         self.assertContains(resp, 'hx-target="#side-panel-content"')
-        self.assertContains(resp, "plaatsing=")
+        self.assertContains(resp, "collega=")
         self.assertContains(resp, self.colleague.name)
         filled_row = self._row_containing(resp, self.colleague.name)
         assert "hx-get" in filled_row
-        assert "plaatsing=" in filled_row
+        assert "collega=" in filled_row
+        assert "plaatsing=" not in filled_row
 
     @staticmethod
     def _rows(resp) -> list[str]:
@@ -1033,14 +1034,14 @@ class AssignmentServicesDisplayTest(TestCase):
         assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
 
     def test_row_menu_view_url_uses_public_id(self):
-        """ "Bekijk teamlid" must build ?plaatsing= from the placement's
+        """ "Bekijk profiel" must build ?collega= from the colleague's
         public_id, not its integer PK."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
-        placement = Placement.objects.get(colleague=self.colleague)
-        assert f"plaatsing={placement.public_id}" in filled_row
-        assert f"plaatsing={placement.id}&" not in filled_row
+        assert "Bekijk profiel" in filled_row
+        assert f"collega={self.colleague.public_id}" in filled_row
+        assert f"collega={self.colleague.id}" not in filled_row
 
     def test_row_menu_edit_url_resolves_to_member_panel(self):
         """End-to-end: the URL the row menu emits must actually open the

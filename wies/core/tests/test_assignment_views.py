@@ -430,10 +430,10 @@ class AssignmentEditAttributeTest(TestCase):
         )
         body = response.content.decode()
         assert 'text="Omschrijving"' in body
-        # "Toon meer" is bound by a delegated listener in inline_edit.js; loading
+        # "Toon meer" is bound by a delegated listener in ui_handlers.js; loading
         # that script only behind show_onboarding left the button dead here.
         page = self.client.get("/opdrachten/").content.decode()
-        assert "js/inline_edit.js" in page
+        assert "js/ui_handlers.js" in page
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
         # Editing runs via "Gegevens bewerken" at the top, not per row.
         assert "&veld=extra_info" not in body
@@ -1049,15 +1049,15 @@ class AssignmentDeleteViewTests(TestCase):
         assert event.context == {"name": "Lege opdracht"}
 
     def test_delete_redirects_to_page_behind_panel(self):
-        """HX-Redirect returns to the page behind the panel, stripping only the
-        opdracht param."""
+        """HX-Redirect returns to the page behind the panel, stripping the panel
+        params: collega too, or the colleague panel would open over the list."""
         self.client.force_login(self.owner_user)
         response = self.client.post(
             self.url,
-            headers={"HX-Current-URL": "https://testserver/medewerkers/?collega=5&opdracht=99"},
+            headers={"HX-Current-URL": "https://testserver/medewerkers/?zoek=a&collega=5&opdracht=99"},
         )
         assert response.status_code == 200
-        assert response["HX-Redirect"] == "/medewerkers/?collega=5"
+        assert response["HX-Redirect"] == "/medewerkers/?zoek=a"
 
     def test_delete_redirect_falls_back_to_list_without_header(self):
         """Without HX-Current-URL the redirect falls back to the opdrachten-lijst."""
