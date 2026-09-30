@@ -14,7 +14,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.roles import setup_roles
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
 
@@ -43,7 +43,7 @@ class AssignmentCreateTest(TestCase):
             first_name="BDM",
             last_name="User",
         )
-        grant_bdm(self.bdm_user)
+        grant_business_manager(self.bdm_user)
         add_assignment = Permission.objects.get(codename="add_assignment")
         add_service = Permission.objects.get(codename="add_service")
         add_placement = Permission.objects.get(codename="add_placement")

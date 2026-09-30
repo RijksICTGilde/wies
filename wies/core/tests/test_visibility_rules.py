@@ -26,7 +26,7 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.querysets import annotate_placement_dates
 from wies.core.services.placements import filter_visible_placements
 from wies.core.visibility_rules import (
-    PRIVACY_BDM,
+    PRIVACY_BM,
     PRIVACY_BM_OWNED,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
@@ -40,7 +40,7 @@ TOMORROW = TODAY + timedelta(days=1)
 
 
 # The evaluate function reads the viewer off ``request.user.colleague`` (only its
-# ``id``) and the privileged flag off ``is_bdm_request(request)``,
+# ``id``) and the privileged flag off ``is_business_manager_request(request)``,
 # which reads the user's BDM group membership. This fake request drives both
 # without a database user.
 @dataclass
@@ -49,11 +49,11 @@ class _Viewer:
 
 
 class _FakeGroups:
-    def __init__(self, *, is_bdm):
-        self._is_bdm = is_bdm
+    def __init__(self, *, is_business_manager):
+        self._is_business_manager = is_business_manager
 
     def filter(self, **kwargs):
-        return SimpleNamespace(exists=lambda: self._is_bdm)
+        return SimpleNamespace(exists=lambda: self._is_business_manager)
 
 
 def _request(*, viewer_id=None, viewer_privileged=False):
@@ -62,7 +62,7 @@ def _request(*, viewer_id=None, viewer_privileged=False):
         is_authenticated=True,
         email="viewer@rijksoverheid.nl",
         colleague=colleague,
-        groups=_FakeGroups(is_bdm=viewer_privileged),
+        groups=_FakeGroups(is_business_manager=viewer_privileged),
     )
     return SimpleNamespace(user=user)
 
@@ -163,14 +163,14 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         )
         assert result.visible is True
         assert result.timing == "future"
-        assert result.privacy_note == PRIVACY_BDM
+        assert result.privacy_note == PRIVACY_BM
 
     def test_ended_visible_to_bdm_with_bdm_note(self):
         result = self._evaluate(
             start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OTHER_ID, viewer_privileged=True
         )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BDM
+        assert result.privacy_note == PRIVACY_BM
 
     def test_bdm_note_reaches_a_viewerless_bdm(self):
         # The BDM branch does not read ``viewer``, so a null viewer still gets in.
@@ -178,7 +178,7 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
             start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=None, viewer_privileged=True
         )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BDM
+        assert result.privacy_note == PRIVACY_BM
 
     def test_future_hidden_from_unrelated_non_bdm(self):
         result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID)
@@ -193,7 +193,7 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
 
     def test_placed_branch_wins_when_viewer_is_both_placed_and_bdm(self):
         # The placed-colleague check runs before the BDM check, so a placed
-        # colleague who is also a BDM gets PRIVACY_OWN, not PRIVACY_BDM.
+        # colleague who is also a BDM gets PRIVACY_OWN, not PRIVACY_BM.
         result = self._evaluate(
             start=TOMORROW,
             end=TOMORROW + timedelta(days=30),

@@ -28,9 +28,9 @@ from wies.core.permission_engine import (
     rule,
 )
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
+    ROLE_USER_ADMIN,
 )
 from wies.rijksauth.models import User
 
@@ -46,7 +46,7 @@ rule(
     label="Opdracht bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
     ],
 )
 
@@ -56,7 +56,7 @@ rule(
     label="Dienst bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
     ],
 )
 
@@ -66,7 +66,7 @@ rule(
     label="Teamlid verplaatsen",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
     ],
 )
 
@@ -75,7 +75,7 @@ rule(
     Colleague,
     label="Collega bewerken",
     grants=[
-        Grant(Role(ROLE_OFFICE_ASSISTANT)),
+        Grant(Role(ROLE_USER_ADMIN)),
         Grant(Anyone(), SELF),
     ],
 )
@@ -85,7 +85,7 @@ rule(
     User,
     label="Gebruiker bewerken",
     grants=[
-        Grant(Role(ROLE_OFFICE_ASSISTANT)),
+        Grant(Role(ROLE_USER_ADMIN)),
         Grant(Anyone(), SELF),
     ],
 )
@@ -99,7 +99,7 @@ rule(
     label="Opdracht verwijderen",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
     ],
 )
 
@@ -112,7 +112,7 @@ rule(
     label="Naam van een opdracht bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
         Grant(Role(ROLE_CONSULTANT), PLACED),
     ],
 )
@@ -123,7 +123,7 @@ rule(
     label="Extra informatie bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
         Grant(Role(ROLE_CONSULTANT), PLACED),
     ],
 )
@@ -134,7 +134,7 @@ rule(
     label="Dienstomschrijving bewerken",
     requires=WIES_SOURCED,
     grants=[
-        Grant(Role(ROLE_BDM)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
         Grant(Role(ROLE_CONSULTANT), PLACED_ON_SERVICE),
     ],
 )
@@ -144,17 +144,17 @@ rule(
     ContractPeriod,
     label="Contracturen van een collega zien",
     grants=[
-        Grant(Role(ROLE_BDM)),
-        Grant(Role(ROLE_OFFICE_ASSISTANT)),
+        Grant(Role(ROLE_BUSINESS_MANAGER)),
+        Grant(Role(ROLE_USER_ADMIN)),
     ],
 )
 
-# A BDM plans with the hours and so reads them, but keeping them is beheer.
+# A Business Manager plans with the hours and so reads them; keeping them is beheer.
 rule(
     UPDATE,
     ContractPeriod,
     label="Contracturen van een collega bijhouden",
-    grants=[Grant(Role(ROLE_OFFICE_ASSISTANT))],
+    grants=[Grant(Role(ROLE_USER_ADMIN))],
 )
 
 # Nobody: an address is changed on the user form, which is where ``may_change_email``

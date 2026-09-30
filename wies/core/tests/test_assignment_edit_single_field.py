@@ -16,7 +16,7 @@ from wies.core.models import (
     Colleague,
     OrganizationUnit,
 )
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
 
@@ -25,12 +25,12 @@ class AssignmentEditSingleFieldTest(TestCase):
     def setUp(self):
         self.client = Client()
         # Both owner and other are BDM, so both are valid choices in the
-        # Business Manager field (choices = _bdm_queryset).
-        self.owner_user = grant_bdm(User.objects.create_user(email="owner@rijksoverheid.nl"))
+        # Business Manager field (choices = _business_manager_queryset).
+        self.owner_user = grant_business_manager(User.objects.create_user(email="owner@rijksoverheid.nl"))
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
 
-        self.other_user = grant_bdm(User.objects.create_user(email="other@rijksoverheid.nl"))
+        self.other_user = grant_business_manager(User.objects.create_user(email="other@rijksoverheid.nl"))
         self.client.force_login(self.other_user)
         self.other = Colleague.objects.get(user=self.other_user)
 
@@ -103,7 +103,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
         self.owner = Colleague.objects.get(user=self.owner_user)
 
         self.editor_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
-        grant_bdm(self.editor_user)
+        grant_business_manager(self.editor_user)
         self.client.force_login(self.editor_user)
 
         self.assignment = Assignment.objects.create(
@@ -143,6 +143,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def test_choices_without_an_assignment_stay_limited_to_the_group(self):
         # On create there is no owner yet, so the list stays the group.
-        from wies.core.editables.assignment import _bdm_queryset  # noqa: PLC0415 (import not at top) — test-local
+        # PLC0415 (import not at top level) is suppressed below: test-local import.
+        from wies.core.editables.assignment import _business_manager_queryset  # noqa: PLC0415
 
-        assert self.owner not in list(_bdm_queryset())
+        assert self.owner not in list(_business_manager_queryset())

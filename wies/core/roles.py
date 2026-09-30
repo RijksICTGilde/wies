@@ -1,5 +1,5 @@
 """Group/permission setup and role predicates for Gebruikersbeheer, Consultant
-and BDM. The authority model is described in ``features/roles.md``.
+and Business Manager. The authority model is described in ``features/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
 ``wies/core/permissions.py``. This module owns the Django Group definitions,
@@ -28,18 +28,18 @@ from wies.core.models import (
 
 User = get_user_model()
 
-# Matching uses the key, showing resolves through ``role_label``: a rename is one
-# string here, not a data migration.
+# Matching uses the key, showing resolves through ``role_label``: a rename of what
+# the screen says is one string here, not a data migration.
 ROLE_CONSULTANT = "consultant"
-ROLE_BDM = "bdm"
-ROLE_OFFICE_ASSISTANT = "office_assistant"
+ROLE_BUSINESS_MANAGER = "business_manager"
+ROLE_USER_ADMIN = "user_admin"
 # Deliberately not a Django group: who holds this one lives in STAFF_EMAILS.
 ROLE_STAFF = "staff"
 
 ROLE_LABELS = {
     ROLE_CONSULTANT: "Consultant",
-    ROLE_BDM: "Business Manager",
-    ROLE_OFFICE_ASSISTANT: "Gebruikersbeheer",
+    ROLE_BUSINESS_MANAGER: "Business Manager",
+    ROLE_USER_ADMIN: "Gebruikersbeheer",
     ROLE_STAFF: "Applicatiebeheer",
 }
 
@@ -53,21 +53,21 @@ def role_label(key: str) -> str:
     return ROLE_LABELS.get(key, key)
 
 
-def is_bdm(user) -> bool:
-    """Whether the user holds the BDM role (Django group ``ROLE_BDM``).
+def is_business_manager(user) -> bool:
+    """Whether the user holds the Business Manager role (group ``ROLE_BUSINESS_MANAGER``).
 
-    Used as a visibility gate: a BDM sees ended and future placements/assignments
+    Used as a visibility gate: a Business Manager sees ended and future placements
     that are otherwise private to the placed colleague — see
     ``evaluate_placement_visibility``.
     """
-    return user.is_authenticated and user.groups.filter(name=ROLE_BDM).exists()
+    return user.is_authenticated and user.groups.filter(name=ROLE_BUSINESS_MANAGER).exists()
 
 
 def is_staff_member(user) -> bool:
     """Whether the user does application administration (``STAFF_EMAILS``).
 
     Gates the maintenance pages (``/beheer/statistieken/``, ``/beheer/database/``).
-    It carries no rights on assignments; those come from the BDM role.
+    It carries no rights on assignments; those come from the Business Manager role.
     """
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
@@ -76,7 +76,7 @@ def can_view_role_hours(user, placement) -> bool:
     """Whether the user may see the hours per week of a role.
 
     Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
-    are for who plans the work (the BDM) and for the consultant themself, not for
+    are for who plans the work (the Business Manager) and for the consultant, not for
     team mates. An open aanvraag has no one to protect, so its hours are visible
     to everyone who sees the opdracht.
 
@@ -93,7 +93,7 @@ def can_view_role_hours(user, placement) -> bool:
     colleague = getattr(user, "colleague", None)
     if colleague is not None and placement.colleague_id == colleague.id:
         return True
-    return is_bdm(user)
+    return is_business_manager(user)
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
@@ -130,21 +130,21 @@ def may_grant(_editor, role: str) -> bool:
     return role != ROLE_STAFF
 
 
-def is_bdm_request(request) -> bool:
-    """Whether the request's user holds the BDM role, resolved once per request,
+def is_business_manager_request(request) -> bool:
+    """Whether the request's user holds the Business Manager role, resolved once per request,
     cached because the audit timeline calls it once per event.
     """
     user = getattr(request, "user", None)
     if user is None:
         return False
     if not hasattr(request, "wies_is_bdm"):
-        request.wies_is_bdm = is_bdm(user)
+        request.wies_is_bdm = is_business_manager(user)
     return request.wies_is_bdm
 
 
 def setup_roles():
     roles = {
-        ROLE_OFFICE_ASSISTANT: [
+        ROLE_USER_ADMIN: [
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
             (
                 LabelCategory,
@@ -163,7 +163,7 @@ def setup_roles():
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         ROLE_CONSULTANT: [],
-        ROLE_BDM: [
+        ROLE_BUSINESS_MANAGER: [
             (Assignment, ["add_assignment"]),
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),

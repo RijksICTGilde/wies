@@ -1,6 +1,7 @@
 """Tests for the role data migrations: the Opdrachtbeheer backfill (0009), the
-Beheerder -> Gebruikersbeheer rename (0010), the move to role keys (0011) and
-dropping Opdrachtbeheer for the roles that replace it (0012)."""
+Beheerder -> Gebruikersbeheer rename (0010), the move to role keys (0011),
+dropping Opdrachtbeheer for the roles that replace it (0012) and the two keys that
+follow the screen names (0013)."""
 
 import os
 from unittest.mock import patch
@@ -16,6 +17,7 @@ BACKFILL = "0009_backfill_assignment_admin"
 RENAME = "0010_rename_beheerder_group"
 KEYS = "0011_role_keys"
 DROP = "0012_drop_assignment_admin_group"
+FINAL = "0013_final_role_keys"
 
 
 class _MigrationTestCase(TransactionTestCase):
@@ -309,3 +311,57 @@ class RoleMigrationChainTest(_MigrationTestCase):
             self._migrate(DROP)
 
         assert self._names(DROP, self.staff_id) == {"bdm", "office_assistant"}
+
+
+class FinalRoleKeyMigrationTest(_MigrationTestCase):
+    """0013 renames ``bdm`` and ``office_assistant`` to the words the screens use."""
+
+    def setUp(self):
+        self._migrate(DROP)
+        apps = self._apps_at(DROP)
+        self.group_model = apps.get_model("auth", "Group")
+        self.permission_model = apps.get_model("auth", "Permission")
+        user_model = apps.get_model(APP, "User")
+        self.user_id = user_model.objects.create(email="beheer@rijksoverheid.nl").pk
+        for name in ("bdm", "office_assistant"):
+            self.group_model.objects.get_or_create(name=name)
+        held = self.group_model.objects.get(name="office_assistant")
+        held.permissions.add(self.permission_model.objects.get(codename="change_user"))
+        held.user_set.add(self.user_id)
+
+    def _names(self, target):
+        return set(self._apps_at(target).get_model("auth", "Group").objects.values_list("name", flat=True))
+
+    def _group(self, target, name):
+        return self._apps_at(target).get_model("auth", "Group").objects.filter(name=name).first()
+
+    def test_both_keys_follow_the_screen_names(self):
+        self._migrate(FINAL)
+
+        assert {"business_manager", "user_admin"} <= self._names(FINAL)
+        assert not {"bdm", "office_assistant"} & self._names(FINAL)
+
+    def test_members_and_permissions_survive_the_rename(self):
+        self._migrate(FINAL)
+
+        group = self._group(FINAL, "user_admin")
+        assert list(group.user_set.values_list("pk", flat=True)) == [self.user_id]
+        assert list(group.permissions.values_list("codename", flat=True)) == ["change_user"]
+
+    def test_an_existing_target_group_is_merged(self):
+        self.group_model.objects.get_or_create(name="user_admin")
+
+        self._migrate(FINAL)
+
+        assert self._group(FINAL, "office_assistant") is None
+        group = self._group(FINAL, "user_admin")
+        assert list(group.user_set.values_list("pk", flat=True)) == [self.user_id]
+        assert list(group.permissions.values_list("codename", flat=True)) == ["change_user"]
+
+    def test_the_rename_is_reversible(self):
+        self._migrate(FINAL)
+        self._migrate(DROP)
+
+        assert not {"business_manager", "user_admin"} & self._names(DROP)
+        group = self._group(DROP, "office_assistant")
+        assert list(group.user_set.values_list("pk", flat=True)) == [self.user_id]

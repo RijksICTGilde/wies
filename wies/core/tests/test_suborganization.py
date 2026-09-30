@@ -10,7 +10,7 @@ from django.urls import reverse
 from wies.core.errors import SuborganizationNotFoundError
 from wies.core.forms import SuborganizationForm
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill, Suborganization
-from wies.core.roles import ROLE_OFFICE_ASSISTANT, setup_roles
+from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.views import PlacementListView, UserListView
@@ -86,7 +86,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         )
 
         self.admin_user = User.objects.create_user(email="admin@rijksoverheid.nl", first_name="Admin")
-        self.admin_user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.admin_user.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
 
         self.other_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="Other")
 
@@ -284,7 +284,7 @@ class SuborganizationAdminTest(TestCase):
         setup_roles()
         self.client = Client()
         self.admin_user = User.objects.create_user(email="beheer@rijksoverheid.nl")
-        self.admin_user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.admin_user.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.plain_user = User.objects.create_user(email="plain@rijksoverheid.nl")
 
     def test_admin_requires_permission(self):

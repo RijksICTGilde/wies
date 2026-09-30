@@ -25,10 +25,10 @@ from wies.core.permission_engine import (
     registered_rules,
 )
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
     ROLE_STAFF,
+    ROLE_USER_ADMIN,
     can_view_role_hours,
     is_staff_member,
     may_change_email,
@@ -44,8 +44,8 @@ STAFF = role_label(ROLE_STAFF)
 # (column heading, Django groups, application administration)
 COLUMNS = [
     (role_label(ROLE_CONSULTANT), (ROLE_CONSULTANT,), False),
-    (role_label(ROLE_BDM), (ROLE_BDM,), False),
-    (role_label(ROLE_OFFICE_ASSISTANT), (ROLE_OFFICE_ASSISTANT,), False),
+    (role_label(ROLE_BUSINESS_MANAGER), (ROLE_BUSINESS_MANAGER,), False),
+    (role_label(ROLE_USER_ADMIN), (ROLE_USER_ADMIN,), False),
     (STAFF, (), True),
 ]
 

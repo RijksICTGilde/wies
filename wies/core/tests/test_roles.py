@@ -9,7 +9,7 @@ from django.urls import reverse
 
 from config.settings import base
 from wies.core.models import Label, LabelCategory
-from wies.core.roles import ROLE_BDM, ROLE_LABELS, ROLE_OFFICE_ASSISTANT, ROLE_STAFF, setup_roles
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_LABELS, ROLE_STAFF, ROLE_USER_ADMIN, setup_roles
 
 User = get_user_model()
 
@@ -18,14 +18,14 @@ class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_setup_roles_does_not_grant_bdm_to_staff(self):
+    def test_setup_roles_does_not_grant_business_manager_to_staff(self):
         """setup_roles() runs on every start; a staff member who removed BDM from
         themselves must not get it back."""
         User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
 
         setup_roles()
 
-        assert not Group.objects.get(name=ROLE_BDM).user_set.exists()
+        assert not Group.objects.get(name=ROLE_BUSINESS_MANAGER).user_set.exists()
 
     def test_setup_roles_creates_exactly_the_roles_that_have_a_label(self):
         """Both sides of a role's name, which drift apart in silence: a group with
@@ -49,13 +49,13 @@ class RBACSetupTest(TestCase):
         setup_roles()
 
         # Gebruikersbeheer group should exist
-        assert Group.objects.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert Group.objects.filter(name=ROLE_USER_ADMIN).exists()
 
     def test_setup_roles_grants_user_permissions(self):
         """Test that Gebruikersbeheer group has all user management permissions"""
         setup_roles()
 
-        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
+        admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
 
         # Check all expected permissions
         expected_permissions = ["view_user", "add_user", "delete_user", "change_user"]
@@ -68,7 +68,7 @@ class RBACSetupTest(TestCase):
         """Test that Gebruikersbeheer group can manage suborganizations (merken)"""
         setup_roles()
 
-        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
+        admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
 
         expected_permissions = [
             "view_suborganization",
@@ -91,7 +91,7 @@ class RBACSetupTest(TestCase):
             first_name="Admin",
             last_name="User",
         )
-        admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
+        admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
         admin_user.groups.add(admin_group)
 
         client = Client()

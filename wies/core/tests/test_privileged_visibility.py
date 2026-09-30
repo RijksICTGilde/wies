@@ -15,10 +15,10 @@ from django.utils import timezone
 
 from wies.core.editables.assignment import _services_display_context
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.roles import ROLE_BDM, is_bdm_request
-from wies.core.tests.role_helpers import STAFF_EMAIL, make_other_bdm_user, make_staff_user
+from wies.core.roles import ROLE_BUSINESS_MANAGER, is_business_manager_request
+from wies.core.tests.role_helpers import STAFF_EMAIL, make_other_business_manager_user, make_staff_user
 from wies.core.views import _get_colleague_assignments, _resolve_placement_panel
-from wies.core.visibility_rules import PRIVACY_BDM
+from wies.core.visibility_rules import PRIVACY_BM
 from wies.rijksauth.models import User
 
 
@@ -34,20 +34,20 @@ class IsBdmRequestTest(SimpleTestCase):
         return request
 
     def test_bdm_can_see(self):
-        assert is_bdm_request(self._request(groups={ROLE_BDM})) is True
+        assert is_business_manager_request(self._request(groups={ROLE_BUSINESS_MANAGER})) is True
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_bare_staff_cannot_see(self):
         # Application administration carries no functional rights.
-        assert is_bdm_request(self._request(email=STAFF_EMAIL)) is False
+        assert is_business_manager_request(self._request(email=STAFF_EMAIL)) is False
 
     def test_unrelated_cannot_see(self):
-        assert is_bdm_request(self._request()) is False
+        assert is_business_manager_request(self._request()) is False
 
     def test_anonymous_cannot_see(self):
         request = Mock(spec=["user"])
         request.user = Mock(is_authenticated=False)
-        assert is_bdm_request(request) is False
+        assert is_business_manager_request(request) is False
 
 
 class _VisibilityFixture(TestCase):
@@ -71,7 +71,7 @@ class _VisibilityFixture(TestCase):
             specific_end_date=date(2024, 6, 14),
             source="wies",
         )
-        self.bdm_viewer = make_other_bdm_user()
+        self.bdm_viewer = make_other_business_manager_user()
         self.user_staff = make_staff_user()
 
     def _request(self, user):
@@ -91,7 +91,7 @@ class AssignmentAdminSeesTeamRowTest(_VisibilityFixture):
         assert len(visible) == 1
         assert visible[0]["colleague"].id == self.colleague_alice.id
         assert visible[0]["historical"] is True
-        assert visible[0]["privacy_warning_text"] == PRIVACY_BDM
+        assert visible[0]["privacy_warning_text"] == PRIVACY_BM
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     @patch("wies.core.editables.assignment.timezone")
@@ -111,7 +111,7 @@ class AssignmentAdminSeesPlacementPanelTest(_VisibilityFixture):
         data = _resolve_placement_panel(self._request(self.bdm_viewer), self.ended.public_id)
 
         assert data is not None
-        assert data["assignment_card"]["privacy_warning_text"] == PRIVACY_BDM
+        assert data["assignment_card"]["privacy_warning_text"] == PRIVACY_BM
 
 
 class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
@@ -123,7 +123,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
-        assert historical[0]["privacy_warning_text"] == PRIVACY_BDM
+        assert historical[0]["privacy_warning_text"] == PRIVACY_BM
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     @patch("wies.core.views.timezone")
@@ -198,7 +198,7 @@ class AssignmentAdminSeesTimelineEventTest(TestCase):
             specific_end_date=today + timedelta(days=120),
             source="wies",
         )
-        self.bdm_viewer = make_other_bdm_user()
+        self.bdm_viewer = make_other_business_manager_user()
 
     def test_a_bdm_sees_the_hidden_team_member(self):
         client = Client()

@@ -9,9 +9,9 @@ from django.urls import reverse
 
 from wies.core.models import SUBGROEP_CATEGORY, Colleague, Label, LabelCategory, Suborganization
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
+    ROLE_USER_ADMIN,
     role_label,
 )
 
@@ -30,7 +30,7 @@ class UserFilterFixture:
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
         self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.merk = Suborganization.objects.create(name="Merk A")
-        self.office_assistant, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        self.office_assistant, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         u = User.objects.create_user(email="c@rijksoverheid.nl", first_name="Cor", last_name="Consultant")
         u.groups.add(self.office_assistant)
         Colleague.objects.create(
@@ -42,8 +42,8 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_row_shows_role_tag(self):
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        assert f'text="{role_label(ROLE_OFFICE_ASSISTANT)}"' in html
-        assert f'text="{ROLE_OFFICE_ASSISTANT}"' not in html
+        assert f'text="{role_label(ROLE_USER_ADMIN)}"' in html
+        assert f'text="{ROLE_USER_ADMIN}"' not in html
 
     def test_filter_sheet_renders_role_and_merk(self):
         # The sheet lives in the page itself: its #filter-form drives the search
@@ -52,7 +52,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         html = self.client.get(reverse("admin-users")).content.decode()
         assert "user-filter-sheet" in html
         assert 'id="filter-form"' in html
-        assert role_label(ROLE_OFFICE_ASSISTANT) in html  # role option, by label
+        assert role_label(ROLE_USER_ADMIN) in html  # role option, by label
         assert "Merk A" in html  # merk option
         assert 'name="rol"' in html
         assert 'name="merk"' in html
@@ -60,7 +60,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_role_filter_lists_the_roles_by_label(self):
         """The full list behind "Meer..." is the one the view builds: sorted on
         ``Group.name`` it would open with ``bdm``, which is no reader's A-Z."""
-        for key in (ROLE_BDM, ROLE_CONSULTANT):
+        for key in (ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT):
             Group.objects.get_or_create(name=key)
         self.client.force_login(self.admin)
 
@@ -70,9 +70,9 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
 
         # One per option row; the template lowercases it for the search box.
         assert re.findall(r'data-option-label="([^"]*)"', html) == [
-            role_label(ROLE_BDM).lower(),
+            role_label(ROLE_BUSINESS_MANAGER).lower(),
             role_label(ROLE_CONSULTANT).lower(),
-            role_label(ROLE_OFFICE_ASSISTANT).lower(),
+            role_label(ROLE_USER_ADMIN).lower(),
         ]
 
     def test_filter_sheet_collapses_long_group_behind_meer(self):

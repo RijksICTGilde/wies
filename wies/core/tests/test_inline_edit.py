@@ -39,11 +39,11 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
-from wies.core.roles import ROLE_BDM
+from wies.core.roles import ROLE_BUSINESS_MANAGER
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm, grant_consultant
+from wies.core.tests.role_helpers import grant_business_manager, grant_consultant
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -106,8 +106,8 @@ class InlineEditInfrastructureTest(TestCase):
             first_name="Inline",
             last_name="Tester",
         )
-        # Ownership only grants edit rights combined with the BDM role.
-        grant_bdm(self.user)
+        # Ownership only grants edit rights combined with the Business Manager role.
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
         # The user_logged_in signal auto-creates a Colleague for the
         # user. Grab it for use as assignment owner.
@@ -289,7 +289,7 @@ class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, "G", "G", "group@rijksoverheid.nl")
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
         # BDM owner so the permission engine allows all UPDATEs
@@ -414,7 +414,7 @@ class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, email="cs@rijksoverheid.nl", first_name="C", last_name="S")
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
         # BDM owner so permission checks pass;
@@ -455,7 +455,7 @@ class InlineEditDisplayTest(TestCase):
             first_name="D",
             last_name="D",
         )
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
         # BDM owner so permission checks pass;
@@ -506,7 +506,7 @@ class AssignmentPanelRenderTest(TestCase):
         self.colleague = Colleague.objects.get(user=self.user)
         # The owner field only offers BDM colleagues, so the combined edit form
         # needs the owner to be a valid choice for itself.
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
@@ -712,7 +712,7 @@ class AssignmentEditablesFullTest(TestCase):
             last_name="F",
         )
         # BDM owner: may edit, and the Colleague shows up in owner choices.
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -815,7 +815,7 @@ class AssignmentCreateFormIntegrationTest(TestCase):
         # the BDM group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        assert ROLE_BDM in str(qs.query)
+        assert ROLE_BUSINESS_MANAGER in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
         form = self._form_cls()(
@@ -841,7 +841,7 @@ class PlacementServiceEditablesTest(TestCase):
             first_name="P",
             last_name="S",
         )
-        grant_bdm(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         assignment = Assignment.objects.create(
@@ -924,7 +924,7 @@ class AssignmentServicesDisplayTest(TestCase):
             first_name="Svc",
             last_name="Display",
         )
-        grant_bdm(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1073,7 +1073,7 @@ class AssignmentServicesAuditTest(TestCase):
             first_name="Svc",
             last_name="Audit",
         )
-        grant_bdm(self.user)  # BDM owner of the assignment below
+        grant_business_manager(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
@@ -1380,7 +1380,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             first_name="Svc",
             last_name="Period",
         )
-        grant_bdm(self.user)  # BDM owner of the assignment below
+        grant_business_manager(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
@@ -1661,8 +1661,8 @@ class ServiceDescriptionPermissionTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.owner_user = User.objects.create_user(email="bm@rijksoverheid.nl", first_name="Bm", last_name="Boss")
-        # Ownership only grants edit rights combined with the BDM role.
-        grant_bdm(self.owner_user)
+        # Ownership only grants edit rights combined with the Business Manager role.
+        grant_business_manager(self.owner_user)
         self.owner = Colleague.objects.create(
             user=self.owner_user, name="Bm Boss", email="bm@rijksoverheid.nl", source="wies"
         )
@@ -1811,7 +1811,7 @@ class InlineOrganizationsEditTest(TestCase):
             first_name="O",
             last_name="O",
         )
-        grant_bdm(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(

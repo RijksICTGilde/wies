@@ -22,7 +22,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm, grant_consultant
+from wies.core.tests.role_helpers import grant_business_manager, grant_consultant
 
 User = get_user_model()
 
@@ -34,7 +34,7 @@ class AssignmentEditAttributeTest(TestCase):
         """Creates the users, colleagues and assignments used by the tests."""
         self.client = Client()
 
-        self.user_with_permission = grant_bdm(
+        self.user_with_permission = grant_business_manager(
             User.objects.create_user(
                 email="perm@rijksoverheid.nl",
                 first_name="User",
@@ -44,7 +44,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         # The owner holds the BDM role: ownership only grants edit rights
         # combined with BDM (see ``update_assignment`` in permissions.py).
-        self.owner_user = grant_bdm(
+        self.owner_user = grant_business_manager(
             User.objects.create_user(
                 email="owner@rijksoverheid.nl",
                 first_name="Owner",
@@ -206,7 +206,7 @@ class AssignmentEditAttributeTest(TestCase):
         """The BDM owner can edit the ``owner`` field, which the field permission
         must not block."""
         self.client.force_login(self.owner_user)
-        new_bdm_user = grant_bdm(
+        new_bdm_user = grant_business_manager(
             User.objects.create_user(
                 email="new-bdm@rijksoverheid.nl",
                 first_name="New",
@@ -260,14 +260,14 @@ class AssignmentEditAttributeTest(TestCase):
 
     def test_a_bdm_can_edit_assignment_owner(self):
         """A BDM can edit an assignment they don't own (#392)."""
-        admin_user = grant_bdm(
+        admin_user = grant_business_manager(
             User.objects.create_user(
                 email="opdrachtbeheer@rijksoverheid.nl",
                 first_name="Opdracht",
                 last_name="Beheer",
             )
         )
-        new_bdm_user = grant_bdm(
+        new_bdm_user = grant_business_manager(
             User.objects.create_user(
                 email="bdm2@rijksoverheid.nl",
                 first_name="New",
@@ -311,7 +311,7 @@ class AssignmentEditAttributeTest(TestCase):
     def test_a_bdm_cannot_edit_external_source_assignment(self):
         """A BDM cannot edit non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
-        admin_user = grant_bdm(
+        admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)
@@ -892,14 +892,14 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_bdm_sees_the_full_history(self):
         bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
         Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
-        grant_bdm(bdm_user)
+        grant_business_manager(bdm_user)
 
         response = self._get_timeline(bdm_user)
 
         self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_non_bdm_owner_no_longer_sees_hidden_history(self):
-        # Ownership alone no longer grants visibility: a non-BDM owner is treated
+        # Ownership alone no longer grants visibility: an owner without the role is treated
         # like any unrelated viewer and the hidden name is filtered out.
         response = self._get_timeline(self.owner_user)
 
@@ -983,7 +983,7 @@ class AssignmentDeleteViewTests(TestCase):
     def setUp(self):
         self.client = Client()
 
-        self.owner_user = grant_bdm(
+        self.owner_user = grant_business_manager(
             User.objects.create_user(email="owner-del@rijksoverheid.nl", first_name="Owner", last_name="BM")
         )
         self.owner_colleague = Colleague.objects.create(
@@ -1119,7 +1119,7 @@ class AssignmentDeleteViewTests(TestCase):
 
     def test_a_bdm_can_delete_wies_assignment(self):
         """A BDM can delete an assignment they don't own (#313)."""
-        admin_user = grant_bdm(
+        admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)
@@ -1145,7 +1145,7 @@ class AssignmentDeleteViewTests(TestCase):
     def test_a_bdm_cannot_delete_otys_iir_assignment(self):
         """A BDM cannot delete non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
-        admin_user = grant_bdm(
+        admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
         self.client.force_login(admin_user)

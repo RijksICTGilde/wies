@@ -16,7 +16,7 @@ from django.test import TestCase
 from django.utils import timezone
 
 from wies.core.models import SUBGROEP_CATEGORY, Assignment, Colleague, LabelCategory, Placement
-from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN
 from wies.core.services.occupancy import colleague_occupancy
 
 User = get_user_model()
@@ -42,7 +42,7 @@ class BaseDummyDataFixtureTest(TestCase):
 
     def test_the_other_roles_are_represented(self):
         """Roles drive permissions, so the demo data has to exercise more than one."""
-        for role in (ROLE_BDM, ROLE_OFFICE_ASSISTANT):
+        for role in (ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN):
             assert Colleague.objects.filter(user__groups__name=role).exists(), f"no {role}"
 
     def test_consultants_have_placements_to_draw(self):

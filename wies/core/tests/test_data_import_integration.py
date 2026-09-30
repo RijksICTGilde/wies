@@ -7,7 +7,7 @@ from django.test import RequestFactory, TestCase
 
 from wies.core.errors import SuborganizationNotFoundError
 from wies.core.models import Assignment, Colleague, Event, Placement, Service, Suborganization
-from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, role_label
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, role_label
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -20,9 +20,9 @@ class DataImportIntegrationTest(TestCase):
 
     def setUp(self):
         """Create necessary groups for CSV import tests"""
-        Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        Group.objects.get_or_create(name=ROLE_BDM)
+        Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
     def test_csv_user_import_with_brand_assigns_existing_merken(self):
         """Test: CSV with brand column assigns each user's (pre-existing) merk"""
@@ -30,7 +30,7 @@ class DataImportIntegrationTest(TestCase):
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
 
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n\n"
             "Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n\n"
             "Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"

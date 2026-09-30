@@ -14,7 +14,7 @@ from django.utils import timezone
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
-from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, role_label
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, role_label
 
 User = get_user_model()
 
@@ -60,9 +60,9 @@ class UserViewsTest(TestCase):
         self.merk_b = Suborganization.objects.create(name="Merk B")
 
         # Create test groups for form testing
-        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BDM)
+        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
         # Create test users
         self.user1 = User.objects.create_user(
@@ -474,7 +474,7 @@ class UserViewsTest(TestCase):
         # A set: nothing orders ``user.groups.all()`` here, only the names matter.
         assert set(created_event.context["group_names"]) == {
             role_label(ROLE_CONSULTANT),
-            role_label(ROLE_OFFICE_ASSISTANT),
+            role_label(ROLE_USER_ADMIN),
         }
 
     def test_user_delete_prevents_superuser_deletion(self):
@@ -807,9 +807,9 @@ class UserImportTest(TestCase):
         self.import_url = reverse("user-import-csv")
 
         # Create test groups
-        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BDM)
+        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
         # Brands referenced by import CSVs must already exist (imports never create merken).
         self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
@@ -850,9 +850,9 @@ class UserImportTest(TestCase):
 
         assert "Import geslaagd" in response.content.decode()
         for email, key in (
-            ("john.doe@rijksoverheid.nl", ROLE_OFFICE_ASSISTANT),
+            ("john.doe@rijksoverheid.nl", ROLE_USER_ADMIN),
             ("jane.smith@rijksoverheid.nl", ROLE_CONSULTANT),
-            ("bob.johnson@minbzk.nl", ROLE_BDM),
+            ("bob.johnson@minbzk.nl", ROLE_BUSINESS_MANAGER),
         ):
             with self.subTest(email=email):
                 assert set(User.objects.get(email=email).groups.values_list("name", flat=True)) == {key}
@@ -916,7 +916,7 @@ class UserImportTest(TestCase):
     def test_import_valid_csv_creates_users(self):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n
 Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -935,19 +935,19 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         # Verify the existing merk was assigned (looked up, not created)
         assert john.colleague.suborganization is not None
         assert john.colleague.suborganization.name == "Brand A"
-        assert john.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert john.groups.filter(name=ROLE_USER_ADMIN).exists()
         assert not john.groups.filter(name=ROLE_CONSULTANT).exists()
 
         jane = User.objects.get(email="jane.smith@rijksoverheid.nl")
         assert jane.first_name == "Jane"
         assert jane.groups.filter(name=ROLE_CONSULTANT).exists()
-        assert not jane.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert not jane.groups.filter(name=ROLE_USER_ADMIN).exists()
 
     def test_import_accepts_semicolon_delimiter(self):
         """Test that import accepts CSV files using `;` as the delimiter (Excel default on many locales)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            f"first_name;last_name;email;brand;{role_label(ROLE_OFFICE_ASSISTANT)};{role_label(ROLE_CONSULTANT)};BDM\n"
+            f"first_name;last_name;email;brand;{role_label(ROLE_USER_ADMIN)};{role_label(ROLE_CONSULTANT)};BDM\n"
             "John;Doe;john.doe@rijksoverheid.nl;Brand A;y;n;n\n"
             "Jane;Smith;jane.smith@rijksoverheid.nl;Brand B;n;y;n"
         )
@@ -964,7 +964,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         """Test that import accepts CSV files saved with a UTF-8 BOM (Excel on Windows)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n"
         )
         csv_file = SimpleUploadedFile(
@@ -1047,7 +1047,7 @@ Jane,Smith,also-invalid"""
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john@rijksoverheid.nl,Brand A,yes,n,n
 Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -1057,7 +1057,7 @@ Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert role_label(ROLE_OFFICE_ASSISTANT) in content
+        assert role_label(ROLE_USER_ADMIN) in content
         assert "must be" in content
         assert role_label(ROLE_CONSULTANT) in content
 
@@ -1135,7 +1135,7 @@ John,Doe,john@rijksoverheid.nl"""
     def test_import_with_multiple_groups(self):
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -1147,15 +1147,15 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.groups.count() == 3
-        assert john.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert john.groups.filter(name=ROLE_USER_ADMIN).exists()
         assert john.groups.filter(name=ROLE_CONSULTANT).exists()
-        assert john.groups.filter(name=ROLE_BDM).exists()
+        assert john.groups.filter(name=ROLE_BUSINESS_MANAGER).exists()
 
     def test_import_without_application_administration_applies_every_column(self):
         """None of the three role columns is Applicatiebeheer's alone, so an importer
         without it grants all of them (features/roles.md)."""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(csv_content)})
@@ -1165,9 +1165,9 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         assert "not applied" not in content
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert set(john.groups.values_list("name", flat=True)) == {
-            ROLE_OFFICE_ASSISTANT,
+            ROLE_USER_ADMIN,
             ROLE_CONSULTANT,
-            ROLE_BDM,
+            ROLE_BUSINESS_MANAGER,
         }
 
     def test_import_empty_csv(self):
@@ -1217,7 +1217,7 @@ Jane,Smith,invalid-email"""
     def test_import_handles_whitespace_in_fields(self):
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
   John  ,  Doe  ,  john@rijksoverheid.nl  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 

@@ -35,10 +35,10 @@ from wies.core.permission_engine import (
     registered_rules,
     rule,
 )
-from wies.core.roles import ROLE_BDM, ROLE_OFFICE_ASSISTANT, ROLE_STAFF
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_STAFF, ROLE_USER_ADMIN
 
 from .inline_edit_helpers import post_inline_edit
-from .role_helpers import grant_bdm, grant_consultant
+from .role_helpers import grant_business_manager, grant_consultant
 
 User = get_user_model()
 
@@ -49,7 +49,9 @@ class _Setup(TestCase):
     def setUp(self):
         # The owner is a BDM: ownership only grants edit rights combined with
         # the BDM role (see ``update_assignment`` in permissions.py).
-        self.owner_user = grant_bdm(User.objects.create_user(email="bm@x.nl", first_name="B", last_name="M"))
+        self.owner_user = grant_business_manager(
+            User.objects.create_user(email="bm@x.nl", first_name="B", last_name="M")
+        )
         self.owner = Colleague.objects.create(user=self.owner_user, name="B M", email="bm@x.nl", source="wies")
 
         self.placed_user = grant_consultant(
@@ -155,7 +157,9 @@ class BdmCanEditAnyAssignmentTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_bdm(User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B"))
+        self.admin_user = grant_business_manager(
+            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
+        )
 
     def test_a_bdm_can_update_assignment(self):
         assert has_permission(Verb.UPDATE, self.assignment, self.admin_user) is True
@@ -197,7 +201,9 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_bdm(User.objects.create_user(email="extern@x.nl", first_name="O", last_name="B"))
+        self.admin_user = grant_business_manager(
+            User.objects.create_user(email="extern@x.nl", first_name="O", last_name="B")
+        )
 
     def _targets(self):
         """One entry per UPDATE rule that requires ``WIES_SOURCED``, re-read from the
@@ -245,7 +251,7 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        stranger = grant_bdm(User.objects.create_user(email="bm2@x.nl", first_name="B", last_name="2"))
+        stranger = grant_business_manager(User.objects.create_user(email="bm2@x.nl", first_name="B", last_name="2"))
         Colleague.objects.create(user=stranger, name="B 2", email="bm2@x.nl", source="wies")
         self.other_bdm_user = User.objects.get(pk=stranger.pk)
 
@@ -283,7 +289,7 @@ class StaffMemberHasNoAssignmentRightsTest(_Setup):
         assert has_permission(Verb.UPDATE, self.placement, self.staff_user) is False
 
     def test_staff_with_the_bdm_role_can_update(self):
-        grant_bdm(self.staff_user)
+        grant_business_manager(self.staff_user)
         assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is True
 
 
@@ -378,7 +384,7 @@ class PlacedWithoutTheConsultantRoleTest(_Setup):
         # Gebruikersbeheer: a role with no rights on an opdracht at all, so the
         # placement is the only door left to try.
         self.placed_other_user = User.objects.create_user(email="placed-other@x.nl", first_name="P", last_name="B")
-        self.placed_other_user.groups.add(Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)[0])
+        self.placed_other_user.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
         placed_other = Colleague.objects.create(
             user=self.placed_other_user, name="P B", email="placed-other@x.nl", source="wies"
         )
@@ -405,7 +411,7 @@ class UserEmailFieldRuleTest(TestCase):
     def setUp(self):
         self.user = User.objects.create_user(email="self@x.nl", first_name="S", last_name="E")
         self.office_assistant = User.objects.create_user(email="adm@x.nl", first_name="A", last_name="D")
-        group, _created = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        group, _created = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         self.office_assistant.groups.add(group)
         self.staff = User.objects.create_user(email="app@x.nl", first_name="A", last_name="A")
 
@@ -540,7 +546,9 @@ class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
 
     def setUp(self):
         super().setUp()
-        self.admin_user = grant_bdm(User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B"))
+        self.admin_user = grant_business_manager(
+            User.objects.create_user(email="admin@x.nl", first_name="O", last_name="B")
+        )
         self.client = Client()
         self.client.force_login(self.admin_user)
 
@@ -652,7 +660,12 @@ class RuleRegistrationTest(SimpleTestCase):
         self.addCleanup(_RULES.pop, (Verb.UPDATE, _Target, None), None)
 
         with pytest.raises(ValueError, match="not in SCOPES"):
-            rule(Verb.UPDATE, _Target, label="Iets bewerken", grants=[Grant(Role(ROLE_BDM), all_of(OWN, PLACED))])
+            rule(
+                Verb.UPDATE,
+                _Target,
+                label="Iets bewerken",
+                grants=[Grant(Role(ROLE_BUSINESS_MANAGER), all_of(OWN, PLACED))],
+            )
 
         assert (Verb.UPDATE, _Target, None) not in registered_rules()
 

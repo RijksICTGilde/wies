@@ -14,10 +14,10 @@ from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Placement, Suborganization
 from wies.core.querysets import annotate_placement_dates
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
     ROLE_LABELS,
-    ROLE_OFFICE_ASSISTANT,
+    ROLE_USER_ADMIN,
     may_change_email,
     may_grant,
     role_label,
@@ -36,10 +36,10 @@ logger = logging.getLogger(__name__)
 # Header as the file writes it -> role key. Two headers for the BDM role: the
 # label it carries today, and the abbreviation existing import files use.
 CSV_ROLE_COLUMNS = {
-    ROLE_LABELS[ROLE_OFFICE_ASSISTANT]: ROLE_OFFICE_ASSISTANT,
+    ROLE_LABELS[ROLE_USER_ADMIN]: ROLE_USER_ADMIN,
     ROLE_LABELS[ROLE_CONSULTANT]: ROLE_CONSULTANT,
-    ROLE_LABELS[ROLE_BDM]: ROLE_BDM,
-    "BDM": ROLE_BDM,
+    ROLE_LABELS[ROLE_BUSINESS_MANAGER]: ROLE_BUSINESS_MANAGER,
+    "BDM": ROLE_BUSINESS_MANAGER,
 }
 
 

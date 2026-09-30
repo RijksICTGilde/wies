@@ -28,7 +28,7 @@ Code: `wies/core/roles.py`, rules in `wies/core/permissions.py`.
 
 ## A role's name is a key, its label is separate
 
-`Group.name` is a key that never changes (`consultant`, `bdm`, `office_assistant`);
+`Group.name` is a key (`consultant`, `business_manager`, `user_admin`);
 the screen name is `ROLE_LABELS` in `roles.py`. Matching uses
 the key, showing uses `role_label(key)`, so renaming a role is one string and no
 data migration.
@@ -149,8 +149,9 @@ combination.
 - `setup_roles()` (every container start) creates the three role groups;
   `Consultant` gets no Django permissions, all its rights are rules.
   Applicatiebeheer has no group at all, it is the address list.
-- `rijksauth/0010` and `0011` move the groups from `Beheerder` to the key
-  `office_assistant`, keeping members and permissions.
+- `rijksauth/0010`, `0011` and `0013` move the groups from their old screen names
+  to their keys, keeping members and permissions: `Beheerder` ends up as
+  `user_admin` and `Business Development Manager` as `business_manager`.
 - `rijksauth/0012` drops the `Opdrachtbeheer` group and gives everyone in
   `STAFF_EMAILS` the `BDM` and `Gebruikersbeheer` roles **once**, so an address
   added later does not get them and has to be granted on the user sheet. Whoever

@@ -24,14 +24,14 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_org_descendant_ids
-from wies.core.tests.role_helpers import grant_bdm, grant_consultant, make_bdm_user
+from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
 from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
     _get_colleague_assignments,
     _resolve_placement_panel,
 )
-from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
+from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
 
@@ -455,7 +455,7 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        grant_bdm(self.user_bdm)
+        grant_business_manager(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(self.list_url)
@@ -510,7 +510,7 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
         assert len(visible) == 1
         assert visible[0]["colleague"].id == self.colleague_alice.id
         assert visible[0]["historical"] is True
-        assert visible[0]["privacy_warning_text"] == PRIVACY_BDM
+        assert visible[0]["privacy_warning_text"] == PRIVACY_BM
 
     @patch("wies.core.editables.assignment.timezone")
     def test_active_placement_visible_to_unrelated_viewer(self, mock_timezone):
@@ -603,7 +603,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        grant_bdm(self.user_bdm)
+        grant_business_manager(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -658,7 +658,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
 
         assert len(rows) == 1
         assert rows[0]["period_label"] == "Gepland"
-        assert rows[0]["privacy_warning_text"] == PRIVACY_BDM
+        assert rows[0]["privacy_warning_text"] == PRIVACY_BM
 
     @patch("wies.core.views.timezone")
     @patch("wies.core.editables.assignment.timezone")
@@ -717,7 +717,7 @@ class PlacementPanelVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        grant_bdm(self.user_bdm)
+        grant_business_manager(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -808,7 +808,7 @@ class PlacementPanelVisibilityTest(TestCase):
         assert data is not None
         card = data["assignment_card"]
         assert card["period_label"] == "Gepland"
-        assert card["privacy_warning_text"] == PRIVACY_BDM
+        assert card["privacy_warning_text"] == PRIVACY_BM
 
     @patch("wies.core.views.timezone")
     def test_active_placement_visible_to_unrelated(self, mock_tz):
@@ -872,7 +872,7 @@ class PlacementPanelPencilPermissionTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         # Bob owns the assignment and holds the BDM role, so he may edit every
         # field (ownership alone no longer grants edit rights).
-        grant_bdm(self.user_bob)
+        grant_business_manager(self.user_bob)
         pl = self._placement(owner=self.colleague_bob)
 
         data = _resolve_placement_panel(self._request(self.user_bob), pl.public_id)
@@ -901,7 +901,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
-        grant_bdm(self.user_bdm)
+        grant_business_manager(self.user_bdm)
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -944,7 +944,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
         assert historical[0]["period_label"] == "Gepland"
-        assert historical[0]["privacy_warning_text"] == PRIVACY_BDM
+        assert historical[0]["privacy_warning_text"] == PRIVACY_BM
 
     @patch("wies.core.views.timezone")
     def test_future_placement_hidden_from_unrelated_profile_viewer(self, mock_tz):
@@ -1091,7 +1091,7 @@ class PlacementListFutureVisibilityTest(TestCase):
     def test_future_placement_hidden_from_bdm(self, mock_tz):
         # Likewise a BDM (the role that sees planned placements elsewhere):
         # planned placements do not appear on the list.
-        grant_bdm(self.user_bob)
+        grant_business_manager(self.user_bob)
         pl = self._future_placement(owner=self.colleague_bob)
         assert pl not in self._queryset_as(self.user_bob, mock_tz)
 
@@ -1304,7 +1304,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
             source="wies",
             user=self.user_bdm,
         )
-        grant_bdm(self.user_bdm)
+        grant_business_manager(self.user_bdm)
 
     def _make_request(self, user):
         factory = RequestFactory()
@@ -1603,7 +1603,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
         This is the ``viewer_is_bdm`` BM-role branch in
         ``_get_colleague_assignments`` — a separate path from the placement-based
-        PRIVACY_OWN/PRIVACY_BDM rule, and its own note: no consultant is placed
+        PRIVACY_OWN/PRIVACY_BM rule, and its own note: no consultant is placed
         on the row, so "de consultant" would not fit.
         """
         mock_now = Mock()
@@ -2240,7 +2240,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
     def test_planned_placement_not_counted_for_bdm(self):
         """The list is active-only, so a planned placement is not counted even
         for a BDM (they see it on the profile/panels, not on the list)."""
-        grant_bdm(self.owner_user)
+        grant_business_manager(self.owner_user)
         self._place(start_offset_days=30, end_offset_days=120)
 
         assert self._modal_count_for(self.owner_user) == 0
@@ -2264,7 +2264,7 @@ class PrivacyNoteSurfacesTest(TestCase):
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
         # Under the new rule the owner sees the restricted row only if they are a
         # Business Manager (BDM role); make bm_user one.
-        grant_bdm(self.bm_user)
+        grant_business_manager(self.bm_user)
         self.client.force_login(self.bm_user)
         self.bm = Colleague.objects.get(user=self.bm_user)
 
@@ -2296,16 +2296,16 @@ class PrivacyNoteSurfacesTest(TestCase):
         # sentence in its tooltip. No separate team-wide "Beperkt zichtbaar" banner.
         assert 'text="Afgelopen"' in body
         assert 'text="Beperkt zichtbaar"' not in body
-        assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
+        assert f'<nldd-tooltip text="{PRIVACY_BM}" timing="instant">' in body
         assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BDM}"' in body
+        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
         assert "De geplaatste teamleden zijn" not in body
-        assert PRIVACY_BDM[0].lower() + PRIVACY_BDM[1:] not in body
+        assert PRIVACY_BM[0].lower() + PRIVACY_BM[1:] not in body
 
     def test_external_source_and_chip_are_separate(self):
         self.assignment.source = "otys_iir"
@@ -2313,13 +2313,13 @@ class PrivacyNoteSurfacesTest(TestCase):
         body = self._panel()
         assert "Wordt beheerd in" in body
         assert 'text="Afgelopen"' in body
-        assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
+        assert f'<nldd-tooltip text="{PRIVACY_BM}" timing="instant">' in body
 
     def test_notes_live_in_one_module(self):
         # Whoever rewords one must find both together.
         assert PRIVACY_OWN.startswith("Alleen zichtbaar voor")
-        assert PRIVACY_BDM.startswith("Alleen zichtbaar voor")
-        assert len({PRIVACY_OWN, PRIVACY_BDM}) == 2
+        assert PRIVACY_BM.startswith("Alleen zichtbaar voor")
+        assert len({PRIVACY_OWN, PRIVACY_BM}) == 2
 
 
 class TimelinePrivacyChipTest(TestCase):
@@ -2332,7 +2332,7 @@ class TimelinePrivacyChipTest(TestCase):
     def setUp(self):
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
         # The full team line is shown only to a Business Manager (BDM role).
-        grant_bdm(self.bm_user)
+        grant_business_manager(self.bm_user)
         self.bm_client = Client()
         self.bm_client.force_login(self.bm_user)
         self.bm = Colleague.objects.get(user=self.bm_user)
@@ -2397,7 +2397,7 @@ class TimelinePrivacyChipTest(TestCase):
         self._team_event()
         body = self._timeline(self.bm_client)
         assert 'text="Beperkt zichtbaar"' in body
-        assert PRIVACY_BDM in body
+        assert PRIVACY_BM in body
 
     def test_other_fields_get_no_chip(self):
         # The description is the same for everyone; a note would mislead.
@@ -2410,7 +2410,7 @@ class TimelinePrivacyChipTest(TestCase):
         self._team_event()
         body = self._timeline(self.outsider_client)
         assert "Beperkt zichtbaar" not in body
-        assert PRIVACY_BDM not in body
+        assert PRIVACY_BM not in body
         assert PRIVACY_OWN not in body
 
     def test_active_placement_gives_no_chip(self):
@@ -2503,7 +2503,7 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
     def test_bdm_still_sees_the_hidden_team_member(self):
         # Guards against over-filtering: a Business Manager (BDM role) must keep
         # full visibility, even when neither placed nor the owner.
-        bdm_user = make_bdm_user()
+        bdm_user = make_business_manager_user()
         bdm_client = Client()
         bdm_client.force_login(bdm_user)
 

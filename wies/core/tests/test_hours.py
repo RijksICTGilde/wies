@@ -19,9 +19,9 @@ from wies.core.editables.service import ServiceEditables
 from wies.core.models import Assignment, Colleague, ContractPeriod, Event, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
+    ROLE_USER_ADMIN,
     can_view_role_hours,
     setup_roles,
 )
@@ -220,7 +220,7 @@ class BezettingPartialStatusViewTest(TestCase):
         self.client = Client()
         self.url = reverse("bezetting")
         bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        bdm.groups.add(Group.objects.get(name=ROLE_BDM))
+        bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
         self.client.force_login(bdm)
         today = timezone.now().date()
         start, end = today - timedelta(days=10), today + timedelta(days=200)
@@ -313,7 +313,7 @@ class ProfileContractPeriodTest(TestCase):
 
     def test_profile_shows_no_contract_hours_to_any_role(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        for group in (None, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
+        for group in (None, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN):
             if group:
                 self.user.groups.add(Group.objects.get(name=group))
             body = self.client.get(reverse("user-profile")).content.decode()
@@ -342,7 +342,7 @@ class ProfileContractPeriodTest(TestCase):
 
 
 class ColleaguePanelContractPeriodTest(TestCase):
-    """A BDM and an Gebruikersbeheer read any colleague's periods in the panel,
+    """A Business Manager and Gebruikersbeheer read any colleague's periods in the panel,
     and keep them from there: the block asks the rule, not which screen it is on."""
 
     def setUp(self):
@@ -350,9 +350,9 @@ class ColleaguePanelContractPeriodTest(TestCase):
         self.client = Client()
         self.today = timezone.now().date()
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.client.force_login(self.admin)
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
 
@@ -413,7 +413,7 @@ class ColleaguePanelContractPeriodTest(TestCase):
 
     def test_panel_shows_the_block_read_only_to_a_bdm(self):
         """A BDM plans with the hours and so reads them; keeping a contract is
-        beheer and stays with an Gebruikersbeheer."""
+        beheer and stays with Gebruikersbeheer."""
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
@@ -505,7 +505,7 @@ class ServiceHoursTest(TestCase):
         setup_roles()
         self.client = Client()
         self.bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
         self.owner = Colleague.objects.create(
             name="Bas BDM", email="bdm@rijksoverheid.nl", source="wies", user=self.bdm
         )
@@ -577,7 +577,7 @@ class UserSheetContractPeriodTest(TestCase):
         self.client = Client()
         self.today = timezone.now().date()
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.client.force_login(self.admin)
         self.user = User.objects.create(
             email="kees@rijksoverheid.nl", first_name="Kees", last_name="Bos", onboarding_completed_at=timezone.now()
@@ -989,7 +989,7 @@ class ServiceHoursPermissionTest(TestCase):
         self.placement = _placement(self.colleague, "Eigen klus", self.today, self.today + timedelta(days=90), hours=24)
         self.service = self.placement.service
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
         owner = Colleague.objects.create(name="Bas BDM", email="bm@rijksoverheid.nl", source="wies", user=self.bdm)
         self.service.assignment.owner = owner
         self.service.assignment.save(update_fields=["owner"])
@@ -1146,8 +1146,8 @@ class ApplicationAdministrationHoursTest(TestCase):
 class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
     """``can_view_role_hours`` is not the audience of ``rule(READ, ContractPeriod)``.
 
-    A contract is beheer, so an Gebruikersbeheer reads it. The hours on an
-    opdracht are planning, so the BDM reads those and an Gebruikersbeheer gets the
+    A contract is beheer, so Gebruikersbeheer reads it. The hours on an
+    opdracht are planning, so the Business Manager reads those and Gebruikersbeheer gets the
     page a team mate gets, with the hours blanked.
     """
 
@@ -1157,7 +1157,7 @@ class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
         self.office_assistant = User.objects.create(
             email="office@rijksoverheid.nl", onboarding_completed_at=timezone.now()
         )
-        self.office_assistant.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.office_assistant.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
         self.placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
 
@@ -1208,7 +1208,7 @@ class ContractHoursAudienceTest(TestCase):
         swapped back in.
         """
         keepers = []
-        for role in (ROLE_BDM, ROLE_OFFICE_ASSISTANT, ROLE_CONSULTANT):
+        for role in (ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN, ROLE_CONSULTANT):
             user = User.objects.create(email=f"{role}@rijksoverheid.nl", onboarding_completed_at=timezone.now())
             user.groups.add(Group.objects.get(name=role))
             if has_permission(Verb.UPDATE, self.period, user):

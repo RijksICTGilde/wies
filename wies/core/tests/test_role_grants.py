@@ -13,10 +13,10 @@ from django.urls import reverse
 from wies.core.forms import UserForm
 from wies.core.models import Event
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
     ROLE_STAFF,
+    ROLE_USER_ADMIN,
     may_grant,
     role_label,
     setup_roles,
@@ -49,9 +49,9 @@ class RoleGrantTest(TestCase):
 
     def setUp(self):
         setup_roles()
-        self.user_admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
+        self.user_admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
         self.consultant_group = Group.objects.get(name=ROLE_CONSULTANT)
-        self.bdm_group = Group.objects.get(name=ROLE_BDM)
+        self.bdm_group = Group.objects.get(name=ROLE_BUSINESS_MANAGER)
 
         # Gebruikersbeheer, not application administration.
         self.user_admin = User.objects.create_user(
@@ -124,7 +124,7 @@ class RoleGrantTest(TestCase):
         not a group, so it cannot be offered at all."""
         for editor in (self.user_admin, self.staff, None):
             with self.subTest(editor=getattr(editor, "email", "system")):
-                assert self._offered(editor) == {ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT}
+                assert self._offered(editor) == {ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN}
 
     def test_application_administration_reaches_neither_the_page_nor_the_sheet(self):
         """It runs the platform and holds nothing functional. The way into a fresh
@@ -200,8 +200,8 @@ class RoleGrantTest(TestCase):
 
         assert response.status_code == 200
         self.assertNotContains(response, role_label(ROLE_STAFF))
-        self.assertContains(response, role_label(ROLE_OFFICE_ASSISTANT))
-        self.assertContains(response, role_label(ROLE_BDM))
+        self.assertContains(response, role_label(ROLE_USER_ADMIN))
+        self.assertContains(response, role_label(ROLE_BUSINESS_MANAGER))
 
     def test_the_sheet_arrives_with_the_roles_the_user_already_holds(self):
         """Saving replaces the whole set, so a sheet that opens unticked strips
@@ -213,7 +213,7 @@ class RoleGrantTest(TestCase):
 
         assert _ticked(response.content.decode()) == {
             role_label(ROLE_CONSULTANT),
-            role_label(ROLE_BDM),
+            role_label(ROLE_BUSINESS_MANAGER),
         }
 
     def test_the_sheet_lists_the_roles_by_label(self):
@@ -223,9 +223,9 @@ class RoleGrantTest(TestCase):
         content = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
 
         assert _labels_in_order(content) == [
-            role_label(ROLE_BDM),
+            role_label(ROLE_BUSINESS_MANAGER),
             role_label(ROLE_CONSULTANT),
-            role_label(ROLE_OFFICE_ASSISTANT),
+            role_label(ROLE_USER_ADMIN),
         ]
 
     def test_a_group_without_a_label_keeps_its_own_name(self):
@@ -274,7 +274,7 @@ class RoleGrantTest(TestCase):
         self.client.force_login(self.user_admin)
         content = self.client.get(reverse("admin-users")).content.decode()
         for url in behind_user_admin:
-            with self.subTest(url=url, visitor=role_label(ROLE_OFFICE_ASSISTANT)):
+            with self.subTest(url=url, visitor=role_label(ROLE_USER_ADMIN)):
                 assert url in content
 
     def test_reading_the_roles_is_not_granting_them(self):
@@ -347,7 +347,7 @@ class RoleGrantTest(TestCase):
         response = self._post_roles(self.target, [self.consultant_group, self.bdm_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_BDM}
+        assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER}
 
     def test_saving_replaces_the_whole_set(self):
         self.target.groups.add(self.user_admin_group, self.bdm_group)
@@ -368,7 +368,7 @@ class RoleGrantTest(TestCase):
         granted = self._post_roles(self.target, [self.user_admin_group])
 
         assert granted["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.target) == {ROLE_OFFICE_ASSISTANT}
+        assert self._group_names(self.target) == {ROLE_USER_ADMIN}
 
         revoked = self._post_roles(self.target, [])
 
@@ -381,11 +381,11 @@ class RoleGrantTest(TestCase):
         response = self._post_roles(self.target, [self.bdm_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.target) == {ROLE_BDM}
+        assert self._group_names(self.target) == {ROLE_BUSINESS_MANAGER}
         event = Event.objects.filter(object_type="User", action="update").last()
         assert event.object_id == self.target.id
         assert event.user_id == self.user_admin.id
-        assert event.context["group_names"] == [role_label(ROLE_BDM)]
+        assert event.context["group_names"] == [role_label(ROLE_BUSINESS_MANAGER)]
 
     def test_an_editor_revokes_their_own_bdm(self):
         # The "switch it off and test as a normal user" workflow.
@@ -395,7 +395,7 @@ class RoleGrantTest(TestCase):
         response = self._post_roles(self.user_admin, [self.user_admin_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        assert self._group_names(self.user_admin) == {ROLE_OFFICE_ASSISTANT}
+        assert self._group_names(self.user_admin) == {ROLE_USER_ADMIN}
 
     def test_users_page_lists_users_with_their_roles(self):
         self.target.groups.add(self.consultant_group)
@@ -417,7 +417,7 @@ class RoleGrantTest(TestCase):
             email=self.target.email,
             groups=[self.bdm_group, self.user_admin_group],
         )
-        assert self._group_names(self.target) == {ROLE_BDM, ROLE_OFFICE_ASSISTANT}
+        assert self._group_names(self.target) == {ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN}
 
     def test_creating_a_user_grants_the_roles_that_were_ticked(self):
         """The sheet hands out roles on create as well as on edit, so a new
@@ -429,11 +429,11 @@ class RoleGrantTest(TestCase):
 
         assert response["HX-Redirect"] == reverse("admin-users")
         created = User.objects.get(email="nieuw@rijksoverheid.nl")
-        assert self._group_names(created) == {ROLE_CONSULTANT, ROLE_BDM}
+        assert self._group_names(created) == {ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER}
         event = Event.objects.filter(object_type="User", action="create").last()
         assert event.object_id == created.id
         # In label order: Business Manager before Consultant.
-        assert event.context["group_names"] == [role_label(ROLE_BDM), role_label(ROLE_CONSULTANT)]
+        assert event.context["group_names"] == [role_label(ROLE_BUSINESS_MANAGER), role_label(ROLE_CONSULTANT)]
 
     def test_the_beheer_menus_offer_the_users_page_to_whoever_may_open_it(self):
         """The entries ask the same ``view_user`` the page does, so a reader who may
@@ -460,7 +460,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_by_user_admin_grants_user_admin(self):
         """Every role column of the import is one Gebruikersbeheer may grant."""
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,y,n\n"
         )
 
@@ -468,7 +468,7 @@ class RoleGrantTest(TestCase):
 
         assert result["success"], result
         assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {
-            ROLE_OFFICE_ASSISTANT,
+            ROLE_USER_ADMIN,
             ROLE_CONSULTANT,
         }
         assert result["errors"] == []
@@ -476,7 +476,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_skips_an_existing_user_and_grants_the_other_rows(self):
         # Row 4 is skipped as an existing user; the rows around it still land.
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "Ann,Een,ann@rijksoverheid.nl,,y,n,n\n"
             "Bob,Twee,bob@rijksoverheid.nl,,n,y,n\n"
             f"Tom,Drie,{self.target.email},,y,n,n\n"
@@ -489,8 +489,8 @@ class RoleGrantTest(TestCase):
         assert result["users_created"] == 3
         assert result["errors"] == [f"User with email '{self.target.email}' already exists, skipped"]
         assert self._group_names(User.objects.get(email="eva@rijksoverheid.nl")) == {
-            ROLE_OFFICE_ASSISTANT,
-            ROLE_BDM,
+            ROLE_USER_ADMIN,
+            ROLE_BUSINESS_MANAGER,
         }
         assert self._group_names(self.target) == set()
 
@@ -498,7 +498,7 @@ class RoleGrantTest(TestCase):
         """The header is a label typed by hand or by Excel, so case and padding
         around it may not decide whether a role column is seen at all."""
         csv_content = (
-            f"first_name,last_name,email, {role_label(ROLE_OFFICE_ASSISTANT).upper()} ,bdm\n"
+            f"first_name,last_name,email, {role_label(ROLE_USER_ADMIN).upper()} ,bdm\n"
             "John,Doe,john.doe@rijksoverheid.nl,y,y\n"
         )
 
@@ -506,20 +506,20 @@ class RoleGrantTest(TestCase):
 
         assert result["success"], result
         assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {
-            ROLE_OFFICE_ASSISTANT,
-            ROLE_BDM,
+            ROLE_USER_ADMIN,
+            ROLE_BUSINESS_MANAGER,
         }
 
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,n,n\n"
         )
 
         result = create_users_from_csv(self.staff, csv_content)
 
         assert result["success"], result
-        assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {ROLE_OFFICE_ASSISTANT}
+        assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {ROLE_USER_ADMIN}
         assert result["errors"] == []
 
 
@@ -527,7 +527,7 @@ class RoleGrantTest(TestCase):
 class StaffEmailChangeTest(TestCase):
     def setUp(self):
         setup_roles()
-        user_admin_group = Group.objects.get(name=ROLE_OFFICE_ASSISTANT)
+        user_admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
         self.user_admin = User.objects.create_user(
             email="gebruikersbeheer@rijksoverheid.nl", first_name="G", last_name="B"
         )
@@ -715,7 +715,7 @@ class MayGrantTest(SimpleTestCase):
     """``may_grant`` is the one place the policy lives, so ask it about any role."""
 
     def test_every_role_is_grantable_by_anyone_on_the_screen(self):
-        for role in (ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
+        for role in (ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN):
             with self.subTest(role=role):
                 assert may_grant(None, role) is True
 

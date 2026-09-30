@@ -47,7 +47,7 @@ from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.visibility_rules import (
     LABELS,
-    PRIVACY_BDM,
+    PRIVACY_BM,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
@@ -90,7 +90,7 @@ from .querysets import (
 )
 from .roles import (
     can_view_role_hours,
-    is_bdm,
+    is_business_manager,
     is_staff_member,
     may_view_role_matrix,
     role_label,
@@ -382,7 +382,7 @@ def _get_colleague_assignments(request, colleague):
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague and the Business Managers (BDM role).
+        # visible to the placed colleague and the Business Managers.
         result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
@@ -412,7 +412,7 @@ def _get_colleague_assignments(request, colleague):
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         # Active and not-yet-started owned assignments are public; ended ones are
-        # only shown to a privileged viewer (the BDM role).
+        # only shown to a privileged viewer (the Business Manager role).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
 
         existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
@@ -555,7 +555,7 @@ def _resolve_placement_panel(request, public_id):
     """Fetches a placement for the side panel, enforcing the team list's rule.
 
     Ended or not-yet-started placements are only shown to the placed colleague
-    and Business Managers (the BDM role). Not-found, malformed and not-visible are
+    and Business Managers. Not-found, malformed and not-visible are
     indistinguishable — all raise Http404 for the HTMX panel request, so a hidden
     placement's existence is never revealed, and return None for a full-page load.
     """
@@ -603,7 +603,7 @@ def staff_required(view_func):
 
 def business_management_access_required(view_func):
     """Gate the "Business management" section: Business Managers."""
-    return user_passes_test(is_bdm, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
 
 
 def _assignment_create_button(request):
@@ -3317,11 +3317,11 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
     viewer = getattr(request.user, "colleague", None)
     if viewer is not None and hidden == {viewer.name}:
         # The only hidden person the event names is the viewer themselves —
-        # a non-BDM only ever reaches this case (their filtered list drops
-        # changes naming hidden others), and a placed BDM gets the wording
+        # someone without the role only ever reaches this case (their filtered list drops
+        # changes naming hidden others), and a placed Business Manager gets the wording
         # matching their own row.
         return PRIVACY_OWN
-    return PRIVACY_BDM
+    return PRIVACY_BM
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
@@ -3362,7 +3362,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # A viewer who sees more than an outsider (a BDM gets the unfiltered
+            # A viewer who sees more than an outsider (a Business Manager gets the unfiltered
             # list) should know this row is hidden from others. Team rows only:
             # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)

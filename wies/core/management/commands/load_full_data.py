@@ -49,7 +49,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, role_label
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, role_label
 from wies.core.services.events import create_event
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
@@ -85,7 +85,7 @@ SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
 # Role mix for the dummy users, by role key: most consultants, some BDMs, a few office assistants.
 # Assignment owners are drawn only from the BDM colleagues, matching production
 # where the owner is a Business Manager.
-ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BDM: 15, ROLE_OFFICE_ASSISTANT: 5}
+ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BUSINESS_MANAGER: 15, ROLE_USER_ADMIN: 5}
 # Contract hours per week: mostly 36, the rijksoverheid norm.
 CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 # Hours per week on a role. None: the role has no hours recorded yet, which the
@@ -850,7 +850,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         user.groups.remove(*role_groups.values())
         user.groups.add(role_groups[role])
         role_counts[role] += 1
-        if role == ROLE_BDM:
+        if role == ROLE_BUSINESS_MANAGER:
             bdm_colleagues.append(colleague)
     write("Colleague roles: " + ", ".join(f"{role_counts[n]} {role_label(n)}" for n in ROLE_WEIGHTS))
 

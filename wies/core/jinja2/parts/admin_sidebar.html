@@ -4,8 +4,8 @@
 </nldd-title>
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 <nldd-list type="navigation" accessible-label="Beheer">
-{# Gated one by one: application administration reaches this sidebar through the
-   roles and maintenance pages without holding Gebruikersbeheer. #}
+{# Gated one by one: the maintenance pages open for application administration,
+   which holds nothing on the pages above them. #}
 {% if user.has_perm('rijksauth.view_user') %}
   <nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">

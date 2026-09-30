@@ -29,9 +29,9 @@ from wies.core.permission_engine import (
     registered_rules,
 )
 from wies.core.roles import (
-    ROLE_BDM,
+    ROLE_BUSINESS_MANAGER,
     ROLE_CONSULTANT,
-    ROLE_OFFICE_ASSISTANT,
+    ROLE_USER_ADMIN,
     can_view_role_hours,
     is_staff_member,
     role_label,
@@ -137,7 +137,7 @@ class RoleMatrixShapeTest(SimpleTestCase):
         """The rules on a dienst, a plaatsing and the opdracht's own fields each
         name the opdracht rule's audience instead of borrowing it, so this pins
         that they still agree."""
-        opdracht = {Grant(Role(ROLE_BDM))}
+        opdracht = {Grant(Role(ROLE_BUSINESS_MANAGER))}
 
         for key, rule in registered_rules().items():
             verb, model, field = key
@@ -238,7 +238,7 @@ class RoleMatrixReaderTest(TestCase):
         cells = _cells()
         # The placement grants it to the consultant; BDM is already through on the
         # relation-free grant these field rules name alongside it.
-        allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BDM)}
+        allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BUSINESS_MANAGER)}
 
         for label in (
             "Naam van een opdracht bewerken",
@@ -268,16 +268,16 @@ class RoleMatrixReaderTest(TestCase):
         a rule moves both at once and only a named cell notices."""
         cells = _cells()
 
-        assert cells[("Opdracht bewerken (van een ander)", role_label(ROLE_BDM))]
-        assert not cells[("Opdracht bewerken (van een ander)", role_label(ROLE_OFFICE_ASSISTANT))]
+        assert cells[("Opdracht bewerken (van een ander)", role_label(ROLE_BUSINESS_MANAGER))]
+        assert not cells[("Opdracht bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
 
         assert cells[("Gebruiker bewerken (je eigen)", "Consultant")]
         assert not cells[("Gebruiker bewerken (van een ander)", "Consultant")]
-        assert cells[("Gebruiker bewerken (van een ander)", role_label(ROLE_OFFICE_ASSISTANT))]
+        assert cells[("Gebruiker bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
 
         assert cells[("Collega bewerken (je eigen)", "Consultant")]
         assert not cells[("Collega bewerken (van een ander)", "Consultant")]
-        assert cells[("Collega bewerken (van een ander)", role_label(ROLE_OFFICE_ASSISTANT))]
+        assert cells[("Collega bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
 
     def test_the_table_only_reads(self):
         """Nothing about the matrix may write, and nothing may probe: the queries
@@ -364,7 +364,7 @@ class RoleMatrixExtraRowTest(TestCase):
                 u, {"email": "nieuw-adres@rijksoverheid.nl"}
             ),
             "Rollen toekennen": lambda u: self._roles_screen_accepts(
-                u, (ROLE_CONSULTANT, ROLE_BDM, ROLE_OFFICE_ASSISTANT)
+                u, (ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN)
             ),
             "Statistieken en database": is_staff_member,
         }
@@ -424,7 +424,7 @@ class RoleMatrixViewTest(TestCase):
 
     def _user_admin(self):
         user = User.objects.create_user(email="gb@rijksoverheid.nl")
-        user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        user.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         return user
 
     def test_user_admin_sees_the_matrix_and_the_menu_entry(self):
