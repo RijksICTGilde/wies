@@ -163,6 +163,20 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 }
 
 
+def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
+    """Label for a scoped nested folder, e.g. "Adviescolleges van BZ".
+
+    ``ministry_abbreviation`` is the ministry's abbreviation (every ministry has
+    one; the callers fall back to the full label only if it is ever missing).
+
+    One recognizable plain string shared by the picker folder (get_org_tree
+    JSON → org_tree.js), its selection token (tree_state.js) and the active
+    chip (_org_chip_data). Plain text so it needs no aria wiring across the
+    web-component shadow boundary.
+    """
+    return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"
+
+
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
@@ -1037,7 +1051,7 @@ def _org_chip_data(
             "param_name": "org_type_in",
             "param_value": f"{ministry_public_id}:{type_label}",
             "label": (
-                f"{ministry_labels[ministry_public_id]} - {ORG_TYPE_PLURAL.get(type_label, type_label)}"
+                nested_folder_label(ministry_labels[ministry_public_id], type_label)
                 if ministry_public_id in ministry_labels
                 else UNKNOWN_FACET_LABELS["org_type_in"]
             ),
@@ -3977,9 +3991,13 @@ def _build_org_hierarchy(
         key = (ministry["id"], main_type)
         folder = synthetic_folders.get(key)
         if folder is None:
+            # Label the folder with the ministry's abbreviation, same rule as the
+            # chip (_org_chip_data): the abbreviation, else the label as fallback.
+            ministry_abbreviation = (ministry["abbreviations"] or [None])[0] or ministry["label"] or ministry["name"]
             folder = {
                 "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped
                 "type_label": main_type,
+                "ministry_abbreviation": ministry_abbreviation,
                 "synthetic_group": True,
                 "self_count": 0,
                 "total_count": 0,
@@ -4015,14 +4033,14 @@ def _build_org_hierarchy(
 
     def sort_key(node: dict) -> str:
         if node.get("synthetic_group"):
-            return ORG_TYPE_PLURAL.get(node["type_label"], node["type_label"])
+            return nested_folder_label(node["ministry_abbreviation"], node["type_label"])
         return node.get("label") or node.get("name") or ""
 
     def to_json(node: dict) -> dict:
         if node.get("synthetic_group"):
             return {
                 "id": node["id"],
-                "label": ORG_TYPE_PLURAL.get(node["type_label"], node["type_label"]),
+                "label": nested_folder_label(node["ministry_abbreviation"], node["type_label"]),
                 "nr_of_placements": node["total_count"],
                 "group": True,
                 "children": [to_json(c) for c in sorted(node["children_data"], key=sort_key)],
@@ -4104,10 +4122,21 @@ def _build_current_selections(request) -> dict[str, str]:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
 
     # Scoped nested folders: re-check the "group-<ministry_public_id>-<type>" node.
-    for value in request.GET.getlist("org_type_in"):
-        ministry_public_id, sep, type_label = value.partition(":")
-        if sep and ministry_public_id and type_label:
-            current_selections[f"group-{ministry_public_id}-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+    # Label matches the picker folder and the chip ("Adviescolleges van BZ"), so a
+    # restored selection reads identically. Abbreviation, else label as fallback.
+    nested = [value.partition(":") for value in request.GET.getlist("org_type_in")]
+    nested = [(pid, tl) for pid, sep, tl in nested if sep and pid and tl]
+    ministry_abbreviations: dict[str, str] = {
+        str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+        for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+            public_id__in=parse_public_ids([pid for pid, _ in nested])
+        ).values_list("public_id", "label", "name", "abbreviations")
+    }
+    for ministry_public_id, type_label in nested:
+        abbreviation = ministry_abbreviations.get(ministry_public_id)
+        if abbreviation is None:
+            continue  # ministry not found → drop, same as a stale facet
+        current_selections[f"group-{ministry_public_id}-{type_label}"] = nested_folder_label(abbreviation, type_label)
 
     return current_selections
 

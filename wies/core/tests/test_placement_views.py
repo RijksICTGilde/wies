@@ -2187,7 +2187,9 @@ class NestedOrgHierarchyTest(TestCase):
         )
         self.gemeente = OrganizationType.objects.create(name="Gemeente", label="Gemeente")
 
-        self.bzk = OrganizationUnit.objects.create(name="BZK", label="Ministerie van BZK", tooi_identifier=MNRE_BZK)
+        self.bzk = OrganizationUnit.objects.create(
+            name="BZK", label="Ministerie van BZK", abbreviations=["BZK"], tooi_identifier=MNRE_BZK
+        )
         self.bzk.organization_types.add(self.ministerie)
 
     def _typed(self, unit, *types):
@@ -2211,7 +2213,7 @@ class NestedOrgHierarchyTest(TestCase):
 
         ministeries = self._find(hierarchy, "Ministeries")
         bzk_node = self._find(ministeries["children"], "Ministerie van BZK")
-        folder = self._find(bzk_node["children"], "Agentschappen")
+        folder = self._find(bzk_node["children"], "Agentschappen van BZK")
         assert folder is not None
         assert folder["group"] is True
         assert folder["id"] == f"group-{self.bzk.public_id}-Agentschap"
@@ -2226,10 +2228,10 @@ class NestedOrgHierarchyTest(TestCase):
         hierarchy = _build_org_hierarchy(Counter(), [], prune_empty=False)
         bzk_node = self._find(hierarchy, "Ministerie van BZK")
 
-        assert self._find(bzk_node["children"], "Inspecties") is not None
-        assert self._find(bzk_node["children"], "Zelfstandige bestuursorganen") is None
+        assert self._find(bzk_node["children"], "Inspecties van BZK") is not None
+        assert self._find(bzk_node["children"], "Zelfstandige bestuursorganen van BZK") is None
         # Exactly one nested occurrence of the unit.
-        inspecties = self._find(bzk_node["children"], "Inspecties")
+        inspecties = self._find(bzk_node["children"], "Inspecties van BZK")
         assert len(inspecties["children"]) == 1
 
     def test_unresolvable_ministry_falls_back_to_top_level(self):
@@ -2295,7 +2297,7 @@ class NestedOrgHierarchyTest(TestCase):
         hierarchy = _build_org_hierarchy(counts, [], prune_empty=True)
         bzk_node = self._find(hierarchy, "Ministerie van BZK")
         assert bzk_node["nr_of_placements"] == 3
-        folder = self._find(bzk_node["children"], "Agentschappen")
+        folder = self._find(bzk_node["children"], "Agentschappen van BZK")
         assert folder["nr_of_placements"] == 3
 
     def test_prune_drops_empty_nested_folder_and_ministry(self):
