@@ -42,8 +42,8 @@ class AssignmentEditAttributeTest(TestCase):
             )
         )
 
-        # The owner holds the BDM role: ownership only grants edit rights
-        # combined with BDM (see ``update_assignment`` in permissions.py).
+        # The owner holds the Business Manager role: ownership only grants edit rights
+        # combined with Business Manager (see ``update_assignment`` in permissions.py).
         self.owner_user = grant_business_manager(
             User.objects.create_user(
                 email="owner@rijksoverheid.nl",
@@ -113,7 +113,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code in [302, 403]
 
     def test_assignment_edit_as_a_bdm(self):
-        """A BDM can edit."""
+        """A Business Manager can edit."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -127,7 +127,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Updated Assignment Name"
 
     def test_assignment_edit_as_bdm_owner_without_permission(self):
-        """The BDM owner can edit without an explicit Django permission."""
+        """The Business Manager owner can edit without an explicit Django permission."""
         self.client.force_login(self.owner_user)
 
         response = post_inline_edit(
@@ -172,8 +172,8 @@ class AssignmentEditAttributeTest(TestCase):
         """A placed consultant editing ``owner`` is denied and the DB is unchanged."""
         self.client.force_login(self.assigned_user)
         other_colleague = Colleague.objects.create(
-            name="Other BDM",
-            email="other-bdm@rijksoverheid.nl",
+            name="Other Business Manager",
+            email="other-business_manager@rijksoverheid.nl",
             source="wies",
         )
 
@@ -203,20 +203,20 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.end_date is None
 
     def test_bdm_owner_can_edit_owner_field(self):
-        """The BDM owner can edit the ``owner`` field, which the field permission
+        """The Business Manager owner can edit the ``owner`` field, which the field permission
         must not block."""
         self.client.force_login(self.owner_user)
         new_bdm_user = grant_business_manager(
             User.objects.create_user(
-                email="new-bdm@rijksoverheid.nl",
+                email="new-business_manager@rijksoverheid.nl",
                 first_name="New",
-                last_name="BDM",
+                last_name="Business Manager",
             )
         )
         new_bdm = Colleague.objects.create(
             user=new_bdm_user,
-            name="New BDM",
-            email="new-bdm@rijksoverheid.nl",
+            name="New Business Manager",
+            email="new-business_manager@rijksoverheid.nl",
             source="wies",
         )
 
@@ -259,7 +259,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.external_assignment.name == "External Assignment"
 
     def test_a_bdm_can_edit_assignment_owner(self):
-        """A BDM can edit an assignment they don't own (#392)."""
+        """A Business Manager can edit an assignment they don't own (#392)."""
         admin_user = grant_business_manager(
             User.objects.create_user(
                 email="opdrachtbeheer@rijksoverheid.nl",
@@ -271,12 +271,12 @@ class AssignmentEditAttributeTest(TestCase):
             User.objects.create_user(
                 email="bdm2@rijksoverheid.nl",
                 first_name="New",
-                last_name="BDM",
+                last_name="Business Manager",
             )
         )
         new_bdm = Colleague.objects.create(
             user=new_bdm_user,
-            name="New BDM",
+            name="New Business Manager",
             email="bdm2@rijksoverheid.nl",
             source="wies",
         )
@@ -309,7 +309,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name != "Attempted Update"
 
     def test_a_bdm_cannot_edit_external_source_assignment(self):
-        """A BDM cannot edit non-wies-sourced assignments: the
+        """A Business Manager cannot edit non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
         admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer@rijksoverheid.nl", first_name="O", last_name="B")
@@ -776,7 +776,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert unrelated.context["new_value"] == "Nieuw"
 
     def test_events_partial_accessible_to_unrelated_user(self):
-        """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
+        """Any authenticated user can open the updates tab, not just Business Manager/placed colleagues."""
         self.client.force_login(self.unrelated_user)
 
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
@@ -814,7 +814,7 @@ class TimelinePlacementPrivacyTests(TestCase):
     """The updates tab honours the team tab's placement-visibility rule.
 
     A planned or ended placement is private to the placed colleague and the
-    Business Managers (the BDM role), so its colleague name must not surface in a
+    Business Managers (the Business Manager role), so its colleague name must not surface in a
     Team event for anyone else.
     """
 
@@ -890,11 +890,15 @@ class TimelinePlacementPrivacyTests(TestCase):
         self.assertContains(response, "Geen updates")
 
     def test_bdm_sees_the_full_history(self):
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
-        Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
-        grant_business_manager(bdm_user)
+        business_manager_user = User.objects.create_user(
+            email="business_manager@rijksoverheid.nl", first_name="B", last_name="dm"
+        )
+        Colleague.objects.create(
+            user=business_manager_user, name="Bdm Colleague", email="business_manager@rijksoverheid.nl", source="wies"
+        )
+        grant_business_manager(business_manager_user)
 
-        response = self._get_timeline(bdm_user)
+        response = self._get_timeline(business_manager_user)
 
         self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
@@ -977,8 +981,8 @@ class TimelinePlacementPrivacyTests(TestCase):
 
 
 class AssignmentDeleteViewTests(TestCase):
-    """Only the BDM owner can delete a wies-sourced opdracht (#313);
-    ownership without the BDM role grants nothing."""
+    """Only the Business Manager owner can delete a wies-sourced opdracht (#313);
+    ownership without the Business Manager role grants nothing."""
 
     def setUp(self):
         self.client = Client()
@@ -1118,7 +1122,7 @@ class AssignmentDeleteViewTests(TestCase):
         assert Assignment.objects.filter(id=self.assignment.id).exists()
 
     def test_a_bdm_can_delete_wies_assignment(self):
-        """A BDM can delete an assignment they don't own (#313)."""
+        """A Business Manager can delete an assignment they don't own (#313)."""
         admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
@@ -1143,7 +1147,7 @@ class AssignmentDeleteViewTests(TestCase):
         assert Assignment.objects.filter(id=self.assignment.id).exists()
 
     def test_a_bdm_cannot_delete_otys_iir_assignment(self):
-        """A BDM cannot delete non-wies-sourced assignments: the
+        """A Business Manager cannot delete non-wies-sourced assignments: the
         ``_is_wies_sourced`` gate runs before the role branch."""
         admin_user = grant_business_manager(
             User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")

@@ -292,7 +292,7 @@ class InlineEditGroupTest(TestCase):
         grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so the permission engine allows all UPDATEs
+        # Business Manager owner so the permission engine allows all UPDATEs
         # these tests focus on group rendering/save, not auth.
         self.assignment = Assignment.objects.create(
             name="G",
@@ -417,7 +417,7 @@ class InlineEditCustomSaveTest(TestCase):
         grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so permission checks pass;
+        # Business Manager owner so permission checks pass;
         # this test focuses on the custom-save dispatch, not auth.
         self.assignment = Assignment.objects.create(
             name="Before",
@@ -458,7 +458,7 @@ class InlineEditDisplayTest(TestCase):
         grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so permission checks pass;
+        # Business Manager owner so permission checks pass;
         # this test focuses on display rendering, not auth.
         self.assignment = Assignment.objects.create(
             name="Shown",
@@ -504,7 +504,7 @@ class AssignmentPanelRenderTest(TestCase):
         )
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
-        # The owner field only offers BDM colleagues, so the combined edit form
+        # The owner field only offers Business Manager colleagues, so the combined edit form
         # needs the owner to be a valid choice for itself.
         grant_business_manager(self.user)
         self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
@@ -711,7 +711,7 @@ class AssignmentEditablesFullTest(TestCase):
             first_name="F",
             last_name="F",
         )
-        # BDM owner: may edit, and the Colleague shows up in owner choices.
+        # Business Manager owner: may edit, and the Colleague shows up in owner choices.
         grant_business_manager(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
@@ -758,15 +758,15 @@ class AssignmentEditablesFullTest(TestCase):
         assert self.assignment.end_date is None
 
     def test_owner_edit_form_limits_choices_to_bdms(self):
-        # A non-BDM colleague should not appear as an option.
+        # A non-Business-Manager colleague should not appear as an option.
         User.objects.create_user(
             email="notbdm@rijksoverheid.nl",
             first_name="Not",
-            last_name="BDM",
+            last_name="Business Manager",
         )
         resp = self.client.get(self._url("owner") + "?edit=true")
         self.assertContains(resp, self.colleague.name)
-        self.assertNotContains(resp, "Not BDM")
+        self.assertNotContains(resp, "Not Business Manager")
 
     def test_owner_display_uses_custom_partial(self):
         resp = self.client.get(self._url("owner"))
@@ -812,7 +812,7 @@ class AssignmentCreateFormIntegrationTest(TestCase):
 
     def test_owner_queryset_filtered_to_bdm_group(self):
         # The owner queryset is derived from the Editable's choices — it includes
-        # the BDM group filter defined in the editables module.
+        # the Business Manager group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
         assert ROLE_BUSINESS_MANAGER in str(qs.query)
@@ -841,7 +841,7 @@ class PlacementServiceEditablesTest(TestCase):
             first_name="P",
             last_name="S",
         )
-        grant_business_manager(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         assignment = Assignment.objects.create(
@@ -924,7 +924,7 @@ class AssignmentServicesDisplayTest(TestCase):
             first_name="Svc",
             last_name="Display",
         )
-        grant_business_manager(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1073,7 +1073,7 @@ class AssignmentServicesAuditTest(TestCase):
             first_name="Svc",
             last_name="Audit",
         )
-        grant_business_manager(self.user)  # BDM owner of the assignment below
+        grant_business_manager(self.user)  # Business Manager owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
@@ -1380,7 +1380,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             first_name="Svc",
             last_name="Period",
         )
-        grant_business_manager(self.user)  # BDM owner of the assignment below
+        grant_business_manager(self.user)  # Business Manager owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
@@ -1721,7 +1721,7 @@ class ServiceDescriptionPermissionTest(TestCase):
         assert self.my_service.skill_id != new_skill.id
 
     def test_owner_can_use_inline_pencil(self):
-        """A BDM owner can edit descriptions inline, consistent with skill and period."""
+        """A Business Manager owner can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
         resp = post_inline_edit(self.client, self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
@@ -1811,7 +1811,7 @@ class InlineOrganizationsEditTest(TestCase):
             first_name="O",
             last_name="O",
         )
-        grant_business_manager(self.user)  # BDM owner of the assignments below
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(

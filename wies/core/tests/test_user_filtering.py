@@ -30,9 +30,9 @@ class UserFilterFixture:
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
         self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.merk = Suborganization.objects.create(name="Merk A")
-        self.office_assistant, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
+        self.user_admin, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         u = User.objects.create_user(email="c@rijksoverheid.nl", first_name="Cor", last_name="Consultant")
-        u.groups.add(self.office_assistant)
+        u.groups.add(self.user_admin)
         Colleague.objects.create(
             user=u, name="Cor Consultant", email="c@rijksoverheid.nl", source="wies", suborganization=self.merk
         )
@@ -59,7 +59,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
 
     def test_role_filter_lists_the_roles_by_label(self):
         """The full list behind "Meer..." is the one the view builds: sorted on
-        ``Group.name`` it would open with ``bdm``, which is no reader's A-Z."""
+        ``Group.name`` it would open with ``business_manager``, which is no reader's A-Z."""
         for key in (ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT):
             Group.objects.get_or_create(name=key)
         self.client.force_login(self.admin)
@@ -92,7 +92,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
     def test_active_filter_renders_chip(self):
         # The chip strip replaced the button counter, which said how many but not what.
         self.client.force_login(self.admin)
-        html = self.client.get(reverse("admin-users") + f"?rol={self.office_assistant.id}").content.decode()
+        html = self.client.get(reverse("admin-users") + f"?rol={self.user_admin.id}").content.decode()
         assert 'data-wies-dismiss="filter"' in html
         assert 'data-filter-name="rol"' in html
         assert "data-clear-all-filters" in html
@@ -103,7 +103,7 @@ class UserFilterOobTest(UserFilterRenderTest):
         self.client.force_login(self.admin)
         # Simulate the apply swap: a filter GET with HX-Request.
         html = self.client.get(
-            reverse("admin-users") + f"?rol={self.office_assistant.id}", headers={"hx-request": "true"}
+            reverse("admin-users") + f"?rol={self.user_admin.id}", headers={"hx-request": "true"}
         ).content.decode()
         assert 'data-wies-dismiss="filter"' in html
         # The filter panel travels along OOB so the sheet shows the new counts.
@@ -114,7 +114,7 @@ class UserFilterFlowTest(UserFilterRenderTest):
     def test_filter_swap_returns_results_with_oob_sheet(self):
         self.client.force_login(self.admin)
         html = self.client.get(
-            reverse("admin-users") + f"?rol={self.office_assistant.id}", headers={"hx-request": "true"}
+            reverse("admin-users") + f"?rol={self.user_admin.id}", headers={"hx-request": "true"}
         ).content.decode()
         # The results fragment comes back with the filter panel as an OOB swap.
         assert 'id="results"' in html
@@ -127,7 +127,7 @@ class UserFilterFlowTest(UserFilterRenderTest):
         u2 = User.objects.create_user(email="c2@rijksoverheid.nl", first_name="C2", last_name="T")
         u2.groups.add(other)
         self.client.force_login(self.admin)
-        resp = self.client.get(reverse("admin-users") + f"?rol={self.office_assistant.id}&rol={other.id}")
+        resp = self.client.get(reverse("admin-users") + f"?rol={self.user_admin.id}&rol={other.id}")
         assert resp.status_code == 200
 
 

@@ -62,7 +62,7 @@ class UserViewsTest(TestCase):
         # Create test groups for form testing
         self.admin_group, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
+        self.business_manager_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
         # Create test users
         self.user1 = User.objects.create_user(
@@ -809,7 +809,7 @@ class UserImportTest(TestCase):
         # Create test groups
         self.admin_group, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
+        self.business_manager_group, _ = Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
         # Brands referenced by import CSVs must already exist (imports never create merken).
         self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
@@ -916,7 +916,7 @@ class UserImportTest(TestCase):
     def test_import_valid_csv_creates_users(self):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n
 Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -947,7 +947,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         """Test that import accepts CSV files using `;` as the delimiter (Excel default on many locales)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            f"first_name;last_name;email;brand;{role_label(ROLE_USER_ADMIN)};{role_label(ROLE_CONSULTANT)};BDM\n"
+            f"first_name;last_name;email;brand;{role_label(ROLE_USER_ADMIN)};{role_label(ROLE_CONSULTANT)};Business Manager\n"
             "John;Doe;john.doe@rijksoverheid.nl;Brand A;y;n;n\n"
             "Jane;Smith;jane.smith@rijksoverheid.nl;Brand B;n;y;n"
         )
@@ -964,7 +964,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         """Test that import accepts CSV files saved with a UTF-8 BOM (Excel on Windows)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n"
         )
         csv_file = SimpleUploadedFile(
@@ -981,7 +981,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
     def test_import_reuses_existing_merken(self):
         """Test that import reuses an existing merk instead of creating a duplicate"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,Administrator,{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,Administrator,{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john.doe@rijksoverheid.nl,{self.existing_suborg.name},n,n,n"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -1047,7 +1047,7 @@ Jane,Smith,also-invalid"""
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john@rijksoverheid.nl,Brand A,yes,n,n
 Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -1135,7 +1135,7 @@ John,Doe,john@rijksoverheid.nl"""
     def test_import_with_multiple_groups(self):
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -1155,7 +1155,7 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         """None of the three role columns is Applicatiebeheer's alone, so an importer
         without it grants all of them (features/roles.md)."""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(csv_content)})
@@ -1217,7 +1217,7 @@ Jane,Smith,invalid-email"""
     def test_import_handles_whitespace_in_fields(self):
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
   John  ,  Doe  ,  john@rijksoverheid.nl  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 

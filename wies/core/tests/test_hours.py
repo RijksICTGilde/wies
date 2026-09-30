@@ -219,9 +219,11 @@ class BezettingPartialStatusViewTest(TestCase):
         setup_roles()
         self.client = Client()
         self.url = reverse("bezetting")
-        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(bdm)
+        business_manager = User.objects.create(
+            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
+        )
+        business_manager.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.client.force_login(business_manager)
         today = timezone.now().date()
         start, end = today - timedelta(days=10), today + timedelta(days=200)
         self.partial = _consultant("Piet Partial", "piet@x.nl")
@@ -349,8 +351,8 @@ class ColleaguePanelContractPeriodTest(TestCase):
         setup_roles()
         self.client = Client()
         self.today = timezone.now().date()
-        self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.business_manager = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.business_manager.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
         self.admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.client.force_login(self.admin)
@@ -402,7 +404,7 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Geen lopend contract." in panel
         assert "Niet ingevuld" not in panel
 
-    def test_panel_lets_an_office_assistant_keep_the_hours(self):
+    def test_panel_lets_a_user_admin_keep_the_hours(self):
         """The buttons follow the rule, not the surface: the same block carries
         them in the panel and in the user sheet."""
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
@@ -412,10 +414,10 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Contractperiode toevoegen" in body
 
     def test_panel_shows_the_block_read_only_to_a_bdm(self):
-        """A BDM plans with the hours and so reads them; keeping a contract is
+        """A Business Manager plans with the hours and so reads them; keeping a contract is
         beheer and stays with Gebruikersbeheer."""
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        self.client.force_login(self.bdm)
+        self.client.force_login(self.business_manager)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
@@ -424,7 +426,7 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert self.client.get(url).status_code == 403
         assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
 
-    def test_an_office_assistant_saves_a_period_for_another_colleague(self):
+    def test_a_user_admin_saves_a_period_for_another_colleague(self):
         url = reverse("contract-period-add", args=[self.colleague.public_id])
         response = self.client.post(url, {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""})
         assert response.status_code == 200
@@ -504,12 +506,17 @@ class ServiceHoursTest(TestCase):
     def setUp(self):
         setup_roles()
         self.client = Client()
-        self.bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.owner = Colleague.objects.create(
-            name="Bas BDM", email="bdm@rijksoverheid.nl", source="wies", user=self.bdm
+        self.business_manager = User.objects.create(
+            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
         )
-        self.client.force_login(self.bdm)
+        self.business_manager.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.owner = Colleague.objects.create(
+            name="Bas Business Manager",
+            email="business_manager@rijksoverheid.nl",
+            source="wies",
+            user=self.business_manager,
+        )
+        self.client.force_login(self.business_manager)
         self.assignment = Assignment.objects.create(name="Urenopdracht", source="wies", owner=self.owner)
         self.skill = Skill.objects.create(name="Data engineer")
 
@@ -988,16 +995,18 @@ class ServiceHoursPermissionTest(TestCase):
         )
         self.placement = _placement(self.colleague, "Eigen klus", self.today, self.today + timedelta(days=90), hours=24)
         self.service = self.placement.service
-        self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        owner = Colleague.objects.create(name="Bas BDM", email="bm@rijksoverheid.nl", source="wies", user=self.bdm)
+        self.business_manager = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.business_manager.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        owner = Colleague.objects.create(
+            name="Bas Business Manager", email="bm@rijksoverheid.nl", source="wies", user=self.business_manager
+        )
         self.service.assignment.owner = owner
         self.service.assignment.save(update_fields=["owner"])
 
     def test_placed_consultant_may_not_update_the_hours_of_own_service(self):
         assert not has_permission(Verb.UPDATE, self.service, self.user, ServiceEditables.hours_per_week)
         assert has_permission(Verb.UPDATE, self.service, self.user, ServiceEditables.description)
-        assert has_permission(Verb.UPDATE, self.service, self.bdm, ServiceEditables.hours_per_week)
+        assert has_permission(Verb.UPDATE, self.service, self.business_manager, ServiceEditables.hours_per_week)
 
     def test_role_form_of_the_consultant_ignores_posted_hours(self):
         client = Client()
@@ -1030,7 +1039,7 @@ class ServiceHoursPermissionTest(TestCase):
     def test_an_hours_only_edit_leaves_no_trace_on_the_timeline(self):
         # No history is kept of a role's hours (agreed with Patrick, 13 July 2026).
         client = Client()
-        client.force_login(self.bdm)
+        client.force_login(self.business_manager)
         before = Event.objects.count()
         response = client.post(
             reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
@@ -1047,7 +1056,7 @@ class ServiceHoursPermissionTest(TestCase):
 
     def test_hours_of_a_placed_colleague_are_hidden_from_team_mates(self):
         """Team mates see each other's role and description, not the hours; an
-        open aanvraag shows its hours to everyone; a BDM sees them all."""
+        open aanvraag shows its hours to everyone; a Business Manager sees them all."""
         assignment = self.service.assignment
         mate = _consultant("Team Maat", "maat@x.nl")
         mate_service = Service.objects.create(
@@ -1075,14 +1084,16 @@ class ServiceHoursPermissionTest(TestCase):
         assert "Maat" in mate_panel
         assert "16 uur" not in mate_panel
 
-        client.force_login(self.bdm)
+        client.force_login(self.business_manager)
         team = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
         assert "24 uur" in team
         assert "16 uur" in team
         assert "8 uur" in team
 
     def test_placement_panel_role_form_carries_the_hours_for_the_owner_only(self):
-        names = [spec.name for (_, spec, _) in placement_edit_specs(self.placement, self.bdm, only="skill")]
+        names = [
+            spec.name for (_, spec, _) in placement_edit_specs(self.placement, self.business_manager, only="skill")
+        ]
         assert "hours_per_week" in names
         names = [spec.name for (_, spec, _) in placement_edit_specs(self.placement, self.user, only="skill")]
         assert "hours_per_week" not in names
@@ -1154,22 +1165,20 @@ class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
     def setUp(self):
         setup_roles()
         self.today = timezone.now().date()
-        self.office_assistant = User.objects.create(
-            email="office@rijksoverheid.nl", onboarding_completed_at=timezone.now()
-        )
-        self.office_assistant.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
+        self.user_admin = User.objects.create(email="office@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.user_admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
         self.placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
 
-    def test_the_office_assistant_reads_the_contract_but_not_the_role_hours(self):
-        assert has_permission(Verb.READ, ContractPeriod(colleague=self.colleague), self.office_assistant) is True
-        assert can_view_role_hours(self.office_assistant, self.placement) is False
+    def test_the_user_admin_reads_the_contract_but_not_the_role_hours(self):
+        assert has_permission(Verb.READ, ContractPeriod(colleague=self.colleague), self.user_admin) is True
+        assert can_view_role_hours(self.user_admin, self.placement) is False
 
-    def test_the_team_list_blanks_the_hours_for_an_office_assistant(self):
+    def test_the_team_list_blanks_the_hours_for_a_user_admin(self):
         """The surface the predicate feeds: the row renders without its hours,
         which is what a team mate sees."""
         client = Client()
-        client.force_login(self.office_assistant)
+        client.force_login(self.user_admin)
 
         body = client.get(reverse("home"), {"opdracht": self.placement.service.assignment.public_id}).content.decode()
 

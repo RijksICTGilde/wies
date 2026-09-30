@@ -30,7 +30,7 @@ class DataImportIntegrationTest(TestCase):
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
 
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n\n"
             "Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n\n"
             "Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"

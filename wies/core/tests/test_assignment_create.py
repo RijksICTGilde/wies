@@ -38,16 +38,16 @@ class AssignmentCreateTest(TestCase):
         setup_roles()
         self.client = Client()
 
-        self.bdm_user = User.objects.create(
-            email="bdm@rijksoverheid.nl",
-            first_name="BDM",
+        self.business_manager_user = User.objects.create(
+            email="business_manager@rijksoverheid.nl",
+            first_name="Business Manager",
             last_name="User",
         )
-        grant_business_manager(self.bdm_user)
+        grant_business_manager(self.business_manager_user)
         add_assignment = Permission.objects.get(codename="add_assignment")
         add_service = Permission.objects.get(codename="add_service")
         add_placement = Permission.objects.get(codename="add_placement")
-        self.bdm_user.user_permissions.add(add_assignment, add_service, add_placement)
+        self.business_manager_user.user_permissions.add(add_assignment, add_service, add_placement)
 
         self.regular_user = User.objects.create(
             email="regular@rijksoverheid.nl",
@@ -60,11 +60,11 @@ class AssignmentCreateTest(TestCase):
             email="consultant@rijksoverheid.nl",
             source="wies",
         )
-        self.bdm_colleague = Colleague.objects.create(
-            name="BDM Colleague",
-            email="bdm@rijksoverheid.nl",
+        self.business_manager_colleague = Colleague.objects.create(
+            name="Business Manager Colleague",
+            email="business_manager@rijksoverheid.nl",
             source="wies",
-            user=self.bdm_user,
+            user=self.business_manager_user,
         )
         self.skill = Skill.objects.create(name="Python Developer")
         self.org = OrganizationUnit.objects.create(
@@ -90,7 +90,7 @@ class AssignmentCreateTest(TestCase):
     def test_list_sentinel_htmx_returns_create_form(self):
         # ?nieuwe-opdracht opens the empty create form as a panel; the htmx
         # panel request gets only the fragment.
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.get(
             reverse("assignment-list"),
             {"nieuwe-opdracht": ""},
@@ -102,7 +102,7 @@ class AssignmentCreateTest(TestCase):
 
     def test_list_sentinel_full_page_opens_create_panel(self):
         # Full-page GET (refresh/bookmark): the whole list plus the create panel.
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.get(reverse("assignment-list"), {"nieuwe-opdracht": ""})
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
@@ -116,12 +116,12 @@ class AssignmentCreateTest(TestCase):
         assert b"Voer opdracht in" not in response.content
 
     def test_sheet_post_creates_assignment_without_services(self):
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.post(
             reverse("assignment-create-sheet"),
             {
                 "name": "Sheet Opdracht",
-                "owner": self.bdm_colleague.public_id,
+                "owner": self.business_manager_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -134,12 +134,12 @@ class AssignmentCreateTest(TestCase):
         assert assignment.services.count() == 0
 
     def test_sheet_post_emits_create_event(self):
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         self.client.post(
             reverse("assignment-create-sheet"),
             {
                 "name": "Sheet Audit",
-                "owner": self.bdm_colleague.public_id,
+                "owner": self.business_manager_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -149,12 +149,12 @@ class AssignmentCreateTest(TestCase):
         assert event.context["name"] == "Sheet Audit"
 
     def test_sheet_post_validation_no_org_rerenders_form(self):
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.post(
             reverse("assignment-create-sheet"),
             {
                 "name": "Zonder Opdrachtgever",
-                "owner": self.bdm_colleague.public_id,
+                "owner": self.business_manager_colleague.public_id,
                 **org_formset_data([]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -176,12 +176,12 @@ class AssignmentCreateTest(TestCase):
     def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
         # _safe_return_path rejects a protocol-relative terug_url, so the
         # HX-Location falls back to the list.
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.post(
             reverse("assignment-create-sheet"),
             {
                 "name": "Onveilige Terug",
-                "owner": self.bdm_colleague.public_id,
+                "owner": self.business_manager_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": "//evil.example",
             },
@@ -197,12 +197,12 @@ class AssignmentCreateTest(TestCase):
         base.html does not reload on a panel swap, so the banner cannot come
         from there.
         """
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.post(
             reverse("assignment-create-sheet"),
             {
                 "name": "Banner Opdracht",
-                "owner": self.bdm_colleague.public_id,
+                "owner": self.business_manager_colleague.public_id,
                 **org_formset_data([(self.org, "PRIMARY")]),
                 "terug_url": reverse("assignment-list"),
             },
@@ -229,18 +229,18 @@ class AssignmentListButtonTest(TestCase):
         setup_roles()
         self.client = Client()
 
-        self.bdm_user = User.objects.create(
-            email="bdm@rijksoverheid.nl",
+        self.business_manager_user = User.objects.create(
+            email="business_manager@rijksoverheid.nl",
         )
         add_assignment = Permission.objects.get(codename="add_assignment")
-        self.bdm_user.user_permissions.add(add_assignment)
+        self.business_manager_user.user_permissions.add(add_assignment)
 
         self.regular_user = User.objects.create(
             email="regular@rijksoverheid.nl",
         )
 
     def test_bdm_sees_create_button(self):
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.get(reverse("assignment-list"))
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
@@ -248,7 +248,7 @@ class AssignmentListButtonTest(TestCase):
     def test_create_button_targets_list_sentinel(self):
         # The button opens the create sheet as a panel on the list
         # (?nieuwe-opdracht) and pushes the URL, not via /invoeren/?terug=.
-        self.client.force_login(self.bdm_user)
+        self.client.force_login(self.business_manager_user)
         response = self.client.get(reverse("assignment-list"))
         html = response.content.decode()
         assert "nieuwe-opdracht" in html

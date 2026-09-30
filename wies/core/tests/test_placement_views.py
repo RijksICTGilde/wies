@@ -431,7 +431,7 @@ class PlacementListHistoricalFilterTest(TestCase):
 
 class AssignmentServicesDisplayVisibilityTest(TestCase):
     """Ended placements in the side-panel team list are visible only to the
-    placed colleague and any Business Manager (BDM role), via
+    placed colleague and any Business Manager (Business Manager role), via
     ``_services_display_context``."""
 
     def setUp(self):
@@ -451,9 +451,9 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
             name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
         )
         # A Business Manager who is neither the placed colleague nor the owner.
-        self.user_bdm = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -499,8 +499,8 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
 
     @patch("wies.core.editables.assignment.timezone")
     def test_ended_placement_visible_to_bdm(self, mock_timezone):
-        # A Business Manager (BDM role) who is neither placed nor the owner still
-        # sees the ended placement, with the BDM note.
+        # A Business Manager (Business Manager role) who is neither placed nor the owner still
+        # sees the ended placement, with the Business Manager note.
         mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
         assignment = self._ended_placement_assignment(owner=self.colleague_bob)
 
@@ -599,9 +599,9 @@ class AssignmentServicesFutureAndCountTest(TestCase):
             name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
         )
         # A Business Manager who is neither placed nor the owner.
-        self.user_bdm = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -647,8 +647,8 @@ class AssignmentServicesFutureAndCountTest(TestCase):
 
     @patch("wies.core.editables.assignment.timezone")
     def test_future_placement_visible_to_bdm(self, mock_tz):
-        # A Business Manager (BDM role), neither placed nor the owner, still sees
-        # the future placement, with the BDM note.
+        # A Business Manager (Business Manager role), neither placed nor the owner, still sees
+        # the future placement, with the Business Manager note.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         assignment = self._assignment_with_future_placement(owner=self.colleague_bob)
 
@@ -688,10 +688,10 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         )
 
         unrelated = _build_assignment_panel_data(assignment, self._request(self.user_unrelated))
-        bdm = _build_assignment_panel_data(assignment, self._request(self.user_bdm))
+        business_manager = _build_assignment_panel_data(assignment, self._request(self.user_bdm))
 
         assert len(unrelated["team_rows"]) == 1, "hidden ended placement must not be listed"
-        assert len(bdm["team_rows"]) == 2, "BDM sees both"
+        assert len(business_manager["team_rows"]) == 2, "Business Manager sees both"
 
 
 class PlacementPanelVisibilityTest(TestCase):
@@ -713,9 +713,9 @@ class PlacementPanelVisibilityTest(TestCase):
             name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
         )
         # A Business Manager who is neither placed nor the owner.
-        self.user_bdm = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -798,8 +798,8 @@ class PlacementPanelVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_future_placement_shown_to_bdm_with_gepland(self, mock_tz):
-        # A Business Manager (BDM role), neither placed nor the owner, still sees
-        # the future placement panel, with the BDM note.
+        # A Business Manager (Business Manager role), neither placed nor the owner, still sees
+        # the future placement panel, with the Business Manager note.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
 
@@ -870,7 +870,7 @@ class PlacementPanelPencilPermissionTest(TestCase):
     @patch("wies.core.views.timezone")
     def test_owner_gets_both_pencils(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        # Bob owns the assignment and holds the BDM role, so he may edit every
+        # Bob owns the assignment and holds the Business Manager role, so he may edit every
         # field (ownership alone no longer grants edit rights).
         grant_business_manager(self.user_bob)
         pl = self._placement(owner=self.colleague_bob)
@@ -884,7 +884,7 @@ class PlacementPanelPencilPermissionTest(TestCase):
 class ColleagueProfileFutureVisibilityTest(TestCase):
     """Own-profile / colleague-panel assignment cards filter future placements
     the same way (visible to the colleague themselves and any Business Manager
-    (BDM role), not others)."""
+    (Business Manager role), not others)."""
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
@@ -897,9 +897,9 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
             name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
         )
         # A Business Manager who is neither placed nor the owner.
-        self.user_bdm = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -934,8 +934,8 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_future_placement_visible_to_bdm_on_other_profile(self, mock_tz):
-        # A Business Manager (BDM role) viewing an unrelated colleague's profile
-        # still sees the future placement, with the BDM note.
+        # A Business Manager (Business Manager role) viewing an unrelated colleague's profile
+        # still sees the future placement, with the Business Manager note.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
@@ -1030,7 +1030,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 class PlacementListFutureVisibilityTest(TestCase):
     """The 'Wie zit waar?' list is a current-state overview: not-yet-started
     (planned) placements are hidden from EVERYONE there, including the placed
-    colleague and BDMs. Planned placements remain visible on the colleague
+    colleague and Business Managers. Planned placements remain visible on the colleague
     profile and the side panels (``evaluate_placement_visibility``), not here."""
 
     def setUp(self):
@@ -1089,7 +1089,7 @@ class PlacementListFutureVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_future_placement_hidden_from_bdm(self, mock_tz):
-        # Likewise a BDM (the role that sees planned placements elsewhere):
+        # Likewise a Business Manager (the role that sees planned placements elsewhere):
         # planned placements do not appear on the list.
         grant_business_manager(self.user_bob)
         pl = self._future_placement(owner=self.colleague_bob)
@@ -1268,7 +1268,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
     """Tests for historical assignment visibility rules in colleague assignments.
 
     Privacy-critical: historical assignments must only be visible to the
-    colleague themselves or a Business Manager (BDM role).
+    colleague themselves or a Business Manager (Business Manager role).
     """
 
     def setUp(self):
@@ -1296,7 +1296,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
             source="wies",
             user=self.user_unrelated,
         )
-        # A Business Manager (BDM role): neither placed nor the owner.
+        # A Business Manager (Business Manager role): neither placed nor the owner.
         self.user_bdm = User.objects.create_user(email="cp_bdm@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
             name="Bdm",
@@ -1339,7 +1339,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_historical_assignments_visible_to_bdm(self, mock_timezone):
-        """A Business Manager (BDM role) sees historical placements of colleagues."""
+        """A Business Manager (Business Manager role) sees historical placements of colleagues."""
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now
@@ -1564,10 +1564,10 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_other_bm_cannot_see_ended_bm_assignments(self, mock_timezone):
-        """A non-BDM owner of a different assignment sees no ended BM assignments.
+        """A non-Business-Manager owner of a different assignment sees no ended BM assignments.
 
-        Owning an (unrelated) assignment grants no visibility: without the BDM
-        role Bob counts as any other unrelated viewer. (A BDM would see them —
+        Owning an (unrelated) assignment grants no visibility: without the Business Manager
+        role Bob counts as any other unrelated viewer. (A Business Manager would see them —
         visibility rides on the role, not on ownership.)"""
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
@@ -1593,12 +1593,14 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
-        assert historical == [], "Non-BDM owner of a different assignment should not see ended BM assignments"
+        assert historical == [], (
+            "Non-Business Manager owner of a different assignment should not see ended BM assignments"
+        )
 
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_shown_to_bdm_with_note(self, mock_timezone):
         """An ended assignment owned by a colleague (but with no placement on it)
-        is surfaced on that colleague's profile only to a Business Manager (BDM
+        is surfaced on that colleague's profile only to a Business Manager (Business Manager
         role), with the PRIVACY_BM_OWNED note.
 
         This is the ``viewer_is_bdm`` BM-role branch in
@@ -1620,18 +1622,18 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
             end_date=date(2024, 6, 14),
         )
 
-        # A BDM viewer (not the owner) sees it on Alice's profile.
+        # A Business Manager viewer (not the owner) sees it on Alice's profile.
         request = self._make_request(self.user_bdm)
         assignments = _get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         entry = next((a for a in historical if a["id"] == assignment.id), None)
-        assert entry is not None, "BDM should see the ended BM assignment"
+        assert entry is not None, "Business Manager should see the ended BM assignment"
         assert entry["privacy_warning_text"] == PRIVACY_BM_OWNED
 
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_hidden_from_non_bdm_owner(self, mock_timezone):
-        """The owner viewing their OWN profile, when NOT a BDM, no longer sees
+        """The owner viewing their OWN profile, when NOT a Business Manager, no longer sees
         their ended owned assignment (the gate is now ``viewer_is_bdm``, not
         ``viewer_is_colleague``)."""
         mock_now = Mock()
@@ -1651,7 +1653,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
         historical = [a for a in assignments if a["historical"]]
         assert next((a for a in historical if a["id"] == assignment.id), None) is None, (
-            "Non-BDM owner should no longer see their own ended BM assignment"
+            "Non-Business Manager owner should no longer see their own ended BM assignment"
         )
 
 
@@ -2188,7 +2190,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
     follow the list's active-only rule.
 
     A planned (not-yet-started) placement never appears on the list — for any
-    viewer, including the placed colleague and BDMs — so it is counted for no
+    viewer, including the placed colleague and Business Managers — so it is counted for no
     one. Only active placements contribute to the per-org counts.
     """
 
@@ -2239,7 +2241,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
     def test_planned_placement_not_counted_for_bdm(self):
         """The list is active-only, so a planned placement is not counted even
-        for a BDM (they see it on the profile/panels, not on the list)."""
+        for a Business Manager (they see it on the profile/panels, not on the list)."""
         grant_business_manager(self.owner_user)
         self._place(start_offset_days=30, end_offset_days=120)
 
@@ -2263,7 +2265,7 @@ class PrivacyNoteSurfacesTest(TestCase):
         self.client = Client()
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
         # Under the new rule the owner sees the restricted row only if they are a
-        # Business Manager (BDM role); make bm_user one.
+        # Business Manager (Business Manager role); make bm_user one.
         grant_business_manager(self.bm_user)
         self.client.force_login(self.bm_user)
         self.bm = Colleague.objects.get(user=self.bm_user)
@@ -2331,7 +2333,7 @@ class TimelinePrivacyChipTest(TestCase):
 
     def setUp(self):
         self.bm_user = User.objects.create_user(email="bm@rijksoverheid.nl")
-        # The full team line is shown only to a Business Manager (BDM role).
+        # The full team line is shown only to a Business Manager (Business Manager role).
         grant_business_manager(self.bm_user)
         self.bm_client = Client()
         self.bm_client.force_login(self.bm_user)
@@ -2393,7 +2395,7 @@ class TimelinePrivacyChipTest(TestCase):
         return response.content.decode()
 
     def test_bdm_sees_the_chip_on_a_team_line(self):
-        # The BDM gets this line and others do not, so the note belongs with it.
+        # The Business Manager gets this line and others do not, so the note belongs with it.
         self._team_event()
         body = self._timeline(self.bm_client)
         assert 'text="Beperkt zichtbaar"' in body
@@ -2501,20 +2503,22 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
         self.assertNotContains(response, "DTC4NL")
 
     def test_bdm_still_sees_the_hidden_team_member(self):
-        # Guards against over-filtering: a Business Manager (BDM role) must keep
+        # Guards against over-filtering: a Business Manager (Business Manager role) must keep
         # full visibility, even when neither placed nor the owner.
-        bdm_user = make_business_manager_user()
-        bdm_client = Client()
-        bdm_client.force_login(bdm_user)
+        business_manager_user = make_business_manager_user()
+        business_manager_client = Client()
+        business_manager_client.force_login(business_manager_user)
 
-        response = bdm_client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=self.HX)
+        response = business_manager_client.get(
+            reverse("home") + f"?opdracht={self.assignment.public_id}", headers=self.HX
+        )
 
         assert response.status_code == 200
         self.assertContains(response, "Active Member")
         self.assertContains(response, "Hidden Member")
 
     def test_non_bdm_owner_no_longer_sees_hidden_team_member(self):
-        # Behaviour-removal regression: the owner, when NOT a BDM, no longer sees
+        # Behaviour-removal regression: the owner, when NOT a Business Manager, no longer sees
         # the ended (hidden) teammate.
         owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.owner.user = owner_user
@@ -2529,7 +2533,7 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
         self.assertNotContains(response, "Hidden Member")
 
     def test_placed_colleague_still_sees_their_own_ended_assignment(self):
-        # The other authorized viewer besides a BDM: the placed colleague
+        # The other authorized viewer besides a Business Manager: the placed colleague
         # themselves. On their own colleague panel the ended assignment must
         # surface (PRIVACY_OWN), even though it is hidden from the outsider.
         member_user = User.objects.create_user(email="hidden@rijksoverheid.nl")

@@ -51,7 +51,7 @@ class RoleGrantTest(TestCase):
         setup_roles()
         self.user_admin_group = Group.objects.get(name=ROLE_USER_ADMIN)
         self.consultant_group = Group.objects.get(name=ROLE_CONSULTANT)
-        self.bdm_group = Group.objects.get(name=ROLE_BUSINESS_MANAGER)
+        self.business_manager_group = Group.objects.get(name=ROLE_BUSINESS_MANAGER)
 
         # Gebruikersbeheer, not application administration.
         self.user_admin = User.objects.create_user(
@@ -104,7 +104,7 @@ class RoleGrantTest(TestCase):
         assert 'label="Rollen"' in content
 
     def test_editing_the_person_saves_the_roles_in_the_same_submission(self):
-        self.target.groups.add(self.bdm_group)
+        self.target.groups.add(self.business_manager_group)
         self.client.force_login(self.user_admin)
         payload = {
             "first_name": "T",
@@ -116,7 +116,7 @@ class RoleGrantTest(TestCase):
         response = self.client.post(reverse("user-edit", args=[self.target.public_id]), payload, headers=HX)
 
         assert response["HX-Redirect"] == reverse("admin-users")
-        # Saving replaces the whole set: BDM was offered and left out, so it goes.
+        # Saving replaces the whole set: Business Manager was offered and left out, so it goes.
         assert self._group_names(self.target) == {ROLE_CONSULTANT}
 
     def test_every_editor_is_offered_every_role(self):
@@ -206,7 +206,7 @@ class RoleGrantTest(TestCase):
     def test_the_sheet_arrives_with_the_roles_the_user_already_holds(self):
         """Saving replaces the whole set, so a sheet that opens unticked strips
         every role the moment someone presses Opslaan."""
-        self.target.groups.add(self.consultant_group, self.bdm_group)
+        self.target.groups.add(self.consultant_group, self.business_manager_group)
         self.client.force_login(self.user_admin)
 
         response = self.client.get(self._roles_url(self.target), headers=HX)
@@ -217,7 +217,7 @@ class RoleGrantTest(TestCase):
         }
 
     def test_the_sheet_lists_the_roles_by_label(self):
-        """By key ``bdm`` would come first, so the order pins the label sort."""
+        """By key ``business_manager`` would come first, so the order pins the label sort."""
         self.client.force_login(self.user_admin)
 
         content = self.client.get(self._roles_url(self.target), headers=HX).content.decode()
@@ -344,13 +344,13 @@ class RoleGrantTest(TestCase):
     def test_user_admin_may_grant_consultant_and_bdm(self):
         self.client.force_login(self.user_admin)
 
-        response = self._post_roles(self.target, [self.consultant_group, self.bdm_group])
+        response = self._post_roles(self.target, [self.consultant_group, self.business_manager_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == {ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER}
 
     def test_saving_replaces_the_whole_set(self):
-        self.target.groups.add(self.user_admin_group, self.bdm_group)
+        self.target.groups.add(self.user_admin_group, self.business_manager_group)
         self.client.force_login(self.user_admin)
 
         response = self._post_roles(self.target, [self.consultant_group])
@@ -375,10 +375,10 @@ class RoleGrantTest(TestCase):
         assert revoked["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == set()
 
-    def test_an_office_assistant_grants_bdm_with_event(self):
+    def test_a_user_admin_grants_bdm_with_event(self):
         self.client.force_login(self.user_admin)
 
-        response = self._post_roles(self.target, [self.bdm_group])
+        response = self._post_roles(self.target, [self.business_manager_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
         assert self._group_names(self.target) == {ROLE_BUSINESS_MANAGER}
@@ -389,7 +389,7 @@ class RoleGrantTest(TestCase):
 
     def test_an_editor_revokes_their_own_bdm(self):
         # The "switch it off and test as a normal user" workflow.
-        self.user_admin.groups.add(self.bdm_group)
+        self.user_admin.groups.add(self.business_manager_group)
         self.client.force_login(self.user_admin)
 
         response = self._post_roles(self.user_admin, [self.user_admin_group])
@@ -415,7 +415,7 @@ class RoleGrantTest(TestCase):
             first_name=self.target.first_name,
             last_name=self.target.last_name,
             email=self.target.email,
-            groups=[self.bdm_group, self.user_admin_group],
+            groups=[self.business_manager_group, self.user_admin_group],
         )
         assert self._group_names(self.target) == {ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN}
 
@@ -425,7 +425,7 @@ class RoleGrantTest(TestCase):
         menu. The event carries them, as it does for an edit."""
         self.client.force_login(self.user_admin)
 
-        response = self._post_create("nieuw@rijksoverheid.nl", [self.consultant_group, self.bdm_group])
+        response = self._post_create("nieuw@rijksoverheid.nl", [self.consultant_group, self.business_manager_group])
 
         assert response["HX-Redirect"] == reverse("admin-users")
         created = User.objects.get(email="nieuw@rijksoverheid.nl")
@@ -460,7 +460,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_by_user_admin_grants_user_admin(self):
         """Every role column of the import is one Gebruikersbeheer may grant."""
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,y,n\n"
         )
 
@@ -476,7 +476,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_skips_an_existing_user_and_grants_the_other_rows(self):
         # Row 4 is skipped as an existing user; the rows around it still land.
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "Ann,Een,ann@rijksoverheid.nl,,y,n,n\n"
             "Bob,Twee,bob@rijksoverheid.nl,,n,y,n\n"
             f"Tom,Drie,{self.target.email},,y,n,n\n"
@@ -512,7 +512,7 @@ class RoleGrantTest(TestCase):
 
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,n,n\n"
         )
 

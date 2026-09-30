@@ -19,7 +19,7 @@ class RBACSetupTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
     def test_setup_roles_does_not_grant_business_manager_to_staff(self):
-        """setup_roles() runs on every start; a staff member who removed BDM from
+        """setup_roles() runs on every start; a staff member who removed Business Manager from
         themselves must not get it back."""
         User.objects.create_user(email="staff@rijksoverheid.nl", first_name="S", last_name="T")
 

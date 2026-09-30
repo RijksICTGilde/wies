@@ -27,7 +27,7 @@ from wies.core.widgets import ComboBoxSelect
 def _business_manager_queryset(assignment=None):
     # A callable so `choices` evaluates lazily per request.
     #
-    # The current owner is always included, even outside the BDM group: without a
+    # The current owner is always included, even outside the Business Manager group: without a
     # matching option the combo box renders empty and saving clears the Business
     # Manager. Owners are usually in that group, but the odd one isn't.
     in_group = Q(user__groups__name=ROLE_BUSINESS_MANAGER)
@@ -173,7 +173,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``_services_initial`` returns every placement; here a placement that is not
     currently active is hidden from unrelated viewers — only the placed colleague
-    and Business Managers (the BDM role) see it, flagged ``historical`` with a
+    and Business Managers (the Business Manager role) see it, flagged ``historical`` with a
     label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
@@ -351,7 +351,7 @@ def restricted_change_names(assignment, changes: list[dict]) -> set[str]:
     """Returns the names these team rows mention that not everyone sees.
 
     Drives the note on a timeline row: a viewer who gets a change naming someone
-    outside the public row set (a BDM, or the person themselves) should know the
+    outside the public row set (a Business Manager, or the person themselves) should know the
     row is hidden from others. Tested against what an outsider would see, not
     against the viewer's own rights, since their own name would otherwise always
     make the row look visible.

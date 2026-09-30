@@ -1,7 +1,7 @@
 """Who sees ended and future placements and assignments (#636).
 
-The BDM role is what makes a viewer privileged for the placement-visibility rule,
-not ownership and not being placed. These tests put a BDM who is neither on each
+The Business Manager role is what makes a viewer privileged for the placement-visibility rule,
+not ownership and not being placed. These tests put a Business Manager who is neither on each
 surface that shows such a row, panel, timeline event or profile card, and check
 that application administration (``STAFF_EMAILS``) alone grants none of it.
 """
@@ -23,7 +23,7 @@ from wies.rijksauth.models import User
 
 
 class IsBdmRequestTest(SimpleTestCase):
-    """The role-based half of the visibility gate: the BDM role, else not."""
+    """The role-based half of the visibility gate: the Business Manager role, else not."""
 
     @staticmethod
     def _request(*, email="u@rijksoverheid.nl", groups=()):
@@ -51,7 +51,7 @@ class IsBdmRequestTest(SimpleTestCase):
 
 
 class _VisibilityFixture(TestCase):
-    """An ended placement plus an unrelated BDM viewer and a bare staff viewer,
+    """An ended placement plus an unrelated Business Manager viewer and a bare staff viewer,
     neither of them placed."""
 
     def setUp(self):
@@ -71,7 +71,7 @@ class _VisibilityFixture(TestCase):
             specific_end_date=date(2024, 6, 14),
             source="wies",
         )
-        self.bdm_viewer = make_other_business_manager_user()
+        self.business_manager_viewer = make_other_business_manager_user()
         self.user_staff = make_staff_user()
 
     def _request(self, user):
@@ -85,7 +85,7 @@ class AssignmentAdminSeesTeamRowTest(_VisibilityFixture):
     def test_a_bdm_sees_ended_team_row(self, mock_timezone):
         mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
-        rows = _services_display_context(self.assignment, self._request(self.bdm_viewer))["value"]
+        rows = _services_display_context(self.assignment, self._request(self.business_manager_viewer))["value"]
 
         visible = [r for r in rows if r["colleague"]]
         assert len(visible) == 1
@@ -108,7 +108,7 @@ class AssignmentAdminSeesPlacementPanelTest(_VisibilityFixture):
     def test_a_bdm_opens_ended_placement_panel(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
-        data = _resolve_placement_panel(self._request(self.bdm_viewer), self.ended.public_id)
+        data = _resolve_placement_panel(self._request(self.business_manager_viewer), self.ended.public_id)
 
         assert data is not None
         assert data["assignment_card"]["privacy_warning_text"] == PRIVACY_BM
@@ -119,7 +119,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
     def test_a_bdm_sees_historical_placement_on_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
-        assignments = _get_colleague_assignments(self._request(self.bdm_viewer), self.colleague_alice)
+        assignments = _get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
@@ -147,7 +147,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
             end_date=date(2024, 6, 14),
         )
 
-        assignments = _get_colleague_assignments(self._request(self.bdm_viewer), self.colleague_alice)
+        assignments = _get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
 
         assert any(a["id"] == owned.id and a["historical"] for a in assignments)
 
@@ -162,7 +162,7 @@ class OwnerPlacedOnEndedAssignmentTest(_VisibilityFixture):
 
     @patch("wies.core.views.timezone")
     def test_own_profile_keeps_the_bm_label_on_the_ended_card(self, mock_tz):
-        # Alice is not a BDM; she views her own profile. The ended
+        # Alice is not a Business Manager; she views her own profile. The ended
         # assignment she owns is also one she is placed on (self.ended).
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
         self.assignment.owner = self.colleague_alice
@@ -180,7 +180,7 @@ class OwnerPlacedOnEndedAssignmentTest(_VisibilityFixture):
 
 
 class AssignmentAdminSeesTimelineEventTest(TestCase):
-    """The updates tab shows a BDM viewer the team event for a hidden placement."""
+    """The updates tab shows a Business Manager viewer the team event for a hidden placement."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
@@ -198,11 +198,11 @@ class AssignmentAdminSeesTimelineEventTest(TestCase):
             specific_end_date=today + timedelta(days=120),
             source="wies",
         )
-        self.bdm_viewer = make_other_business_manager_user()
+        self.business_manager_viewer = make_other_business_manager_user()
 
     def test_a_bdm_sees_the_hidden_team_member(self):
         client = Client()
-        client.force_login(self.bdm_viewer)
+        client.force_login(self.business_manager_viewer)
 
         response = client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=self.HX)
 

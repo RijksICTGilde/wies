@@ -44,11 +44,11 @@ User = get_user_model()
 
 
 class _Setup(TestCase):
-    """Common fixture: BDM owner, placed consultant, unrelated user, assignment with a service."""
+    """Common fixture: Business Manager owner, placed consultant, unrelated user, assignment with a service."""
 
     def setUp(self):
-        # The owner is a BDM: ownership only grants edit rights combined with
-        # the BDM role (see ``update_assignment`` in permissions.py).
+        # The owner is a Business Manager: ownership only grants edit rights combined with
+        # the Business Manager role (see ``update_assignment`` in permissions.py).
         self.owner_user = grant_business_manager(
             User.objects.create_user(email="bm@x.nl", first_name="B", last_name="M")
         )
@@ -94,7 +94,7 @@ class HasPermissionEngineTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, self.placed_user, AssignmentEditables.extra_info) is True
 
     def test_verb_list_or_composes(self):
-        # The BDM owner passes UPDATE on assignment; not LIST-only test, but
+        # The Business Manager owner passes UPDATE on assignment; not LIST-only test, but
         # demonstrates list normalisation.
         assert has_permission([Verb.UPDATE, Verb.DELETE], self.assignment, self.owner_user) is True
         # A verb the user can't do AND another they also can't do → False.
@@ -120,7 +120,7 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, self.owner_user) is True
 
     def test_non_bdm_owner_cannot_update_or_delete(self):
-        """Ownership alone grants nothing: an owner outside the BDM group is
+        """Ownership alone grants nothing: an owner outside the Business Manager group is
         treated as any other viewer (see ``update_assignment``)."""
         plain_user = User.objects.create_user(email="plain@x.nl", first_name="P", last_name="O")
         plain = Colleague.objects.create(user=plain_user, name="P O", email="plain@x.nl", source="wies")
@@ -141,7 +141,7 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, ext, self.owner_user) is False
 
     def test_change_assignment_perm_does_not_grant_update(self):
-        # Assignment rights come from the BDM role only; a
+        # Assignment rights come from the Business Manager role only; a
         # direct Django permission grant opens nothing.
         u = User.objects.create_user(email="hp@x.nl", first_name="H", last_name="P")
         u.user_permissions.add(Permission.objects.get(codename="change_assignment"))
@@ -151,7 +151,7 @@ class AssignmentPermissionRulesTest(_Setup):
 
 
 class BdmCanEditAnyAssignmentTest(_Setup):
-    """A BDM can edit and delete wies-sourced assignments and their
+    """A Business Manager can edit and delete wies-sourced assignments and their
     chained Service/Placement records (issues #392, #313). External-source
     assignments stay read-only."""
 
@@ -195,7 +195,7 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
     """A dienst and a plaatsing are as read-only as the opdracht they hang under,
     because each rule states ``WIES_SOURCED`` for itself.
 
-    The BDM role is the widest audience these rules name, so an opdracht managed
+    The Business Manager role is the widest audience these rules name, so an opdracht managed
     elsewhere shows here first if one of them stopped asking.
     """
 
@@ -228,7 +228,7 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
                 assert has_permission(Verb.UPDATE, obj, self.admin_user, field) is False
 
     def test_the_same_rules_all_answer_yes_while_the_opdracht_comes_from_wies(self):
-        """Otherwise the refusals above could be the BDM role falling short rather
+        """Otherwise the refusals above could be the Business Manager role falling short rather
         than the source of the opdracht."""
         for label, obj, field in self._targets():
             with self.subTest(rule=label):
@@ -246,14 +246,14 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
 
 
 class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
-    """The BDM role carries every wies-sourced opdracht, so a BDM reaches the
+    """The Business Manager role carries every wies-sourced opdracht, so a Business Manager reaches the
     diensten and plaatsingen of one they do not own; without the role nobody does."""
 
     def setUp(self):
         super().setUp()
         stranger = grant_business_manager(User.objects.create_user(email="bm2@x.nl", first_name="B", last_name="2"))
         Colleague.objects.create(user=stranger, name="B 2", email="bm2@x.nl", source="wies")
-        self.other_bdm_user = User.objects.get(pk=stranger.pk)
+        self.other_business_manager_user = User.objects.get(pk=stranger.pk)
 
     def test_the_owning_bdm_reaches_the_dienst(self):
         assert has_permission(Verb.UPDATE, self.service, self.owner_user) is True
@@ -261,7 +261,7 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
     def test_a_bdm_who_does_not_own_the_opdracht_reaches_both(self):
         for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
             with self.subTest(rule=label):
-                assert has_permission(Verb.UPDATE, obj, self.other_bdm_user) is True
+                assert has_permission(Verb.UPDATE, obj, self.other_business_manager_user) is True
 
     def test_without_the_role_neither_is_reached(self):
         for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
@@ -272,7 +272,7 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
 @override_settings(STAFF_EMAILS=["staff@x.nl"])
 class StaffMemberHasNoAssignmentRightsTest(_Setup):
     """Application administration (``STAFF_EMAILS``) carries no functional rights:
-    without the BDM role a staff member may not edit or delete an assignment."""
+    without the Business Manager role a staff member may not edit or delete an assignment."""
 
     def setUp(self):
         super().setUp()
@@ -296,7 +296,7 @@ class StaffMemberHasNoAssignmentRightsTest(_Setup):
 class PlacementPermissionTest(_Setup):
     """A colleague placed on an assignment must not be able to update
     Placement records on the same assignment — only the assignment's
-    a BDM can.
+    a Business Manager can.
 
     The endpoint shape is ``POST /inline-edit/placement/<id>/colleague/``.
     """
@@ -325,7 +325,7 @@ class InlineEditExistenceOracleTest(_Setup):
     exists to a viewer who may not touch it: 'not found' and 'not allowed'
     must be indistinguishable, so sequential PKs can't be walked as an oracle.
 
-    ``update_placement`` is BDM-owner-only, and the placement is made *planned*
+    ``update_placement`` is Business-Manager-only, and the placement is made *planned*
     (future start) so an unrelated consultant can neither edit nor see it.
     """
 
@@ -345,7 +345,7 @@ class InlineEditExistenceOracleTest(_Setup):
 
     def test_existing_forbidden_and_missing_are_indistinguishable(self):
         """An unrelated consultant cannot edit this placement (update_placement is
-        BDM-owner-only) and cannot see it (it is planned). The response for the real,
+        Business-Manager-only) and cannot see it (it is planned). The response for the real,
         hidden placement must match the response for a non-existent public_id."""
         self.client.force_login(self.unrelated_user)
         missing_public_id = uuid.uuid4()
@@ -410,9 +410,9 @@ class UserEmailFieldRuleTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(email="self@x.nl", first_name="S", last_name="E")
-        self.office_assistant = User.objects.create_user(email="adm@x.nl", first_name="A", last_name="D")
+        self.user_admin = User.objects.create_user(email="adm@x.nl", first_name="A", last_name="D")
         group, _created = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
-        self.office_assistant.groups.add(group)
+        self.user_admin.groups.add(group)
         self.staff = User.objects.create_user(email="app@x.nl", first_name="A", last_name="A")
 
     def test_self_can_update_first_name(self):
@@ -423,14 +423,14 @@ class UserEmailFieldRuleTest(TestCase):
         # Field-level rule: stricter than the whole-object rule that just allowed it.
         assert has_permission(Verb.UPDATE, self.user, self.user, UserEditables.email) is False
 
-    def test_office_assistant_can_update_the_whole_user(self):
+    def test_user_admin_can_update_the_whole_user(self):
         """The other half of the override: the role ``rule(UPDATE, User, ...)`` names
-        really does reach this account, so ``test_office_assistant_cannot_update_email_inline``
+        really does reach this account, so ``test_user_admin_cannot_update_email_inline``
         is the field rule refusing and not an editor falling short."""
-        assert has_permission(Verb.UPDATE, self.user, self.office_assistant) is True
+        assert has_permission(Verb.UPDATE, self.user, self.user_admin) is True
 
-    def test_office_assistant_cannot_update_email_inline(self):
-        assert has_permission(Verb.UPDATE, self.user, self.office_assistant, UserEditables.email) is False
+    def test_user_admin_cannot_update_email_inline(self):
+        assert has_permission(Verb.UPDATE, self.user, self.user_admin, UserEditables.email) is False
 
     @override_settings(STAFF_EMAILS=["app@x.nl"])
     def test_application_administration_cannot_either(self):
@@ -536,12 +536,12 @@ class AssignmentMemberSheetPermissionTest(_Setup):
 
 
 class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
-    """A BDM can edit Service and Placement records end-to-end over the
+    """A Business Manager can edit Service and Placement records end-to-end over the
     inline-edit HTTP endpoint, not just at the engine level.
 
     The engine-level equivalents live in ``BdmCanEditAnyAssignmentTest``;
     these drive the real ``inline_edit_view`` request so the whole stack (lookup,
-    ``_permission_denied``, save) is exercised for a BDM editor.
+    ``_permission_denied``, save) is exercised for a Business Manager editor.
     """
 
     def setUp(self):
@@ -564,7 +564,7 @@ class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
 
     def test_a_bdm_can_edit_placement_period_inline(self):
         # An unrelated user is refused this exact edit (see
-        # InlineEditExistenceOracleTest); a BDM must be able to save it.
+        # InlineEditExistenceOracleTest); a Business Manager must be able to save it.
         url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
 
         resp = post_inline_edit(
@@ -587,7 +587,7 @@ class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
 class ScopeVocabularyTest(_Setup):
     """The relations a rule can name, asked directly.
 
-    ``OWN`` is named by no rule today: a BDM carries every wies-sourced opdracht,
+    ``OWN`` is named by no rule today: a Business Manager carries every wies-sourced opdracht,
     so nothing narrows to the one they own. It stays because merk scoping (#526)
     combines with it, and it is measured here so it cannot rot unnoticed.
     """

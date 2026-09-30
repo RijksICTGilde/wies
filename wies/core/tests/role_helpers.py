@@ -31,7 +31,7 @@ def grant_consultant(user):
     return user
 
 
-def make_other_business_manager_user(email="bdm-ander@rijksoverheid.nl", name="Bdm Ander"):
+def make_other_business_manager_user(email="business_manager-ander@rijksoverheid.nl", name="Bdm Ander"):
     """A second Business Manager with a linked colleague, for the rights that do not need ownership."""
     from wies.core.models import Colleague  # noqa: PLC0415 (import not at top level), see make_business_manager_user
     from wies.rijksauth.models import User  # noqa: PLC0415 (import not at top level), see make_business_manager_user
@@ -41,7 +41,7 @@ def make_other_business_manager_user(email="bdm-ander@rijksoverheid.nl", name="B
     return grant_business_manager(user)
 
 
-def make_business_manager_user(email="bdm@rijksoverheid.nl", name="Bdm"):
+def make_business_manager_user(email="business_manager@rijksoverheid.nl", name="Bdm"):
     """A Business Manager with a linked colleague, ready for ``force_login``."""
     # Local imports: keep the helper importable before Django app setup.
     from wies.core.models import Colleague  # noqa: PLC0415 (import not at top level) — see above

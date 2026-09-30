@@ -28,7 +28,7 @@ class PlacementEditViewTest(TestCase):
     """POST-only save of the combined placement edit form.
 
     Edit rights on a Placement chain to UPDATE on the parent assignment, which
-    for a wies assignment is its BDM owner (see permissions.py).
+    for a wies assignment is its Business Manager owner (see permissions.py).
     """
 
     def setUp(self):

@@ -31,10 +31,9 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 # The role columns of the user CSV, by the header a file writes: labels, not keys,
-# so an import file stays readable (``features/roles.md``). BDM keeps the short
-# form it has always had.
-# Header as the file writes it -> role key. Two headers for the BDM role: the
-# label it carries today, and the abbreviation existing import files use.
+# so an import file stays readable (``features/roles.md``). Two headers reach the
+# Business Manager role: the label it carries today, and the "BDM" existing import
+# files were written with.
 CSV_ROLE_COLUMNS = {
     ROLE_LABELS[ROLE_USER_ADMIN]: ROLE_USER_ADMIN,
     ROLE_LABELS[ROLE_CONSULTANT]: ROLE_CONSULTANT,

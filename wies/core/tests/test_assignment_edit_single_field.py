@@ -24,7 +24,7 @@ User = get_user_model()
 class AssignmentEditSingleFieldTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Both owner and other are BDM, so both are valid choices in the
+        # Both owner and other are Business Manager, so both are valid choices in the
         # Business Manager field (choices = _business_manager_queryset).
         self.owner_user = grant_business_manager(User.objects.create_user(email="owner@rijksoverheid.nl"))
         self.client.force_login(self.owner_user)
@@ -34,7 +34,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         self.client.force_login(self.other_user)
         self.other = Colleague.objects.get(user=self.other_user)
 
-        # No role at all: the rules on an opdracht all name the BDM role.
+        # No role at all: the rules on an opdracht all name the Business Manager role.
         self.outsider = User.objects.create_user(email="buiten@rijksoverheid.nl")
         self.client.force_login(self.owner_user)
 
@@ -87,7 +87,7 @@ class AssignmentEditSingleFieldTest(TestCase):
 
 
 class AssignmentOwnerOutsideBdmGroupTest(TestCase):
-    """The current Business Manager is a choice even outside the BDM group.
+    """The current Business Manager is a choice even outside the Business Manager group.
 
     Regression: without an option matching its ``value`` the combo box rendered
     empty and saving wiped the Business Manager.
@@ -95,8 +95,8 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        # The owner is deliberately NOT in the BDM group: ownership alone grants
-        # nothing, so a BDM drives the edit UI while the non-BDM owner stays the
+        # The owner is deliberately NOT in the Business Manager group: ownership alone grants
+        # nothing, so a Business Manager drives the edit UI while the non-Business-Manager owner stays the
         # assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)  # the login signal creates the Colleague

@@ -82,8 +82,8 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
-# Role mix for the dummy users, by role key: most consultants, some BDMs, a few office assistants.
-# Assignment owners are drawn only from the BDM colleagues, matching production
+# Role mix for the dummy users, by role key: most consultants, some Business Managers, a few office assistants.
+# Assignment owners are drawn only from the Business Manager colleagues, matching production
 # where the owner is a Business Manager.
 ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BUSINESS_MANAGER: 15, ROLE_USER_ADMIN: 5}
 # Contract hours per week: mostly 36, the rijksoverheid norm.
@@ -830,12 +830,12 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             colleague.save(update_fields=["suborganization"])
         write("Colleague suborganizations assigned")
 
-    # ── 4d. Colleague user + role (most consultants, some BDM, few beheerder) ──
+    # ── 4d. Colleague user + role (most consultants, some Business Manager, few beheerder) ──
     user_model = get_user_model()
     role_groups = {name: Group.objects.get(name=name) for name in ROLE_WEIGHTS}
     role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
     roles = assign_roles(rng, len(colleagues))
-    bdm_colleagues = []
+    business_manager_colleagues = []
     for colleague, role in zip(colleagues, roles, strict=True):
         first_name, _, last_name = colleague.name.partition(" ")
         # A previous run may have left a user with this email (colleagues are
@@ -851,7 +851,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         user.groups.add(role_groups[role])
         role_counts[role] += 1
         if role == ROLE_BUSINESS_MANAGER:
-            bdm_colleagues.append(colleague)
+            business_manager_colleagues.append(colleague)
     write("Colleague roles: " + ", ".join(f"{role_counts[n]} {role_label(n)}" for n in ROLE_WEIGHTS))
 
     # ── 4e. Contract periods ─────────────────────────────────────────
@@ -884,9 +884,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             start_date=start,
             end_date=end,
             extra_info="",
-            # Owners are drawn only from BDM colleagues, matching production
+            # Owners are drawn only from Business Manager colleagues, matching production
             # where the assignment owner is a Business Manager.
-            owner=rng.choice(bdm_colleagues),
+            owner=rng.choice(business_manager_colleagues),
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",
         )

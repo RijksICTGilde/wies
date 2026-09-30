@@ -221,7 +221,7 @@ class RoleMatrixReaderTest(TestCase):
                         assert printed[index] == bool(rule(fixtures.user, fixtures.objects[(rule.model, scope)]))
 
     def test_a_relation_that_changes_the_answer_gets_a_row(self):
-        """A rule shows every relation it distinguishes; otherwise a BDM reads
+        """A rule shows every relation it distinguishes; otherwise a Business Manager reads
         "Dienst bewerken (van een ander): Nee" and no row tells them about their own."""
         stand_ins = role_matrix.column_stand_ins()
         for rule in registered_rules().values():
@@ -236,7 +236,7 @@ class RoleMatrixReaderTest(TestCase):
         """The rule branch behind them asks for the Consultant role on top of
         the placement, so no other role reaches them through the placement."""
         cells = _cells()
-        # The placement grants it to the consultant; BDM is already through on the
+        # The placement grants it to the consultant; Business Manager is already through on the
         # relation-free grant these field rules name alongside it.
         allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BUSINESS_MANAGER)}
 

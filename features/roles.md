@@ -13,7 +13,7 @@ What each may do is on the page **Beheer > Rollen**, which reads the rules
 themselves.
 
 Applicatiebeheer carries **no** functional rights. An application administrator
-who also does assignment work holds `BDM` as well, and can test the app as a
+who also does assignment work holds `Business Manager` as well, and can test the app as a
 normal user by unchecking it and checking it again; both steps are recorded as an
 `Event`.
 
@@ -39,15 +39,16 @@ Two places deliberately use the label instead:
   then. An event records how something was called when it happened.
 - **The CSV import.** Column headers are names a person reads rather than keys,
   matched case-insensitively (`CSV_ROLE_COLUMNS`), so an import file stays
-  readable. Not all of them are the label: the BDM column is spelled `BDM`, as
-  existing import files have it. `example_users_import.csv` carries the header row.
+  readable. The Business Manager role answers to two headers: its label, and the
+  `BDM` existing import files were written with. `example_users_import.csv`
+  carries the header row.
 
 ## Who may grant what
 
 | Role             | May be granted by                  |
 | ---------------- | ---------------------------------- |
 | Consultant       | Gebruikersbeheer, Applicatiebeheer |
-| BDM              | Gebruikersbeheer, Applicatiebeheer |
+| Business Manager | Gebruikersbeheer, Applicatiebeheer |
 | Gebruikersbeheer | Gebruikersbeheer, Applicatiebeheer |
 | Applicatiebeheer | nobody inside the application      |
 
@@ -56,11 +57,11 @@ yes to every role, and no to Applicatiebeheer, which is not a role at all but an
 address list. Restricting a role to Applicatiebeheer later is a line there and no
 caller changed.
 
-**What that costs, deliberately.** Gebruikersbeheer may grant BDM, and BDM carries
-every wies-sourced opdracht plus the ended and future placements of colleagues. So
-user administration can hand out assignment authority. The alternative was to keep
-BDM behind Applicatiebeheer, which would stall onboarding a Business Manager on a
-deploy-level address list; the team chose onboarding.
+**What that costs, deliberately.** Gebruikersbeheer may grant Business Manager, and
+that role carries every wies-sourced opdracht plus the ended and future placements
+of colleagues. So user administration can hand out assignment authority. The
+alternative was to keep it behind Applicatiebeheer, which would stall onboarding a
+Business Manager on a deploy-level address list; the team chose onboarding.
 
 Granting happens on the user sheet, Bewerken in the row menu on **Beheer >
 Gebruikers**, behind `rijksauth.change_user`. Nieuwe gebruiker is the same sheet
@@ -81,8 +82,8 @@ Under the form sits a third thing that is not part of it: the contract hours of
 the linked colleague. `_contract_block` asks the rule and not the surface, in both
 directions: it returns nothing to someone who may not read the hours, and carries
 the buttons for whoever may keep them, on the user sheet and in the colleague
-panel alike. A BDM plans with the hours and so reads them there; keeping them is
-beheer and stays with Gebruikersbeheer.
+panel alike. A Business Manager plans with the hours and so reads them there;
+keeping them is beheer and stays with Gebruikersbeheer.
 
 _Which_ periods it shows is the surface's question and not the rule's: the panel
 lists the running and coming ones, the sheet the whole history. The two share the
@@ -153,9 +154,9 @@ combination.
   to their keys, keeping members and permissions: `Beheerder` ends up as
   `user_admin` and `Business Development Manager` as `business_manager`.
 - `rijksauth/0012` drops the `Opdrachtbeheer` group and gives everyone in
-  `STAFF_EMAILS` the `BDM` and `Gebruikersbeheer` roles **once**, so an address
+  `STAFF_EMAILS` the `Business Manager` and `Gebruikersbeheer` roles **once**, so an address
   added later does not get them and has to be granted on the user sheet. Whoever
-  held the group itself gets `BDM`, address list or not: the roles screen handed
+  held the group itself becomes a `Business Manager`, address list or not: the roles screen handed
   `Opdrachtbeheer` out too, and dropping the group would otherwise take their
   rights along in silence.
 - `ensure_initial_user` gives the first user of a fresh environment every group.
@@ -185,7 +186,7 @@ The question becomes "is this object's merk one you hold the role for".
 Two halves of that are already in place.
 
 `all_of(OWN, BRANDS)` builds the relation that is both at once, so one grant reads
-"a BDM, for an opdracht of their own merk, that they own":
+"a Business Manager, for an opdracht of their own merk, that they own":
 
 ```python
 Grant(Role(ROLE_BDM), all_of(OWN, BRANDS))
@@ -198,7 +199,8 @@ How a combination is named, and why "either of these" needs no `any_of`, is in
 its parts are a subset of the row's, so `ANY` (no parts) covers every row and `OWN`
 also covers the `OWN, BRANDS` row, without either being a special case.
 
-`OWN` itself is named by no rule today, since a BDM carries every opdracht. It stays
+`OWN` itself is named by no rule today, since a Business Manager carries every
+opdracht. It stays
 as the narrowing this will combine with, and `ScopeVocabularyTest` measures it so it
 cannot rot.
 
@@ -209,6 +211,6 @@ Two things are still missing:
   all. Scoping needs a decision on that case, and on whether the merk follows the
   owner or is stored on the assignment.
 - **A person has one merk, and a role has none.** `Colleague.suborganization` is a
-  single FK and a `Group` is held or not, so "the merken this BDM holds the role
-  for" has nowhere to live. The grant would need a model of its own, which then
-  reaches the user sheet and `_apply_groups`.
+  single FK and a `Group` is held or not, so "the merken this Business Manager
+  holds the role for" has nowhere to live. The grant would need a model of its
+  own, which then reaches the user sheet and `_apply_groups`.
