@@ -12,6 +12,19 @@ This files lists the changes during the lifetime of this project.
 - 673: NLDD design system 0.8.82 → 0.8.88: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel, and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
 - ?
 
+## 2026-09-24
+
+- 684: the organisation picker (opdracht form and filter sheet) keeps its scroll position when a nested organisation is expanded; a click in a child row no longer bubbles to the branch row above it
+- 660: (migration) contract hours per colleague, as periods with a start and end date kept by a beheerder on the user sheet, and hours per week on a role; Bezetting shows per consultant the role and the free contract hours, with a "deels beschikbaar" status; deleting a user asks for the day they left and ends the contract and the placements on that day; the privacy statement names both kinds of hours
+- 660: the Bezetting filter row is a toolbar with an "Opdracht invoeren" action; the Business management sidebar is gone
+- 660: form fields no longer show placeholder text; the label says what goes in
+- 672: the user list has a sort control in the toolbar; it names the current order (achternaam A-Z by default) and offers achternaam Z-A, voornaam and most recently added
+- 672: each row in the user list shows the colleague's merk and subgroep after the e-mail address
+- 672: saving, adding or deleting a user returns to the user list as it was filtered, searched and sorted, instead of the unfiltered list
+- 672: changing a filter on "Wie zit waar?" no longer resets the chosen sort order
+- 667: the "dagen vrij" label on a short bench bar in the Bezetting timeline no longer has its leading digit cut off
+- 667: the Bezetting filter options now show the correct number of matching consultants instead of always showing 1
+
 ## 2026-09-13
 
 - 632: (post-release actions) new "Business management" page with a "Bezetting" timeline.

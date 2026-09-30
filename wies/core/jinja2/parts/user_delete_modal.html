@@ -1,0 +1,42 @@
+{# Delete confirmation for a user. Unlike confirm_delete_modal.html it carries a
+   form: with a colleague profile the beheerder picks the day the contract ends.
+   The form posts through htmx, and so does the destructive button outside it:
+   Enter in the date field would otherwise submit natively (one field, no submit
+   button) and land on the empty HX-Redirect response. On a validation error the
+   modal comes back into its mount and reopens. #}
+<nldd-modal-dialog data-auto-show text="Gebruiker verwijderen?" supporting-text="{{ dialog_supporting }}">
+{% if content %}
+  {# Room between the running text and the field, and between the field and
+     the buttons: the dialog stacks its slot content without any. #}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# What the chosen day does, measured against today (see _colleague_delete_overview):
+     short lists in the shape of the contract-period block, not prose. The group
+     name is the list's header and accessible label, not a heading: the dialog's
+     own title is body text, so a heading here would outrank it. #}
+  {% for group in delete_overview or [] %}
+    <nldd-text-cell size="sm" color="secondary" text="{{ group.heading }}"></nldd-text-cell>
+    <nldd-list dividers="always" accessible-label="{{ group.heading }}">
+    {% for item in group.rows %}
+      <nldd-list-item size="sm">
+      <nldd-text-cell size="sm" text="{{ item.title }}" supporting-text="{{ item.detail }}"></nldd-text-cell>
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% endfor %}
+  <nldd-form>
+  <form id="userDeleteForm"
+        method="post"
+        action="{{ form_post_url }}"
+        hx-post="{{ form_post_url }}"
+        hx-target="#userFormModal"
+        hx-swap="innerHTML">
+    {{ get_csrf_hidden_input(request) }}
+    {{ content.left_on.as_field_group() }}
+  </form>
+  </nldd-form>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+{% endif %}
+<nldd-button slot="actions" variant="primary" text="Behoud gebruiker" data-dismiss-modal></nldd-button>
+<nldd-button slot="actions" variant="destructive" text="Verwijder gebruiker" hx-post="{{ form_post_url }}" hx-include="#userDeleteForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
+</nldd-modal-dialog>

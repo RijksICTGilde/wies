@@ -159,38 +159,6 @@ def get_csrf_hidden_input(request):
     return format_html('<input type="hidden" name="csrfmiddlewaretoken" value="{}">', token)
 
 
-def get_toggle_sort_url(request, field):
-    """
-    Build URL for sortable table headers that toggles sort direction.
-    If field is currently sorted ascending, returns URL for descending sort.
-    If field is sorted descending or not sorted, returns URL for ascending sort.
-    Preserves all other query parameters.
-    """
-    params = request.GET.copy()
-    current_order = params.get("order", "")
-
-    # Toggle: if currently ascending, switch to descending; otherwise ascending
-    if current_order == field:
-        params["order"] = f"-{field}"
-    else:
-        params["order"] = field
-
-    return f"{request.path}?{params.urlencode()}"
-
-
-def get_sort_state(request, field):
-    """
-    Get the current sort state for a field.
-    Returns: 'ascending', 'descending', or None
-    """
-    current_order = request.GET.get("order", "")
-    if current_order == field:
-        return "ascending"
-    if current_order == f"-{field}":
-        return "descending"
-    return None
-
-
 def nldd_asset(filename: str) -> str:
     """URL for a vendored design-system asset, cache-busted on its version.
 
@@ -237,8 +205,6 @@ def environment(**options):
             "url": reverse,
             "get_csrf_token": get_token,
             "get_csrf_hidden_input": get_csrf_hidden_input,
-            "get_toggle_sort_url": get_toggle_sort_url,
-            "get_sort_state": get_sort_state,
             "get_messages": get_messages,
             "show_bm_page": show_bm_page,
             "show_staff_pages": show_staff_pages,

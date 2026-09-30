@@ -28,6 +28,7 @@
   {% include "parts/user_filter_button.html" %}
   <nldd-menu-item slot="overflow" text="Filters" icon="filter" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
+  {% include "parts/sort_control.html" %}
   <nldd-toolbar-item slot="end">
   <nldd-button start-icon="plus" text="Nieuwe gebruiker" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
   </nldd-button>

@@ -71,7 +71,7 @@ class SuccessMessageTest(TestCase):
         assert last_message(response) == "Gebruiker Jan Jans is opgeslagen."
 
         response = self.client.post(reverse("user-delete", args=[jan.public_id]), **HX)
-        assert last_message(response) == "Gebruiker Jan Jans is verwijderd."
+        assert last_message(response) == "Jan Jans is verwijderd."
 
     def test_profile_name_and_labels(self):
         response = self.client.post(reverse("profile-name-edit"), {"first_name": "Be", "last_name": "Heerder"}, **HX)

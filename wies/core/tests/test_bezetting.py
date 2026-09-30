@@ -9,14 +9,26 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, Suborganization
+from wies.core.models import (
+    SUBGROEP_CATEGORY,
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    Placement,
+    Service,
+    Skill,
+    Suborganization,
+)
+from wies.core.public_id import resolve_facet
 from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
-    GILDE_CATEGORY,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
+    bezetting_filter_groups,
     colleague_occupancy,
+    labels_by_category,
     month_ticks,
     occupancy_summary,
     today_marker_pct,
@@ -378,13 +390,13 @@ class OccupancySummaryTest(TestCase):
         _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
         rows = colleague_occupancy(self.today)
         summary = occupancy_summary(rows)
-        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 1}
+        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 1}
 
     def test_ends_soon_is_independent_of_bucket(self):
         # A far-ending active placement is "full" but not "ends_soon".
         _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
         summary = occupancy_summary(colleague_occupancy(self.today))
-        assert summary == {"bench_count": 1, "full_count": 1, "ends_soon_count": 0}
+        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 0}
 
 
 class TimelineGeometryTest(TestCase):
@@ -510,6 +522,56 @@ class OccupancyLabelFilterTest(TestCase):
         assert self._ids({self.thema.id: [self.ai.id], self.niveau.id: [self.senior.id]}) == {self.a.id}
 
 
+class BezettingFilterGroupCountTest(TestCase):
+    """The cross-filtered counts on each filter option (issue #666: every count
+    collapsed to 1 because the counting queryset still carried the filter JOIN +
+    distinct that apply_colleague_filters leaves behind)."""
+
+    def setUp(self):
+        setup_roles()
+        self.thema = LabelCategory.objects.create(name="Thema", color="#0066CC")
+        self.niveau = LabelCategory.objects.create(name="Niveau", color="#00AA00")
+        self.ai = Label.objects.create(name="AI", category=self.thema)
+        self.data = Label.objects.create(name="Data", category=self.thema)
+        self.senior = Label.objects.create(name="Senior", category=self.niveau)
+
+        self.merk_a = Suborganization.objects.create(name="Merk A")
+        self.merk_b = Suborganization.objects.create(name="Merk B")
+
+        # Three AI-labelled consultants, all Senior, so an AND filter on Niveau is
+        # active while we count the Thema group.
+        for i in range(3):
+            c = _consultant(f"AI-{i}", f"ai{i}@x.nl", suborganization=self.merk_a)
+            c.labels.add(self.ai, self.senior)
+        # One Data consultant, also Senior, in the other merk.
+        d = _consultant("Data-0", "data0@x.nl", suborganization=self.merk_b)
+        d.labels.add(self.data, self.senior)
+
+    def _groups(self, merk_tokens=None, label_tokens=None):
+        merk = resolve_facet(Suborganization, merk_tokens or [])
+        labels = resolve_facet(Label, label_tokens or [])
+        return bezetting_filter_groups(merk, labels, labels_by_category(labels.ids))
+
+    def _count(self, groups, group_label, public_id):
+        group = next(g for g in groups if g["label"] == group_label)
+        option = next(o for o in group["options"] if o.get("value") == str(public_id))
+        return option["count"]
+
+    def test_label_counts_reflect_all_matching_consultants(self):
+        # Filtering on Niveau=Senior, the Thema group excludes its own filter and
+        # must count all three AI consultants -- not collapse to 1.
+        groups = self._groups(label_tokens=[str(self.senior.public_id)])
+        assert self._count(groups, "Thema", self.ai.public_id) == 3
+        assert self._count(groups, "Thema", self.data.public_id) == 1
+
+    def test_merk_counts_reflect_all_matching_consultants(self):
+        # With a label filter active, the merk group excludes its own filter and
+        # must count all three consultants in Merk A.
+        groups = self._groups(label_tokens=[str(self.senior.public_id)])
+        assert self._count(groups, "Merk", self.merk_a.public_id) == 3
+        assert self._count(groups, "Merk", self.merk_b.public_id) == 1
+
+
 class BezettingLabelFilterViewTest(TestCase):
     def setUp(self):
         setup_roles()
@@ -591,13 +653,45 @@ class BezettingFilterChipTest(TestCase):
         assert f'data-filter-value="{self.digi.public_id}"' in content
         assert "Digi Gilde" in content
 
-    def test_status_filter_gets_no_chip_but_clear_all_is_available(self):
-        # Status stays represented by its pressed card, so no chip — but the row
-        # still appears so "Wis alle filters" (which clears the cards too) is
-        # reachable.
+    def test_status_filter_gets_a_chip_and_a_sheet_group(self):
+        # The card says it is on by being pressed, but the card is hidden on a
+        # narrow window: the chip and the sheet's "Status" group are what keep
+        # the filter reachable there.
         content = self.client.get(self.url, {"status": "bench"}).content.decode()
-        assert 'data-filter-name="status"' not in content
+        assert 'data-filter-name="status"' in content
+        assert 'data-filter-value="bench"' in content
         assert "Wis alle filters" in content
+        assert 'data-name="status"' in content
+
+    def test_every_status_has_a_sheet_input_whatever_its_count(self):
+        # Four statuses, and the sheet's top-3 cut must not drop the fourth: the
+        # sheet checkbox is the only input its card can tick.
+        content = self.client.get(self.url).content.decode()
+        hidden = re.search(r'data-hidden-inputs="status".*?</span>', content, re.DOTALL).group(0)
+        for value in ("bench", "partial", "full", "ends_soon"):
+            assert f'value="{value}"' in hidden, value
+        assert "filter_modal=status" not in content
+
+    def test_status_card_carries_no_input_of_its_own(self):
+        # The sheet's checkbox submits; a second one on the card sent the value
+        # twice and came back as two identical chips.
+        content = self.client.get(self.url).content.decode()
+        card = re.search(r"<button[^>]*data-status-card.*?</button>", content, re.DOTALL).group(0)
+        assert "<input" not in card
+        assert 'data-hidden-inputs="status"' in content
+
+    def test_filters_button_has_an_overflow_twin(self):
+        content = self.client.get(self.url).content.decode()
+        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-user-filter-open', content)
+
+    def test_bm_gets_the_create_action_with_its_overflow_twin(self):
+        """Same button and same ?nieuwe-opdracht panel as the Aanvragen list."""
+        content = self.client.get(self.url).content.decode()
+        assert content.count("Opdracht invoeren") == 2
+        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*text="Opdracht invoeren"', content)
+        panel = self.client.get(self.url, {"nieuwe-opdracht": ""}).content.decode()
+        assert "Nieuwe opdracht" in panel or "Opdracht invoeren" in panel
+        assert 'name="name"' in panel
 
 
 class BezettingStatusFilterViewTest(TestCase):
@@ -647,13 +741,15 @@ class BezettingStatusFilterViewTest(TestCase):
 
     def test_counts_stay_unfiltered_when_status_active(self):
         # Cards are a stable dashboard: the totals do not shrink to the filtered set.
-        # With only the bench row shown, the 'volledig ingezet' card must still read
-        # its full population count (2). Match the count and its label within one
+        # With only the bench row shown, the 'eindigt bijna' card must still read
+        # its full population count (1). Match the count and its label within one
         # card, tolerating the markup between them.
         response = self.client.get(self.url, {"status": "bench"})
         content = response.content.decode()
-        assert re.search(r">2</span>.*?ingezet", content, re.DOTALL)
+        assert re.search(r">1</span>.*?eindigt bijna", content, re.DOTALL)
         assert re.search(r">1</span>.*?op de bank", content, re.DOTALL)
+        # "Volledig ingezet" has no card; it is only a sheet option.
+        assert 'data-status="full"' not in content
 
     def test_empty_result_uses_the_shared_empty_state(self):
         """An nldd-inline-dialog, like the other lists: a bare paragraph read as body copy."""
@@ -672,8 +768,6 @@ class BezettingStatusFilterViewTest(TestCase):
         response = self.client.get(self.url)
         content = response.content.decode()
         assert content.index(self.bench.name) < content.index(self.full.name)
-        # Bench rows are compact, placed rows are not.
-        assert "bezetting-row--compact" in content
 
     def test_a_bench_colleague_still_gets_a_bar_for_work_already_booked(self):
         """The reason bench rows keep a timeline: a list of names cannot answer
@@ -713,7 +807,7 @@ class BezettingStatusFilterViewTest(TestCase):
     def test_rows_show_only_the_gilde_category_as_chips(self):
         """The gilde is the subdivision this page is read by; the full expertise
         list would fill the row, so those stay in the filter sheet."""
-        gilde = LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        gilde = LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#DCE3EA")
         expertise = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
         self.bench.labels.add(Label.objects.create(name="ICT", category=gilde))
         self.bench.labels.add(Label.objects.create(name="Security en privacy", category=expertise))
@@ -726,7 +820,7 @@ class BezettingStatusFilterViewTest(TestCase):
         assert 'text="Security en privacy"></nldd-tag>' not in content
 
     def test_a_colleague_without_a_gilde_label_gets_no_chip(self):
-        LabelCategory.objects.create(name=GILDE_CATEGORY, color="#DCE3EA")
+        LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#DCE3EA")
         rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
         assert rows[self.bench.id].gilde_labels == []
         assert self.client.get(self.url).status_code == 200
@@ -764,9 +858,10 @@ class BezettingStatusFilterViewTest(TestCase):
         assert b"Fred Full" in response.content
 
     def test_active_status_shows_on_its_own_card(self):
-        """No chip beside the Filters button: a status says it is on by its card
-        being pressed, and repeating it as a token forced the row to wrap."""
+        """The card says a status is on by being pressed; the chip under the row
+        (see test_status_filter_gets_a_chip_and_a_sheet_group) is for when the
+        card is hidden."""
         response = self.client.get(self.url, {"status": "bench"})
         content = response.content.decode()
         assert re.search(r'data-status="bench"[^>]*\s+aria-pressed="true"', content, re.DOTALL)
-        assert re.search(r'data-status="full"[^>]*\s+aria-pressed="false"', content, re.DOTALL)
+        assert re.search(r'data-status="ends_soon"[^>]*\s+aria-pressed="false"', content, re.DOTALL)

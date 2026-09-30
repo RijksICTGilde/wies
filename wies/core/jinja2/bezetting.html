@@ -8,10 +8,14 @@
   <script src="{{ app_asset('js/side_panel.js') }}" defer></script>
   <script src="{{ app_asset('js/user_filter.js') }}" defer></script>
 {% endblock extra_head %}
-{% block sidebar %}
-  {% include "parts/business_management_sidebar.html" %}
-{% endblock sidebar %}
+{# No sidebar: Business management has one page, so a navigation column with
+   one entry cost a third of the width for nothing and vanished on narrow
+   screens without a way to open it. #}
 {% block content %}
+  {# Same width as the top bar and the footer (1920px): without a wrapper the
+     content sat flush against the viewport edge while the chrome around it
+     stayed indented. The sidebar section used to supply this frame. #}
+  <nldd-simple-section width="1920px">
   <nldd-title size="3">
   <h1>Bezetting</h1>
   </nldd-title>
@@ -20,6 +24,7 @@
   {% include "parts/bezetting_filter_sheet.html" %}
   {# Mount for a filter group's "Meer…" sheet, shared with the lists. #}
   <div id="filter-options-modal-container"></div>
+  </nldd-simple-section>
 {% endblock content %}
 {% block panel %}
   {# nldd-page must be a direct child: the sheet only stretches ::slotted(nldd-page). #}
