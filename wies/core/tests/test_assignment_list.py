@@ -14,7 +14,8 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import AssignmentListView, _org_counts_from_filtered
+from wies.core.services.organizations import org_counts_from_filtered
+from wies.core.views import AssignmentListView
 
 User = get_user_model()
 
@@ -363,7 +364,7 @@ class AssignmentListViewTest(TestCase):
         # duplicating them here — the single-source-of-filters point of the helper.
         base = view._get_base_queryset()  # noqa: SLF001 (private member) — mirrors client_modal's count path
         filtered_qs = view._apply_filters(base, exclude_filter="org").distinct()  # noqa: SLF001 (private member) — same
-        return _org_counts_from_filtered(filtered_qs, Assignment, "organizations__id")
+        return org_counts_from_filtered(filtered_qs, Assignment, "organizations__id")
 
     def test_modal_org_count_does_not_collapse_multiple_aanvragen(self):
         """The org modal counts every aanvraag on an org, rather than collapsing to 1.

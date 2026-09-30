@@ -8,6 +8,7 @@ import io
 import logging
 import re
 import xml.etree.ElementTree as ET
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import IO, TYPE_CHECKING
@@ -34,6 +35,51 @@ EXCLUDED_ORG_NAMES: set[str] = {
     "militaire inlichtingen- en veiligheidsdienst",
 }
 EXCLUDED_ORG_ABBREVIATIONS: set[str] = {"aivd", "mivd"}
+
+# Types that nest under their ministry. A unit nests only when its MAIN type
+# (first-listed = overheid.nl breadcrumb category) is one of these and its
+# related_ministry_tooi resolves to a ministry. Others keep their top-level type
+# folder in the picker and a plain parent-chain breadcrumb. Used by both the
+# picker (build_org_hierarchy) and the breadcrumb (resolve_related_ministry).
+NESTED_ORG_TYPES: frozenset[str] = frozenset({"Agentschap", "Zelfstandig bestuursorgaan", "Adviescollege", "Inspectie"})
+
+# Singular → plural display names for organization type group headers.
+ORG_TYPE_PLURAL: dict[str, str] = {
+    "Adviescollege": "Adviescolleges",
+    "Agentschap": "Agentschappen",
+    "Caribisch openbaar lichaam": "Caribische openbare lichamen",
+    "Externe commissie": "Externe commissies",
+    "Gemeente": "Gemeenten",
+    "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
+    "Hoog College van Staat": "Hoge Colleges van Staat",
+    "Inspectie": "Inspecties",
+    "Interdepartementale commissie": "Interdepartementale commissies",
+    "Koepelorganisatie": "Koepelorganisaties",
+    "Ministerie": "Ministeries",
+    "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
+    "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
+    "Organisatieonderdeel": "Organisatieonderdelen",
+    "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
+    "Provinciale Rekenkamer": "Provinciale Rekenkamers",
+    "Provincie": "Provincies",
+    "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
+    "Waterschap": "Waterschappen",
+    "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
+}
+
+
+def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
+    """Label for a scoped nested folder, e.g. "Adviescolleges van BZ".
+
+    ``ministry_abbreviation`` is the ministry's abbreviation (every ministry has
+    one; the callers fall back to the full label only if it is ever missing).
+
+    One recognizable plain string shared by the picker folder (get_org_tree
+    JSON → org_tree.js), its selection token (tree_state.js) and the active
+    chip (_org_chip_data). Plain text so it needs no aria wiring across the
+    web-component shadow boundary.
+    """
+    return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"
 
 
 def build_source_url(system_id: str, name: str) -> str:
@@ -67,6 +113,20 @@ class SyncResult:
             deleted=self.deleted + other.deleted,
             errors=self.errors + other.errors,
         )
+
+
+def set_types_and_main(unit: OrganizationUnit, organization_types: list[OrganizationType]) -> None:
+    """Replace a unit's types (unordered set) and record its main type.
+
+    The main type is the first-listed source type — the overheid.nl breadcrumb
+    category the org is filed under. It is stored as its own ``main_type`` FK;
+    ``organization_types`` itself carries no order.
+    """
+    unit.organization_types.set(organization_types)
+    main_type = organization_types[0] if organization_types else None
+    if unit.main_type_id != (main_type.pk if main_type else None):
+        unit.main_type = main_type
+        unit.save(update_fields=["main_type"])
 
 
 def parse_organization_element(
@@ -249,8 +309,6 @@ def sync_organization_tree(
             organization_types.append(organization_type)
 
     try:
-        # Separate ManyToMany fields from regular attributes
-        m2m_fields = {"organization_types": organization_types}
         new_org_attributes = {
             "name": org_data["name"],
             "label": org_data["label"],
@@ -285,15 +343,18 @@ def sync_organization_tree(
                 if not dry_run:
                     setattr(db_org, attribute, new_value)
 
-            # Check ManyToMany fields separately
-            for m2m_field, new_value in m2m_fields.items():
-                # Compare by PK sets to avoid order-dependent comparison
-                current_pks = set(getattr(db_org, m2m_field).values_list("pk", flat=True))
-                new_pks = {obj.pk for obj in new_value}
-                if current_pks != new_pks:
-                    changes[m2m_field] = {"old": sorted(current_pks), "new": sorted(new_pks)}
-                if not dry_run:
-                    getattr(db_org, m2m_field).set(new_value)
+            # The type set is unordered; log a change when its membership differs.
+            current_type_pks = set(db_org.organization_types.values_list("pk", flat=True))
+            new_type_pks = {obj.pk for obj in organization_types}
+            if current_type_pks != new_type_pks:
+                changes["organization_types"] = {"old": sorted(current_type_pks), "new": sorted(new_type_pks)}
+            # The main type (first-listed source type) is its own field, so a
+            # change there — even without a set change — is worth logging.
+            new_main_pk = organization_types[0].pk if organization_types else None
+            if db_org.main_type_id != new_main_pk:
+                changes["main_type"] = {"old": db_org.main_type_id, "new": new_main_pk}
+            if not dry_run:
+                set_types_and_main(db_org, organization_types)
 
             if changes:
                 if not dry_run:
@@ -348,9 +409,8 @@ def sync_organization_tree(
 
             if not dry_run:
                 new_org = OrganizationUnit.objects.create(**new_org_attributes)
-                # Set ManyToMany fields after creation
-                for m2m_field, value in m2m_fields.items():
-                    getattr(new_org, m2m_field).set(value)
+                # First-listed source type becomes main_type; the rest form the set.
+                set_types_and_main(new_org, organization_types)
                 logger.info("Created: %s", new_org)
                 create_event(
                     object_type="OrganizationUnit",
@@ -527,6 +587,283 @@ def get_org_descendant_ids(root_ids: list[int]) -> set[int]:
     return result
 
 
+def org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: str | None = None) -> Counter[int]:
+    """Per-org counts from an already org-excluded, filter-applied queryset.
+
+    Re-key on distinct row ids first: projecting the org id straight off a
+    .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
+    shared by multiple rows. The base queryset already drops excluded orgs, so
+    the exclusion is not re-applied here.
+
+    With ``group_field`` the count is per distinct group (a colleague or an
+    assignment) instead of per row, so it matches a list that shows one card
+    per group.
+    """
+    rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    # Without group_field each row is its own group, so counting is per row.
+    pairs = rows.values_list(org_lookup, group_field or "id").distinct()
+    return Counter(oid for oid, _ in pairs if oid is not None)
+
+
+def get_top_org_options(
+    selected_org_ids: set[int],
+    org_counts: Counter[int],
+    *,
+    selected_self_ids: set[int] | None = None,
+    selected_type_labels: set[str] | None = None,
+    limit: int = 3,
+) -> list[dict]:
+    """Turns per-org ``org_counts`` + the current selections into the opdrachtgever
+    quick checkbox options, ordered by count then label.
+
+    Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
+    so the sidebar quick row stays in sync with whatever was picked in the modal.
+    The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
+    self/type only appear when selected, having no top-N baseline.
+
+    A selected option is always shown, appended below the top-N when it does not
+    make the cut. The order never depends on selection — ticking an option
+    jumping to the top felt jarring.
+    """
+    selected_self_ids = selected_self_ids or set()
+    selected_type_labels = selected_type_labels or set()
+
+    selected_ids = set(selected_org_ids)
+    self_ids = set(selected_self_ids)
+
+    # The top-N is fixed on count regardless of selection, so ticking an option
+    # never displaces a visible one.
+    top_n = [oid for oid, _ in org_counts.most_common(limit)]
+    org_wanted = selected_ids | set(top_n)
+
+    options: list[dict] = []
+
+    # Iterating the rows (not the wanted ids) keeps an id that no longer exists
+    # out of the options instead of rendering it with a "None" value.
+    if org_wanted:
+        options.extend(
+            {
+                "param": "org",
+                "value": str(public_id),
+                "label": label or f"Organisatie {org_id}",
+                "count": org_counts.get(org_id, 0),
+                "selected": org_id in selected_ids,
+            }
+            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=org_wanted).values_list(
+                "id", "label", "public_id"
+            )
+        )
+
+    if self_ids:
+        options.extend(
+            {
+                "param": "org_self",
+                "value": str(public_id),
+                "label": f"{label or f'Organisatie {org_id}'} (direct)",
+                "count": org_counts.get(org_id, 0),
+                "selected": True,
+            }
+            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=self_ids).values_list(
+                "id", "label", "public_id"
+            )
+        )
+
+    options.extend(
+        {
+            "param": "org_type",
+            "value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            "count": 0,
+            "selected": True,
+        }
+        for type_label in selected_type_labels
+    )
+
+    # Sorted on count then label, deliberately not on ``selected``: a just-ticked
+    # option jumping to the top read as confusing.
+    options.sort(key=lambda o: (-o["count"], o["label"]))
+    return options
+
+
+def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool) -> list[dict]:
+    """Builds the grouped org tree hierarchy for the client modal."""
+    all_orgs = list(
+        OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
+            "id",
+            "public_id",
+            "parent_id",
+            "name",
+            "label",
+            "abbreviations",
+            "tooi_identifier",
+            "related_ministry_tooi",
+            "main_type__label",
+        )
+    )
+
+    units_by_id: dict[int, dict] = {}
+    for org in all_orgs:
+        org["children_data"] = []
+        org["self_count"] = org_self_counts.get(org["id"], 0)
+        org["total_count"] = 0
+        units_by_id[org["id"]] = org
+
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["children_data"].append(unit)
+        else:
+            roots.append(unit)
+
+    # Each root's full (unordered) type set. Read before counting/pruning so we
+    # can re-parent the nestable roots first. The set drives the "is this a
+    # Ministerie?" check; main_type (loaded above with all_orgs) drives nesting.
+    root_ids = {u["id"] for u in roots}
+    type_links = OrganizationUnit.organization_types.through.objects.filter(
+        organizationunit_id__in=root_ids
+    ).values_list("organizationunit_id", "organizationtype__label")
+    root_types: dict[int, set[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, set()).add(type_label)
+
+    # main_type per root, falling back to any type only while it is unset (the
+    # brief window before the first sync); once set, this is a pure dict read.
+    root_main_type: dict[int, str | None] = {}
+    for unit in roots:
+        types = root_types.get(unit["id"])
+        root_main_type[unit["id"]] = unit["main_type__label"] or (next(iter(types)) if types else None)
+
+    # Presentation-only nesting: a root whose MAIN type is nestable and whose
+    # related_ministry_tooi resolves to a ministry in the tree is moved under a
+    # synthetic per-ministry type folder. The DB parent FK is untouched. Done
+    # before compute_total/prune so counts roll up into the ministry naturally.
+    ministry_by_tooi: dict[str, dict] = {}
+    for unit in roots:
+        if "Ministerie" in root_types.get(unit["id"], []) and unit["tooi_identifier"]:
+            ministry_by_tooi[unit["tooi_identifier"]] = unit
+
+    synthetic_folders: dict[tuple[int, str], dict] = {}
+    nested_unit_ids: set[int] = set()
+    for unit in roots:
+        main_type = root_main_type.get(unit["id"])
+        if main_type not in NESTED_ORG_TYPES:
+            continue
+        ministry = ministry_by_tooi.get(unit["related_ministry_tooi"])
+        if ministry is None or ministry["id"] == unit["id"]:
+            continue  # no resolvable ministry (or self) → keep at top level
+        key = (ministry["id"], main_type)
+        folder = synthetic_folders.get(key)
+        if folder is None:
+            # Label the folder with the ministry's abbreviation, same rule as the
+            # chip (_org_chip_data): the abbreviation, else the label as fallback.
+            ministry_abbreviation = (ministry["abbreviations"] or [None])[0] or ministry["label"] or ministry["name"]
+            folder = {
+                "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped
+                "type_label": main_type,
+                "ministry_abbreviation": ministry_abbreviation,
+                "synthetic_group": True,
+                "self_count": 0,
+                "total_count": 0,
+                "children_data": [],
+            }
+            synthetic_folders[key] = folder
+            ministry["children_data"].append(folder)
+        folder["children_data"].append(unit)
+        nested_unit_ids.add(unit["id"])
+
+    roots = [r for r in roots if r["id"] not in nested_unit_ids]
+
+    def compute_total(node: dict) -> int:
+        total = node["self_count"]
+        for child in node["children_data"]:
+            total += compute_total(child)
+        node["total_count"] = total
+        return total
+
+    for root in roots:
+        compute_total(root)
+
+    if prune_empty:
+
+        def prune(node: dict) -> None:
+            node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
+            for child in node["children_data"]:
+                prune(child)
+
+        for root in roots:
+            prune(root)
+        roots = [r for r in roots if r["total_count"] > 0]
+
+    def sort_key(node: dict) -> str:
+        if node.get("synthetic_group"):
+            return nested_folder_label(node["ministry_abbreviation"], node["type_label"])
+        return node.get("label") or node.get("name") or ""
+
+    def to_json(node: dict) -> dict:
+        if node.get("synthetic_group"):
+            return {
+                "id": node["id"],
+                "label": nested_folder_label(node["ministry_abbreviation"], node["type_label"]),
+                "nr_of_placements": node["total_count"],
+                "group": True,
+                "children": [to_json(c) for c in sorted(node["children_data"], key=sort_key)],
+            }
+        children_data = sorted(node["children_data"], key=sort_key)
+        children_json = []
+        has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
+        if node["self_count"] > 0 and has_children_with_placements:
+            children_json.append(
+                {
+                    "id": f"self-{node['public_id']}",  # UUID -> str via f-string
+                    "label": node["label"] or node["name"],
+                    "abbreviations": node["abbreviations"] or [],
+                    "self": True,
+                    "nr_of_placements": node["self_count"],
+                }
+            )
+        children_json.extend(to_json(child) for child in children_data)
+        result: dict = {
+            "id": str(node["public_id"]),
+            "label": node["label"] or node["name"],
+            "abbreviations": node["abbreviations"] or [],
+            "nr_of_placements": node["total_count"],
+        }
+        if children_json:
+            result["children"] = children_json
+        return result
+
+    # Top-level grouping for the remaining roots (nested units already removed).
+    # A unit lands under its MAIN type only. Grouping a multi-type org under every
+    # one of its types would emit the same node id in several folders, and the tree
+    # keys nodes/rows by id — the duplicates then collapse and break checkbox sync.
+    # One folder per unit mirrors the nested-folder rule.
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        main_type = root_main_type.get(unit["id"])
+        if main_type:
+            grouped.setdefault(main_type, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    hierarchy = []
+    for group_label in sorted(grouped.keys()):
+        group_units = sorted(grouped[group_label], key=sort_key)
+        total = sum(u["total_count"] for u in group_units)
+        hierarchy.append(
+            {
+                "id": f"group-{group_label}",
+                "label": ORG_TYPE_PLURAL.get(group_label, group_label),
+                "nr_of_placements": total,
+                "group": True,
+                "children": [to_json(u) for u in group_units],
+            }
+        )
+    hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
+    return hierarchy
+
+
 def get_excluded_org_ids() -> set[int]:
     """Return IDs of organizations that should be hidden from display (e.g. intelligence services).
 
@@ -574,15 +911,75 @@ def find_orgs_by_abbreviation(search_term: str) -> list[dict]:
     return results
 
 
+def resolve_related_ministry(org: OrganizationUnit) -> OrganizationUnit | None:
+    """The ministry a root org nests under, via ``related_ministry_tooi``.
+
+    Only for roots whose main type is nestable (mirrors the picker's nesting in
+    ``build_org_hierarchy``); returns ``None`` otherwise, so a normal org keeps
+    its plain parent-chain breadcrumb. Also ``None`` when the tooi resolves to no
+    org (e.g. an excluded/unsynced ministry) — a graceful, unchanged breadcrumb.
+    """
+    if org.parent_id or not org.related_ministry_tooi:
+        return None
+    # Fall back to any type when main_type is unset (e.g. not yet synced).
+    main = org.main_type or org.organization_types.first()
+    if main is None or main.name not in NESTED_ORG_TYPES:
+        return None
+    return OrganizationUnit.objects.filter(tooi_identifier=org.related_ministry_tooi).exclude(id=org.id).first()
+
+
+def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_label: str | None = None) -> list[int]:
+    """Root org ids that nest under the given ministries in the picker (boom).
+
+    Same rule as ``build_org_hierarchy`` and ``resolve_related_ministry``: an org
+    nests under a ministry only when it is a DB root (no parent), its ``main_type``
+    (the overheid.nl breadcrumb category) is in ``NESTED_ORG_TYPES``, and its
+    ``related_ministry_tooi`` points at one of the given ministries. Pass
+    ``type_label`` to restrict to a single nestable type (the ``org_type_in``
+    facet); it is ignored when not itself nestable.
+
+    Callers wrap the result in ``get_org_descendant_ids`` to include subtrees.
+    Keying on the MAIN type (not any attached type) is what keeps orgs merely
+    linked via ``related_ministry_tooi`` — e.g. a stichting — out of the results.
+    """
+    if not ministry_toois:
+        return []
+    allowed_types = NESTED_ORG_TYPES if type_label is None else (NESTED_ORG_TYPES & {type_label})
+    if not allowed_types:
+        return []
+    return list(
+        OrganizationUnit.objects.filter(
+            parent__isnull=True,
+            related_ministry_tooi__in=ministry_toois,
+            main_type__label__in=allowed_types,
+        ).values_list("id", flat=True)
+    )
+
+
 def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
     """Build breadcrumb data for an organization: label + clickable ancestor path."""
     ancestors = []
+    root = org
     current = org.parent
     while current:
         label = current.abbreviation or current.label or current.name
         ancestors.append({"label": label, "url": f"{base_url}?org={current.public_id}"})
+        root = current  # the last ancestor reached is the chain root
         current = current.parent
     ancestors.reverse()
+
+    # The ministry link lives on the ROOT of the chain (e.g. RVB), not the leaf
+    # (Atelier Rijksbouwmeester). Resolve from the root so a descendant of a
+    # nestable root also shows the ministry the picker nests that root under.
+    ministry = resolve_related_ministry(root)
+    if ministry is not None:
+        ancestors.insert(
+            0,
+            {
+                "label": ministry.abbreviation or ministry.label or ministry.name,
+                "url": f"{base_url}?org={ministry.public_id}",
+            },
+        )
 
     is_self = org.children.filter(assignment_relations__isnull=False).exists()
     label = org.label or org.name
