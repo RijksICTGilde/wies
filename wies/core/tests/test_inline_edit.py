@@ -11,7 +11,6 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -40,11 +39,11 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_BDM
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_bdm, grant_consultant
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -252,7 +251,7 @@ class InlineEditPermissionTest(TestCase):
         _restore_rules(self._prev_rules)
 
     def test_object_permission_denied_returns_display_with_alert(self):
-        # No placement, no ownership, no Beheerder perm → whole-object
+        # No placement, no ownership, no role → whole-object
         # rule update_assignment denies → alert rendered.
         _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
@@ -269,7 +268,7 @@ class InlineEditPermissionTest(TestCase):
         # always returns False, even though the whole-object rule might
         # otherwise allow.
         cls = _register(_make_set("FieldDeniedEditables", Assignment, name=Editable()))
-        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
+        rule(Verb.UPDATE, cls.name, label="Testregel", grants=[])
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
@@ -277,7 +276,7 @@ class InlineEditPermissionTest(TestCase):
 
     def test_post_denied_does_not_save(self):
         cls = _register(_make_set("PostDeniedEditables", Assignment, name=Editable()))
-        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
+        rule(Verb.UPDATE, cls.name, label="Testregel", grants=[])
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.post(url, {"name": "hacked"})
         assert resp.status_code == 200
@@ -712,9 +711,7 @@ class AssignmentEditablesFullTest(TestCase):
             first_name="F",
             last_name="F",
         )
-        # Grant change_assignment so the user can edit regardless of ownership.
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
-        # Put user's Colleague in the BDM group so it shows up in owner choices.
+        # BDM owner: may edit, and the Colleague shows up in owner choices.
         grant_bdm(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
@@ -818,7 +815,7 @@ class AssignmentCreateFormIntegrationTest(TestCase):
         # the BDM group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        assert BDM_GROUP_NAME in str(qs.query)
+        assert ROLE_BDM in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
         form = self._form_cls()(
@@ -844,7 +841,7 @@ class PlacementServiceEditablesTest(TestCase):
             first_name="P",
             last_name="S",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         assignment = Assignment.objects.create(
@@ -927,7 +924,7 @@ class AssignmentServicesDisplayTest(TestCase):
             first_name="Svc",
             last_name="Display",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1075,9 +1072,8 @@ class AssignmentServicesAuditTest(TestCase):
             email="svc-audit@rijksoverheid.nl",
             first_name="Svc",
             last_name="Audit",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_bdm(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
@@ -1383,9 +1379,8 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             email="svc-period@rijksoverheid.nl",
             first_name="Svc",
             last_name="Period",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_bdm(self.user)  # BDM owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
@@ -1672,7 +1667,9 @@ class ServiceDescriptionPermissionTest(TestCase):
             user=self.owner_user, name="Bm Boss", email="bm@rijksoverheid.nl", source="wies"
         )
 
-        self.placed_user = User.objects.create_user(email="placed@rijksoverheid.nl", first_name="P", last_name="Laced")
+        self.placed_user = grant_consultant(
+            User.objects.create_user(email="placed@rijksoverheid.nl", first_name="P", last_name="Laced")
+        )
         self.placed = Colleague.objects.create(
             user=self.placed_user, name="P Laced", email="placed@rijksoverheid.nl", source="wies"
         )
@@ -1814,7 +1811,7 @@ class InlineOrganizationsEditTest(TestCase):
             first_name="O",
             last_name="O",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.user)  # BDM owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1906,8 +1903,9 @@ class ColleagueLabelsInlineEditTest(TestCase):
             first_name="L",
             last_name="L",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_colleague"))
         self.client.force_login(self.user)
+        # Their own colleague record: the SELF grant on ``rule(UPDATE, Colleague, ...)``
+        # is what lets this through, no role and no Django permission.
         self.colleague = Colleague.objects.get(user=self.user)
 
         self.expertise = LabelCategory.objects.create(name="Expertise", color="#DCE3EA")

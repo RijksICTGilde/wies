@@ -22,7 +22,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_bdm, grant_consultant
 
 User = get_user_model()
 
@@ -34,13 +34,13 @@ class AssignmentEditAttributeTest(TestCase):
         """Creates the users, colleagues and assignments used by the tests."""
         self.client = Client()
 
-        self.user_with_permission = User.objects.create_user(
-            email="perm@rijksoverheid.nl",
-            first_name="User",
-            last_name="WithPerm",
+        self.user_with_permission = grant_bdm(
+            User.objects.create_user(
+                email="perm@rijksoverheid.nl",
+                first_name="User",
+                last_name="WithPerm",
+            )
         )
-        change_permission = Permission.objects.get(codename="change_assignment")
-        self.user_with_permission.user_permissions.add(change_permission)
 
         # The owner holds the BDM role: ownership only grants edit rights
         # combined with BDM (see ``update_assignment`` in permissions.py).
@@ -52,10 +52,12 @@ class AssignmentEditAttributeTest(TestCase):
             )
         )
 
-        self.assigned_user = User.objects.create_user(
-            email="assigned@rijksoverheid.nl",
-            first_name="Assigned",
-            last_name="User",
+        self.assigned_user = grant_consultant(
+            User.objects.create_user(
+                email="assigned@rijksoverheid.nl",
+                first_name="Assigned",
+                last_name="User",
+            )
         )
 
         self.unrelated_user = User.objects.create_user(
@@ -110,8 +112,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]))
         assert response.status_code in [302, 403]
 
-    def test_assignment_edit_with_change_assignment_permission(self):
-        """A user holding change_assignment can edit."""
+    def test_assignment_edit_as_a_bdm(self):
+        """A BDM can edit."""
         self.client.force_login(self.user_with_permission)
 
         response = post_inline_edit(
@@ -256,13 +258,14 @@ class AssignmentEditAttributeTest(TestCase):
         self.external_assignment.refresh_from_db()
         assert self.external_assignment.name == "External Assignment"
 
-    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_staff_member_can_edit_assignment_owner(self):
-        """A user in STAFF_EMAILS can edit an assignment they don't own (#392)."""
-        staff_user = User.objects.create_user(
-            email="staff@rijksoverheid.nl",
-            first_name="Staff",
-            last_name="Member",
+    def test_a_bdm_can_edit_assignment_owner(self):
+        """A BDM can edit an assignment they don't own (#392)."""
+        admin_user = grant_bdm(
+            User.objects.create_user(
+                email="opdrachtbeheer@rijksoverheid.nl",
+                first_name="Opdracht",
+                last_name="Beheer",
+            )
         )
         new_bdm_user = grant_bdm(
             User.objects.create_user(
@@ -277,7 +280,7 @@ class AssignmentEditAttributeTest(TestCase):
             email="bdm2@rijksoverheid.nl",
             source="wies",
         )
-        self.client.force_login(staff_user)
+        self.client.force_login(admin_user)
 
         response = post_inline_edit(
             self.client,
@@ -290,15 +293,28 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.owner_id == new_bdm.id
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_staff_member_cannot_edit_external_source_assignment(self):
-        """Staff cannot edit non-wies-sourced assignments: the ``_is_wies_sourced``
-        gate runs before the staff branch."""
-        staff_user = User.objects.create_user(
-            email="staff@rijksoverheid.nl",
-            first_name="Staff",
-            last_name="Member",
-        )
+    def test_bare_staff_member_cannot_edit_assignment(self):
+        """Application administration (STAFF_EMAILS) alone grants no edit rights."""
+        staff_user = User.objects.create_user(email="staff@rijksoverheid.nl", first_name="Staff", last_name="Member")
         self.client.force_login(staff_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
+            {"name": "Attempted Update"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name != "Attempted Update"
+
+    def test_a_bdm_cannot_edit_external_source_assignment(self):
+        """A BDM cannot edit non-wies-sourced assignments: the
+        ``_is_wies_sourced`` gate runs before the role branch."""
+        admin_user = grant_bdm(
+            User.objects.create_user(email="opdrachtbeheer@rijksoverheid.nl", first_name="O", last_name="B")
+        )
+        self.client.force_login(admin_user)
 
         response = self.client.post(
             reverse("inline-edit", args=["assignment", self.external_assignment.public_id, "name"]),
@@ -974,7 +990,7 @@ class AssignmentDeleteViewTests(TestCase):
             user=self.owner_user, name="Owner BM", email="owner-del@rijksoverheid.nl", source="wies"
         )
 
-        # Holds change_assignment but is not the owner: #313 is owner-only.
+        # A direct change_assignment grant is no role: it opens no delete.
         self.admin_user = User.objects.create_user(
             email="admin-del@rijksoverheid.nl", first_name="Admin", last_name="User"
         )
@@ -1083,7 +1099,7 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.external_assignment.id).exists()
 
-    def test_beheerder_cannot_delete(self):
+    def test_change_assignment_holder_cannot_delete(self):
         self.client.force_login(self.admin_user)
         response = self.client.post(self.url)
         assert response.status_code == 403
@@ -1101,13 +1117,12 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.assignment.id).exists()
 
-    @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
-    def test_staff_member_can_delete_wies_assignment(self):
-        """A user in STAFF_EMAILS can delete an assignment they don't own (#392)."""
-        staff_user = User.objects.create_user(
-            email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
+    def test_a_bdm_can_delete_wies_assignment(self):
+        """A BDM can delete an assignment they don't own (#313)."""
+        admin_user = grant_bdm(
+            User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
         )
-        self.client.force_login(staff_user)
+        self.client.force_login(admin_user)
         assignment_id = self.assignment.id
 
         response = self.client.post(self.url)
@@ -1117,13 +1132,23 @@ class AssignmentDeleteViewTests(TestCase):
         assert not Assignment.objects.filter(id=assignment_id).exists()
 
     @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
-    def test_staff_member_cannot_delete_otys_iir_assignment(self):
-        """Staff cannot delete non-wies-sourced assignments: the ``_is_wies_sourced``
-        gate runs before the staff branch."""
+    def test_bare_staff_member_cannot_delete_wies_assignment(self):
+        """Application administration (STAFF_EMAILS) alone grants no delete rights."""
         staff_user = User.objects.create_user(
             email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
         )
         self.client.force_login(staff_user)
+        response = self.client.post(self.url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.assignment.id).exists()
+
+    def test_a_bdm_cannot_delete_otys_iir_assignment(self):
+        """A BDM cannot delete non-wies-sourced assignments: the
+        ``_is_wies_sourced`` gate runs before the role branch."""
+        admin_user = grant_bdm(
+            User.objects.create_user(email="opdrachtbeheer-del@rijksoverheid.nl", first_name="O", last_name="B")
+        )
+        self.client.force_login(admin_user)
         response = self.client.post(self.external_url)
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.external_assignment.id).exists()

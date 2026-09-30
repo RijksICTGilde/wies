@@ -49,7 +49,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, role_label
 from wies.core.services.events import create_event
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
@@ -82,10 +82,10 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
-# Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+# Role mix for the dummy users, by role key: most consultants, some BDMs, a few office assistants.
 # Assignment owners are drawn only from the BDM colleagues, matching production
 # where the owner is a Business Development Manager.
-ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
+ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BDM: 15, ROLE_OFFICE_ASSISTANT: 5}
 # Contract hours per week: mostly 36, the rijksoverheid norm.
 CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 # Hours per week on a role. None: the role has no hours recorded yet, which the
@@ -667,9 +667,9 @@ def seed_base_organizations() -> None:
 
 
 def assign_roles(rng: random.Random, count: int) -> list[str]:
-    """A shuffled list of ``count`` role names in roughly ``ROLE_WEIGHTS``
+    """A shuffled list of ``count`` role keys in roughly ``ROLE_WEIGHTS``
     proportion, but guaranteeing at least one of every role when ``count``
-    allows it — a weighted per-item draw can leave a rare role (Beheerder)
+    allows it: a weighted per-item draw can leave a rare role (Office assistent)
     empty at the small base-profile size."""
     roles = list(ROLE_WEIGHTS)
     if count <= len(roles):
@@ -850,9 +850,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         user.groups.remove(*role_groups.values())
         user.groups.add(role_groups[role])
         role_counts[role] += 1
-        if role == BDM_GROUP_NAME:
+        if role == ROLE_BDM:
             bdm_colleagues.append(colleague)
-    write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
+    write("Colleague roles: " + ", ".join(f"{role_counts[n]} {role_label(n)}" for n in ROLE_WEIGHTS))
 
     # ── 4e. Contract periods ─────────────────────────────────────────
     # One running period each, started some time ago; a fifth also has an

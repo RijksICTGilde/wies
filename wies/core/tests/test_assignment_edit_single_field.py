@@ -7,7 +7,6 @@ an omitted field would wipe its column.
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -34,6 +33,9 @@ class AssignmentEditSingleFieldTest(TestCase):
         self.other_user = grant_bdm(User.objects.create_user(email="other@rijksoverheid.nl"))
         self.client.force_login(self.other_user)
         self.other = Colleague.objects.get(user=self.other_user)
+
+        # No role at all: the rules on an opdracht all name the BDM role.
+        self.outsider = User.objects.create_user(email="buiten@rijksoverheid.nl")
         self.client.force_login(self.owner_user)
 
         self.assignment = Assignment.objects.create(
@@ -78,7 +80,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         assert "bewerken=1" in body
 
     def test_forbidden_without_edit_rights(self):
-        self.client.force_login(self.other_user)
+        self.client.force_login(self.outsider)
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(url, {"owner": str(self.owner.public_id)})
         assert response.status_code == 403
@@ -93,15 +95,15 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        # The owner is deliberately NOT in the BDM group. Since ownership alone
-        # does not grand edit rights, a Beheerder (change_assignment) drives
-        # the edit UI; the non-BDM owner stays the assignment's Business Manager.
+        # The owner is deliberately NOT in the BDM group: ownership alone grants
+        # nothing, so a BDM drives the edit UI while the non-BDM owner stays the
+        # assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)  # the login signal creates the Colleague
         self.owner = Colleague.objects.get(user=self.owner_user)
 
         self.editor_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
-        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_bdm(self.editor_user)
         self.client.force_login(self.editor_user)
 
         self.assignment = Assignment.objects.create(

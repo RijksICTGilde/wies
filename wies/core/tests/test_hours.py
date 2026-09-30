@@ -7,10 +7,10 @@ from datetime import timedelta
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -18,16 +18,24 @@ from django.utils.formats import date_format
 from wies.core.editables.service import ServiceEditables
 from wies.core.models import Assignment, Colleague, ContractPeriod, Event, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import setup_roles
+from wies.core.roles import (
+    ROLE_BDM,
+    ROLE_CONSULTANT,
+    ROLE_OFFICE_ASSISTANT,
+    can_view_role_hours,
+    setup_roles,
+)
 from wies.core.services.occupancy import BUCKET_FULL, BUCKET_PARTIAL, colleague_occupancy, occupancy_summary
 from wies.core.services.placements import placement_edit_specs
+
+from .role_helpers import STAFF_EMAIL, make_staff_user
 
 User = get_user_model()
 
 
 def _consultant(name, email):
     user = User.objects.create(email=email, onboarding_completed_at=timezone.now())
-    user.groups.add(Group.objects.get(name="Consultant"))
+    user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
     return Colleague.objects.create(name=name, email=email, source="wies", user=user)
 
 
@@ -212,7 +220,7 @@ class BezettingPartialStatusViewTest(TestCase):
         self.client = Client()
         self.url = reverse("bezetting")
         bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.client.force_login(bdm)
         today = timezone.now().date()
         start, end = today - timedelta(days=10), today + timedelta(days=200)
@@ -288,26 +296,24 @@ class BezettingPartialStatusViewTest(TestCase):
 
 
 class ProfileContractPeriodTest(TestCase):
-    """Contract hours are not on the profile, for no role; a beheerder keeps them in the user sheet."""
+    """Contract hours are not on the profile, for no role: they are a matter for
+    the colleague and their manager, and Wies shows them where they are kept."""
 
     def setUp(self):
         setup_roles()
         self.client = Client()
         self.today = timezone.now().date()
         self.user = User.objects.create(email="me@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.user.groups.add(Group.objects.get(name="Consultant"))
+        self.user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
         self.colleague = Colleague.objects.create(
             name="Ik Zelf", email="me@rijksoverheid.nl", source="wies", user=self.user
         )
         self.client.force_login(self.user)
         self.add_url = reverse("contract-period-add", args=[self.colleague.public_id])
 
-    def _make_beheerder(self):
-        self.user.groups.add(Group.objects.get(name="Beheerder"))
-
     def test_profile_shows_no_contract_hours_to_any_role(self):
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        for group in (None, "Business Development Manager", "Beheerder"):
+        for group in (None, ROLE_BDM, ROLE_OFFICE_ASSISTANT):
             if group:
                 self.user.groups.add(Group.objects.get(name=group))
             body = self.client.get(reverse("user-profile")).content.decode()
@@ -336,16 +342,17 @@ class ProfileContractPeriodTest(TestCase):
 
 
 class ColleaguePanelContractPeriodTest(TestCase):
-    """A BDM and a beheerder read any colleague's periods in the panel; keeping them is for the user sheet."""
+    """A BDM and an Office assistent read any colleague's periods in the panel,
+    and keep them from there: the block asks the rule, not which screen it is on."""
 
     def setUp(self):
         setup_roles()
         self.client = Client()
         self.today = timezone.now().date()
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
         self.client.force_login(self.admin)
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
 
@@ -395,27 +402,29 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "Geen lopend contract." in panel
         assert "Niet ingevuld" not in panel
 
-    def test_panel_shows_the_block_read_only_to_a_beheerder(self):
+    def test_panel_lets_an_office_assistant_keep_the_hours(self):
+        """The buttons follow the rule, not the surface: the same block carries
+        them in the panel and in the user sheet."""
         ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
+        assert "Contractperiode toevoegen" in body
 
-    def test_panel_shows_the_block_read_only_to_a_bdm(self):
+    def test_panel_lets_a_bdm_keep_the_hours(self):
+        """A BDM plans with the hours, so a BDM keeps them, from the panel where
+        they already read them."""
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "<h3>Contracturen</h3>" in body
         assert "36 uur" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
+        assert "Contractperiode toevoegen" in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])
-        assert self.client.get(url).status_code == 403
-        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
+        assert self.client.get(url).status_code == 200
+        assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 200
 
-    def test_a_beheerder_saves_a_period_for_another_colleague(self):
+    def test_an_office_assistant_saves_a_period_for_another_colleague(self):
         url = reverse("contract-period-add", args=[self.colleague.public_id])
         response = self.client.post(url, {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""})
         assert response.status_code == 200
@@ -424,13 +433,79 @@ class ColleaguePanelContractPeriodTest(TestCase):
         assert "36 uur" in body
         assert self.colleague.contract_periods.count() == 1
 
+    def _ended_period(self):
+        return ContractPeriod.objects.create(
+            colleague=self.colleague,
+            hours_per_week=24,
+            start_date=self.today - timedelta(days=400),
+            end_date=self.today - timedelta(days=101),
+        )
+
+    def test_the_panel_buttons_carry_the_surface_they_sit_on(self):
+        """The two surfaces share the three write routes, so the button says which
+        one it is on; the sheet posts back to the url it was opened with."""
+        period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        add_url = reverse("contract-period-add", args=[self.colleague.public_id])
+        edit_url = reverse("contract-period-edit", args=[period.public_id])
+        delete_url = reverse("contract-period-delete", args=[period.public_id])
+        assert f'{add_url}?vanuit=paneel"' in panel
+        assert f'{edit_url}?vanuit=paneel"' in panel
+        assert f'{delete_url}?vanuit=paneel"' in panel
+
+        sheet = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
+        assert "vanuit=paneel" not in sheet
+        assert f'{add_url}"' in sheet
+
+        # The sheet posts back to the same url, so a validation error and a save
+        # both keep the surface.
+        opened = self.client.get(add_url + "?vanuit=paneel").content.decode()
+        assert f'{add_url}?vanuit=paneel"' in opened
+        confirm = self.client.get(delete_url + "?vanuit=paneel").content.decode()
+        assert f'{delete_url}?vanuit=paneel"' in confirm
+
+    def test_saving_from_the_panel_swaps_the_panel_slice_back(self):
+        """Not the sheet's whole history: the panel leaves ended periods out on
+        purpose, and a save must not put them back."""
+        self._ended_period()
+        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+        assert "24 uur" not in panel
+
+        url = reverse("contract-period-add", args=[self.colleague.public_id])
+        form = {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""}
+        body = self.client.post(url + "?vanuit=paneel", form).content.decode()
+        assert "36 uur" in body
+        assert "24 uur" not in body
+
+    def test_saving_from_the_user_sheet_keeps_the_history(self):
+        self._ended_period()
+        url = reverse("contract-period-add", args=[self.colleague.public_id])
+        form = {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""}
+        body = self.client.post(url, form).content.decode()
+        assert "36 uur" in body
+        assert "24 uur" in body
+
+    def test_deleting_from_the_panel_swaps_the_panel_slice_back(self):
+        """Including the empty text, which differs per surface: the panel says the
+        contract has ended where the sheet would say nothing is filled in."""
+        ended = self._ended_period()
+        period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+        body = self.client.post(
+            reverse("contract-period-delete", args=[period.public_id]) + "?vanuit=paneel"
+        ).content.decode()
+        assert "24 uur" not in body
+        assert "Geen lopend contract." in body
+
+        sheet_body = self.client.post(reverse("contract-period-delete", args=[ended.public_id])).content.decode()
+        assert "Niet ingevuld" in sheet_body
+
 
 class ServiceHoursTest(TestCase):
     def setUp(self):
         setup_roles()
         self.client = Client()
         self.bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         self.owner = Colleague.objects.create(
             name="Bas BDM", email="bdm@rijksoverheid.nl", source="wies", user=self.bdm
         )
@@ -495,14 +570,14 @@ class GeneratorHoursTest(TestCase):
 
 
 class UserSheetContractPeriodTest(TestCase):
-    """A beheerder keeps contract periods on the user sheet (beheer/gebruikers)."""
+    """An Office assistent keeps contract periods on the user sheet (beheer/gebruikers)."""
 
     def setUp(self):
         setup_roles()
         self.client = Client()
         self.today = timezone.now().date()
         self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.admin.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
         self.client.force_login(self.admin)
         self.user = User.objects.create(
             email="kees@rijksoverheid.nl", first_name="Kees", last_name="Bos", onboarding_completed_at=timezone.now()
@@ -907,14 +982,14 @@ class ServiceHoursPermissionTest(TestCase):
         setup_roles()
         self.today = timezone.now().date()
         self.user = User.objects.create(email="c@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.user.groups.add(Group.objects.get(name="Consultant"))
+        self.user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
         self.colleague = Colleague.objects.create(
             name="Con Sultant", email="c@rijksoverheid.nl", source="wies", user=self.user
         )
         self.placement = _placement(self.colleague, "Eigen klus", self.today, self.today + timedelta(days=90), hours=24)
         self.service = self.placement.service
         self.bdm = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
-        self.bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BDM))
         owner = Colleague.objects.create(name="Bas BDM", email="bm@rijksoverheid.nl", source="wies", user=self.bdm)
         self.service.assignment.owner = owner
         self.service.assignment.save(update_fields=["owner"])
@@ -1016,3 +1091,134 @@ class ServiceHoursPermissionTest(TestCase):
         client.force_login(self.user)
         body = client.get(reverse("home"), {"plaatsing": self.placement.public_id}).content.decode()
         assert "24 uur" in body
+
+
+@override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+class ApplicationAdministrationHoursTest(TestCase):
+    """Application administration runs the platform and carries nothing
+    functional, and hours are as functional as data gets. It is the one authority
+    that reaches the user sheet without a role, so it is also the only one for
+    which "who sees the block" and "on which screen" can come apart.
+
+    Whoever does platform work and plans with people holds a role for the second
+    half; ``rijksauth/0012`` hands the addresses in ``STAFF_EMAILS`` both roles
+    once.
+    """
+
+    def setUp(self):
+        setup_roles()
+        self.staff = make_staff_user()
+        self.client = Client()
+        self.client.force_login(self.staff)
+        self.today = timezone.now().date()
+        self.colleague = _consultant("Kees Bos", "kees@rijksoverheid.nl")
+        self.period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+
+    def test_neither_rule_names_it(self):
+        assert has_permission(Verb.READ, self.period, self.staff) is False
+        assert has_permission(Verb.UPDATE, self.period, self.staff) is False
+
+    def test_the_colleague_panel_carries_no_block(self):
+        body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
+
+        assert self.colleague.name in body
+        assert "Contracturen" not in body
+
+    def test_the_user_sheet_it_opens_for_the_roles_carries_no_block(self):
+        """The surface that made this worth pinning: ``user_edit`` opens on
+        ``may_administer_roles``, so this sheet renders for someone the hours rule
+        says nothing about."""
+        body = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
+
+        assert "Rollen" in body
+        assert "Contracturen" not in body
+
+    def test_the_hours_on_a_colleagues_role_are_not_for_it_either(self):
+        """``can_view_role_hours`` is the same authority asked about the other kind
+        of hours, so it answers the same."""
+        placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
+
+        assert can_view_role_hours(self.staff, placement) is False
+        body = self.client.get(reverse("home"), {"opdracht": placement.service.assignment.public_id}).content.decode()
+        assert "16 uur" not in body
+
+
+class RoleHoursForUserAdministrationTest(TestCase):
+    """The authority ``can_view_role_hours`` names beside the BDM role and the
+    placed colleague: the Office assistent role.
+
+    It is the audience this split added to these hours. An Office assistent is
+    placed nowhere and holds no BDM role, so without that branch of the predicate
+    they read the page a team mate gets, with the hours blanked.
+    """
+
+    def setUp(self):
+        setup_roles()
+        self.today = timezone.now().date()
+        self.office_assistant = User.objects.create(
+            email="office@rijksoverheid.nl", onboarding_completed_at=timezone.now()
+        )
+        self.office_assistant.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        self.colleague = _consultant("Kees Bos", "kees@x.nl")
+        self.placement = _placement(self.colleague, "Klus", self.today, self.today + timedelta(days=90), hours=16)
+
+    def test_the_predicate_names_user_administration(self):
+        assert can_view_role_hours(self.office_assistant, self.placement) is True
+
+    def test_the_team_list_prints_the_hours_of_a_colleagues_role(self):
+        """The surface the predicate feeds: without the branch the row renders
+        without its hours, which is what a team mate sees."""
+        client = Client()
+        client.force_login(self.office_assistant)
+
+        body = client.get(reverse("home"), {"opdracht": self.placement.service.assignment.public_id}).content.decode()
+
+        assert "Kees Bos" in body
+        assert "16 uur" in body
+
+    def test_the_permission_the_role_happens_to_carry_is_not_the_audience(self):
+        """One audience, spelled once on both rights over the same data.
+
+        ``rule(READ, ContractPeriod)`` names ``Grant(Role(ROLE_OFFICE_ASSISTANT))``,
+        so this predicate names the role too. Asking ``rijksauth.change_user``
+        instead — the permission the role happens to carry — would answer yes here
+        and no there for anyone who holds the permission without the role, a
+        superuser above all.
+        """
+        holder = User.objects.create(email="perm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        holder.user_permissions.add(Permission.objects.get(content_type__app_label="rijksauth", codename="change_user"))
+        holder = User.objects.get(pk=holder.pk)  # fresh, no cached permissions
+        assert holder.has_perm("rijksauth.change_user") is True
+
+        assert can_view_role_hours(holder, self.placement) is False
+        assert has_permission(Verb.READ, ContractPeriod(colleague=self.colleague), holder) is False
+
+
+class ContractHoursAudienceTest(TestCase):
+    """The two contract-hours rules against each other."""
+
+    def setUp(self):
+        setup_roles()
+        self.colleague = Colleague.objects.create(name="Cora", email="cora@x.nl", source="wies")
+        self.period = ContractPeriod.objects.create(
+            colleague=self.colleague, hours_per_week=36, start_date=timezone.now().date()
+        )
+
+    def test_whoever_may_keep_the_hours_may_read_them(self):
+        """What ``_contract_block`` rests on: it returns nothing to a non-reader,
+        and the add/edit/delete routes render it after a save on the UPDATE right
+        alone. A role that could write without reading would get an empty block
+        swapped back in.
+        """
+        keepers = []
+        for role in (ROLE_BDM, ROLE_OFFICE_ASSISTANT, ROLE_CONSULTANT):
+            user = User.objects.create(email=f"{role}@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+            user.groups.add(Group.objects.get(name=role))
+            if has_permission(Verb.UPDATE, self.period, user):
+                keepers.append(role)
+                with self.subTest(role=role):
+                    assert has_permission(Verb.READ, self.period, user) is True
+
+        # The assertion above only runs for a role that reached UPDATE, so a rule
+        # granting it to nobody would leave every branch unentered and the loop silent.
+        assert keepers, "No role reached UPDATE, so the loop above asserted nothing."

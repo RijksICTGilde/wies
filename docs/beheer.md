@@ -12,14 +12,14 @@ Wies is een interne webapplicatie voor medewerkers bij ODI om inzicht te krijgen
 
 ## 2\. Rollen & verantwoordelijkheden
 
-| Rol                   | Naam / team                                        | Verantwoordelijkheden                                |
-| :-------------------- | :------------------------------------------------- | :--------------------------------------------------- |
-| Adviseur              | Robbert Bos                                        | Prioriteiten, productrichting, stakeholderafstemming |
-| Product Owner         | Matthijs Beekman                                   | Prioriteiten, productrichting, stakeholderafstemming |
-| Technisch beheerder   | Robbert Uittenbroek Matthijs Beekman               | Hosting, deployment, updates, monitoring             |
-| Functioneel beheerder | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Gebruikersbeheer, feedback, testen                   |
-| Ontwikkelteam         | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Ontwikkeling, bugfixes, releases                     |
-| Security/Privacy      | CISO & Privacyofficer ODI, Patrick Keizer          | Beleid, AVG compliance, advisering                   |
+| Rol                   | Naam / team                                        | Verantwoordelijkheden                                     |
+| :-------------------- | :------------------------------------------------- | :-------------------------------------------------------- |
+| Adviseur              | Robbert Bos                                        | Prioriteiten, productrichting, stakeholderafstemming      |
+| Product Owner         | Matthijs Beekman                                   | Prioriteiten, productrichting, stakeholderafstemming      |
+| Technisch beheerder   | Robbert Uittenbroek Matthijs Beekman               | Hosting, deployment, updates, monitoring                  |
+| Functioneel beheerder | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Gebruikersbeheer (rol Office assistent), feedback, testen |
+| Ontwikkelteam         | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Ontwikkeling, bugfixes, releases                          |
+| Security/Privacy      | CISO & Privacyofficer ODI, Patrick Keizer          | Beleid, AVG compliance, advisering                        |
 
 ## 3\. Hosting & infrastructuur
 
@@ -34,9 +34,9 @@ Wies is een interne webapplicatie voor medewerkers bij ODI om inzicht te krijgen
 
 ## 4\. Beveiliging & continuïteit
 
-- Authenticatie: Rijks SSO, alleen expliciet toegevoegde ODI-gebruikers; beheerd via speciale rol (“Beheerder”). Elke wijziging aan de gebruikerslijst wordt gelogd en kan later geïnspecteerd worden.
+- Authenticatie: Rijks SSO, alleen expliciet toegevoegde ODI-gebruikers; beheerd via speciale rol (“Office assistent”), die door applicatiebeheer en door de rol zelf wordt toegekend. Elke wijziging aan de gebruikerslijst wordt gelogd en kan later geïnspecteerd worden.
 - Logging (BIO): bij elke wijzigingsactie en bij in-/uitlogpogingen wordt vastgelegd: het event, de actor (gebruiker/e-mail), het tijdstip, het IP-adres, de User-Agent en het resultaat. Deze gegevens worden niet in de UI getoond (privacy) en zijn uitsluitend beschikbaar voor incidentonderzoek.
-- Onboarding/offboarding: voor elk merk binnen ODI wordt er 1 beheerder aangesteld. Deze beheerder kan bij indiensttreding/uitdiensttreding gebruikers toevoegen/verwijderen.
+- Onboarding/offboarding: voor elk merk binnen ODI wordt er 1 Office assistent aangesteld. Deze kan bij indiensttreding/uitdiensttreding gebruikers toevoegen/verwijderen.
 - Data & privacy: er wordt een zeer beperkte set gegevens opgeslagen per persoon, waarbij slechts de huidige opdrachten zichtbaar zijn voor collega’s. Een Pre-scan DPIA heeft aangetoond dat er geen DPIA nodig is.
 - Updates: per sprint en daarnaast direct na beveiligingspatches.
 - Testen: automatische tests voor bestaande en nieuwe functionaliteiten.

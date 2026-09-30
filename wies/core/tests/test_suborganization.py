@@ -10,7 +10,7 @@ from django.urls import reverse
 from wies.core.errors import SuborganizationNotFoundError
 from wies.core.forms import SuborganizationForm
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill, Suborganization
-from wies.core.roles import setup_roles
+from wies.core.roles import ROLE_OFFICE_ASSISTANT, setup_roles
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.views import PlacementListView, UserListView
@@ -68,7 +68,7 @@ class GetSuborganizationByNameTest(TestCase):
 
 
 class SuborganizationInlineEditPermissionTest(TestCase):
-    """Suborganization keeps the same permission as labels: self-edit + Beheerder."""
+    """Suborganization keeps the same permission as labels: self-edit + Office assistent."""
 
     def setUp(self):
         setup_roles()
@@ -86,7 +86,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         )
 
         self.admin_user = User.objects.create_user(email="admin@rijksoverheid.nl", first_name="Admin")
-        self.admin_user.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin_user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
 
         self.other_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="Other")
 
@@ -102,11 +102,10 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         self.own_colleague.refresh_from_db()
         assert self.own_colleague.suborganization == self.suborg_b
 
-    def test_beheerder_can_edit_suborganization_with_change_colleague_perm(self):
-        # Grant the admin the standard change_colleague permission (the same
-        # gate that governs editing any other colleague field inline).
-        perm = Permission.objects.get(codename="change_colleague", content_type__app_label="core")
-        self.admin_user.user_permissions.add(perm)
+    def test_office_assistent_can_edit_another_colleagues_suborganization(self):
+        """``rule(UPDATE, Colleague, ...)`` names the role, and that is the whole of it:
+        no Django permission on ``Colleague`` stands behind this save."""
+        assert not self.admin_user.has_perm("core.change_colleague")
         self.client.force_login(self.admin_user)
         response = post_inline_edit(
             self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id}
@@ -285,7 +284,7 @@ class SuborganizationAdminTest(TestCase):
         setup_roles()
         self.client = Client()
         self.admin_user = User.objects.create_user(email="beheer@rijksoverheid.nl")
-        self.admin_user.groups.add(Group.objects.get(name="Beheerder"))
+        self.admin_user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
         self.plain_user = User.objects.create_user(email="plain@rijksoverheid.nl")
 
     def test_admin_requires_permission(self):
@@ -451,7 +450,7 @@ class SuborganizationAdminTest(TestCase):
 
 
 class SuborganizationAdminPermissionGranularityTest(TestCase):
-    """Each endpoint is gated by its own permission, not just 'is Beheerder'."""
+    """Each endpoint is gated by its own permission, not just 'is Office assistent'."""
 
     def setUp(self):
         setup_roles()

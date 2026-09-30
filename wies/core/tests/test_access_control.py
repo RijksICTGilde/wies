@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+
+from wies.core.roles import ROLE_OFFICE_ASSISTANT, setup_roles
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -93,3 +97,30 @@ class AccessControlTest(TestCase):
 
                 assert response.status_code == 302
                 assert response.url.startswith("/geen-toegang/")
+
+    @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
+    def test_a_bdm_cannot_access_staff_page(self):
+        """BDM is a functional role, not application administration."""
+        self.client.force_login(grant_bdm(self.test_user))
+
+        for path in ("/beheer/statistieken/", "/beheer/database/"):
+            with self.subTest(path=path):
+                response = self.client.get(path, follow=False)
+
+                assert response.status_code == 302
+                assert response.url.startswith("/geen-toegang/")
+
+    def test_beheer_menu_entries_follow_staff_emails_not_a_functional_role(self):
+        """The Statistieken/Database entries in the Beheer menu show for application
+        administration only, not for a user who holds both functional admin roles."""
+        staff_dashboard = reverse("staff-dashboard")
+        setup_roles()
+        self.test_user.groups.add(Group.objects.get(name=ROLE_OFFICE_ASSISTANT))
+        grant_bdm(self.test_user)
+        self.client.force_login(self.test_user)
+        for staff_emails, shown in (([], False), ([self.test_user.email], True)):
+            with self.subTest(staff_emails=staff_emails), override_settings(STAFF_EMAILS=staff_emails):
+                response = self.client.get(reverse("home"))
+
+                assert response.status_code == 200
+                assert (staff_dashboard in response.content.decode()) is shown

@@ -1,6 +1,10 @@
+import csv
 import uuid
+from io import StringIO
+from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -10,7 +14,7 @@ from django.utils import timezone
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_BDM, ROLE_CONSULTANT, ROLE_OFFICE_ASSISTANT, role_label
 
 User = get_user_model()
 
@@ -56,9 +60,9 @@ class UserViewsTest(TestCase):
         self.merk_b = Suborganization.objects.create(name="Merk B")
 
         # Create test groups for form testing
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
+        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BDM)
 
         # Create test users
         self.user1 = User.objects.create_user(
@@ -249,6 +253,49 @@ class UserViewsTest(TestCase):
         self.colleague1.refresh_from_db()
         assert self.colleague1.suborganization_id is None
 
+    def test_user_edit_replaces_labels_on_another_colleague(self):
+        """The form writes labels onto someone else's colleague record, and asks
+        nothing of ``Colleague`` to do it: ``auth_user`` holds the four ``rijksauth``
+        user permissions, no permission on the colleague and no role, so neither gate
+        that guards a colleague is standing. ``features/roles.md`` leans on that when
+        it explains why the rule on ``Colleague`` may not contradict the form."""
+        assert self.colleague1.user != self.auth_user
+        assert not self.auth_user.has_perm("core.change_colleague")
+        assert not self.auth_user.groups.exists()
+        assert set(self.colleague1.labels.values_list("pk", flat=True)) == {self.label_a.id}
+
+        self.client.force_login(self.auth_user)
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.public_id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+                "category_Expertise": self.label_b.public_id,
+            },
+        )
+
+        assert response.status_code == 302
+        assert set(self.colleague1.labels.values_list("pk", flat=True)) == {self.label_b.id}
+
+    def test_user_edit_clears_labels_on_another_colleague(self):
+        """Submitting the edit form with no label selected empties the other
+        colleague's labels, the way ``test_user_edit_clears_merk`` does for the merk."""
+        assert set(self.colleague1.labels.values_list("pk", flat=True)) == {self.label_a.id}
+
+        self.client.force_login(self.auth_user)
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.public_id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+            },
+        )
+
+        assert response.status_code == 302
+        assert self.colleague1.labels.count() == 0
+
     def test_user_edit_get_prefills_merk(self):
         """Test that the edit form pre-selects the colleague's current merk"""
         self.colleague1.suborganization = self.merk_a
@@ -414,6 +461,21 @@ class UserViewsTest(TestCase):
         created_event = Event.objects.last()
         assert created_event.object_id == user_id
         assert created_event.context["email"] == self.user1.email
+
+    def test_user_delete_records_the_roles_by_label(self):
+        """The deleted user is gone, so the event is all that is left of their
+        roles: it keeps the name they were called by, not the key."""
+        self.user1.groups.add(self.consultant_group, self.admin_group)
+        self.client.force_login(self.auth_user)
+
+        self.client.post(reverse("user-delete", args=[self.user1.public_id]))
+
+        created_event = Event.objects.last()
+        # A set: nothing orders ``user.groups.all()`` here, only the names matter.
+        assert set(created_event.context["group_names"]) == {
+            role_label(ROLE_CONSULTANT),
+            role_label(ROLE_OFFICE_ASSISTANT),
+        }
 
     def test_user_delete_prevents_superuser_deletion(self):
         """Test that superusers cannot be deleted via this endpoint"""
@@ -725,7 +787,15 @@ class UserViewsTest(TestCase):
         content = response.content.decode()
 
         assert "nldd-form-field" in content
-        assert "nldd-checkbox-field" in content
+        assert "nldd-combo-box" in content
+
+    def test_the_roles_half_of_the_sheet_uses_nldd_styling(self):
+        self.client.force_login(self.auth_user)
+
+        response = self.client.get(reverse("user-edit", args=[self.user1.public_id]))
+
+        assert response.status_code == 200
+        assert "nldd-checkbox-field" in response.content.decode()
 
 
 class UserImportTest(TestCase):
@@ -737,9 +807,9 @@ class UserImportTest(TestCase):
         self.import_url = reverse("user-import-csv")
 
         # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
+        self.admin_group, _ = Group.objects.get_or_create(name=ROLE_OFFICE_ASSISTANT)
+        self.consultant_group, _ = Group.objects.get_or_create(name=ROLE_CONSULTANT)
+        self.bdm_group, _ = Group.objects.get_or_create(name=ROLE_BDM)
 
         # Brands referenced by import CSVs must already exist (imports never create merken).
         self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
@@ -765,6 +835,27 @@ class UserImportTest(TestCase):
     def _create_csv_file(self, content):
         """Helper to create a CSV file upload"""
         return SimpleUploadedFile("users.csv", content.encode("utf-8"), content_type="text/csv")
+
+    def test_the_example_file_offered_on_the_page_imports_as_it_is(self):
+        """The import page calls it "het juiste formaat". A role column the importer
+        no longer recognises is not an error: the roles are silently left off."""
+        example = Path(settings.BASE_DIR) / "wies" / "core" / "static" / "example_users_import.csv"
+        content = example.read_text(encoding="utf-8")
+        # The merken it names have to exist; an import never creates one.
+        for row in csv.DictReader(StringIO(content)):
+            Suborganization.objects.get_or_create(name=row["brand"])
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(content)})
+
+        assert "Import geslaagd" in response.content.decode()
+        for email, key in (
+            ("john.doe@rijksoverheid.nl", ROLE_OFFICE_ASSISTANT),
+            ("jane.smith@rijksoverheid.nl", ROLE_CONSULTANT),
+            ("bob.johnson@minbzk.nl", ROLE_BDM),
+        ):
+            with self.subTest(email=email):
+                assert set(User.objects.get(email=email).groups.values_list("name", flat=True)) == {key}
 
     def test_import_requires_login(self):
         """Test that import endpoint requires authentication"""
@@ -825,7 +916,7 @@ class UserImportTest(TestCase):
     def test_import_valid_csv_creates_users(self):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n
 Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -844,19 +935,19 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         # Verify the existing merk was assigned (looked up, not created)
         assert john.colleague.suborganization is not None
         assert john.colleague.suborganization.name == "Brand A"
-        assert john.groups.filter(name="Beheerder").exists()
-        assert not john.groups.filter(name="Consultant").exists()
+        assert john.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert not john.groups.filter(name=ROLE_CONSULTANT).exists()
 
         jane = User.objects.get(email="jane.smith@rijksoverheid.nl")
         assert jane.first_name == "Jane"
-        assert jane.groups.filter(name="Consultant").exists()
-        assert not jane.groups.filter(name="Beheerder").exists()
+        assert jane.groups.filter(name=ROLE_CONSULTANT).exists()
+        assert not jane.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
 
     def test_import_accepts_semicolon_delimiter(self):
         """Test that import accepts CSV files using `;` as the delimiter (Excel default on many locales)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            "first_name;last_name;email;brand;Beheerder;Consultant;BDM\n"
+            f"first_name;last_name;email;brand;{role_label(ROLE_OFFICE_ASSISTANT)};{role_label(ROLE_CONSULTANT)};BDM\n"
             "John;Doe;john.doe@rijksoverheid.nl;Brand A;y;n;n\n"
             "Jane;Smith;jane.smith@rijksoverheid.nl;Brand B;n;y;n"
         )
@@ -873,7 +964,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         """Test that import accepts CSV files saved with a UTF-8 BOM (Excel on Windows)"""
         self.client.force_login(self.auth_user)
         csv_content = (
-            "first_name,last_name,email,brand,Beheerder,Consultant,BDM\n"
+            f"first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM\n"
             "John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n"
         )
         csv_file = SimpleUploadedFile(
@@ -890,7 +981,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
     def test_import_reuses_existing_merken(self):
         """Test that import reuses an existing merk instead of creating a duplicate"""
         self.client.force_login(self.auth_user)
-        csv_content = f"""first_name,last_name,email,brand,Administrator,Consultant,BDM
+        csv_content = f"""first_name,last_name,email,brand,Administrator,{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john.doe@rijksoverheid.nl,{self.existing_suborg.name},n,n,n"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -956,7 +1047,7 @@ Jane,Smith,also-invalid"""
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john@rijksoverheid.nl,Brand A,yes,n,n
 Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -966,9 +1057,9 @@ Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "Beheerder" in content
+        assert role_label(ROLE_OFFICE_ASSISTANT) in content
         assert "must be" in content
-        assert "Consultant" in content
+        assert role_label(ROLE_CONSULTANT) in content
 
     def test_import_detects_duplicate_emails_in_csv(self):
         """Test that import detects duplicate emails within the CSV"""
@@ -1044,7 +1135,7 @@ John,Doe,john@rijksoverheid.nl"""
     def test_import_with_multiple_groups(self):
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -1056,9 +1147,28 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.groups.count() == 3
-        assert john.groups.filter(name="Beheerder").exists()
-        assert john.groups.filter(name="Consultant").exists()
-        assert john.groups.filter(name=BDM_GROUP_NAME).exists()
+        assert john.groups.filter(name=ROLE_OFFICE_ASSISTANT).exists()
+        assert john.groups.filter(name=ROLE_CONSULTANT).exists()
+        assert john.groups.filter(name=ROLE_BDM).exists()
+
+    def test_import_without_application_administration_applies_every_column(self):
+        """None of the three role columns is Applicatiebeheer's alone, so an importer
+        without it grants all of them (features/roles.md)."""
+        self.client.force_login(self.auth_user)
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
+John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
+
+        response = self.client.post(self.import_url, {"csv_file": self._create_csv_file(csv_content)})
+
+        content = response.content.decode()
+        assert "Import geslaagd" in content
+        assert "not applied" not in content
+        john = User.objects.get(email="john@rijksoverheid.nl")
+        assert set(john.groups.values_list("name", flat=True)) == {
+            ROLE_OFFICE_ASSISTANT,
+            ROLE_CONSULTANT,
+            ROLE_BDM,
+        }
 
     def test_import_empty_csv(self):
         """Test import with empty CSV file"""
@@ -1107,7 +1217,7 @@ Jane,Smith,invalid-email"""
     def test_import_handles_whitespace_in_fields(self):
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+        csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_OFFICE_ASSISTANT)},{role_label(ROLE_CONSULTANT)},BDM
   John  ,  Doe  ,  john@rijksoverheid.nl  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 
