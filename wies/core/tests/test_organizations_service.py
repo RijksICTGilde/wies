@@ -17,6 +17,7 @@ from wies.core.models import (
 )
 from wies.core.services.organizations import (
     get_excluded_org_ids,
+    get_ministry_nested_root_ids,
     get_org_breadcrumb,
     iter_root_organizations,
     resolve_related_ministry,
@@ -1148,6 +1149,61 @@ class ResolveRelatedMinistryTest(TestCase):
 
     def test_ministry_itself_does_not_resolve(self):
         assert resolve_related_ministry(self.bzk) is None
+
+
+MNRE_IENW = "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013"
+
+
+class MinistryNestedRootIdsTest(TestCase):
+    """get_ministry_nested_root_ids returns exactly the roots the picker nests."""
+
+    def setUp(self):
+        self.agentschap = OrganizationType.objects.create(name="Agentschap", label="Agentschap")
+        self.stichting = OrganizationType.objects.create(
+            name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
+        )
+        self.odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
+        self.odi.organization_types.add(self.agentschap)
+
+    def test_includes_nestable_root(self):
+        assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
+
+    def test_excludes_non_nestable_main_type(self):
+        foundation = OrganizationUnit.objects.create(name="Stichting", related_ministry_tooi=MNRE_BZK)
+        foundation.organization_types.add(self.stichting)
+        assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
+
+    def test_excludes_db_child(self):
+        # A child carrying the tooi directly is not a DB root, so not returned
+        # here; the caller reaches it via get_org_descendant_ids of its parent.
+        parent = OrganizationUnit.objects.create(name="Parent")
+        child = OrganizationUnit.objects.create(name="Child", parent=parent, related_ministry_tooi=MNRE_BZK)
+        child.organization_types.add(self.agentschap)
+        assert child.id not in get_ministry_nested_root_ids([MNRE_BZK])
+
+    def test_excludes_other_ministrys_units(self):
+        other = OrganizationUnit.objects.create(name="Other", related_ministry_tooi=MNRE_IENW)
+        other.organization_types.add(self.agentschap)
+        assert get_ministry_nested_root_ids([MNRE_BZK]) == [self.odi.id]
+
+    def test_type_label_scopes_to_that_nestable_type(self):
+        inspectie_type = OrganizationType.objects.create(name="Inspectie", label="Inspectie")
+        inspectie = OrganizationUnit.objects.create(name="Inspectie X", related_ministry_tooi=MNRE_BZK)
+        inspectie.organization_types.add(inspectie_type)
+        assert get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap") == [self.odi.id]
+
+    def test_type_label_keys_on_main_type_not_any_type(self):
+        # Non-nestable main type + incidental Agentschap type → still excluded.
+        mixed = OrganizationUnit.objects.create(name="Mixed", related_ministry_tooi=MNRE_BZK)
+        OrganizationUnitType.objects.create(organization_unit=mixed, organization_type=self.stichting, position=0)
+        OrganizationUnitType.objects.create(organization_unit=mixed, organization_type=self.agentschap, position=1)
+        assert mixed.id not in get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap")
+
+    def test_non_nestable_type_label_returns_nothing(self):
+        assert get_ministry_nested_root_ids([MNRE_BZK], type_label="Ministerie") == []
+
+    def test_empty_toois_returns_nothing(self):
+        assert get_ministry_nested_root_ids([]) == []
 
 
 class OrgBreadcrumbMinistryTest(TestCase):

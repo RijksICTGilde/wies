@@ -114,6 +114,7 @@ from .services.organizations import (
     NESTED_ORG_TYPES,
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
+    get_ministry_nested_root_ids,
     get_org_breadcrumb,
     get_org_descendant_ids,
 )
@@ -1115,11 +1116,10 @@ class PublicIdFacetsMixin:
                 if tooi
             ]
             if ministry_toois:
-                linked_ids = list(
-                    OrganizationUnit.objects.filter(related_ministry_tooi__in=ministry_toois).values_list(
-                        "id", flat=True
-                    )
-                )
+                # Only the roots that actually nest under the ministry in the
+                # picker (nestable main type), so the filter matches the tree and
+                # the sidebar count — not every org merely linked via the tooi.
+                linked_ids = get_ministry_nested_root_ids(ministry_toois)
                 matching_ids |= get_org_descendant_ids(linked_ids)
         if self.org_type_filter:
             type_root_ids = list(
@@ -1136,11 +1136,9 @@ class PublicIdFacetsMixin:
             )
             if not ministry_tooi:
                 continue  # fail closed: unknown ministry matches nothing
-            scoped_ids = list(
-                OrganizationUnit.objects.filter(
-                    organization_types__label=type_label, related_ministry_tooi=ministry_tooi
-                ).values_list("id", flat=True)
-            )
+            # Same nesting rule as the org facet, scoped to the chosen type; keys
+            # on the MAIN type so a stichting with an incidental type is excluded.
+            scoped_ids = get_ministry_nested_root_ids([ministry_tooi], type_label=type_label)
             matching_ids |= get_org_descendant_ids(scoped_ids)
         return qs.filter(**{lookup: matching_ids})
 

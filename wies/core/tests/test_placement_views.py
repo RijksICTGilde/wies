@@ -2344,6 +2344,41 @@ class ScopedOrgTypeInFilterTest(TestCase):
         matched = self._matched_ids({"org_type_in": "00000000-0000-0000-0000-000000000000:Agentschap"})
         assert self.odi.id not in matched
 
+    def test_ministry_excludes_linked_non_nestable_org(self):
+        # A stichting linked to BZK via related_ministry_tooi but whose MAIN type
+        # is not nestable does not nest under BZK in the picker, so ticking BZK
+        # must not sweep it in (the reported bug).
+        stichting_type = OrganizationType.objects.create(
+            name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
+        )
+        stichting = OrganizationUnit.objects.create(name="Stichting X", related_ministry_tooi=MNRE_BZK)
+        stichting.organization_types.add(stichting_type)
+
+        matched = self._matched_ids({"org": str(self.bzk.public_id)})
+        assert stichting.id not in matched
+        assert self.odi.id in matched  # nestable agentschap still matched
+
+    def test_ministry_reaches_child_of_nestable_root_via_subtree(self):
+        # A child of a nestable root is not a DB root itself, so it is not pulled
+        # as a linked root, but it is still reached as a subtree descendant.
+        child = OrganizationUnit.objects.create(name="Afdeling van ODI", parent=self.odi)
+        matched = self._matched_ids({"org": str(self.bzk.public_id)})
+        assert child.id in matched
+
+    def test_org_type_in_excludes_linked_non_nestable_org(self):
+        # org_type_in keys on the MAIN type: a stichting with an incidental
+        # Agentschap type (but a non-nestable main type) is still excluded.
+        stichting_type = OrganizationType.objects.create(
+            name="Overheidsstichting of -vereniging", label="Overheidsstichting of -vereniging"
+        )
+        stichting = OrganizationUnit.objects.create(name="Stichting Y", related_ministry_tooi=MNRE_BZK)
+        OrganizationUnitType.objects.create(organization_unit=stichting, organization_type=stichting_type, position=0)
+        OrganizationUnitType.objects.create(organization_unit=stichting, organization_type=self.agentschap, position=1)
+
+        matched = self._matched_ids({"org_type_in": f"{self.bzk.public_id}:Agentschap"})
+        assert stichting.id not in matched
+        assert self.odi.id in matched
+
 
 class AssignmentPanelBreadcrumbMinistryTest(TestCase):
     """The opdracht panel shows the ministry a nestable-root opdrachtgever nests under."""
