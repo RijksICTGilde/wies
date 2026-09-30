@@ -115,7 +115,6 @@ from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
     get_ministry_nested_root_ids,
-    get_org_breadcrumb,
     get_org_descendant_ids,
 )
 from .services.placements import (
@@ -1860,11 +1859,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
             assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.public_id)
-            first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-            assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
+            first_org = assignment.organizations.first()
+            assignment.org_label = (first_org.label or first_org.name) if first_org else None
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
