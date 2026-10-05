@@ -71,19 +71,18 @@
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
     {# The description sits in this list, not above the tabs, where a long text
-       pushed the tabs and fields out of view. Its label is shortened because
-       "Opdrachtomschrijving" wrapped in the label column. #}
+       pushed the tabs and fields out of view, and last in it, so the short
+       facts above it stay in view when it runs long. Its label is shortened
+       because "Opdrachtomschrijving" wrapped in the label column. #}
     {% set _rows = [
       ("Externe bron", "source"),
-      ("Omschrijving", "extra_info"),
       ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
       ("Periode", "period"),
-      ("Plaatsingsdatum", "created_at"),
       ("Business Manager", "owner"),
+      ("Omschrijving", "extra_info"),
     ] %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
-      {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
       {% else %}
         <nldd-list-item>
         <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
@@ -111,8 +110,6 @@
         {% elif row_kind == "period" %}
           {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
           {% include "forms/displays/assignment_period.html" %}
-        {% elif row_kind == "created_at" %}
-          {{ panel_data.assignment.created_at|datum_nl }}
         {% elif row_kind == "owner" %}
           {% if panel_data.assignment.owner %}
             {{ panel_data.assignment.owner.name }}

@@ -31,22 +31,29 @@ profiel" with the actions. #}
       <nldd-text-cell divider-start>
       {% if has_actions %}
         {# htmx cancels the anchor's own navigation. #}
-        <a class="wies-quiet-link" href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false">{{ row.colleague.name }}</a>
+        <a class="wies-quiet-link"
+           href="{{ person_url }}"
+           hx-get="{{ person_url }}"
+           hx-target="#side-panel-content"
+           hx-swap="innerHTML"
+           hx-push-url="false">{{ row.colleague.name }}</a>
       {% else %}
         <span>{{ row.colleague.name }}</span>
       {% endif %}
       {% set hours = row.hours_per_week if row.show_hours else none %}
       {% if row.skill_name or pl.start_date or pl.end_date or hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
-          {# The role leads the second line, so the name stands alone. Icons
-             are decorative: the text says what the number is. #}
-          {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
+          {# The period leads the second line, so it starts at the same place on
+             every row: a role tag in front of it is as wide as its name, which
+             left the dates stepping in and out down the list. Icons are
+             decorative: the text says what the number is. #}
           {% if pl.start_date or pl.end_date %}
             <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
               {%- if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}{% elif pl.start_date %}Vanaf {{ pl.start_date|datum_nl }}{% else %}t/m {{ pl.end_date|datum_nl }}{% endif -%}
             </span>
           {% endif %}
           {% if hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ hours }} uur</span>{% endif %}
+          {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
           {# A visible non-active row carries a note; only an ended one also a
              label (see visibility_rules.LABELS). #}
           {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
@@ -66,7 +73,11 @@ profiel" with the actions. #}
       {% set svc = row.service %}
       {% set pl = none %}
       {% set member_name = row.skill_name %}
-      <nldd-list-item>
+      {# The row opens the aanvraag panel, as a placement row opens the person.
+         Only without a menu: the menu is its own click target, and a row link
+         around it would swallow it (see the has_actions branch above). #}
+      {% set aanvraag_url = "?opdracht=" ~ row.assignment_public_id ~ "&aanvraag=" ~ svc.public_id %}
+      <nldd-list-item {% if not user_can_edit %}href="{{ aanvraag_url }}" hx-get="{{ aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>
       <nldd-cell>
       {# No name: the text-document icon reads as a request, not as a person. #}
       <nldd-avatar size="40" icon="text-document" decorative></nldd-avatar>
@@ -90,6 +101,9 @@ profiel" with the actions. #}
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       {% if user_can_edit %}
         {% include "forms/displays/assignment_services_row_menu.html" %}
+      {% else %}
+        {# Decorative: the whole row is the link to the aanvraag. #}
+        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20"></nldd-icon-cell>
       {% endif %}
       </nldd-list-item>
     {% endif %}

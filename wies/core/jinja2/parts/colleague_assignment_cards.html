@@ -1,110 +1,103 @@
 {% from "parts/privacy_chip.html" import privacy_chip %}
-{# Opdracht cards for the colleague panel and the profile page.
+{# A colleague's opdrachten, one labelled list per opdracht, in the same
+   box-tinted label/value pattern the opdracht panel uses for its own details.
    Expects: assignments (list), hx_target (string).
-   One compact card per opdracht: name, role tags and period. The name is the
-   link to the opdracht, one click away. The card opens on a click anywhere
-   else on it (toggle-card in ui_handlers.js); the chevron button carries the
-   state for keyboard and screen reader. The period on the card is the
-   placement's, not the opdracht's; the hours (under the hours rule) and the
-   client sit on that line too. Open, it shows the role description. `expanded` on an entry (?uitgeklapt=, the
-   way in from a team row) renders it open. #}
-{# The description leads with "Taken:", so it reads as what this person does
-   here and not as the opdracht's text. #}
-{% macro taken_label(suffix="") -%}
-  <span class="wies-text-secondary">Taken{{ suffix }}:</span>
-{%- endmacro %}
+   This is the colleague's page, so the entry leads with the role they had and
+   names the opdracht under it. The Opdracht row is the link to it and the
+   Taken row holds the toggle, so the two never compete for a click. The period is the
+   placement's, not the opdracht's; the hours follow the hours rule.
+   `expanded` on an entry (?uitgeklapt=, the way in from a team row) renders
+   its description open. #}
 {% if assignments %}
-  {# max-items="9999": the component paginates its own slot at 24 by default and
-     hides every card past that. This list shows a colleague's full assignment
-     history with no server-side paging, so the built-in limit would silently
-     drop the 25th+ assignment -- lift it so all cards render.
-     item-width="100%": one card per row; the description needs the width. #}
-  <nldd-collection layout="grid" item-width="100%" max-items="9999">
+  {# Bound once, outside the loop: inside it `assignments` is the caller's
+     {% with %} binding and does not count reliably. #}
+  {% set only_one = assignments|list|length == 1 %}
+  <ul class="wies-cv">
   {% for assignment in assignments %}
     {# A placement carries dates; the "Business Manager" tag does not. #}
     {% set roles = assignment.tags|selectattr("start", "defined")|list %}
     {% set described = roles|selectattr("description")|list %}
-    {# Nothing behind the fold: no toggle, the card is just the card. That is a
-       BM-only card, a role without description, or one whose description fits
-       the preview line (no line break, about one line of text). #}
-    {% set fits = described|length == 1 and roles|length == 1 and "\n" not in described[0].description and described[0].description|length <= 90 %}
+    {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
+    {# Nothing behind the fold: no toggle. That is a BM-only entry, a role
+       without description, or one short enough to fit the three clamped
+       preview lines whole (roughly 90 characters a line in this panel). #}
+    {% set fits = described|length == 1 and roles|length == 1 and described[0].description|length <= 240 %}
     {% set has_more = (described or roles|length > 1) and not fits %}
-    {% set open = assignment.expanded and has_more %}
-    <nldd-card background="tinted" class="wies-card"{% if has_more %} data-action="toggle-card"{% endif %}>
-    <nldd-container padding="16">
-    <div class="wies-card__head">
-      {# A link inside the card: hx_link_guard.js catches the click so htmx
-         fills the panel; ui_handlers.js leaves a click on a link alone. #}
-      <nldd-title size="5">
-      <h3><nldd-link class="wies-card__link" href="{{ assignment.assignment_url }}" text="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML"></nldd-link></h3>
-      </nldd-title>
-      {% if has_more %}
-        <nldd-icon-button class="wies-card__toggle" size="sm" variant="neutral-transparent" icon="{{ 'chevron-up' if open else 'chevron-down' }}" tooltip-timing="never" text="{{ 'Minder over' if open else 'Meer over' }} {{ assignment.name }}" {% if open %}expanded{% endif %} data-action="toggle-card"></nldd-icon-button>
+    {# One opdracht: show it open. There is room in the panel, and with a single
+       entry a collapsed description reads as if the list itself were cut off. #}
+    {% set open = has_more and (assignment.expanded or only_one) %}
+    <li class="wies-cv__item">
+    <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
+      {% if role_names %}
+        <nldd-list-item>
+        <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-text-cell vertical-alignment="top"
+          text="{{ role_names[:3]|join(', ') }}{% if role_names|length > 3 %} +{{ role_names|length - 3 }}{% endif %}"
+          {% if roles|length == 1 and roles[0].hours %}supporting-text="{{ roles[0].hours }} uur per week"{% endif %}></nldd-text-cell>
+        </nldd-list-item>
       {% endif %}
-    </div>
-    {% if assignment.tags or assignment.start_date or assignment.end_date or assignment.period_label or assignment.organization %}
-      <div class="wies-team-row-meta wies-card__meta">
-        {% for tag in assignment.tags[:3] %}
-          <nldd-tag size="sm" text="{{ tag.skill if tag is mapping else tag }}"></nldd-tag>
-        {% endfor %}
-        {% if assignment.tags|length > 3 %}
-          <nldd-tag size="sm" text="+{{ assignment.tags|length - 3 }} meer"></nldd-tag>
-        {% endif %}
-        {# The placement's own dates (merged over its roles), as on the team
-           row; not the opdracht's period. #}
-        {% if assignment.start_date or assignment.end_date %}
-          <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-            {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}{% else %}t/m {{ assignment.end_date|datum_nl }}{% endif -%}
+      {# The whole row is the link to the opdracht, with the chevron saying so;
+         the row holds nothing else interactive, so nothing competes with it.
+         The toggle below lives in its own row. hx_link_guard.js cancels the
+         anchor so htmx fills the panel. #}
+      <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
+      <nldd-text-cell width="120px" text="Opdracht" vertical-alignment="top"></nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell vertical-alignment="top" text="{{ assignment.name }}"
+        {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-text-cell>
+      <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
+      </nldd-list-item>
+      <nldd-list-item>
+      <nldd-text-cell width="120px" text="Periode" vertical-alignment="top"></nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {# Month and year, as a cv dates its jobs; the exact day stays in the
+         title attribute. #}
+      <nldd-text-cell vertical-alignment="top">
+        <span{% if assignment.start_date or assignment.end_date %} title="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}{% else %}t/m {{ assignment.end_date|datum_nl }}{% endif %}"{% endif %}>
+          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} – {{ assignment.end_date|datum_nl('b Y') }}
+          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}
+          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl('b Y') }}
+          {%- else %}Geen periode{% endif -%}
+        </span>
+        {% if assignment.period_label or assignment.privacy_warning_text %}
+          <span slot="supporting-text" class="wies-cv__chips">
+            {% if assignment.period_label %}<nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>{% endif %}
+            {% if assignment.privacy_warning_text %}{{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif %}
           </span>
         {% endif %}
-        {% if assignment.period_label %}<nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>{% endif %}
-        {% if assignment.privacy_warning_text %}{{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif %}
-        {# Hours under the hours rule (None when the viewer may not see them);
-           with several roles each role has its own, behind the fold. #}
-        {% if roles|length == 1 and roles[0].hours %}
-          <span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ roles[0].hours }} uur per week</span>
-        {% endif %}
-        {% if assignment.organization %}
-          <span class="wies-team-row-meta__item"><nldd-icon name="office" size="16" aria-hidden="true"></nldd-icon>{{ assignment.organization }}</span>
-        {% endif %}
-      </div>
-    {% endif %}
-    {% if described %}
-      {# Closed, the first line of the description as a preview, cut by the
-         CSS ellipsis if it is long; open, the full text below takes over. The
-         first line and not the whole text run together: what you see closed
-         is then exactly how the open text starts. #}
-      <p class="wies-card__preview"{% if open %} hidden{% endif %}><span class="wies-card__preview-text">{{ taken_label() }} {{ (described[0].description|trim).splitlines()[0] }}</span></p>
-    {% endif %}
-    {% if has_more %}
-    <div class="wies-card__more"{% if not open %} hidden{% endif %}>
-      {% for role in roles %}
-        <div class="wies-card__role">
-          {# With one role the card's own line already has the dates and
-             hours; with several, each role gets its own. #}
-          {% if roles|length > 1 %}
-            {% if not role.description %}<p class="wies-card__label">{{ role.skill }}</p>{% endif %}
-            <div class="wies-team-row-meta">
-              <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-                {%- if role.start and role.end %}{{ role.start|datum_nl }} t/m {{ role.end|datum_nl }}{% elif role.start %}Vanaf {{ role.start|datum_nl }}{% elif role.end %}t/m {{ role.end|datum_nl }}{% else %}Geen periode{% endif -%}
-              </span>
-              {% if role.hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ role.hours }} uur per week</span>{% endif %}
+      </nldd-text-cell>
+      </nldd-list-item>
+      {% if described %}
+        <nldd-list-item>
+        <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-text-cell vertical-alignment="top">
+          {# Closed, the description as plain text clamped to three lines, so a
+             longer one visibly runs out mid-sentence and "Toon meer" reads as
+             what it is. Open, the full rendered text below takes over. #}
+          <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described[0].description }}</p>
+          {% if has_more %}
+            <div class="wies-cv__more"{% if not open %} hidden{% endif %}>
+              {% for role in roles %}
+                {% if role.description %}
+                  <div class="wies-cv__role-block">
+                    {# With several roles each description says which one it is. #}
+                    {% if roles|length > 1 %}<p class="wies-cv__role-label">{{ role.skill }}</p>{% endif %}
+                    <div class="wies-role-description"><span class="wies-role-description__text">{{ role.description }}</span></div>
+                  </div>
+                {% endif %}
+              {% endfor %}
             </div>
+            <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} data-action="toggle-card"></nldd-button>
           {% endif %}
-          {% if role.description %}
-            {# The same "Taken:" as the closed preview, inline before the text.
-               pre-wrap keeps the description's line breaks; the template's own
-               whitespace is trimmed. #}
-            <p class="wies-role-description"><span class="wies-role-description__text">{{ taken_label((" als " ~ role.skill) if roles|length > 1 else "") }} {{ role.description -}}</span></p>
-          {% endif %}
-        </div>
-      {% endfor %}
-    </div>
-    {% endif %}
-    </nldd-container>
-    </nldd-card>
+        </nldd-text-cell>
+        </nldd-list-item>
+      {% endif %}
+    </nldd-list>
+    </li>
   {% endfor %}
-  </nldd-collection>
+  </ul>
 {% else %}
   <nldd-inline-dialog icon="business-suitcase" text="Geen opdrachten" supporting-text="Er staan nog geen opdrachten op deze naam."></nldd-inline-dialog>
 {% endif %}

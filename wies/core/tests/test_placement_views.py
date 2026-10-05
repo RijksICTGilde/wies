@@ -830,7 +830,7 @@ class OwnRoleSheetPermissionTest(TestCase):
     """``?opdracht=&teamlid=`` opens the right sheet for who asks.
 
     A placed colleague may edit their own role description but not the role,
-    hours or period, so their row opens "Omschrijving wijzigen" with the role
+    hours or period, so their row opens "Taken wijzigen" with the role
     read-only; the BDM owner gets the full "Teamlid bewerken" form instead."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
@@ -873,7 +873,7 @@ class OwnRoleSheetPermissionTest(TestCase):
 
         body = self._sheet(self.user_alice, pl).content.decode()
 
-        assert "Omschrijving wijzigen" in body
+        assert "Taken wijzigen" in body
         assert "Teamlid bewerken" not in body
         assert 'name="description"' in body
         assert "<nldd-text-field readonly" in body
@@ -891,7 +891,7 @@ class OwnRoleSheetPermissionTest(TestCase):
         body = self._sheet(self.user_bob, pl).content.decode()
 
         assert "Teamlid bewerken" in body
-        assert "Omschrijving wijzigen" not in body
+        assert "Taken wijzigen" not in body
 
     @patch("wies.core.views.timezone")
     def test_own_row_menu_says_mijn(self, mock_tz):
@@ -905,7 +905,7 @@ class OwnRoleSheetPermissionTest(TestCase):
 
         self.client.force_login(self.user_alice)
         alice = row(self.client.get(panel, headers=self.HX).content.decode())
-        assert "Mijn omschrijving wijzigen" in alice
+        assert "Mijn taken wijzigen" in alice
         assert "Mijn profiel" in alice
         assert "Bekijk profiel" not in alice
 
@@ -939,7 +939,8 @@ class OwnRoleSheetPermissionTest(TestCase):
         self.client.force_login(self.user_bob)
         bob = alice_row(self.client.get(panel, headers=self.HX).content.decode())
         assert person_url not in bob.split(">")[0]
-        assert f'<a class="wies-quiet-link" {person_url}' in bob
+        quiet_link = next(t for t in bob.split("<a ") if "wies-quiet-link" in t)
+        assert person_url in quiet_link.split(">")[0]
         assert 'text="Bekijk profiel" icon="user" ' + person_url.replace("href=", "hx-get=") in bob
         assert "Acties voor Alice" in bob
         assert 'icon="chevron-right"' not in bob
@@ -951,7 +952,7 @@ class OwnRoleSheetPermissionTest(TestCase):
 
         body = self._sheet(self.user_carol, pl).content.decode()
 
-        assert "Omschrijving wijzigen" not in body
+        assert "Taken wijzigen" not in body
         assert "Teamlid bewerken" not in body
         assert "Alice" in body
 

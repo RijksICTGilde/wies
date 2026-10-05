@@ -15,46 +15,33 @@
     else window.location.assign("/");
   }
 
-  // Long free text (#576): two spans swapped via hidden. The toggle is an
-  // nldd-button, so its text, icon and state are set via attributes.
+  // Long free text (#576): rendered Markdown in one block, collapsed by a
+  // class on the wrapper. The toggle is an nldd-button, so its text, icon and
+  // state are set via attributes.
   function toggleLongText(toggle) {
-    var wrapper = toggle.parentElement;
-    var truncated = wrapper && wrapper.querySelector(".inline-edit-long-text__truncated");
-    var full = wrapper && wrapper.querySelector(".inline-edit-long-text__full");
-    if (!truncated || !full) return;
-    var expanded = full.hidden === false;
-    truncated.hidden = !expanded;
-    full.hidden = expanded;
-    var text = expanded ? "Toon meer" : "Toon minder";
-    toggle.setAttribute("text", text);
-    // A card toggle names its subject ("Toon meer over de rol ..."); the verb
-    // in that name follows the state too.
-    var label = toggle.getAttribute("accessible-label");
-    if (label) toggle.setAttribute("accessible-label", label.replace(/^Toon (meer|minder)/, text));
+    var wrapper = toggle.closest(".wies-long-text");
+    if (!wrapper) return;
+    var expanded = !wrapper.classList.contains("wies-long-text--collapsed");
+    wrapper.classList.toggle("wies-long-text--collapsed", expanded);
+    toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
+    toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
     // nldd-button forwards `expanded` as aria-expanded on its inner button.
     toggle.toggleAttribute("expanded", !expanded);
-    // The role-description toggle has no icon; only flip one that is there.
-    if (toggle.hasAttribute("start-icon")) {
-      toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
-    }
   }
 
-  // An opdracht card on a colleague panel or profile: a click anywhere on the
-  // card opens or closes it; the chevron button carries the state.
+  // "Toon meer" on an opdracht entry in a colleague's cv list unfolds the role
+  // description. Nothing around it is clickable, so the click needs no guard.
   function toggleCard(el) {
-    var card = el.closest("nldd-card");
-    var more = card && card.querySelector(".wies-card__more");
+    var entry = el.closest(".wies-cv__item");
+    var more = entry && entry.querySelector(".wies-cv__more");
     if (!more) return;
     var open = more.hidden;
     more.hidden = !open;
-    var preview = card.querySelector(".wies-card__preview");
+    var preview = entry.querySelector(".wies-cv__preview");
     if (preview) preview.hidden = open;
-    var toggle = card.querySelector(".wies-card__toggle");
-    if (!toggle) return;
-    toggle.toggleAttribute("expanded", open);
-    toggle.setAttribute("icon", open ? "chevron-up" : "chevron-down");
-    var label = toggle.getAttribute("text") || "";
-    toggle.setAttribute("text", label.replace(/^(Meer|Minder) over/, open ? "Minder over" : "Meer over"));
+    el.toggleAttribute("expanded", open);
+    el.setAttribute("start-icon", open ? "chevron-up" : "chevron-down");
+    el.setAttribute("text", open ? "Toon minder" : "Toon meer");
   }
 
   var CLICK_ACTIONS = {

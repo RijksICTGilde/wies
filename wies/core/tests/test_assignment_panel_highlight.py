@@ -96,55 +96,97 @@ class AssignmentPanelHighlightTest(TestCase):
         assert 'icon="chevron-right"' in row
         assert "<nldd-link" not in row
         assert "Acties voor" not in row
-        assert f"collega={self.anke.id}" not in row
+        # The integer pk must not reach the URL (it is enumerable). The
+        # lookahead stops "collega=7" from matching a uuid that starts with 7.
+        assert not re.search(rf"collega={self.anke.id}(?![0-9a-f-])", row)
         assert "Begeleidt de overgang." not in row
 
-    def test_the_opdracht_card_holds_the_placement_and_opens_for_uitgeklapt(self):
+    def test_the_cv_entry_holds_the_placement_and_opens_for_uitgeklapt(self):
         Service.objects.filter(placements__colleague=self.anke).update(
-            description="Begeleidt de overgang.\n\nEn stemt af met de directie.", hours_per_week=24
+            description="Begeleidt de overgang. " * 12 + "\n\nEn stemt af met de directie.", hours_per_week=24
         )
         headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
         panel = reverse("home") + f"?collega={self.anke.public_id}"
+
+        # A second opdracht, so the list does not fall under the single-entry
+        # rule below and this one starts collapsed.
+        other = Assignment.objects.create(name="Archief", source="wies")
+        other_service = Service.objects.create(
+            assignment=other, description="Eerder werk.", skill=self.skill, source="wies"
+        )
+        today = timezone.now().date()
+        Placement.objects.create(
+            colleague=self.anke,
+            service=other_service,
+            period_source=Placement.PLACEMENT,
+            specific_start_date=today - timedelta(days=20),
+            specific_end_date=today + timedelta(days=80),
+            source="wies",
+        )
 
         closed = self.client.get(panel, headers=headers).content.decode()
         opened = self.client.get(panel + f"&uitgeklapt={self.assignment.public_id}", headers=headers).content.decode()
 
         assert "Begeleidt de overgang." in closed
-        assert (
-            '<span class="wies-card__preview-text"><span class="wies-text-secondary">Taken:</span> '
-            "Begeleidt de overgang.</span></p>" in closed
-        )
-        assert '<div class="wies-card__more" hidden>' in closed
-        assert '<p class="wies-card__preview" hidden>' in opened
-        assert (
-            '<span class="wies-role-description__text"><span class="wies-text-secondary">Taken:</span> '
-            "Begeleidt de overgang.\n\nEn stemt af met de directie.</span></p>" in opened
-        )
-        placement = Placement.objects.get(colleague=self.anke)
-        # The placement's own dates on the card, not the opdracht's period.
-        assert f"{placement.start_date.day} " in closed.split("wies-card__meta")[1].split("</div>")[0]
+        assert 'text="Taken"' in closed
+        assert '<p class="wies-cv__preview">Begeleidt de overgang. Begeleidt' in closed
+        assert '<div class="wies-cv__more" hidden>' in closed
+        assert '<p class="wies-cv__preview" hidden>' in opened
+        # Open, the description is rendered from Markdown. The template's
+        # indentation is the formatter's to change, so match on the sequence.
+        role_block = opened.split('<div class="wies-role-description">')[1]
+        assert 'text="Taken"' in opened
+        assert '<span class="wies-role-description__text">Begeleidt de overgang.' in role_block
+        assert "En stemt af met de directie." in opened
+        placement = Placement.objects.get(colleague=self.anke, service__assignment=self.assignment)
+        # The placement's own dates, not the opdracht's period. The line shows
+        # month and year; the exact day stays in the title.
+        meta_line = closed.split('text="Periode"')[1].split("</nldd-list-item>")[0]
+        # The line itself shows month and year ...
+        assert placement.start_date.strftime("%Y") in meta_line
+        # ... and the exact day stays in the title.
+        assert f"{placement.start_date.day} " in meta_line
         # The viewer is a team mate, not a planner: no hours for them.
         assert "uur per week" not in closed
         self.client.force_login(self.anke_user)
         own = self.client.get(panel, headers=headers).content.decode()
-        # On the card's own line, not behind the fold.
-        assert "24 uur per week" in own.split("wies-card__more")[0]
+        # On the entry's own line, not behind the fold.
+        assert "24 uur per week" in own.split("wies-cv__more")[0]
         # A description that fits the preview line has nothing behind the fold.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")
         bram = self.client.get(reverse("home") + f"?collega={self.bram.public_id}", headers=headers).content.decode()
-        assert "Taken:</span> Kort.</span></p>" in bram
-        assert "wies-card__toggle" not in bram
-        assert "wies-card__more" not in bram
+        assert '<p class="wies-cv__preview">Kort.</p>' in bram
+        assert "wies-cv__toggle" not in bram
+        assert "wies-cv__more" not in bram
         self.client.force_login(self.viewer)
-        assert 'icon="chevron-down"' in closed
-        assert " expanded" not in closed.split("wies-card__toggle")[1].split(">")[0]
-        assert '<div class="wies-card__more">' in opened
-        assert 'icon="chevron-up"' in opened
-        assert " expanded" in opened.split("wies-card__toggle")[1].split(">")[0]
-        assert (
-            f'<nldd-link class="wies-card__link" href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}" text="Zaaksysteem"'
-            in closed
+        assert 'start-icon="chevron-down"' in closed
+        assert " expanded" not in closed.split("wies-cv__toggle")[1].split(">")[0]
+        assert '<div class="wies-cv__more">' in opened
+        assert 'start-icon="chevron-up"' in opened
+        assert " expanded" in opened.split("wies-cv__toggle")[1].split(">")[0]
+        # The Opdracht row is the link, with a chevron saying so; the toggle
+        # sits in the Taken row, so the two never compete for the same click.
+        row = closed.split('<nldd-list-item class="wies-cv__link"')[1].split("</nldd-list-item>")[0]
+        assert f'href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}"' in row
+        assert 'text="Zaaksysteem"' in row
+        assert 'icon="chevron-right"' in row
+        assert "data-action" not in row
+        entry = closed.split('<li class="wies-cv__item">')[1]
+        assert entry.count("nldd-list-item class=") == 1
+
+    def test_a_lone_opdracht_opens_its_description_without_asking(self):
+        """One entry fills the panel on its own, and a collapsed description
+        there reads as if the list itself were cut off."""
+        Service.objects.filter(placements__colleague=self.anke).update(
+            description="Begeleidt de overgang. " * 12 + "\n\nEn stemt af met de directie."
         )
+        headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+        body = self.client.get(reverse("home") + f"?collega={self.anke.public_id}", headers=headers).content.decode()
+
+        assert body.count('<li class="wies-cv__item">') == 1
+        assert '<div class="wies-cv__more">' in body
+        assert '<p class="wies-cv__preview" hidden>' in body
+        assert "Toon minder" in body
 
 
 class SidePanelSheetTest(TestCase):

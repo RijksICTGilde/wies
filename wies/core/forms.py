@@ -428,7 +428,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
     # valid submitted value; its choices are DB-driven and injected in __init__.
     skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
-        label="Omschrijving rol",
+        label="Taken",
         max_length=500,
         required=False,
         widget=forms.Textarea(attrs={"rows": 2}),

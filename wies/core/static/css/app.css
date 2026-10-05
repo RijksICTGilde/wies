@@ -278,22 +278,54 @@ a > nldd-icon:last-child {
   gap: var(--primitives-space-8, 8px);
 }
 
-/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
-   double spaces and indentation of a pasted description should survive.
-   `:not([hidden])` is needed because inline_edit.js swaps the two spans via the
-   hidden attribute, and a display from the document beats [hidden]. */
-.inline-edit-long-text__truncated:not([hidden]),
-.inline-edit-long-text__full:not([hidden]) {
-  display: block;
-  white-space: pre-wrap;
-}
-
 /* nldd-button draws itself; only position is ours. No display on the host: the
    component relies on its own inline-flex and blows its icon up otherwise. The
    negative margin offsets the button padding so the label lines up with the text. */
 .inline-edit-show-more {
   margin-top: var(--primitives-space-4, 4px);
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
+}
+
+/* The formatting bar and its editor read as one control: a little air between
+   them, no more than the gap between a label and its field. */
+.wies-text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-8, 8px);
+}
+
+/* A rendered description, collapsed to five lines until "Toon meer". A hard
+   edge, not a fade: a gradient over a tinted list is not colour-fast in dark
+   mode. lh: five lines whatever the rich-text line height is. */
+.wies-long-text--collapsed .wies-long-text__body {
+  max-height: calc(5 * 1lh);
+  overflow: hidden;
+}
+
+/* A heading inside a description is bold text at the text's own size, open
+   or collapsed: a description sits in a data row, and full-size headings made
+   the block leap in scale on "Toon meer". The selectors reach into
+   nldd-rich-text's light DOM: it has no attribute for this. */
+.wies-long-text nldd-rich-text :is(h1, h2, h3, h4, h5, h6) {
+  font-size: inherit;
+  line-height: inherit;
+  font-weight: 600;
+}
+
+/* Collapsed, every line is one lh high and nothing has a margin, so the cut
+   falls between lines and not through one. Open, the block spacing returns. */
+.wies-long-text--collapsed .wies-long-text__body nldd-rich-text {
+  /* Its own block gap and line height would put lines off the lh grid. */
+  --_spacing: 0;
+  line-height: inherit;
+}
+
+.wies-long-text--collapsed
+  .wies-long-text__body
+  :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote) {
+  margin: 0;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 /* The contract hours in the colleague panel: one line, the parts spaced like
@@ -304,7 +336,7 @@ a > nldd-icon:last-child {
   align-items: center;
   gap: var(--primitives-space-12, 12px);
   margin: 0;
-  font: var(--primitives-font-body-sm-regular-snug);
+  font: var(--primitives-font-body-sm-regular-flat);
 }
 
 /* A name that opens the colleague panel, on a row that already has a menu:
@@ -320,64 +352,70 @@ a > nldd-icon:last-child {
   text-decoration: underline;
 }
 
-/* An opdracht card on a colleague panel or profile: compact until opened.
-   The card is ours to lay out inside; the component gives no header slot with
-   a control at the end. */
-.wies-card__head {
+/* A colleague's opdrachten: one box-tinted label/value list per opdracht, the
+   same pattern the opdracht panel uses for its own details. */
+.wies-cv {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The chips sit in a supporting-text slot, which is a plain line of text. */
+.wies-cv__chips {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: var(--primitives-space-8, 8px);
 }
 
-/* The toggle sits above nldd-card's own surface, like the privacy chip. */
-.wies-card__toggle,
-.wies-card__link {
-  position: relative;
-  z-index: 1;
+/* Three lines, then it cuts: the clamp is the signal that the text goes on,
+   which a single ellipsised line ending in a full stop was not. */
+.wies-cv__preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  margin: 0;
+  overflow: hidden;
 }
 
-/* A long client name wraps to a second line; the row gap stays small so the
-   line still reads as one. */
-.wies-card__meta {
-  margin-top: var(--primitives-space-8, 8px);
-  row-gap: var(--primitives-space-4, 4px);
-  font: var(--primitives-font-body-sm-regular-snug);
+.wies-cv__more:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
 }
 
-/* The description lines of a card, closed (one line, ellipsis) and open (the
-   full text), in the size of the date and client lines above them.
-   :not([hidden]): a display from the stylesheet would beat the hidden
-   attribute the toggle sets. */
-.wies-card__preview:not([hidden]),
+.wies-cv__role-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
+}
+
+/* Names which role a description belongs to, when there are several. */
+.wies-cv__role-label {
+  margin: 0;
+  color: var(--semantics-content-secondary-color, #64748b);
+  font: var(--primitives-font-body-xs-regular-flat);
+}
+
 .wies-role-description {
   display: block;
-  margin: var(--primitives-space-4, 4px) 0 0;
-  font: var(--primitives-font-body-sm-regular-snug);
+  margin: 0;
 }
 
-.wies-card__preview-text {
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
+/* The description is plain text here; pre-wrap keeps its line breaks. */
 .wies-role-description__text {
   white-space: pre-wrap;
 }
 
-.wies-card__more:not([hidden]) {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--primitives-space-8, 8px);
-}
-
-.wies-card__role {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-4, 4px);
+/* Aligned with the text above it: nldd-button carries its own side padding. */
+.wies-cv__toggle {
+  align-self: flex-start;
+  margin-top: var(--primitives-space-4, 4px);
+  margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
 /* A Van/Naar value below a timeline sentence, as its own block so long text does

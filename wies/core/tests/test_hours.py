@@ -947,12 +947,12 @@ class ServiceHoursPermissionTest(TestCase):
             f"?opdracht={assignment.public_id}&collega={self.colleague.public_id}&teamlid={self.service.public_id}"
         )
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "Mijn omschrijving wijzigen" in body
+        assert "Mijn taken wijzigen" in body
         assert edit_link in body
         other = _consultant("Ander", "ander@x.nl")
         client.force_login(other.user)
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "Omschrijving wijzigen" not in body
+        assert "Taken wijzigen" not in body
 
     def test_an_hours_only_edit_leaves_no_trace_on_the_timeline(self):
         # No history is kept of a role's hours (agreed with Patrick, 13 July 2026).

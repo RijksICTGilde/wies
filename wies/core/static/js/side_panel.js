@@ -20,7 +20,13 @@
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
   // Mirrors PANEL_PARAMS in views.py minus 'pagina', which belongs to the list.
-  const PANEL_PARAMS = ["collega", "opdracht", "plaatsing", "nieuwe-opdracht"];
+  const PANEL_PARAMS = [
+    "collega",
+    "opdracht",
+    "aanvraag",
+    "plaatsing",
+    "nieuwe-opdracht",
+  ];
 
   function hasPanelParam(url) {
     return PANEL_PARAMS.some((name) => url.searchParams.has(name));
@@ -138,62 +144,6 @@
     }
   }
 
-  // The nearest ancestor in the flat tree that actually scrolls. Slotted
-  // content's scroller sits inside nldd-page's shadow root, reached through
-  // the slot; the host above it has overflow:auto too, and scrollIntoView
-  // would shift both, leaving the host offset where the wheel cannot reach.
-  function scrollParent(el) {
-    let node = el;
-    while (node) {
-      node =
-        node.assignedSlot ||
-        node.parentElement ||
-        (node.getRootNode() instanceof ShadowRoot
-          ? node.getRootNode().host
-          : null);
-      if (!node || node === document.documentElement) return null;
-      const style = getComputedStyle(node);
-      if (
-        /(auto|scroll)/.test(style.overflowY) &&
-        node.scrollHeight > node.clientHeight
-      ) {
-        return node;
-      }
-    }
-    return null;
-  }
-
-  // The team rows of the colleague you came in on (?collega=) sit below the
-  // opdracht details, so a link straight to them scrolls the first one into
-  // view once the list item has rendered. Centred, so the rows around it
-  // give context; no animation for who asked for none.
-  function revealHighlightedRow() {
-    const content = document.getElementById(CONTENT_ID);
-    const row = content && content.querySelector(".wies-team-row--highlighted");
-    if (!row) return;
-    const reduce =
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    customElements
-      .whenDefined("nldd-list-item")
-      .then(() => row.updateComplete)
-      .then(() => {
-        const scroller = scrollParent(row);
-        if (!scroller) return;
-        const offset =
-          row.getBoundingClientRect().top -
-          scroller.getBoundingClientRect().top;
-        const top =
-          scroller.scrollTop +
-          offset -
-          (scroller.clientHeight - row.offsetHeight) / 2;
-        scroller.scrollTo({
-          top: Math.max(0, top),
-          behavior: reduce ? "auto" : "smooth",
-        });
-      });
-  }
-
   // Reserve the scrollbar's width inside the panel. With sticky-header the
   // scroller is a div in nldd-page's shadow root, out of reach of app.css, and
   // the component sets no scrollbar-gutter itself; without it "Toon meer"
@@ -225,8 +175,7 @@
         customElements
           .whenDefined("nldd-sheet")
           .then(() => sheet.updateComplete)
-          .then(() => openSheet())
-          .then(revealHighlightedRow);
+          .then(() => openSheet());
       }
       syncPanelBackButton();
     }
@@ -405,7 +354,6 @@
 
     const sheet = getSheet();
     if (sheet && !isSheetOpen(sheet)) openSheet();
-    revealHighlightedRow();
 
     if (_skipNextPush) {
       _skipNextPush = false;

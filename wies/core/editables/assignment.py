@@ -177,7 +177,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
     ``historical`` with a label and privacy note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
-    description of their own role from the team list ("Omschrijving wijzigen"
+    description of their own role from the team list ("Taken wijzigen"
     in the row menu). The hours are not theirs to keep: those
     follow the assignment's edit rights, like the role itself.
 

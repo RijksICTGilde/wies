@@ -168,6 +168,7 @@ PANEL_PARAMS = (
     "pagina",
     "collega",
     "opdracht",
+    "aanvraag",
     "plaatsing",
     "bewerken",
     "teamlid",
@@ -302,7 +303,7 @@ def _build_assignment_panel_data(assignment, request, *, highlight=None, child_s
 
 
 def _build_own_role_panel_data(request, team_rows):
-    """The "Omschrijving wijzigen" sheet for a placed consultant's own row
+    """The "Taken wijzigen" sheet for a placed consultant's own row
     (``?teamlid=`` without team edit rights), or None when the row is not theirs."""
     teamlid = request.GET.get("teamlid", "")
     row = next((r for r in team_rows if r["service_public_id"] == teamlid and r.get("can_edit_role")), None)
@@ -542,6 +543,31 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
+def _build_service_panel_data(service, request):
+    """Builds the aanvraag panel: the read view of one open role on an opdracht.
+
+    A team row for a placement opens that colleague's panel; an aanvraag has no
+    colleague, so it opens this one. An aanvraag is a vacancy and
+    ``visible_service_rows`` shows it to everyone who may see the opdracht, so
+    the panel inherits the opdracht's visibility and adds no rule of its own.
+    """
+    # Deferred like the other panel builders: wies.core.editables imports from
+    # views at module level, so a top-level import here is circular.
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+
+    assignment = service.assignment
+    return {
+        "panel_content_template": "parts/service_panel_content.html",
+        "panel_title": f"Aanvraag: {service.skill.name}" if service.skill else "Aanvraag",
+        "close_url": _build_close_url(request),
+        "service": service,
+        "assignment": assignment,
+        "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
+        "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
+        "edit_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid=service.public_id),
+    }
+
+
 def _resolve_placement_alias(request, public_id):
     """Resolves an old ``?plaatsing=`` link to its placement, if the viewer may see it.
 
@@ -700,11 +726,17 @@ def bezetting(request):
     placement_id = request.GET.get("plaatsing")
     assignment_id = request.GET.get("opdracht")
     colleague_id = request.GET.get("collega")
+    service_id = request.GET.get("aanvraag")
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
     panel_data = _assignment_create_panel(request)
     if panel_data is None and placement_id:
         panel_data = _placement_alias_panel(request, placement_id)
+    elif panel_data is None and service_id:
+        # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
+        service = _resolve_panel_object(request, Service, service_id, select_related=("assignment", "skill"))
+        if service is not None:
+            panel_data = _build_service_panel_data(service, request)
     elif panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
@@ -1664,11 +1696,16 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
+        service_id = self.request.GET.get("aanvraag")
 
         if placement_id:
             panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
+        elif service_id:
+            service = _resolve_panel_object(self.request, Service, service_id, select_related=("assignment", "skill"))
+            if service is not None:
+                context["panel_data"] = _build_service_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
             colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
@@ -1913,6 +1950,12 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
+        elif self.request.GET.get("aanvraag"):
+            service = _resolve_panel_object(
+                self.request, Service, self.request.GET["aanvraag"], select_related=("assignment", "skill")
+            )
+            if service is not None:
+                context["panel_data"] = _build_service_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
             colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
@@ -3470,6 +3513,12 @@ def user_profile(request):
 
     if placement_id:
         panel_data = _placement_alias_panel(request, placement_id)
+    elif request.GET.get("aanvraag"):
+        service = _resolve_panel_object(
+            request, Service, request.GET["aanvraag"], select_related=("assignment", "skill")
+        )
+        if service is not None:
+            panel_data = _build_service_panel_data(service, request)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
@@ -4459,7 +4508,7 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
 def placement_edit_view(request, public_id):
     """Saves the combined edit form of the placement child sheet.
 
-    Reached from the UI only by a placed consultant ("Omschrijving wijzigen",
+    Reached from the UI only by a placed consultant ("Taken wijzigen",
     ``?veld=skill``); the role, hours and period branches stay for a business
     manager's POST, whose sheet is "Teamlid wijzigen" now.
 
@@ -4523,7 +4572,7 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     # A placed consultant keeps only the description of their role; the role
     # itself is read-only in the sheet, so the title says what they can change.
     if only == "skill":
-        heading = "Rol wijzigen" if "skill" in form.fields else "Omschrijving wijzigen"
+        heading = "Rol wijzigen" if "skill" in form.fields else "Taken wijzigen"
     else:
         heading = "Teamlid bewerken"
     return {
