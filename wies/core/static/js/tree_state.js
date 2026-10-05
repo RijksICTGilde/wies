@@ -72,24 +72,9 @@ TreeState.prototype.check = function (nodeId) {
   // orgs beneath it, so the folder ticks but does not read as "selected".
   if (this.groupSelectsChildren && node.group) {
     this.explicitSelections.delete(node.id);
-    this._selectConcreteDescendants(node);
+    this._promoteCheckedChildren(node);
   }
   this._promoteAncestors(node);
-};
-
-// Put the explicit selection on the concrete (non-group) checked orgs under a
-// node, descending THROUGH nested groups. Used when a virtual folder is ticked.
-TreeState.prototype._selectConcreteDescendants = function (node) {
-  for (var i = 0; i < node.children.length; i++) {
-    var child = node.children[i];
-    if (child.group) {
-      this._selectConcreteDescendants(child);
-    } else if (child.checked && !child.indeterminate) {
-      this.explicitSelections.set(child.id, this._getLabel(child));
-    } else if (child.indeterminate) {
-      this._selectConcreteDescendants(child);
-    }
-  }
 };
 
 TreeState.prototype.uncheck = function (nodeId) {
@@ -208,10 +193,15 @@ TreeState.prototype._cascadeUp = function (startNode) {
   }
 };
 
+// Hand a node's selection down to its checked children. With
+// groupSelectsChildren a virtual folder is never a selection itself, so the
+// selection passes through it to the concrete orgs it holds.
 TreeState.prototype._promoteCheckedChildren = function (node) {
   for (var i = 0; i < node.children.length; i++) {
     var child = node.children[i];
-    if (child.checked && !child.indeterminate) {
+    if (this.groupSelectsChildren && child.group) {
+      this._promoteCheckedChildren(child);
+    } else if (child.checked && !child.indeterminate) {
       this.explicitSelections.set(child.id, this._getLabel(child));
     } else if (child.indeterminate) {
       this._promoteCheckedChildren(child);

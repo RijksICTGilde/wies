@@ -534,3 +534,55 @@ describe("groupSelectsChildren (assignment picker: virtual folders)", function (
     assert.ok(!ts.explicitSelections.has("group-Ag"));
   });
 });
+
+describe("unticking a child of a selected parent that holds a virtual folder", function () {
+  // BZ(org) > Adviescolleges van BZ(group) > AIV, CAVV ; Bestuur(org) ; DGES(org)
+  function ministryTree() {
+    return [
+      {
+        id: "bz",
+        label: "BZ",
+        children: [
+          {
+            id: "group-bz-Adviescollege",
+            label: "Adviescolleges van BZ",
+            group: true,
+            nested: true,
+            children: [
+              { id: "aiv", label: "AIV" },
+              { id: "cavv", label: "CAVV" },
+            ],
+          },
+          { id: "bestuur", label: "Bestuur" },
+          { id: "dges", label: "DGES" },
+        ],
+      },
+    ];
+  }
+
+  it("assignment picker: the folder's orgs become the selection, not the folder", function () {
+    var ts = new TreeState(ministryTree(), {
+      collapseToParent: false,
+      groupSelectsChildren: true,
+    });
+    ts.check("bz");
+    ts.uncheck("bestuur");
+    assert.deepEqual(Array.from(ts.explicitSelections.keys()).sort(), [
+      "aiv",
+      "cavv",
+      "dges",
+    ]);
+    assert.equal(ts.getNode("group-bz-Adviescollege").checked, true);
+    assert.equal(ts.getNode("bz").indeterminate, true);
+  });
+
+  it("filter picker: the folder itself stays the selection", function () {
+    var ts = new TreeState(ministryTree(), { collapseToParent: false });
+    ts.check("bz");
+    ts.uncheck("bestuur");
+    assert.deepEqual(Array.from(ts.explicitSelections.keys()).sort(), [
+      "dges",
+      "group-bz-Adviescollege",
+    ]);
+  });
+});
