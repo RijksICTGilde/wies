@@ -13,64 +13,61 @@
      {% with %} binding and does not count reliably. #}
   {% set only_one = assignments|list|length == 1 %}
   <ul class="wies-cv">
-  {% for assignment in assignments %}
-    {# A placement carries dates; the "Business Manager" tag does not. #}
-    {% set roles = assignment.tags|selectattr("start", "defined")|list %}
-    {% set described = roles|selectattr("description")|list %}
-    {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
-    {# Nothing behind the fold: no toggle. The preview runs every role's text
+    {% for assignment in assignments %}
+      {# A placement carries dates; the "Business Manager" tag does not. #}
+      {% set roles = assignment.tags|selectattr("start", "defined")|list %}
+      {% set described = roles|selectattr("description")|list %}
+      {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
+      {# Nothing behind the fold: no toggle. The preview runs every role's text
        together, so what has to fit is that whole string, not the first role's
        alone -- two short roles fit the three clamped lines just as well as one
        long one. Roughly 90 characters a line in this panel; the browser
        measures for real afterwards (uncollapseWhatFits in inline_edit.js). #}
-    {% set all_text = described|map(attribute="description")|join(" ") %}
-    {% set fits = all_text|length <= 240 %}
-    {% set has_more = described and not fits %}
-    {# One opdracht: show it open. There is room in the panel, and with a single
+      {% set all_text = described|map(attribute="description")|join(" ") %}
+      {% set fits = all_text|length <= 240 %}
+      {% set has_more = described and not fits %}
+      {# One opdracht: show it open. There is room in the panel, and with a single
        entry a collapsed description reads as if the list itself were cut off. #}
-    {% set open = has_more and (assignment.expanded or only_one) %}
-    <li class="wies-cv__item">
-    <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
-      {# The opdracht is what this entry is about, so it heads the block rather
+      {% set open = has_more and (assignment.expanded or only_one) %}
+      <li class="wies-cv__item">
+        <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
+        {# The opdracht is what this entry is about, so it heads the block rather
          than sitting in a labelled row between the details. The whole row is
          the link, with the chevron saying so; it holds nothing else
          interactive, so nothing competes with it. The toggle below lives in
          its own row. hx_link_guard.js cancels the anchor so htmx fills the
          panel. #}
-      <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
-      <nldd-title-cell size="5" text="{{ assignment.name }}"
-        {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
-      <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
-      </nldd-list-item>
-      {% if role_names %}
-        <nldd-list-item>
-        {# "Business Manager" is an ownership tag, not a role filled on the
-           opdracht; it reads as "Rol" only because it shares the tag list. #}
-        <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
-        <nldd-spacer-cell size="8"></nldd-spacer-cell>
-        <nldd-text-cell vertical-alignment="top"
-          text="{{ role_names[:3]|join(', ') }}{% if role_names|length > 3 %} +{{ role_names|length - 3 }}{% endif %}"
-          {% if roles|length == 1 and roles[0].hours %}supporting-text="{{ roles[0].hours }} uur per week"{% endif %}></nldd-text-cell>
+        <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
+        <nldd-title-cell size="5" text="{{ assignment.name }}" {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
+        <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
         </nldd-list-item>
-      {% endif %}
-      <nldd-list-item>
-      <nldd-text-cell width="120px" text="Periode" vertical-alignment="top"></nldd-text-cell>
-      <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      {# Month and year, as a cv dates its jobs; the exact day stays in the
-         title attribute. #}
-      <nldd-text-cell vertical-alignment="top">
-        <span{% if assignment.start_date or assignment.end_date %} title="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}{% else %}t/m {{ assignment.end_date|datum_nl }}{% endif %}"{% endif %}>
-          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl('b Y') }} – {{ assignment.end_date|datum_nl('b Y') }}
-          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl('b Y') }}
-          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl('b Y') }}
-          {%- else %}Geen periode{% endif -%}
-        </span>
-        {% if assignment.period_label or assignment.privacy_warning_text %}
-          <span slot="supporting-text" class="wies-cv__chips">
-            {% if assignment.period_label %}<nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>{% endif %}
-            {% if assignment.privacy_warning_text %}{{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif %}
-          </span>
+        {% if role_names %}
+          <nldd-list-item>
+          {# "Business Manager" is an ownership tag, not a role filled on the
+           opdracht; it reads as "Rol" only because it shares the tag list. #}
+          <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-text-cell vertical-alignment="top" text="{{ role_names[:3]|join(', ') }}{% if role_names|length > 3 %} +{{ role_names|length - 3 }}{% endif %}" {% if roles|length == 1 and roles[0].hours %}supporting-text="{{ roles[0].hours }} uur per week"{% endif %}></nldd-text-cell>
+          </nldd-list-item>
         {% endif %}
+        <nldd-list-item>
+        <nldd-text-cell width="120px" text="Periode" vertical-alignment="top"></nldd-text-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        {# Month and year, as a cv dates its jobs; the exact day stays in the
+         title attribute. #}
+        <nldd-text-cell vertical-alignment="top">
+        <span{% if assignment.start_date or assignment.end_date %} title="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}{% else %}t/m {{ assignment.end_date|datum_nl }}{% endif %}"{% endif %}>
+          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} – {{ assignment.end_date|datum_nl("b Y") }}
+          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
+          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
+    {%- else %}Geen periode{% endif -%}
+      </span>
+      {% if assignment.period_label or assignment.privacy_warning_text %}
+        <span slot="supporting-text" class="wies-cv__chips">
+          {% if assignment.period_label %}<nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>{% endif %}
+          {% if assignment.privacy_warning_text %}{{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif %}
+        </span>
+      {% endif %}
       </nldd-text-cell>
       </nldd-list-item>
       {% if described %}
@@ -78,32 +75,32 @@
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="top">
-          {# Closed, every role's text runs together, clamped to three lines, so
+        {# Closed, every role's text runs together, clamped to three lines, so
              what is cut off is visibly cut off and "Toon meer" names what it
              reveals. Showing only the first role's text left the preview
              ending on a full stop with a button under it that seemed to do
              nothing. Open, the per-role blocks below take over. #}
-          <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described|map(attribute="description")|join(" ") }}</p>
-          {% if has_more %}
-            <div class="wies-cv__more"{% if not open %} hidden{% endif %}>
-              {% for role in roles %}
-                {% if role.description %}
-                  <div class="wies-cv__role-block">
-                    {# With several roles each description says which one it is. #}
-                    {% if roles|length > 1 %}<p class="wies-cv__role-label">{{ role.skill }}</p>{% endif %}
-                    <div class="wies-role-description"><span class="wies-role-description__text">{{ role.description }}</span></div>
-                  </div>
-                {% endif %}
-              {% endfor %}
-            </div>
-            <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} data-action="toggle-card"></nldd-button>
-          {% endif %}
+        <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described|map(attribute="description") |join(" ") }}</p>
+        {% if has_more %}
+          <div class="wies-cv__more"{% if not open %} hidden{% endif %}>
+            {% for role in roles %}
+              {% if role.description %}
+                <div class="wies-cv__role-block">
+                  {# With several roles each description says which one it is. #}
+                  {% if roles|length > 1 %}<p class="wies-cv__role-label">{{ role.skill }}</p>{% endif %}
+                  <div class="wies-role-description"><span class="wies-role-description__text">{{ role.description }}</span></div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+          <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} data-action="toggle-card"></nldd-button>
+        {% endif %}
         </nldd-text-cell>
         </nldd-list-item>
       {% endif %}
-    </nldd-list>
-    </li>
-  {% endfor %}
+      </nldd-list>
+      </li>
+    {% endfor %}
   </ul>
 {% else %}
   <nldd-inline-dialog icon="business-suitcase" text="Geen opdrachten" supporting-text="Er staan nog geen opdrachten op deze naam."></nldd-inline-dialog>

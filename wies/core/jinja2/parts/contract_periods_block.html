@@ -29,38 +29,38 @@
       <p class="wies-contract-line wies-text-secondary">{{ contract_block.empty_text }}</p>
     {% endfor %}
   {% else %}
-  <nldd-title size="5">
-  <h3>Contracturen</h3>
-  </nldd-title>
-  <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-  {% if periods %}
-    {# Newest first, as the model orders them; a running period has no end. The
+    <nldd-title size="5">
+    <h3>Contracturen</h3>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    {% if periods %}
+      {# Newest first, as the model orders them; a running period has no end. The
        panel gets only the running and coming periods, the sheet all of them. #}
-    <nldd-list dividers="always" accessible-label="Contractperioden">
-    {% for period in periods %}
-      <nldd-list-item size="sm">
-      <nldd-text-cell text="{{ period.hours_per_week }} uur">
-      <span slot="supporting-text">{{ period_dates(period) }}</span>
-      </nldd-text-cell>
-      {% if contract_block.can_edit %}
-        <nldd-cell>
-        <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Wijzigen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} wijzigen" hx-get="{{ url('contract-period-edit', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
-        </nldd-cell>
-        <nldd-cell>
-        <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-get="{{ url('contract-period-delete', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
-        </nldd-cell>
-      {% endif %}
-      </nldd-list-item>
-    {% endfor %}
-    </nldd-list>
-  {% else %}
-    <nldd-rich-text>
-    <p>{{ contract_block.empty_text }}</p>
-    </nldd-rich-text>
-  {% endif %}
-  {% if contract_block.can_edit %}
-    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    <nldd-button size="sm" start-icon="plus" text="Contractperiode toevoegen" hx-get="{{ contract_block.add_url }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
-  {% endif %}
+      <nldd-list dividers="always" accessible-label="Contractperioden">
+      {% for period in periods %}
+        <nldd-list-item size="sm">
+        <nldd-text-cell text="{{ period.hours_per_week }} uur">
+        <span slot="supporting-text">{{ period_dates(period) }}</span>
+        </nldd-text-cell>
+        {% if contract_block.can_edit %}
+          <nldd-cell>
+          <nldd-button size="sm" variant="neutral-transparent" start-icon="pencil" text="Wijzigen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} wijzigen" hx-get="{{ url('contract-period-edit', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+          </nldd-cell>
+          <nldd-cell>
+          <nldd-button size="sm" variant="neutral-transparent" start-icon="delete" text="Verwijderen" accessible-label="Contractperiode vanaf {{ period.start_date|datum_nl }} verwijderen" hx-get="{{ url('contract-period-delete', args=[period.public_id]) }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+          </nldd-cell>
+        {% endif %}
+        </nldd-list-item>
+      {% endfor %}
+      </nldd-list>
+    {% else %}
+      <nldd-rich-text>
+      <p>{{ contract_block.empty_text }}</p>
+      </nldd-rich-text>
+    {% endif %}
+    {% if contract_block.can_edit %}
+      <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+      <nldd-button size="sm" start-icon="plus" text="Contractperiode toevoegen" hx-get="{{ contract_block.add_url }}" hx-target="#contractPeriodMount" hx-swap="innerHTML"></nldd-button>
+    {% endif %}
   {% endif %}
 </div>
