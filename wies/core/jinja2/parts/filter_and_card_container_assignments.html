@@ -49,11 +49,12 @@
      hides every card past that (and the "Meer tonen" cell with them). Wies
      paginates server-side and appends via its own button, so the built-in limit
      has to be lifted -- the component can't know our pages accumulate. #}
-  <nldd-collection id="assignment-card-grid" layout="grid" max-items="9999" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {# data-announce: live_region.js reads this out after a filter change. #}
+  <nldd-collection id="assignment-card-grid" layout="grid" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdracht' if paginator.count == 1 else 'opdrachten' }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}
   </nldd-collection>
 {% else %}
-  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen opdrachten gevonden" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the

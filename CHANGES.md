@@ -14,6 +14,15 @@ This files lists the changes during the lifetime of this project.
 - 693: the contract hours in the colleague panel are one line under the labels instead of a section with a heading
 - 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
 - 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
+- 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
+- 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
+- 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
+- 673: the notification after editing something says "is aangepast" instead of "is opgeslagen", so it reads differently from adding ("is toegevoegd") and deleting ("is verwijderd")
+- 673: the notification after creating an opdracht no longer carries a "Bekijk opdracht" button: the opdracht's panel opens by itself
+- 673: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
+- 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
+- 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
+- ?
 
 ## 2026-09-24
 

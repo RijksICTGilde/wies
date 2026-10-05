@@ -42,7 +42,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# The empty state belongs to the list, which knows when nothing is left; a
      separate line above showed two at once. #}
-  <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties" empty-text="Geen opdrachtgevers gevonden">
+  <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties">
   {% for type_name, units in type_groups %}
     <nldd-list-item button expanded data-label="{{ type_name|lower }}" data-org-group>
     <nldd-icon-cell disclosure size="20">

@@ -1,6 +1,13 @@
 {# The read view of one aanvraag (an open role on an opdracht). A team row for
    a placement opens that colleague's panel; an aanvraag has no colleague, so
    it opens this. Same box-tinted label/value list as the opdracht panel. #}
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap. Only under htmx: a full page load already renders them in base.html. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 {% if not panel_data %}
   {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Aanvraag" dismiss-text="Sluit"></nldd-top-title-bar>

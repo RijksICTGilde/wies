@@ -29,27 +29,6 @@ from wies.core.services.version import get_app_version, get_nldd_version
 from wies.core.visibility_rules import show_bm_page, show_staff_pages
 
 
-def parse_message_link(extra_tags: str) -> dict | None:
-    """Parse a structured link from message extra_tags.
-
-    Format: "link:<url>|<text>"
-    Returns {"url": ..., "text": ...} or None.
-    """
-    if not extra_tags:
-        return None
-    # extra_tags bevat alleen deze link-tag (het level, bv. "success", zit in
-    # message.tags). Niet op witruimte splitsen: de linktekst mag spaties bevatten
-    # ("Bekijk opdracht"), en een split() kapte die af tot "Bekijk".
-    prefix = "link:"
-    start = extra_tags.find(prefix)
-    if start == -1:
-        return None
-    url, sep, text = extra_tags[start + len(prefix) :].partition("|")
-    if sep:
-        return {"url": url, "text": text}
-    return None
-
-
 def datum_nl(datum, fmt="j b Y"):
     """THE date display for Wies, via Django's nl-nl localization.
 
@@ -232,6 +211,5 @@ def environment(**options):
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
-    env.filters["parse_message_link"] = parse_message_link
 
     return env
