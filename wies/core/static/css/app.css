@@ -373,7 +373,9 @@ a > nldd-icon:last-child {
 
 /* Three lines, then it cuts: the clamp is the signal that the text goes on,
    which a single ellipsised line ending in a full stop was not. */
-.wies-cv__preview {
+/* :not([hidden]): a display from the stylesheet beats the hidden attribute the
+   toggle sets, so an open entry would show the preview above its own text. */
+.wies-cv__preview:not([hidden]) {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;

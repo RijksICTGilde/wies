@@ -18,18 +18,34 @@
     {% set roles = assignment.tags|selectattr("start", "defined")|list %}
     {% set described = roles|selectattr("description")|list %}
     {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
-    {# Nothing behind the fold: no toggle. That is a BM-only entry, a role
-       without description, or one short enough to fit the three clamped
-       preview lines whole (roughly 90 characters a line in this panel). #}
-    {% set fits = described|length == 1 and roles|length == 1 and described[0].description|length <= 240 %}
-    {% set has_more = (described or roles|length > 1) and not fits %}
+    {# Nothing behind the fold: no toggle. The preview runs every role's text
+       together, so what has to fit is that whole string, not the first role's
+       alone -- two short roles fit the three clamped lines just as well as one
+       long one. Roughly 90 characters a line in this panel; the browser
+       measures for real afterwards (uncollapseWhatFits in inline_edit.js). #}
+    {% set all_text = described|map(attribute="description")|join(" ") %}
+    {% set fits = all_text|length <= 240 %}
+    {% set has_more = described and not fits %}
     {# One opdracht: show it open. There is room in the panel, and with a single
        entry a collapsed description reads as if the list itself were cut off. #}
     {% set open = has_more and (assignment.expanded or only_one) %}
     <li class="wies-cv__item">
     <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
+      {# The opdracht is what this entry is about, so it heads the block rather
+         than sitting in a labelled row between the details. The whole row is
+         the link, with the chevron saying so; it holds nothing else
+         interactive, so nothing competes with it. The toggle below lives in
+         its own row. hx_link_guard.js cancels the anchor so htmx fills the
+         panel. #}
+      <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
+      <nldd-title-cell size="5" text="{{ assignment.name }}"
+        {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
+      <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
+      </nldd-list-item>
       {% if role_names %}
         <nldd-list-item>
+        {# "Business Manager" is an ownership tag, not a role filled on the
+           opdracht; it reads as "Rol" only because it shares the tag list. #}
         <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="top"
@@ -37,17 +53,6 @@
           {% if roles|length == 1 and roles[0].hours %}supporting-text="{{ roles[0].hours }} uur per week"{% endif %}></nldd-text-cell>
         </nldd-list-item>
       {% endif %}
-      {# The whole row is the link to the opdracht, with the chevron saying so;
-         the row holds nothing else interactive, so nothing competes with it.
-         The toggle below lives in its own row. hx_link_guard.js cancels the
-         anchor so htmx fills the panel. #}
-      <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
-      <nldd-text-cell width="120px" text="Opdracht" vertical-alignment="top"></nldd-text-cell>
-      <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell vertical-alignment="top" text="{{ assignment.name }}"
-        {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-text-cell>
-      <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
-      </nldd-list-item>
       <nldd-list-item>
       <nldd-text-cell width="120px" text="Periode" vertical-alignment="top"></nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -73,10 +78,12 @@
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="top">
-          {# Closed, the description as plain text clamped to three lines, so a
-             longer one visibly runs out mid-sentence and "Toon meer" reads as
-             what it is. Open, the full rendered text below takes over. #}
-          <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described[0].description }}</p>
+          {# Closed, every role's text runs together, clamped to three lines, so
+             what is cut off is visibly cut off and "Toon meer" names what it
+             reveals. Showing only the first role's text left the preview
+             ending on a full stop with a button under it that seemed to do
+             nothing. Open, the per-role blocks below take over. #}
+          <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described|map(attribute="description")|join(" ") }}</p>
           {% if has_more %}
             <div class="wies-cv__more"{% if not open %} hidden{% endif %}>
               {% for role in roles %}

@@ -5,8 +5,9 @@ sheet at one width."""
 import re
 from datetime import timedelta
 
+from django.conf import settings
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
@@ -174,6 +175,54 @@ class AssignmentPanelHighlightTest(TestCase):
         entry = closed.split('<li class="wies-cv__item">')[1]
         assert entry.count("nldd-list-item class=") == 1
 
+    def test_an_open_entry_marks_its_preview_hidden(self):
+        """Open, the preview must not stand above the block that repeats it.
+
+        This checks the markup; the stylesheet has to cooperate too, because a
+        `display` there beats the hidden attribute — hence the
+        `:not([hidden])` on .wies-cv__preview, which the CSS test below pins.
+        """
+        other = Skill.objects.create(name="Arch")
+        service = Service.objects.create(
+            assignment=self.assignment, description="Tekst van de tweede rol. " * 8, skill=other, source="wies"
+        )
+        today = timezone.now().date()
+        Placement.objects.create(
+            colleague=self.anke,
+            service=service,
+            period_source=Placement.PLACEMENT,
+            specific_start_date=today - timedelta(days=10),
+            specific_end_date=today + timedelta(days=100),
+            source="wies",
+        )
+        Service.objects.filter(placements__colleague=self.anke, skill=self.skill).update(
+            description="Tekst van de eerste rol. " * 8
+        )
+        headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+        panel = reverse("home") + f"?collega={self.anke.public_id}"
+
+        opened = self.client.get(panel + f"&uitgeklapt={self.assignment.public_id}", headers=headers).content.decode()
+
+        # Scoped to this opdracht's own entry: the panel lists others too.
+        entry = next(
+            item for item in opened.split('<li class="wies-cv__item">')[1:] if "Tekst van de eerste rol." in item
+        )
+        # The preview carries hidden, so it does not stand above the block that
+        # repeats it; each role's text is visible exactly once.
+        preview = re.search(r'<p class="wies-cv__preview"([^>]*)>', entry)
+        assert preview is not None
+        assert "hidden" in preview.group(1)
+        # Each role's text appears in its own block; the one the preview
+        # repeats appears twice, but that copy carries hidden.
+        assert '<p class="wies-cv__role-label">Arch</p>' in entry
+        assert '<p class="wies-cv__role-label">Dev</p>' in entry
+        # The preview runs both texts together; the blocks below carry them
+        # once each, under their own role heading.
+        preview_text = re.search(r'<p class="wies-cv__preview" hidden>([^<]*)</p>', entry).group(1)
+        assert "Tekst van de eerste rol." in preview_text
+        assert "Tekst van de tweede rol." in preview_text
+        assert entry.count('<div class="wies-cv__role-block">') == 2
+
     def test_a_lone_opdracht_opens_its_description_without_asking(self):
         """One entry fills the panel on its own, and a collapsed description
         there reads as if the list itself were cut off."""
@@ -187,6 +236,19 @@ class AssignmentPanelHighlightTest(TestCase):
         assert '<div class="wies-cv__more">' in body
         assert '<p class="wies-cv__preview" hidden>' in body
         assert "Toon minder" in body
+
+
+class CvPreviewStylesheetTest(SimpleTestCase):
+    """A `display` in the stylesheet beats the `hidden` attribute, so the rule
+    that clamps the preview has to exclude hidden ones. Without it an open
+    entry showed its first role's text twice, and no template test catches
+    that: the markup is right, the stylesheet overrides it."""
+
+    def test_the_preview_rule_does_not_override_hidden(self):
+        css = (settings.BASE_DIR / "wies" / "core" / "static" / "css" / "app.css").read_text()
+        rule = next(line for line in css.splitlines() if line.startswith(".wies-cv__preview"))
+
+        assert rule.startswith(".wies-cv__preview:not([hidden])"), rule
 
 
 class SidePanelSheetTest(TestCase):
