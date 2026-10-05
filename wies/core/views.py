@@ -149,6 +149,8 @@ User = get_user_model()
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
 
 # Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
+# A new audit: drop the HTML next to this one, point this at it, and leave the
+# old file in place. The markdown it was built from lives in docs/toegankelijkheid/.
 CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
@@ -3646,10 +3648,10 @@ def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
 
 
-# Public because the DigiToegankelijk register links straight at this URL. The
-# redirect is what keeps that link alive: the report itself is a static file, so
-# in production its name carries a hash that changes with every new version.
-# See docs/toegankelijkheid/README.md.
+# Public because the DigiToegankelijk register links straight at this URL, and
+# that URL must never move: it sits in a public register that regulators check.
+# Hence the redirect — the report is a static file, so in production its own name
+# carries a hash that changes with every new version.
 @login_not_required
 def toegankelijkheid_onderzoek(request):
     """The WCAG audit report the toegankelijkheidsverklaring points at."""
