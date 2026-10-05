@@ -12,7 +12,7 @@ This files lists the changes during the lifetime of this project.
 - 673: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
 - 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
 - 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
-- ?
+- ?: the production image no longer ships pip, uv, git, vim, sudo, the docs and the tests
 
 ## 2026-09-24
 

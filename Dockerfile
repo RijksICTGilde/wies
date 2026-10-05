@@ -9,6 +9,9 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
+# pip is unused (uv installs into /opt/venv)
+RUN python -m pip uninstall --yes pip
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Python build stage
 #-----------------------------------------------------------------------------------------------------------------------
@@ -18,14 +21,6 @@ ENV UV_CACHE_DIR=/opt/uv-cache/
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV VIRTUAL_ENV=/opt/venv
-
-# Install git to enable installation of jrc from github
-# can be removed when jrc is on pypi
-RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
-  git \
-  # Cleaning up unused files
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
 
 # Production images exclude all dependency groups so dev/test tooling stays out
 # of the runtime image. Local dev / in-container test runs pass INSTALL_DEV=true
@@ -48,27 +43,14 @@ FROM python AS django-run
 RUN groupadd --gid 1000 app \
   && useradd --gid app --uid 1000 --shell /bin/bash --home-dir /app app
 
-# Install (required) system dependencies
-RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
-  # Devcontainer dependencies and utils
-  sudo git bash-completion vim \
-  # Cleaning up unused files
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
-
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 
-# copy uv to enable runtime including editable package during development
-COPY --from=uv /uv /bin/uv
-
 COPY --chown=app:app . /app
 RUN chown -R app:app /app
-RUN rm -rf /app/docker && \
-  rm -rf /app/.dockerignore && \
-  rm -rf /app/pyproject.toml && \
-  rm -rf /app/uv.lock && \
-  rm -rf /app/temp
+# Only needed in the build context, for the uv sync bind mounts above
+RUN rm -rf /app/pyproject.toml && \
+  rm -rf /app/uv.lock
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so

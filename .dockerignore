@@ -26,6 +26,7 @@ __pycache__
 .DS_Store
 
 # Project config (not needed in runtime)
+.dockerignore
 .claude
 .pre-commit-config.yaml
 .python-version
@@ -37,6 +38,14 @@ justfile
 README.md
 CHANGES.md
 LICENSE
+SECURITY.md
+PDR
+docs
+features
+
+# Tests (dev mounts the repo, so they are still available there)
+js_tests
+wies/*/tests
 
 # Development
 db.sqlite3
