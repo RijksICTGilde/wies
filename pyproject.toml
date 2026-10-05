@@ -8,7 +8,7 @@ dependencies = [
   "gunicorn==25.3.0",
   "Authlib==1.7.2",
   "requests==2.34.2",
-  "urllib3>=2.7.0",  # CVE-2025-66418, CVE-2025-66471
+  "urllib3>=2.8.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
   "psycopg[binary]>=3.3.4",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
