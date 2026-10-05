@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: the WCAG 2.2 audit report is published at /toegankelijkheid/onderzoek/, readable without logging in, because the toegankelijkheidsverklaring in the DigiToegankelijk register links straight at it; the Toegankelijkheid page links to it too
 - 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
 - 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
 - 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did

@@ -58,6 +58,23 @@ class AccessControlTest(TestCase):
                 assert response.status_code == 302
                 assert response.url.startswith(reverse("login"))
 
+    def test_audit_report_is_readable_without_login(self):
+        """The toegankelijkheidsverklaring in the DigiToegankelijk register links
+        straight at this URL, and the register rejects a link behind a login. It is
+        the one exception to the rule the test above states."""
+        response = self.client.get(reverse("toegankelijkheid-onderzoek"), follow=False)
+
+        assert response.status_code == 200
+        body = b"".join(response.streaming_content)
+        assert b"Toegankelijkheidsonderzoek Wies" in body
+
+    def test_accessibility_page_itself_still_requires_login(self):
+        """Only the report is public; the page that links to it is not."""
+        response = self.client.get(reverse("toegankelijkheid"), follow=False)
+
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("login"))
+
     def test_staff_page_requires_authentication(self):
         """Test that staff subpages redirect unauthenticated users"""
         for path in ("/beheer/statistieken/", "/beheer/database/"):

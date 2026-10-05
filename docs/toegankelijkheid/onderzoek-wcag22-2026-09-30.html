@@ -1,0 +1,2125 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Toegankelijkheidsonderzoek Wies</title>
+<style>
+body {
+  /* border-box: anders telt de zijpadding bij de breedte op en scrolt de pagina
+     op een smal scherm 32 px opzij (SC 1.4.10). */
+  box-sizing: border-box;
+  max-width: 60rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 6rem;
+  font-family: "RijksSans", system-ui, -apple-system, sans-serif;
+  line-height: 1.68;
+  color: var(--fg);
+  background: var(--bg);
+}
+:root {
+  --bg: #ffffff; --fg: #1a1d21; --muted: #55627a; --rule: #d6dbe3;
+  --accent: #154273; --accent-soft: #f0f4f9;
+  --pass-bg: #eef7f0; --pass-br: #2b7a3d;
+  --fail-bg: #fdf1f2; --fail-br: #a8202a;
+  --unk-bg: #fff8e6;  --unk-br: #c99400;
+  --na-bg: #f2f3f5;   --na-br: #8b95a5;
+  --explain-bg: #f7f9fc;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171c; --fg: #e6e9ee; --muted: #a4aebd; --rule: #2c333d;
+    --accent: #7cadde; --accent-soft: #1b222c;
+    --pass-bg: #16241a; --pass-br: #4e9c62;
+    --fail-bg: #2b1a1c; --fail-br: #c9646d;
+    --unk-bg: #2a2413;  --unk-br: #a98a10;
+    --na-bg: #1c2027;   --na-br: #6b7585;
+    --explain-bg: #1a1f27;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171c; --fg: #e6e9ee; --muted: #a4aebd; --rule: #2c333d;
+  --accent: #7cadde; --accent-soft: #1b222c;
+  --pass-bg: #16241a; --pass-br: #4e9c62;
+  --fail-bg: #2b1a1c; --fail-br: #c9646d;
+  --unk-bg: #2a2413;  --unk-br: #a98a10;
+  --na-bg: #1c2027;   --na-br: #6b7585;
+  --explain-bg: #1a1f27;
+}
+.cover { padding: 3.5rem 0 2.5rem; border-bottom: 4px solid var(--accent); margin-bottom: .5rem; }
+.cover h1 { font-size: 2.4rem; margin: 0 0 .3rem; letter-spacing: -0.015em; border: none; padding: 0; }
+.cover h2 { font-size: 1.15rem; font-weight: 500; color: var(--muted);
+  margin: 0 0 1.8rem; border: none; padding: 0; }
+.cover p { margin: .25rem 0; }
+h1 { font-size: 2.1rem; line-height: 1.2; }
+h2 {
+  font-size: 1.5rem; margin: 3.4rem 0 1rem; padding-top: 1.7rem;
+  border-top: 3px solid var(--accent); letter-spacing: -0.01em;
+}
+h3 { font-size: 1.18rem; margin: 2.6rem 0 .6rem; color: var(--accent); }
+h4 {
+  font-size: 1.02rem; margin: 2.2rem 0 .5rem; padding-bottom: .35rem;
+  border-bottom: 1px solid var(--rule);
+}
+p, li { font-size: .95rem; }
+a { color: var(--accent); }
+hr { border: 0; border-top: 1px solid var(--rule); margin: 2.8rem 0; }
+table { width: 100%; border-collapse: collapse; margin: 1rem 0 1.5rem; font-size: .9rem; }
+th, td { text-align: left; padding: .55rem .7rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+th { font-weight: 650; color: var(--muted); font-size: .83rem; letter-spacing: .02em; }
+tbody tr:last-child td { border-bottom: none; }
+.verdict {
+  margin: 1rem 0; padding: .8rem 1rem; border-left: 4px solid; border-radius: 0 5px 5px 0;
+  font-size: .93rem;
+}
+.verdict p:first-child { margin-top: 0; }
+.verdict p:last-child { margin-bottom: 0; }
+.verdict table { margin: .6rem 0 0; }
+.verdict.pass { background: var(--pass-bg); border-color: var(--pass-br); }
+.verdict.fail { background: var(--fail-bg); border-color: var(--fail-br); }
+.verdict.unknown { background: var(--unk-bg); border-color: var(--unk-br); }
+.verdict.na { background: var(--na-bg); border-color: var(--na-br); }
+.explain {
+  margin: 1.2rem 0 1.8rem; padding: .9rem 1.1rem;
+  background: var(--explain-bg); border: 1px solid var(--rule); border-radius: 6px;
+  font-size: .89rem;
+}
+.explain p:first-child { margin-top: 0; font-weight: 650; color: var(--muted); }
+.explain p:last-child, .explain ul:last-child { margin-bottom: 0; }
+.explain li { font-size: .89rem; }
+blockquote {
+  margin: 1.3rem 0; padding: .85rem 1.1rem;
+  background: var(--unk-bg); border-left: 4px solid var(--unk-br);
+  border-radius: 0 5px 5px 0;
+}
+blockquote p { margin: .3rem 0; font-size: .91rem; }
+pre {
+  background: var(--accent-soft); border: 1px solid var(--rule); border-radius: 6px;
+  padding: .85rem 1rem; overflow-x: auto; font-size: .84rem; line-height: 1.55;
+}
+code { font-size: .88em; }
+:not(pre) > code { background: var(--accent-soft); padding: .12em .35em; border-radius: 3px; }
+.footer-note {
+  margin-top: 3rem; padding-top: 1.2rem; border-top: 1px solid var(--rule);
+  color: var(--muted); font-size: .87rem;
+}
+@media (max-width: 640px) {
+  body { padding: 1.5rem 1rem 4rem; }
+  table { font-size: .82rem; }
+  .cover h1 { font-size: 1.8rem; }
+}
+
+/* De wrapper scrollt; hij mag zelf nooit breder worden dan de kolom waarin hij
+   staat, anders duwt de tabel de pagina opzij in plaats van binnen de wrapper te
+   scrollen (SC 1.4.10). `width: auto` laat de tabel zijn natuurlijke breedte
+   houden, zodat de kolommen niet op 320 px worden samengeperst. */
+.table-wrap { overflow-x: auto; max-width: 100%; width: 100%; }
+.table-wrap table { width: auto; min-width: 100%; margin: 1rem 0 1.5rem; }
+.table-wrap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.subtitle { font-size: 1.15rem; color: var(--muted); margin: .4rem 0 0; }
+/* Bestandspaden en selectors in lopende tekst breken niet op een spatie; zonder
+   dit duwen ze de pagina op een smal scherm opzij (SC 1.4.10). Alleen inline
+   code: een <pre> scrollt al in zijn eigen kader. */
+:not(pre) > code { overflow-wrap: anywhere; }
+/* Het codeblok scrolt al, maar zonder deze grens rekent het zijn breedte op de
+   inhoud en duwt het de pagina alsnog opzij. */
+pre { max-width: 100%; }
+</style>
+</head>
+<body>
+<main>
+<div class="cover">
+<h1 id="onderzoek-wies">Onderzoek Wies</h1>
+<h2 id="rijksorganisatie-voor-ontwikkeling-digitalisering-en-innovatie">Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie</h2>
+<p><strong>WCAG 2.2 — Niveau AA</strong></p>
+<p>Onderzoek afgerond op 30 september 2026 · versie 3.0</p>
+</div>
+<hr />
+<h2 id="inhoudsopgave">Inhoudsopgave</h2>
+<ul>
+<li><a href="#inleiding">Inleiding</a></li>
+<li><a href="#a-informatie-over-de-opdracht">A. Informatie over de opdracht</a></li>
+<li><a href="#b-informatie-over-het-onderzoek">B. Informatie over het onderzoek</a></li>
+<li><a href="#c-informatie-over-de-getoetste-applicatie">C. Informatie over de getoetste applicatie</a></li>
+<li><a href="#beoordeling-per-succescriterium">Beoordeling per succescriterium</a></li>
+<li><a href="#d-resultaten-van-het-onderzoek">D. Resultaten van het onderzoek</a></li>
+<li><a href="#principe-1-waarneembaar">Principe 1 Waarneembaar</a></li>
+<li><a href="#principe-2-bedienbaar">Principe 2 Bedienbaar</a></li>
+<li><a href="#principe-3-begrijpelijk">Principe 3 Begrijpelijk</a></li>
+<li><a href="#principe-4-robuust">Principe 4 Robuust</a></li>
+<li><a href="#bijlagen">Bijlagen</a></li>
+</ul>
+<hr />
+<h2 id="inleiding">Inleiding</h2>
+<p>Het toegankelijkheidsonderzoek naar Wies is uitgevoerd op de live versie
+(<code>main</code>) en afgerond op 30 september 2026. Alle 55 succescriteria van WCAG 2.2
+op niveau A en AA zijn beoordeeld: met geautomatiseerde toetsing, met eigen
+instrumentele metingen in drie browsers, en met de schermlezer VoiceOver. Dit
+rapport laat zien in hoeverre de applicatie op dit moment voldoet aan de
+internationaal geaccepteerde toegankelijkheidsrichtlijnen (WCAG 2.2).</p>
+<p>WCAG staat voor Web Content Accessibility Guidelines. Dit zijn de internationale
+richtlijnen voor toegankelijkheid van webcontent. De richtlijnen zijn opgedeeld in
+vier principes (Waarneembaar, Bedienbaar, Begrijpelijk en Robuust). Elke richtlijn
+is vervolgens opgedeeld in meetbare succescriteria. Omdat WCAG
+techniekonafhankelijk is opgesteld, kan hiermee de toegankelijkheid van alle
+content op het web worden onderzocht.</p>
+<p>De beschrijving van de succescriteria is in dit rapport ingekort. Volledige
+beschrijvingen zijn te vinden in de WCAG-documentatie. In het rapport geven we bij
+ieder succescriterium een algemene toelichting. Hoewel de WCAG-norm duidelijk
+genoeg is om onderzoeken goed te kunnen uitvoeren, kan de beoordeling van
+succescriteria op detailniveau de komende tijd veranderen.</p>
+<p>In dit rapport worden slechts voorbeelden gegeven van aangetroffen problemen; dit
+is echter geen compleet overzicht. Omdat het onderzoek uit een steekproef bestaat,
+kan het zijn dat een probleem niet gesignaleerd wordt. Wanneer verbeteringen
+worden doorgevoerd, dient er rekening mee gehouden te worden dat hierdoor nieuwe
+toegankelijkheidsproblemen kunnen ontstaan.</p>
+<blockquote>
+<p><strong>Status van dit onderzoek.</strong> Dit onderzoek is uitgevoerd door het eigen
+ontwikkelteam, met geautomatiseerde toetsing, instrumentele metingen en een
+toets met de schermlezer VoiceOver. Alle 55 succescriteria zijn beoordeeld.</p>
+</blockquote>
+<hr />
+<h2 id="a-informatie-over-de-opdracht">A. Informatie over de opdracht</h2>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Onderdeel</th>
+<th>Gegeven</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">Onderzoeker</th>
+<td>R. Rouwhof, ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)</td>
+</tr>
+<tr>
+<th scope="row">Onderzoeksdatum</th>
+<td>30 september 2026</td>
+</tr>
+<tr>
+<th scope="row">Opdrachtgever</th>
+<td>Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)</td>
+</tr>
+<tr>
+<th scope="row">Norm</th>
+<td>WCAG 2.2, niveau A en AA (via EN 301 549)</td>
+</tr>
+<tr>
+<th scope="row">Soort onderzoek</th>
+<td>Volledig onderzoek van alle 55 succescriteria, intern uitgevoerd: geautomatiseerde toetsing, instrumentele metingen in drie browsers en een toets met schermlezer. Geen onafhankelijk onderzoek.</td>
+</tr>
+<tr>
+<th scope="row">Versie van dit document</th>
+<td>3.0</td>
+</tr>
+<tr>
+<th scope="row">Onderzochte versie applicatie</th>
+<td><code>main</code>, stand 30 september 2026 (@ <code>c342ff2</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="b-informatie-over-het-onderzoek">B. Informatie over het onderzoek</h2>
+<h3 id="evaluatiemethode">Evaluatiemethode</h3>
+<p>Dit onderzoek volgt de opzet van WCAG-EM (Website Accessibility Conformance
+Evaluation Methodology): scope bepalen, steekproef samenstellen, per
+succescriterium beoordelen en rapporteren. De stappen die toetsing met
+gebruikers vereisen zijn <strong>niet</strong> uitgevoerd. Per succescriterium is de best
+passende methode gebruikt: axe-core voor wat geautomatiseerd te toetsen is, eigen
+meetscripts in Chromium, Edge en Firefox voor wat een browser kan meten
+(contrast, koppen, focus, reflow, doelgrootte), en de schermlezer VoiceOver voor
+wat alleen hoorbaar is; zie <a href="#schermlezertoets">Schermlezertoets</a>.</p>
+<h3 id="scope-van-het-onderzoek">Scope van het onderzoek</h3>
+<p>De ingelogde webapplicatie Wies. Buiten scope vallen: het Keycloak-inlogscherm
+(andere leverancier), externe websites waarnaar wordt gelinkt, en de
+beheerinterface van Django.</p>
+<p><strong>Uitzonderingen en specifieke situaties.</strong></p>
+<p>Bij dit onderzoek is uitgegaan van de Europese standaard voor
+toegankelijkheidseisen, de EN 301 549-norm, waarin wordt verwezen naar de
+internationale toegankelijkheidsrichtlijn WCAG 2.</p>
+<p><strong>Op tijd gebaseerde media.</strong> De applicatie bevat geen audio, video of iframes.
+Gemeten op alle onderzochte pagina's: <code>&lt;video&gt;</code> 0, <code>&lt;audio&gt;</code> 0, <code>&lt;iframe&gt;</code> 0. De
+succescriteria 1.2.1 tot en met 1.2.5 zijn daarom niet van toepassing.</p>
+<p><strong>Documenten.</strong> Er worden vanuit de applicatie geen PDF- of Office-bestanden
+aangeboden. De CSV-export van plaatsingen valt buiten de scope van WCAG.</p>
+<p><strong>Besloten applicatie.</strong> Wies is alleen bereikbaar na aanmelding via OIDC. Het
+inlogscherm wordt geleverd door Keycloak, valt onder een andere leverancier en is
+niet meegenomen.</p>
+<h3 id="samenvatting">Samenvatting</h3>
+<p>Alle 55 succescriteria zijn beoordeeld. Op <strong>47 van de 55</strong> wordt voldaan; de
+overige acht zijn niet van toepassing. Er zijn geen afwijkingen gevonden.</p>
+<p>De applicatie voldoet daarmee aan de vereisten voor WCAG 2.2, niveau AA, voor
+zover dit onderzoek reikt.</p>
+<p>Onderstaande tabel geeft per principe het aantal succescriteria waaraan wordt
+voldaan, van alle 55 van WCAG 2.2 op niveau A en AA. De noemer telt ook de
+criteria die niet van toepassing zijn; die zijn in de laatste kolom apart
+vermeld. Elk criterium dat van toepassing is, voldoet.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Principe</th>
+<th>Niveau A</th>
+<th>Niveau AA</th>
+<th>Totaal</th>
+<th>Waarvan n.v.t.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">Waarneembaar</th>
+<td>5 / 9</td>
+<td>9 / 11</td>
+<td>14 / 20</td>
+<td>6</td>
+</tr>
+<tr>
+<th scope="row">Bedienbaar</th>
+<td>13 / 14</td>
+<td>6 / 6</td>
+<td>19 / 20</td>
+<td>1</td>
+</tr>
+<tr>
+<th scope="row">Begrijpelijk</th>
+<td>7 / 7</td>
+<td>5 / 6</td>
+<td>12 / 13</td>
+<td>1</td>
+</tr>
+<tr>
+<th scope="row">Robuust</th>
+<td>1 / 1</td>
+<td>1 / 1</td>
+<td>2 / 2</td>
+<td>0</td>
+</tr>
+<tr>
+<th scope="row">Totaal</th>
+<td><strong>26 / 31</strong></td>
+<td><strong>21 / 24</strong></td>
+<td><strong>47 / 55</strong></td>
+<td><strong>8</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Uitgeschreven.</strong> Van de 55 succescriteria voldoen er 47. Acht zijn niet van
+toepassing omdat de applicatie geen audio, video of bewegingsbediening bevat en
+de authenticatie bij een externe leverancier ligt.</p>
+<p>De aandacht ging in dit onderzoek vooral uit naar wat een schermlezer merkt van
+een pagina die met htmx in delen ververst: waar de focus heen gaat (3.2.2), of
+het aantal resultaten en de bevestiging na opslaan worden aangekondigd (4.1.3),
+en of de foutmelding van een afgewezen formulier het veld bereikt over de
+shadow-grens van het component heen (3.3.1, 3.3.3). Die vier zijn met VoiceOver
+getoetst en voldoen.</p>
+<h4 id="verdeling-van-de-uitkomsten">Verdeling van de uitkomsten</h4>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Uitkomst</th>
+<th>Aantal</th>
+<th>Succescriteria</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Voldoet</td>
+<td>47</td>
+<td>zie de hoofdstukken hieronder</td>
+</tr>
+<tr>
+<td>Voldoet niet</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>Niet vastgesteld</td>
+<td>0</td>
+<td></td>
+</tr>
+<tr>
+<td>Niet van toepassing</td>
+<td>8</td>
+<td>1.2.1, 1.2.2, 1.2.3, 1.2.4, 1.2.5, 1.4.2, 2.5.4, 3.3.8</td>
+</tr>
+<tr>
+<th scope="row">Totaal</th>
+<td><strong>55</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table></div>
+<h4 id="nieuw-in-wcag-22">Nieuw in WCAG 2.2</h4>
+<p>WCAG 2.2 voegt zes succescriteria toe op niveau A en AA, en laat 4.1.1 (Parsen)
+vervallen. De nieuwe criteria zijn in dit onderzoek meegenomen:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Succescriterium</th>
+<th>Niveau</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.4.11 Focus niet bedekt (minimaal)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.7 Sleepbewegingen</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.8 Doelgrootte (minimaal)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.6 Consistente hulp</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.7 Overbodige invoer</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.8 Toegankelijke authenticatie (minimaal)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="beoordeling-per-succescriterium">Beoordeling per succescriterium</h3>
+<p>Alle 55 succescriteria van WCAG 2.2 op niveau A en AA, met het oordeel over
+de onderzochte set pagina's. De onderbouwing per criterium staat in
+<a href="#d-resultaten-van-het-onderzoek">hoofdstuk D</a>.</p>
+<p><strong>Waarneembaar</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Criterium</th>
+<th>Omschrijving</th>
+<th>Niveau</th>
+<th>Resultaat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.1.1</td>
+<td>Niet-tekstuele content</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.2.1</td>
+<td>Louter-geluid en louter-videobeeld (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.2</td>
+<td>Ondertiteling voor doven en slechthorenden (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.3</td>
+<td>Audiodescriptie of media-alternatief (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.4</td>
+<td>Ondertiteling voor doven en slechthorenden (live)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.5</td>
+<td>Audiodescriptie (vooraf opgenomen)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.3.1</td>
+<td>Info en relaties</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.3.2</td>
+<td>Betekenisvolle volgorde</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.3.3</td>
+<td>Zintuiglijke eigenschappen</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.3.4</td>
+<td>Oriëntatie</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.3.5</td>
+<td>Inputdoel identificeren</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.1</td>
+<td>Gebruik van kleur</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.2</td>
+<td>Geluidsbediening</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.4.3</td>
+<td>Contrast (minimum)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.4</td>
+<td>Herschalen van tekst</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.5</td>
+<td>Afbeeldingen van tekst</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.10</td>
+<td>Dynamisch aanpassen (reflow)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.11</td>
+<td>Niet-tekstueel contrast</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.12</td>
+<td>Tekstafstand</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>1.4.13</td>
+<td>Content bij aanwijzen of focussen</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Bedienbaar</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Criterium</th>
+<th>Omschrijving</th>
+<th>Niveau</th>
+<th>Resultaat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2.1.1</td>
+<td>Toetsenbord</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.1.2</td>
+<td>Geen toetsenbordval</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.1.4</td>
+<td>Sneltoetsen tekentoets</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.2.1</td>
+<td>Timing aanpasbaar</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.2.2</td>
+<td>Pauzeren, stoppen, verbergen</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.3.1</td>
+<td>Drie flitsen of beneden drempelwaarde</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.1</td>
+<td>Blokken omzeilen</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.2</td>
+<td>Paginatitel</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.3</td>
+<td>Focus volgorde</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.4</td>
+<td>Linkdoel (in context)</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.5</td>
+<td>Meerdere manieren</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.6</td>
+<td>Koppen en labels</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.7</td>
+<td>Focus zichtbaar</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.4.11</td>
+<td>Focus niet bedekt (minimaal)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.1</td>
+<td>Bewegingen aanwijzer</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.2</td>
+<td>Annulering aanwijzer</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.3</td>
+<td>Label in naam</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.4</td>
+<td>Bewegingsactivering</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>2.5.7</td>
+<td>Sleepbewegingen</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>2.5.8</td>
+<td>Doelgrootte (minimum)</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Begrijpelijk</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Criterium</th>
+<th>Omschrijving</th>
+<th>Niveau</th>
+<th>Resultaat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3.1.1</td>
+<td>Taal van de pagina</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.1.2</td>
+<td>Taal van onderdelen</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.1</td>
+<td>Bij focus</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.2</td>
+<td>Bij input</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.3</td>
+<td>Consistente navigatie</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.4</td>
+<td>Consistente identificatie</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.2.6</td>
+<td>Consistente hulp</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.1</td>
+<td>Fout identificatie</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.2</td>
+<td>Labels of instructies</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.3</td>
+<td>Foutsuggestie</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.4</td>
+<td>Foutpreventie</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.7</td>
+<td>Overbodige invoer</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>3.3.8</td>
+<td>Toegankelijke authenticatie (minimaal)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Robuust</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Criterium</th>
+<th>Omschrijving</th>
+<th>Niveau</th>
+<th>Resultaat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.1.2</td>
+<td>Naam, rol, waarde</td>
+<td>A</td>
+<td>Voldoet</td>
+</tr>
+<tr>
+<td>4.1.3</td>
+<td>Statusberichten</td>
+<td>AA</td>
+<td>Voldoet</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="steekproef">Steekproef</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Pagina</th>
+<th>URL</th>
+<th>Kenmerken</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Wie zit waar?</td>
+<td><code>/</code></td>
+<td>Overzicht, filters, zoeken, zijpanelen, paginering</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Aanvragen</td>
+<td><code>/opdrachten/</code></td>
+<td>Overzicht met filters en modals</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Beheer — gebruikers</td>
+<td><code>/beheer/gebruikers/</code></td>
+<td>Tabel, formulier in modal</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Beheer — labels</td>
+<td><code>/beheer/labels/</code></td>
+<td>Lijst met acties per rij</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Beheer — merken</td>
+<td><code>/beheer/merken/</code></td>
+<td>Lijst, sheet met formulier</td>
+</tr>
+<tr>
+<td>6</td>
+<td>Beheer — organisaties</td>
+<td><code>/beheer/organisaties/</code></td>
+<td>Boomstructuur</td>
+</tr>
+<tr>
+<td>7</td>
+<td>Mijn profiel</td>
+<td><code>/profiel/</code></td>
+<td>Detail met inline bewerken</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Veelgestelde vragen</td>
+<td><code>/faq/</code></td>
+<td>Tekst met accordeon</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Contact</td>
+<td><code>/contact/</code></td>
+<td>Tekst met externe links</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Privacy</td>
+<td><code>/privacy/</code></td>
+<td>Gegenereerde tekstpagina</td>
+</tr>
+<tr>
+<td>11</td>
+<td>Toegankelijkheid</td>
+<td><code>/toegankelijkheid/</code></td>
+<td>Tekst met afbeelding</td>
+</tr>
+</tbody>
+</table></div>
+<p>De 404-pagina is niet in de steekproef opgenomen. In de onderzoeksomgeving toont
+Django zijn ontwikkelaarspagina; de productieversie gebruikt een eigen Nederlandse
+foutpagina (<code>404.html</code>), die niet apart is getoetst.</p>
+<p>De instrumentele metingen zijn gedaan op alle elf pagina's in Chromium, en op
+pagina 1, 2, 3, 7 en 8 daarnaast in Edge en Firefox. De schermlezertoets volgde
+de steekproef in de volgorde van de toetsronde: eerst pagina 1, 2, 3 en 7, waar
+de bediening zit, daarna de tekstpagina's.</p>
+<h3 id="gebruikte-browsers-en-software">Gebruikte browsers en software</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Software</th>
+<th>Versie</th>
+<th>Gebruikt voor</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Chromium</td>
+<td><strong>140.0.7339.16</strong> en <strong>151.0.7922.34</strong></td>
+<td>Geautomatiseerde toetsing en instrumentele metingen</td>
+</tr>
+<tr>
+<td>Microsoft Edge</td>
+<td><strong>152.0.4191.66</strong></td>
+<td>Instrumentele metingen</td>
+</tr>
+<tr>
+<td>Firefox</td>
+<td><strong>153.0</strong></td>
+<td>Instrumentele metingen</td>
+</tr>
+<tr>
+<td>Playwright</td>
+<td><strong>1.55.0</strong> en <strong>1.62.0</strong></td>
+<td>Aansturing van de browsers</td>
+</tr>
+<tr>
+<td>axe-core</td>
+<td><strong>4.10.2</strong></td>
+<td>Geautomatiseerde toetsing</td>
+</tr>
+<tr>
+<td>Chrome DevTools Protocol</td>
+<td>via Playwright</td>
+<td>Uitlezen van de accessibility tree</td>
+</tr>
+<tr>
+<td>Eigen meetscripts</td>
+<td>—</td>
+<td>Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Instellingen.</strong> Alle metingen zijn uitgevoerd in een schone browsersessie zonder
+extensies, met een weergavekader van 1440 × 900 pixels tenzij anders vermeld.
+axe-core is beperkt tot de regelsets <code>wcag2a</code>, <code>wcag2aa</code>, <code>wcag21a</code> en <code>wcag21aa</code>.</p>
+<p><strong>ACT Rules Format.</strong> axe-core implementeert regels uit het ACT Rules Format van
+het W3C en publiceert per regel de bijbehorende ACT-regel-identificatie. Daarmee
+voldoet de gebruikte automatische toetsing aan de eis dat testtools op
+ACT-algoritmen gebaseerd zijn. De eigen meetscripts implementeren geen
+ACT-regels; hun uitkomsten zijn steeds met een tweede methode of visueel
+geverifieerd.</p>
+<p>| VoiceOver                | macOS <strong>14.4</strong>                                 | Schermlezertoets                                                                                                                                       |
+| Google Chrome            | <strong>153.0.8010.48</strong>                              | Schermlezertoets, handmatige ronde                                                                                                                     |
+| Google Chrome for Testing | <strong>151.0.7922.34</strong> via Playwright 1.62.0       | Schermlezertoets, geïnstrumenteerde ronde: toetsaanslagen via macOS, uitspraak van VoiceOver uitgelezen via zijn AppleScript-koppeling                 |</p>
+<h3 id="schermlezertoets">Schermlezertoets</h3>
+<p>Veertien succescriteria zijn alleen vast te stellen met een schermlezer: wat er
+wordt uitgesproken, is de meting. Die zijn met VoiceOver op macOS 14.4 getoetst,
+op twee manieren die elkaar controleren.</p>
+<p><strong>Handmatig.</strong> De onderzoeker doorloopt de steekproef met VoiceOver in Chrome
+153, met het scherm uit, en noteert per criterium wat hij hoort.</p>
+<p><strong>Geïnstrumenteerd.</strong> Dezelfde handelingen in Chrome for Testing 151 met
+dezelfde VoiceOver, waarbij de toetsaanslagen via macOS gaan zodat VoiceOver ze
+ziet zoals bij een gebruiker. Wat VoiceOver uitspreekt, is uitgelezen via zijn
+AppleScript-koppeling (<code>last phrase</code>); die uitspraken staan in dit rapport
+letterlijk aangehaald.</p>
+<p>Vier criteria die geen schermlezer vragen (1.1.1, 1.3.2, 2.4.6, 3.1.2) zijn
+beoordeeld op de toegankelijkheidsboom van alle elf pagina's; 1.4.11 is in het
+donkere thema gemeten als pixelcontrast op schermafbeeldingen.</p>
+<p>Twee eigenschappen van deze meetwijze zijn van belang bij het herhalen ervan.
+VoiceOver reageert niet op toetsaanslagen die een testtool rechtstreeks in de
+pagina stuurt: zijn cursor blijft dan op de adresbalk staan en de pagina is voor
+hem stil. En een live region die verandert vlak na een volledige paginalading
+wordt niet uitgesproken, beleefd noch assertief; de aankondiging van de nieuwe
+pagina gaat voor.</p>
+<hr />
+<h2 id="c-informatie-over-de-getoetste-applicatie">C. Informatie over de getoetste applicatie</h2>
+<h3 id="basisniveau-van-toegankelijkheidsondersteuning">Basisniveau van toegankelijkheidsondersteuning</h3>
+<p>Wies zou moeten werken met alle gangbare browsers en gangbare hulpapparatuur.
+Concreet gaat dit onderzoek uit van: Chromium-, Firefox- en Safari-gebaseerde
+browsers in een actuele versie, in combinatie met schermlezers (JAWS, NVDA,
+VoiceOver), schermvergroters en spraak- of schakelbediening. Er is bij dit
+onderzoek van uitgegaan dat alle door het W3C uitgebrachte technieken door
+hulpsoftware worden ondersteund en dus gebruikt mogen worden.</p>
+<p><strong>Let op:</strong> dit basisniveau is het uitgangspunt, niet het getoetste bereik. Er is
+gemeten in Chromium, Edge en Firefox op macOS, zonder hulpsoftware (zie hierboven). Of het
+gestelde basisniveau daadwerkelijk wordt gehaald, is met dit onderzoek <strong>niet
+vastgesteld</strong>.</p>
+<h3 id="technologieen-van-de-applicatie">Technologieën van de applicatie</h3>
+<p>Gebruikt zijn de technologieën HTML5, CSS, JavaScript (inclusief de frameworks
+htmx en Lit voor webcomponenten), WAI-ARIA en de DOM inclusief Shadow DOM,
+waarvoor technieken zijn gedocumenteerd in
+https://www.w3.org/WAI/WCAG22/Techniques/. De applicatie maakt gebruik van de
+componentbibliotheek @nldd/design-system. Er worden geen PDF-, SMIL- of
+Silverlight-technologieën toegepast.</p>
+<h3 id="bereik-van-geautomatiseerde-toetsing">Bereik van geautomatiseerde toetsing</h3>
+<p>Wies is opgebouwd uit NLDD-webcomponenten. Het overgrote deel van de interface
+staat daardoor in een shadow root, buiten het bereik van standaard
+toetsingsgereedschap.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Waar</th>
+<th>Aantal elementen</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">In het gewone document</th>
+<td>638</td>
+</tr>
+<tr>
+<th scope="row">In shadow roots</th>
+<td><strong>2.310</strong></td>
+</tr>
+<tr>
+<th scope="row">Aandeel in shadow roots</th>
+<td><strong>≈ 78 %</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Dit is geverifieerd door bewust fouten te injecteren:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Injectie</th>
+<th>Locatie</th>
+<th>Gedetecteerd door axe-core</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&lt;img&gt;</code> zonder <code>alt</code></td>
+<td>gewone document</td>
+<td>ja</td>
+</tr>
+<tr>
+<td>Tekst met contrast 1,9:1</td>
+<td>gewone document</td>
+<td>ja</td>
+</tr>
+<tr>
+<td>Tekst met contrast 1,9:1</td>
+<td>shadow root</td>
+<td><strong>nee</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Het resultaat "0 overtredingen" van axe-core geldt daarom uitsluitend voor de
+± 22 % van de interface die in het gewone document staat, en is op zichzelf geen
+bewijs van conformiteit. De contrast-, structuur- en naamgevingstoetsen zijn zo
+uitgevoerd dat zij shadow roots wél doorlopen, respectievelijk via de accessibility
+tree.</p>
+<h3 id="afhankelijke-technologie">Afhankelijke technologie</h3>
+<p>HTML5, CSS, WAI-ARIA, ECMAScript (htmx en Lit-webcomponenten), DOM inclusief
+Shadow DOM.</p>
+<hr />
+<h2 id="d-resultaten-van-het-onderzoek">D. Resultaten van het onderzoek</h2>
+<p>Per succescriterium staat hieronder het oordeel: voldoet, voldoet niet, niet van
+toepassing, of niet vastgesteld. Bij een afwijking staat wat precies is gevonden, op
+welke pagina's, en hoe het op te lossen is. Elk criterium sluit af met een korte uitleg
+van wat het vraagt.</p>
+<h3 id="principe-1-waarneembaar">Principe 1 Waarneembaar</h3>
+<p><em>Informatie en componenten van de gebruikersinterface moeten toonbaar zijn aan gebruikers op voor hen waarneembare wijze.</em></p>
+<h4 id="richtlijn-11-tekstalternatieven">Richtlijn 1.1 Tekstalternatieven</h4>
+<p><em>Lever tekstalternatieven voor alle niet-tekstuele content, zodat die veranderd kan worden in andere vormen die mensen nodig hebben.</em></p>
+<h5 id="succescriterium-111-niveau-a-niet-tekstuele-content">Succescriterium 1.1.1 (Niveau A) — Niet-tekstuele content</h5>
+<p>Alle niet-tekstuele content die aan de gebruiker wordt gepresenteerd, heeft een
+tekstalternatief dat een gelijkwaardig doel dient.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De toegankelijkheidsboom van alle elf pagina's bevat geen
+enkele afbeelding, icoon of knop zonder naam. De 265 SVG-elementen zonder naam
+uit het eerste onderzoek zijn de iconen in shadow roots: naast een tekstlabel
+zijn ze voor de schermlezer verborgen, en icoonknoppen zonder tekst hebben een
+eigen naam ("Acties voor opdrachtgever", "Opdracht verwijderen"). Het logo heet
+"Rijkswapen - Rijksoverheid"; het toegankelijkheidslabel heeft een beschrijvende
+<code>alt</code>-tekst.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Alle belangrijke niet-tekstuele content zoals afbeeldingen, knoppen en
+formulier-invoervelden moeten een tekstueel alternatief of naam hebben. Dan kan de
+voorleessoftware van blinde bezoekers die informatie voorlezen. Iconen die naast
+een tekstlabel staan en niets toevoegen, horen juist <code>aria-hidden="true"</code> te
+krijgen, zodat ze niet dubbel worden voorgelezen.</p>
+</div>
+<h4 id="richtlijn-12-op-tijd-gebaseerde-media">Richtlijn 1.2 Op tijd gebaseerde media</h4>
+<p>De applicatie bevat geen audio en geen video. Gemeten op alle elf onderzochte
+pagina's: <code>&lt;video&gt;</code> 0, <code>&lt;audio&gt;</code> 0, <code>&lt;iframe&gt;</code> 0. De onderstaande vijf
+succescriteria zijn daarom alle niet van toepassing.</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Succescriterium</th>
+<th>Niveau</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1.2.1 Louter-geluid en louter-videobeeld (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.2 Ondertiteling voor doven en slechthorenden (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.3 Audiodescriptie of media-alternatief (vooraf opgenomen)</td>
+<td>A</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.4 Ondertitels voor doven en slechthorenden (live)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+<tr>
+<td>1.2.5 Audiodescriptie (vooraf opgenomen)</td>
+<td>AA</td>
+<td>Niet van toepassing</td>
+</tr>
+</tbody>
+</table></div>
+<div class="explain">
+<p><strong>Uitleg van deze succescriteria</strong></p>
+<p>Voor video en audio gelden aparte eisen: ondertiteling voor dove en slechthorende
+bezoekers, en audiodescriptie of een uitgeschreven transcript voor blinde
+bezoekers. Zodra Wies video of audio gaat aanbieden (bijvoorbeeld een
+instructiefilmpje bij de onboarding), worden deze criteria alsnog van toepassing
+en moeten ze opnieuw worden beoordeeld.</p>
+</div>
+<h4 id="richtlijn-13-aanpasbaar">Richtlijn 1.3 Aanpasbaar</h4>
+<p><em>Creëer content die op verschillende manieren gepresenteerd kan worden zonder verlies van informatie of structuur.</em></p>
+<h5 id="succescriterium-131-niveau-a-info-en-relaties">Succescriterium 1.3.1 (Niveau A) — Info en relaties</h5>
+<p>Informatie, structuur en relaties overgebracht door presentatie kunnen door
+software bepaald worden of zijn beschikbaar in tekst.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De koppenreeks is sluitend en slaat geen niveau over.</p>
+</div>
+<p>De koppenstructuur is op alle pagina's van de steekproef gemeten, in de
+toegankelijkheidsboom en in de broncode, op 1440 px en op 375 px. De reeks loopt
+van <code>&lt;h1&gt;</code> naar <code>&lt;h2&gt;</code> zonder een niveau over te slaan. Op <code>/</code> en <code>/opdrachten/</code>
+dragen de filtergroepen in de zijbalk <code>&lt;h2&gt;</code> en de kaarttitels eveneens <code>&lt;h2&gt;</code>,
+onder de <code>&lt;h1&gt;</code> van de pagina:</p>
+<pre><code>H2: Opdrachtgever          ← zijbalk
+H2: Rol
+H1: Wie zit waar?          ← paginatitel
+H2: Laura van Leeuwen      ← kaarten
+H2: Laura Popov
+</code></pre>
+<p>VoiceOver spreekt ze uit als "<span lang="en">heading level 2</span> Opdrachtgever", "<span lang="en">heading level 2</span>
+Rol", "<span lang="en">heading level 2</span> Expertise".</p>
+<p>Dat de zijbalk in bronvolgorde vóór de <code>&lt;h1&gt;</code> staat, is een keuze van het
+paginaraamwerk; met een sluitende koppenreeks is dat geen afwijking. Onder
+768 px valt de zijbalk weg en begint de reeks bij de <code>&lt;h1&gt;</code>.</p>
+<p>Verder zijn de lijsten, tabellen en formuliervelden op semantiek gecontroleerd:
+lijsten gebruiken <code>&lt;ul&gt;</code>/<code>&lt;li&gt;</code>, de tabellen op de beheerpagina's hebben
+kolomkoppen, en elk invoerveld heeft een label dat er programmatisch aan
+vastzit.</p>
+<p><strong>Bron:</strong> <code>wies/core/jinja2/parts/filter_sidebar.html</code>,
+<code>wies/core/jinja2/parts/placement_cards.html</code>,
+<code>wies/core/jinja2/parts/assignment_card_rows.html</code>.</p>
+<p>In Chromium, Edge en Firefox gelijk.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Alle informatie die visueel wordt overgedragen, dient ook tekstueel of semantisch
+(in betekenisvolle code) te worden overgedragen. Op deze manier kan de informatie
+ook aan blinde bezoekers worden voorgelezen. Let in het bijzonder op:</p>
+<ul>
+<li>Maak alle koppen correct op, namelijk met <code>&lt;h1&gt;</code> tot en met <code>&lt;h6&gt;</code>. Sla daarbij
+  geen niveaus over: na een <code>&lt;h1&gt;</code> hoort een <code>&lt;h2&gt;</code>, niet meteen een <code>&lt;h3&gt;</code>.</li>
+<li>Gebruik correcte lijstopmaak: <code>&lt;ul&gt;</code> voor ongeordende en <code>&lt;ol&gt;</code> voor geordende
+  lijsten, met <code>&lt;li&gt;</code> voor de items.</li>
+<li>Gebruik <code>&lt;table&gt;</code> voor datatabellen, met <code>&lt;th&gt;</code> voor rij- en kolomkoppen.</li>
+<li>Bied namen aan invoervelden en groepeer bij elkaar horende velden.</li>
+</ul>
+</div>
+<h5 id="succescriterium-132-niveau-a-betekenisvolle-volgorde">Succescriterium 1.3.2 (Niveau A) — Betekenisvolle volgorde</h5>
+<p>Als de volgorde waarin content wordt gepresenteerd van invloed is op zijn
+betekenis, kan een betekenisvolle leesvolgorde door software bepaald worden.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Leesvolgorde uit de toegankelijkheidsboom: banner,
+hoofdnavigatie, gebruikersmenu, hoofdinhoud met de zijbalk vóór de inhoud,
+footer als laatste. In het zijpaneel: titelbalk, naam, gegevens. Dat komt
+overeen met de visuele opbouw; de zijbalk vóór de paginatitel is de kwestie van
+1.3.1. Bevestigd met VoiceOver.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Content dient in een betekenisvolle volgorde in de broncode te staan. De
+voorleessoftware van blinde bezoekers leest namelijk de broncodevolgorde voor, niet
+de visuele volgorde. Wordt iets met CSS visueel verplaatst, dan kan de voorgelezen
+volgorde afwijken van wat op het scherm staat.</p>
+</div>
+<h5 id="succescriterium-133-niveau-a-zintuiglijke-eigenschappen">Succescriterium 1.3.3 (Niveau A) — Zintuiglijke eigenschappen</h5>
+<p>Instructies zijn niet alleen afhankelijk van zintuiglijke eigenschappen zoals
+vorm, omvang, visuele locatie, oriëntatie of geluid.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn geen instructies aangetroffen die uitsluitend verwijzen naar vorm,
+omvang, locatie of geluid.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Instructies als "klik op het vierkante icoon" of "de instructies staan in de
+rechterkolom" zijn niet te begrijpen voor blinde bezoekers. Benoem in plaats
+daarvan het element bij zijn naam of label.</p>
+</div>
+<h5 id="succescriterium-134-niveau-aa-orientatie">Succescriterium 1.3.4 (Niveau AA) — Oriëntatie</h5>
+<p>De weergave en bediening van content is niet beperkt tot een enkele schermstand.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Getoetst in staand (600 × 900) en liggend (900 × 600) formaat. In beide standen
+geen verlies van content of functionaliteit, en geen horizontale schuifbalk.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Een website mag niet afdwingen dat een tablet of telefoon in één bepaalde stand
+wordt gehouden. Mensen die hun apparaat in een houder of aan een rolstoel bevestigd
+hebben, kunnen de stand vaak niet wijzigen.</p>
+</div>
+<h5 id="succescriterium-135-niveau-aa-inputdoel-identificeren">Succescriterium 1.3.5 (Niveau AA) — Inputdoel identificeren</h5>
+<p>Het doel van een invoerveld dat gegevens over de gebruiker verzamelt, kan door
+software bepaald worden.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De velden die over de gebruiker zelf gaan, dragen hun inputdoel.</p>
+</div>
+<p>De velden Voornaam en Achternaam achter "Naam wijzigen" op Mijn profiel gaan
+over de gebruiker zelf en dragen <code>autocomplete="given-name"</code> respectievelijk
+<code>autocomplete="family-name"</code>, de waarden uit de WCAG-lijst van inputdoelen.</p>
+<p>Alle andere formulieren in Wies verzamelen gegevens over collega's, niet over de
+ingelogde gebruiker, en vallen buiten het criterium; daar geldt de uitzondering.</p>
+<p><strong>Bron:</strong> <code>wies/core/forms.py</code>, <code>ProfileNameForm</code>.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Velden die om gegevens van de gebruiker zelf vragen (naam, e-mailadres,
+telefoonnummer) horen een <code>autocomplete</code>-attribuut te hebben. Browsers en
+hulpsoftware kunnen die velden dan automatisch invullen of van een herkenbaar icoon
+voorzien. Dat scheelt typewerk voor mensen met een motorische beperking en helpt
+mensen met een cognitieve beperking.</p>
+</div>
+<h4 id="richtlijn-14-onderscheidbaar">Richtlijn 1.4 Onderscheidbaar</h4>
+<p><em>Maak het voor gebruikers gemakkelijker om content te horen en te zien.</em></p>
+<h5 id="succescriterium-141-niveau-a-gebruik-van-kleur">Succescriterium 1.4.1 (Niveau A) — Gebruik van kleur</h5>
+<p>Kleur wordt niet als het enige visuele middel gebruikt om informatie over te
+brengen.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Handmatig beoordeeld op Wie zit waar?, Aanvragen en Beheer
+gebruikers: elke betekenis die met kleur wordt gegeven, staat ook in tekst of
+vorm. Statuschips dragen een tekstlabel ("Beperkt zichtbaar", "Afgelopen"), de
+actieve filterrij een vinkje, de gekozen weergave een ingedrukte knop.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Als informatie alleen door kleurverschil wordt overgebracht, kan die informatie
+niet worden waargenomen door slechtziende of kleurenblinde bezoekers. Zorg dat een
+link niet alleen aan kleur herkenbaar is maar ook aan onderstreping, en dat
+foutmeldingen niet alleen "rood" zijn maar ook tekstueel worden benoemd.</p>
+</div>
+<h5 id="succescriterium-142-niveau-a-geluidsbediening">Succescriterium 1.4.2 (Niveau A) — Geluidsbediening</h5>
+<p>Als een geluidsweergave op een webpagina automatisch meer dan 3 seconden speelt, is er of een mechanisme beschikbaar om de geluidsweergave te pauzeren of te stoppen, of er is een mechanisme beschikbaar om het geluidsvolume onafhankelijk van het overall systeemvolume te regelen.</p>
+<div class="verdict na">
+<p><strong>Dit succescriterium is niet van toepassing.</strong></p>
+<p>Er is geen automatisch spelende audio aanwezig.</p>
+</div>
+<h5 id="succescriterium-143-niveau-aa-contrast-minimum">Succescriterium 1.4.3 (Niveau AA) — Contrast (minimum)</h5>
+<p>De visuele weergave van tekst en afbeeldingen van tekst heeft een
+contrastverhouding van ten minste 4,5:1.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Meting</th>
+<th>Aantal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th scope="row">Gemeten tekstelementen</th>
+<td><strong>903</strong></td>
+</tr>
+<tr>
+<th scope="row">Onder de norm (4,5:1, of 3,0:1 voor grote tekst)</th>
+<td><strong>0</strong></td>
+</tr>
+</tbody>
+</table></div>
+</div>
+<p>Alle zichtbare tekst op de elf pagina's is gemeten, <strong>inclusief de shadow roots
+van de webcomponenten</strong>. Kleuren zijn door de browser zelf omgezet via een canvas,
+zodat moderne kleurnotaties (<code>oklch()</code>) correct oplossen. Doorzichtigheid van tekst
+en van alle bovenliggende lagen is meegerekend.</p>
+<p>De meetmethode is gevalideerd door contrastfouten te injecteren in zowel het gewone
+document als in een shadow root; beide werden gedetecteerd (1,92:1).</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Het doel is voldoende contrast tussen tekstkleur en achtergrondkleur, zodat de
+tekst goed kan worden gelezen door kleurenblinde of slechtziende bezoekers. Grote
+tekst (vanaf 24 px, of 18,66 px vet) mag een lager contrast hebben: 3:1 in plaats
+van 4,5:1. Met het gratis programma Colour Contrast Analyser is het contrast
+handmatig te meten.</p>
+</div>
+<h5 id="succescriterium-144-niveau-aa-herschalen-van-tekst">Succescriterium 1.4.4 (Niveau AA) — Herschalen van tekst</h5>
+<p>Tekst kan zonder hulptechnologie tot 200 procent schalen zonder verlies van
+content of functionaliteit.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Getoetst tot een weergavekader van 720 px, equivalent aan 200 % vergroting. Geen
+verlies van content of functionaliteit en geen horizontale schuifbalk.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Voor slechtziende bezoekers is het belangrijk dat tekst tot 200 % kan worden
+vergroot. Let erop dat daarbij geen informatie wegvalt: tekst die buiten een kader
+valt of buiten beeld raakt zonder dat gescrold kan worden, is een probleem.</p>
+</div>
+<h5 id="succescriterium-145-niveau-aa-afbeeldingen-van-tekst">Succescriterium 1.4.5 (Niveau AA) — Afbeeldingen van tekst</h5>
+<p>Als de gebruikte technologieën de visuele weergave tot stand kunnen brengen, wordt tekst gebruikt in plaats van afbeeldingen van tekst om informatie over te brengen, behalve wanneer de afbeelding van tekst visueel aanpasbaar is of een specifieke weergave essentieel is.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is geen tekst als afbeelding aangetroffen. De enige afbeelding is het
+toegankelijkheidslabel, dat als keurmerk is uitgezonderd.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Tekst hoort met HTML te worden geplaatst en niet als afbeelding. HTML-tekst is met
+een eigen stylesheet aan te passen in kleur, lettertype en grootte, en blijft scherp
+bij vergroting. Dit is eenvoudig te testen door alles op de pagina te selecteren
+(Ctrl+A): wat niet oplicht, is een afbeelding.</p>
+</div>
+<h5 id="succescriterium-1410-niveau-aa-dynamisch-aanpassen-reflow">Succescriterium 1.4.10 (Niveau AA) — Dynamisch aanpassen (reflow)</h5>
+<p>Content kan zonder verlies van informatie of functionaliteit en zonder te scrollen
+in twee dimensies worden weergegeven.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Breedte</th>
+<th>Horizontale schuifbalk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1440 px</td>
+<td>nee</td>
+</tr>
+<tr>
+<td>720 px</td>
+<td>nee</td>
+</tr>
+<tr>
+<th scope="row">320 px</strong> (de reflow-eis)</td>
+<td><strong>nee</th>
+</tr>
+</tbody>
+</table></div>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Content moet bruikbaar blijven bij een breedte van 320 CSS-pixels, gelijk aan een
+beginbreedte van 1280 px bij 400 % zoom. De gebruiker mag dan niet in twee
+richtingen tegelijk hoeven scrollen. Uitgezonderd zijn onderdelen die een
+tweedimensionale lay-out vereisen, zoals kaarten en grote datatabellen.</p>
+</div>
+<h5 id="succescriterium-1411-niveau-aa-niet-tekstueel-contrast">Succescriterium 1.4.11 (Niveau AA) — Niet-tekstueel contrast</h5>
+<p>De visuele weergave van componenten en grafische objecten heeft een
+contrastverhouding van ten minste 3:1.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>In het lichte thema handmatig beoordeeld; in het donkere thema gemeten als
+pixelcontrast op schermafbeeldingen van <code>/opdrachten/</code> (<code>data-scheme="dark"</code>), omdat de kleuren in shadow roots zitten:</p>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Licht</th>
+<th>Donker</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Rand zoekveld</td>
+<td>5,3:1</td>
+<td>5,3:1</td>
+</tr>
+<tr>
+<td>Rand datumveld</td>
+<td>4,9:1</td>
+<td>5,8:1</td>
+</tr>
+<tr>
+<td>Rand checkbox</td>
+<td>4,9:1</td>
+<td>5,8:1</td>
+</tr>
+<tr>
+<td>Focusring op zoekveld</td>
+<td>6,2:1</td>
+<td>5,3:1</td>
+</tr>
+<tr>
+<td>Focusring op filterrij</td>
+<td>6,2:1</td>
+<td>4,6:1</td>
+</tr>
+</tbody>
+</table></div>
+<p>Alles boven de eis van 3:1. Chips en tags hebben een vulling van 1,1 tot 1,3:1
+tegen de pagina, maar dragen hun betekenis in tekst en vallen daarom buiten het
+criterium.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Niet alleen tekst moet voldoende contrast hebben. Ook de rand van een invoerveld,
+het vinkje in een selectievakje, een icoon dat betekenis draagt en de focusring
+moeten zich met ten minste 3:1 aftekenen tegen hun omgeving. Anders is voor
+slechtziende gebruikers niet te zien waar een veld begint of eindigt.</p>
+</div>
+<h5 id="succescriterium-1412-niveau-aa-tekstafstand">Succescriterium 1.4.12 (Niveau AA) — Tekstafstand</h5>
+<p>Er is geen verlies van content of functionaliteit wanneer regelhoogte,
+letterafstand en woordafstand worden gewijzigd.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Getoetst met regelhoogte 1,5×, afstand tussen alinea's 2×, letterafstand 0,12em en
+woordafstand 0,16em. Geen verlies van content, geen overlappende tekst en geen
+horizontale schuifbalk.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Mensen met dyslexie of een visuele beperking passen soms met een eigen stylesheet
+de regel-, letter- en woordafstand aan om tekst leesbaarder te maken. De pagina moet
+daar tegen kunnen: tekst mag niet uit zijn kader lopen of achter andere elementen
+verdwijnen.</p>
+</div>
+<h5 id="succescriterium-1413-niveau-aa-content-bij-aanwijzen-of-focussen">Succescriterium 1.4.13 (Niveau AA) — Content bij aanwijzen of focussen</h5>
+<p>Wanneer aanvullende content zichtbaar wordt en daarna weer verborgen door hover
+met de aanwijzer of focus met het toetsenbord, dan kan die content worden
+gesloten, aangewezen en blijft ze zichtbaar tot de gebruiker haar sluit.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Handmatig beoordeeld: de tooltips op iconen en op de
+privacy-chips sluiten met Escape zonder dat de focus verspringt, blijven staan
+zolang de muis erop rust en bedekken niets dat nodig is.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Verschijnt er extra inhoud bij het aanwijzen of focussen (een tooltip, een
+uitklapmenu), dan gelden drie eisen: de inhoud moet met Escape te sluiten zijn, de
+muis moet er naartoe kunnen bewegen zonder dat hij verdwijnt, en hij moet zichtbaar
+blijven tot de gebruiker wegbeweegt of hem sluit.</p>
+</div>
+<hr />
+<h3 id="principe-2-bedienbaar">Principe 2 Bedienbaar</h3>
+<p><em>Componenten van de gebruikersinterface en navigatie moeten bedienbaar zijn.</em></p>
+<h4 id="richtlijn-21-toetsenbordtoegankelijk">Richtlijn 2.1 Toetsenbordtoegankelijk</h4>
+<h5 id="succescriterium-211-niveau-a-toetsenbord">Succescriterium 2.1.1 (Niveau A) — Toetsenbord</h5>
+<p>Alle functionaliteit van de content is bedienbaar via een toetsenbordinterface.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Alle interactieve elementen zijn met Tab bereikbaar. Getoetst via de
+accessibility tree van de browser: op <code>/</code> 61 interactieve elementen, op
+<code>/beheer/gebruikers/</code> 70, alle met een toegankelijke naam en rol.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Alle functionaliteit dient bediend te kunnen worden met het toetsenbord. Dit is te
+toetsen door de hele applicatie alleen met Tab, Enter, spatie en de pijltoetsen te
+bedienen, zonder muis.</p>
+</div>
+<h5 id="succescriterium-212-niveau-a-geen-toetsenbordval">Succescriterium 2.1.2 (Niveau A) — Geen toetsenbordval</h5>
+<p>Als de toetsenbordfocus met de toetsenbordinterface verplaatst kan worden naar een component van de pagina, dan kan de focus ook met alleen de toetsenbordinterface weer van dat component weg worden bewogen. En, als er meer nodig is dan de standaard pijl- of tabtoetsen, dan wordt de gebruiker geïnformeerd over de manier waarop de focus kan worden verplaatst.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Getoetst op de sheet "Merk toevoegen": deze opent als een echte <code>&lt;dialog open&gt;</code>,
+de focus springt bij openen naar het eerste invoerveld, en van 12 opeenvolgende
+tabstops bleven er 9 binnen de sheet: de focus loopt rond en verlaat het venster
+niet.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Een bezoeker mag nooit met het toetsenbord "vast" komen te zitten. Bij een venster
+of dialoog hoort de focus juist wél ingesloten te zijn zolang het open staat, maar
+er moet altijd een weg naar buiten zijn, meestal met Escape of een sluitknop.</p>
+</div>
+<h5 id="succescriterium-214-niveau-a-sneltoetsen-tekentoets">Succescriterium 2.1.4 (Niveau A) — Sneltoetsen tekentoets</h5>
+<p>Wanneer een sneltoets in content wordt geïmplementeerd door alleen letters, leestekens, cijfers of symbolen te gebruiken, dan kan die sneltoets worden uitgezet of opnieuw toegewezen, of is hij alleen actief wanneer de betreffende component de focus heeft.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn geen sneltoetsen geïmplementeerd die uit één teken bestaan.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Sneltoetsen die uit één letter of cijfer bestaan, kunnen per ongeluk worden
+geactiveerd door mensen die met spraak werken of die trillen bij het typen. Zulke
+sneltoetsen moeten uit te zetten of opnieuw toe te wijzen zijn.</p>
+</div>
+<h4 id="richtlijn-22-genoeg-tijd">Richtlijn 2.2 Genoeg tijd</h4>
+<h5 id="succescriterium-221-niveau-a-timing-aanpasbaar">Succescriterium 2.2.1 (Niveau A) — Timing aanpasbaar</h5>
+<p>Voor elke tijdslimiet die door de content wordt ingesteld, kan de gebruiker die uitzetten, aanpassen of verlengen, tenzij de limiet onderdeel is van een realtime gebeurtenis, essentieel is, of langer duurt dan 20 uur.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is geen <code>meta refresh</code> aangetroffen en geen tijdslimiet binnen de applicatie.
+De sessieduur wordt beheerd door de authenticatievoorziening, die buiten de scope
+valt.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Heeft een bezoeker beperkt de tijd om iets te lezen of te doen, dan moet die limiet
+uit te zetten, aan te passen of te verlengen zijn. Dit is vooral belangrijk voor
+blinde bezoekers en mensen met een cognitieve beperking, die meer tijd nodig hebben.</p>
+</div>
+<h5 id="succescriterium-222-niveau-a-pauzeren-stoppen-verbergen">Succescriterium 2.2.2 (Niveau A) — Pauzeren, stoppen, verbergen</h5>
+<p>Voor alle bewegende, knipperende, scrollende of automatisch actualiserende informatie die automatisch start, langer dan vijf seconden duurt en parallel met andere content wordt getoond, is er een mechanisme om dit te pauzeren, te stoppen of te verbergen.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is geen bewegende, knipperende, scrollende of automatisch actualiserende content
+aangetroffen.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Bewegende of automatisch bijwerkende content leidt af bij het gebruik van de rest
+van de pagina. Duurt de beweging langer dan vijf seconden, dan moet die te
+pauzeren, te stoppen of te verbergen zijn.</p>
+</div>
+<h4 id="richtlijn-23-toevallen">Richtlijn 2.3 Toevallen</h4>
+<h5 id="succescriterium-231-niveau-a-drie-flitsen-of-beneden-drempelwaarde">Succescriterium 2.3.1 (Niveau A) — Drie flitsen of beneden drempelwaarde</h5>
+<p>Webpagina's bevatten niets wat meer dan drie keer flitst in enige periode van één seconde, of de flits is beneden de algemene flits- en rodeflitsdrempelwaarden.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is geen flitsende content aanwezig.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Sterk flitsende content kan epileptische aanvallen veroorzaken. Vermijd content die
+meer dan drie keer per seconde flitst.</p>
+</div>
+<h4 id="richtlijn-24-navigeerbaar">Richtlijn 2.4 Navigeerbaar</h4>
+<h5 id="succescriterium-241-niveau-a-blokken-omzeilen">Succescriterium 2.4.1 (Niveau A) — Blokken omzeilen</h5>
+<p>Er is een mechanisme beschikbaar om blokken content die op meerdere webpagina's
+worden herhaald te omzeilen.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is een skiplink "Ga naar hoofdinhoud" (<code>base.html</code>, regel 60). Geverifieerd: het
+is de <strong>eerste tabstop</strong> op de pagina, hij wordt zichtbaar bij focus, en activeren
+verplaatst de focus naar de hoofdinhoud.</p>
+</div>
+<blockquote>
+<p><strong>Correctie op een bestaande melding.</strong> Issue #600 in de projectadministratie
+meldt dat er géén skiplink zou zijn en dat de focus na het bijwerken van de
+pagina verloren gaat. Beide zijn <strong>niet meer actueel</strong>; zie ook 2.4.3.
+Aanbevolen het issue te sluiten.</p>
+</blockquote>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Zorg dat toetsenbordgebruikers en blinde bezoekers herhalende blokken (menu's,
+zoekveld, logo) kunnen overslaan om direct bij de hoofdinhoud te komen. De beste
+manier is een skiplink bovenaan de pagina, die zichtbaar wordt zodra hij focus
+krijgt.</p>
+</div>
+<h5 id="succescriterium-242-niveau-a-paginatitel">Succescriterium 2.4.2 (Niveau A) — Paginatitel</h5>
+<p>Webpagina's hebben titels die het onderwerp of doel beschrijven.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Alle elf pagina's hebben een beschrijvende, onderscheidende titel volgens het
+patroon <code>&lt;Pagina&gt; · Wies</code>, bijvoorbeeld "Wie zit waar · Wies" en "Veelgestelde
+vragen · Wies".</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Een goede paginatitel in het <code>&lt;title&gt;</code>-element is voor blinde bezoekers het eerste
+wat wordt voorgelezen en helpt bij het schakelen tussen tabbladen. Zet het
+specifieke deel vooraan, de sitenaam achteraan.</p>
+</div>
+<h5 id="succescriterium-243-niveau-a-focus-volgorde">Succescriterium 2.4.3 (Niveau A) — Focus volgorde</h5>
+<p>Focusbare componenten krijgen de focus in een volgorde waardoor betekenis en
+bedienbaarheid behouden blijven.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Wies vervangt delen van de pagina zonder deze opnieuw te laden. Na zo'n swap
+verplaatst <code>focus_restore.js</code> de focus naar het element waar de gebruiker was,
+of naar een logisch startpunt binnen het vervangen fragment. <code>scripts/focus_swap.py</code>
+geeft 9 van 9. Daarnaast zijn de volgende flows met het toetsenbord doorlopen in
+Chromium, Edge en Firefox (<code>scripts/hertest_swap.py</code>); in alle drie landt de
+focus op dezelfde plek.</p>
+</div>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Flow</th>
+<th>Focus na de swap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kaart openen (Enter) op Wie zit waar?</td>
+<td>Het zijpaneel (<code>dialog</code>)</td>
+</tr>
+<tr>
+<td>Zijpaneel sluiten (Escape)</td>
+<td>Terug op de kaart die het opende</td>
+</tr>
+<tr>
+<td>Updates-tab in het paneel</td>
+<td>Blijft op de tab</td>
+</tr>
+<tr>
+<td>Inline bewerken openen</td>
+<td>Het eerste invoerveld</td>
+</tr>
+<tr>
+<td>Filtergroep "Meer..." openen</td>
+<td>Het zoekveld in de modal; Escape brengt terug naar de knop</td>
+</tr>
+<tr>
+<td>Weergave wisselen (Collega's / Opdrachten)</td>
+<td>Blijft op de gekozen optie</td>
+</tr>
+<tr>
+<td>"Opdracht invoeren" op Aanvragen</td>
+<td>Het zijpaneel (<code>dialog</code>)</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>Observatie, geen afwijking.</strong> Firefox geeft elke pagina één tabstop extra aan het
+begin: <code>nldd-page</code> is een scrollbare container en Firefox maakt die standaard met Tab
+bereikbaar. Chromium en Edge doen dat niet. Het is een keuze van de browser en zit in
+het design system, niet in Wies; het is te voorkomen met <code>tabindex="-1"</code> op
+<code>nldd-page</code> in <code>@nldd/design-system</code>.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>De tabvolgorde moet logisch zijn en aansluiten bij wat er op het scherm gebeurt.
+Wordt een venster geopend, dan hoort de focus daarheen te gaan. Wordt een deel van
+de pagina vervangen, dan hoort de focus mee te verhuizen en niet terug te vallen
+naar het begin van de pagina.</p>
+</div>
+<h5 id="succescriterium-244-niveau-a-linkdoel-in-context">Succescriterium 2.4.4 (Niveau A) — Linkdoel (in context)</h5>
+<p>Het linkdoel kan bepaald worden uit enkel de linktekst of uit de linktekst samen met zijn door software bepaalde linkcontext, behalve daar waar het doel van de link een dubbelzinnige betekenis zou kunnen hebben voor gebruikers in het algemeen.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn geen links met nietszeggende tekst ("lees meer", "klik hier", "hier")
+aangetroffen. Externe links dragen sinds kort een icoon en verborgen tekst die
+aankondigt dat ze in een nieuw tabblad openen.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Bied een duidelijke linktekst die aangeeft waar de link naartoe verwijst. Blinde
+bezoekers vragen vaak een lijst van alle links op een pagina op; "lees meer" zegt
+in zo'n lijst niets.</p>
+</div>
+<h5 id="succescriterium-245-niveau-aa-meerdere-manieren">Succescriterium 2.4.5 (Niveau AA) — Meerdere manieren</h5>
+<p>Er is meer dan één manier beschikbaar om een webpagina binnen een verzameling webpagina's te vinden, behalve wanneer de webpagina het resultaat is van, of een stap in, een proces.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn ten minste twee manieren om een pagina te bereiken: de hoofdnavigatie en de
+zoekfunctie op het overzicht, aangevuld met filters op organisatie, rol en merk.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Elke pagina moet op minstens twee manieren te bereiken zijn, bijvoorbeeld via het
+menu én via een zoekfunctie of sitemap. Stappen binnen een proces zijn hiervan
+uitgezonderd.</p>
+</div>
+<h5 id="succescriterium-246-niveau-aa-koppen-en-labels">Succescriterium 2.4.6 (Niveau AA) — Koppen en labels</h5>
+<p>Koppen en labels beschrijven het onderwerp of doel.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Toegankelijkheidsboom van alle elf pagina's: elke pagina één
+h1 met de paginatitel, groepen als h2, kaarten en opdrachten als h3, en elk
+zoek- en invoerveld met een label dat zegt wat er wordt verwacht. VoiceOver bij
+de tabs van het zijpaneel: "Gegevens, <span lang="en">selected tab</span>, <span lang="en">1 of 2</span>, Opdrachtdetails tab
+group". Het niveau van de zijbalkkoppen is de kwestie van 1.3.1.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Koppen en labels moeten het onderwerp of doel beschrijven. Een kop als "Meer
+informatie" kan beter "Meer informatie over voorleessoftware" heten. Blinde
+bezoekers vragen vaak een overzicht van alle koppen op om snel een beeld van de
+inhoud te krijgen.</p>
+</div>
+<h5 id="succescriterium-247-niveau-aa-focus-zichtbaar">Succescriterium 2.4.7 (Niveau AA) — Focus zichtbaar</h5>
+<p>Elke gebruikersinterface die met een toetsenbord te bedienen is, heeft een
+bedieningswijze waarbij de indicator van de toetsenbordfocus zichtbaar is.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Visueel geverifieerd: elementen met toetsenbordfocus krijgen een duidelijk
+zichtbare ring.</p>
+</div>
+<blockquote>
+<p><strong>Kanttekening bij de meting.</strong> Een eerste geautomatiseerde meting meldde dat 8
+van de 10 tabstops geen zichtbare focusindicator hadden. Dat bleek <strong>onjuist</strong>:
+de indicator wordt getekend op een element ín de shadow root van het component,
+niet op het element dat de browser als "actief" teruggeeft. Visuele controle
+weerlegde de meting.</p>
+</blockquote>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Zorg dat altijd visueel zichtbaar is waar de toetsenbordfocus zich bevindt. Dit is
+te toetsen door de applicatie alleen met Tab te doorlopen en te kijken of steeds
+duidelijk is welk element aan de beurt is.</p>
+</div>
+<h5 id="succescriterium-2411-niveau-aa-focus-niet-bedekt-minimaal">Succescriterium 2.4.11 (Niveau AA) — Focus niet bedekt (minimaal)</h5>
+<p>Wanneer een component toetsenbordfocus krijgt, wordt deze niet volledig verborgen
+door content die door de auteur is toegevoegd.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Getoetst door 20 opeenvolgende tabstops te doorlopen op een venster van 1200 × 500
+pixels, een hoogte waarbij vaste elementen het snelst in de weg zitten. Het
+element met focus bleef steeds volledig in beeld; de pagina scrolt het zo nodig in
+zicht. Er is één <code>sticky</code> element aangetroffen (de filterzijbalk), dat de
+hoofdinhoud niet overlapt.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Een vaste kopbalk, cookiebanner of chatvenster kan het element met toetsenbordfocus
+afdekken. De gebruiker ziet dan niet waar hij is. Nieuw in WCAG 2.2: het element
+met focus mag niet <strong>volledig</strong> verborgen zijn.</p>
+</div>
+<h4 id="richtlijn-25-inputmodaliteiten">Richtlijn 2.5 Inputmodaliteiten</h4>
+<h5 id="succescriterium-251-niveau-a-bewegingen-aanwijzer">Succescriterium 2.5.1 (Niveau A) — Bewegingen aanwijzer</h5>
+<p>Alle functionaliteit waarmee bij de bediening gebruik wordt gemaakt van meerpunts- of padgebaseerde gebaren, kan worden bediend met een enkele aanwijzer zonder een padgebaseerd gebaar, tenzij een meerpunts- of padgebaseerd gebaar essentieel is.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn geen multipoint- of padgebaseerde bewegingen aangetroffen.</p>
+</div>
+<h5 id="succescriterium-252-niveau-a-annulering-aanwijzer">Succescriterium 2.5.2 (Niveau A) — Annulering aanwijzer</h5>
+<p>Voor functionaliteit die kan worden bediend met een enkele aanwijzer geldt dat het down-event niet wordt gebruikt om de functie uit te voeren, of dat de functie kan worden afgebroken of ongedaan gemaakt.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Bediening vindt plaats op het loslaten van de muisknop (standaard klikgedrag), niet
+op het indrukken.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Wordt een functie al uitgevoerd zodra de muisknop omlaag gaat, dan kan iemand met
+een motorische beperking een onbedoelde klik niet meer terugnemen. Door pas bij het
+loslaten te reageren, kan de gebruiker de muis nog wegbewegen.</p>
+</div>
+<h5 id="succescriterium-253-niveau-a-label-in-naam">Succescriterium 2.5.3 (Niveau A) — Label in naam</h5>
+<p>Bij componenten van de gebruikersinterface met labels die tekst of afbeeldingen van tekst bevatten, bevat de naam de tekst die visueel wordt weergegeven.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er zijn geen elementen aangetroffen waarbij de toegankelijke naam de zichtbare
+tekst niet bevat.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Staat er "Verzenden" op een knop, dan moet de toegankelijke naam die tekst ook
+bevatten. Anders kan iemand die met spraakbediening werkt de knop niet aanroepen:
+"klik Verzenden" werkt dan niet.</p>
+</div>
+<h5 id="succescriterium-254-niveau-a-bewegingsactivering">Succescriterium 2.5.4 (Niveau A) — Bewegingsactivering</h5>
+<p>Functionaliteit die kan worden bediend door de beweging van een apparaat of beweging van een gebruiker, kan ook worden bediend met componenten van de gebruikersinterface. De reactie op de beweging kan worden uitgeschakeld om onbedoelde activering te voorkomen.</p>
+<div class="verdict na">
+<p><strong>Dit succescriterium is niet van toepassing.</strong></p>
+<p>Er is geen functionaliteit die door beweging van het apparaat wordt geactiveerd.</p>
+</div>
+<h5 id="succescriterium-257-niveau-aa-sleepbewegingen">Succescriterium 2.5.7 (Niveau AA) — Sleepbewegingen</h5>
+<p>Alle functionaliteit die met slepen wordt bediend, kan ook met één aanwijzer
+zonder slepen worden bediend.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Er is geen functionaliteit aangetroffen die slepen vereist. De organisatieboom, de
+filterlijsten en de kaarten worden met klikken bediend; er zijn geen
+schuifregelaars of herschikbare lijsten.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Slepen is lastig of onmogelijk voor mensen met beperkte handfunctie, en voor wie
+met oogbesturing of een schakelaar werkt. Nieuw in WCAG 2.2: er moet altijd een
+alternatief zijn, bijvoorbeeld knoppen "omhoog" en "omlaag" naast een sleepbare
+lijst.</p>
+</div>
+<h5 id="succescriterium-258-niveau-aa-doelgrootte-minimum">Succescriterium 2.5.8 (Niveau AA) — Doelgrootte (minimum)</h5>
+<p>De grootte van het aanwijsgebied is ten minste 24 bij 24 CSS-pixels, behalve wanneer het doel inline in een zin staat, de grootte wordt bepaald door de user agent, of een equivalent alternatief beschikbaar is.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Van de 61 gemeten bedieningselementen zijn er 5 kleiner dan 24 × 24 CSS-pixels.
+Alle vijf zijn tekstlinks in de paginavoet ("Veelgestelde vragen", "Contact",
+"Privacy", "Toegankelijkheid" en de versieregel). Deze vallen onder de uitzondering
+<strong>"inline"</strong>: het doel bevindt zich in een zin of tekstblok.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Knoppen en andere bedieningselementen moeten minstens 24 × 24 CSS-pixels groot zijn,
+zodat mensen met een motorische beperking of trillende handen ze kunnen raken.
+Uitzonderingen zijn links binnen een lopende tekst en doelen die ver genoeg uit
+elkaar staan.</p>
+</div>
+<hr />
+<h3 id="principe-3-begrijpelijk">Principe 3 Begrijpelijk</h3>
+<p><em>Informatie en de bediening van de gebruikersinterface moeten begrijpelijk zijn.</em></p>
+<h4 id="richtlijn-31-leesbaar">Richtlijn 3.1 Leesbaar</h4>
+<h5 id="succescriterium-311-niveau-a-taal-van-de-pagina">Succescriterium 3.1.1 (Niveau A) — Taal van de pagina</h5>
+<p>De standaard menselijke taal van elke webpagina kan door software bepaald worden.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Op alle elf pagina's is <code>lang="nl"</code> aanwezig op het <code>&lt;html&gt;</code>-element.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Geef de taal van de pagina aan met een <code>lang</code>-attribuut, zodat voorleessoftware de
+tekst met de juiste uitspraak voorleest. Zonder deze aanduiding leest een
+Nederlandse tekst mogelijk met een Engelse uitspraak.</p>
+</div>
+<h5 id="succescriterium-312-niveau-aa-taal-van-onderdelen">Succescriterium 3.1.2 (Niveau AA) — Taal van onderdelen</h5>
+<p>De menselijke taal van elke passage of zin in de content kan door software bepaald worden, behalve waar het gaat om eigennamen, technische termen, woorden uit een onbepaalde taal en woorden of zinsdelen die deel zijn gaan uitmaken van het jargon van de onmiddellijk omringende tekst.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Handmatig beoordeeld met VoiceOver in de Nederlandse stem: de
+Engelse rolnamen ("UX designer", "Scrum Master", "Business Manager") worden
+herkenbaar uitgesproken en zijn binnen de organisatie gangbaar jargon, zodat de
+uitzondering voor ingeburgerde termen geldt. Er is geen term aangetroffen die
+zó verminkt wordt dat hij onherkenbaar is.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Wordt ergens een andere taal gebruikt dan de hoofdtaal van de pagina, dan hoort dat
+in de code te worden aangegeven met <code>lang</code>. Voor losse woorden en voor jargon dat is
+ingeburgerd, hoeft dat niet.</p>
+</div>
+<h4 id="richtlijn-32-voorspelbaar">Richtlijn 3.2 Voorspelbaar</h4>
+<h5 id="succescriterium-321-niveau-a-bij-focus">Succescriterium 3.2.1 (Niveau A) — Bij focus</h5>
+<p>Als een component van de gebruikersinterface de focus krijgt, dan veroorzaakt dat geen contextwijziging.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Het focussen van een element veroorzaakt geen contextwijziging.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Er mag niets ingrijpends gebeuren zodra een element focus krijgt, dus vóór er
+geklikt wordt. Een select die bij focus meteen naar een andere pagina springt, is
+een klassiek voorbeeld van wat niet mag.</p>
+</div>
+<h5 id="succescriterium-322-niveau-a-bij-input">Succescriterium 3.2.2 (Niveau A) — Bij input</h5>
+<p>Het veranderen van de instelling van een component leidt niet automatisch tot een
+contextwijziging, tenzij de gebruiker daarover vooraf is geïnformeerd.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De focus blijft staan waar de gebruiker hem liet.</p>
+</div>
+<p>Een filter aanvinken ververst de lijst en de zijbalk in delen (htmx). Gemeten met
+VoiceOver blijft de focus daarbij op de rij die de gebruiker aanvinkte:
+"Directoraat-generaal Belastingdienst 16 <span lang="en">unchecked checkbox</span>, <span lang="en">group list</span>
+Opdrachtgever 4 items", en na het aanvinken dezelfde rij, nu aangevinkt.</p>
+<p>Hetzelfde is gemeten voor de overige plekken waar de pagina in delen ververst:
+een kaart openen brengt de focus naar het zijpaneel dat verschijnt
+(<code>nldd-sheet</code> → <code>dialog</code>), en Escape brengt hem terug naar de kaart waar hij
+vandaan kwam. In geen van de gemeten gevallen valt de focus terug naar het begin
+van de pagina.</p>
+<p>Er treedt bij geen van deze handelingen een contextwijziging op die de gebruiker
+niet zelf in gang zette.</p>
+<p><strong>Bron:</strong> <code>wies/core/static/js/focus_restore.js</code>,
+<code>wies/core/jinja2/parts/filter_sidebar.html</code>.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Het invullen of wijzigen van een formulierveld mag niet automatisch een grote
+verandering veroorzaken, zoals het laden van een nieuwe pagina, tenzij de
+gebruiker daar vooraf over is geïnformeerd.</p>
+</div>
+<h5 id="succescriterium-323-niveau-aa-consistente-navigatie">Succescriterium 3.2.3 (Niveau AA) — Consistente navigatie</h5>
+<p>Navigatiemechanismen, die op meerdere webpagina's binnen een verzameling webpagina's herhaald worden, komen elke keer dat ze worden herhaald in dezelfde relatieve volgorde voor, tenzij een verandering wordt geïnitieerd door de gebruiker.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De hoofdnavigatie, het gebruikersmenu en de paginavoet staan op alle onderzochte
+pagina's in dezelfde relatieve volgorde.</p>
+</div>
+<h5 id="succescriterium-324-niveau-aa-consistente-identificatie">Succescriterium 3.2.4 (Niveau AA) — Consistente identificatie</h5>
+<p>Componenten die dezelfde functionaliteit hebben binnen een verzameling webpagina's worden consistent geïdentificeerd.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Componenten met dezelfde functie worden consistent aangeduid.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Een onderdeel van de interface hoort altijd met dezelfde naam te worden aangeduid.
+Noem een knop niet op de ene pagina "Opslaan" en op de andere "Bewaren".</p>
+</div>
+<h5 id="succescriterium-326-niveau-a-consistente-hulp">Succescriterium 3.2.6 (Niveau A) — Consistente hulp</h5>
+<p>Als een pagina een manier biedt om hulp te vinden, staat die op elke pagina in
+dezelfde relatieve volgorde.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Op <strong>alle elf</strong> onderzochte pagina's zijn de links "Veelgestelde vragen" en
+"Contact" aanwezig, steeds in de paginavoet en steeds in dezelfde volgorde. De
+contactpagina biedt zowel een e-mailadres als een verwijzing naar het
+Mattermost-kanaal.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Nieuw in WCAG 2.2. Biedt een website hulp (contactgegevens, een
+veelgestelde-vragenpagina, een chatfunctie), dan moet die hulp op elke pagina op
+dezelfde plek staan. Mensen met een cognitieve beperking hoeven dan niet op elke
+pagina opnieuw te zoeken waar ze terechtkunnen.</p>
+</div>
+<h4 id="richtlijn-33-assistentie-bij-invoer">Richtlijn 3.3 Assistentie bij invoer</h4>
+<h5 id="succescriterium-331-niveau-a-fout-identificatie">Succescriterium 3.3.1 (Niveau A) — Fout identificatie</h5>
+<p>Als een invoerfout automatisch wordt ontdekt, wordt het onderdeel waar de fout
+zit geïdentificeerd en wordt de fout in tekst aan de gebruiker meegedeeld.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Een afgewezen veld wordt benoemd, en de reden komt mee.</p>
+</div>
+<p>Elk formulier in de steekproef is leeg en met ongeldige waarden ingediend. Een
+afgewezen veld draagt <code>invalid</code> en verwijst met <code>unmet</code> naar de bijbehorende
+foutregel, die dat id draagt:</p>
+<pre><code class="language-html">&lt;nldd-text-field name=&quot;name&quot; required invalid unmet=&quot;error-name-1&quot;&gt;
+&lt;nldd-validation-item id=&quot;error-name-1&quot;&gt;Dit veld is verplicht.&lt;/nldd-validation-item&gt;
+</code></pre>
+<p>Het veld geeft die foutlijst zelf door als beschrijving aan de invoer in zijn
+shadow root, zodat de koppeling de shadow-grens overleeft. Gemeten met
+VoiceOver: "Opdrachtnaam, Opdrachtnaam is verplicht, required, <span lang="en">invalid data</span>,
+<span lang="en">edit text</span>". De focus gaat na afwijzing naar het eerste ongeldige onderdeel, ook
+als dat een knop is, zoals bij de opdrachtgever-kiezer: "Opdrachtgever
+toevoegen, Fout: Voeg minimaal 1 opdrachtgever toe., <span lang="en">button</span>".</p>
+<p>Daarnaast vat één live region de fouten samen, zodat de gebruiker meteen hoort
+dat het opslaan niet lukte en waarom: "Het formulier heeft 2 fouten:
+Opdrachtnaam is verplicht. Voeg minimaal 1 opdrachtgever toe."</p>
+<p><strong>Bron:</strong> <code>wies/core/jinja2/forms/field.html</code>,
+<code>wies/core/static/js/field_error_description.js</code>,
+<code>wies/core/static/js/live_region.js</code>.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Zorg voor foutmeldingen die het veld benoemen waar de fout zit. Vermijd "dit veld is
+verkeerd ingevuld"; noem de naam van het veld, zodat een blinde bezoeker weet waar
+hij moet zijn.</p>
+</div>
+<h5 id="succescriterium-332-niveau-a-labels-of-instructies">Succescriterium 3.3.2 (Niveau A) — Labels of instructies</h5>
+<p>Als de content gebruikersinvoer vereist, dan worden labels of instructies geleverd.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Alle zichtbare invoervelden hebben in de accessibility tree een toegankelijke naam.
+Voorbeeld: het zoekveld op <code>/beheer/gebruikers/</code> heeft de naam "Naam of e-mail
+zoeken".</p>
+</div>
+<blockquote>
+<p><strong>Kanttekening bij de meting.</strong> Een eerste meting meldde 3 velden zonder label en
+192 elementen zonder toegankelijke naam. Beide bleken <strong>onjuist</strong>: die elementen
+ontlenen hun naam aan inhoud die via een slot wordt doorgegeven, wat een eigen
+DOM-controle niet ziet. Toetsing via de accessibility tree van de browser gaf
+<strong>0 zonder naam</strong>.</p>
+</blockquote>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Bied bij invoervelden duidelijke labels en instructies, zodat voor alle bezoekers
+helder is wat er ingevuld moet worden. Een <code>placeholder</code> is geen label: die
+verdwijnt zodra men begint te typen.</p>
+</div>
+<h5 id="succescriterium-333-niveau-aa-foutsuggestie">Succescriterium 3.3.3 (Niveau AA) — Foutsuggestie</h5>
+<p>Als een invoerfout automatisch wordt ontdekt en suggesties voor verbetering
+bekend zijn, dan worden die aan de gebruiker gegeven.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>De suggestie bij een fout benoemt wat er moet gebeuren.</p>
+</div>
+<p>De foutmeldingen benoemen wat er moet gebeuren in plaats van alleen dát er iets
+mis is: "Voeg minimaal 1 opdrachtgever toe", "Opdrachtnaam is verplicht", en bij
+een periode dat de einddatum na de startdatum moet liggen.</p>
+<p>Ze bereiken een schermlezergebruiker langs dezelfde weg als bij 3.3.1: het veld
+geeft zijn foutlijst door als beschrijving, en de live region vat ze samen. De
+metingen staan daar.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Bied waar mogelijk een suggestie ter verbetering, bijvoorbeeld "controleer of het
+e-mailadres het formaat naam@domein.nl heeft". Dat helpt vooral mensen met een
+cognitieve beperking.</p>
+</div>
+<h5 id="succescriterium-334-niveau-aa-foutpreventie">Succescriterium 3.3.4 (Niveau AA) — Foutpreventie</h5>
+<p>Voor webpagina's die wettelijke verplichtingen of financiële transacties voor de gebruiker uitvoeren, die door de gebruiker te beheren gegevens verwijderen of wijzigen, of die antwoorden van de gebruiker verzenden, geldt dat verzendingen omkeerbaar zijn, gecontroleerd worden op invoerfouten, of bevestigd kunnen worden.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Handmatig en geïnstrumenteerd beoordeeld: elke verwijdering
+vraagt bevestiging in een dialoog. VoiceOver: "Gebruiker verwijderen? dialog
+with 4 items"; Tab: "Behoud gebruiker, <span lang="en">button</span>"; Tab: "Verwijder gebruiker,
+<span lang="en">button</span>"; Escape sluit de dialoog. Dezelfde dialoog staat op het verwijderen van
+een opdracht, een label, een categorie en een merk. De annuleerknop heet
+"Behoud gebruiker" in plaats van "Annuleren"; dat is een keuze in de tekst, geen
+afwijking.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Bij handelingen met juridische of financiële gevolgen, of bij het wijzigen of
+verwijderen van gegevens, moet de gebruiker de actie kunnen terugdraaien,
+controleren of bevestigen.</p>
+</div>
+<h5 id="succescriterium-337-niveau-a-overbodige-invoer">Succescriterium 3.3.7 (Niveau A) — Overbodige invoer</h5>
+<p>Informatie die de gebruiker eerder heeft ingevoerd, wordt automatisch ingevuld of
+is te kiezen, en hoeft niet opnieuw te worden ingetypt.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Bij het bewerken van een gebruiker zijn 12 van de 13 velden voorgevuld met de
+bestaande gegevens; niets hoeft opnieuw te worden ingetypt. De applicatie kent
+geen meerstapsformulieren waarin dezelfde gegevens twee keer worden gevraagd.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Nieuw in WCAG 2.2. Moet een gebruiker in stap 3 van een formulier nogmaals zijn
+adres intypen dat hij in stap 1 al gaf, dan is dat overbodige invoer. Voor mensen
+met een geheugenbeperking of een motorische beperking is dat een reële drempel.
+Uitzonderingen gelden onder meer voor het opnieuw invoeren van een wachtwoord.</p>
+</div>
+<h5 id="succescriterium-338-niveau-aa-toegankelijke-authenticatie-minimaal">Succescriterium 3.3.8 (Niveau AA) — Toegankelijke authenticatie (minimaal)</h5>
+<p>Bij het inloggen is geen cognitieve test vereist, tenzij er een alternatief of
+hulpmiddel beschikbaar is.</p>
+<div class="verdict na">
+<p><strong>Dit succescriterium is niet van toepassing.</strong></p>
+<p>Wies kent geen eigen inlogformulier: de authenticatie verloopt via OIDC bij
+Keycloak, dat onder een andere leverancier valt en buiten de scope van dit
+onderzoek ligt. In de applicatie zelf zijn geen wachtwoordvelden en geen CAPTCHA
+aangetroffen.</p>
+<p><strong>Aanbeveling:</strong> laat vaststellen of de Keycloak-inlogpagina aan dit criterium
+voldoet, en leg dat vast in de toegankelijkheidsverklaring van die voorziening.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Nieuw in WCAG 2.2. Inloggen mag niet afhangen van een cognitieve test: een puzzel
+oplossen, plaatjes herkennen, of een wachtwoord uit het hoofd overtypen zonder dat
+plakken is toegestaan. Dat sluit mensen met een cognitieve beperking uit. Een
+CAPTCHA die "vink alle stoplichten aan" vraagt, is het klassieke voorbeeld van wat
+niet mag.</p>
+</div>
+<hr />
+<h3 id="principe-4-robuust">Principe 4 Robuust</h3>
+<p><em>Content moet voldoende robuust zijn om betrouwbaar geïnterpreteerd te worden door een breed scala van gebruikersagenten, waaronder hulptechnologieën.</em></p>
+<h4 id="richtlijn-41-compatibel">Richtlijn 4.1 Compatibel</h4>
+<blockquote>
+<p><strong>Succescriterium 4.1.1 (Parsen) is vervallen.</strong> Dit criterium is in WCAG 2.2
+geschrapt, omdat moderne browsers zelf omgaan met kleine fouten in de opmaak.
+Ter informatie: er is wel op gecontroleerd, en op alle elf pagina's zijn
+<strong>0 dubbele ID's</strong> aangetroffen.</p>
+</blockquote>
+<h5 id="succescriterium-412-niveau-a-naam-rol-waarde">Succescriterium 4.1.2 (Niveau A) — Naam, rol, waarde</h5>
+<p>Voor alle componenten van de gebruikersinterface kunnen de naam en rol door software bepaald worden; toestanden, eigenschappen en waarden die door de gebruiker ingesteld kunnen worden, kunnen door software ingesteld worden; en kennisgeving van veranderingen in deze items is beschikbaar voor user agents, met inbegrip van hulptechnologieën.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Gemeten met VoiceOver, letterlijk: checkbox in de zijbalk
+"Directoraat-generaal Belastingdienst 6, <span lang="en">unchecked checkbox</span>" en na activeren
+"checked"; weergavekeuze "Persoon (30), <span lang="en">selected <span lang="en">radio button</span></span>, Weergave radio
+group" en na pijl rechts "Opdracht (21), <span lang="en">selected <span lang="en">radio button</span></span>"; tabs in het
+zijpaneel "Gegevens, <span lang="en">selected tab</span>, <span lang="en">1 of 2</span>" en "Updates, <span lang="en">selected tab</span>, <span lang="en">2 of 2</span>";
+sorteerknop "Startdatum (nieuwste eerst), <span lang="en">menu pop up collapsed</span>, <span lang="en">button</span>", na
+Enter "Startdatum (nieuwste eerst), <span lang="en">checked menu item</span>" en na pijl omlaag "Naam
+(A-Z), <span lang="en">menu item</span>"; zijpaneel "Detail <span lang="en">dialog with 2 items</span>"; verwijderen
+"Gebruiker verwijderen? <span lang="en">dialog with 4 items</span>". Naam, rol en toestand kloppen.</p>
+<p>Waar de focus na een deelverversing heen gaat, valt onder 3.2.2 en niet onder
+dit criterium, dat over naam, rol en waarde gaat. Kanttekening: de weergavekeuze meldt bij elke knop "<span lang="en">1 of 1</span>" in plaats van "1 of
+2"; dat zit in <code>nldd-segmented-control</code> en is bij de componentbibliotheek te
+melden.</p>
+</div>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Voor alle bedieningselementen moet hulpsoftware kunnen bepalen: wat is het (rol),
+hoe heet het (naam) en in welke stand staat het (waarde). Bij zelfgebouwde
+componenten (een eigen keuzelijst, een eigen schakelaar) gaat dit vaak mis, omdat
+de browser die betekenis niet vanzelf kent.</p>
+</div>
+<h5 id="succescriterium-413-niveau-aa-statusberichten">Succescriterium 4.1.3 (Niveau AA) — Statusberichten</h5>
+<p>Statusberichten kunnen door software bepaald worden, zodat ze aan de gebruiker
+kunnen worden voorgelezen zonder dat die de focus verliest.</p>
+<div class="verdict pass">
+<p><strong>De onderzochte set webpagina's voldoet aan dit succescriterium.</strong></p>
+<p>Wat er verandert zonder paginalading, wordt uitgesproken.</p>
+</div>
+<p>De pagina draagt één live region (<code>role="status"</code>), die leeg in het document
+staat en na elke deelverversing wordt gevuld. Dat een region al bestaat vóór de
+tekst erin verschijnt, is wat een schermlezer nodig heeft: een region die
+tegelijk met zijn inhoud verschijnt, blijft stil.</p>
+<p>Drie soorten statusberichten zijn met VoiceOver getoetst:</p>
+<ul>
+<li><strong>Aantal resultaten na een filterwissel.</strong> Gemeten: "16 collega's", direct na
+  het aanvinken van een filter. Op de opdrachtenlijst evenzo het aantal
+  opdrachten; is er niets gevonden, dan klinkt "Geen opdrachten gevonden".</li>
+<li><strong>Bevestiging na opslaan of verwijderen.</strong> De notificatie wordt uitgesproken,
+  bijvoorbeeld <code>Merk "Toetsmerk" is toegevoegd.</code> Opslaan, aanpassen en
+  verwijderen van een gebruiker, label, categorie, merk, teamlid of opdracht
+  geven elk zo'n bevestiging.</li>
+<li><strong>Foutmelding van een afgewezen formulier.</strong> Zie 3.3.1.</li>
+</ul>
+<p><strong>Afbakening.</strong> Het criterium gaat over veranderingen terwijl de gebruiker op de
+pagina blijft. Een bevestiging die verschijnt nadat een opslag de hele pagina
+opnieuw laadt, is strikt genomen nieuwe pagina-inhoud en valt erbuiten. Die
+gevallen zijn toch meegenomen: ook dan wil een gebruiker weten of het opslaan
+gelukt is.</p>
+<p><strong>Bron:</strong> <code>wies/core/static/js/live_region.js</code>, <code>wies/core/jinja2/base.html</code>.</p>
+<div class="explain">
+<p><strong>Uitleg van dit succescriterium</strong></p>
+<p>Verandert er iets op de pagina zonder dat de gebruiker daarheen navigeert ("12
+resultaten gevonden", "opgeslagen", "er ging iets mis"), dan moet dat aan een
+schermlezer worden aangekondigd via een live region. Anders merkt een blinde
+gebruiker de verandering niet op.</p>
+</div>
+<hr />
+<h2 id="bijlagen">Bijlagen</h2>
+<h3 id="geadviseerde-vervolgstappen">Geadviseerde vervolgstappen</h3>
+<div class="table-wrap" role="region" tabindex="0" aria-label="Tabel, horizontaal scrollbaar"><table>
+<thead>
+<tr>
+<th>Stap</th>
+<th>Waarom</th>
+<th>Prioriteit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. Toegankelijkheidsverklaring 29132 bijwerken</td>
+<td>Alle 55 criteria zijn beoordeeld; dit rapport kan als onderbouwing worden ingediend</td>
+<td>Hoog</td>
+</tr>
+<tr>
+<td>2. Toetsing met NVDA in Firefox en Chrome op Windows</td>
+<td>Het basisniveau belooft alle gangbare hulpapparatuur</td>
+<td>Middel</td>
+</tr>
+<tr>
+<td>3. Toetsing met gebruikers van hulpapparatuur</td>
+<td>Het oordeel van wie de applicatie dagelijks zo gebruikt, is met geen instrument te vervangen</td>
+<td>Middel</td>
+</tr>
+<tr>
+<td>4. Twee punten melden bij de componentbibliotheek</td>
+<td><code>aria-describedby</code> over de shadow-grens (3.3.1) en "<span lang="en">1 of 1</span>" in de weergavekeuze (4.1.2)</td>
+<td>Middel</td>
+</tr>
+<tr>
+<td>5. axe-core en een koppenvolgordetoets in de bouwstraat</td>
+<td>Voorkomt regressie in het gewone document</td>
+<td>Middel</td>
+</tr>
+<tr>
+<td>6. 404-pagina en processen alsnog toetsen</td>
+<td>Ontbraken in de steekproef</td>
+<td>Middel</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<div class="footer-note">
+<p><strong>Herleidbaarheid.</strong> Alle cijfers in dit rapport komen uit meetscripts die zijn
+uitgevoerd tegen een draaiende instantie van <code>main</code> (stand 30 september 2026,
+@ <code>c342ff2</code>), en uit de schermlezertoets, waarin de aangehaalde uitspraken van
+VoiceOver letterlijk bewaard zijn. De scripts zijn beschikbaar bij het
+ontwikkelteam, zodat de metingen herhaald kunnen worden.</p>
+</div>
+</main>
+</body>
+</html>
