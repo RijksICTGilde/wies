@@ -20,8 +20,9 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
-from django.http import FileResponse, Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -166,7 +167,8 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 # ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
 
-CURRENT_AUDIT_REPORT = settings.BASE_DIR / "docs" / "toegankelijkheid" / "onderzoek-wcag22-2026-09-30.html"
+# Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
+CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -3637,13 +3639,14 @@ def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
 
 
-# Public because the DigiToegankelijk register links straight at this URL, and no
-# file under /static/ because production hashes those names. See
-# docs/toegankelijkheid/README.md.
+# Public because the DigiToegankelijk register links straight at this URL. The
+# redirect is what keeps that link alive: the report itself is a static file, so
+# in production its name carries a hash that changes with every new version.
+# See docs/toegankelijkheid/README.md.
 @login_not_required
 def toegankelijkheid_onderzoek(request):
     """The WCAG audit report the toegankelijkheidsverklaring points at."""
-    return FileResponse(CURRENT_AUDIT_REPORT.open("rb"), content_type="text/html")
+    return redirect(static(CURRENT_AUDIT_REPORT))
 
 
 def error_400(request, exception=None):

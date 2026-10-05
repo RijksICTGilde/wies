@@ -2,6 +2,8 @@ import os
 
 from django.core.exceptions import ImproperlyConfigured
 
+from wies.core.middleware import add_security_headers
+
 from .base import *  # noqa: F403
 from .base import DATABASES
 
@@ -48,6 +50,10 @@ STORAGES = {
 _WHITENOISE = "whitenoise.middleware.WhiteNoiseMiddleware"
 _AFTER_SECURITY = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1  # noqa: F405
 MIDDLEWARE.insert(_AFTER_SECURITY, _WHITENOISE)  # noqa: F405
+
+# WhiteNoise answers static requests above ResponseHeadersMiddleware, so it has
+# to stamp the security headers itself. See wies/core/middleware.py.
+WHITENOISE_ADD_HEADERS_FUNCTION = add_security_headers
 
 LOGGING = {
     "version": 1,
