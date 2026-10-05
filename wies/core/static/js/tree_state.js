@@ -32,6 +32,7 @@ TreeState.prototype._buildIndex = function (nodes, parent) {
       label: raw.label || "",
       abbreviations: raw.abbreviations || [],
       group: !!raw.group,
+      nested: !!raw.nested,
       self: !!raw.self,
       nr_of_placements: raw.nr_of_placements,
       checked: false,

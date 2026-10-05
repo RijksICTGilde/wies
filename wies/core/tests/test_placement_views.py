@@ -2205,6 +2205,13 @@ class NestedOrgHierarchyTest(TestCase):
                 return found
         return None
 
+    def test_nested_folder_is_flagged_and_top_level_folder_is_not(self):
+        odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
+        self._typed(odi, self.agentschap)
+        hierarchy = build_org_hierarchy(Counter(), [], prune_empty=False)
+        assert self._find(hierarchy, "Agentschappen van BZK").get("nested") is True
+        assert not self._find(hierarchy, "Ministeries").get("nested")
+
     def test_agentschap_nests_under_its_ministry(self):
         odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
         self._typed(odi, self.agentschap)
@@ -2342,9 +2349,17 @@ class ScopedOrgTypeInFilterTest(TestCase):
         assert self.odi.id in matched
         assert self.other_agentschap.id not in matched
 
-    def test_global_org_type_still_matches_all(self):
-        matched = self._matched_ids({"org_type": "Agentschap"})
-        assert {self.odi.id, self.other_agentschap.id} <= matched
+    def test_invalid_ministry_id_matches_nothing(self):
+        # A non-UUID id must not reach the UUIDField lookup (that raised a 500).
+        matched = self._matched_ids({"org_type_in": "abc:Agentschap"})
+        assert matched == set()
+
+    def test_invalid_ministry_id_gets_unknown_chip(self):
+        user = User.objects.create_user(email="chip@rijksoverheid.nl")
+        self.client.force_login(user)
+        response = self.client.get(reverse("home"), {"org_type_in": "abc:Agentschap"})
+        assert response.status_code == 200
+        assert "Onbekende opdrachtgever" in response.content.decode()
 
     def test_unknown_ministry_matches_nothing(self):
         matched = self._matched_ids({"org_type_in": "00000000-0000-0000-0000-000000000000:Agentschap"})
@@ -2383,6 +2398,70 @@ class ScopedOrgTypeInFilterTest(TestCase):
         matched = self._matched_ids({"org_type_in": f"{self.bzk.public_id}:Agentschap"})
         assert stichting.id not in matched
         assert self.odi.id in matched
+
+
+class TopLevelTypeFolderFilterTest(TestCase):
+    """org_type matches what the picker's top-level type folder holds."""
+
+    def setUp(self):
+        self.ministerie = OrganizationType.objects.create(name="Ministerie", label="Ministerie")
+        self.agentschap = OrganizationType.objects.create(name="Agentschap", label="Agentschap")
+        self.inspectie = OrganizationType.objects.create(name="Inspectie", label="Inspectie")
+        self.zbo = OrganizationType.objects.create(
+            name="Zelfstandig bestuursorgaan", label="Zelfstandig bestuursorgaan"
+        )
+        self.bzk = OrganizationUnit.objects.create(name="BZK", tooi_identifier=MNRE_BZK)
+        self._typed(self.bzk, self.ministerie)
+        self.dg = OrganizationUnit.objects.create(name="DG", parent=self.bzk)
+        self.odi = OrganizationUnit.objects.create(name="ODI", related_ministry_tooi=MNRE_BZK)
+        self._typed(self.odi, self.agentschap)
+        # No ministry in the tree for this tooi, so it stays in the top-level folder.
+        self.loose = OrganizationUnit.objects.create(name="Los", related_ministry_tooi=MNRE_IENW)
+        self._typed(self.loose, self.agentschap)
+
+    def _typed(self, unit, *types):
+        """Give a unit its type set, with the first as main_type."""
+        unit.organization_types.set(types)
+        unit.main_type = types[0] if types else None
+        unit.save(update_fields=["main_type"])
+
+    def _matched_ids(self, params):
+        view = PlacementListView()
+        view.request = RequestFactory().get("/", params)
+        return set(view.apply_org_filter(OrganizationUnit.objects.all(), "id__in").values_list("id", flat=True))
+
+    def test_ministries_folder_includes_units_nested_under_them(self):
+        matched = self._matched_ids({"org_type": "Ministerie"})
+        assert {self.bzk.id, self.dg.id, self.odi.id} <= matched
+        assert self.loose.id not in matched
+
+    def test_type_folder_excludes_units_nested_under_a_ministry(self):
+        matched = self._matched_ids({"org_type": "Agentschap"})
+        assert self.loose.id in matched
+        assert self.odi.id not in matched
+
+    def test_type_folder_keys_on_main_type(self):
+        # ANVS is filed under Inspecties (its main type), not under ZBO's.
+        anvs = OrganizationUnit.objects.create(name="ANVS")
+        self._typed(anvs, self.inspectie, self.zbo)
+        assert anvs.id not in self._matched_ids({"org_type": "Zelfstandig bestuursorgaan"})
+        assert anvs.id in self._matched_ids({"org_type": "Inspectie"})
+
+    def test_type_folder_holds_roots_only(self):
+        # A non-root of the type sits in its parent's subtree, not in the folder.
+        child = OrganizationUnit.objects.create(name="Kind", parent=self.loose)
+        agentschap_child = OrganizationUnit.objects.create(name="Sub-agentschap", parent=self.dg)
+        self._typed(agentschap_child, self.agentschap)
+        matched = self._matched_ids({"org_type": "Agentschap"})
+        assert child.id in matched  # subtree of a folder root
+        assert agentschap_child.id not in matched
+
+    def test_folder_count_matches_filter(self):
+        hierarchy = build_org_hierarchy(
+            Counter({self.odi.id: 2, self.loose.id: 1, self.bzk.id: 1}), [], prune_empty=True
+        )
+        folders = {n["label"]: n["nr_of_placements"] for n in hierarchy if n.get("group")}
+        assert folders == {"Ministeries": 3, "Agentschappen": 1}
 
 
 class AssignmentPanelBreadcrumbMinistryTest(TestCase):

@@ -1199,16 +1199,16 @@ class MinistryNestedRootIdsTest(TestCase):
         inspectie_type = OrganizationType.objects.create(name="Inspectie", label="Inspectie")
         inspectie = OrganizationUnit.objects.create(name="Inspectie X", related_ministry_tooi=MNRE_BZK)
         self._typed(inspectie, inspectie_type)
-        assert get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap") == [self.odi.id]
+        assert get_ministry_nested_root_ids([MNRE_BZK], type_name="Agentschap") == [self.odi.id]
 
     def test_type_label_keys_on_main_type_not_any_type(self):
         # Non-nestable main type + incidental Agentschap type → still excluded.
         mixed = OrganizationUnit.objects.create(name="Mixed", related_ministry_tooi=MNRE_BZK)
         self._typed(mixed, self.stichting, self.agentschap)
-        assert mixed.id not in get_ministry_nested_root_ids([MNRE_BZK], type_label="Agentschap")
+        assert mixed.id not in get_ministry_nested_root_ids([MNRE_BZK], type_name="Agentschap")
 
     def test_non_nestable_type_label_returns_nothing(self):
-        assert get_ministry_nested_root_ids([MNRE_BZK], type_label="Ministerie") == []
+        assert get_ministry_nested_root_ids([MNRE_BZK], type_name="Ministerie") == []
 
     def test_empty_toois_returns_nothing(self):
         assert get_ministry_nested_root_ids([]) == []

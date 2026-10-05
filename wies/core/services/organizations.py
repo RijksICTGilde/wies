@@ -21,6 +21,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from wies.core.models import OrganizationType, OrganizationUnit
+from wies.core.public_id import parse_public_ids
 from wies.core.services.events import create_event
 
 logger = logging.getLogger(__name__)
@@ -113,20 +114,6 @@ class SyncResult:
             deleted=self.deleted + other.deleted,
             errors=self.errors + other.errors,
         )
-
-
-def set_types_and_main(unit: OrganizationUnit, organization_types: list[OrganizationType]) -> None:
-    """Replace a unit's types (unordered set) and record its main type.
-
-    The main type is the first-listed source type — the overheid.nl breadcrumb
-    category the org is filed under. It is stored as its own ``main_type`` FK;
-    ``organization_types`` itself carries no order.
-    """
-    unit.organization_types.set(organization_types)
-    main_type = organization_types[0] if organization_types else None
-    if unit.main_type_id != (main_type.pk if main_type else None):
-        unit.main_type = main_type
-        unit.save(update_fields=["main_type"])
 
 
 def parse_organization_element(
@@ -320,6 +307,7 @@ def sync_organization_tree(
             "system_id": org_data["system_id"],
             "source_url": org_data["source_url"],
             "end_date": end_date,
+            "main_type": organization_types[0] if organization_types else None,
         }
 
         if db_org:
@@ -328,7 +316,7 @@ def sync_organization_tree(
                 old_value = getattr(db_org, attribute)
                 if old_value != new_value:
                     # Ensure JSON-serializable values for event logging
-                    if attribute == "parent":
+                    if attribute in ("parent", "main_type"):
                         changes[attribute] = {
                             "old": old_value.id if old_value else None,
                             "new": new_value.id if new_value else None,
@@ -348,13 +336,8 @@ def sync_organization_tree(
             new_type_pks = {obj.pk for obj in organization_types}
             if current_type_pks != new_type_pks:
                 changes["organization_types"] = {"old": sorted(current_type_pks), "new": sorted(new_type_pks)}
-            # The main type (first-listed source type) is its own field, so a
-            # change there — even without a set change — is worth logging.
-            new_main_pk = organization_types[0].pk if organization_types else None
-            if db_org.main_type_id != new_main_pk:
-                changes["main_type"] = {"old": db_org.main_type_id, "new": new_main_pk}
             if not dry_run:
-                set_types_and_main(db_org, organization_types)
+                db_org.organization_types.set(organization_types)
 
             if changes:
                 if not dry_run:
@@ -409,8 +392,7 @@ def sync_organization_tree(
 
             if not dry_run:
                 new_org = OrganizationUnit.objects.create(**new_org_attributes)
-                # First-listed source type becomes main_type; the rest form the set.
-                set_types_and_main(new_org, organization_types)
+                new_org.organization_types.set(organization_types)
                 logger.info("Created: %s", new_org)
                 create_event(
                     object_type="OrganizationUnit",
@@ -611,15 +593,18 @@ def get_top_org_options(
     *,
     selected_self_ids: set[int] | None = None,
     selected_type_labels: set[str] | None = None,
+    selected_type_in: list[tuple[str, str]] | None = None,
     limit: int = 3,
 ) -> list[dict]:
     """Turns per-org ``org_counts`` + the current selections into the opdrachtgever
     quick checkbox options, ordered by count then label.
 
-    Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
-    so the sidebar quick row stays in sync with whatever was picked in the modal.
-    The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
-    self/type only appear when selected, having no top-N baseline.
+    Each option carries its own ``param`` (``org``, ``org_self``, ``org_type`` or
+    ``org_type_in``) so the sidebar quick row stays in sync with whatever was
+    picked in the modal. The ``org`` group pads up to ``limit`` with the
+    highest-count unselected orgs; self/type only appear when selected, having no
+    top-N baseline. ``selected_type_in`` holds ``(ministry_public_id, type_name)``
+    pairs; a pair whose ministry is unknown is left out.
 
     A selected option is always shown, appended below the top-N when it does not
     make the cut. The order never depends on selection — ticking an option
@@ -627,6 +612,7 @@ def get_top_org_options(
     """
     selected_self_ids = selected_self_ids or set()
     selected_type_labels = selected_type_labels or set()
+    selected_type_in = selected_type_in or []
 
     selected_ids = set(selected_org_ids)
     self_ids = set(selected_self_ids)
@@ -645,12 +631,12 @@ def get_top_org_options(
             {
                 "param": "org",
                 "value": str(public_id),
-                "label": label or f"Organisatie {org_id}",
+                "label": label or name,
                 "count": org_counts.get(org_id, 0),
                 "selected": org_id in selected_ids,
             }
-            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=org_wanted).values_list(
-                "id", "label", "public_id"
+            for org_id, label, name, public_id in OrganizationUnit.objects.filter(id__in=org_wanted).values_list(
+                "id", "label", "name", "public_id"
             )
         )
 
@@ -659,12 +645,12 @@ def get_top_org_options(
             {
                 "param": "org_self",
                 "value": str(public_id),
-                "label": f"{label or f'Organisatie {org_id}'} (direct)",
+                "label": f"{label or name} (direct)",
                 "count": org_counts.get(org_id, 0),
                 "selected": True,
             }
-            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=self_ids).values_list(
-                "id", "label", "public_id"
+            for org_id, label, name, public_id in OrganizationUnit.objects.filter(id__in=self_ids).values_list(
+                "id", "label", "name", "public_id"
             )
         )
 
@@ -678,6 +664,25 @@ def get_top_org_options(
         }
         for type_label in selected_type_labels
     )
+
+    if selected_type_in:
+        ministry_abbreviations = {
+            str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+            for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+                public_id__in=parse_public_ids([pid for pid, _ in selected_type_in])
+            ).values_list("public_id", "label", "name", "abbreviations")
+        }
+        options.extend(
+            {
+                "param": "org_type_in",
+                "value": f"{ministry_public_id}:{type_name}",
+                "label": nested_folder_label(ministry_abbreviations[ministry_public_id], type_name),
+                "count": 0,
+                "selected": True,
+            }
+            for ministry_public_id, type_name in selected_type_in
+            if ministry_public_id in ministry_abbreviations
+        )
 
     # Sorted on count then label, deliberately not on ``selected``: a just-ticked
     # option jumping to the top read as confusing.
@@ -697,7 +702,7 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
             "abbreviations",
             "tooi_identifier",
             "related_ministry_tooi",
-            "main_type__label",
+            "main_type__name",
         )
     )
 
@@ -722,17 +727,12 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
     root_ids = {u["id"] for u in roots}
     type_links = OrganizationUnit.organization_types.through.objects.filter(
         organizationunit_id__in=root_ids
-    ).values_list("organizationunit_id", "organizationtype__label")
+    ).values_list("organizationunit_id", "organizationtype__name")
     root_types: dict[int, set[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, set()).add(type_label)
+    for unit_id, type_name in type_links:
+        root_types.setdefault(unit_id, set()).add(type_name)
 
-    # main_type per root, falling back to any type only while it is unset (the
-    # brief window before the first sync); once set, this is a pure dict read.
-    root_main_type: dict[int, str | None] = {}
-    for unit in roots:
-        types = root_types.get(unit["id"])
-        root_main_type[unit["id"]] = unit["main_type__label"] or (next(iter(types)) if types else None)
+    root_main_type: dict[int, str | None] = {unit["id"]: unit["main_type__name"] for unit in roots}
 
     # Presentation-only nesting: a root whose MAIN type is nestable and whose
     # related_ministry_tooi resolves to a ministry in the tree is moved under a
@@ -807,6 +807,9 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
                 "label": nested_folder_label(node["ministry_abbreviation"], node["type_label"]),
                 "nr_of_placements": node["total_count"],
                 "group": True,
+                # A ministry-scoped folder; the assignment picker lets you tick
+                # these (unlike the top-level type folders).
+                "nested": True,
                 "children": [to_json(c) for c in sorted(node["children_data"], key=sort_key)],
             }
         children_data = sorted(node["children_data"], key=sort_key)
@@ -921,21 +924,19 @@ def resolve_related_ministry(org: OrganizationUnit) -> OrganizationUnit | None:
     """
     if org.parent_id or not org.related_ministry_tooi:
         return None
-    # Fall back to any type when main_type is unset (e.g. not yet synced).
-    main = org.main_type or org.organization_types.first()
-    if main is None or main.name not in NESTED_ORG_TYPES:
+    if org.main_type is None or org.main_type.name not in NESTED_ORG_TYPES:
         return None
     return OrganizationUnit.objects.filter(tooi_identifier=org.related_ministry_tooi).exclude(id=org.id).first()
 
 
-def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_label: str | None = None) -> list[int]:
+def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_name: str | None = None) -> list[int]:
     """Root org ids that nest under the given ministries in the picker (boom).
 
     Same rule as ``build_org_hierarchy`` and ``resolve_related_ministry``: an org
     nests under a ministry only when it is a DB root (no parent), its ``main_type``
     (the overheid.nl breadcrumb category) is in ``NESTED_ORG_TYPES``, and its
     ``related_ministry_tooi`` points at one of the given ministries. Pass
-    ``type_label`` to restrict to a single nestable type (the ``org_type_in``
+    ``type_name`` to restrict to a single nestable type (the ``org_type_in``
     facet); it is ignored when not itself nestable.
 
     Callers wrap the result in ``get_org_descendant_ids`` to include subtrees.
@@ -944,16 +945,40 @@ def get_ministry_nested_root_ids(ministry_toois: list[str], *, type_label: str |
     """
     if not ministry_toois:
         return []
-    allowed_types = NESTED_ORG_TYPES if type_label is None else (NESTED_ORG_TYPES & {type_label})
+    allowed_types = NESTED_ORG_TYPES if type_name is None else (NESTED_ORG_TYPES & {type_name})
     if not allowed_types:
         return []
     return list(
         OrganizationUnit.objects.filter(
             parent__isnull=True,
             related_ministry_tooi__in=ministry_toois,
-            main_type__label__in=allowed_types,
+            main_type__name__in=allowed_types,
         ).values_list("id", flat=True)
     )
+
+
+def get_type_folder_root_ids(type_names: list[str]) -> list[int]:
+    """Root org ids in the picker's top-level type folders for ``type_names``.
+
+    Same rule as ``build_org_hierarchy``: a DB root is filed under its MAIN type
+    only, and a root that nests under its ministry has left the top-level folder.
+    The roots nested under a ministry in the folder are included instead, so the
+    "Ministeries" folder matches the ministries plus what the picker shows under
+    them. Callers wrap the result in ``get_org_descendant_ids`` for subtrees.
+    """
+    if not type_names:
+        return []
+    ministry_toois = set(
+        OrganizationUnit.objects.filter(parent__isnull=True, organization_types__name="Ministerie")
+        .exclude(tooi_identifier__isnull=True)
+        .exclude(tooi_identifier="")
+        .values_list("tooi_identifier", flat=True)
+    )
+    roots = OrganizationUnit.objects.filter(parent__isnull=True, main_type__name__in=type_names)
+    nested = Q(main_type__name__in=NESTED_ORG_TYPES, related_ministry_tooi__in=ministry_toois)
+    folder_roots = list(roots.exclude(nested).values_list("id", "tooi_identifier"))
+    folder_ministry_toois = [tooi for _, tooi in folder_roots if tooi in ministry_toois]
+    return [root_id for root_id, _ in folder_roots] + get_ministry_nested_root_ids(folder_ministry_toois)
 
 
 def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:

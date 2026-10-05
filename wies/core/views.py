@@ -118,6 +118,7 @@ from .services.organizations import (
     get_ministry_nested_root_ids,
     get_org_descendant_ids,
     get_top_org_options,
+    get_type_folder_root_ids,
     nested_folder_label,
     org_counts_from_filtered,
 )
@@ -978,14 +979,14 @@ def _org_chip_data(
                 "public_id", "label"
             )
         }
-    # Ministry labels for the scoped nested-folder chips ("BZK - Agentschappen").
+    # Ministry labels for the scoped nested-folder chips ("Agentschappen van BZK").
     ministry_labels: dict[str, str] = {}
     if type_in:
         ministry_labels = {
-            str(public_id): ((abbreviations[0] if abbreviations else "") or label)
-            for public_id, label, abbreviations in OrganizationUnit.objects.filter(
+            str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+            for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
                 public_id__in=parse_public_ids([pid for pid, _ in type_in])
-            ).values_list("public_id", "label", "abbreviations")
+            ).values_list("public_id", "label", "name", "abbreviations")
         }
     chips: list[dict] = [
         {
@@ -1047,13 +1048,17 @@ class PublicIdFacetsMixin:
         """The scoped nested-folder facet: ``org_type_in=<ministry_public_id>:<type>``.
 
         One entry per selected nested folder (e.g. BZK → Agentschappen). Parsed
-        into ``(ministry_public_id, type_label)`` pairs; malformed values drop.
+        into ``(ministry_public_id, type_name)`` pairs; values without both parts
+        drop. A valid id is normalised to its canonical form so it matches
+        ``str(public_id)`` lookups; an invalid one is kept as-is, so it matches
+        nothing and gets an "Onbekende opdrachtgever" chip.
         """
         pairs: list[tuple[str, str]] = []
         for value in self.request.GET.getlist("org_type_in"):
-            ministry_public_id, sep, type_label = value.partition(":")
-            if sep and ministry_public_id and type_label:
-                pairs.append((ministry_public_id, type_label))
+            ministry_public_id, sep, type_name = value.partition(":")
+            if sep and ministry_public_id and type_name:
+                parsed = parse_public_ids([ministry_public_id])
+                pairs.append((str(parsed[0]) if parsed else ministry_public_id, type_name))
         return pairs
 
     def apply_org_filter(self, qs, lookup: str):
@@ -1062,8 +1067,9 @@ class PublicIdFacetsMixin:
         ``lookup`` is the queryset path to the organization id, which differs per
         list view. ``org`` matches the whole subtree (plus units linked to it as
         their ministry, since those are not DB descendants), ``org_self`` only the
-        org itself, ``org_type`` every org of that type plus its subtree, and
-        ``org_type_in`` every org of a type that is linked to a given ministry.
+        org itself, ``org_type`` the roots in that top-level type folder of the
+        picker plus their subtrees, and ``org_type_in`` every org of a type that
+        nests under a given ministry.
         """
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
@@ -1086,24 +1092,23 @@ class PublicIdFacetsMixin:
                 linked_ids = get_ministry_nested_root_ids(ministry_toois)
                 matching_ids |= get_org_descendant_ids(linked_ids)
         if self.org_type_filter:
-            type_root_ids = list(
-                OrganizationUnit.objects.filter(organization_types__label__in=self.org_type_filter).values_list(
-                    "id", flat=True
-                )
-            )
-            matching_ids |= get_org_descendant_ids(type_root_ids)
-        for ministry_public_id, type_label in self.org_type_in_filter:
-            ministry_tooi = (
-                OrganizationUnit.objects.filter(public_id=ministry_public_id)
-                .values_list("tooi_identifier", flat=True)
-                .first()
-            )
-            if not ministry_tooi:
-                continue  # fail closed: unknown ministry matches nothing
-            # Same nesting rule as the org facet, scoped to the chosen type; keys
-            # on the MAIN type so a stichting with an incidental type is excluded.
-            scoped_ids = get_ministry_nested_root_ids([ministry_tooi], type_label=type_label)
-            matching_ids |= get_org_descendant_ids(scoped_ids)
+            # Same folder contents as the picker, so the folder's count holds.
+            matching_ids |= get_org_descendant_ids(get_type_folder_root_ids(self.org_type_filter))
+        if self.org_type_in_filter:
+            ministry_toois = {
+                str(public_id): tooi
+                for public_id, tooi in OrganizationUnit.objects.filter(
+                    public_id__in=parse_public_ids([pid for pid, _ in self.org_type_in_filter])
+                ).values_list("public_id", "tooi_identifier")
+            }
+            for ministry_public_id, type_name in self.org_type_in_filter:
+                ministry_tooi = ministry_toois.get(ministry_public_id)
+                if not ministry_tooi:
+                    continue  # fail closed: unknown ministry matches nothing
+                # Same nesting rule as the org facet, scoped to the chosen type; keys
+                # on the MAIN type so a stichting with an incidental type is excluded.
+                scoped_ids = get_ministry_nested_root_ids([ministry_tooi], type_name=type_name)
+                matching_ids |= get_org_descendant_ids(scoped_ids)
         return qs.filter(**{lookup: matching_ids})
 
     def add_org_filter_context(self, context: dict, active_filters: dict) -> None:
@@ -1667,6 +1672,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
+                    selected_type_in=self.org_type_in_filter,
                 ),
             },
             {
@@ -1800,7 +1806,14 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                         placements__isnull=True,
                     ).select_related("skill"),
                     to_attr="services_with_skills",
-                )
+                ),
+                # The card shows the first opdrachtgever; ordered on pk, as
+                # organizations.first() would pick it.
+                Prefetch(
+                    "organizations",
+                    queryset=OrganizationUnit.objects.order_by("pk"),
+                    to_attr="organizations_by_pk",
+                ),
             )
         )
 
@@ -1826,7 +1839,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         for assignment in context["object_list"]:
             assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.public_id)
-            first_org = assignment.organizations.first()
+            first_org = next(iter(assignment.organizations_by_pk), None)
             assignment.org_label = (first_org.label or first_org.name) if first_org else None
 
         context["filter_target_url"] = reverse("assignment-list")
@@ -1898,6 +1911,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                     org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
+                    selected_type_in=self.org_type_in_filter,
                 ),
             },
             {

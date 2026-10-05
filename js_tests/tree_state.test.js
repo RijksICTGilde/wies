@@ -517,6 +517,14 @@ describe("groupSelectsChildren (assignment picker: virtual folders)", function (
     assert.ok(!ts.explicitSelections.has("group-Min"));
   });
 
+  it("indexes the nested flag of a ministry-scoped folder", function () {
+    var data = groupTree();
+    data[0].children[0].children[0].nested = true;
+    var ts = new TreeState(data, opts);
+    assert.equal(ts.getNode("group-Ag").nested, true);
+    assert.equal(ts.getNode("group-Min").nested, false);
+  });
+
   it("unticking one child leaves the rest selected, folder unticked", function () {
     var ts = new TreeState(groupTree(), opts);
     ts.check("group-Ag");

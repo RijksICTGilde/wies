@@ -9,11 +9,9 @@
 
   if (!container) return;
 
-  // An assignment is linked to concrete organisations. A type group ("virtuele
-  // map", e.g. Agentschappen) carries no organisation of its own, but IS
-  // selectable: ticking it selects/deselects every concrete organisation under
-  // it. Its own group node never reaches the form — selectedOrgs() expands it to
-  // its concrete org descendants.
+  // An assignment is linked to concrete organisations. A nested type folder
+  // under a ministry ("Agentschappen van BZK") carries no organisation of its
+  // own, but IS selectable: ticking it selects the organisations in it.
   var treeState = new TreeState(data, {
     collapseToParent: false,
     // Ticking a type folder selects the concrete orgs under it, and the
@@ -25,10 +23,11 @@
     container: container,
     showCounts: false,
     accessibleLabel: "Opdrachtgevers",
-    // Groups (type folders) are selectable and cascade to their orgs; a "self"
-    // helper node carries no distinct organisation, so it stays structure-only.
+    // Only the nested folders are selectable: a top-level type folder
+    // ("Gemeenten") would link hundreds of orgs in one click. A "self" helper
+    // node carries no distinct organisation, so it stays structure-only.
     isSelectable: function (node) {
-      return !node.self;
+      return !node.self && (!node.group || node.nested);
     },
     onToggle: rebuildSelectionList,
   });
@@ -38,41 +37,14 @@
   // says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
 
-  // The concrete organisation leaves under a node: skip group/self helper nodes,
-  // recurse into groups so a whole type folder resolves to its real orgs.
-  function collectOrgLeaves(node, out) {
-    (node.children || []).forEach(function (child) {
-      if (child.group || child.self) {
-        collectOrgLeaves(child, out);
-      } else {
-        out.push({ nodeId: child.id, label: child.label });
-        // A concrete org can still have concrete children; keep them too.
-        collectOrgLeaves(child, out);
-      }
-    });
-    return out;
-  }
-
-  // Group and self nodes carry no organisation, so they never reach the form: a
-  // selected group is expanded to the concrete orgs beneath it instead.
+  // Group and self nodes carry no organisation, so they never reach the form;
+  // groupSelectsChildren already moved a folder's selection onto its orgs.
   function selectedOrgs() {
     var rows = [];
-    var seen = {};
-    function add(nodeId, label) {
-      if (seen[nodeId]) return;
-      seen[nodeId] = true;
-      rows.push({ nodeId: nodeId, label: label });
-    }
     treeState.explicitSelections.forEach(function (label, nodeId) {
       var node = treeState.getNode(nodeId);
-      if (node && node.self) return;
-      if (node && node.group) {
-        collectOrgLeaves(node, []).forEach(function (leaf) {
-          add(leaf.nodeId, leaf.label);
-        });
-        return;
-      }
-      add(nodeId, label);
+      if (node && (node.group || node.self)) return;
+      rows.push({ nodeId: nodeId, label: label });
     });
     return rows;
   }

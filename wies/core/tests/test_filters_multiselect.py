@@ -266,6 +266,25 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         assert match, "selected org-type must appear as a quick option"
         assert match[0]["selected"] is True
 
+    def test_nested_folder_selection_is_checked_with_org_type_in_param(self):
+        ministry = OrganizationUnit.objects.create(name="BZK", label="Ministerie van BZK", abbreviations=["BZK"])
+        value = f"{ministry.public_id}:Agentschap"
+        opts = get_top_org_options(set(), Counter(), selected_type_in=[(str(ministry.public_id), "Agentschap")])
+        match = [o for o in opts if o["param"] == "org_type_in" and o["value"] == value]
+        assert match, "selected nested folder must appear as a quick option"
+        assert match[0]["selected"] is True
+        assert match[0]["label"] == "Agentschappen van BZK"
+
+    def test_nested_folder_with_unknown_ministry_is_left_out(self):
+        opts = get_top_org_options(set(), Counter(), selected_type_in=[("abc", "Agentschap")])
+        assert not [o for o in opts if o["param"] == "org_type_in"]
+
+    def test_org_without_label_falls_back_to_name(self):
+        org = OrganizationUnit.objects.create(name="Zonder label", label="")
+        opts = get_top_org_options({org.id}, Counter())
+        match = [o for o in opts if o["value"] == str(org.public_id)]
+        assert match[0]["label"] == "Zonder label"
+
     def test_selecting_does_not_reorder_by_selection(self):
         # Org B has the higher count, Org A none. Selecting the low-count Org A
         # must NOT push it above Org B: the order is count/label, not "selected
