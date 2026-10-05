@@ -9,8 +9,10 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
-# pip is unused (uv installs into /opt/venv)
-RUN python -m pip uninstall --yes pip
+# pip is unused (uv installs into /opt/venv); ensurepip carries a bundled
+# wheel that would put it back
+RUN python -m pip uninstall --yes pip \
+  && rm -rf /usr/local/lib/python3*/ensurepip
 
 #-----------------------------------------------------------------------------------------------------------------------
 # Python build stage
