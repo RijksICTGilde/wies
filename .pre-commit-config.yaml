@@ -43,7 +43,11 @@ repos:
   - repo: https://github.com/djlint/djLint
     rev: v1.44.2
     hooks:
+      # docs/ is uitgezonderd: het onderzoeksrapport daar is een gegenereerd
+      # document, geen template, en herformatteren levert alleen ruis op.
       - id: djlint-reformat-jinja
         types_or: [html]
+        exclude: ^docs/
       - id: djlint-jinja
         types_or: [html]
+        exclude: ^docs/

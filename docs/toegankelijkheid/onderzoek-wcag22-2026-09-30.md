@@ -68,15 +68,15 @@ toegankelijkheidsproblemen kunnen ontstaan.
 
 ## A. Informatie over de opdracht
 
-| Onderdeel                         | Gegeven                                                                                                                                                                                          |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Onderzoeker**                   | R. Rouwhof, ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                            |
-| **Onderzoeksdatum**               | 30 september 2026                                                                                                                                                                                |
-| **Opdrachtgever**                 | Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                            |
-| **Norm**                          | WCAG 2.2, niveau A en AA (via EN 301 549)                                                                                                                                                        |
-| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, intern uitgevoerd: geautomatiseerde toetsing, instrumentele metingen in drie browsers en een toets met schermlezer. Geen onafhankelijk onderzoek. |
-| **Versie van dit document**       | 3.0                                                                                                                                                                                              |
-| **Onderzochte versie applicatie** | `main`, stand 30 september 2026 (@ `c342ff2`)                                                                                                                                                    |
+| Onderdeel                         | Gegeven                                                                                                                                                                                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Onderzoeker**                   | R. Rouwhof, ontwikkelteam Wies, Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                               |
+| **Onderzoeksdatum**               | 30 september 2026                                                                                                                                                                                                                                   |
+| **Opdrachtgever**                 | Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI)                                                                                                                                                                               |
+| **Norm**                          | WCAG 2.2, niveau A en AA (via EN 301 549)                                                                                                                                                                                                           |
+| **Soort onderzoek**               | Volledig onderzoek van alle 55 succescriteria, intern uitgevoerd: geautomatiseerde toetsing, instrumentele metingen in drie browsers en een toets met schermlezer. Geen onafhankelijk onderzoek.                                                   |
+| **Versie van dit document**       | 3.0                                                                                                                                                                                                                                                 |
+| **Onderzochte versie applicatie** | `main`, stand 30 september 2026 (@ `c342ff2`)                                                                                                                              |
 
 ---
 
@@ -163,14 +163,14 @@ getoetst en voldoen.
 WCAG 2.2 voegt zes succescriteria toe op niveau A en AA, en laat 4.1.1 (Parsen)
 vervallen. De nieuwe criteria zijn in dit onderzoek meegenomen:
 
-| Succescriterium                              | Niveau | Status              |
-| -------------------------------------------- | ------ | ------------------- |
-| 2.4.11 Focus niet bedekt (minimaal)          | AA     | Voldoet             |
-| 2.5.7 Sleepbewegingen                        | AA     | Voldoet             |
-| 2.5.8 Doelgrootte (minimaal)                 | AA     | Voldoet             |
-| 3.2.6 Consistente hulp                       | A      | Voldoet             |
-| 3.3.7 Overbodige invoer                      | A      | Voldoet             |
-| 3.3.8 Toegankelijke authenticatie (minimaal) | AA     | Niet van toepassing |
+| Succescriterium                              | Niveau | Status                 |
+| -------------------------------------------- | ------ | ---------------------- |
+| 2.4.11 Focus niet bedekt (minimaal)          | AA     | Voldoet                |
+| 2.5.7 Sleepbewegingen                        | AA     | Voldoet                |
+| 2.5.8 Doelgrootte (minimaal)                 | AA     | Voldoet                |
+| 3.2.6 Consistente hulp                       | A      | Voldoet                |
+| 3.3.7 Overbodige invoer                      | A      | Voldoet                |
+| 3.3.8 Toegankelijke authenticatie (minimaal) | AA     | Niet van toepassing    |
 
 ### Beoordeling per succescriterium
 
@@ -180,78 +180,78 @@ de onderzochte set pagina's. De onderbouwing per criterium staat in
 
 **Waarneembaar**
 
-| Criterium | Omschrijving                                                  | Niveau | Resultaat           |
-| --------- | ------------------------------------------------------------- | ------ | ------------------- |
-| 1.1.1     | Niet-tekstuele content                                        | A      | Voldoet             |
-| 1.2.1     | Louter-geluid en louter-videobeeld (vooraf opgenomen)         | A      | Niet van toepassing |
-| 1.2.2     | Ondertiteling voor doven en slechthorenden (vooraf opgenomen) | A      | Niet van toepassing |
-| 1.2.3     | Audiodescriptie of media-alternatief (vooraf opgenomen)       | A      | Niet van toepassing |
-| 1.2.4     | Ondertiteling voor doven en slechthorenden (live)             | AA     | Niet van toepassing |
-| 1.2.5     | Audiodescriptie (vooraf opgenomen)                            | AA     | Niet van toepassing |
-| 1.3.1     | Info en relaties                                              | A      | Voldoet             |
-| 1.3.2     | Betekenisvolle volgorde                                       | A      | Voldoet             |
-| 1.3.3     | Zintuiglijke eigenschappen                                    | A      | Voldoet             |
-| 1.3.4     | Oriëntatie                                                    | AA     | Voldoet             |
-| 1.3.5     | Inputdoel identificeren                                       | AA     | Voldoet             |
-| 1.4.1     | Gebruik van kleur                                             | A      | Voldoet             |
-| 1.4.2     | Geluidsbediening                                              | A      | Niet van toepassing |
-| 1.4.3     | Contrast (minimum)                                            | AA     | Voldoet             |
-| 1.4.4     | Herschalen van tekst                                          | AA     | Voldoet             |
-| 1.4.5     | Afbeeldingen van tekst                                        | AA     | Voldoet             |
-| 1.4.10    | Dynamisch aanpassen (reflow)                                  | AA     | Voldoet             |
-| 1.4.11    | Niet-tekstueel contrast                                       | AA     | Voldoet             |
-| 1.4.12    | Tekstafstand                                                  | AA     | Voldoet             |
-| 1.4.13    | Content bij aanwijzen of focussen                             | AA     | Voldoet             |
+| Criterium | Omschrijving | Niveau | Resultaat |
+| --- | --- | --- | --- |
+| 1.1.1 | Niet-tekstuele content | A | Voldoet |
+| 1.2.1 | Louter-geluid en louter-videobeeld (vooraf opgenomen) | A | Niet van toepassing |
+| 1.2.2 | Ondertiteling voor doven en slechthorenden (vooraf opgenomen) | A | Niet van toepassing |
+| 1.2.3 | Audiodescriptie of media-alternatief (vooraf opgenomen) | A | Niet van toepassing |
+| 1.2.4 | Ondertiteling voor doven en slechthorenden (live) | AA | Niet van toepassing |
+| 1.2.5 | Audiodescriptie (vooraf opgenomen) | AA | Niet van toepassing |
+| 1.3.1 | Info en relaties | A | Voldoet |
+| 1.3.2 | Betekenisvolle volgorde | A | Voldoet |
+| 1.3.3 | Zintuiglijke eigenschappen | A | Voldoet |
+| 1.3.4 | Oriëntatie | AA | Voldoet |
+| 1.3.5 | Inputdoel identificeren | AA | Voldoet |
+| 1.4.1 | Gebruik van kleur | A | Voldoet |
+| 1.4.2 | Geluidsbediening | A | Niet van toepassing |
+| 1.4.3 | Contrast (minimum) | AA | Voldoet |
+| 1.4.4 | Herschalen van tekst | AA | Voldoet |
+| 1.4.5 | Afbeeldingen van tekst | AA | Voldoet |
+| 1.4.10 | Dynamisch aanpassen (reflow) | AA | Voldoet |
+| 1.4.11 | Niet-tekstueel contrast | AA | Voldoet |
+| 1.4.12 | Tekstafstand | AA | Voldoet |
+| 1.4.13 | Content bij aanwijzen of focussen | AA | Voldoet |
 
 **Bedienbaar**
 
-| Criterium | Omschrijving                          | Niveau | Resultaat           |
-| --------- | ------------------------------------- | ------ | ------------------- |
-| 2.1.1     | Toetsenbord                           | A      | Voldoet             |
-| 2.1.2     | Geen toetsenbordval                   | A      | Voldoet             |
-| 2.1.4     | Sneltoetsen tekentoets                | A      | Voldoet             |
-| 2.2.1     | Timing aanpasbaar                     | A      | Voldoet             |
-| 2.2.2     | Pauzeren, stoppen, verbergen          | A      | Voldoet             |
-| 2.3.1     | Drie flitsen of beneden drempelwaarde | A      | Voldoet             |
-| 2.4.1     | Blokken omzeilen                      | A      | Voldoet             |
-| 2.4.2     | Paginatitel                           | A      | Voldoet             |
-| 2.4.3     | Focus volgorde                        | A      | Voldoet             |
-| 2.4.4     | Linkdoel (in context)                 | A      | Voldoet             |
-| 2.4.5     | Meerdere manieren                     | AA     | Voldoet             |
-| 2.4.6     | Koppen en labels                      | AA     | Voldoet             |
-| 2.4.7     | Focus zichtbaar                       | AA     | Voldoet             |
-| 2.4.11    | Focus niet bedekt (minimaal)          | AA     | Voldoet             |
-| 2.5.1     | Bewegingen aanwijzer                  | A      | Voldoet             |
-| 2.5.2     | Annulering aanwijzer                  | A      | Voldoet             |
-| 2.5.3     | Label in naam                         | A      | Voldoet             |
-| 2.5.4     | Bewegingsactivering                   | A      | Niet van toepassing |
-| 2.5.7     | Sleepbewegingen                       | AA     | Voldoet             |
-| 2.5.8     | Doelgrootte (minimum)                 | AA     | Voldoet             |
+| Criterium | Omschrijving | Niveau | Resultaat |
+| --- | --- | --- | --- |
+| 2.1.1 | Toetsenbord | A | Voldoet |
+| 2.1.2 | Geen toetsenbordval | A | Voldoet |
+| 2.1.4 | Sneltoetsen tekentoets | A | Voldoet |
+| 2.2.1 | Timing aanpasbaar | A | Voldoet |
+| 2.2.2 | Pauzeren, stoppen, verbergen | A | Voldoet |
+| 2.3.1 | Drie flitsen of beneden drempelwaarde | A | Voldoet |
+| 2.4.1 | Blokken omzeilen | A | Voldoet |
+| 2.4.2 | Paginatitel | A | Voldoet |
+| 2.4.3 | Focus volgorde | A | Voldoet |
+| 2.4.4 | Linkdoel (in context) | A | Voldoet |
+| 2.4.5 | Meerdere manieren | AA | Voldoet |
+| 2.4.6 | Koppen en labels | AA | Voldoet |
+| 2.4.7 | Focus zichtbaar | AA | Voldoet |
+| 2.4.11 | Focus niet bedekt (minimaal) | AA | Voldoet |
+| 2.5.1 | Bewegingen aanwijzer | A | Voldoet |
+| 2.5.2 | Annulering aanwijzer | A | Voldoet |
+| 2.5.3 | Label in naam | A | Voldoet |
+| 2.5.4 | Bewegingsactivering | A | Niet van toepassing |
+| 2.5.7 | Sleepbewegingen | AA | Voldoet |
+| 2.5.8 | Doelgrootte (minimum) | AA | Voldoet |
 
 **Begrijpelijk**
 
-| Criterium | Omschrijving                           | Niveau | Resultaat           |
-| --------- | -------------------------------------- | ------ | ------------------- |
-| 3.1.1     | Taal van de pagina                     | A      | Voldoet             |
-| 3.1.2     | Taal van onderdelen                    | AA     | Voldoet             |
-| 3.2.1     | Bij focus                              | A      | Voldoet             |
-| 3.2.2     | Bij input                              | A      | Voldoet             |
-| 3.2.3     | Consistente navigatie                  | AA     | Voldoet             |
-| 3.2.4     | Consistente identificatie              | AA     | Voldoet             |
-| 3.2.6     | Consistente hulp                       | A      | Voldoet             |
-| 3.3.1     | Fout identificatie                     | A      | Voldoet             |
-| 3.3.2     | Labels of instructies                  | A      | Voldoet             |
-| 3.3.3     | Foutsuggestie                          | AA     | Voldoet             |
-| 3.3.4     | Foutpreventie                          | AA     | Voldoet             |
-| 3.3.7     | Overbodige invoer                      | A      | Voldoet             |
-| 3.3.8     | Toegankelijke authenticatie (minimaal) | AA     | Niet van toepassing |
+| Criterium | Omschrijving | Niveau | Resultaat |
+| --- | --- | --- | --- |
+| 3.1.1 | Taal van de pagina | A | Voldoet |
+| 3.1.2 | Taal van onderdelen | AA | Voldoet |
+| 3.2.1 | Bij focus | A | Voldoet |
+| 3.2.2 | Bij input | A | Voldoet |
+| 3.2.3 | Consistente navigatie | AA | Voldoet |
+| 3.2.4 | Consistente identificatie | AA | Voldoet |
+| 3.2.6 | Consistente hulp | A | Voldoet |
+| 3.3.1 | Fout identificatie | A | Voldoet |
+| 3.3.2 | Labels of instructies | A | Voldoet |
+| 3.3.3 | Foutsuggestie | AA | Voldoet |
+| 3.3.4 | Foutpreventie | AA | Voldoet |
+| 3.3.7 | Overbodige invoer | A | Voldoet |
+| 3.3.8 | Toegankelijke authenticatie (minimaal) | AA | Niet van toepassing |
 
 **Robuust**
 
-| Criterium | Omschrijving      | Niveau | Resultaat |
-| --------- | ----------------- | ------ | --------- |
-| 4.1.2     | Naam, rol, waarde | A      | Voldoet   |
-| 4.1.3     | Statusberichten   | AA     | Voldoet   |
+| Criterium | Omschrijving | Niveau | Resultaat |
+| --- | --- | --- | --- |
+| 4.1.2 | Naam, rol, waarde | A | Voldoet |
+| 4.1.3 | Statusberichten | AA | Voldoet |
 
 ### Steekproef
 
@@ -280,15 +280,15 @@ de bediening zit, daarna de tekstpagina's.
 
 ### Gebruikte browsers en software
 
-| Software                 | Versie                                 | Gebruikt voor                                                                                                                                          |
-| ------------------------ | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Chromium                 | **140.0.7339.16** en **151.0.7922.34** | Geautomatiseerde toetsing en instrumentele metingen                                                                                                    |
-| Microsoft Edge           | **152.0.4191.66**                      | Instrumentele metingen                                                                                                                                 |
-| Firefox                  | **153.0**                              | Instrumentele metingen                                                                                                                                 |
-| Playwright               | **1.55.0** en **1.62.0**               | Aansturing van de browsers                                                                                                                             |
-| axe-core                 | **4.10.2**                             | Geautomatiseerde toetsing                                                                                                                              |
-| Chrome DevTools Protocol | via Playwright                         | Uitlezen van de accessibility tree                                                                                                                     |
-| Eigen meetscripts        | —                                      | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
+| Software                 | Versie                                         | Gebruikt voor                                                                                                                                          |
+| ------------------------ | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Chromium                 | **140.0.7339.16** en **151.0.7922.34**         | Geautomatiseerde toetsing en instrumentele metingen                                                                                                    |
+| Microsoft Edge           | **152.0.4191.66**                              | Instrumentele metingen                                                                                                                                 |
+| Firefox                  | **153.0**                                      | Instrumentele metingen                                                                                                                                 |
+| Playwright               | **1.55.0** en **1.62.0**                       | Aansturing van de browsers                                                                                                                             |
+| axe-core                 | **4.10.2**                                     | Geautomatiseerde toetsing                                                                                                                              |
+| Chrome DevTools Protocol | via Playwright                                 | Uitlezen van de accessibility tree                                                                                                                     |
+| Eigen meetscripts        | —                                              | Contrast (incl. shadow DOM), koppenstructuur, tabvolgorde, focus, focus na htmx-swap, reflow, doelgrootte, tekstafstand, focusinsluiting, dubbele ID's |
 
 **Instellingen.** Alle metingen zijn uitgevoerd in een schone browsersessie zonder
 extensies, met een weergavekader van 1440 × 900 pixels tenzij anders vermeld.
@@ -301,9 +301,9 @@ ACT-algoritmen gebaseerd zijn. De eigen meetscripts implementeren geen
 ACT-regels; hun uitkomsten zijn steeds met een tweede methode of visueel
 geverifieerd.
 
-| VoiceOver | macOS **14.4** | Schermlezertoets |
-| Google Chrome | **153.0.8010.48** | Schermlezertoets, handmatige ronde |
-| Google Chrome for Testing | **151.0.7922.34** via Playwright 1.62.0 | Schermlezertoets, geïnstrumenteerde ronde: toetsaanslagen via macOS, uitspraak van VoiceOver uitgelezen via zijn AppleScript-koppeling |
+| VoiceOver                | macOS **14.4**                                 | Schermlezertoets                                                                                                                                       |
+| Google Chrome            | **153.0.8010.48**                              | Schermlezertoets, handmatige ronde                                                                                                                     |
+| Google Chrome for Testing | **151.0.7922.34** via Playwright 1.62.0       | Schermlezertoets, geïnstrumenteerde ronde: toetsaanslagen via macOS, uitspraak van VoiceOver uitgelezen via zijn AppleScript-koppeling                 |
 
 ### Schermlezertoets
 
@@ -443,13 +443,13 @@ De applicatie bevat geen audio en geen video. Gemeten op alle elf onderzochte
 pagina's: `<video>` 0, `<audio>` 0, `<iframe>` 0. De onderstaande vijf
 succescriteria zijn daarom alle niet van toepassing.
 
-| Succescriterium                                                     | Niveau | Status              |
-| ------------------------------------------------------------------- | ------ | ------------------- |
-| 1.2.1 Louter-geluid en louter-videobeeld (vooraf opgenomen)         | A      | Niet van toepassing |
-| 1.2.2 Ondertiteling voor doven en slechthorenden (vooraf opgenomen) | A      | Niet van toepassing |
-| 1.2.3 Audiodescriptie of media-alternatief (vooraf opgenomen)       | A      | Niet van toepassing |
-| 1.2.4 Ondertitels voor doven en slechthorenden (live)               | AA     | Niet van toepassing |
-| 1.2.5 Audiodescriptie (vooraf opgenomen)                            | AA     | Niet van toepassing |
+| Succescriterium                                                     | Niveau | Status                 |
+| ------------------------------------------------------------------- | ------ | ---------------------- |
+| 1.2.1 Louter-geluid en louter-videobeeld (vooraf opgenomen)         | A      | Niet van toepassing    |
+| 1.2.2 Ondertiteling voor doven en slechthorenden (vooraf opgenomen) | A      | Niet van toepassing    |
+| 1.2.3 Audiodescriptie of media-alternatief (vooraf opgenomen)       | A      | Niet van toepassing    |
+| 1.2.4 Ondertitels voor doven en slechthorenden (live)               | AA     | Niet van toepassing    |
+| 1.2.5 Audiodescriptie (vooraf opgenomen)                            | AA     | Niet van toepassing    |
 
 <div class="explain">
 
@@ -805,13 +805,13 @@ contrastverhouding van ten minste 3:1.
 In het lichte thema handmatig beoordeeld; in het donkere thema gemeten als
 pixelcontrast op schermafbeeldingen van `/opdrachten/` (`data-scheme="dark"`), omdat de kleuren in shadow roots zitten:
 
-| Element                | Licht | Donker |
-| ---------------------- | ----- | ------ |
-| Rand zoekveld          | 5,3:1 | 5,3:1  |
-| Rand datumveld         | 4,9:1 | 5,8:1  |
-| Rand checkbox          | 4,9:1 | 5,8:1  |
-| Focusring op zoekveld  | 6,2:1 | 5,3:1  |
-| Focusring op filterrij | 6,2:1 | 4,6:1  |
+| Element                  | Licht  | Donker |
+| ------------------------ | ------ | ------ |
+| Rand zoekveld            | 5,3:1  | 5,3:1  |
+| Rand datumveld           | 4,9:1  | 5,8:1  |
+| Rand checkbox            | 4,9:1  | 5,8:1  |
+| Focusring op zoekveld    | 6,2:1  | 5,3:1  |
+| Focusring op filterrij   | 6,2:1  | 4,6:1  |
 
 Alles boven de eis van 3:1. Chips en tags hebben een vulling van 1,1 tot 1,3:1
 tegen de pagina, maar dragen hun betekenis in tekst en vallen daarom buiten het
@@ -1593,10 +1593,7 @@ foutregel, die dat id draagt:
 
 ```html
 <nldd-text-field name="name" required invalid unmet="error-name-1">
-  <nldd-validation-item id="error-name-1"
-    >Dit veld is verplicht.</nldd-validation-item
-  ></nldd-text-field
->
+<nldd-validation-item id="error-name-1">Dit veld is verplicht.</nldd-validation-item>
 ```
 
 Het veld geeft die foutlijst zelf door als beschrijving aan de invoer in zijn
@@ -1875,14 +1872,14 @@ gebruiker de verandering niet op.
 
 ### Geadviseerde vervolgstappen
 
-| Stap                                                    | Waarom                                                                                       | Prioriteit |
-| ------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ---------- |
-| 1. Toegankelijkheidsverklaring 29132 bijwerken          | Alle 55 criteria zijn beoordeeld; dit rapport kan als onderbouwing worden ingediend          | Hoog       |
-| 2. Toetsing met NVDA in Firefox en Chrome op Windows    | Het basisniveau belooft alle gangbare hulpapparatuur                                         | Middel     |
-| 3. Toetsing met gebruikers van hulpapparatuur           | Het oordeel van wie de applicatie dagelijks zo gebruikt, is met geen instrument te vervangen | Middel     |
-| 4. Twee punten melden bij de componentbibliotheek       | `aria-describedby` over de shadow-grens (3.3.1) en "1 of 1" in de weergavekeuze (4.1.2)      | Middel     |
-| 5. axe-core en een koppenvolgordetoets in de bouwstraat | Voorkomt regressie in het gewone document                                                    | Middel     |
-| 6. 404-pagina en processen alsnog toetsen               | Ontbraken in de steekproef                                                                   | Middel     |
+| Stap                                                          | Waarom                                                                                                       | Prioriteit |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ---------- |
+| 1. Toegankelijkheidsverklaring 29132 bijwerken                | Alle 55 criteria zijn beoordeeld; dit rapport kan als onderbouwing worden ingediend                          | Hoog       |
+| 2. Toetsing met NVDA in Firefox en Chrome op Windows          | Het basisniveau belooft alle gangbare hulpapparatuur                                                         | Middel     |
+| 3. Toetsing met gebruikers van hulpapparatuur                 | Het oordeel van wie de applicatie dagelijks zo gebruikt, is met geen instrument te vervangen                 | Middel     |
+| 4. Twee punten melden bij de componentbibliotheek             | `aria-describedby` over de shadow-grens (3.3.1) en "1 of 1" in de weergavekeuze (4.1.2)                      | Middel     |
+| 5. axe-core en een koppenvolgordetoets in de bouwstraat       | Voorkomt regressie in het gewone document                                                                    | Middel     |
+| 6. 404-pagina en processen alsnog toetsen                     | Ontbraken in de steekproef                                                                                   | Middel     |
 
 ---
 
