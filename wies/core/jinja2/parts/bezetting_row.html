@@ -18,9 +18,12 @@
       {% elif row.contract_hours is none %}
         {% set hours_text = "contracturen onbekend" %}
       {% elif row.unfilled_hours > 0 %}
-        {% set hours_text = row.unfilled_hours ~ " uur vrij" %}
+        {# A role without hours counted as 0, so this is an upper bound. The
+             caveat sits here and not on the bar: a bar under ~15 days is too
+             narrow to carry a label at all (#692 review). #}
+        {% set hours_text = row.unfilled_hours ~ " uur vrij" ~ (", uren niet overal ingevuld" if row.has_role_without_hours else "") %}
       {% elif row.unfilled_hours < 0 %}
-        {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" %}
+        {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" ~ (", uren niet overal ingevuld" if row.has_role_without_hours else "") %}
       {% else %}
         {% set hours_text = none %}
       {% endif %}

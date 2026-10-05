@@ -142,6 +142,10 @@ class OccupancyRow:
     # when the roles add up to more than the contract. None when the contract
     # hours are unknown.
     unfilled_hours: int | None = None
+    # Whether an active role counted as 0 for want of recorded hours, which makes
+    # unfilled_hours an upper bound. Sits on the row, not the bar: a bar too
+    # narrow for a label would otherwise swallow the caveat (#692 review).
+    has_role_without_hours: bool = False
 
 
 def contract_hours_on(periods, day: date) -> int | None:
@@ -339,6 +343,7 @@ def colleague_occupancy(
         active_count = 0
         active_ends: list[date] = []
         active_hours = 0
+        has_role_without_hours = False
         segments: list[TimelineSegment] = []
         for placement in placements:
             start = placement.actual_start_date
@@ -350,9 +355,11 @@ def colleague_occupancy(
                 if end is not None:
                     active_ends.append(end)
                 # A role without hours counts as 0 rather than voiding the sum
-                # (#687); its bar says so.
+                # (#687); the row says so, so the total reads as an upper bound.
                 if hours is not None:
                     active_hours += hours
+                else:
+                    has_role_without_hours = True
             left, width = _position(start, end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
@@ -441,11 +448,12 @@ def colleague_occupancy(
                 contract_ended=contract_ended,
                 active_hours=active_hours if active_count else None,
                 unfilled_hours=unfilled_hours,
+                has_role_without_hours=has_role_without_hours,
             )
         )
 
     # Partial rows by most free hours first; the bench is re-sorted on how long
-    # someone has been free in split_bench_and_timeline, and full rows go by
+    # someone has been free in rows_in_display_order, and full rows go by
     # when their work ends.
     rows.sort(
         key=lambda r: (
@@ -470,21 +478,21 @@ def occupancy_summary(rows) -> dict:
     }
 
 
-def split_bench_and_timeline(rows) -> tuple[list, list]:
-    """Split occupancy rows into (bench_rows, timeline_rows).
+def rows_in_display_order(rows) -> list:
+    """Occupancy rows in the order the page renders them: bench first.
 
-    Bench colleagues get their own section above the placed ones, longest-free
-    first — the order a business manager reads this in. Sorted here rather than in
-    the template: Jinja's sort filter cannot order a list where some bench_days are
-    None (never placed), and comparing None to an int raises. Those go last —
-    "never placed" is not a long wait, it is a different thing.
+    One list, not two sections: an unstaffed colleague is what this page is
+    scanned for. Bench rows go longest-free first — the order a business manager
+    reads this in. Sorted here rather than in the template: Jinja's sort filter
+    cannot order a list where some bench_days are None (never placed), and
+    comparing None to an int raises. Those go last — "never placed" is not a long
+    wait, it is a different thing.
     """
     bench_rows = sorted(
         (r for r in rows if r.bucket == BUCKET_BENCH),
         key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
     )
-    timeline_rows = [r for r in rows if r.bucket != BUCKET_BENCH]
-    return bench_rows, timeline_rows
+    return bench_rows + [r for r in rows if r.bucket != BUCKET_BENCH]
 
 
 def today_marker_pct() -> float:

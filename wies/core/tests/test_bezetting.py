@@ -13,6 +13,7 @@ from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
     Colleague,
+    ContractPeriod,
     Label,
     LabelCategory,
     Placement,
@@ -892,7 +893,8 @@ class BezettingSearchTest(TestCase):
         assert 'id="search-hidden"' in content
         assert content.count('value="appel"') == 2
 
-    def test_no_match_shows_the_empty_state_and_keeps_the_counts(self):
+    def test_no_match_shows_the_empty_state_and_zeroes_the_counts(self):
+        """Search narrows the cards too, like merk and labels (unlike status)."""
         content = self.client.get(self.url, {"zoek": "niemand"}).content.decode()
         assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
         assert re.search(r">0</span>.*?op de bank", content, re.DOTALL)
@@ -939,3 +941,52 @@ class BezettingPaginationTest(TestCase):
     def test_summary_counts_the_whole_population_not_the_page(self):
         content = self.client.get(self.url).content.decode()
         assert re.search(rf">{BEZETTING_PAGE_SIZE}</span>.*?op de bank", content, re.DOTALL)
+
+
+class UnfilledHoursCaveatTest(TestCase):
+    """An active role without recorded hours counts as 0 (#687), so the free
+    hours are an upper bound. The caveat must be visible however short the bar:
+    on the bar itself it vanished under NARROW_BAR_PCT (#692 review)."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        self.today = timezone.now().date()
+        self.colleague = _consultant("Hanna Hour", "hanna@x.nl")
+        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+
+    def _row_html(self):
+        content = self.client.get(self.url).content.decode()
+        return content.replace("&#39;", "'").replace("&nbsp;", " ")
+
+    def test_short_role_without_hours_still_shows_the_caveat(self):
+        """A seven-day bar is far under NARROW_BAR_PCT, so it carries no label."""
+        _placement(self.colleague, "Kort", self.today, self.today + timedelta(days=7))
+
+        html = self._row_html()
+        assert "36 uur vrij, uren niet overal ingevuld" in html
+
+    def test_long_role_without_hours_shows_the_caveat_too(self):
+        _placement(self.colleague, "Lang", self.today, self.today + timedelta(days=60))
+
+        html = self._row_html()
+        assert "36 uur vrij, uren niet overal ingevuld" in html
+
+    def test_role_with_hours_gets_no_caveat(self):
+        placement = _placement(self.colleague, "Ingevuld", self.today, self.today + timedelta(days=7))
+        placement.service.hours_per_week = 16
+        placement.service.save()
+
+        html = self._row_html()
+        assert "20 uur vrij" in html
+        assert "uren niet overal ingevuld" not in html
+
+    def test_bench_colleague_gets_no_caveat(self):
+        """Nothing active to be missing hours for."""
+        html = self._row_html()
+        assert "36 uur vrij" in html
+        assert "uren niet overal ingevuld" not in html

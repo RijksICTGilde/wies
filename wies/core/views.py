@@ -106,7 +106,7 @@ from .services.occupancy import (
     month_ticks,
     occupancy_summary,
     row_has_status,
-    split_bench_and_timeline,
+    rows_in_display_order,
     today_marker_pct,
 )
 from .services.organizations import (
@@ -643,8 +643,8 @@ def _bezetting_status_group(selected, summary):
         "options": options,
         "selected_values": list(selected),
         # Finalized by hand, outside _finalize_filter_groups: that keeps the top
-        # three by count and hides the rest behind "Meer…", which would drop the
-        # hidden input of the fourth status and leave its card dead.
+        # three by count and hides the rest behind "Meer…", which would drop a
+        # status's hidden input and leave its card dead.
         "group_id": "status",
         "top_options": real_options,
         "has_more": False,
@@ -660,8 +660,13 @@ def bezetting(request):
 
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
     opens the shared colleague side panel via the ``collega`` param, exactly like
-    the "Wie zit waar?" table. Paged like the card lists, but from the in-memory
-    row list rather than a queryset.
+    the "Wie zit waar?" table.
+
+    Paged from the in-memory row list, not the queryset: the sort order is a
+    derived property of the built rows, not a column. So every page costs the
+    same database work and only the HTML shrinks, which is what the paging is
+    for here. Moving it into the queryset means moving the sort into annotations
+    and is its own change.
     """
     today = timezone.now().date()
 
@@ -704,8 +709,9 @@ def bezetting(request):
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
-    # Summary-card counts are the full population within the merk/label selection —
-    # computed before the status filter narrows the rows (see occupancy_summary).
+    # Summary-card counts follow merk, labels and the search term (they all
+    # narrowed the queryset above) but not the status filter, which is applied
+    # after this: a card has to keep showing what it would select.
     summary = occupancy_summary(rows)
 
     # Status facet: the three summary cards, as independent OR-toggles. Derived
@@ -732,9 +738,7 @@ def bezetting(request):
     if selected_statuses:
         active_filters["status"] = selected_statuses
 
-    bench_rows, timeline_rows = split_bench_and_timeline(rows)
-    # One list, bench first: a page boundary may fall inside either section.
-    page = Paginator(bench_rows + timeline_rows, BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
+    page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
     next_page_url = (
         _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
         if page.has_next()
