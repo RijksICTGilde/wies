@@ -39,18 +39,18 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
 #-----------------------------------------------------------------------------------------------------------------------
 FROM python AS django-run
 
-# Create app user
+# Create app user; /app is created by WORKDIR as root
 RUN groupadd --gid 1000 app \
-  && useradd --gid app --uid 1000 --shell /bin/bash --home-dir /app app
+  && useradd --gid app --uid 1000 --shell /bin/bash --home-dir /app app \
+  && chown app:app /app
 
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 
-COPY --chown=app:app . /app
-RUN chown -R app:app /app
-# Only needed in the build context, for the uv sync bind mounts above
-RUN rm -rf /app/pyproject.toml && \
-  rm -rf /app/uv.lock
+# Copy by name, most stable first, so a change in the app leaves the layers above it cached
+COPY --chown=app:app manage.py docker-entrypoint.sh ./
+COPY --chown=app:app config ./config
+COPY --chown=app:app wies ./wies
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so

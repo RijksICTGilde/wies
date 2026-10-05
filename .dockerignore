@@ -1,55 +1,18 @@
-# Git
-.git
-.gitattributes
-.gitignore
-.github
+# The Dockerfile copies by name (manage.py, docker-entrypoint.sh, config,
+# wies), so this file does not decide what ends up in the image. It does
+# two other things.
 
-# Python
-__pycache__
+# 1. Filter inside the directories that are copied
+**/tests
+**/__pycache__
 *.py[cod]
-*.egg-info
-.venv
-.cache
-.ruff_cache
 
-# Testing
-.pytest_cache
-.coverage
-
-# Environment
+# 2. Keep secrets and bulk out of the build context
 .env
 .env.*
-
-# IDE / OS
-.vscode
-.editorconfig
-.DS_Store
-
-# Project config (not needed in runtime)
-.dockerignore
-.claude
-.pre-commit-config.yaml
-.python-version
-docker-compose.yml
-Dockerfile
-justfile
-
-# Documentation
-README.md
-CHANGES.md
-LICENSE
-SECURITY.md
-PDR
-docs
-features
-
-# Tests (dev mounts the repo, so they are still available there)
-js_tests
-wies/*/tests
-
-# Development
-db.sqlite3
+.git
+.venv
 node_modules
 staticfiles
-.bash_history
-.python_history
+db
+.cache
