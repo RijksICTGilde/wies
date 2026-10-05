@@ -166,8 +166,6 @@ ORG_TYPE_PLURAL: dict[str, str] = {
 # ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
 
-# The current WCAG audit report. A new audit replaces this filename; the URL that
-# serves it stays the same, which is the point (see the view).
 CURRENT_AUDIT_REPORT = settings.BASE_DIR / "docs" / "toegankelijkheid" / "onderzoek-wcag22-2026-09-30.html"
 
 
@@ -3639,14 +3637,9 @@ def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
 
 
-# The one page in Wies that anonymous visitors may read, and it has to be: the
-# toegankelijkheidsverklaring in the DigiToegankelijk register links straight to
-# this URL, and the register's own checklist rejects "een link naar een pagina
-# achter een inlogscherm".
-#
-# Its own route rather than a file under /static/: production hashes static
-# filenames (CompressedManifestStaticFilesStorage), so every new version of the
-# report would move, breaking the link in the register. This URL stays put.
+# Public because the DigiToegankelijk register links straight at this URL, and no
+# file under /static/ because production hashes those names. See
+# docs/toegankelijkheid/README.md.
 @login_not_required
 def toegankelijkheid_onderzoek(request):
     """The WCAG audit report the toegankelijkheidsverklaring points at."""

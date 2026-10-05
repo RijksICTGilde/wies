@@ -59,9 +59,7 @@ class AccessControlTest(TestCase):
                 assert response.url.startswith(reverse("login"))
 
     def test_audit_report_is_readable_without_login(self):
-        """The toegankelijkheidsverklaring in the DigiToegankelijk register links
-        straight at this URL, and the register rejects a link behind a login. It is
-        the one exception to the rule the test above states."""
+        """The one exception to the rule above: the DigiToegankelijk register links here."""
         response = self.client.get(reverse("toegankelijkheid-onderzoek"), follow=False)
 
         assert response.status_code == 200

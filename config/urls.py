@@ -141,7 +141,6 @@ urlpatterns = [
     path("faq/", faq, name="faq"),
     path("privacy/", privacy, name="privacy"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
-    # The URL the toegankelijkheidsverklaring points at; it must not move.
     path("toegankelijkheid/onderzoek/", toegankelijkheid_onderzoek, name="toegankelijkheid-onderzoek"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
