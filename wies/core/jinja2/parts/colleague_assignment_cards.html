@@ -1,4 +1,3 @@
-{% from "parts/privacy_chip.html" import privacy_chip %}
 {# A colleague's opdrachten, one labelled list per opdracht, in the same
    box-tinted label/value pattern the opdracht panel uses for its own details.
    Expects: assignments (list), hx_target (string).
@@ -31,6 +30,17 @@
       {% set open = has_more and (assignment.expanded or only_one) %}
       <li class="wies-cv__item">
         <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
+        {# The rule hides the whole entry from others, not just its period, so it
+         is stated once above the block rather than as a chip beside one value.
+         A row of the list, not an nldd-banner: a banner is page-level and
+         shouts, and this repeats per opdracht. #}
+        {% if assignment.privacy_warning_text %}
+          <nldd-list-item class="wies-cv__privacy">
+          <nldd-text-cell size="sm" color="secondary">
+          <span class="wies-cv__privacy-text"><nldd-icon name="eye-slash" size="16" aria-hidden="true"></nldd-icon>{{ assignment.privacy_warning_text }}</span>
+          </nldd-text-cell>
+          </nldd-list-item>
+        {% endif %}
         {# The opdracht is what this entry is about, so it heads the block rather
          than sitting in a labelled row between the details. The whole row is
          the link, with the chevron saying so; it holds nothing else
@@ -47,7 +57,9 @@
            opdracht; it reads as "Rol" only because it shares the tag list. #}
           <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-text-cell vertical-alignment="top" text="{{ role_names[:3]|join(', ') }}{% if role_names|length > 3 %} +{{ role_names|length - 3 }}{% endif %}" {% if roles|length == 1 and roles[0].hours %}supporting-text="{{ roles[0].hours }} uur per week"{% endif %}></nldd-text-cell>
+          {% set role_text = role_names[:3]|join(", ") ~ (" +" ~ (role_names|length - 3) if role_names|length > 3 else "") %}
+          {% set role_hours = (roles[0].hours ~ " uur per week") if roles|length == 1 and roles[0].hours else "" %}
+          <nldd-text-cell vertical-alignment="top" text="{{ role_text }}" supporting-text="{{ role_hours }}"></nldd-text-cell>
           </nldd-list-item>
         {% endif %}
         <nldd-list-item>
@@ -56,21 +68,33 @@
         {# Month and year, as a cv dates its jobs; the exact day stays in the
          title attribute. #}
         <nldd-text-cell vertical-alignment="top">
-        <span{% if assignment.start_date or assignment.end_date %} title="{% if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}{% elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}{% else %}t/m {{ assignment.end_date|datum_nl }}{% endif %}"{% endif %}>
-          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} – {{ assignment.end_date|datum_nl("b Y") }}
-          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
-          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
+        {# The exact days live in the title; the line shows month and year.
+           Built up front so no Jinja tag sits inside the attribute. #}
+        {% set exact_period %}
+          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl }} t/m {{ assignment.end_date|datum_nl }}
+          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}
+        {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl }}{% endif -%}
+      {% endset %}
+      <span title="{{ exact_period|trim }}">
+        {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} – {{ assignment.end_date|datum_nl("b Y") }}
+        {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
+        {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
     {%- else %}Geen periode{% endif -%}
       </span>
-      {% if assignment.period_label or assignment.privacy_warning_text %}
+      {% if assignment.period_label %}
+        {# "Afgelopen" belongs to the dates; the privacy chip does not, so it
+             sits by the opdracht's name instead. #}
         <span slot="supporting-text" class="wies-cv__chips">
-          {% if assignment.period_label %}<nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>{% endif %}
-          {% if assignment.privacy_warning_text %}{{ privacy_chip(assignment.privacy_warning_text, size="sm") }}{% endif %}
+          <nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>
         </span>
       {% endif %}
       </nldd-text-cell>
       </nldd-list-item>
       {% if described %}
+        {# The viewer's own role: the pencil opens the same sheet the team row
+           offers as "Mijn taken wijzigen". Only with one role, because with
+           several the sheet is per role and the row cannot say which. #}
+        {% set own_edit_url = described[0].edit_url if described|length == 1 else none %}
         <nldd-list-item>
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -96,6 +120,11 @@
           <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} data-action="toggle-card"></nldd-button>
         {% endif %}
         </nldd-text-cell>
+        {% if own_edit_url %}
+          <nldd-cell>
+          <nldd-icon-button size="sm" icon="edit" text="{{ described[0].edit_label }}" hx-get="{{ own_edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+          </nldd-cell>
+        {% endif %}
         </nldd-list-item>
       {% endif %}
       </nldd-list>

@@ -87,7 +87,7 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_view_role_hours, is_bdm, is_staff_member
+from .roles import can_view_role_hours, is_bdm, is_bdm_or_staff, is_staff_member
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -412,6 +412,7 @@ def _get_colleague_assignments(request, colleague):
             "service__assignment__start_date",
             "service__assignment__end_date",
             "service__skill__name",
+            "service__public_id",
             "service__description",
             "service__hours_per_week",
         )
@@ -420,6 +421,15 @@ def _get_colleague_assignments(request, colleague):
     placement_qs = annotate_placement_dates(placement_qs)
     # Every placement here is this colleague's, so the hours rule is one answer.
     show_hours = can_view_role_hours(request.user, Placement(colleague_id=colleague.id))
+    # Likewise the right to edit the role text: it is the viewer's own row or it
+    # is not, the same for every placement on this panel.
+    viewer = getattr(request.user, "colleague", None)
+    is_own_panel = viewer is not None and viewer.id == colleague.id
+    # Which sheet the pencil opens depends on the rights on the opdracht, so
+    # the label follows it: a team editor gets the full "Mijn rol wijzigen",
+    # a placed consultant the text-only "Mijn taken wijzigen". A BDM or staff
+    # member edits any team, so the answer is the same for every row here.
+    is_team_editor = is_own_panel and is_bdm_or_staff(request)
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
         start = placement.get("actual_start_date")
@@ -456,6 +466,22 @@ def _get_colleague_assignments(request, colleague):
                 "start": start,
                 "end": end,
                 "hours": placement["service__hours_per_week"] if show_hours else None,
+                # The pencil on the viewer's own role, to the same sheet the
+                # team row opens. Which sheet that is depends on the rights on
+                # this opdracht, so the label follows the sheet: a team editor
+                # gets the full "Mijn rol wijzigen", a placed consultant the
+                # text-only "Mijn taken wijzigen".
+                "edit_url": (
+                    _build_panel_url(
+                        request,
+                        opdracht=placement["service__assignment__public_id"],
+                        collega=colleague.public_id,
+                        teamlid=placement["service__public_id"],
+                    )
+                    if is_own_panel
+                    else None
+                ),
+                "edit_label": "Mijn rol wijzigen" if is_team_editor else "Mijn taken wijzigen",
             }
 
     # BM roles (active and ended)
@@ -537,8 +563,6 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "contract_block": _contract_block(colleague, "panel"),
-        "can_view_contract": has_permission(Verb.READ, ContractPeriod(colleague=colleague), request.user),
         "assignments": assignments,
     }
 
@@ -2303,7 +2327,7 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, "user") if colleague else None
+    contract_block = _contract_block(colleague) if colleague else None
 
     if request.method == "GET":
         form = UserForm(instance=edited_user)
@@ -2710,28 +2734,20 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-def _contract_block(colleague, surface):
+def _contract_block(colleague):
     """Context for parts/contract_periods_block.html.
 
-    One block for two places: the colleague panel (read-only, for who plans
-    with the hours) and the user sheet, which carries the buttons: keeping
-    periods is user administration. A consultant does not see their own
-    contract hours in Wies; that is a matter for them and their manager.
-
-    The panel answers "how many hours now, and soon": it lists the running
-    period and the ones still to start. The sheet keeps the whole history,
-    since that is where it is kept.
+    The user sheet is where contract periods are kept, so it carries the
+    buttons and the whole history. The colleague panel used to show a quiet
+    line with the running hours; it no longer does -- the hours matter when you
+    plan with them, which happens on Bezetting, not when you look someone up.
     """
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
-    if surface == "panel":
-        periods = periods.filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
     # exists(), not bool(): the add/edit sheet builds this block before it saves
     # and renders it after, so the queryset must stay unevaluated until then.
     if periods.exists():
         empty_text = ""
-    elif surface == "panel" and colleague.contract_periods.exists():
-        empty_text = "Geen lopend contract."
     else:
         empty_text = "Niet ingevuld. De overzichten voor business managers rekenen dan zonder deze uren."
     return {
@@ -2739,9 +2755,7 @@ def _contract_block(colleague, surface):
         "periods": periods,
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
-        # The panel shows the hours as one quiet line; the sheet keeps the list.
-        "surface": surface,
-        "can_edit": surface == "user",
+        "can_edit": True,
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
     }
@@ -2814,7 +2828,7 @@ def contract_period_add(request, colleague_public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user"))
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague))
 
 
 @login_required
@@ -2823,7 +2837,7 @@ def contract_period_edit(request, public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user"))
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague))
 
 
 @login_required
@@ -2853,7 +2867,7 @@ def contract_period_delete(request, public_id):
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, "user")
+    block = _contract_block(colleague)
     return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 

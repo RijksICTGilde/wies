@@ -223,6 +223,48 @@ class AssignmentPanelHighlightTest(TestCase):
         assert "Tekst van de tweede rol." in preview_text
         assert entry.count('<div class="wies-cv__role-block">') == 2
 
+    def test_only_your_own_panel_offers_the_pencil_on_your_role(self):
+        """You may edit your own role text, so the entry carries the pencil to
+        the same sheet the team row opens; someone else's panel does not."""
+        Service.objects.filter(placements__colleague=self.anke).update(description="Mijn taken.")
+        headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+        anke_panel = reverse("home") + f"?collega={self.anke.public_id}"
+
+        # A team mate looking at Anke's panel.
+        other = self.client.get(anke_panel, headers=headers).content.decode()
+        assert 'icon="edit"' not in other.split('<ul class="wies-cv">')[1]
+
+        # Anke looking at her own.
+        self.client.force_login(self.anke_user)
+        own = self.client.get(anke_panel, headers=headers).content.decode()
+        entry = own.split('<ul class="wies-cv">')[1]
+        assert 'icon="edit"' in entry
+        # A plain consultant edits the text, not the role.
+        assert 'text="Mijn taken wijzigen"' in entry
+        service = Service.objects.get(placements__colleague=self.anke)
+        assert f"teamlid={service.public_id}" in entry
+
+    def test_a_hidden_placement_states_that_above_the_whole_entry(self):
+        """The rule hides the entry, not just its period, so the note is a band
+        at the top of the block rather than a chip beside one value."""
+        placement = Placement.objects.get(colleague=self.anke)
+        placement.specific_start_date = timezone.now().date() - timedelta(days=400)
+        placement.specific_end_date = timezone.now().date() - timedelta(days=300)
+        placement.save()
+        headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+
+        # Only a privileged viewer sees an ended placement at all.
+        self.client.force_login(make_bdm_user(email="band@rijksoverheid.nl"))
+        body = self.client.get(reverse("home") + f"?collega={self.anke.public_id}", headers=headers).content.decode()
+
+        entry = body.split('<li class="wies-cv__item">')[1]
+        band = entry.split('<nldd-list-item class="wies-cv__privacy">')[1]
+        assert "Alleen zichtbaar voor" in band
+        # Above the opdracht's own row, so it covers everything under it.
+        assert entry.index("wies-cv__privacy") < entry.index("wies-cv__link")
+        # "Afgelopen" still belongs to the dates, not to the band.
+        assert 'text="Afgelopen"' in entry.split('text="Periode"')[1]
+
     def test_a_lone_opdracht_opens_its_description_without_asking(self):
         """One entry fills the panel on its own, and a collapsed description
         there reads as if the list itself were cut off."""

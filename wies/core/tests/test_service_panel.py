@@ -90,3 +90,20 @@ class ServicePanelTest(TestCase):
         body = self.client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=HX).content.decode()
 
         assert f"aanvraag={self.service.public_id}" in body
+
+    def test_a_team_editor_reaches_the_aanvraag_from_its_title(self):
+        """A row with a menu cannot be the link, so the title is a quiet one --
+        as the name is on a person's row. Without it a team editor had no way
+        in but the menu."""
+        bdm = make_bdm_user(email="bdm2@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        self.client.force_login(bdm)
+
+        body = self.client.get(reverse("home") + f"?opdracht={self.assignment.public_id}", headers=HX).content.decode()
+
+        link = next(t for t in body.split("<a ") if "Aanvraag: Dev" in t)
+        assert "wies-quiet-link" in link
+        assert f"aanvraag={self.service.public_id}" in link
+        # The menu is still its own click target next to it.
+        assert "Acties voor" in body

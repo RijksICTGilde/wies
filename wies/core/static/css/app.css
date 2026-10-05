@@ -363,6 +363,18 @@ a > nldd-icon:last-child {
   list-style: none;
 }
 
+/* The note that a whole entry is hidden from others. It heads the block, so
+   it reads as being about everything under it -- but it states a condition,
+   not a problem, so it is a quiet line rather than a warning-coloured band:
+   the eye-slash carries the meaning and the text does the rest. */
+.wies-cv__privacy-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  color: var(--semantics-content-secondary-color, #64748b);
+  font: var(--primitives-font-body-sm-regular-flat);
+}
+
 /* The chips sit in a supporting-text slot, which is a plain line of text. */
 .wies-cv__chips {
   display: inline-flex;

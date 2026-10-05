@@ -85,8 +85,20 @@ profiel" with the actions. #}
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
       <nldd-text-cell divider-start>
       {# "Aanvraag: <rol>" reads as one sentence; a separate tag next to it did
-         that job less clearly. #}
-      <span>Aanvraag: {{ row.skill_name }}</span>
+         that job less clearly. With a menu the row cannot be the link (the menu
+         is its own click target), so the title is a quiet link to the aanvraag,
+         as the name is on a person's row. htmx cancels the anchor's own
+         navigation. #}
+      {% if user_can_edit %}
+        <a class="wies-quiet-link"
+           href="{{ aanvraag_url }}"
+           hx-get="{{ aanvraag_url }}"
+           hx-target="#side-panel-content"
+           hx-swap="innerHTML"
+           hx-push-url="false">Aanvraag: {{ row.skill_name }}</a>
+      {% else %}
+        <span>Aanvraag: {{ row.skill_name }}</span>
+      {% endif %}
       {% if (svc and (svc.start_date or svc.end_date)) or row.hours_per_week %}
         <span slot="supporting-text" class="wies-team-row-meta">
           {% if svc and (svc.start_date or svc.end_date) %}

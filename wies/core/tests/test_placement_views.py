@@ -1052,11 +1052,10 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Planned Opdracht")
 
-    def test_restricted_card_merges_the_note_into_the_period_chip(self):
-        """The card shows the dates of a future placement with an icon-only chip
-        beside them that carries the note in its tooltip and accessible name.
-        No "Gepland" word, and no separate "Beperkt zichtbaar" chip up with the
-        role tags."""
+    def test_a_restricted_entry_states_the_note_above_the_whole_block(self):
+        """The rule hides the whole entry, not just its period, so the note is a
+        band at the top of the block. Beside the dates it read as if only the
+        period were restricted. No "Gepland" word either."""
         today = timezone.now().date()
         assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -1073,10 +1072,11 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         body = self.client.get(reverse("user-profile")).content.decode()
 
         assert "Gepland" not in body
-        assert 'text="Beperkt zichtbaar"' not in body
-        assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
-        assert 'variant="icon"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+        entry = next(item for item in body.split('<li class="wies-cv__item">')[1:] if "Planned Opdracht" in item)
+        band = entry.split('<nldd-list-item class="wies-cv__privacy">')[1]
+        assert PRIVACY_OWN in band
+        # Above the opdracht's own row, so it covers everything under it.
+        assert entry.index("wies-cv__privacy") < entry.index("wies-cv__link")
 
     def test_future_placement_card_hidden_on_unrelated_profile_page(self):
         """End-to-end negative: an unrelated viewer loading Alice's data must not

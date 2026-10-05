@@ -10,8 +10,11 @@ This files lists the changes during the lifetime of this project.
 - 693: the text on a role is called "Taken" everywhere (the panel row, the form field, "Mijn taken wijzigen" and the "Taken wijzigen" sheet); "Omschrijving" now only means the text on an opdracht, which the two fields sharing one name made impossible to tell apart
 - 693: the opdracht panel no longer shows "Plaatsingsdatum" (it was the record's creation date, not a placement), and the description moved to the bottom of the list, so the opdrachtgever, period and business manager stay in view when it runs long
 - 693: on a team row the period leads the second line and the role tag follows it, so the dates start at the same place on every row instead of stepping in and out with the length of the role name
+- 693: an aanvraag's title on a team row links to its panel, as a team member's name links to their profile; a row without a menu stays one link with a chevron
+- 693: your own role on your panel and profile carries a pencil to the sheet that keeps it, labelled for the sheet it opens ("Mijn rol wijzigen" for a team editor, "Mijn taken wijzigen" for a placed consultant)
+- 693: that a placement is only visible to some is said once above the whole entry, not as a chip beside its period: the rule hides the entry, not just its dates ("Afgelopen" still belongs to the dates)
+- 693: the colleague panel no longer shows the contract hours; they matter when you plan with them, which is what Bezetting is for, and they are kept on the user sheet
 - 693: the side panel is 800px wide instead of 640px, on every page that opens it
-- 693: the contract hours in the colleague panel are one line under the labels instead of a section with a heading
 - 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
 - 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
 - 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place

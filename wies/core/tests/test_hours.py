@@ -335,8 +335,10 @@ class ProfileContractPeriodTest(TestCase):
         assert "Contracturen" not in body
 
 
-class ColleaguePanelContractPeriodTest(TestCase):
-    """A BDM and a beheerder read any colleague's periods in the panel; keeping them is for the user sheet."""
+class ColleagueContractPeriodPermissionTest(TestCase):
+    """Keeping contract periods is user administration: a beheerder may,
+    a BDM may not. The colleague panel no longer shows the hours at all --
+    they matter when you plan with them, which is Bezetting's job."""
 
     def setUp(self):
         setup_roles()
@@ -349,68 +351,9 @@ class ColleaguePanelContractPeriodTest(TestCase):
         self.client.force_login(self.admin)
         self.colleague = _consultant("Kees Bos", "kees@x.nl")
 
-    def test_panel_lists_only_the_running_and_coming_periods(self):
-        """The panel answers "how many hours now, and soon"; the sheet keeps the history."""
-        ContractPeriod.objects.create(
-            colleague=self.colleague,
-            hours_per_week=24,
-            start_date=self.today - timedelta(days=400),
-            end_date=self.today - timedelta(days=101),
-        )
-        ContractPeriod.objects.create(
-            colleague=self.colleague,
-            hours_per_week=36,
-            start_date=self.today - timedelta(days=100),
-            end_date=self.today + timedelta(days=30),
-        )
-        ContractPeriod.objects.create(
-            colleague=self.colleague, hours_per_week=32, start_date=self.today + timedelta(days=31)
-        )
-        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "36 uur" in panel
-        assert "32 uur" in panel
-        assert "24 uur" not in panel
-        sheet = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id])).content.decode()
-        assert "24 uur" in sheet
-
-    def test_period_labels_read_running_as_until_today_and_planned_as_from(self):
-        ContractPeriod.objects.create(
-            colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=10)
-        )
-        ContractPeriod.objects.create(
-            colleague=self.colleague, hours_per_week=32, start_date=self.today + timedelta(days=10)
-        )
-        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert f"{date_format(self.today - timedelta(days=10), 'j b Y')} t/m heden" in panel
-        assert f"Vanaf {date_format(self.today + timedelta(days=10), 'j b Y')}" in panel
-
-    def test_panel_says_so_when_the_contract_has_ended(self):
-        ContractPeriod.objects.create(
-            colleague=self.colleague,
-            hours_per_week=24,
-            start_date=self.today - timedelta(days=400),
-            end_date=self.today - timedelta(days=1),
-        )
-        panel = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "Geen lopend contract." in panel
-        assert "Niet ingevuld" not in panel
-
-    def test_panel_shows_the_hours_as_one_line_read_only_to_a_beheerder(self):
-        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
-        body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "<h3>Contracturen</h3>" not in body
-        assert 'class="wies-contract-line"' in body
-        assert "36 uur per week" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
-
-    def test_panel_shows_the_block_read_only_to_a_bdm(self):
+    def test_a_bdm_may_not_keep_contract_periods(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         self.client.force_login(self.bdm)
-        body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
-        assert "36 uur per week" in body
-        assert "Contractperiode toevoegen" not in body
-        assert "Verwijderen" not in body
         url = reverse("contract-period-add", args=[self.colleague.public_id])
         assert self.client.get(url).status_code == 403
         assert self.client.get(reverse("contract-period-delete", args=[period.public_id])).status_code == 403
