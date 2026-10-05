@@ -478,6 +478,15 @@ class OrganizationUnit(models.Model):
         help_text='Lijst van afkortingen, bijv. ["BZK", "MinBZK"]',
     )
     organization_types = models.ManyToManyField("OrganizationType", blank=True)
+    # The primary type: the overheid.nl breadcrumb category (first-listed in the
+    # source).
+    main_type = models.ForeignKey(
+        "OrganizationType",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="+",
+    )
     related_ministry_tooi = models.CharField(
         max_length=200,
         default="",

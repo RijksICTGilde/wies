@@ -17,6 +17,8 @@ This files lists the changes during the lifetime of this project.
 - 693: the side panel is 800px wide instead of 640px, on every page that opens it
 - 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
 - 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
+- 690: removed the unused DEBUG-only "Opdrachtgevers" admin page (organization unit tree)
+- 690: (migration)(post-release actions) the organisation picker nests agentschappen, zbo's, adviescolleges and inspecties under their ministry instead of in separate top-level type folders
 - 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
 - 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
 - 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
