@@ -418,6 +418,16 @@ class TimelineGeometryTest(TestCase):
         assert lefts == sorted(lefts)  # monotonic left to right
         assert all(0 <= left <= 100 for left in lefts)
 
+    def test_a_tick_near_the_end_gets_its_label_flipped(self):
+        """A label to the right of the last gridline overflows the track and
+        gives the page a horizontal scrollbar (#692 review). The template flips
+        it past 90%, so there has to be a tick that far along to flip."""
+        ticks = month_ticks(date(2025, 11, 15))
+
+        assert any(t["left"] > 90 for t in ticks), (
+            "no tick past 90%, so the flip rule in bezetting_results.html is dead code"
+        )
+
 
 class OccupancyMerkFilterTest(TestCase):
     def setUp(self):
@@ -990,3 +1000,22 @@ class UnfilledHoursCaveatTest(TestCase):
         html = self._row_html()
         assert "36 uur vrij" in html
         assert "uren niet overal ingevuld" not in html
+
+
+class TickLabelFlipTest(TestCase):
+    """The month labels sit right of their gridline, so the last one overflowed
+    the track and gave the page a stray horizontal scrollbar (#692 review)."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+
+    def test_the_rendered_page_flips_its_last_tick(self):
+        content = self.client.get(reverse("bezetting")).content.decode()
+
+        assert "bezetting-tick--flip" in content, (
+            "no flipped tick on the page; the last month label will overflow the track"
+        )

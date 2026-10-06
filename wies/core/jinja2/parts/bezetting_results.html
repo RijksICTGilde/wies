@@ -98,7 +98,10 @@
     <div class="bezetting-row__side bezetting-row__side--head"></div>
     <div class="bezetting-track bezetting-track--head">
       {% for tick in month_ticks %}
-        <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %}"
+        {# --flip: the label normally sits right of its gridline, which pushes a
+             tick near the end past the track and gives the page a stray
+             horizontal scrollbar. Past 90% it hangs to the left instead. #}
+        <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %} {% if tick.left > 90 %}bezetting-tick--flip{% endif %}"
              style="left: {{ tick.left }}%">
           <span class="bezetting-tick__label">{{ tick.label }}</span>
         </div>

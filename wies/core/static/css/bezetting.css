@@ -302,6 +302,14 @@
   white-space: nowrap;
 }
 
+/* The last gridlines sit so close to the end of the track that a label to their
+   right overflows it, which the scroller then reports as content to scroll to.
+   Those hang to the left of their line instead. */
+.bezetting-tick--flip .bezetting-tick__label {
+  left: auto;
+  right: var(--primitives-space-2);
+}
+
 /* "Today" marker.
 
    Accent, not critical: critical is the design system's colour for errors and

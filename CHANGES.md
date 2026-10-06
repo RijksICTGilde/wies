@@ -11,6 +11,7 @@ This files lists the changes during the lifetime of this project.
 - 692: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
 - 692: the card titles on Wie zit waar? and Aanvragen are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
 - 692: the page carried two live regions with the same id, of which only the first was ever used; the leftover one is gone, so what a screen reader hears after a filter no longer depends on which of the two won
+- 692: Bezetting no longer has a horizontal scrollbar under the timeline on a wide window; the last month label hung past the edge of the track
 - 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
 - 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
 - 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
