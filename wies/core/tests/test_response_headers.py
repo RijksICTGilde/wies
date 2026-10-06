@@ -1,7 +1,7 @@
 from django.http import HttpResponse
 from django.test import RequestFactory, TestCase
 
-from wies.core.middleware import ResponseHeadersMiddleware
+from wies.core.middleware import ResponseHeadersMiddleware, add_security_headers
 
 
 class ResponseHeadersTestBase(TestCase):
@@ -56,7 +56,7 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
     def test_script_src_is_self_only_no_inline(self):
         """Scripts are external-only: script-src is 'self' with no 'unsafe-inline'
         (and no nonce), so an injected inline <script> or on*= handler cannot run.
-        style-src still allows inline styles, which RVO components rely on."""
+        style-src still allows inline styles, which templates rely on."""
         response = self._process(HttpResponse("<html></html>", content_type="text/html"))
         csp = response["Content-Security-Policy"]
         assert "script-src 'self';" in csp
@@ -67,3 +67,48 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
         response = self._process(HttpResponse("{}", content_type="application/json"))
         assert response.has_header("Permissions-Policy")
         assert response.has_header("Content-Security-Policy")
+
+
+class SecurityHeadersWiredUpTest(TestCase):
+    """The tests above call the middleware directly; this one goes through the
+    real MIDDLEWARE stack, so it fails if the middleware is dropped from
+    settings. Presence only: the values are pinned above."""
+
+    def test_real_response_carries_the_security_headers(self):
+        response = self.client.get("/")
+        for header in (
+            "Content-Security-Policy",
+            "Permissions-Policy",
+            "X-Frame-Options",
+            "X-Content-Type-Options",
+        ):
+            with self.subTest(header=header):
+                assert response.has_header(header)
+
+
+class WhiteNoiseHeaderTest(TestCase):
+    """WhiteNoise answers static requests above ResponseHeadersMiddleware, so
+    those responses only get security headers if its add_headers hook sets them.
+
+    This is not academic: the WCAG report at /toegankelijkheid/onderzoek/ is a
+    static HTML document that anonymous visitors open directly."""
+
+    def _headers(self, path="/static/toegankelijkheid/report.html"):
+        headers = {}
+        add_security_headers(headers, path, f"http://testserver{path}")
+        return headers
+
+    def test_static_responses_get_the_same_csp_as_the_rest(self):
+        assert (
+            self._headers()["Content-Security-Policy"]
+            == ResponseHeadersMiddleware(lambda request: HttpResponse())(RequestFactory().get("/"))[
+                "Content-Security-Policy"
+            ]
+        )
+
+    def test_static_responses_are_not_framable(self):
+        # XFrameOptionsMiddleware also sits below WhiteNoise.
+        assert self._headers()["X-Frame-Options"] == "DENY"
+
+    def test_static_responses_get_the_permissions_policy(self):
+        assert self._headers()["Permissions-Policy"] == "geolocation=(), microphone=(), camera=()"

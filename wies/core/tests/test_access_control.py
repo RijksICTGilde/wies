@@ -1,6 +1,10 @@
 from django.contrib.auth import get_user_model
+from django.contrib.staticfiles import finders
+from django.templatetags.static import static
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+
+from wies.core.views import CURRENT_AUDIT_REPORT
 
 User = get_user_model()
 
@@ -57,6 +61,31 @@ class AccessControlTest(TestCase):
 
                 assert response.status_code == 302
                 assert response.url.startswith(reverse("login"))
+
+    def test_audit_report_is_readable_without_login(self):
+        """The one exception to the rule above: the DigiToegankelijk register links here.
+
+        The report itself is a static file, so the view only redirects; what
+        matters is that an anonymous visitor is sent to the report and not to login.
+        """
+        response = self.client.get(reverse("toegankelijkheid-onderzoek"), follow=False)
+
+        assert response.status_code == 302
+        assert response.url == static(CURRENT_AUDIT_REPORT)
+        assert not response.url.startswith(reverse("login"))
+
+    def test_audit_report_file_exists(self):
+        """The redirect target must resolve, or the register's link 404s silently."""
+        assert finders.find(CURRENT_AUDIT_REPORT) is not None, (
+            f"{CURRENT_AUDIT_REPORT} is missing from the static files"
+        )
+
+    def test_accessibility_page_itself_still_requires_login(self):
+        """Only the report is public; the page that links to it is not."""
+        response = self.client.get(reverse("toegankelijkheid"), follow=False)
+
+        assert response.status_code == 302
+        assert response.url.startswith(reverse("login"))
 
     def test_staff_page_requires_authentication(self):
         """Test that staff subpages redirect unauthenticated users"""

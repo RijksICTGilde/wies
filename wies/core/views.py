@@ -22,6 +22,7 @@ from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -146,6 +147,11 @@ User = get_user_model()
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
+
+# Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
+# A new audit: drop the HTML next to this one, point this at it, and leave the
+# old file in place -- the URL stays put, so the register's link keeps working.
+CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -3640,6 +3646,16 @@ def privacy(request):
 
 def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
+
+
+# Public because the DigiToegankelijk register links straight at this URL, and
+# that URL must never move: it sits in a public register that regulators check.
+# Hence the redirect — the report is a static file, so in production its own name
+# carries a hash that changes with every new version.
+@login_not_required
+def toegankelijkheid_onderzoek(request):
+    """The WCAG audit report the toegankelijkheidsverklaring points at."""
+    return redirect(static(CURRENT_AUDIT_REPORT))
 
 
 def error_400(request, exception=None):
