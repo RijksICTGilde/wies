@@ -8,8 +8,9 @@ if TYPE_CHECKING:
 # script-src is 'self' only: all JavaScript is served from static files,
 # with no inline <script> blocks and no on*= handlers (event handling is
 # delegated from external JS), so scripts need neither 'unsafe-inline' nor
-# a nonce. style-src still allows 'unsafe-inline' because RVO components and
-# templates rely on inline style attributes.
+# a nonce. style-src still allows 'unsafe-inline' because templates rely on
+# inline style attributes (some computed per request, e.g. the bezetting
+# timeline) and the published WCAG report carries an inline <style> block.
 #
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
 CONTENT_SECURITY_POLICY = (

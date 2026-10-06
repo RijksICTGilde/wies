@@ -56,7 +56,7 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
     def test_script_src_is_self_only_no_inline(self):
         """Scripts are external-only: script-src is 'self' with no 'unsafe-inline'
         (and no nonce), so an injected inline <script> or on*= handler cannot run.
-        style-src still allows inline styles, which RVO components rely on."""
+        style-src still allows inline styles, which templates rely on."""
         response = self._process(HttpResponse("<html></html>", content_type="text/html"))
         csp = response["Content-Security-Policy"]
         assert "script-src 'self';" in csp
