@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
@@ -44,7 +44,7 @@ jobs:
           echo "Immutable tag: ${IMMUTABLE}"
 
       - name: Build and push web image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           target: web
@@ -56,7 +56,7 @@ jobs:
             ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.immutable }}
 
       - name: Build and push worker image
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: .
           target: worker
@@ -82,7 +82,7 @@ jobs:
     steps:
       - name: Deploy to ZAD
         id: deploy
-        uses: RijksICTGilde/zad-actions/deploy@b844c76eba3502b40a19be868cdf0586e322f4b8 # v4.1.0
+        uses: RijksICTGilde/zad-actions/deploy@4ac541a57542a22bde95b28f3ace4ee3123acd7a # v4.2.0
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
