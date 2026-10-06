@@ -7,6 +7,7 @@ an omitted field would wipe its column.
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -16,7 +17,7 @@ from wies.core.models import (
     Colleague,
     OrganizationUnit,
 )
-from wies.core.tests.role_helpers import grant_business_manager
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -24,18 +25,15 @@ User = get_user_model()
 class AssignmentEditSingleFieldTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Both owner and other are Business Manager, so both are valid choices in the
-        # Business Manager field (choices = _business_manager_queryset).
-        self.owner_user = grant_business_manager(User.objects.create_user(email="owner@rijksoverheid.nl"))
+        # Both owner and other are BDM, so both are valid choices in the
+        # Business Manager field (choices = _bdm_queryset).
+        self.owner_user = grant_bdm(User.objects.create_user(email="owner@rijksoverheid.nl"))
         self.client.force_login(self.owner_user)
         self.owner = Colleague.objects.get(user=self.owner_user)
 
-        self.other_user = grant_business_manager(User.objects.create_user(email="other@rijksoverheid.nl"))
+        self.other_user = grant_bdm(User.objects.create_user(email="other@rijksoverheid.nl"))
         self.client.force_login(self.other_user)
         self.other = Colleague.objects.get(user=self.other_user)
-
-        # No role at all: the rules on an opdracht all name the Business Manager role.
-        self.outsider = User.objects.create_user(email="buiten@rijksoverheid.nl")
         self.client.force_login(self.owner_user)
 
         self.assignment = Assignment.objects.create(
@@ -80,14 +78,14 @@ class AssignmentEditSingleFieldTest(TestCase):
         assert "bewerken=1" in body
 
     def test_forbidden_without_edit_rights(self):
-        self.client.force_login(self.outsider)
+        self.client.force_login(self.other_user)
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(url, {"owner": str(self.owner.public_id)})
         assert response.status_code == 403
 
 
 class AssignmentOwnerOutsideBdmGroupTest(TestCase):
-    """The current Business Manager is a choice even outside the Business Manager group.
+    """The current Business Manager is a choice even outside the BDM group.
 
     Regression: without an option matching its ``value`` the combo box rendered
     empty and saving wiped the Business Manager.
@@ -95,15 +93,15 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        # The owner is deliberately NOT in the Business Manager group: ownership alone grants
-        # nothing, so a Business Manager drives the edit UI while the non-Business-Manager owner stays the
-        # assignment's Business Manager.
+        # The owner is deliberately NOT in the BDM group. Since ownership alone
+        # does not grand edit rights, a Beheerder (change_assignment) drives
+        # the edit UI; the non-BDM owner stays the assignment's Business Manager.
         self.owner_user = User.objects.create_user(email="sophie@rijksoverheid.nl")
         self.client.force_login(self.owner_user)  # the login signal creates the Colleague
         self.owner = Colleague.objects.get(user=self.owner_user)
 
         self.editor_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
-        grant_business_manager(self.editor_user)
+        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         self.client.force_login(self.editor_user)
 
         self.assignment = Assignment.objects.create(
@@ -143,7 +141,6 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def test_choices_without_an_assignment_stay_limited_to_the_group(self):
         # On create there is no owner yet, so the list stays the group.
-        # PLC0415 (import not at top level) is suppressed below: test-local import.
-        from wies.core.editables.assignment import _business_manager_queryset  # noqa: PLC0415
+        from wies.core.editables.assignment import _bdm_queryset  # noqa: PLC0415 (import not at top) — test-local
 
-        assert self.owner not in list(_business_manager_queryset())
+        assert self.owner not in list(_bdm_queryset())

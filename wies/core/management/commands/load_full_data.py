@@ -49,7 +49,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, role_label
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.events import create_event
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
@@ -82,10 +82,10 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 50, "wies": 50}
-# Role mix for the dummy users, by role key: mostly Consultant, some Business Manager,
-# a few Gebruikersbeheerder. Assignment owners are drawn only from the Business
-# Manager colleagues, as in production.
-ROLE_WEIGHTS = {ROLE_CONSULTANT: 80, ROLE_BUSINESS_MANAGER: 15, ROLE_USER_ADMIN: 5}
+# Role mix for the dummy users: most consultants, some BDMs, a few beheerders.
+# Assignment owners are drawn only from the BDM colleagues, matching production
+# where the owner is a Business Development Manager.
+ROLE_WEIGHTS = {"Consultant": 80, "Business Development Manager": 15, "Beheerder": 5}
 # Contract hours per week: mostly 36, the rijksoverheid norm.
 CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 # Hours per week on a role. None: the role has no hours recorded yet, which the
@@ -731,9 +731,9 @@ def seed_base_organizations() -> None:
 
 
 def assign_roles(rng: random.Random, count: int) -> list[str]:
-    """A shuffled list of ``count`` role keys in roughly ``ROLE_WEIGHTS``
+    """A shuffled list of ``count`` role names in roughly ``ROLE_WEIGHTS``
     proportion, but guaranteeing at least one of every role when ``count``
-    allows it: a weighted per-item draw can leave a rare role (Gebruikersbeheerder)
+    allows it — a weighted per-item draw can leave a rare role (Beheerder)
     empty at the small base-profile size."""
     roles = list(ROLE_WEIGHTS)
     if count <= len(roles):
@@ -894,12 +894,12 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             colleague.save(update_fields=["suborganization"])
         write("Colleague suborganizations assigned")
 
-    # ── 4d. Colleague user + role ────────────────────────────────────
+    # ── 4d. Colleague user + role (most consultants, some BDM, few beheerder) ──
     user_model = get_user_model()
     role_groups = {name: Group.objects.get(name=name) for name in ROLE_WEIGHTS}
     role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
     roles = assign_roles(rng, len(colleagues))
-    business_manager_colleagues = []
+    bdm_colleagues = []
     for colleague, role in zip(colleagues, roles, strict=True):
         first_name, _, last_name = colleague.name.partition(" ")
         # A previous run may have left a user with this email (colleagues are
@@ -914,9 +914,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         user.groups.remove(*role_groups.values())
         user.groups.add(role_groups[role])
         role_counts[role] += 1
-        if role == ROLE_BUSINESS_MANAGER:
-            business_manager_colleagues.append(colleague)
-    write("Colleague roles: " + ", ".join(f"{role_counts[n]} {role_label(n)}" for n in ROLE_WEIGHTS))
+        if role == BDM_GROUP_NAME:
+            bdm_colleagues.append(colleague)
+    write("Colleague roles: " + ", ".join(f"{role_counts[n]} {n}" for n in ROLE_WEIGHTS))
 
     # ── 4e. Contract periods ─────────────────────────────────────────
     # One running period each, started some time ago; a fifth also has an
@@ -948,7 +948,9 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             start_date=start,
             end_date=end,
             extra_info="",
-            owner=rng.choice(business_manager_colleagues),
+            # Owners are drawn only from BDM colleagues, matching production
+            # where the assignment owner is a Business Development Manager.
+            owner=rng.choice(bdm_colleagues),
             source=weighted_choice(rng, SOURCE_WEIGHTS),
             source_id="",
         )

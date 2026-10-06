@@ -4,10 +4,10 @@ The rules decide who may see a row:
 
 - ``period_timing`` / ``evaluate_placement_visibility`` — the per-placement rule
   used by the panels and the colleague profile, where the placed colleague and the
-  Business Managers (the Business Manager role) also see ended and planned placements.
+  Business Managers (the BDM role) also see ended and planned placements.
 - ``evaluate_assignment_visibility`` — the per-owned-assignment rule on the
   colleague profile: active and not-yet-started ones are public, an ended one is
-  shown only to a privileged viewer (the Business Manager role).
+  shown only to a privileged viewer (BDM role or support staff).
 - ``filter_visible_placements`` — the "Wie zit waar?" list, which shows only
   active placements, to every viewer alike.
 
@@ -26,7 +26,7 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.querysets import annotate_placement_dates
 from wies.core.services.placements import filter_visible_placements
 from wies.core.visibility_rules import (
-    PRIVACY_BM,
+    PRIVACY_BDM,
     PRIVACY_BM_OWNED,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
@@ -40,8 +40,8 @@ TOMORROW = TODAY + timedelta(days=1)
 
 
 # The evaluate function reads the viewer off ``request.user.colleague`` (only its
-# ``id``) and the privileged flag off ``is_business_manager_request(request)``,
-# which reads the user's Business Manager group membership. This fake request drives both
+# ``id``) and the privileged flag off ``is_bdm_or_staff(request)``,
+# which reads the user's BDM group membership. This fake request drives both
 # without a database user.
 @dataclass
 class _Viewer:
@@ -49,11 +49,11 @@ class _Viewer:
 
 
 class _FakeGroups:
-    def __init__(self, *, is_business_manager):
-        self._is_business_manager = is_business_manager
+    def __init__(self, *, is_bdm):
+        self._is_bdm = is_bdm
 
     def filter(self, **kwargs):
-        return SimpleNamespace(exists=lambda: self._is_business_manager)
+        return SimpleNamespace(exists=lambda: self._is_bdm)
 
 
 def _request(*, viewer_id=None, viewer_privileged=False):
@@ -62,7 +62,7 @@ def _request(*, viewer_id=None, viewer_privileged=False):
         is_authenticated=True,
         email="viewer@rijksoverheid.nl",
         colleague=colleague,
-        groups=_FakeGroups(is_business_manager=viewer_privileged),
+        groups=_FakeGroups(is_bdm=viewer_privileged),
     )
     return SimpleNamespace(user=user)
 
@@ -106,7 +106,7 @@ class PeriodTimingTest(SimpleTestCase):
 
 
 # The privileged flag must come only from the fake groups, never from a stray
-# STAFF_EMAILS in the environment matching _request's viewer email: pin it empty
+# STAFF_EMAILS in the environment matching _request's viewer email — pin it empty
 # so the unprivileged cases stay unprivileged for the reason under test.
 @override_settings(STAFF_EMAILS=[])
 class EvaluatePlacementVisibilityTest(SimpleTestCase):
@@ -138,12 +138,12 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         assert result.privacy_note is None
 
     def test_active_ignores_bdm_flag(self):
-        # An active placement is public regardless of the Business Manager flag, no note.
+        # An active placement is public regardless of the BDM flag, no note.
         result = self._evaluate(start=YESTERDAY, end=TOMORROW, viewer_id=self.OTHER_ID, viewer_privileged=True)
         assert result.visible is True
         assert result.privacy_note is None
 
-    # --- future / ended: private to the placed colleague and the Business Managers ---
+    # --- future / ended: private to the placed colleague and the BDMs ---
 
     def test_future_visible_to_placed_colleague_with_own_note(self):
         result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.PLACED_ID)
@@ -163,22 +163,22 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
         )
         assert result.visible is True
         assert result.timing == "future"
-        assert result.privacy_note == PRIVACY_BM
+        assert result.privacy_note == PRIVACY_BDM
 
     def test_ended_visible_to_bdm_with_bdm_note(self):
         result = self._evaluate(
             start=YESTERDAY - timedelta(days=30), end=YESTERDAY, viewer_id=self.OTHER_ID, viewer_privileged=True
         )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BM
+        assert result.privacy_note == PRIVACY_BDM
 
     def test_bdm_note_reaches_a_viewerless_bdm(self):
-        # The Business Manager branch does not read ``viewer``, so a null viewer still gets in.
+        # The BDM branch does not read ``viewer``, so a null viewer still gets in.
         result = self._evaluate(
             start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=None, viewer_privileged=True
         )
         assert result.visible is True
-        assert result.privacy_note == PRIVACY_BM
+        assert result.privacy_note == PRIVACY_BDM
 
     def test_future_hidden_from_unrelated_non_bdm(self):
         result = self._evaluate(start=TOMORROW, end=TOMORROW + timedelta(days=30), viewer_id=self.OTHER_ID)
@@ -192,8 +192,8 @@ class EvaluatePlacementVisibilityTest(SimpleTestCase):
     # --- edge cases in the identity checks ---
 
     def test_placed_branch_wins_when_viewer_is_both_placed_and_bdm(self):
-        # The placed-colleague check runs before the Business Manager check, so a placed
-        # colleague who is also a Business Manager gets PRIVACY_OWN, not PRIVACY_BM.
+        # The placed-colleague check runs before the BDM check, so a placed
+        # colleague who is also a BDM gets PRIVACY_OWN, not PRIVACY_BDM.
         result = self._evaluate(
             start=TOMORROW,
             end=TOMORROW + timedelta(days=30),
@@ -256,7 +256,7 @@ class ListVisibilityParityTest(TestCase):
 
     This is the guardrail against the two implementations drifting: the list is
     active-only and viewer-independent, while the panels additionally show
-    ended/future placements to the placed colleague and the Business Managers.
+    ended/future placements to the placed colleague and the BDMs.
     """
 
     def setUp(self):
@@ -303,11 +303,11 @@ class ListVisibilityParityTest(TestCase):
 
     def test_list_equals_active_subset_for_every_viewer(self):
         # The list takes no viewer; the evaluate side is computed per row. For
-        # every viewer class (including a Business Manager) the list must equal the active set.
+        # every viewer class (including a BDM) the list must equal the active set.
         for viewer in (None, self.placed, self.owner, self.unrelated):
             for viewer_privileged in (False, True):
                 assert self._list_ids() == self._evaluate_active_ids(viewer, viewer_privileged=viewer_privileged), (
-                    f"mismatch for viewer={viewer}, business_manager={viewer_privileged}"
+                    f"mismatch for viewer={viewer}, bdm={viewer_privileged}"
                 )
 
     def test_list_is_viewer_independent(self):
@@ -317,7 +317,7 @@ class ListVisibilityParityTest(TestCase):
 
     def test_future_and_ended_absent_from_list_but_visible_on_panels(self):
         # The intended divergence: planned/ended placements never reach the list,
-        # yet the panels still show them to the placed colleague and to a Business Manager.
+        # yet the panels still show them to the placed colleague and to a BDM.
         list_ids = self._list_ids()
         assert self.future.id not in list_ids
         assert self.ended.id not in list_ids
@@ -333,11 +333,11 @@ class ListVisibilityParityTest(TestCase):
             )
             assert placed_result.visible is True, f"{placement} should be visible to the placed colleague"
             # ...and to a privileged viewer via the role flag (any viewer, incl. unrelated).
-            business_manager_result = evaluate_placement_visibility(
+            bdm_result = evaluate_placement_visibility(
                 start=placement.specific_start_date,
                 end=placement.specific_end_date,
                 placed_colleague_id=placement.colleague_id,
                 request=_request(viewer_id=self.unrelated.id, viewer_privileged=True),
                 today=TODAY,
             )
-            assert business_manager_result.visible is True, f"{placement} should be visible to a privileged viewer"
+            assert bdm_result.visible is True, f"{placement} should be visible to a privileged viewer"

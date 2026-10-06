@@ -15,14 +15,6 @@ This files lists the changes during the lifetime of this project.
 - 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
 - 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
 - ?
-- 695: (migration) authority is split by what it lets you do: the `Applicatiebeheerder` (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours, and `Business Manager` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives both roles once, and anyone who held the dropped `Opdrachtbeheer` role becomes a `Business Manager`. See `features/roles.md`
-- 695: the roles `Beheerder` and `Business Development Manager` are now called `Gebruikersbeheerder` and `Business Manager`; a role's screen name is separate from the key it is stored under, so this is a rename and not a reassignment
-- 695: the user CSV import column `Beheerder` is now `Gebruikersbeheerder`: update the header of existing import files. The `BDM` column keeps working and `Business Manager` is accepted too
-- 695: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant
-- 695: new page Beheer > Rollen shows what each role may do, read from the rules themselves; a cell is green for yes and red for no, and a row that holds whatever your role, because it is about yourself, says so in words after the row name
-- 695: only the `Applicatiebeheerder` may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
-- 695: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with the `Gebruikersbeheerder` and a Business Manager reads them
-- 695: the hours on a team member's role are no longer visible to the `Applicatiebeheerder`; a Business Manager and the placed colleague read them, as before, and Beheer > Rollen lists it alongside the wider audience of the contract hours
 
 ## 2026-09-24
 

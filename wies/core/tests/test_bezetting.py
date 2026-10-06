@@ -21,7 +21,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.public_id import resolve_facet
-from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, setup_roles
+from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
@@ -41,7 +41,7 @@ def _consultant(name, email, **kwargs):
     """Create a Colleague whose linked user is in the Consultant group, so it
     appears on the Bezetting page. Requires setup_roles() to have run."""
     user = User.objects.create(email=email)
-    user.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
+    user.groups.add(Group.objects.get(name="Consultant"))
     return Colleague.objects.create(name=name, email=email, source="wies", user=user, **kwargs)
 
 
@@ -66,15 +66,13 @@ class BezettingAuthTest(TestCase):
         self.client = Client()
         self.url = reverse("bezetting")
 
-        self.business_manager_user = User.objects.create(
-            email="business_manager@rijksoverheid.nl", first_name="Business Manager", last_name="User"
-        )
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", first_name="BDM", last_name="User")
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
 
         self.regular_user = User.objects.create(email="regular@rijksoverheid.nl")
 
         self.consultant = User.objects.create(email="consultant@rijksoverheid.nl")
-        self.consultant.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
+        self.consultant.groups.add(Group.objects.get(name="Consultant"))
 
     def test_anonymous_redirected(self):
         response = self.client.get(self.url)
@@ -95,28 +93,20 @@ class BezettingAuthTest(TestCase):
         assert "/geen-toegang/" in response.url
 
     def test_bdm_gets_page(self):
-        self.client.force_login(self.business_manager_user)
-        response = self.client.get(self.url)
-        assert response.status_code == 200
-        assert b"Bezetting" in response.content
-
-    def test_a_bdm_who_owns_nothing_gets_page(self):
-        # The section follows the role, not ownership.
-        admin = User.objects.create(email="business_manager-ander@rijksoverheid.nl")
-        admin.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(admin)
+        self.client.force_login(self.bdm_user)
         response = self.client.get(self.url)
         assert response.status_code == 200
         assert b"Bezetting" in response.content
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_bare_staff_redirected(self):
-        # Application administration alone carries no functional rights.
+    def test_staff_gets_page(self):
+        # Support staff (STAFF_EMAILS) may reach the business-management section too,
+        # even without the Business Development Manager role.
         staff = User.objects.create(email="staff@rijksoverheid.nl")
         self.client.force_login(staff)
         response = self.client.get(self.url)
-        assert response.status_code == 302
-        assert "/geen-toegang/" in response.url
+        assert response.status_code == 200
+        assert b"Bezetting" in response.content
 
 
 class BezettingPanelTest(TestCase):
@@ -126,9 +116,9 @@ class BezettingPanelTest(TestCase):
         setup_roles()
         self.client = Client()
         self.url = reverse("bezetting")
-        self.business_manager_user = User.objects.create(email="business_manager@rijksoverheid.nl")
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(self.business_manager_user)
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
 
         today = timezone.now().date()
         self.colleague = _consultant("Fred Full", "f@x.nl")
@@ -165,12 +155,12 @@ class BezettingNavVisibilityTest(TestCase):
     def setUp(self):
         setup_roles()
         self.client = Client()
-        self.business_manager_user = User.objects.create(email="business_manager@rijksoverheid.nl")
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl")
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
         self.regular_user = User.objects.create(email="regular@rijksoverheid.nl")
 
     def test_tab_visible_for_bdm(self):
-        self.client.force_login(self.business_manager_user)
+        self.client.force_login(self.bdm_user)
         # The home page renders the base nav.
         response = self.client.get(reverse("home"))
         assert b"Business management" in response.content
@@ -180,19 +170,12 @@ class BezettingNavVisibilityTest(TestCase):
         response = self.client.get(reverse("home"))
         assert b"Business management" not in response.content
 
-    def test_tab_visible_for_a_bdm(self):
-        admin = User.objects.create(email="opdrachtbeheer@rijksoverheid.nl")
-        admin.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(admin)
-        response = self.client.get(reverse("home"))
-        assert b"Business management" in response.content
-
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
-    def test_tab_hidden_for_bare_staff(self):
+    def test_tab_visible_for_staff(self):
         staff = User.objects.create(email="staff@rijksoverheid.nl")
         self.client.force_login(staff)
         response = self.client.get(reverse("home"))
-        assert b"Business management" not in response.content
+        assert b"Business management" in response.content
 
 
 class OccupancyServiceTest(TestCase):
@@ -464,11 +447,9 @@ class BezettingMerkFilterViewTest(TestCase):
         self.url = reverse("bezetting")
         # onboarding_completed_at set so the onboarding wizard (which lists every
         # merk) does not render and mask the filter-bar assertions.
-        self.business_manager_user = User.objects.create(
-            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
-        )
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(self.business_manager_user)
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
 
         self.digi = Suborganization.objects.create(name="Digi Gilde")
         self.mindful = Suborganization.objects.create(name="Mindful Rijk")
@@ -596,11 +577,9 @@ class BezettingLabelFilterViewTest(TestCase):
         setup_roles()
         self.client = Client()
         self.url = reverse("bezetting")
-        self.business_manager_user = User.objects.create(
-            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
-        )
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(self.business_manager_user)
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
 
         self.thema = LabelCategory.objects.create(name="Thema", color="#0066CC")
         self.ai = Label.objects.create(name="AI", category=self.thema)
@@ -644,11 +623,9 @@ class BezettingFilterChipTest(TestCase):
         setup_roles()
         self.client = Client()
         self.url = reverse("bezetting")
-        self.business_manager_user = User.objects.create(
-            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
-        )
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(self.business_manager_user)
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
 
         self.thema = LabelCategory.objects.create(name="Thema", color="#0066CC")
         self.ai = Label.objects.create(name="AI", category=self.thema)
@@ -726,11 +703,9 @@ class BezettingStatusFilterViewTest(TestCase):
         self.client = Client()
         self.url = reverse("bezetting")
         self.today = timezone.now().date()
-        self.business_manager_user = User.objects.create(
-            email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
-        )
-        self.business_manager_user.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
-        self.client.force_login(self.business_manager_user)
+        self.bdm_user = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm_user.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(self.bdm_user)
 
         self.bench = _consultant("Bea Bank", "bea@x.nl")
         self.full = _consultant("Fred Full", "fred@x.nl")

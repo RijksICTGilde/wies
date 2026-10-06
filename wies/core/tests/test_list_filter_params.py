@@ -4,7 +4,6 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Label, LabelCategory, Skill
-from wies.core.roles import ROLE_USER_ADMIN
 
 User = get_user_model()
 
@@ -175,7 +174,7 @@ class UserAdminRoleFilterTests(TestCase):
         assert self._shows_target({"rol": ""})
 
     def test_existing_group_still_filters_normally(self):
-        group, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
+        group = Group.objects.create(name="Beheerder")
         User.objects.get(last_name=self.TARGET).groups.add(group)
 
         assert self._shows_target({"rol": str(group.id)})

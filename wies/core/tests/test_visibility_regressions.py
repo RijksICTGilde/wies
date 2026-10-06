@@ -1,14 +1,12 @@
-"""Regression tests for the Business Manager visibility rule's edge surfaces (#636).
+"""Regression tests for the BDM visibility rule's edge surfaces (#636).
 
 Two holes found in review:
 
 - The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
-  team list, so a viewer with UPDATE rights but without visibility could read
-  a hidden ended placement's colleague and dates through a crafted URL: data
-  the 404 anti-oracle in ``_resolve_placement_panel`` exists to withhold. No
-  role combines the two today (both assignment roles are privileged viewers),
-  so the tests stand one in with a rule; the guard stays in case a future rule
-  splits them again.
+  team list, so a viewer with UPDATE rights but without visibility (a
+  ``change_assignment`` holder, staff) could read a hidden ended placement's
+  colleague and dates through a crafted URL — data the 404 anti-oracle in
+  ``_resolve_placement_panel`` exists to withhold.
 - The timeline's privacy note was taken from the *first* noted row of the
   viewer's current team list, so an event about one colleague could carry
   another row's note ("jou"-wording on someone else's event), and an event
@@ -16,17 +14,16 @@ Two holes found in review:
 """
 
 from datetime import timedelta
-from unittest import mock
 
-from django.test import Client, RequestFactory, TestCase
+from django.contrib.auth.models import Permission
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.permission_engine import _RULES, Verb, registered_rules
-from wies.core.tests.role_helpers import grant_business_manager, make_other_business_manager_user
+from wies.core.tests.role_helpers import STAFF_EMAIL, grant_bdm, make_staff_user
 from wies.core.views import _team_event_privacy_note
-from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_OWN
+from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
 from wies.rijksauth.models import User
 
 
@@ -67,17 +64,11 @@ class MemberSheetHiddenRowTest(TestCase):
             self.assignment, self.skill, hidden, start=today - timedelta(days=100), end=today - timedelta(days=10)
         )
 
-        # An edit-but-not-see user: UPDATE via a stand-in rule, no visibility
-        # (not placed, not a Business Manager).
+        # The surviving edit-but-not-see class: UPDATE via change_assignment,
+        # no visibility (not placed, not a BDM).
         self.editor_user = User.objects.create_user(email="editor@rijksoverheid.nl")
         Colleague.objects.create(name="Editor", email="editor@rijksoverheid.nl", source="wies", user=self.editor_user)
-        update_assignment = registered_rules()[(Verb.UPDATE, Assignment, None)]
-        patcher = mock.patch.dict(
-            _RULES,
-            {(Verb.UPDATE, Assignment, None): lambda u, a: u == self.editor_user or update_assignment(u, a)},
-        )
-        patcher.start()
-        self.addCleanup(patcher.stop)
+        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
         self.editor_client = Client()
         self.editor_client.force_login(self.editor_user)
 
@@ -107,7 +98,7 @@ class MemberSheetHiddenRowTest(TestCase):
         owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.owner.user = owner_user
         self.owner.save(update_fields=["user"])
-        grant_business_manager(owner_user)
+        grant_bdm(owner_user)
         owner_client = Client()
         owner_client.force_login(owner_user)
 
@@ -117,13 +108,15 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, "Teamlid bewerken")
         self.assertContains(response, "Hidden Member")
 
-    def test_a_bdm_opens_the_hidden_row_sheet(self):
-        # A Business Manager is a privileged viewer, so unlike the stand-in
-        # editor above it DOES see the hidden row and its edit sheet.
-        admin_client = Client()
-        admin_client.force_login(make_other_business_manager_user())
+    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+    def test_staff_opens_the_hidden_row_sheet(self):
+        # Support staff are privileged viewers, so unlike the change_assignment
+        # editor above they DO see the hidden row and its edit sheet.
+        staff_user = make_staff_user()
+        staff_client = Client()
+        staff_client.force_login(staff_user)
 
-        response = admin_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
+        response = staff_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
         self.assertContains(response, "Teamlid bewerken")
@@ -167,7 +160,7 @@ class MemberSheetHiddenRowTest(TestCase):
         owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.owner.user = owner_user
         self.owner.save(update_fields=["user"])
-        grant_business_manager(owner_user)
+        grant_bdm(owner_user)
         owner_client = Client()
         owner_client.force_login(owner_user)
 
@@ -225,39 +218,31 @@ class TeamEventPrivacyNoteTest(TestCase):
         # The event names a colleague whose placement no longer exists, so no
         # current row carries a note — the chip must survive on the event's own
         # names instead of vanishing.
-        business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
-        Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
-        )
-        grant_business_manager(business_manager_user)
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
+        grant_bdm(bdm_user)
 
-        note = _team_event_privacy_note(
-            self.assignment, self._request(business_manager_user), self._removal_of("Ghost")
-        )
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
 
-        assert note == PRIVACY_BM
+        assert note == PRIVACY_BDM
 
     def test_placed_bdm_does_not_lend_their_own_note_to_anothers_event(self):
         # The viewer's own ended row carries PRIVACY_OWN; an event about a
         # different hidden colleague must not borrow that "jou" wording.
-        business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
-        business_manager_colleague = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
-        )
-        grant_business_manager(business_manager_user)
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        bdm_colleague = Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
+        grant_bdm(bdm_user)
         _place(
             self.assignment,
             self.skill,
-            business_manager_colleague,
+            bdm_colleague,
             start=self.today - timedelta(days=100),
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(
-            self.assignment, self._request(business_manager_user), self._removal_of("Ghost")
-        )
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
 
-        assert note == PRIVACY_BM
+        assert note == PRIVACY_BDM
 
     def test_own_event_keeps_the_own_note_for_the_placed_colleague(self):
         placed_user = User.objects.create_user(email="placed@rijksoverheid.nl")
@@ -277,14 +262,10 @@ class TeamEventPrivacyNoteTest(TestCase):
         assert note == PRIVACY_OWN
 
     def test_publicly_visible_names_get_no_note(self):
-        business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
-        Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
-        )
-        grant_business_manager(business_manager_user)
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
+        grant_bdm(bdm_user)
 
-        note = _team_event_privacy_note(
-            self.assignment, self._request(business_manager_user), self._removal_of("Active Member")
-        )
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Active Member"))
 
         assert note == ""

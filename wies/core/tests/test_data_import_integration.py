@@ -7,7 +7,7 @@ from django.test import RequestFactory, TestCase
 
 from wies.core.errors import SuborganizationNotFoundError
 from wies.core.models import Assignment, Colleague, Event, Placement, Service, Suborganization
-from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, role_label
+from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -20,21 +20,19 @@ class DataImportIntegrationTest(TestCase):
 
     def setUp(self):
         """Create necessary groups for CSV import tests"""
-        Group.objects.get_or_create(name=ROLE_USER_ADMIN)
-        Group.objects.get_or_create(name=ROLE_CONSULTANT)
-        Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name=BDM_GROUP_NAME)
 
     def test_csv_user_import_with_brand_assigns_existing_merken(self):
         """Test: CSV with brand column assigns each user's (pre-existing) merk"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
 
-        csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
-            "John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n\n"
-            "Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n\n"
-            "Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"
-        )
+        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
+John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n
+Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n
+Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
 
         result = create_users_from_csv(None, csv_content)
 

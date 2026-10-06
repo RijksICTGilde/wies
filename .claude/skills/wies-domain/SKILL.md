@@ -15,10 +15,9 @@ description: Wies project domain knowledge including Dutch government terminolog
 
 ## User Roles
 
-- **Gebruikersbeheerder** - User administration (users, labels, merken, contract hours); may grant every role, including its own
-- **Consultant** - View-only, plus the text fields of an opdracht they are placed on
-- **Business Manager** - every wies-sourced opdracht, and reading both a colleague's contract hours and the hours on a role
-- Application administration (`STAFF_EMAILS`) is not a role; see `features/roles.md`
+- **Beheerder** - Administrator (user/label management)
+- **Consultant** - View-only access
+- **BDM** - Business Development Manager (creates assignments)
 
 ## Date Inheritance
 
