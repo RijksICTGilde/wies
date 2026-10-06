@@ -696,7 +696,6 @@
     return panel ? findScroller(panel) : null;
   }
 
-  // A filter change swaps the results in silence; say what is left (WCAG 4.1.3).
   function setupFilterScrollPreserve() {
     let saved = null;
     document.addEventListener("htmx:beforeSwap", (e) => {

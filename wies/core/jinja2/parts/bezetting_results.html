@@ -98,10 +98,10 @@
     <div class="bezetting-row__side bezetting-row__side--head"></div>
     <div class="bezetting-track bezetting-track--head">
       {% for tick in month_ticks %}
-        {# --flip: the label normally sits right of its gridline, which pushes a
-             tick near the end past the track and gives the page a stray
-             horizontal scrollbar. Past 90% it hangs to the left instead. #}
-        <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %} {% if tick.left > 90 %}bezetting-tick--flip{% endif %}"
+        {# --flip: the label normally sits right of its gridline, which would push
+             a tick near the end past the track and give the page a stray
+             horizontal scrollbar. The threshold lives in occupancy.py. #}
+        <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %} {% if tick.flip %}bezetting-tick--flip{% endif %}"
              style="left: {{ tick.left }}%">
           <span class="bezetting-tick__label">{{ tick.label }}</span>
         </div>
@@ -116,9 +116,10 @@
   </div>
   {# data-announce: live_region.js reads this out after a filter change. The
      count is the whole result set, not the rendered rows: the page shows at
-     most one page of them. #}
+     most one page of them. Only when there are rows -- at nought the empty
+     state below carries the announcement, as on the other lists. #}
   <div class="bezetting-rows"
-       data-announce="{{ row_count }} {{ 'collega' if row_count == 1 else "collega's" }}">
+       {% if row_count %}data-announce="{{ row_count }} {{ 'collega' if row_count == 1 else "collega's" }}"{% endif %}>
     {# One list, bench rows first: an unstaffed colleague is what this page is
        scanned for, and their row shows whether anything is already booked — the
        thing a list of names could not answer. No headings between the two: the
@@ -128,7 +129,7 @@
     {% if not row_count %}
       {# nldd-inline-dialog is the empty state across the app (see
          parts/placement_card_grid.html); a bare paragraph reads as body copy. #}
-      <nldd-inline-dialog icon="magnifier" text="Geen collega's gevonden" supporting-text="Pas de filters of zoekopdracht aan."></nldd-inline-dialog>
+      <nldd-inline-dialog icon="magnifier" text="Geen collega's gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen collega's gevonden"></nldd-inline-dialog>
     {% endif %}
   </div>
 </div>

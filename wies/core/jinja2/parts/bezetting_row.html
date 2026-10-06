@@ -11,6 +11,10 @@
       {# Second line: role and what is still free. Exactly full shows no hours.
            End dates sit on the bar, not here: one of two opdrachten ending is
            not the colleague ending. #}
+      {# A role without hours counted as 0, so any total below is an upper
+           bound. The caveat rides on this line and not on the bar: a bar under
+           ~15 days is too narrow to carry a label at all (#692 review). #}
+      {% set caveat = ", uren niet overal ingevuld" if row.has_role_without_hours else "" %}
       {% if row.next_contract %}
         {% set hours_text = row.next_contract.hours_per_week ~ " uur vanaf " ~ (row.next_contract.start_date|datum_nl) %}
       {% elif row.contract_hours is none and row.contract_ended %}
@@ -18,12 +22,14 @@
       {% elif row.contract_hours is none %}
         {% set hours_text = "contracturen onbekend" %}
       {% elif row.unfilled_hours > 0 %}
-        {# A role without hours counted as 0, so this is an upper bound. The
-             caveat sits here and not on the bar: a bar under ~15 days is too
-             narrow to carry a label at all (#692 review). #}
-        {% set hours_text = row.unfilled_hours ~ " uur vrij" ~ (", uren niet overal ingevuld" if row.has_role_without_hours else "") %}
+        {% set hours_text = row.unfilled_hours ~ " uur vrij" ~ caveat %}
       {% elif row.unfilled_hours < 0 %}
-        {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" ~ (", uren niet overal ingevuld" if row.has_role_without_hours else "") %}
+        {% set hours_text = (-row.unfilled_hours) ~ " uur boven contract" ~ caveat %}
+      {% elif row.has_role_without_hours %}
+        {# Exactly nought free, but a role counted as 0 for want of hours, so
+             the nought is an upper bound too. Without this the one row where
+             something is still open would say nothing at all (#692 review). #}
+        {% set hours_text = "uren niet overal ingevuld" %}
       {% else %}
         {% set hours_text = none %}
       {% endif %}

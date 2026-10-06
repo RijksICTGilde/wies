@@ -24,6 +24,7 @@ from wies.core.models import (
 from wies.core.public_id import resolve_facet
 from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
+    FLIP_LABEL_PCT,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
@@ -418,15 +419,19 @@ class TimelineGeometryTest(TestCase):
         assert lefts == sorted(lefts)  # monotonic left to right
         assert all(0 <= left <= 100 for left in lefts)
 
-    def test_a_tick_near_the_end_gets_its_label_flipped(self):
-        """A label to the right of the last gridline overflows the track and
-        gives the page a horizontal scrollbar (#692 review). The template flips
-        it past 90%, so there has to be a tick that far along to flip."""
-        ticks = month_ticks(date(2025, 11, 15))
+    def test_only_ticks_past_the_threshold_flip(self):
+        """A label right of the last gridline overflows the track and gives the
+        page a horizontal scrollbar (#692 review); those hang left instead.
 
-        assert any(t["left"] > 90 for t in ticks), (
-            "no tick past 90%, so the flip rule in bezetting_results.html is dead code"
-        )
+        Over a full year, because whether any tick lands past the threshold
+        depends on the day of the month: on 137 days of 2026 none does.
+        """
+        for offset in range(366):
+            today = date(2026, 1, 1) + timedelta(days=offset)
+            for tick in month_ticks(today):
+                assert tick["flip"] == (tick["left"] > FLIP_LABEL_PCT), (
+                    f"tick at {tick['left']}% on {today} has flip={tick['flip']}"
+                )
 
 
 class OccupancyMerkFilterTest(TestCase):
@@ -995,6 +1000,17 @@ class UnfilledHoursCaveatTest(TestCase):
         assert "20 uur vrij" in html
         assert "uren niet overal ingevuld" not in html
 
+    def test_exactly_full_still_shows_the_caveat(self):
+        """Nought free is an upper bound too when a role has no hours; without
+        this the one row with something still open says nothing (#692 review)."""
+        placement = _placement(self.colleague, "Vol", self.today, self.today + timedelta(days=60))
+        placement.service.hours_per_week = 36
+        placement.service.save()
+        _placement(self.colleague, "Zonder uren", self.today, self.today + timedelta(days=60))
+
+        html = self._row_html()
+        assert "uren niet overal ingevuld" in html
+
     def test_bench_colleague_gets_no_caveat(self):
         """Nothing active to be missing hours for."""
         html = self._row_html()
@@ -1013,9 +1029,10 @@ class TickLabelFlipTest(TestCase):
         bdm.groups.add(Group.objects.get(name="Business Development Manager"))
         self.client.force_login(bdm)
 
-    def test_the_rendered_page_flips_its_last_tick(self):
+    def test_the_page_marks_exactly_the_ticks_the_service_flags(self):
+        """Whether any tick flips today depends on the date, so this pins the
+        template to the service rather than to the calendar."""
         content = self.client.get(reverse("bezetting")).content.decode()
 
-        assert "bezetting-tick--flip" in content, (
-            "no flipped tick on the page; the last month label will overflow the track"
-        )
+        expected = sum(1 for t in month_ticks(timezone.now().date()) if t["flip"])
+        assert content.count("bezetting-tick--flip") == expected

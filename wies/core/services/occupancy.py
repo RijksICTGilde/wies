@@ -43,6 +43,10 @@ ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
 
 # Below this share of the horizon a bar cannot hold its own label legibly.
 NARROW_BAR_PCT = 8
+# A month label sits right of its gridline, so a line this far along would push
+# the label past the track and give the page a horizontal scrollbar. Those hang
+# their label to the left instead (#692 review).
+FLIP_LABEL_PCT = 90
 
 # Only colleagues in this role appear on the Bezetting page.
 CONSULTANT_GROUP = "Consultant"
@@ -501,7 +505,11 @@ def today_marker_pct() -> float:
 
 
 def month_ticks(today: date) -> list[dict]:
-    """First-of-month gridline labels across the horizon, as {label, month, left%}."""
+    """First-of-month gridline labels across the horizon.
+
+    Each tick is {label, month, left%, flip}; ``flip`` says the label would
+    overflow the track on the right and has to hang left of its line instead.
+    """
     horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
     horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
     span = (horizon_end - horizon_start).days or 1
@@ -516,7 +524,14 @@ def month_ticks(today: date) -> list[dict]:
     cursor = date(year, month, 1)
     while cursor <= horizon_end:
         left = (cursor - horizon_start).days / span * 100
-        ticks.append({"label": cursor.strftime("%b"), "month": cursor.month, "left": round(left, 2)})
+        ticks.append(
+            {
+                "label": cursor.strftime("%b"),
+                "month": cursor.month,
+                "left": round(left, 2),
+                "flip": left > FLIP_LABEL_PCT,
+            }
+        )
         month += 1
         if month > 12:  # noqa: PLR2004 (12 = months per year)
             month = 1
