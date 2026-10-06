@@ -25,9 +25,9 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        # Naast de templates ook het onderzoeksrapport: gegenereerde HTML en
-        # de markdown-bron ervan, waar herformatteren alleen ruis oplevert.
-        exclude: "jinja2/|^wies/core/static/toegankelijkheid/|^docs/toegankelijkheid/onderzoek-"
+        # Naast de templates ook het onderzoeksrapport: een zelfstandig
+        # HTML-document waar herformatteren alleen ruis oplevert.
+        exclude: "jinja2/|^wies/core/static/toegankelijkheid/"
 
   - repo: https://github.com/adamchainz/django-upgrade
     rev: "1.30.0"

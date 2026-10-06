@@ -150,7 +150,7 @@ PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teaml
 
 # Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
 # A new audit: drop the HTML next to this one, point this at it, and leave the
-# old file in place. The markdown it was built from lives in docs/toegankelijkheid/.
+# old file in place -- the URL stays put, so the register's link keeps working.
 CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
