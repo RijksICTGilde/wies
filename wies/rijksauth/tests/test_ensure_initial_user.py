@@ -10,8 +10,8 @@ User = get_user_model()
 
 class EnsureInitialUserTest(TestCase):
     def setUp(self):
-        Group.objects.create(name="Admins")
-        Group.objects.create(name="Editors")
+        Group.objects.get_or_create(name="Admins")
+        Group.objects.get_or_create(name="Editors")
 
     @patch.dict(
         "os.environ",
@@ -26,8 +26,10 @@ class EnsureInitialUserTest(TestCase):
         user = User.objects.get(email="admin@rijksoverheid.nl")
         assert user.first_name == "Admin"
         assert user.last_name == "User"
+        # Every group, including any a data migration created.
         group_names = set(user.groups.values_list("name", flat=True))
-        assert group_names == {"Admins", "Editors"}
+        assert {"Admins", "Editors"} <= group_names
+        assert group_names == set(Group.objects.values_list("name", flat=True))
 
     @patch.dict(
         "os.environ",
