@@ -198,5 +198,5 @@ KB_CURRENT_POINTER_KEY = os.environ.get("KB_CURRENT_POINTER_KEY", "sites/CURRENT
 
 # Private content repo (owner/name) whose latest GitHub release artifact holds
 # the built site, and a read token to download it. Only the worker needs these.
-KB_CONTENT_GITHUB_REPO = os.environ.get("KB_CONTENT_GITHUB_REPO", "")
+KB_CONTENT_GITHUB_REPO = os.environ.get("KB_CONTENT_GITHUB_REPO", "DigiGilde/odi-startpagina")
 KB_CONTENT_GITHUB_TOKEN = os.environ.get("KB_CONTENT_GITHUB_TOKEN", "")

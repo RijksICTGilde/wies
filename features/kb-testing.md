@@ -43,13 +43,13 @@ built site as a `.tar.gz` release artifact on every merge to `main`.
 
 - **A GitHub read token** able to download the repo's release artifacts. The
   repo is private, so this is required: without it the download 401s.
-  - Local: set `KB_CONTENT_GITHUB_REPO` and `KB_CONTENT_GITHUB_TOKEN` in `.env`
-    (see `.env.local.example`). Not in `.env.worker` -- the `environment:` block
-    of `db_worker` in `docker-compose.yml` overrides `env_file`, so a value
-    there is silently ignored.
+  - Local: set `KB_CONTENT_GITHUB_TOKEN` in `.env.worker` (see
+    `.env.worker.example`). The repo defaults to `DigiGilde/odi-startpagina`;
+    set `KB_CONTENT_GITHUB_REPO` there only to override it.
   - A fine-grained token with `Contents: read` on that one repo is enough.
     Resource owner must be DigiGilde, and an org owner approves it.
-  - Production: provision both as ZAD secrets on the `worker` component.
+  - Production: provision the token as a ZAD secret on the `worker` component.
+    `KB_CONTENT_GITHUB_REPO` only needs setting to override the default.
 
 Verified end-to-end on 6 October 2026: the button fetched release `build-2` and
 published 339 objects to MinIO, and `/odi-startpagina/` served the site with its
