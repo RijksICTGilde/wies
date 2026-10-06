@@ -69,6 +69,23 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
         assert response.has_header("Content-Security-Policy")
 
 
+class SecurityHeadersWiredUpTest(TestCase):
+    """The tests above call the middleware directly; this one goes through the
+    real MIDDLEWARE stack, so it fails if the middleware is dropped from
+    settings. Presence only: the values are pinned above."""
+
+    def test_real_response_carries_the_security_headers(self):
+        response = self.client.get("/")
+        for header in (
+            "Content-Security-Policy",
+            "Permissions-Policy",
+            "X-Frame-Options",
+            "X-Content-Type-Options",
+        ):
+            with self.subTest(header=header):
+                assert response.has_header(header)
+
+
 class WhiteNoiseHeaderTest(TestCase):
     """WhiteNoise answers static requests above ResponseHeadersMiddleware, so
     those responses only get security headers if its add_headers hook sets them.
