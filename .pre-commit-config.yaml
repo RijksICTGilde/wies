@@ -30,20 +30,20 @@ repos:
         exclude: "jinja2/|^wies/core/static/toegankelijkheid/"
 
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: "1.30.0"
+    rev: "1.33.0"
     hooks:
       - id: django-upgrade
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.3
+    rev: v0.16.10
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.44.2
+    rev: v1.46.4
     hooks:
       # Het onderzoeksrapport is uitgezonderd: een gegenereerd, zelfstandig
       # HTML-document, geen Jinja-template, en herformatteren levert alleen ruis op.
