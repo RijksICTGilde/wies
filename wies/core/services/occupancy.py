@@ -24,6 +24,7 @@ from django.db.models.functions import Lower
 
 from wies.core.models import SUBGROEP_CATEGORY, Colleague, ContractPeriod, Label, Placement, Suborganization
 from wies.core.querysets import annotate_placement_dates
+from wies.core.roles import ROLE_CONSULTANT
 
 # Timeline horizon and "pressing" threshold. Four months ahead, not six: the far
 # end of a six-month view was empty for almost every row, and the months that do
@@ -48,8 +49,6 @@ NARROW_BAR_PCT = 8
 # their label to the left instead (#692 review).
 FLIP_LABEL_PCT = 90
 
-# Only colleagues in this role appear on the Bezetting page.
-CONSULTANT_GROUP = "Consultant"
 
 BUCKET_BENCH = "bench"  # no active placement today
 BUCKET_PARTIAL = "partial"  # placed, with contract hours left over
@@ -276,12 +275,12 @@ def colleague_occupancy(
     horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
     far_future = date.max
 
-    # Only consultants: colleagues whose linked user is in the "Consultant" group.
+    # Only consultants: colleagues whose linked user holds the Consultant role.
     # Colleagues without a user (e.g. imported without an account) are excluded.
     # The labels and merk ride along: the row shows them as chips, and without
     # the prefetch that is a query per colleague.
     colleagues = (
-        Colleague.objects.filter(user__groups__name=CONSULTANT_GROUP)
+        Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
         .select_related("suborganization")
         .prefetch_related("labels__category", "contract_periods")
         .order_by("name")
@@ -551,7 +550,7 @@ def labels_by_category(label_ids: list[int]) -> dict[int, list[int]]:
 def consultant_colleagues():
     """Base colleague queryset for the Bezetting page: only consultants, matching
     the occupancy timeline (colleagues whose linked user is in that group)."""
-    return Colleague.objects.filter(user__groups__name=CONSULTANT_GROUP)
+    return Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
 
 
 def apply_colleague_filters(qs, merk, labels_by_cat, *, exclude_filter=None):
@@ -585,7 +584,7 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
 
     # Label categories: one group each, only labels actually used by a consultant.
     used_labels = (
-        Label.objects.filter(colleagues__user__groups__name=CONSULTANT_GROUP)
+        Label.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT)
         .distinct()
         .select_related("category")
         .order_by("category__name", Lower("name"))
@@ -629,7 +628,7 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
     merk_counts = Counter(mid for mid in merk_ids if mid is not None)
     merk_options = [{"value": "", "label": ""}]
     merk_selected = []
-    used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=CONSULTANT_GROUP).distinct()
+    used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
     for suborganization in used_suborgs:
         value = str(suborganization.public_id)
         option = {"value": value, "label": suborganization.name, "count": merk_counts.get(suborganization.id, 0)}

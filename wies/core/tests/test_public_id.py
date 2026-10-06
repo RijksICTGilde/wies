@@ -34,7 +34,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
+from wies.core.tests.role_helpers import grant_business_manager, make_business_manager_user
 
 User = get_user_model()
 
@@ -77,8 +77,8 @@ class AssignmentPublicIdRoutingTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="u@rijksoverheid.nl", first_name="U", last_name="s")
         self.owner = Colleague.objects.create(user=self.user, name="Owner", email="u@rijksoverheid.nl", source="wies")
-        # Ownership only grants edit/delete rights combined with the BDM role.
-        grant_bdm(self.user)
+        # Ownership only grants edit/delete rights combined with the Business Manager role.
+        grant_business_manager(self.user)
         self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner, source="wies")
         self.client.force_login(self.user)
 
@@ -281,10 +281,10 @@ class PlacementPanelParamTests(TestCase):
         self.assertContains(response, "Placed Person")
 
     def test_ended_placement_shown_to_bdm(self):
-        """A BDM (not the placed colleague, not the owner) opens the same ended
+        """A Business Manager (not the placed colleague, not the owner) opens the same ended
         placement's panel over HTTP and sees it."""
-        bdm_user = make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm")
-        self.client.force_login(bdm_user)
+        business_manager_user = make_business_manager_user(email="business_manager@rijksoverheid.nl", name="Bdm")
+        self.client.force_login(business_manager_user)
         ended = self._placement(start_offset=-30, end_offset=-10)
 
         response = self._panel(ended.public_id)
@@ -293,7 +293,7 @@ class PlacementPanelParamTests(TestCase):
         self.assertContains(response, "Placed Person")
 
     def test_ended_placement_hidden_from_non_bdm_owner(self):
-        """The BM-owner is no longer entitled by ownership alone: a non-BDM owner
+        """The BM-owner is no longer entitled by ownership alone: an owner without the role
         gets the same 404 as any unrelated viewer."""
         owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
         self.owner.user = owner_user
