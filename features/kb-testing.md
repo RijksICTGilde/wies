@@ -38,17 +38,22 @@ The publish button (staff-only) enqueues the `kb_publish` background job, which
 pulls the **latest GitHub release artifact** from the content repo, unpacks it,
 uploads it under a new `sites/<tag>` prefix, and flips the pointer.
 
-The content repo now exists: `rubenrouwhof/odi-startpagina` (public for now,
-moving to a private repo later). Its CI attaches the built site as a `.tar.gz`
-release artifact on every merge to `main`, so the release side is real. One thing
-remains to test the flow end-to-end:
+The content repo is `DigiGilde/odi-startpagina`, private. Its CI attaches the
+built site as a `.tar.gz` release artifact on every merge to `main`.
 
-- **A GitHub read token** able to download the repo's release artifacts.
-  - Local: set `KB_CONTENT_GITHUB_REPO=rubenrouwhof/odi-startpagina` and
-    `KB_CONTENT_GITHUB_TOKEN` in `.env.worker` (compose passes them to the
-    `db_worker`). While the repo is public a token isn't strictly required to
-    download the asset, but `kb_publish` still validates that both are set.
+- **A GitHub read token** able to download the repo's release artifacts. The
+  repo is private, so this is required: without it the download 401s.
+  - Local: set `KB_CONTENT_GITHUB_REPO` and `KB_CONTENT_GITHUB_TOKEN` in `.env`
+    (see `.env.local.example`). Not in `.env.worker` -- the `environment:` block
+    of `db_worker` in `docker-compose.yml` overrides `env_file`, so a value
+    there is silently ignored.
+  - A fine-grained token with `Contents: read` on that one repo is enough.
+    Resource owner must be DigiGilde, and an org owner approves it.
   - Production: provision both as ZAD secrets on the `worker` component.
+
+Verified end-to-end on 6 October 2026: the button fetched release `build-2` and
+published 339 objects to MinIO, and `/odi-startpagina/` served the site with its
+assets.
 
 Without the token configured, the button enqueues the job but `kb_publish` fails
 its config check with a clear message. The local loop uses `kb_seed_dummy` as a

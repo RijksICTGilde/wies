@@ -79,10 +79,15 @@ services:
     environment:
       <<: *object-store-env
       APP_VERSION: ${APP_VERSION:-}
-      # The content repo (public) publishes token-free, so no token default here —
-      # an empty token means kb_publish sends no auth header (a bogus one would 401,
-      # see wies/kb/publish.py). Override both when the repo goes private.
-      KB_CONTENT_GITHUB_REPO: ${KB_CONTENT_GITHUB_REPO:-rubenrouwhof/odi-startpagina}
+      # The content repo is private, so kb_publish needs a token: set
+      # KB_CONTENT_GITHUB_TOKEN in .env (a fine-grained token with Contents:
+      # read on that repo). No default for it -- an empty value makes
+      # kb_publish send no auth header, and a 401 on the release is a clearer
+      # failure than a bogus token would give (see wies/kb/publish.py).
+      #
+      # Both read from .env, not .env.worker: this environment: block overrides
+      # env_file, so a value there is silently ignored.
+      KB_CONTENT_GITHUB_REPO: ${KB_CONTENT_GITHUB_REPO:-DigiGilde/odi-startpagina}
       KB_CONTENT_GITHUB_TOKEN: ${KB_CONTENT_GITHUB_TOKEN:-}
     depends_on:
       postgres:
