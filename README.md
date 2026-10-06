@@ -6,7 +6,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 
 - **Backend**: Django 6 with PostgreSQL
 - **Templates**: Jinja2
-- **Styling**: [RVO Design System](https://github.com/nl-design-system/rvo) (Dutch government design system)
+- **Styling**: [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) (NLDD web components, Dutch government design system)
 - **Interactivity**: HTMX
 - **Authentication**: OIDC via Keycloak
 - **Package management**: uv
