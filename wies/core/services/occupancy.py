@@ -8,8 +8,9 @@ ends soon.
 A colleague is "op de bank" (``bench``: no active placement today), "deels
 beschikbaar" (``partial``: placed, but the hours of their active roles add up to
 less than their contract) or "volledig ingezet" (``full``). Hours are optional:
-without contract hours, or with an active role that has none, the row cannot be
-split and counts as full, exactly as before hours existed.
+without contract hours the row cannot be split and counts as full, exactly as
+before hours existed. An active role without hours counts as 0, so the free
+hours are an upper bound until it is filled in.
 """
 
 from __future__ import annotations
@@ -42,13 +43,17 @@ ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
 
 # Below this share of the horizon a bar cannot hold its own label legibly.
 NARROW_BAR_PCT = 8
+# A month label sits right of its gridline, so a line this far along would push
+# the label past the track and give the page a horizontal scrollbar. Those hang
+# their label to the left instead (#692 review).
+FLIP_LABEL_PCT = 90
 
 # Only colleagues in this role appear on the Bezetting page.
 CONSULTANT_GROUP = "Consultant"
 
 BUCKET_BENCH = "bench"  # no active placement today
 BUCKET_PARTIAL = "partial"  # placed, with contract hours left over
-BUCKET_FULL = "full"  # placed, and no hours left (or hours unknown)
+BUCKET_FULL = "full"  # placed, and no hours left (or contract hours unknown)
 # Sort order: bench first, then partials, then fully placed.
 _BUCKET_RANK = {BUCKET_BENCH: 0, BUCKET_PARTIAL: 1, BUCKET_FULL: 2}
 
@@ -57,9 +62,10 @@ _BUCKET_RANK = {BUCKET_BENCH: 0, BUCKET_PARTIAL: 1, BUCKET_FULL: 2}
 # happens in-memory on the built rows, not in the queryset.
 STATUS_BENCH = "bench"
 STATUS_PARTIAL = "partial"
-STATUS_FULL = "full"
 STATUS_ENDS_SOON = "ends_soon"
-STATUS_VALUES = (STATUS_BENCH, STATUS_PARTIAL, STATUS_FULL, STATUS_ENDS_SOON)
+# No "volledig ingezet" status (#687): the page is read for who is free. The
+# full bucket stays for sorting.
+STATUS_VALUES = (STATUS_BENCH, STATUS_PARTIAL, STATUS_ENDS_SOON)
 
 
 @dataclass
@@ -133,13 +139,17 @@ class OccupancyRow:
     # for today", which is not the same as never filled in.
     next_contract: ContractPeriod | None = None
     contract_ended: bool = False
-    # Hours per week of the active roles added up; None when any of them has no
-    # hours, since a partial sum would understate how placed someone is.
+    # Hours per week of the active roles added up, a role without hours counting
+    # as 0; None on the bench.
     active_hours: int | None = None
     # Contract minus active hours, or the whole contract on the bench; negative
-    # when the roles add up to more than the contract. None whenever either
-    # side is unknown.
+    # when the roles add up to more than the contract. None when the contract
+    # hours are unknown.
     unfilled_hours: int | None = None
+    # Whether an active role counted as 0 for want of recorded hours, which makes
+    # unfilled_hours an upper bound. Sits on the row, not the bar: a bar too
+    # narrow for a label would otherwise swallow the caveat (#692 review).
+    has_role_without_hours: bool = False
 
 
 def contract_hours_on(periods, day: date) -> int | None:
@@ -164,8 +174,6 @@ def row_has_status(row: OccupancyRow, status: str) -> bool:
         return row.bucket == BUCKET_BENCH
     if status == STATUS_PARTIAL:
         return row.bucket == BUCKET_PARTIAL
-    if status == STATUS_FULL:
-        return row.bucket == BUCKET_FULL
     if status == STATUS_ENDS_SOON:
         return row.ends_soon
     return False
@@ -245,6 +253,7 @@ def colleague_occupancy(
     *,
     merk_ids: list[int] | None = None,
     labels_by_category: dict[int, list[int]] | None = None,
+    search: str = "",
 ) -> list[OccupancyRow]:
     """Build the occupancy rows, sorted most-pressing first.
 
@@ -259,6 +268,9 @@ def colleague_occupancy(
     ``labels_by_category`` maps a label-category id to the selected label ids in
     that category. Matching is OR within a category and AND between categories,
     matching the "Wie zit waar?" filter semantics.
+
+    ``search`` narrows the rows to colleagues whose name or e-mail contains it,
+    like the search box on the user list.
     """
     horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
     horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
@@ -276,6 +288,8 @@ def colleague_occupancy(
     )
     if merk_ids:
         colleagues = colleagues.filter(suborganization_id__in=merk_ids)
+    if search:
+        colleagues = colleagues.filter(Q(name__icontains=search) | Q(email__icontains=search))
     for label_ids in (labels_by_category or {}).values():
         # AND between categories: chain a filter per category (OR within).
         colleagues = colleagues.filter(labels__id__in=label_ids)
@@ -332,7 +346,8 @@ def colleague_occupancy(
 
         active_count = 0
         active_ends: list[date] = []
-        active_hours: int | None = 0
+        active_hours = 0
+        has_role_without_hours = False
         segments: list[TimelineSegment] = []
         for placement in placements:
             start = placement.actual_start_date
@@ -343,8 +358,12 @@ def colleague_occupancy(
                 active_count += 1
                 if end is not None:
                     active_ends.append(end)
-                # One role without hours makes the sum unknowable.
-                active_hours = None if active_hours is None or hours is None else active_hours + hours
+                # A role without hours counts as 0 rather than voiding the sum
+                # (#687); the row says so, so the total reads as an upper bound.
+                if hours is not None:
+                    active_hours += hours
+                else:
+                    has_role_without_hours = True
             left, width = _position(start, end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
@@ -375,16 +394,14 @@ def colleague_occupancy(
         if active_count == 0:
             bucket = BUCKET_BENCH
             unfilled_hours = contract_hours
-        elif contract_hours is not None and active_hours is not None and active_hours < contract_hours:
+        elif contract_hours is not None and active_hours < contract_hours:
             bucket = BUCKET_PARTIAL
             unfilled_hours = contract_hours - active_hours
         else:
             bucket = BUCKET_FULL
             # Kept as a signed number: 24 on contract and 36 in roles is not
             # "full", it is 12 over, and the page should say so.
-            unfilled_hours = (
-                contract_hours - active_hours if contract_hours is not None and active_hours is not None else None
-            )
+            unfilled_hours = contract_hours - active_hours if contract_hours is not None else None
         earliest_active_end = min(active_ends) if active_ends else None
         ends_soon = earliest_active_end is not None and earliest_active_end <= soon_cutoff
 
@@ -435,11 +452,12 @@ def colleague_occupancy(
                 contract_ended=contract_ended,
                 active_hours=active_hours if active_count else None,
                 unfilled_hours=unfilled_hours,
+                has_role_without_hours=has_role_without_hours,
             )
         )
 
     # Partial rows by most free hours first; the bench is re-sorted on how long
-    # someone has been free in split_bench_and_timeline, and full rows go by
+    # someone has been free in rows_in_display_order, and full rows go by
     # when their work ends.
     rows.sort(
         key=lambda r: (
@@ -460,26 +478,25 @@ def occupancy_summary(rows) -> dict:
     return {
         "bench_count": sum(1 for r in rows if r.bucket == BUCKET_BENCH),
         "partial_count": sum(1 for r in rows if r.bucket == BUCKET_PARTIAL),
-        "full_count": sum(1 for r in rows if r.bucket == BUCKET_FULL),
         "ends_soon_count": sum(1 for r in rows if r.ends_soon),
     }
 
 
-def split_bench_and_timeline(rows) -> tuple[list, list]:
-    """Split occupancy rows into (bench_rows, timeline_rows).
+def rows_in_display_order(rows) -> list:
+    """Occupancy rows in the order the page renders them: bench first.
 
-    Bench colleagues get their own section above the placed ones, longest-free
-    first — the order a business manager reads this in. Sorted here rather than in
-    the template: Jinja's sort filter cannot order a list where some bench_days are
-    None (never placed), and comparing None to an int raises. Those go last —
-    "never placed" is not a long wait, it is a different thing.
+    One list, not two sections: an unstaffed colleague is what this page is
+    scanned for. Bench rows go longest-free first — the order a business manager
+    reads this in. Sorted here rather than in the template: Jinja's sort filter
+    cannot order a list where some bench_days are None (never placed), and
+    comparing None to an int raises. Those go last — "never placed" is not a long
+    wait, it is a different thing.
     """
     bench_rows = sorted(
         (r for r in rows if r.bucket == BUCKET_BENCH),
         key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
     )
-    timeline_rows = [r for r in rows if r.bucket != BUCKET_BENCH]
-    return bench_rows, timeline_rows
+    return bench_rows + [r for r in rows if r.bucket != BUCKET_BENCH]
 
 
 def today_marker_pct() -> float:
@@ -488,7 +505,11 @@ def today_marker_pct() -> float:
 
 
 def month_ticks(today: date) -> list[dict]:
-    """First-of-month gridline labels across the horizon, as {label, month, left%}."""
+    """First-of-month gridline labels across the horizon.
+
+    Each tick is {label, month, left%, flip}; ``flip`` says the label would
+    overflow the track on the right and has to hang left of its line instead.
+    """
     horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
     horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
     span = (horizon_end - horizon_start).days or 1
@@ -503,7 +524,14 @@ def month_ticks(today: date) -> list[dict]:
     cursor = date(year, month, 1)
     while cursor <= horizon_end:
         left = (cursor - horizon_start).days / span * 100
-        ticks.append({"label": cursor.strftime("%b"), "month": cursor.month, "left": round(left, 2)})
+        ticks.append(
+            {
+                "label": cursor.strftime("%b"),
+                "month": cursor.month,
+                "left": round(left, 2),
+                "flip": left > FLIP_LABEL_PCT,
+            }
+        )
         month += 1
         if month > 12:  # noqa: PLR2004 (12 = months per year)
             month = 1

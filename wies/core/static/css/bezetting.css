@@ -29,11 +29,11 @@
 
 /* Equal width, and no wider than the caption needs: in their own list the cards
    would take every pixel the toolbar leaves over and dwarf the button beside
-   them. The floor is where the short captions still read in full. */
+   them. The floor is where "102 eindigt bijna" still reads in full. */
 .bezetting-toolbar__stats > li {
   display: flex;
   flex: 1 1 0;
-  min-width: 150px;
+  min-width: 190px;
   max-width: 220px;
   /* The height nldd-button resolves to. The cards are the same kind of control
      as the button beside them, so they match it rather than sizing themselves
@@ -47,9 +47,9 @@
 
    The cards must be gone before nldd-toolbar starts pushing its own items into
    the menu: they are a shortcut, "Opdracht invoeren" is not reachable anywhere
-   else on the page. Three cards at their floor width beside both buttons hold
-   the row down to 850px; at 800px the create action goes first (measured). */
-@media (max-width: 840px) {
+   else on the page. With the search field the row holds down to about 1000px
+   (measured). */
+@media (max-width: 1000px) {
   .bezetting-toolbar__stats {
     display: none;
   }
@@ -302,6 +302,14 @@
   white-space: nowrap;
 }
 
+/* The last gridlines sit so close to the end of the track that a label to their
+   right overflows it, which the scroller then reports as content to scroll to.
+   Those hang to the left of their line instead. */
+.bezetting-tick--flip .bezetting-tick__label {
+  left: auto;
+  right: var(--primitives-space-2);
+}
+
 /* "Today" marker.
 
    Accent, not critical: critical is the design system's colour for errors and
@@ -462,6 +470,13 @@
    is absolutely positioned so it cannot reserve the space itself. */
 .bezetting-seg--ending-soon .bezetting-seg__label {
   padding-right: 6rem;
+}
+
+/* "uren niet ingevuld" reads as a note, not as part of the name. Opacity, so
+   it dims whatever colour the bar's phase gave the text, in both schemes. */
+.bezetting-seg__gap {
+  font-style: italic;
+  opacity: 0.7;
 }
 
 .bezetting-seg__label {

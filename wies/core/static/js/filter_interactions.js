@@ -696,30 +696,6 @@
     return panel ? findScroller(panel) : null;
   }
 
-  // A filter change swaps the results in silence; say what is left (WCAG 4.1.3).
-  // Only on pages whose #results names its row selector: every list swaps into
-  // #results, and counting the wrong selector would announce "Geen resultaten"
-  // over a full list.
-  function setupFilterAnnounce() {
-    document.addEventListener("htmx:afterSettle", (e) => {
-      const target = e.detail?.target;
-      if (!target || target.id !== "results") return;
-      // The swap replaces #results, so read the document, not the detached
-      // element the event still points at.
-      const results = document.getElementById("results");
-      const selector = results?.dataset.wiesAnnounceRows;
-      const live = document.getElementById("wies-live");
-      if (!selector || !live) return;
-      const n = results.querySelectorAll(selector).length;
-      live.textContent =
-        n === 0
-          ? "Geen resultaten"
-          : n === 1
-            ? "1 resultaat"
-            : `${n} resultaten`;
-    });
-  }
-
   function setupFilterScrollPreserve() {
     let saved = null;
     document.addEventListener("htmx:beforeSwap", (e) => {
@@ -761,7 +737,6 @@
     setupTokenDismiss();
     setupClearAllFilters();
     setupStatusCards();
-    setupFilterAnnounce();
     setupFilterScrollPreserve();
     setupFilterRows();
     setupOrgQuickOptions();
