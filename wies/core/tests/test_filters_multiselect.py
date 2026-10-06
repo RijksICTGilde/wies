@@ -15,7 +15,8 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import PlacementListView, _get_top_org_options
+from wies.core.services.organizations import get_top_org_options
+from wies.core.views import PlacementListView
 
 User = get_user_model()
 
@@ -238,7 +239,7 @@ class OrgFilterCombiningTest(FilterCombiningTestBase):
 
 
 class TopOrgOptionsTest(FilterCombiningTestBase):
-    """`_get_top_org_options` always surfaces selected orgs — including a
+    """`get_top_org_options` always surfaces selected orgs — including a
     "direct onder…" self-node (org_self) and an org-type group (org_type) —
     as checked quick options, each carrying its own param. Regression for the
     self/type selections that previously got no checkmark in the sidebar list.
@@ -246,31 +247,50 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
 
     def test_org_selection_is_checked_with_org_param(self):
         # Selections come in as internal ids; the rendered option value is the public_id.
-        opts = _get_top_org_options({self.org_a.id}, Counter())
+        opts = get_top_org_options({self.org_a.id}, Counter())
         match = [o for o in opts if o["value"] == str(self.org_a.public_id)]
         assert match, "selected org must appear as a quick option"
         assert match[0]["param"] == "org"
         assert match[0]["selected"] is True
 
     def test_self_selection_is_checked_with_org_self_param(self):
-        opts = _get_top_org_options(set(), Counter(), selected_self_ids={self.org_a.id})
+        opts = get_top_org_options(set(), Counter(), selected_self_ids={self.org_a.id})
         match = [o for o in opts if o["param"] == "org_self" and o["value"] == str(self.org_a.public_id)]
         assert match, "selected self-node must appear as a quick option"
         assert match[0]["selected"] is True
         assert "(direct)" in match[0]["label"]
 
     def test_type_selection_is_checked_with_org_type_param(self):
-        opts = _get_top_org_options(set(), Counter(), selected_type_labels={"Ministerie"})
+        opts = get_top_org_options(set(), Counter(), selected_type_labels={"Ministerie"})
         match = [o for o in opts if o["param"] == "org_type" and o["value"] == "Ministerie"]
         assert match, "selected org-type must appear as a quick option"
         assert match[0]["selected"] is True
+
+    def test_nested_folder_selection_is_checked_with_org_type_in_param(self):
+        ministry = OrganizationUnit.objects.create(name="BZK", label="Ministerie van BZK", abbreviations=["BZK"])
+        value = f"{ministry.public_id}:Agentschap"
+        opts = get_top_org_options(set(), Counter(), selected_type_in=[(str(ministry.public_id), "Agentschap")])
+        match = [o for o in opts if o["param"] == "org_type_in" and o["value"] == value]
+        assert match, "selected nested folder must appear as a quick option"
+        assert match[0]["selected"] is True
+        assert match[0]["label"] == "Agentschappen van BZK"
+
+    def test_nested_folder_with_unknown_ministry_is_left_out(self):
+        opts = get_top_org_options(set(), Counter(), selected_type_in=[("abc", "Agentschap")])
+        assert not [o for o in opts if o["param"] == "org_type_in"]
+
+    def test_org_without_label_falls_back_to_name(self):
+        org = OrganizationUnit.objects.create(name="Zonder label", label="")
+        opts = get_top_org_options({org.id}, Counter())
+        match = [o for o in opts if o["value"] == str(org.public_id)]
+        assert match[0]["label"] == "Zonder label"
 
     def test_selecting_does_not_reorder_by_selection(self):
         # Org B has the higher count, Org A none. Selecting the low-count Org A
         # must NOT push it above Org B: the order is count/label, not "selected
         # first", so a tick never makes a row jump to the top.
         counts = Counter({self.org_b.id: 2})
-        opts = _get_top_org_options({self.org_a.id}, counts)
+        opts = get_top_org_options({self.org_a.id}, counts)
         values = [o["value"] for o in opts if o["param"] == "org"]
         assert values.index(str(self.org_b.public_id)) < values.index(str(self.org_a.public_id))
 
@@ -280,12 +300,12 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         counts = Counter({o.id: c for o, c in zip(orgs, [5, 4, 3, 2, 1], strict=True)})
         top = [orgs[0].id, orgs[1].id]
 
-        baseline = _get_top_org_options(set(), counts, limit=2)
+        baseline = get_top_org_options(set(), counts, limit=2)
         base_ids = [o["value"] for o in baseline if o["param"] == "org"]
 
         # Selecting the lowest-count org (outside the top-2) must keep both top
         # options and append the pick — the list grows, nothing is dropped.
-        picked = _get_top_org_options({orgs[4].id}, counts, limit=2)
+        picked = get_top_org_options({orgs[4].id}, counts, limit=2)
         picked_ids = [o["value"] for o in picked if o["param"] == "org"]
 
         for top_id in top:

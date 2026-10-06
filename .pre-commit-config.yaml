@@ -25,7 +25,9 @@ repos:
     rev: v4.0.0-alpha.8
     hooks:
       - id: prettier
-        exclude: "jinja2/"
+        # Naast de templates ook het onderzoeksrapport: een zelfstandig
+        # HTML-document waar herformatteren alleen ruis oplevert.
+        exclude: "jinja2/|^wies/core/static/toegankelijkheid/"
 
   - repo: https://github.com/adamchainz/django-upgrade
     rev: "1.30.0"
@@ -43,7 +45,11 @@ repos:
   - repo: https://github.com/djlint/djLint
     rev: v1.44.2
     hooks:
+      # Het onderzoeksrapport is uitgezonderd: een gegenereerd, zelfstandig
+      # HTML-document, geen Jinja-template, en herformatteren levert alleen ruis op.
       - id: djlint-reformat-jinja
         types_or: [html]
+        exclude: ^wies/core/static/toegankelijkheid/
       - id: djlint-jinja
         types_or: [html]
+        exclude: ^wies/core/static/toegankelijkheid/

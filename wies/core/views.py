@@ -22,6 +22,7 @@ from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -98,7 +99,6 @@ from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
     STATUS_BENCH,
     STATUS_ENDS_SOON,
-    STATUS_FULL,
     STATUS_PARTIAL,
     STATUS_VALUES,
     bezetting_filter_groups,
@@ -107,14 +107,20 @@ from .services.occupancy import (
     month_ticks,
     occupancy_summary,
     row_has_status,
-    split_bench_and_timeline,
+    rows_in_display_order,
     today_marker_pct,
 )
 from .services.organizations import (
+    ORG_TYPE_PLURAL,
+    build_org_hierarchy,
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
-    get_org_breadcrumb,
+    get_ministry_nested_root_ids,
     get_org_descendant_ids,
+    get_top_org_options,
+    get_type_folder_root_ids,
+    nested_folder_label,
+    org_counts_from_filtered,
 )
 from .services.placements import (
     create_assignments_from_csv,
@@ -137,34 +143,14 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
-# Singular → plural display names for organization type group headers.
-ORG_TYPE_PLURAL: dict[str, str] = {
-    "Adviescollege": "Adviescolleges",
-    "Agentschap": "Agentschappen",
-    "Caribisch openbaar lichaam": "Caribische openbare lichamen",
-    "Externe commissie": "Externe commissies",
-    "Gemeente": "Gemeenten",
-    "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
-    "Hoog College van Staat": "Hoge Colleges van Staat",
-    "Inspectie": "Inspecties",
-    "Interdepartementale commissie": "Interdepartementale commissies",
-    "Koepelorganisatie": "Koepelorganisaties",
-    "Ministerie": "Ministeries",
-    "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
-    "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
-    "Organisatieonderdeel": "Organisatieonderdelen",
-    "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
-    "Provinciale Rekenkamer": "Provinciale Rekenkamers",
-    "Provincie": "Provincies",
-    "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
-    "Waterschap": "Waterschappen",
-    "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
-}
-
-
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` puts the panel in edit mode (the child sheet).
 PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "nieuwe-opdracht")
+
+# Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
+# A new audit: drop the HTML next to this one, point this at it, and leave the
+# old file in place -- the URL stays put, so the register's link keeps working.
+CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -649,7 +635,6 @@ def _bezetting_status_group(selected, summary):
     for value, label, count in (
         (STATUS_BENCH, "Op de bank", summary["bench_count"]),
         (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
-        (STATUS_FULL, "Volledig ingezet", summary["full_count"]),
         (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
     ):
         option = {"value": value, "label": label, "count": count}
@@ -664,12 +649,15 @@ def _bezetting_status_group(selected, summary):
         "options": options,
         "selected_values": list(selected),
         # Finalized by hand, outside _finalize_filter_groups: that keeps the top
-        # three by count and hides the rest behind "Meer…", which would drop the
-        # hidden input of the fourth status and leave its card dead.
+        # three by count and hides the rest behind "Meer…", which would drop a
+        # status's hidden input and leave its card dead.
         "group_id": "status",
         "top_options": real_options,
         "has_more": False,
     }
+
+
+BEZETTING_PAGE_SIZE = 60
 
 
 @business_management_access_required
@@ -679,6 +667,12 @@ def bezetting(request):
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
     opens the shared colleague side panel via the ``collega`` param, exactly like
     the "Wie zit waar?" table.
+
+    Paged from the in-memory row list, not the queryset: the sort order is a
+    derived property of the built rows, not a column. So every page costs the
+    same database work and only the HTML shrinks, which is what the paging is
+    for here. Moving it into the queryset means moving the sort into annotations
+    and is its own change.
     """
     today = timezone.now().date()
 
@@ -715,13 +709,15 @@ def bezetting(request):
     merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_cat = labels_by_category(labels.ids)
+    search = request.GET.get("zoek", "").strip()
 
-    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat)
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat, search=search)
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
-    # Summary-card counts are the full population within the merk/label selection —
-    # computed before the status filter narrows the rows (see occupancy_summary).
+    # Summary-card counts follow merk, labels and the search term (they all
+    # narrowed the queryset above) but not the status filter, which is applied
+    # after this: a card has to keep showing what it would select.
     summary = occupancy_summary(rows)
 
     # Status facet: the three summary cards, as independent OR-toggles. Derived
@@ -748,11 +744,18 @@ def bezetting(request):
     if selected_statuses:
         active_filters["status"] = selected_statuses
 
-    bench_rows, timeline_rows = split_bench_and_timeline(rows)
+    page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
+    next_page_url = (
+        _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
+        if page.has_next()
+        else None
+    )
 
     context = {
-        "rows": timeline_rows,
-        "bench_rows": bench_rows,
+        "rows": page.object_list,
+        "row_count": page.paginator.count,
+        "next_page_url": next_page_url,
+        "search_filter": search,
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
         "today": today,
@@ -772,6 +775,9 @@ def bezetting(request):
     if "HX-Request" in request.headers:
         if request.GET.get("filter_modal"):
             return render(request, "parts/filter_options_modal.html", context)
+        # "Meer tonen" replaces itself with the next page of rows.
+        if request.GET.get("pagina"):
+            return render(request, "parts/bezetting_rows.html", context)
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
@@ -975,14 +981,21 @@ def staff_database(request):
 UNKNOWN_FACET_LABELS = {
     "org": "Onbekende opdrachtgever",
     "org_self": "Onbekende opdrachtgever",
+    "org_type_in": "Onbekende opdrachtgever",
     "rol": "Onbekende rol",
     "labels": "Onbekend label",
     "merk": "Onbekend merk",
 }
 
 
-def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: list[str]) -> list[dict]:
+def _org_chip_data(
+    org: ResolvedFacet,
+    org_self: ResolvedFacet,
+    type_labels: list[str],
+    type_in: list[tuple[str, str]] | None = None,
+) -> list[dict]:
     """Chips for the opdrachtgever facets, in the order they appear in the URL."""
+    type_in = type_in or []
     labels: dict[str, str] = {}
     if org.ids or org_self.ids:
         labels = {
@@ -990,6 +1003,15 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
             for public_id, label in OrganizationUnit.objects.filter(id__in=[*org.ids, *org_self.ids]).values_list(
                 "public_id", "label"
             )
+        }
+    # Ministry labels for the scoped nested-folder chips ("Agentschappen van BZK").
+    ministry_labels: dict[str, str] = {}
+    if type_in:
+        ministry_labels = {
+            str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+            for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+                public_id__in=parse_public_ids([pid for pid, _ in type_in])
+            ).values_list("public_id", "label", "name", "abbreviations")
         }
     chips: list[dict] = [
         {
@@ -1015,6 +1037,18 @@ def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: lis
         }
         for type_label in type_labels
     )
+    chips.extend(
+        {
+            "param_name": "org_type_in",
+            "param_value": f"{ministry_public_id}:{type_label}",
+            "label": (
+                nested_folder_label(ministry_labels[ministry_public_id], type_label)
+                if ministry_public_id in ministry_labels
+                else UNKNOWN_FACET_LABELS["org_type_in"]
+            ),
+        }
+        for ministry_public_id, type_label in type_in
+    )
     return chips
 
 
@@ -1034,27 +1068,72 @@ class PublicIdFacetsMixin:
     def org_type_filter(self) -> list[str]:
         return [x for x in self.request.GET.getlist("org_type") if x]
 
+    @cached_property
+    def org_type_in_filter(self) -> list[tuple[str, str]]:
+        """The scoped nested-folder facet: ``org_type_in=<ministry_public_id>:<type>``.
+
+        One entry per selected nested folder (e.g. BZK → Agentschappen). Parsed
+        into ``(ministry_public_id, type_name)`` pairs; values without both parts
+        drop. A valid id is normalised to its canonical form so it matches
+        ``str(public_id)`` lookups; an invalid one is kept as-is, so it matches
+        nothing and gets an "Onbekende opdrachtgever" chip.
+        """
+        pairs: list[tuple[str, str]] = []
+        for value in self.request.GET.getlist("org_type_in"):
+            ministry_public_id, sep, type_name = value.partition(":")
+            if sep and ministry_public_id and type_name:
+                parsed = parse_public_ids([ministry_public_id])
+                pairs.append((str(parsed[0]) if parsed else ministry_public_id, type_name))
+        return pairs
+
     def apply_org_filter(self, qs, lookup: str):
-        """Applies the opdrachtgever facets (``org``/``org_self``/``org_type``).
+        """Applies the opdrachtgever facets (``org``/``org_self``/``org_type``/``org_type_in``).
 
         ``lookup`` is the queryset path to the organization id, which differs per
-        list view. ``org`` matches the whole subtree, ``org_self`` only the org
-        itself, ``org_type`` every org of that type plus its subtree.
+        list view. ``org`` matches the whole subtree (plus units linked to it as
+        their ministry, since those are not DB descendants), ``org_self`` only the
+        org itself, ``org_type`` the roots in that top-level type folder of the
+        picker plus their subtrees, and ``org_type_in`` every org of a type that
+        nests under a given ministry.
         """
         org = self.facets("org", OrganizationUnit)
         org_self = self.facets("org_self", OrganizationUnit)
-        if not (org.requested or org_self.requested or self.org_type_filter):
+        if not (org.requested or org_self.requested or self.org_type_filter or self.org_type_in_filter):
             return qs
         matching_ids: set[int] = set(org_self.ids)
         if org.ids:
             matching_ids |= get_org_descendant_ids(org.ids)
+            # Units that nest under a selected ministry are DB roots, not
+            # descendants, so pull them (and their subtrees) in via the tooi link.
+            ministry_toois = [
+                tooi
+                for tooi in OrganizationUnit.objects.filter(id__in=org.ids).values_list("tooi_identifier", flat=True)
+                if tooi
+            ]
+            if ministry_toois:
+                # Only the roots that actually nest under the ministry in the
+                # picker (nestable main type), so the filter matches the tree and
+                # the sidebar count — not every org merely linked via the tooi.
+                linked_ids = get_ministry_nested_root_ids(ministry_toois)
+                matching_ids |= get_org_descendant_ids(linked_ids)
         if self.org_type_filter:
-            type_root_ids = list(
-                OrganizationUnit.objects.filter(organization_types__label__in=self.org_type_filter).values_list(
-                    "id", flat=True
-                )
-            )
-            matching_ids |= get_org_descendant_ids(type_root_ids)
+            # Same folder contents as the picker, so the folder's count holds.
+            matching_ids |= get_org_descendant_ids(get_type_folder_root_ids(self.org_type_filter))
+        if self.org_type_in_filter:
+            ministry_toois = {
+                str(public_id): tooi
+                for public_id, tooi in OrganizationUnit.objects.filter(
+                    public_id__in=parse_public_ids([pid for pid, _ in self.org_type_in_filter])
+                ).values_list("public_id", "tooi_identifier")
+            }
+            for ministry_public_id, type_name in self.org_type_in_filter:
+                ministry_tooi = ministry_toois.get(ministry_public_id)
+                if not ministry_tooi:
+                    continue  # fail closed: unknown ministry matches nothing
+                # Same nesting rule as the org facet, scoped to the chosen type; keys
+                # on the MAIN type so a stichting with an incidental type is excluded.
+                scoped_ids = get_ministry_nested_root_ids([ministry_tooi], type_name=type_name)
+                matching_ids |= get_org_descendant_ids(scoped_ids)
         return qs.filter(**{lookup: matching_ids})
 
     def add_org_filter_context(self, context: dict, active_filters: dict) -> None:
@@ -1067,7 +1146,9 @@ class PublicIdFacetsMixin:
             active_filters["org_self"] = org_self.active_values
         if self.org_type_filter:
             active_filters["org_type"] = self.org_type_filter
-        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter)
+        if self.org_type_in_filter:
+            active_filters["org_type_in"] = [f"{pid}:{label}" for pid, label in self.org_type_in_filter]
+        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter, self.org_type_in_filter)
 
     def add_unknown_filter_chips(self, context: dict, facets: dict[str, type[Model]]) -> None:
         """Chips for the values of ``facets`` that match no row.
@@ -1593,7 +1674,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters.
-        org_counts = _org_counts_from_filtered(
+        org_counts = org_counts_from_filtered(
             self._apply_filters(base_qs, exclude_filter="org").distinct(),
             Placement,
             "service__assignment__organizations__id",
@@ -1611,11 +1692,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
-                "top_options": _get_top_org_options(
+                "top_options": get_top_org_options(
                     set(self.facets("org", OrganizationUnit).ids),
                     org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
+                    selected_type_in=self.org_type_in_filter,
                 ),
             },
             {
@@ -1749,7 +1831,14 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                         placements__isnull=True,
                     ).select_related("skill"),
                     to_attr="services_with_skills",
-                )
+                ),
+                # The card shows the first opdrachtgever; ordered on pk, as
+                # organizations.first() would pick it.
+                Prefetch(
+                    "organizations",
+                    queryset=OrganizationUnit.objects.order_by("pk"),
+                    to_attr="organizations_by_pk",
+                ),
             )
         )
 
@@ -1773,11 +1862,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
             assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.public_id)
-            first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-            assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
+            first_org = next(iter(assignment.organizations_by_pk), None)
+            assignment.org_label = (first_org.label or first_org.name) if first_org else None
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
@@ -1828,7 +1916,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
-        org_counts = _org_counts_from_filtered(
+        org_counts = org_counts_from_filtered(
             self._apply_filters(base_qs, exclude_filter="org").distinct(),
             Assignment,
             "organizations__id",
@@ -1843,11 +1931,12 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
-                "top_options": _get_top_org_options(
+                "top_options": get_top_org_options(
                     set(self.facets("org", OrganizationUnit).ids),
                     org_counts,
                     selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
                     selected_type_labels=set(self.org_type_filter),
+                    selected_type_in=self.org_type_in_filter,
                 ),
             },
             {
@@ -2522,63 +2611,6 @@ def assignment_import_csv(request):
 
         return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
-
-
-@permission_required("core.view_organizationunit", raise_exception=True)
-def organization_admin(request):
-    """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
-    if not settings.DEBUG:
-        raise Http404
-    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
-
-    today = timezone.now().date()
-    units_by_id: dict[int, dict] = {}
-    for row in rows:
-        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
-        row["tree_children"] = []
-        units_by_id[row["id"]] = row
-
-    roots: list[dict] = []
-    for unit in units_by_id.values():
-        parent_id = unit["parent_id"]
-        if parent_id and parent_id in units_by_id:
-            units_by_id[parent_id]["tree_children"].append(unit)
-        else:
-            roots.append(unit)
-
-    def sort_key(u):
-        return u["label"] or u["name"]
-
-    for unit in units_by_id.values():
-        unit["tree_children"].sort(key=sort_key)
-    roots.sort(key=sort_key)
-
-    # Organization types for the root nodes only, via the M2M through table.
-    root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
-        .select_related("organizationtype")
-        .values_list("organizationunit_id", "organizationtype__label")
-    )
-    root_types: dict[int, list[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
-
-    grouped: dict[str, list[dict]] = {}
-    ungrouped: list[dict] = []
-    for unit in roots:
-        type_labels = root_types.get(unit["id"], [])
-        if type_labels:
-            for type_label in type_labels:
-                grouped.setdefault(type_label, []).append(unit)
-        else:
-            ungrouped.append(unit)
-
-    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
-    if ungrouped:
-        type_groups.append(("Overig", ungrouped))
-
-    return render(request, "organization_admin.html", {"type_groups": type_groups})
 
 
 @permission_required("core.view_labelcategory", raise_exception=True)
@@ -3635,6 +3667,16 @@ def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
 
 
+# Public because the DigiToegankelijk register links straight at this URL, and
+# that URL must never move: it sits in a public register that regulators check.
+# Hence the redirect — the report is a static file, so in production its own name
+# carries a hash that changes with every new version.
+@login_not_required
+def toegankelijkheid_onderzoek(request):
+    """The WCAG audit report the toegankelijkheidsverklaring points at."""
+    return redirect(static(CURRENT_AUDIT_REPORT))
+
+
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)
 
@@ -3730,104 +3772,6 @@ def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[i
     return Counter(fid for fid, _ in pairs if fid is not None)
 
 
-def _org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: str | None = None) -> Counter[int]:
-    """Per-org counts from an already org-excluded, filter-applied queryset.
-
-    Re-key on distinct row ids first: projecting the org id straight off a
-    .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
-    shared by multiple rows. The base queryset already drops excluded orgs, so
-    the exclusion is not re-applied here.
-
-    With ``group_field`` the count is per distinct group (a colleague or an
-    assignment) instead of per row, so it matches a list that shows one card
-    per group.
-    """
-    rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    # Without group_field each row is its own group, so counting is per row.
-    pairs = rows.values_list(org_lookup, group_field or "id").distinct()
-    return Counter(oid for oid, _ in pairs if oid is not None)
-
-
-def _get_top_org_options(
-    selected_org_ids: set[int],
-    org_counts: Counter[int],
-    *,
-    selected_self_ids: set[int] | None = None,
-    selected_type_labels: set[str] | None = None,
-    limit: int = 3,
-) -> list[dict]:
-    """Turns per-org ``org_counts`` + the current selections into the opdrachtgever
-    quick checkbox options, ordered by count then label.
-
-    Each option carries its own ``param`` (``org``, ``org_self`` or ``org_type``)
-    so the sidebar quick row stays in sync with whatever was picked in the modal.
-    The ``org`` group pads up to ``limit`` with the highest-count unselected orgs;
-    self/type only appear when selected, having no top-N baseline.
-
-    A selected option is always shown, appended below the top-N when it does not
-    make the cut. The order never depends on selection — ticking an option
-    jumping to the top felt jarring.
-    """
-    selected_self_ids = selected_self_ids or set()
-    selected_type_labels = selected_type_labels or set()
-
-    selected_ids = set(selected_org_ids)
-    self_ids = set(selected_self_ids)
-
-    # The top-N is fixed on count regardless of selection, so ticking an option
-    # never displaces a visible one.
-    top_n = [oid for oid, _ in org_counts.most_common(limit)]
-    org_wanted = selected_ids | set(top_n)
-
-    options: list[dict] = []
-
-    # Iterating the rows (not the wanted ids) keeps an id that no longer exists
-    # out of the options instead of rendering it with a "None" value.
-    if org_wanted:
-        options.extend(
-            {
-                "param": "org",
-                "value": str(public_id),
-                "label": label or f"Organisatie {org_id}",
-                "count": org_counts.get(org_id, 0),
-                "selected": org_id in selected_ids,
-            }
-            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=org_wanted).values_list(
-                "id", "label", "public_id"
-            )
-        )
-
-    if self_ids:
-        options.extend(
-            {
-                "param": "org_self",
-                "value": str(public_id),
-                "label": f"{label or f'Organisatie {org_id}'} (direct)",
-                "count": org_counts.get(org_id, 0),
-                "selected": True,
-            }
-            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=self_ids).values_list(
-                "id", "label", "public_id"
-            )
-        )
-
-    options.extend(
-        {
-            "param": "org_type",
-            "value": type_label,
-            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-            "count": 0,
-            "selected": True,
-        }
-        for type_label in selected_type_labels
-    )
-
-    # Sorted on count then label, deliberately not on ``selected``: a just-ticked
-    # option jumping to the top read as confusing.
-    options.sort(key=lambda o: (-o["count"], o["label"]))
-    return options
-
-
 def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
     """Post-processes the select-multi groups in place for the top-N + "Meer" modal.
 
@@ -3851,124 +3795,12 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
         by_count = sorted(real_options, key=lambda o: (-o.get("count", 0), o.get("label", "")))
         # The top-N is fixed on count regardless of selection; a selected option
         # outside it is appended rather than displacing one. Same rule as
-        # _get_top_org_options.
+        # get_top_org_options.
         top = list(by_count[:top_n])
         top_values = {o["value"] for o in top}
         top.extend(o for o in by_count if o["value"] in selected and o["value"] not in top_values)
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
-
-
-def _build_org_hierarchy(
-    org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool
-) -> list[dict]:
-    """Builds the grouped org tree hierarchy for the client modal."""
-    all_orgs = list(
-        OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
-            "id", "public_id", "parent_id", "name", "label", "abbreviations"
-        )
-    )
-
-    units_by_id: dict[int, dict] = {}
-    for org in all_orgs:
-        org["children_data"] = []
-        org["self_count"] = org_self_counts.get(org["id"], 0)
-        org["total_count"] = 0
-        units_by_id[org["id"]] = org
-
-    roots: list[dict] = []
-    for unit in units_by_id.values():
-        parent_id = unit["parent_id"]
-        if parent_id and parent_id in units_by_id:
-            units_by_id[parent_id]["children_data"].append(unit)
-        else:
-            roots.append(unit)
-
-    def compute_total(node: dict) -> int:
-        total = node["self_count"]
-        for child in node["children_data"]:
-            total += compute_total(child)
-        node["total_count"] = total
-        return total
-
-    for root in roots:
-        compute_total(root)
-
-    if prune_empty:
-
-        def prune(node: dict) -> None:
-            node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
-            for child in node["children_data"]:
-                prune(child)
-
-        for root in roots:
-            prune(root)
-        roots = [r for r in roots if r["total_count"] > 0]
-
-    def sort_key(node: dict) -> str:
-        return node.get("label") or node.get("name") or ""
-
-    def to_json(node: dict) -> dict:
-        children_data = sorted(node["children_data"], key=sort_key)
-        children_json = []
-        has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
-        if node["self_count"] > 0 and has_children_with_placements:
-            children_json.append(
-                {
-                    "id": f"self-{node['public_id']}",  # UUID -> str via f-string
-                    "label": node["label"] or node["name"],
-                    "abbreviations": node["abbreviations"] or [],
-                    "self": True,
-                    "nr_of_placements": node["self_count"],
-                }
-            )
-        children_json.extend(to_json(child) for child in children_data)
-        result: dict = {
-            "id": str(node["public_id"]),
-            "label": node["label"] or node["name"],
-            "abbreviations": node["abbreviations"] or [],
-            "nr_of_placements": node["total_count"],
-        }
-        if children_json:
-            result["children"] = children_json
-        return result
-
-    # Group roots by OrganizationUnit type
-    root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
-        .select_related("organizationtype")
-        .values_list("organizationunit_id", "organizationtype__label")
-    )
-    root_types: dict[int, list[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
-
-    grouped: dict[str, list[dict]] = {}
-    ungrouped: list[dict] = []
-    for unit in roots:
-        type_labels = root_types.get(unit["id"], [])
-        if type_labels:
-            for type_label in type_labels:
-                grouped.setdefault(type_label, []).append(unit)
-        else:
-            ungrouped.append(unit)
-
-    hierarchy = []
-    for group_label in sorted(grouped.keys()):
-        group_units = sorted(grouped[group_label], key=sort_key)
-        total = sum(u["total_count"] for u in group_units)
-        hierarchy.append(
-            {
-                "id": f"group-{group_label}",
-                "label": ORG_TYPE_PLURAL.get(group_label, group_label),
-                "nr_of_placements": total,
-                "group": True,
-                "children": [to_json(u) for u in group_units],
-            }
-        )
-    hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
-    return hierarchy
 
 
 def _build_current_selections(request) -> dict[str, str]:
@@ -3990,6 +3822,23 @@ def _build_current_selections(request) -> dict[str, str]:
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    # Scoped nested folders: re-check the "group-<ministry_public_id>-<type>" node.
+    # Label matches the picker folder and the chip ("Adviescolleges van BZ"), so a
+    # restored selection reads identically. Abbreviation, else label as fallback.
+    nested = [value.partition(":") for value in request.GET.getlist("org_type_in")]
+    nested = [(pid, tl) for pid, sep, tl in nested if sep and pid and tl]
+    ministry_abbreviations: dict[str, str] = {
+        str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+        for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+            public_id__in=parse_public_ids([pid for pid, _ in nested])
+        ).values_list("public_id", "label", "name", "abbreviations")
+    }
+    for ministry_public_id, type_label in nested:
+        abbreviation = ministry_abbreviations.get(ministry_public_id)
+        if abbreviation is None:
+            continue  # ministry not found → drop, same as a stale facet
+        current_selections[f"group-{ministry_public_id}-{type_label}"] = nested_folder_label(abbreviation, type_label)
 
     return current_selections
 
@@ -4024,8 +3873,8 @@ def client_modal(request):
         if count_mode == "placements":
             group_field = view.GROUP_FIELD[view.active_view]
         filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-        org_self_counts = _org_counts_from_filtered(filtered_qs, model, org_lookup, group_field=group_field)
-    hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
+        org_self_counts = org_counts_from_filtered(filtered_qs, model, org_lookup, group_field=group_field)
+    hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
     template = "parts/assignment_org_modal.html" if count_mode == "none" else "parts/client_modal.html"

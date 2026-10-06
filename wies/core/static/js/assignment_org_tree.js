@@ -9,16 +9,25 @@
 
   if (!container) return;
 
-  // An assignment is linked to concrete organisations: type groups are
-  // structure only, and picking a parent means that org, not its subtree.
-  var treeState = new TreeState(data, { collapseToParent: false });
+  // An assignment is linked to concrete organisations. A nested type folder
+  // under a ministry ("Agentschappen van BZK") carries no organisation of its
+  // own, but IS selectable: ticking it selects the organisations in it.
+  var treeState = new TreeState(data, {
+    collapseToParent: false,
+    // Ticking a type folder selects the concrete orgs under it, and the
+    // selection (and grey fill) lands on those orgs, not the folder.
+    groupSelectsChildren: true,
+  });
   var tree = new WiesOrgTree({
     state: treeState,
     container: container,
     showCounts: false,
     accessibleLabel: "Opdrachtgevers",
+    // Only the nested folders are selectable: a top-level type folder
+    // ("Gemeenten") would link hundreds of orgs in one click. A "self" helper
+    // node carries no distinct organisation, so it stays structure-only.
     isSelectable: function (node) {
-      return !node.group;
+      return !node.self && (!node.group || node.nested);
     },
     onToggle: rebuildSelectionList,
   });
@@ -28,13 +37,13 @@
   // says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
 
-  // Group and self nodes carry no organisation, so they never reach the form.
+  // Group and self nodes carry no organisation, so they never reach the form;
+  // groupSelectsChildren already moved a folder's selection onto its orgs.
   function selectedOrgs() {
     var rows = [];
     treeState.explicitSelections.forEach(function (label, nodeId) {
-      if (nodeId.indexOf("group-") === 0 || nodeId.indexOf("self-") === 0) {
-        return;
-      }
+      var node = treeState.getNode(nodeId);
+      if (node && (node.group || node.self)) return;
       rows.push({ nodeId: nodeId, label: label });
     });
     return rows;

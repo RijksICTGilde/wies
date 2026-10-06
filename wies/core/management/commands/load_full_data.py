@@ -633,6 +633,19 @@ BASE_MINISTRIES = [
     ("Sociale Zaken en Werkgelegenheid", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073"),
     ("Volksgezondheid, Welzijn en Sport", "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025"),
 ]
+MINISTRY_ABBREVIATIONS = {
+    "Algemene Zaken": "AZ",
+    "Binnenlandse Zaken en Koninkrijksrelaties": "BZK",
+    "Buitenlandse Zaken": "BZ",
+    "Defensie": "Def",
+    "Economische Zaken": "EZ",
+    "Financiën": "FIN",
+    "Infrastructuur en Waterstaat": "IenW",
+    "Justitie en Veiligheid": "JenV",
+    "Onderwijs, Cultuur en Wetenschap": "OCW",
+    "Sociale Zaken en Werkgelegenheid": "SZW",
+    "Volksgezondheid, Welzijn en Sport": "VWS",
+}
 # (name, tooi, parent_ministry_name or None) — the agentschappen/onderdelen.
 BASE_SUBORGS = [
     ("Directoraat-generaal Belastingdienst", "https://identifier.overheid.nl/tooi/id/oorg/oorg12368", "Financiën"),
@@ -652,11 +665,23 @@ def seed_base_organizations() -> None:
     onderdeel, _ = OrganizationType.objects.get_or_create(
         name="Organisatieonderdeel", defaults={"label": "Organisatieonderdeel"}
     )
+    agentschap, _ = OrganizationType.objects.get_or_create(name="Agentschap", defaults={"label": "Agentschap"})
+    inspectie, _ = OrganizationType.objects.get_or_create(name="Inspectie", defaults={"label": "Inspectie"})
+    zbo, _ = OrganizationType.objects.get_or_create(
+        name="Zelfstandig bestuursorgaan", defaults={"label": "Zelfstandig bestuursorgaan"}
+    )
 
     ministries: dict[str, OrganizationUnit] = {}
     for name, tooi in BASE_MINISTRIES:
-        unit = OrganizationUnit.objects.create(name=name, label=f"Ministerie van {name}", tooi_identifier=tooi)
+        unit = OrganizationUnit.objects.create(
+            name=name,
+            label=f"Ministerie van {name}",
+            abbreviations=[MINISTRY_ABBREVIATIONS[name]] if name in MINISTRY_ABBREVIATIONS else [],
+            tooi_identifier=tooi,
+        )
         unit.organization_types.add(ministerie)
+        unit.main_type = ministerie
+        unit.save(update_fields=["main_type"])
         ministries[name] = unit
 
     for name, tooi, parent_name in BASE_SUBORGS:
@@ -664,6 +689,45 @@ def seed_base_organizations() -> None:
             name=name, label=name, tooi_identifier=tooi, parent=ministries.get(parent_name)
         )
         unit.organization_types.add(onderdeel)
+        unit.main_type = onderdeel
+        unit.save(update_fields=["main_type"])
+
+    # Nestable units: DB roots (no parent) linked to a ministry only via
+    # related_ministry_tooi. The picker nests them under that ministry by their
+    # main type. See build_org_hierarchy. The dual-type unit's main type is
+    # Inspectie, so it nests under Inspecties (mirrors overheid.nl).
+    ministry_tooi = dict(BASE_MINISTRIES)
+    bzk = ministry_tooi["Binnenlandse Zaken en Koninkrijksrelaties"]
+    ienw = ministry_tooi["Infrastructuur en Waterstaat"]
+    # (name, label, abbreviations, tooi, related_ministry_tooi, ordered types)
+    nestable = [
+        (
+            "Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie",
+            "Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie",
+            ["ODI"],
+            "https://identifier.overheid.nl/tooi/id/oorg/oorg20001",
+            bzk,
+            [agentschap],
+        ),
+        (
+            "Autoriteit Nucleaire Veiligheid en Stralingsbescherming",
+            "Autoriteit Nucleaire Veiligheid en Stralingsbescherming",
+            ["ANVS"],
+            "https://identifier.overheid.nl/tooi/id/oorg/oorg20002",
+            ienw,
+            [inspectie, zbo],  # main type = Inspectie → nests under Inspecties
+        ),
+    ]
+    for name, label, abbrevs, tooi, related_tooi, ordered_types in nestable:
+        unit = OrganizationUnit.objects.create(
+            name=name,
+            label=label,
+            abbreviations=abbrevs,
+            tooi_identifier=tooi,
+            related_ministry_tooi=related_tooi,
+            main_type=ordered_types[0],  # first-listed is the main type
+        )
+        unit.organization_types.set(ordered_types)
 
 
 def assign_roles(rng: random.Random, count: int) -> list[str]:
