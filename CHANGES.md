@@ -26,7 +26,7 @@ This files lists the changes during the lifetime of this project.
 - 693: closing the side panel clears every param it put in the URL, so a refresh after closing no longer reopens a card or an edit sheet
 - 693: on a colleague's opdracht the "Afgelopen" tag follows the dates on their own line instead of dropping to a line below them, where it read as a second value
 - 693: the side panel keeps a little room under its last card, so scrolled to the end the content no longer sits flush against the edge
--?
+  -?
 
 ## 2026-10-07_2
 
