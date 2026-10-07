@@ -1021,8 +1021,8 @@ class AssignmentServicesDisplayTest(TestCase):
         assert "edit-icon-button" not in team_outer
 
     def test_row_menu_edit_url_uses_public_id(self):
-        """The row "Aanvraag/Rol wijzigen" action must build its panel URL from
-        the assignment's public_id, not its integer PK — the panel resolver
+        """The row "Teamlid/Aanvraag wijzigen" action must build its panel URL
+        from the assignment's public_id, not its integer PK — the panel resolver
         looks up by public_id and a bare integer 404s ("Niet gevonden")."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200

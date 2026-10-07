@@ -4473,12 +4473,10 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     if form is None:
         form_cls, initial = build_combined_form_class(specs)
         form = form_cls(initial=initial)
-    # A placed consultant keeps only the description of their role; the role
-    # itself is read-only in the sheet, so the title says what they can change.
-    if only == "skill":
-        heading = "Rol wijzigen" if "skill" in form.fields else "Taken wijzigen"
-    else:
-        heading = "Teamlid wijzigen"
+    # ``only="skill"`` comes from the own-role sheet alone, which opens only for
+    # a viewer without UPDATE on the opdracht -- the right the skill field needs.
+    # So that sheet is always the description one, and says so.
+    heading = "Taken wijzigen" if only == "skill" else "Teamlid wijzigen"
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "colleague": placement.colleague,
