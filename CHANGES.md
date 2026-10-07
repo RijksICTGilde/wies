@@ -26,6 +26,14 @@ This files lists the changes during the lifetime of this project.
 - 693: closing the side panel clears every param it put in the URL, so a refresh after closing no longer reopens a card or an edit sheet
 - 693: on a colleague's opdracht the "Afgelopen" tag follows the dates on their own line instead of dropping to a line below them, where it read as a second value
 - 693: the side panel keeps a little room under its last card, so scrolled to the end the content no longer sits flush against the edge
+-?
+
+## 2026-10-07_2
+
+- 709: fixed the organization sync importing 0 organizations after the overheid.nl export schema version changed to 2.6.13
+
+## 2026-10-07
+
 - 700: the WCAG 2.2 audit report is published at /toegankelijkheid/onderzoek/, readable without logging in, because the toegankelijkheidsverklaring in the DigiToegankelijk register links straight at it; the Toegankelijkheid page links to it too
 - 690: removed the unused DEBUG-only "Opdrachtgevers" admin page (organization unit tree)
 - 690: (migration)(post-release actions) the organisation picker nests agentschappen, zbo's, adviescolleges and inspecties under their ministry instead of in separate top-level type folders
