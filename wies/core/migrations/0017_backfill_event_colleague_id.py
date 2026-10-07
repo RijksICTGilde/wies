@@ -3,34 +3,45 @@ from collections import defaultdict
 from django.db import migrations
 
 
-def backfill_colleague_id(apps, schema_editor):
-    """Give the team rows in existing audit events the id of the colleague they name.
-
-    The timeline decides on that id who may see a row, and no longer on the name.
-    A frozen name that belongs to exactly one colleague gets that colleague's id.
-    A name nobody carries any more (a rename, a deleted colleague) or that
-    several colleagues share stays without one: guessing would show the row to
-    the wrong person, so it remains hidden from everyone but the Business
-    Managers.
+def _colleague_id_for(row, colleagues_by_name, event_timestamp) -> int | None:
     """
+    Returns the id to freeze on one snapshot row, or None to leave it as it is.
+    Is user joined after event, it is set to None
+    """
+    if not isinstance(row, dict) or row.get("colleague_id") is not None:
+        return None
+    matches = colleagues_by_name.get(row.get("colleague_name"), [])
+    if len(matches) != 1:
+        return None
+    colleague_id, date_joined = matches[0]
+    if date_joined is not None and date_joined > event_timestamp:
+        return None
+    return colleague_id
+
+
+def backfill_colleague_id(apps, schema_editor):
+    """Give the team rows in existing audit events the id of the colleague they name."""
     Colleague = apps.get_model("core", "Colleague")
     Event = apps.get_model("core", "Event")
 
-    ids_by_name: dict[str, list[int]] = defaultdict(list)
-    for colleague_id, name in Colleague.objects.values_list("id", "name"):
-        ids_by_name[name].append(colleague_id)
+    colleagues_by_name: dict[str, list[tuple]] = defaultdict(list)
+    for colleague_id, name, date_joined in Colleague.objects.values_list("id", "name", "user__date_joined"):
+        colleagues_by_name[name].append((colleague_id, date_joined))
 
     events = Event.objects.filter(object_type="Assignment", action="update", context__field_name="services")
     for event in events.iterator():
+        changes = event.context.get("changes")
+        if not isinstance(changes, list):
+            continue
         changed = False
-        for change in event.context.get("changes") or []:
+        for change in changes:
+            if not isinstance(change, dict):
+                continue
             for side in ("old", "new"):
                 row = change.get(side)
-                if not isinstance(row, dict) or row.get("colleague_id") is not None:
-                    continue
-                matches = ids_by_name.get(row.get("colleague_name"), [])
-                if len(matches) == 1:
-                    row["colleague_id"] = matches[0]
+                colleague_id = _colleague_id_for(row, colleagues_by_name, event.timestamp)
+                if colleague_id is not None:
+                    row["colleague_id"] = colleague_id
                     changed = True
         if changed:
             Event.objects.filter(pk=event.pk).update(context=event.context)

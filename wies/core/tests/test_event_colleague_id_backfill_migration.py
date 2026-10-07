@@ -4,13 +4,19 @@ Backfill rules (see migrations/0017_backfill_event_colleague_id.py):
 - name of exactly one colleague -> that colleague's id
 - name shared by colleagues     -> no id
 - name nobody carries           -> no id
+- carrier joined after event    -> no id
 - vacancy row                   -> untouched
+- entry that is not a dict      -> untouched
 """
 
+from datetime import timedelta
+
+from django.contrib.auth import get_user_model
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase
+from django.utils import timezone
 
 APP = "core"
 MIGRATE_FROM = "0016_service_description_optional"
@@ -43,8 +49,12 @@ class EventColleagueIdBackfillMigrationTest(TransactionTestCase):
     def tearDown(self):
         self._migrate_to_latest()
 
-    def _colleague(self, name, email):
-        return self.Colleague.objects.create(name=name, email=email, source="wies")
+    def _colleague(self, name, email, joined=None):
+        """``joined`` gives the colleague an account that dates from that moment."""
+        # The real user model: only core is migrated back, so the user table is
+        # at its latest schema and the historical user model no longer fits it.
+        user = get_user_model().objects.create_user(email=email, date_joined=joined) if joined else None
+        return self.Colleague.objects.create(name=name, email=email, source="wies", user_id=user.pk if user else None)
 
     def _event(self, changes, **overrides):
         fields = {
@@ -90,6 +100,35 @@ class EventColleagueIdBackfillMigrationTest(TransactionTestCase):
         changes = self._changes_after_migration(event)
 
         assert "colleague_id" not in changes[0]["old"]
+
+    def test_carrier_who_joined_after_the_event_gets_no_id(self):
+        # Whoever carries the name now got their account after the event, so the
+        # row names a predecessor: someone renamed or removed since.
+        event_time = timezone.now() - timedelta(days=30)
+        self._colleague("Jan Jansen", "jan@rijksoverheid.nl", joined=event_time + timedelta(days=1))
+        event = self._event([{"old": None, "new": {"id": 1, "colleague_name": "Jan Jansen"}}], timestamp=event_time)
+
+        changes = self._changes_after_migration(event)
+
+        assert "colleague_id" not in changes[0]["new"]
+
+    def test_carrier_who_joined_before_the_event_gets_the_id(self):
+        event_time = timezone.now() - timedelta(days=30)
+        jan = self._colleague("Jan Jansen", "jan@rijksoverheid.nl", joined=event_time - timedelta(days=1))
+        event = self._event([{"old": None, "new": {"id": 1, "colleague_name": "Jan Jansen"}}], timestamp=event_time)
+
+        changes = self._changes_after_migration(event)
+
+        assert changes[0]["new"]["colleague_id"] == jan.pk
+
+    def test_entry_that_is_not_a_dict_is_skipped(self):
+        jan = self._colleague("Jan Jansen", "jan@rijksoverheid.nl")
+        event = self._event(["kapot", {"old": None, "new": {"id": 1, "colleague_name": "Jan Jansen"}}])
+
+        changes = self._changes_after_migration(event)
+
+        assert changes[0] == "kapot"
+        assert changes[1]["new"]["colleague_id"] == jan.pk
 
     def test_vacancy_row_is_left_alone(self):
         event = self._event([{"old": None, "new": {"id": 1, "colleague_name": None}}])
