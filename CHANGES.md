@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
--?
+- ?: fixed the organization sync importing 0 organizations after the overheid.nl export schema version changed to 2.6.13
 
 ## 2026-10-07
 

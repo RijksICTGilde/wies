@@ -27,7 +27,7 @@ from wies.core.services.events import create_event
 logger = logging.getLogger(__name__)
 
 ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.xml"
-NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.9"}
+NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.13"}
 
 # Organizations excluded from sync (intelligence services).
 # All comparisons are case-insensitive.
