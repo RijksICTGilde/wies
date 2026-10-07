@@ -60,7 +60,7 @@ def can_view_role_hours(user, placement) -> bool:
     """
     if placement is None:
         return True
-    # restricted_change_names builds the team rows with a request that has no
+    # restricted_change_ids builds the team rows with a request that has no
     # user, to see what an outsider sees; that outsider sees no hours.
     if user is None:
         return False

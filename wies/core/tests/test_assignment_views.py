@@ -11,6 +11,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
+from wies.core.editables.assignment import placement_audit_row
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -23,6 +24,7 @@ from wies.core.models import (
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.tests.role_helpers import grant_bdm
+from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
 
 User = get_user_model()
 
@@ -830,14 +832,15 @@ class TimelinePlacementPrivacyTests(TestCase):
             source="wies",
         )
         self.event = self._team_event(
-            [{"old": None, "new": self._row(self.service.id, "Software Engineer", "Hidden Colleague")}]
+            [{"old": None, "new": self._row(self.service.id, "Software Engineer", self.hidden_colleague)}]
         )
 
-    def _row(self, service_id, skill_name, colleague_name):
+    def _row(self, service_id, skill_name, colleague):
         return {
             "id": service_id,
             "skill_name": skill_name,
-            "colleague_name": colleague_name,
+            "colleague_name": colleague.name if colleague else None,
+            "colleague_id": colleague.id if colleague else None,
             "description": "",
             "has_custom_period": False,
             "start_date": self.start.isoformat(),
@@ -917,8 +920,34 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         self.assertContains(response, "Communicatie Medewerker (open) toegevoegd")
 
+    def _legacy_event(self):
+        """Replaces the event with one from before the snapshot froze the colleague id."""
+        self.event.delete()
+        row = self._row(self.service.id, "Software Engineer", self.hidden_colleague)
+        del row["colleague_id"]
+        self._team_event([{"old": None, "new": row}])
+
+    def test_legacy_row_without_colleague_id_is_not_matched_on_name(self):
+        """No fallback on the name: not even the colleague it names gets the row (#551)."""
+        self._legacy_event()
+
+        response = self._get_timeline(self.hidden_user)
+
+        self.assertNotContains(response, "Hidden Colleague")
+
+    def test_legacy_row_without_colleague_id_stays_visible_to_bdm(self):
+        self._legacy_event()
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
+        Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
+        grant_bdm(bdm_user)
+
+        response = self._get_timeline(bdm_user)
+
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
+        self.assertContains(response, PRIVACY_BDM)
+
     def test_filter_does_not_query_per_event(self):
-        """The visible-name set is resolved once per request, not per event.
+        """The visible-colleague set is resolved once per request, not per event.
 
         Asserted as "does not grow with the event count" rather than a fixed
         number, which would break on any unrelated query change.
@@ -930,7 +959,7 @@ class TimelinePlacementPrivacyTests(TestCase):
             self.client.get(url)
         for _ in range(9):
             self._team_event(
-                [{"old": None, "new": self._row(self.service.id, "Software Engineer", "Hidden Colleague")}]
+                [{"old": None, "new": self._row(self.service.id, "Software Engineer", self.hidden_colleague)}]
             )
         with CaptureQueriesContext(connection) as ten_events:
             self.client.get(url)
@@ -958,6 +987,128 @@ class TimelinePlacementPrivacyTests(TestCase):
         response = self._get_timeline(self.unrelated_user)
 
         self.assertContains(response, "van &#34;UX / UI advies&#34;")
+
+
+class TimelineColleagueIdentityTests(TestCase):
+    """A team event belongs to a colleague, not to whoever carries that name (#551).
+
+    The event row comes from the real snapshot builder rather than a hand-written
+    dict, so these tests follow whatever the snapshot freezes.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl", first_name="O", last_name="wner")
+        self.hidden_user = User.objects.create_user(email="hidden@rijksoverheid.nl", first_name="H", last_name="idden")
+        self.unrelated_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="U", last_name="n")
+
+        owner_colleague = Colleague.objects.create(
+            user=self.owner_user, name="Owner Colleague", email="owner@rijksoverheid.nl", source="wies"
+        )
+        self.hidden_colleague = Colleague.objects.create(
+            user=self.hidden_user, name="Hidden Colleague", email="hidden@rijksoverheid.nl", source="wies"
+        )
+
+        self.assignment = Assignment.objects.create(name="DTC4NL", owner=owner_colleague, source="wies")
+        skill = Skill.objects.create(name="Software Engineer")
+        service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
+
+        # Not started yet, so private to the placed colleague and the BM.
+        start = timezone.now().date() + datetime.timedelta(days=30)
+        self.placement = Placement.objects.create(
+            colleague=self.hidden_colleague,
+            service=service,
+            specific_start_date=start,
+            specific_end_date=start + datetime.timedelta(days=90),
+            period_source=Placement.PLACEMENT,
+            source="wies",
+        )
+        Event.objects.create(
+            user=self.owner_user,
+            user_email=self.owner_user.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "services",
+                "field_label": "Team",
+                "changes": [{"old": None, "new": placement_audit_row(self.placement)}],
+            },
+        )
+
+    def _get_timeline(self, user):
+        self.client.force_login(user)
+        return self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
+
+    def _rename_placed_colleague(self):
+        Colleague.objects.filter(pk=self.hidden_colleague.pk).update(name="Hidden Getrouwd")
+
+    def _make_placement_active(self):
+        today = timezone.now().date()
+        Placement.objects.filter(pk=self.placement.pk).update(
+            specific_start_date=today - datetime.timedelta(days=10),
+            specific_end_date=today + datetime.timedelta(days=10),
+        )
+
+    def _namesake(self, email):
+        user = User.objects.create_user(email=email, first_name="N", last_name="amesake")
+        Colleague.objects.create(user=user, name="Hidden Colleague", email=email, source="wies")
+        return user
+
+    def test_placed_colleague_keeps_own_history_after_rename(self):
+        self._rename_placed_colleague()
+
+        response = self._get_timeline(self.hidden_user)
+
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
+
+    def test_public_placement_history_survives_rename(self):
+        self._make_placement_active()
+        self._rename_placed_colleague()
+
+        response = self._get_timeline(self.unrelated_user)
+
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
+
+    def test_namesake_does_not_see_hidden_history(self):
+        namesake = self._namesake("namesake@rijksoverheid.nl")
+
+        response = self._get_timeline(namesake)
+
+        self.assertNotContains(response, "Hidden Colleague")
+        self.assertContains(response, "Geen updates")
+
+    def test_bdm_namesake_gets_bdm_notice_not_own(self):
+        """A BDM sees the row by role; sharing the name does not make it their own."""
+        namesake = self._namesake("bdm-namesake@rijksoverheid.nl")
+        grant_bdm(namesake)
+
+        response = self._get_timeline(namesake)
+
+        self.assertContains(response, PRIVACY_BDM)
+        self.assertNotContains(response, PRIVACY_OWN)
+
+    def test_placed_colleague_keeps_own_notice_after_rename(self):
+        self._rename_placed_colleague()
+
+        response = self._get_timeline(self.hidden_user)
+
+        self.assertContains(response, PRIVACY_OWN)
+
+    def test_public_placement_gets_no_notice_after_rename(self):
+        """A row everyone sees carries no notice, whatever the colleague is called now."""
+        self._make_placement_active()
+        self._rename_placed_colleague()
+        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
+        Colleague.objects.create(user=bdm_user, name="Bdm Colleague", email="bdm@rijksoverheid.nl", source="wies")
+        grant_bdm(bdm_user)
+
+        response = self._get_timeline(bdm_user)
+
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
+        self.assertNotContains(response, PRIVACY_BDM)
+        self.assertNotContains(response, PRIVACY_OWN)
 
 
 class AssignmentDeleteViewTests(TestCase):

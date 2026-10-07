@@ -1141,7 +1141,9 @@ class AssignmentServicesAuditTest(TestCase):
         change = changes[0]
         assert change["old"]["id"] == self.vacant_service.id
         assert change["old"]["colleague_name"] is None
+        assert change["old"]["colleague_id"] is None
         assert change["new"]["colleague_name"] == self.colleague.name
+        assert change["new"]["colleague_id"] == self.colleague.id
 
     def test_services_post_no_change_no_event(self):
         # Re-post the filled row exactly as it stands: no field changes, so

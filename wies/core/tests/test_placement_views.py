@@ -2730,7 +2730,12 @@ class TimelinePrivacyChipTest(TestCase):
             context={
                 "field_name": "services",
                 "field_label": "Team",
-                "changes": [{"old": None, "new": {"id": 1, "colleague_name": self.consultant.name}}],
+                "changes": [
+                    {
+                        "old": None,
+                        "new": {"id": 1, "colleague_name": self.consultant.name, "colleague_id": self.consultant.id},
+                    }
+                ],
             },
         )
 
