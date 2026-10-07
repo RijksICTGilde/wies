@@ -332,7 +332,6 @@ a > nldd-icon:last-child {
   font: var(--primitives-font-body-sm-regular-flat);
 }
 
-/* The chips sit in a supporting-text slot, which is a plain line of text. */
 /* The dates and the "Afgelopen" tag read as one value, so they share a line and
    wrap together when the panel is narrow. */
 .wies-cv__period {
@@ -392,10 +391,6 @@ a > nldd-icon:last-child {
 }
 
 /* Aligned with the text above it: nldd-button carries its own side padding. */
-/* The toggle and the pencil of one opdracht, below its list. They sit outside
-   nldd-list because its roving tabindex makes a control in any row but the
-   first unreachable by keyboard; the indent lines them up with the values in
-   the rows above (the label column is 120px plus an 8px spacer). */
 .wies-cv__toggle {
   align-self: flex-start;
   margin-top: var(--primitives-space-4, 4px);
