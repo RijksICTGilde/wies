@@ -163,30 +163,52 @@ combination.
   sheet. Whoever held the group itself becomes a `Business Manager`, address list
   or not: the roles screen handed `Opdrachtbeheer` out too, and dropping the group
   would otherwise take their rights along in silence.
-- `ensure_initial_user` runs on every container start, after `setup_roles()`, and
-  creates the account named by `INITIAL_USER_EMAIL` with every group. It skips an
-  address that already has an account, so it provisions and never repairs: a role
-  somebody took off themselves stays off.
+- `ensure_initial_user` runs on every container start, after `setup_roles()`.
+  While `INITIAL_USER_EMAIL` is set it makes sure that account exists and holds
+  **every** role, whether it had them or not. Only the address is required; the
+  two name variables fill in a new account's name and nothing else.
 
 Without `STAFF_EMAILS` set, an environment has no application administrator at
 all and nobody reaches the maintenance pages.
 
-### Adding an application administrator to a running environment
+### The way back in
 
-Two routes, both at deploy level, because that is where the address list lives.
+Because the command grants on every start and not only on the one that creates the
+account, the way into a fresh environment is also the way back into a stuck one.
+That matters, because the lockout is easy to reach: the roles are handed out on
+the user sheet behind `rijksauth.change_user`, the Gebruikersbeheerder carries
+that, and nothing stops the last one from taking the role off themselves. After
+that nobody can reach the sheet, and an application administrator cannot help:
+that authority is the maintenance pages and carries nothing on users.
 
-Point `INITIAL_USER_EMAIL` at the new address and restart. The command runs every
-start, not only on a fresh database, so it creates that account with every role
-even in an environment full of accounts, and even on a `STAFF_EMAILS` address: it
-calls `User.objects.create_user` and so never reaches `may_change_email`. It
-leaves no `Event` either, unlike every grant made on the user sheet, and it links
-no `Colleague` (that is `setup_initial_user`, which the entrypoint does not run).
+So: set `INITIAL_USER_EMAIL` to the address that needs the roles, redeploy, and
+**remove the variable again** once that is done. Leaving it set means every
+restart puts every role back on that account, which also undoes somebody
+unchecking a role on purpose. The command logs a warning on a start where the
+variable is set and nothing needed changing, so a forgotten variable is visible
+in the container log rather than only in its effects.
 
-Or create the account on the user sheet **first** and add the address to
+Three things worth knowing about that route:
+
+- It adopts an account that already exists. Pointing the variable at a sitting
+  colleague gives them the roles and keeps their account; it does not make a
+  second one.
+- It bypasses `may_change_email`, deliberately. The guard asks for an application
+  administrator, and this is the one route that has to work when nobody holds a
+  role to answer with. It calls `User.objects.create_user` directly.
+- A change leaves an `Event` with source `system` and no actor, naming
+  `INITIAL_USER_EMAIL` as what granted the roles, so the one route that works
+  without a role is not the one route that is invisible. A start that changes
+  nothing writes no event.
+
+### Adding an application administrator
+
+Create the account on the user sheet **first** and add the address to
 `STAFF_EMAILS` after. The order matters: once the address is on the list,
 `may_change_email` wants an application administrator and the sheet wants
 `rijksauth.add_user`, and after this split those two need not sit with the same
-person. Doing it the other way round leaves nobody able to create the account.
+person. Doing it the other way round leaves nobody able to create the account,
+and the way out is then `INITIAL_USER_EMAIL` again.
 
 ## A person is a `User`, a `Colleague`, or both
 

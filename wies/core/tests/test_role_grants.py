@@ -746,12 +746,13 @@ class TheWayIntoAFreshEnvironmentTest(TestCase):
     every role, so somebody can administer users without the address list being
     handed a functional right.
 
-    ``ensure_initial_user`` skips an account that already exists, so the claim is
-    only as good as "a login cannot get there first". It cannot: the OIDC backend
-    claims an account, it never creates one. For an environment that already has
-    accounts, the way in comes from ``rijksauth/0012`` and ``0013`` instead, which
-    hand every address in ``STAFF_EMAILS`` the Business Manager and
-    Gebruikersbeheerder roles once (``rijksauth/tests/test_role_migrations.py``).
+    ``ensure_initial_user`` runs on every container start and, while
+    ``INITIAL_USER_EMAIL`` is set, gives that account every role whether it had
+    them or not. So the way in is also the way back in: an environment whose last
+    Gebruikersbeheerder is gone is recovered by setting the variable and
+    redeploying, and removing it again is what ends that. The command's own
+    behaviour is measured in ``rijksauth/tests/test_ensure_initial_user.py``;
+    what the screens then allow is measured here.
     """
 
     INITIAL = "eerste@rijksoverheid.nl"
@@ -790,10 +791,10 @@ class TheWayIntoAFreshEnvironmentTest(TestCase):
         held = set(User.objects.get(email=self.INITIAL).groups.values_list("name", flat=True))
         assert held == {ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN}
 
-    def test_a_login_cannot_create_the_account_the_command_would_then_skip(self):
-        """The one way the claim could fail: if signing in made the account, the
-        command would find it and skip, and the environment would come up with
-        nobody able to administer users."""
+    def test_a_login_cannot_get_to_the_account_first(self):
+        """Signing in never creates an account: the OIDC backend claims a
+        pre-provisioned one. So the command decides what the first account is,
+        and not whoever reaches the login page first."""
         signed_in = authenticate(request=None, username="verse-sub", email=self.INITIAL, email_verified=True)
 
         assert signed_in is None
@@ -802,13 +803,16 @@ class TheWayIntoAFreshEnvironmentTest(TestCase):
         self._bootstrap()
         assert User.objects.get(email=self.INITIAL).groups.exists()
 
-    def test_the_command_leaves_an_account_that_already_exists_alone(self):
-        """The limit of the claim, stated: the command is a bootstrap, not a repair.
-        An environment whose accounts predate it gets its way in from the migrations.
-        """
+    def test_an_account_that_already_exists_is_adopted_and_can_administer_users(self):
+        """The repair, from the screens' side: an account that predates the variable
+        keeps its identity and gains the roles, so somebody can reach the sheet again
+        without a database command."""
         existing = User.objects.create_user(email=self.INITIAL, first_name="Al", last_name="Daar")
 
         self._bootstrap()
 
         assert User.objects.filter(email__iexact=self.INITIAL).count() == 1
-        assert not User.objects.get(pk=existing.pk).groups.exists()
+        assert ROLE_USER_ADMIN in set(User.objects.get(pk=existing.pk).groups.values_list("name", flat=True))
+        self.client.force_login(existing)
+        assert self.client.get(reverse("admin-users")).status_code == 200
+        assert self.client.get(self._sheet(existing), headers=HX).status_code == 200

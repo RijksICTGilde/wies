@@ -41,6 +41,7 @@ This files lists the changes during the lifetime of this project.
 - 703: only the `Applicatiebeheerder` may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
 - 703: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with the `Gebruikersbeheerder` and a Business Manager reads them
 - 703: the hours on a team member's role are no longer visible to the `Applicatiebeheerder`; a Business Manager and the placed colleague read them, as before, and Beheer > Rollen lists it alongside the wider audience of the contract hours
+- 703: `INITIAL_USER_EMAIL` is the way back in as well as the way in: while it is set, every start gives that account every role, also when the account already exists, so an environment whose last `Gebruikersbeheerder` is gone is recovered with a redeploy instead of a database command. Remove the variable once the deploy is done, or every restart keeps restoring those roles. The grant is recorded in the audit log as a system action naming the variable
 
 ## 2026-09-24
 
