@@ -1,0 +1,9 @@
+{# One page of rows plus the "Meer tonen" button, which replaces itself with
+   the next page. Click instead of auto-load: see placement_cards.html. #}
+{% from "parts/bezetting_row.html" import timeline_row with context %}
+{% for row in rows %}{{ timeline_row(row) }}{% endfor %}
+{% if next_page_url %}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+  </div>
+{% endif %}

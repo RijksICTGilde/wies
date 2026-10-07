@@ -13,6 +13,7 @@ from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
     Colleague,
+    ContractPeriod,
     Label,
     LabelCategory,
     Placement,
@@ -23,6 +24,7 @@ from wies.core.models import (
 from wies.core.public_id import resolve_facet
 from wies.core.roles import setup_roles
 from wies.core.services.occupancy import (
+    FLIP_LABEL_PCT,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
@@ -33,6 +35,7 @@ from wies.core.services.occupancy import (
     occupancy_summary,
     today_marker_pct,
 )
+from wies.core.views import BEZETTING_PAGE_SIZE
 
 User = get_user_model()
 
@@ -392,13 +395,13 @@ class OccupancySummaryTest(TestCase):
         _placement(self.full, "Loopt bijna af", self.today - timedelta(days=10), self.today + timedelta(days=20))
         rows = colleague_occupancy(self.today)
         summary = occupancy_summary(rows)
-        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 1}
+        assert summary == {"bench_count": 1, "partial_count": 0, "ends_soon_count": 1}
 
     def test_ends_soon_is_independent_of_bucket(self):
         # A far-ending active placement is "full" but not "ends_soon".
         _placement(self.full, "Loopt lang door", self.today - timedelta(days=10), self.today + timedelta(days=200))
         summary = occupancy_summary(colleague_occupancy(self.today))
-        assert summary == {"bench_count": 1, "partial_count": 0, "full_count": 1, "ends_soon_count": 0}
+        assert summary == {"bench_count": 1, "partial_count": 0, "ends_soon_count": 0}
 
 
 class TimelineGeometryTest(TestCase):
@@ -417,6 +420,20 @@ class TimelineGeometryTest(TestCase):
         lefts = [t["left"] for t in ticks]
         assert lefts == sorted(lefts)  # monotonic left to right
         assert all(0 <= left <= 100 for left in lefts)
+
+    def test_only_ticks_past_the_threshold_flip(self):
+        """A label right of the last gridline overflows the track and gives the
+        page a horizontal scrollbar (#692 review); those hang left instead.
+
+        Over a full year, because whether any tick lands past the threshold
+        depends on the day of the month: on 137 days of 2026 none does.
+        """
+        for offset in range(366):
+            today = date(2026, 1, 1) + timedelta(days=offset)
+            for tick in month_ticks(today):
+                assert tick["flip"] == (tick["left"] > FLIP_LABEL_PCT), (
+                    f"tick at {tick['left']}% on {today} has flip={tick['flip']}"
+                )
 
 
 class OccupancyMerkFilterTest(TestCase):
@@ -666,13 +683,21 @@ class BezettingFilterChipTest(TestCase):
         assert 'data-name="status"' in content
 
     def test_every_status_has_a_sheet_input_whatever_its_count(self):
-        # Four statuses, and the sheet's top-3 cut must not drop the fourth: the
-        # sheet checkbox is the only input its card can tick.
+        # The sheet checkbox is the only input a card can tick, so every status
+        # needs one whatever its count.
         content = self.client.get(self.url).content.decode()
         hidden = re.search(r'data-hidden-inputs="status".*?</span>', content, re.DOTALL).group(0)
-        for value in ("bench", "partial", "full", "ends_soon"):
+        for value in ("bench", "partial", "ends_soon"):
             assert f'value="{value}"' in hidden, value
         assert "filter_modal=status" not in content
+
+    def test_volledig_ingezet_is_no_longer_a_status(self):
+        # Neither in the sheet nor as a filter value: ?status=full is ignored
+        # like any unknown status, so every row shows.
+        content = self.client.get(self.url, {"status": "full"}).content.decode()
+        assert "Volledig ingezet" not in content
+        assert 'value="full"' not in content
+        assert "Wis alle filters" not in content
 
     def test_status_card_carries_no_input_of_its_own(self):
         # The sheet's checkbox submits; a second one on the card sent the value
@@ -721,13 +746,6 @@ class BezettingStatusFilterViewTest(TestCase):
         assert b"Fred Full" not in response.content
         assert b"Ellen Eind" not in response.content
 
-    def test_full_status_shows_all_placed(self):
-        # ends_soon colleagues are also 'full', so both placed rows appear.
-        response = self.client.get(self.url, {"status": "full"})
-        assert b"Bea Bank" not in response.content
-        assert b"Fred Full" in response.content
-        assert b"Ellen Eind" in response.content
-
     def test_ends_soon_status_is_subset_of_full(self):
         response = self.client.get(self.url, {"status": "ends_soon"})
         assert b"Ellen Eind" in response.content
@@ -750,8 +768,6 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert re.search(r">1</span>.*?eindigt bijna", content, re.DOTALL)
         assert re.search(r">1</span>.*?op de bank", content, re.DOTALL)
-        # "Volledig ingezet" has no card; it is only a sheet option.
-        assert 'data-status="full"' not in content
 
     def test_empty_result_uses_the_shared_empty_state(self):
         """An nldd-inline-dialog, like the other lists: a bare paragraph read as body copy."""
@@ -867,3 +883,158 @@ class BezettingStatusFilterViewTest(TestCase):
         content = response.content.decode()
         assert re.search(r'data-status="bench"[^>]*\s+aria-pressed="true"', content, re.DOTALL)
         assert re.search(r'data-status="ends_soon"[^>]*\s+aria-pressed="false"', content, re.DOTALL)
+
+
+class BezettingSearchTest(TestCase):
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        _consultant("Anna Appel", "anna.appel@x.nl")
+        _consultant("Bert Boom", "bert@x.nl")
+
+    def test_search_matches_name_or_email_case_insensitively(self):
+        by_name = self.client.get(self.url, {"zoek": "appel"}).content.decode()
+        assert "Anna Appel" in by_name
+        assert "Bert Boom" not in by_name
+        by_email = self.client.get(self.url, {"zoek": "BERT@"}).content.decode()
+        assert "Bert Boom" in by_email
+        assert "Anna Appel" not in by_email
+
+    def test_search_field_and_hidden_input_carry_the_term(self):
+        content = self.client.get(self.url, {"zoek": "appel"}).content.decode()
+        assert 'data-wies-search-input name="zoek"' in content
+        assert 'id="search-hidden"' in content
+        assert content.count('value="appel"') == 2
+
+    def test_no_match_shows_the_empty_state_and_zeroes_the_counts(self):
+        """Search narrows the cards too, like merk and labels (unlike status)."""
+        content = self.client.get(self.url, {"zoek": "niemand"}).content.decode()
+        assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
+        assert re.search(r">0</span>.*?op de bank", content, re.DOTALL)
+
+
+class BezettingPaginationTest(TestCase):
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        today = timezone.now().date()
+        # 61 consultants: one bench row more than a page holds, then one placed
+        # colleague who sorts after every bench row and so lands on page two.
+        for i in range(BEZETTING_PAGE_SIZE):
+            _consultant(f"Bank {i:02d}", f"bank{i}@x.nl")
+        placed = _consultant("Zoë Zet", "zoe@x.nl")
+        _placement(placed, "Klus", today - timedelta(days=10), today + timedelta(days=200))
+
+    def test_first_page_holds_the_bench_rows_and_a_load_more_button(self):
+        content = self.client.get(self.url).content.decode()
+        assert content.count('class="bezetting-row ') == BEZETTING_PAGE_SIZE
+        assert "Zoë Zet" not in content
+        assert 'text="Meer tonen"' in content
+        assert "pagina=2" in content
+
+    def test_next_page_is_just_the_rows_without_the_button(self):
+        content = self.client.get(self.url, {"pagina": 2}, headers={"hx-request": "true"}).content.decode()
+        assert content.count('class="bezetting-row ') == 1
+        assert "Zoë Zet" in content
+        assert "Meer tonen" not in content
+        assert 'id="results"' not in content
+
+    def test_next_page_url_keeps_the_filters_but_not_the_panel(self):
+        # Every consultant matches the search, so page two still exists.
+        content = self.client.get(self.url, {"zoek": "x.nl", "collega": "x"}).content.decode()
+        button = re.search(r'text="Meer tonen" hx-get="([^"]+)"', content).group(1)
+        assert "zoek=x.nl" in button
+        assert "collega=" not in button
+        assert "pagina=2" in button
+
+    def test_summary_counts_the_whole_population_not_the_page(self):
+        content = self.client.get(self.url).content.decode()
+        assert re.search(rf">{BEZETTING_PAGE_SIZE}</span>.*?op de bank", content, re.DOTALL)
+
+
+class UnfilledHoursCaveatTest(TestCase):
+    """An active role without recorded hours counts as 0 (#687), so the free
+    hours are an upper bound. The caveat must be visible however short the bar:
+    on the bar itself it vanished under NARROW_BAR_PCT (#692 review)."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+        self.today = timezone.now().date()
+        self.colleague = _consultant("Hanna Hour", "hanna@x.nl")
+        ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
+
+    def _row_html(self):
+        content = self.client.get(self.url).content.decode()
+        return content.replace("&#39;", "'").replace("&nbsp;", " ")
+
+    def test_short_role_without_hours_still_shows_the_caveat(self):
+        """A seven-day bar is far under NARROW_BAR_PCT, so it carries no label."""
+        _placement(self.colleague, "Kort", self.today, self.today + timedelta(days=7))
+
+        html = self._row_html()
+        assert "36 uur vrij, uren niet overal ingevuld" in html
+
+    def test_long_role_without_hours_shows_the_caveat_too(self):
+        _placement(self.colleague, "Lang", self.today, self.today + timedelta(days=60))
+
+        html = self._row_html()
+        assert "36 uur vrij, uren niet overal ingevuld" in html
+
+    def test_role_with_hours_gets_no_caveat(self):
+        placement = _placement(self.colleague, "Ingevuld", self.today, self.today + timedelta(days=7))
+        placement.service.hours_per_week = 16
+        placement.service.save()
+
+        html = self._row_html()
+        assert "20 uur vrij" in html
+        assert "uren niet overal ingevuld" not in html
+
+    def test_exactly_full_still_shows_the_caveat(self):
+        """Nought free is an upper bound too when a role has no hours; without
+        this the one row with something still open says nothing (#692 review)."""
+        placement = _placement(self.colleague, "Vol", self.today, self.today + timedelta(days=60))
+        placement.service.hours_per_week = 36
+        placement.service.save()
+        _placement(self.colleague, "Zonder uren", self.today, self.today + timedelta(days=60))
+
+        html = self._row_html()
+        assert "uren niet overal ingevuld" in html
+
+    def test_bench_colleague_gets_no_caveat(self):
+        """Nothing active to be missing hours for."""
+        html = self._row_html()
+        assert "36 uur vrij" in html
+        assert "uren niet overal ingevuld" not in html
+
+
+class TickLabelFlipTest(TestCase):
+    """The month labels sit right of their gridline, so the last one overflowed
+    the track and gave the page a stray horizontal scrollbar (#692 review)."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name="Business Development Manager"))
+        self.client.force_login(bdm)
+
+    def test_the_page_marks_exactly_the_ticks_the_service_flags(self):
+        """Whether any tick flips today depends on the date, so this pins the
+        template to the service rather than to the calendar."""
+        content = self.client.get(reverse("bezetting")).content.decode()
+
+        expected = sum(1 for t in month_ticks(timezone.now().date()) if t["flip"])
+        assert content.count("bezetting-tick--flip") == expected

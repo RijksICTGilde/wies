@@ -22,6 +22,7 @@ from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
@@ -98,7 +99,6 @@ from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
     STATUS_BENCH,
     STATUS_ENDS_SOON,
-    STATUS_FULL,
     STATUS_PARTIAL,
     STATUS_VALUES,
     bezetting_filter_groups,
@@ -107,7 +107,7 @@ from .services.occupancy import (
     month_ticks,
     occupancy_summary,
     row_has_status,
-    split_bench_and_timeline,
+    rows_in_display_order,
     today_marker_pct,
 )
 from .services.organizations import (
@@ -157,6 +157,11 @@ PANEL_PARAMS = (
     "nieuwe-opdracht",
     "uitgeklapt",
 )
+
+# Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
+# A new audit: drop the HTML next to this one, point this at it, and leave the
+# old file in place -- the URL stays put, so the register's link keeps working.
+CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -689,7 +694,6 @@ def _bezetting_status_group(selected, summary):
     for value, label, count in (
         (STATUS_BENCH, "Op de bank", summary["bench_count"]),
         (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
-        (STATUS_FULL, "Volledig ingezet", summary["full_count"]),
         (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
     ):
         option = {"value": value, "label": label, "count": count}
@@ -704,12 +708,15 @@ def _bezetting_status_group(selected, summary):
         "options": options,
         "selected_values": list(selected),
         # Finalized by hand, outside _finalize_filter_groups: that keeps the top
-        # three by count and hides the rest behind "Meer…", which would drop the
-        # hidden input of the fourth status and leave its card dead.
+        # three by count and hides the rest behind "Meer…", which would drop a
+        # status's hidden input and leave its card dead.
         "group_id": "status",
         "top_options": real_options,
         "has_more": False,
     }
+
+
+BEZETTING_PAGE_SIZE = 60
 
 
 @business_management_access_required
@@ -719,6 +726,12 @@ def bezetting(request):
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
     opens the shared colleague side panel via the ``collega`` param, exactly like
     the "Wie zit waar?" table.
+
+    Paged from the in-memory row list, not the queryset: the sort order is a
+    derived property of the built rows, not a column. So every page costs the
+    same database work and only the HTML shrinks, which is what the paging is
+    for here. Moving it into the queryset means moving the sort into annotations
+    and is its own change.
     """
     today = timezone.now().date()
 
@@ -764,13 +777,15 @@ def bezetting(request):
     merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_cat = labels_by_category(labels.ids)
+    search = request.GET.get("zoek", "").strip()
 
-    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat)
+    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat, search=search)
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
-    # Summary-card counts are the full population within the merk/label selection —
-    # computed before the status filter narrows the rows (see occupancy_summary).
+    # Summary-card counts follow merk, labels and the search term (they all
+    # narrowed the queryset above) but not the status filter, which is applied
+    # after this: a card has to keep showing what it would select.
     summary = occupancy_summary(rows)
 
     # Status facet: the three summary cards, as independent OR-toggles. Derived
@@ -797,11 +812,18 @@ def bezetting(request):
     if selected_statuses:
         active_filters["status"] = selected_statuses
 
-    bench_rows, timeline_rows = split_bench_and_timeline(rows)
+    page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
+    next_page_url = (
+        _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
+        if page.has_next()
+        else None
+    )
 
     context = {
-        "rows": timeline_rows,
-        "bench_rows": bench_rows,
+        "rows": page.object_list,
+        "row_count": page.paginator.count,
+        "next_page_url": next_page_url,
+        "search_filter": search,
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
         "today": today,
@@ -821,6 +843,9 @@ def bezetting(request):
     if "HX-Request" in request.headers:
         if request.GET.get("filter_modal"):
             return render(request, "parts/filter_options_modal.html", context)
+        # "Meer tonen" replaces itself with the next page of rows.
+        if request.GET.get("pagina"):
+            return render(request, "parts/bezetting_rows.html", context)
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
@@ -3727,6 +3752,16 @@ def privacy(request):
 
 def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
+
+
+# Public because the DigiToegankelijk register links straight at this URL, and
+# that URL must never move: it sits in a public register that regulators check.
+# Hence the redirect — the report is a static file, so in production its own name
+# carries a hash that changes with every new version.
+@login_not_required
+def toegankelijkheid_onderzoek(request):
+    """The WCAG audit report the toegankelijkheidsverklaring points at."""
+    return redirect(static(CURRENT_AUDIT_REPORT))
 
 
 def error_400(request, exception=None):

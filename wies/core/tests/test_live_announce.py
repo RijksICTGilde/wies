@@ -78,3 +78,10 @@ class LiveAnnounceTest(TestCase):
     def test_empty_home_announces_the_empty_state(self):
         response = self.client.get(reverse("home"), **HX)
         self.assertContains(response, 'data-announce="Geen inzetten gevonden"')
+
+    def test_the_page_has_exactly_one_live_region(self):
+        """getElementById returns the first, so a second one is dead markup that
+        silently decides which attributes the live region really has."""
+        response = self.client.get(reverse("home"))
+
+        assert response.content.decode().count('id="wies-live"') == 1

@@ -31,6 +31,11 @@ Maak een bevinding niet openbaar voordat het team heeft kunnen reageren.
   geen wachtwoorden en geen groepsaccounts.
 - **Dependencies** — Dependabot bewaakt wekelijks de Python-, npm- en GitHub
   Actions-dependencies ([`.github/dependabot.yml`](.github/dependabot.yml)).
+- **Kwetsbaarheidsscans** — Trivy scant bij iedere pull request, bij iedere push
+  naar `main` en wekelijks de broncode (dependencies, geheimen, configuratie) en
+  de container-image (OS-pakketten). Bevindingen met ernst hoog of kritiek
+  waarvoor een fix beschikbaar is, komen in de Security-tab van de repository
+  ([`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)).
 - **Geheimen** — GitHub secret scanning met push protection blokkeert het pushen
   van credentials naar deze repository.
 - **Wijzigingen** — iedere wijziging gaat via een pull request en draait

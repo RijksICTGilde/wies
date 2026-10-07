@@ -3,12 +3,12 @@ name = "wies"
 dynamic = ["version"]
 requires-python = ">=3.14"
 dependencies = [
-  "django==6.0.8",
+  "django==6.1.2",
   "whitenoise==6.12.0",
-  "gunicorn==25.3.0",
+  "gunicorn==26.1.0",
   "Authlib==1.7.2",
   "requests==2.34.2",
-  "urllib3>=2.7.0",  # CVE-2025-66418, CVE-2025-66471
+  "urllib3>=2.8.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
   "psycopg[binary]>=3.3.4",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
@@ -20,9 +20,9 @@ dev = [
   "ruff>=0.16.0",
   "djlint>=1.42.3",
   "pytest>=9.1.1",
-  "pytest-django>=4.9",
+  "pytest-django>=4.14.0",
   "pytest-cov>=6.0",
-  "coverage[toml]>=7.15.2",
+  "coverage[toml]>=7.15.4",
   "markdown-it-py>=4.2.0",
 ]
 

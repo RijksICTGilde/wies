@@ -67,6 +67,7 @@ from wies.core.views import (
     suborganization_delete,
     suborganization_edit,
     toegankelijkheid,
+    toegankelijkheid_onderzoek,
     user_create,
     user_delete,
     user_edit,
@@ -138,6 +139,7 @@ urlpatterns = [
     path("faq/", faq, name="faq"),
     path("privacy/", privacy, name="privacy"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
+    path("toegankelijkheid/onderzoek/", toegankelijkheid_onderzoek, name="toegankelijkheid-onderzoek"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
     path(
