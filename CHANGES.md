@@ -4,28 +4,11 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 693: the placement panel is gone: a person card opens the colleague panel; an opdracht on a colleague's profile and an old `?plaatsing=` link open the opdracht panel
-- 693: a colleague's opdrachten on the panel and the profile are a labelled list per opdracht (Rol, Periode, Taken) under the opdracht's name in the same box-tinted pattern the opdracht panel uses for its own details; the Opdracht row is the link to it, with a chevron, and the role description unfolds with "Toon meer" under the text itself, so opening the opdracht and unfolding the text never compete for the same click; a single opdracht shows its description open; the team row opens the colleague panel with that opdracht open, and for a team editor the row menu offers "Profiel bekijken" (was "Bekijk teamlid") next to the actions; a placed consultant edits their own role text via "Mijn taken wijzigen"
-- 693: an aanvraag on a team row opens its own panel (`?aanvraag=`), the way a team member's row opens that person's: it names the role, the opdracht it is on (a row back up to it), the period, the hours and the role text; a team editor reaches it from "Aanvraag bekijken" in the row menu and can go straight to "Aanvraag wijzigen" from the panel
-- 693: the text on a role is called "Taken" everywhere (the panel row, the form field, "Mijn taken wijzigen" and the "Taken wijzigen" sheet); "Omschrijving" now only means the text on an opdracht, which the two fields sharing one name made impossible to tell apart
-- 693: the opdracht panel no longer shows "Plaatsingsdatum" (it was the record's creation date, not a placement), and the description moved to the bottom of the list, so the opdrachtgever, period and business manager stay in view when it runs long
-- 693: on a team row the period leads the second line and the role tag follows it, so the dates start at the same place on every row instead of stepping in and out with the length of the role name
-- 693: an aanvraag's title on a team row links to its panel, as a team member's name links to their profile; a row without a menu stays one link with a chevron
-- 693: your own role on your panel and profile carries a pencil to the sheet that keeps it, labelled for the sheet it opens ("Mijn rol wijzigen" for a team editor, "Mijn taken wijzigen" for a placed consultant)
-- 693: that a placement is only visible to some is said once above the whole entry, not as a chip beside its period: the rule hides the entry, not just its dates ("Afgelopen" still belongs to the dates)
-- 693: the colleague panel no longer shows the contract hours; they matter when you plan with them, which is what Bezetting is for, and they are kept on the user sheet
-- 693: the side panel is 800px wide instead of 640px, on every page that opens it
-- 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
-- 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
-- 693: every edit action is called "wijzigen" instead of "bewerken", so a menu item and the sheet it opens no longer use different words for the same thing ("Teamlid wijzigen", "Opdracht wijzigen", "Gegevens wijzigen", "Gebruiker wijzigen", "Label wijzigen", "Contractperiode wijzigen", and the pencil's "Wijzig <veld>")
-- 693: the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken" (on your own row "Mijn profiel bekijken"), the same infinitive as the "Wijzigen" and "Verwijderen" beside them
-- 693: the aanvraag panel only opens a real aanvraag: a filled role resolved there showed the placed colleague's hours and role text to anyone with the link, past the rules the team row applies to both
-- 693: "Toon meer" on a long omschrijving or role text unfolds it again, on the opdracht panel, the aanvraag panel, the onboarding box and the Updates tab; line breaks in such a text are kept
-- 693: no pencil on your own role in an opdracht that comes from another system: it is read-only there, so the sheet it opened did not exist
-- 693: a colleague's opdracht shows its period as "mei 2026 t/m jun 2027" and an empty one as "Geen periode opgegeven", like everywhere else; a fourth role and beyond reads "+1 meer"
-- 693: closing the side panel clears every param it put in the URL, so a refresh after closing no longer reopens a card or an edit sheet
-- 693: on a colleague's opdracht the "Afgelopen" tag follows the dates on their own line instead of dropping to a line below them, where it read as a second value
-- 693: the side panel keeps a little room under its last card, so scrolled to the end the content no longer sits flush against the edge
+- 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the taken. Old `?plaatsing=` links keep working.
+- 693: an aanvraag on a team row opens its own panel instead of being a dead end, and only a real aanvraag does: a filled role used to open it too, showing the placed colleague's hours and taken past the rules the team row applies.
+- 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere, never "bewerken", and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
+- 693: the side panel is 800px wide, keeps room under its last card, and clears every param it set when it closes.
+- 693: fixed on the way: "Toon meer" unfolds long text again, a pencil no longer appears on an opdracht from another system where it opened nothing, and a placement that has not started carries no "Gepland" chip.
   -?
 
 ## 2026-10-07_2
