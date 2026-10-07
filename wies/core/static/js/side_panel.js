@@ -19,7 +19,7 @@
 
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
-  // Mirrors PANEL_PARAMS in views.py minus 'pagina', which belongs to the list.
+  // The params that open a panel: their presence means "a panel belongs here".
   const PANEL_PARAMS = [
     "collega",
     "opdracht",
@@ -27,6 +27,16 @@
     "plaatsing",
     "nieuwe-opdracht",
   ];
+
+  // Everything the panel puts in the URL, stripped when it closes. The ones
+  // above plus the params that only modify an open panel; 'pagina' is the
+  // list's, not the panel's, so PANEL_PARAMS in views.py has one more.
+  const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
+    "bewerken",
+    "teamlid",
+    "veld",
+    "uitgeklapt",
+  ]);
 
   function hasPanelParam(url) {
     return PANEL_PARAMS.some((name) => url.searchParams.has(name));
@@ -123,8 +133,7 @@
     closeSheet();
     clearContent();
     const url = new URL(window.location);
-    PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
-    url.searchParams.delete("bewerken");
+    PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
     history.replaceState({}, "", url.toString());
   }
 
@@ -144,15 +153,23 @@
     }
   }
 
-  // Reserve the scrollbar's width inside the panel. With sticky-header the
-  // scroller is a div in nldd-page's shadow root, out of reach of app.css, and
-  // the component sets no scrollbar-gutter itself; without it "Toon meer"
+  // Two fixes on the panel's own scroller, a div in nldd-page's shadow root
+  // that app.css cannot reach. An adopted sheet, not an injected <style>:
+  // the CSP allows no inline styles.
+  //
+  // scrollbar-gutter: the component sets none, so without it "Toon meer"
   // shifts the whole panel a bar's width to the left when the bar appears.
-  // An adopted sheet, not an injected <style>: CSP allows no inline styles.
-  function reserveScrollbarGutter(page) {
+  //
+  // padding-bottom: the scroller's bottom inset counts the footer's height,
+  // and this sheet has no footer, so scrolled to the end the last card sits
+  // flush against the edge with nothing under it. The top inset is 50px; half
+  // of that is enough to read as an end.
+  function styleScroller(page) {
     if (!page.shadowRoot || !("adoptedStyleSheets" in page.shadowRoot)) return;
     const sheet = new CSSStyleSheet();
-    sheet.replaceSync(".page__scroll { scrollbar-gutter: stable; }");
+    sheet.replaceSync(
+      ".page__scroll { scrollbar-gutter: stable; padding-bottom: 24px; }",
+    );
     page.shadowRoot.adoptedStyleSheets = [
       ...page.shadowRoot.adoptedStyleSheets,
       sheet,
@@ -166,7 +183,7 @@
       customElements
         .whenDefined("nldd-page")
         .then(() => content.updateComplete)
-        .then(() => reserveScrollbarGutter(content));
+        .then(() => styleScroller(content));
     }
     if (content && content.innerHTML.trim()) {
       // show() before the first render leaves the dialog closed.
@@ -270,9 +287,7 @@
         if (hasPanelParam(url)) {
           panelStack.length = 0;
           clearContent();
-          PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
-          url.searchParams.delete("bewerken");
-          url.searchParams.delete("teamlid");
+          PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
           history.replaceState({}, "", url.toString());
           document.documentElement.style.overflow = "";
         }

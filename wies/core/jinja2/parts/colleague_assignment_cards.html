@@ -57,7 +57,7 @@
            opdracht; it reads as "Rol" only because it shares the tag list. #}
           <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          {% set role_text = role_names[:3]|join(", ") ~ (" +" ~ (role_names|length - 3) if role_names|length > 3 else "") %}
+          {% set role_text = role_names[:3]|join(", ") ~ (" +" ~ (role_names|length - 3) ~ " meer" if role_names|length > 3 else "") %}
           {% set role_hours = (roles[0].hours ~ " uur per week") if roles|length == 1 and roles[0].hours else "" %}
           <nldd-text-cell vertical-alignment="top" text="{{ role_text }}" supporting-text="{{ role_hours }}"></nldd-text-cell>
           </nldd-list-item>
@@ -75,26 +75,28 @@
           {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl }}
         {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl }}{% endif -%}
       {% endset %}
-      <span title="{{ exact_period|trim }}">
-        {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} – {{ assignment.end_date|datum_nl("b Y") }}
-        {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
-        {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
-    {%- else %}Geen periode{% endif -%}
+      {# "Afgelopen" belongs to the dates, so it follows them on the same line,
+         as it does on a team row. A supporting-text slot would drop it to a
+         line of its own, where it reads as a second value. The privacy note is
+         not about the dates and stays by the opdracht's name. #}
+      <span class="wies-cv__period">
+        <span title="{{ exact_period|trim }}">
+          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} t/m {{ assignment.end_date|datum_nl("b Y") }}
+          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
+          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
+    {%- else %}Geen periode opgegeven{% endif -%}
       </span>
       {% if assignment.period_label %}
-        {# "Afgelopen" belongs to the dates; the privacy chip does not, so it
-             sits by the opdracht's name instead. #}
-        <span slot="supporting-text" class="wies-cv__chips">
-          <nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>
-        </span>
+        <nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>
       {% endif %}
+      </span>
       </nldd-text-cell>
       </nldd-list-item>
+      {# The viewer's own role: the pencil opens the same sheet the team row
+         offers as "Mijn taken wijzigen". Only with one role, because with
+         several the sheet is per role and the row cannot say which. #}
+      {% set own_edit_url = described[0].edit_url if described and described|length == 1 else none %}
       {% if described %}
-        {# The viewer's own role: the pencil opens the same sheet the team row
-           offers as "Mijn taken wijzigen". Only with one role, because with
-           several the sheet is per role and the row cannot say which. #}
-        {% set own_edit_url = described[0].edit_url if described|length == 1 else none %}
         <nldd-list-item>
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -117,12 +119,17 @@
               {% endif %}
             {% endfor %}
           </div>
-          <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} data-action="toggle-card"></nldd-button>
+        {% endif %}
+        {# The toggle belongs under the text it unfolds, not in a row of its
+           own: a lone button in an empty row reads as if it were a value. #}
+        {% if has_more %}
+          <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
         {% endif %}
         </nldd-text-cell>
         {% if own_edit_url %}
-          <nldd-cell>
-          <nldd-icon-button size="sm" icon="edit" text="{{ described[0].edit_label }}" hx-get="{{ own_edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-cell vertical-alignment="top">
+          <nldd-icon-button class="wies-cv__edit" size="sm" icon="edit" text="{{ described[0].edit_label }}" hx-get="{{ own_edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
           </nldd-cell>
         {% endif %}
         </nldd-list-item>

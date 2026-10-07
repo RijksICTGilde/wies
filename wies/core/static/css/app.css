@@ -286,57 +286,14 @@ a > nldd-icon:last-child {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
-/* The formatting bar and its editor read as one control: a little air between
-   them, no more than the gap between a label and its field. */
-.wies-text-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-8, 8px);
-}
-
-/* A rendered description, collapsed to five lines until "Toon meer". A hard
-   edge, not a fade: a gradient over a tinted list is not colour-fast in dark
-   mode. lh: five lines whatever the rich-text line height is. */
-.wies-long-text--collapsed .wies-long-text__body {
-  max-height: calc(5 * 1lh);
-  overflow: hidden;
-}
-
-/* A heading inside a description is bold text at the text's own size, open
-   or collapsed: a description sits in a data row, and full-size headings made
-   the block leap in scale on "Toon meer". The selectors reach into
-   nldd-rich-text's light DOM: it has no attribute for this. */
-.wies-long-text nldd-rich-text :is(h1, h2, h3, h4, h5, h6) {
-  font-size: inherit;
-  line-height: inherit;
-  font-weight: 600;
-}
-
-/* Collapsed, every line is one lh high and nothing has a margin, so the cut
-   falls between lines and not through one. Open, the block spacing returns. */
-.wies-long-text--collapsed .wies-long-text__body nldd-rich-text {
-  /* Its own block gap and line height would put lines off the lh grid. */
-  --_spacing: 0;
-  line-height: inherit;
-}
-
-.wies-long-text--collapsed
-  .wies-long-text__body
-  :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote) {
-  margin: 0;
-  font-size: inherit;
-  line-height: inherit;
-}
-
-/* The contract hours in the colleague panel: one line, the parts spaced like
-   the meta line of a team row. */
-.wies-contract-line {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--primitives-space-12, 12px);
-  margin: 0;
-  font: var(--primitives-font-body-sm-regular-flat);
+/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
+   double spaces and indentation of a pasted description should survive.
+   `:not([hidden])` is needed because toggle-long-text swaps the two spans via
+   the hidden attribute, and a display from the document beats [hidden]. */
+.inline-edit-long-text__truncated:not([hidden]),
+.inline-edit-long-text__full:not([hidden]) {
+  display: block;
+  white-space: pre-wrap;
 }
 
 /* A name that opens the colleague panel, on a row that already has a menu:
@@ -376,7 +333,9 @@ a > nldd-icon:last-child {
 }
 
 /* The chips sit in a supporting-text slot, which is a plain line of text. */
-.wies-cv__chips {
+/* The dates and the "Afgelopen" tag read as one value, so they share a line and
+   wrap together when the panel is narrow. */
+.wies-cv__period {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
@@ -394,6 +353,13 @@ a > nldd-icon:last-child {
   line-clamp: 3;
   margin: 0;
   overflow: hidden;
+}
+
+/* The pencil floats over the first lines of the text (it is a cell of the same
+   row), so the clamped preview keeps its width clear. The open text runs the
+   full width again: the button is level with the first line only. */
+.wies-cv__item:has(.wies-cv__edit) .wies-cv__preview:not([hidden]) {
+  padding-right: var(--primitives-space-40, 40px);
 }
 
 .wies-cv__more:not([hidden]) {
@@ -426,6 +392,10 @@ a > nldd-icon:last-child {
 }
 
 /* Aligned with the text above it: nldd-button carries its own side padding. */
+/* The toggle and the pencil of one opdracht, below its list. They sit outside
+   nldd-list because its roving tabindex makes a control in any row but the
+   first unreachable by keyboard; the indent lines them up with the values in
+   the rows above (the label column is 120px plus an 8px spacer). */
 .wies-cv__toggle {
   align-self: flex-start;
   margin-top: var(--primitives-space-4, 4px);
@@ -449,15 +419,8 @@ a > nldd-icon:last-child {
    DOM. An attribute selector tests for presence, not content, so `[href]`
    matched them all. */
 nldd-card[href]:not([href=""]):hover,
-nldd-card[button]:hover,
-nldd-card[data-action]:hover {
+nldd-card[button]:hover {
   --_background-color: var(--primitives-color-neutral-50);
-}
-
-/* A card that opens on click (data-action) is clickable without href or
-   button, so the component does not set the cursor. */
-nldd-card[data-action] {
-  cursor: pointer;
 }
 
 /* "Meer tonen" button below a list or card grid. grid-column spans every column

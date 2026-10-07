@@ -1,6 +1,5 @@
-"""The opdracht panel marks one colleague's rows via ``?collega=`` (the hook
-side_panel.js scrolls to) and the side panel every list page opens is one
-sheet at one width."""
+"""The opdracht panel's team rows, and the side panel every list page opens as
+one sheet at one width."""
 
 import re
 from datetime import timedelta
@@ -17,7 +16,6 @@ from wies.core.tests.role_helpers import make_bdm_user
 User = get_user_model()
 
 HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
-HIGHLIGHT = "wies-team-row--highlighted"
 
 
 def _row_of(body: str, name: str) -> str:
@@ -26,7 +24,7 @@ def _row_of(body: str, name: str) -> str:
     return next(item for item in items if name in item)
 
 
-class AssignmentPanelHighlightTest(TestCase):
+class AssignmentPanelRowsTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.viewer = User.objects.create_user(email="v@rijksoverheid.nl")
@@ -58,35 +56,21 @@ class AssignmentPanelHighlightTest(TestCase):
         query = "&".join(f"{k}={v}" for k, v in {"opdracht": self.assignment.public_id, **params}.items())
         return self.client.get(reverse("home") + "?" + query, headers=HX).content.decode()
 
-    def test_the_colleagues_rows_are_marked_and_the_others_not(self):
-        body = self._panel(collega=self.anke.public_id)
-
-        assert HIGHLIGHT in _row_of(body, "Anke Jacobs")
-        assert HIGHLIGHT not in _row_of(body, "Bram Smit")
-
-    def test_two_rows_of_the_same_colleague_are_both_marked(self):
-        self._place(self.anke, start=-5, end=50)
-
-        body = self._panel(collega=self.anke.public_id)
-
-        assert body.count(HIGHLIGHT) == 2
-
-    def test_unknown_or_unplaced_colleague_marks_nothing(self):
-        assert HIGHLIGHT not in self._panel(collega="not-a-uuid")
+    def test_an_unknown_or_unplaced_colleague_still_gives_the_panel(self):
+        """``?collega=`` names who you came in on; a name the opdracht does not
+        know is no reason to withhold the panel."""
+        assert "Zaaksysteem" in self._panel(collega="not-a-uuid")
         outsider = Colleague.objects.create(name="Niet Geplaatst", email="n@rijksoverheid.nl", source="wies")
-        assert HIGHLIGHT not in self._panel(collega=outsider.public_id)
+        assert "Niet Geplaatst" not in self._panel(collega=outsider.public_id)
 
-    def test_a_hidden_row_is_not_marked_for_an_outsider_but_is_for_a_bdm(self):
+    def test_a_hidden_row_stays_hidden_for_an_outsider_but_shows_for_a_bdm(self):
         ended = Colleague.objects.create(name="Eva Eind", email="eva@rijksoverheid.nl", source="wies")
         self._place(ended, start=-100, end=-10)
 
-        body = self._panel(collega=ended.public_id)
-        assert "Eva Eind" not in body
-        assert HIGHLIGHT not in body
+        assert "Eva Eind" not in self._panel(collega=ended.public_id)
 
         self.client.force_login(make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm"))
-        body = self._panel(collega=ended.public_id)
-        assert HIGHLIGHT in _row_of(body, "Eva Eind")
+        assert "Eva Eind" in self._panel(collega=ended.public_id)
 
     def test_a_viewer_without_actions_gets_the_row_as_a_link_without_description(self):
         Service.objects.filter(placements__colleague=self.anke).update(description="Begeleidt de overgang.")
@@ -166,7 +150,7 @@ class AssignmentPanelHighlightTest(TestCase):
         assert 'start-icon="chevron-up"' in opened
         assert " expanded" in opened.split("wies-cv__toggle")[1].split(">")[0]
         # The Opdracht row is the link, with a chevron saying so; the toggle
-        # sits in the Taken row, so the two never compete for the same click.
+        # sits below the list, so the two never compete for the same click.
         row = closed.split('<nldd-list-item class="wies-cv__link"')[1].split("</nldd-list-item>")[0]
         assert f'href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}"' in row
         assert 'text="Zaaksysteem"' in row
@@ -262,8 +246,12 @@ class AssignmentPanelHighlightTest(TestCase):
         assert "Alleen zichtbaar voor" in band
         # Above the opdracht's own row, so it covers everything under it.
         assert entry.index("wies-cv__privacy") < entry.index("wies-cv__link")
-        # "Afgelopen" still belongs to the dates, not to the band.
-        assert 'text="Afgelopen"' in entry.split('text="Periode"')[1]
+        # "Afgelopen" still belongs to the dates, not to the band -- and it sits
+        # on the date's own line, not in a supporting-text slot below it.
+        period_row = entry.split('text="Periode"')[1].split("</nldd-list-item>")[0]
+        assert 'text="Afgelopen"' in period_row
+        assert 'text="Afgelopen"' in period_row.split('class="wies-cv__period"')[1]
+        assert "supporting-text" not in period_row
 
     def test_a_lone_opdracht_opens_its_description_without_asking(self):
         """One entry fills the panel on its own, and a collapsed description
@@ -278,6 +266,109 @@ class AssignmentPanelHighlightTest(TestCase):
         assert '<div class="wies-cv__more">' in body
         assert '<p class="wies-cv__preview" hidden>' in body
         assert "Toon minder" in body
+
+
+class CvControlsTest(TestCase):
+    """The toggle sits under the text it unfolds and the pencil in its own cell
+    of the Taken row, both inside the tinted list that is the entry's card.
+    """
+
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="a@rijksoverheid.nl")
+        self.colleague = Colleague.objects.create(
+            user=self.user, name="Anke Jacobs", email="a@rijksoverheid.nl", source="wies"
+        )
+        assignment = Assignment.objects.create(name="Zaaksysteem", source="wies")
+        skill = Skill.objects.create(name="Dev")
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Begeleidt de overgang. " * 12,
+            skill=skill,
+            source="wies",
+        )
+        today = timezone.now().date()
+        Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source=Placement.PLACEMENT,
+            specific_start_date=today - timedelta(days=5),
+            specific_end_date=today + timedelta(days=50),
+            source="wies",
+        )
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def test_the_toggle_and_pencil_stay_inside_the_entrys_card(self):
+        """The tinted card is the nldd-list itself, so a control placed after
+        it floats loose on the panel's background."""
+        body = self.client.get(
+            reverse("home") + f"?collega={self.colleague.public_id}", headers=self.HX
+        ).content.decode()
+
+        entry = body.split('<li class="wies-cv__item">')[1].split("</li>")[0]
+        in_list, _, after_list = entry.partition("</nldd-list>")
+
+        assert "wies-cv__toggle" in in_list, "the toggle belongs inside the list"
+        assert "Mijn taken wijzigen" in in_list, "the pencil belongs inside the list"
+        assert after_list.strip() == "", "nothing may trail the card"
+
+    def test_the_toggle_names_the_opdracht_it_belongs_to(self):
+        """Every entry's button reads "Toon meer"; without a label of its own a
+        screen reader hears the same name several times over. A single opdracht
+        renders unfolded, so here the label is the "Toon minder" side of it."""
+        body = self.client.get(
+            reverse("home") + f"?collega={self.colleague.public_id}", headers=self.HX
+        ).content.decode()
+
+        assert 'accessible-label="Toon minder taken bij Zaaksysteem"' in body
+
+
+class OwnRolePencilTest(TestCase):
+    """The pencil on your own role follows the rights on that opdracht, not on
+    the panel: an externally sourced opdracht is read-only for everyone, so a
+    pencil there would open a sheet that does not exist (#311)."""
+
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+
+    def setUp(self):
+        self.user = User.objects.create_user(email="c@rijksoverheid.nl")
+        self.colleague = Colleague.objects.create(
+            user=self.user, name="Cons Ultant", email="c@rijksoverheid.nl", source="wies"
+        )
+        self.skill = Skill.objects.create(name="Dev")
+        self.client = Client()
+        self.client.force_login(self.user)
+
+    def _place_on(self, source):
+        assignment = Assignment.objects.create(name=f"Opdracht {source}", source=source)
+        service = Service.objects.create(assignment=assignment, description="Taken.", skill=self.skill, source=source)
+        today = timezone.now().date()
+        Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source=Placement.PLACEMENT,
+            specific_start_date=today - timedelta(days=5),
+            specific_end_date=today + timedelta(days=50),
+            source=source,
+        )
+
+    def _own_panel(self):
+        url = reverse("home") + f"?collega={self.colleague.public_id}"
+        return self.client.get(url, headers=self.HX).content.decode()
+
+    def test_a_consultant_keeps_the_pencil_on_a_wies_opdracht(self):
+        self._place_on("wies")
+
+        assert "Mijn taken wijzigen" in self._own_panel()
+
+    def test_an_external_opdracht_offers_no_pencil(self):
+        self._place_on("otys")
+        body = self._own_panel()
+
+        assert "Mijn taken wijzigen" not in body
+        assert "Mijn rol wijzigen" not in body
 
 
 class CvPreviewStylesheetTest(SimpleTestCase):

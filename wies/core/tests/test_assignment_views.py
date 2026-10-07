@@ -435,7 +435,7 @@ class AssignmentEditAttributeTest(TestCase):
         page = self.client.get("/opdrachten/").content.decode()
         assert "js/ui_handlers.js" in page
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
-        # Editing runs via "Gegevens bewerken" at the top, not per row.
+        # Editing runs via "Gegevens wijzigen" at the top, not per row.
         assert "&veld=extra_info" not in body
 
     def test_assignment_extra_info_short_text_no_toggle(self):

@@ -21,9 +21,7 @@ profiel" with the actions. #}
       {% set has_actions = user_can_edit or row.can_edit_role %}
       {# uitgeklapt: the colleague panel opens this opdracht's card. #}
       {% set person_url = "?collega=" ~ row.colleague.public_id ~ "&uitgeklapt=" ~ row.assignment_public_id %}
-      {# The row of the colleague you came in on (?collega=) is not marked, only
-         scrolled into view by side_panel.js; the class is that hook. #}
-      <nldd-list-item {% if row.highlighted %}class="wies-team-row--highlighted"{% endif %} {% if not has_actions %}href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>
+      <nldd-list-item {% if not has_actions %}href="{{ person_url }}" hx-get="{{ person_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"{% endif %}>
       <nldd-cell>
       <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
       </nldd-cell>

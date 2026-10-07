@@ -52,15 +52,15 @@
     {%- if service.start_date and service.end_date %}{{ service.start_date|datum_nl }} t/m {{ service.end_date|datum_nl }}
     {%- elif service.start_date %}Vanaf {{ service.start_date|datum_nl }}
     {%- elif service.end_date %}t/m {{ service.end_date|datum_nl }}
-  {%- else %}Geen periode{% endif -%}
+  {%- else %}Geen periode opgegeven{% endif -%}
 {% endset %}
 <nldd-text-cell vertical-alignment="top" text="{{ period_text|trim }}"></nldd-text-cell>
 </nldd-list-item>
 {% if service.hours_per_week %}
   <nldd-list-item>
-  <nldd-text-cell width="140px" text="Uren" vertical-alignment="top"></nldd-text-cell>
+  <nldd-text-cell width="140px" text="Uren per week" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell vertical-alignment="top" text="{{ service.hours_per_week }} uur per week"></nldd-text-cell>
+  <nldd-text-cell vertical-alignment="top" text="{{ service.hours_per_week }} uur"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
 {# The role description, rendered from Markdown with the same fold as the

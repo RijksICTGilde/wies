@@ -161,7 +161,7 @@ class InlineEditInfrastructureTest(TestCase):
         assert "edit=true" in content
         assert "edit-icon-button" in content
         # And a tooltip aiding discoverability now the value isn't clickable.
-        assert 'title="Bewerk ' in content
+        assert 'title="Wijzig ' in content
 
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
@@ -542,7 +542,7 @@ class AssignmentPanelRenderTest(TestCase):
         all assignment fields, posting to the assignment-edit endpoint."""
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken=1")
         assert response.status_code == 200
-        self.assertContains(response, "Opdracht bewerken")
+        self.assertContains(response, "Opdracht wijzigen")
         self.assertContains(response, f"/opdracht/{self.assignment.public_id}/bewerken/")
         for field in ("name", "extra_info", "owner", "start_date", "end_date"):
             self.assertContains(response, f'name="{field}"')
@@ -566,7 +566,7 @@ class AssignmentPanelRenderTest(TestCase):
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, "Teamlid wijzigen")
         self.assertContains(response, 'name="service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
@@ -1034,12 +1034,12 @@ class AssignmentServicesDisplayTest(TestCase):
         assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
 
     def test_row_menu_view_url_uses_public_id(self):
-        """ "Bekijk profiel" must build ?collega= from the colleague's
+        """ "Profiel bekijken" must build ?collega= from the colleague's
         public_id, not its integer PK."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
-        assert "Bekijk profiel" in filled_row
+        assert "Profiel bekijken" in filled_row
         assert f"collega={self.colleague.public_id}" in filled_row
         assert f"collega={self.colleague.id}" not in filled_row
 
@@ -1052,7 +1052,7 @@ class AssignmentServicesDisplayTest(TestCase):
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert panel.status_code == 200
-        self.assertContains(panel, "Teamlid bewerken")
+        self.assertContains(panel, "Teamlid wijzigen")
 
 
 class AssignmentServicesAuditTest(TestCase):

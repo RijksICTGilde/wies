@@ -220,9 +220,9 @@ class PlacementPublicIdTests(TestCase):
 
 
 class PlacementPanelParamTests(TestCase):
-    """An old ?plaatsing= link resolves by public_id to the opdracht panel with
-    the placed colleague highlighted, and keeps placement visibility, so a
-    placement the viewer may not see looks like a nonexistent one."""
+    """An old ?plaatsing= link resolves by public_id to the opdracht panel, and
+    keeps placement visibility, so a placement the viewer may not see looks like
+    a nonexistent one."""
 
     HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
@@ -258,7 +258,6 @@ class PlacementPanelParamTests(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "Placed Person")
-        self.assertContains(response, "wies-team-row--highlighted")
 
     def test_htmx_alias_ignores_the_old_sheet_params(self):
         # The owner with BDM rights would get an edit sheet on ?opdracht=&bewerken=1;
@@ -273,7 +272,7 @@ class PlacementPanelParamTests(TestCase):
 
         assert "Placed Person" in body
         assert 'name="specific_start_date"' not in body
-        assert "Opdracht bewerken" not in body
+        assert "Opdracht wijzigen" not in body
 
     def test_full_page_load_redirects_to_the_canonical_url_with_filters_kept(self):
         active = self._placement(start_offset=-5, end_offset=5)
