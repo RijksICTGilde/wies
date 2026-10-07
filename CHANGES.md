@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+-?
+
+## 2026-10-07
+
 - 700: the WCAG 2.2 audit report is published at /toegankelijkheid/onderzoek/, readable without logging in, because the toegankelijkheidsverklaring in the DigiToegankelijk register links straight at it; the Toegankelijkheid page links to it too
 - 690: removed the unused DEBUG-only "Opdrachtgevers" admin page (organization unit tree)
 - 690: (migration)(post-release actions) the organisation picker nests agentschappen, zbo's, adviescolleges and inspecties under their ministry instead of in separate top-level type folders
