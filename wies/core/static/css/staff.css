@@ -1,33 +1,5 @@
 /* Staff dashboard / database subpages */
 
-.staff-tiles {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-}
-
-.staff-tile {
-  flex: 1;
-  min-width: 9rem;
-  background: var(--semantics-surfaces-base-background-color, #fff);
-  border: 1px solid var(--primitives-color-coolgray-200, #cfd2d5);
-  border-radius: 4px;
-  padding: 0.85rem 1rem;
-}
-
-.staff-tile__value {
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.1;
-}
-
-.staff-tile__label {
-  font-size: 0.85rem;
-  color: var(--primitives-color-coolgray-700, #535353);
-  margin-top: 0.25rem;
-}
-
 .staff-chart {
   display: flex;
   align-items: flex-end;
@@ -47,66 +19,4 @@
 
 .staff-chart__bar:hover {
   background: var(--primitives-color-donkerblauw-500, #00476b);
-}
-
-/* Error table: fill the container and never overflow the page */
-#error_table_container .rvo-table--responsive {
-  overflow-x: auto;
-}
-
-.error-table {
-  width: 100%;
-  table-layout: fixed;
-}
-
-/* Compact error table rows */
-.error-table .rvo-table-cell,
-.error-table .rvo-table-header {
-  padding-top: 0.4rem;
-  padding-bottom: 0.4rem;
-  vertical-align: top;
-}
-
-/* Long values (path, email) truncate instead of pushing the table wider */
-.error-table .rvo-table-cell > span {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Column widths: pin the narrow columns, let Waar/Gebruiker take the rest */
-.error-table__col-tijd {
-  width: 11rem;
-}
-
-.error-table__col-fout {
-  width: 10rem;
-}
-
-.error-table__col-waar {
-  width: auto;
-}
-
-.error-table__col-gebruiker {
-  width: auto;
-}
-
-.error-table__actions-col {
-  width: 5.5rem;
-  white-space: nowrap;
-}
-
-.error-table__actions {
-  display: flex;
-  gap: 0.25rem;
-}
-
-.error-table__icon-btn {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.15rem;
-  border: 0;
-  background: none;
-  cursor: pointer;
 }
