@@ -894,7 +894,7 @@ class TimelinePlacementPrivacyTests(TestCase):
             email="business_manager@rijksoverheid.nl", first_name="B", last_name="dm"
         )
         Colleague.objects.create(
-            user=business_manager_user, name="Bdm Colleague", email="business_manager@rijksoverheid.nl", source="wies"
+            user=business_manager_user, name="Bm Colleague", email="business_manager@rijksoverheid.nl", source="wies"
         )
         grant_business_manager(business_manager_user)
 

@@ -163,10 +163,30 @@ combination.
   sheet. Whoever held the group itself becomes a `Business Manager`, address list
   or not: the roles screen handed `Opdrachtbeheer` out too, and dropping the group
   would otherwise take their rights along in silence.
-- `ensure_initial_user` gives the first user of a fresh environment every group.
+- `ensure_initial_user` runs on every container start, after `setup_roles()`, and
+  creates the account named by `INITIAL_USER_EMAIL` with every group. It skips an
+  address that already has an account, so it provisions and never repairs: a role
+  somebody took off themselves stays off.
 
 Without `STAFF_EMAILS` set, an environment has no application administrator at
 all and nobody reaches the maintenance pages.
+
+### Adding an application administrator to a running environment
+
+Two routes, both at deploy level, because that is where the address list lives.
+
+Point `INITIAL_USER_EMAIL` at the new address and restart. The command runs every
+start, not only on a fresh database, so it creates that account with every role
+even in an environment full of accounts, and even on a `STAFF_EMAILS` address: it
+calls `User.objects.create_user` and so never reaches `may_change_email`. It
+leaves no `Event` either, unlike every grant made on the user sheet, and it links
+no `Colleague` (that is `setup_initial_user`, which the entrypoint does not run).
+
+Or create the account on the user sheet **first** and add the address to
+`STAFF_EMAILS` after. The order matters: once the address is on the list,
+`may_change_email` wants an application administrator and the sheet wants
+`rijksauth.add_user`, and after this split those two need not sit with the same
+person. Doing it the other way round leaves nobody able to create the account.
 
 ## A person is a `User`, a `Colleague`, or both
 

@@ -485,6 +485,23 @@ class RoleMatrixViewTest(TestCase):
         assert in_table, "the table renders no icon at all"
         assert in_table == in_legend
 
+    def test_every_legend_term_says_its_state_in_words(self):
+        """The legend is the explanation for whoever does not see the colour, so a
+        term that is only an icon is blank for exactly that reader: ``nldd-icon``
+        sets its own ``aria-hidden``. Same rule as the cells, asserted apart,
+        because the icon comparison above passes with or without the word."""
+        self.client.force_login(self._user_admin())
+
+        html = self.client.get(self.url).content.decode()
+
+        terms = re.findall(r"<dt>(.*?)</dt>", html, re.S)
+        assert terms, "the legend has no terms"
+        for term in terms:
+            word = _HIDDEN_WORD.search(term)
+            with self.subTest(icon=_icon(term)):
+                assert word is not None, term.strip()
+                assert word.group(1) in {"Ja", "Nee"}, term.strip()
+
     def test_the_cell_icons_are_names_the_design_system_knows(self):
         """An unknown icon name renders nothing, without an error: the cell would
         be empty on screen with only the hidden word behind it."""
@@ -525,7 +542,7 @@ class RoleMatrixViewTest(TestCase):
 
     def test_no_row_about_being_placed_is_called_role_free(self):
         """Being placed asks for a role on top, so no placed row may read as
-        role-free — neither through the note nor through the paragraph that
+        role-free, neither through the note nor through the paragraph that
         explains it."""
         notes = _notes()
         placed = [label for label in notes if label.endswith(f"({PLACED.label})")]
@@ -550,7 +567,7 @@ class RoleMatrixViewTest(TestCase):
         """
         self.client.force_login(self._user_admin())
         html = self.client.get(self.url).content.decode()
-        note = role_matrix.ROLE_FREE_NOTE.strip(" —")
+        note = role_matrix.ROLE_FREE_NOTE.strip()
 
         headers = [row.group("label") for row in _ROW.finditer(html)]
         assert [header for header in headers if note in header], "the page prints no note at all"

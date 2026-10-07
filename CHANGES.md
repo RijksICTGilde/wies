@@ -33,14 +33,14 @@ This files lists the changes during the lifetime of this project.
 - 699: the production image no longer ships pip, uv, git, vim, sudo, the docs and the tests
 - 699: bump dependencies because of cve's
 - ?
-- 695: (migration) authority is split by what it lets you do: the `Applicatiebeheerder` (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours, and `Business Manager` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives both roles once, and anyone who held the dropped `Opdrachtbeheer` role becomes a `Business Manager`. See `features/roles.md`
-- 695: the roles `Beheerder` and `Business Development Manager` are now called `Gebruikersbeheerder` and `Business Manager`; a role's screen name is separate from the key it is stored under, so this is a rename and not a reassignment
-- 695: the user CSV import column `Beheerder` is now `Gebruikersbeheerder`: update the header of existing import files. The `BDM` column keeps working and `Business Manager` is accepted too
-- 695: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant
-- 695: new page Beheer > Rollen shows what each role may do, read from the rules themselves; a cell is green for yes and red for no, and a row that holds whatever your role, because it is about yourself, says so in words after the row name
-- 695: only the `Applicatiebeheerder` may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
-- 695: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with the `Gebruikersbeheerder` and a Business Manager reads them
-- 695: the hours on a team member's role are no longer visible to the `Applicatiebeheerder`; a Business Manager and the placed colleague read them, as before, and Beheer > Rollen lists it alongside the wider audience of the contract hours
+- 703: (migration) authority is split by what it lets you do: the `Applicatiebeheerder` (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours, and `Business Manager` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives both roles once, and anyone who held the dropped `Opdrachtbeheer` role becomes a `Business Manager`. See `features/roles.md`
+- 703: the roles `Beheerder` and `Business Development Manager` are now called `Gebruikersbeheerder` and `Business Manager`; a role's screen name is separate from the key it is stored under, so this is a rename and not a reassignment
+- 703: the user CSV import column `Beheerder` is now `Gebruikersbeheerder`: update the header of existing import files. The `BDM` column keeps working and `Business Manager` is accepted too
+- 703: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant
+- 703: new page Beheer > Rollen shows what each role may do, read from the rules themselves; a cell is green for yes and red for no, and a row that holds whatever your role, because it is about yourself, says so in words after the row name
+- 703: only the `Applicatiebeheerder` may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
+- 703: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with the `Gebruikersbeheerder` and a Business Manager reads them
+- 703: the hours on a team member's role are no longer visible to the `Applicatiebeheerder`; a Business Manager and the placed colleague read them, as before, and Beheer > Rollen lists it alongside the wider audience of the contract hours
 
 ## 2026-09-24
 

@@ -555,12 +555,12 @@ class AssignmentAdminCanEditServiceAndPlacementOverHttpTest(_Setup):
     def test_a_bdm_can_edit_service_description_inline(self):
         url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
 
-        resp = post_inline_edit(self.client, url, {"description": "Bdm-bewerking"})
+        resp = post_inline_edit(self.client, url, {"description": "Bm-bewerking"})
 
         assert resp.status_code == 200
         self.assertNotContains(resp, "geen rechten")
         self.service.refresh_from_db()
-        assert self.service.description == "Bdm-bewerking"
+        assert self.service.description == "Bm-bewerking"
 
     def test_a_bdm_can_edit_placement_period_inline(self):
         # An unrelated user is refused this exact edit (see

@@ -283,7 +283,7 @@ class PlacementPanelParamTests(TestCase):
     def test_ended_placement_shown_to_bdm(self):
         """A Business Manager (not the placed colleague, not the owner) opens the same ended
         placement's panel over HTTP and sees it."""
-        business_manager_user = make_business_manager_user(email="business_manager@rijksoverheid.nl", name="Bdm")
+        business_manager_user = make_business_manager_user(email="business_manager@rijksoverheid.nl", name="Bm")
         self.client.force_login(business_manager_user)
         ended = self._placement(start_offset=-30, end_offset=-10)
 

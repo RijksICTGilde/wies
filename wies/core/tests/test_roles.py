@@ -152,7 +152,7 @@ class LabelRenameCostsOneStringTest(TestCase):
     The promise holds because nothing stored and nothing matched carries the
     label. The one thing that does follow it is the CSV import header, by design
     (``CSV_ROLE_COLUMNS`` is built from ``ROLE_LABELS``, so an import file keeps
-    reading in words) — that is the same string, not a second one.
+    reading in words). That is the same string, not a second one.
     """
 
     #: Every label replaced, so no assertion below can pass on an unmoved name.

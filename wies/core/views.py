@@ -2026,7 +2026,6 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     template_name = "user_admin.html"
     paginate_by = 60
     page_kwarg = "pagina"
-
     permission_required = "rijksauth.view_user"
 
     # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.

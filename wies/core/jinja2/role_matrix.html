@@ -82,17 +82,20 @@
       {% endfor %}
     </tbody>
   </table>
-  {# Copies of the cell icons: change these and allowed_cell together. #}
+  {# Copies of the cell icons, hidden word included: change these and allowed_cell
+   together. Without that word a dt holds nothing a reader can hear, because
+   nldd-icon is aria-hidden, and the legend explaining the colours would be blank
+   for exactly the reader who needs it. #}
   <h2>Legenda</h2>
   <dl>
     <dt>
-      <nldd-icon name="check-circle-filled" color="success" size="20"></nldd-icon>
+      <nldd-icon name="check-circle-filled" color="success" size="20"></nldd-icon><span class="wies-visually-hidden">Ja</span>
     </dt>
     <dd>
       Deze rol geeft je dit recht.
     </dd>
     <dt>
-      <nldd-icon name="close-circle-filled" color="critical" size="20"></nldd-icon>
+      <nldd-icon name="close-circle-filled" color="critical" size="20"></nldd-icon><span class="wies-visually-hidden">Nee</span>
     </dt>
     <dd>
       Deze rol mag dit niet.

@@ -455,7 +455,7 @@ class AssignmentServicesDisplayVisibilityTest(TestCase):
         # A Business Manager who is neither the placed colleague nor the owner.
         self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -603,7 +603,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         # A Business Manager who is neither placed nor the owner.
         self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -717,7 +717,7 @@ class PlacementPanelVisibilityTest(TestCase):
         # A Business Manager who is neither placed nor the owner.
         self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -901,7 +901,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         # A Business Manager who is neither placed nor the owner.
         self.user_bdm = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=self.user_bdm
         )
         grant_business_manager(self.user_bdm)
 
@@ -1301,7 +1301,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         # A Business Manager (Business Manager role): neither placed nor the owner.
         self.user_bdm = User.objects.create_user(email="cp_bdm@rijksoverheid.nl")
         self.colleague_bdm = Colleague.objects.create(
-            name="Bdm",
+            name="Bm",
             email="cp_bdm@rijksoverheid.nl",
             source="wies",
             user=self.user_bdm,
@@ -1602,13 +1602,13 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_shown_to_bdm_with_note(self, mock_timezone):
         """An ended assignment owned by a colleague (but with no placement on it)
-        is surfaced on that colleague's profile only to a Business Manager (Business Manager
-        role), with the PRIVACY_BM_OWNED note.
+        is surfaced on that colleague's profile only to a Business Manager, with
+        the PRIVACY_BM_OWNED note.
 
-        This is the ``viewer_is_bdm`` BM-role branch in
-        ``_get_colleague_assignments`` — a separate path from the placement-based
-        PRIVACY_OWN/PRIVACY_BM rule, and its own note: no consultant is placed
-        on the row, so "de consultant" would not fit.
+        This is the role branch of ``evaluate_assignment_visibility``, reached from
+        ``_get_colleague_assignments``: a separate path from the placement-based
+        PRIVACY_OWN/PRIVACY_BM rule, and its own note, because no consultant is
+        placed on the row and "de consultant" would not fit.
         """
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
@@ -1635,9 +1635,9 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
     @patch("wies.core.views.timezone")
     def test_ended_bm_role_hidden_from_non_bdm_owner(self, mock_timezone):
-        """The owner viewing their OWN profile, when NOT a Business Manager, no longer sees
-        their ended owned assignment (the gate is now ``viewer_is_bdm``, not
-        ``viewer_is_colleague``)."""
+        """The owner viewing their OWN profile does not see their ended owned
+        assignment without the Business Manager role: the gate is the role, not
+        being the colleague whose profile it is."""
         mock_now = Mock()
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now

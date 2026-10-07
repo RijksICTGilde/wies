@@ -232,6 +232,3 @@ REVIEW_CHECKLIST.md
 
 # Stray local uv/virtualenv dir (created by accidental host-side uv run)
 .local/
-
-# Output of the browser suites (screenshots, a11y and contrast reports)
-/test-artifacts/

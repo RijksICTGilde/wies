@@ -227,7 +227,7 @@ class TeamEventPrivacyNoteTest(TestCase):
         # names instead of vanishing.
         business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
         )
         grant_business_manager(business_manager_user)
 
@@ -242,7 +242,7 @@ class TeamEventPrivacyNoteTest(TestCase):
         # different hidden colleague must not borrow that "jou" wording.
         business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         business_manager_colleague = Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
         )
         grant_business_manager(business_manager_user)
         _place(
@@ -279,7 +279,7 @@ class TeamEventPrivacyNoteTest(TestCase):
     def test_publicly_visible_names_get_no_note(self):
         business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
         Colleague.objects.create(
-            name="Bdm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
         )
         grant_business_manager(business_manager_user)
 
