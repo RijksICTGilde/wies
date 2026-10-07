@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<p:overheidsorganisaties p:timestamp="2026-02-08T22:00:10.863+01:00" xmlns:p="https://organisaties.overheid.nl/static/schema/oo/export/2.6.9">
+<p:overheidsorganisaties p:timestamp="2026-02-08T22:00:10.863+01:00" xmlns:p="https://organisaties.overheid.nl/static/schema/oo/export/2.6.13">
   <p:organisaties>
     <!-- Ministry with nested hierarchy -->
     <p:organisatie p:systeemId="1001" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001">

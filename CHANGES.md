@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 -?
 
+## 2026-10-07_2
+
+- 709: fixed the organization sync importing 0 organizations after the overheid.nl export schema version changed to 2.6.13
+
 ## 2026-10-07
 
 - 700: the WCAG 2.2 audit report is published at /toegankelijkheid/onderzoek/, readable without logging in, because the toegankelijkheidsverklaring in the DigiToegankelijk register links straight at it; the Toegankelijkheid page links to it too
