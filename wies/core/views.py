@@ -4405,6 +4405,8 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     row of the panel (``?veld=`` on a POST).
     """
     only = only or request.GET.get("veld") or None
+    if parent_url is None:
+        parent_url = _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid"))
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
@@ -4422,9 +4424,7 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
         "edit_heading": heading,
         # The sheet is a child of the opdracht panel; the back button names it.
         "back_text": placement.service.assignment.name,
-        "parent_url": parent_url
-        if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid")),
+        "parent_url": parent_url,
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
