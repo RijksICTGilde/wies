@@ -114,7 +114,7 @@ class BezettingAuthTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
     def test_bare_staff_redirected(self):
-        # Application administration alone carries no functional rights.
+        # The Applicatiebeheerder alone carries no functional rights.
         staff = User.objects.create(email="staff@rijksoverheid.nl")
         self.client.force_login(staff)
         response = self.client.get(self.url)

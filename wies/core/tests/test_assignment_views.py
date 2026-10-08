@@ -294,7 +294,7 @@ class AssignmentEditAttributeTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
     def test_bare_staff_member_cannot_edit_assignment(self):
-        """Application administration (STAFF_EMAILS) alone grants no edit rights."""
+        """The Applicatiebeheerder (STAFF_EMAILS) alone grants no edit rights."""
         staff_user = User.objects.create_user(email="staff@rijksoverheid.nl", first_name="Staff", last_name="Member")
         self.client.force_login(staff_user)
 
@@ -1137,7 +1137,7 @@ class AssignmentDeleteViewTests(TestCase):
 
     @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
     def test_bare_staff_member_cannot_delete_wies_assignment(self):
-        """Application administration (STAFF_EMAILS) alone grants no delete rights."""
+        """The Applicatiebeheerder (STAFF_EMAILS) alone grants no delete rights."""
         staff_user = User.objects.create_user(
             email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
         )

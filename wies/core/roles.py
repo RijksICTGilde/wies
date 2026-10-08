@@ -65,7 +65,7 @@ def is_business_manager(user) -> bool:
 
 
 def is_staff_member(user) -> bool:
-    """Whether the user does application administration (``STAFF_EMAILS``).
+    """Whether the user is an Applicatiebeheerder (``STAFF_EMAILS``).
 
     Gates the maintenance pages (``/beheer/statistieken/``, ``/beheer/database/``).
     It carries no rights on assignments; those come from the Business Manager role.
@@ -98,11 +98,11 @@ def can_view_role_hours(user, placement) -> bool:
 
 
 def may_change_email(editor, old: str, new: str) -> bool:
-    """Moving a ``STAFF_EMAILS`` address moves application administration, so
-    only an application administrator may; ``editor=None`` (the system) may not.
+    """Moving a ``STAFF_EMAILS`` address moves who the Applicatiebeheerder is, so
+    only an Applicatiebeheerder may; ``editor=None`` (the system) may not.
 
     ``old=""`` is a user being created, and the answer is the same: an account on
-    such an address is an application administrator once it is claimed at login,
+    such an address is an Applicatiebeheerder once it is claimed at login,
     whether it was moved there or born there.
     """
     old, new = old.lower(), new.lower()
@@ -113,8 +113,8 @@ def may_change_email(editor, old: str, new: str) -> bool:
 
 def may_view_role_matrix(user) -> bool:
     """Whether the user may read the role matrix (``/beheer/rollen/``): the
-    Gebruikersbeheerder, whose Beheer section it sits in, and application
-    administration, which owns the roles.
+    Gebruikersbeheerder, whose Beheer section it sits in, and the
+    Applicatiebeheerder, who owns the roles.
     The page shows no data, so the gate is wide.
     """
     return user.has_perm("rijksauth.view_user") or is_staff_member(user)

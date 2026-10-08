@@ -3,7 +3,7 @@
 The Business Manager role is what makes a viewer privileged for the placement-visibility rule,
 not ownership and not being placed. These tests put a Business Manager who is neither on each
 surface that shows such a row, panel, timeline event or profile card, and check
-that application administration (``STAFF_EMAILS``) alone grants none of it.
+that the Applicatiebeheerder (``STAFF_EMAILS``) alone grants none of it.
 """
 
 from datetime import date, timedelta
@@ -38,7 +38,7 @@ class IsBdmRequestTest(SimpleTestCase):
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_bare_staff_cannot_see(self):
-        # Application administration carries no functional rights.
+        # The Applicatiebeheerder carries no functional rights.
         assert is_business_manager_request(self._request(email=STAFF_EMAIL)) is False
 
     def test_unrelated_cannot_see(self):

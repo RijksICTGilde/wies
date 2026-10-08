@@ -1189,7 +1189,7 @@ class ServiceHoursPermissionTest(TestCase):
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
 class ApplicationAdministrationHoursTest(TestCase):
-    """Application administration runs the platform and carries nothing
+    """The Applicatiebeheerder runs the platform and carries nothing
     functional, and hours are as functional as data gets.
 
     Whoever does platform work and plans with people holds a role as well;
@@ -1220,7 +1220,7 @@ class ApplicationAdministrationHoursTest(TestCase):
         so there is no sheet to leave a block off.
 
         The status code is the assertion: the refusal page renders the Beheer
-        sidebar, and that sidebar offers Rollen to application administration, so a
+        sidebar, and that sidebar offers Rollen to the Applicatiebeheerder, so a
         body check alone reads a 403 as a rendered sheet.
         """
         response = self.client.get(reverse("user-edit", args=[self.colleague.user.public_id]))

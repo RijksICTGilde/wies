@@ -11,7 +11,7 @@ from django.contrib.auth.models import Group
 
 from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT
 
-# Application administration is email-based (``settings.STAFF_EMAILS``), not
+# The Applicatiebeheerder is email-based (``settings.STAFF_EMAILS``), not
 # a group. A test using ``make_staff_user`` must also apply
 # ``@override_settings(STAFF_EMAILS=[STAFF_EMAIL])`` so the email actually counts.
 STAFF_EMAIL = "staff@rijksoverheid.nl"
@@ -53,7 +53,7 @@ def make_business_manager_user(email="business_manager@rijksoverheid.nl", name="
 
 
 def make_staff_user(email=STAFF_EMAIL, name="Staff"):
-    """An application-administration user with a linked colleague, ready for ``force_login``.
+    """An Applicatiebeheerder with a linked colleague, ready for ``force_login``.
 
     Needs ``@override_settings(STAFF_EMAILS=[email])`` as well, see the note
     at ``STAFF_EMAIL``.

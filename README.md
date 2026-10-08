@@ -130,7 +130,7 @@ just manage test wies.core.tests.test_roles
 | **Business Manager**    | Business management | Any wies-sourced opdracht, and reading contract hours and role hours |
 | **Consultant**          | Employee            | View-only, plus the text fields of an opdracht they are placed on    |
 
-Application administration (database, errors) is the `STAFF_EMAILS` setting, not a
+The Applicatiebeheerder (database, errors) is the `STAFF_EMAILS` setting, not a
 role, and carries no functional rights. The names above are labels; a role is
 stored under a key. See `features/roles.md`.
 

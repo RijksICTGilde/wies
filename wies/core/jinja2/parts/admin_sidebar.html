@@ -4,7 +4,7 @@
 </nldd-title>
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 <nldd-list type="navigation" accessible-label="Beheer">
-{# Gated one by one: these authorities do not nest. Application administration
+{# Gated one by one: these authorities do not nest. The Applicatiebeheerder
    reaches Rollen and the maintenance pages, and nothing else here. #}
 {% if user.has_perm('rijksauth.view_user') %}
   <nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>

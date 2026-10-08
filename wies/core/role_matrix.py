@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 STAFF = role_label(ROLE_STAFF)
-# (column heading, Django groups, application administration)
+# (column heading, Django groups, is Applicatiebeheerder)
 COLUMNS = [
     (role_label(ROLE_CONSULTANT), (ROLE_CONSULTANT,), False),
     (role_label(ROLE_BUSINESS_MANAGER), (ROLE_BUSINESS_MANAGER,), False),

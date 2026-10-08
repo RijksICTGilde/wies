@@ -6,7 +6,7 @@ STAFF_EMAILS; this gives those same addresses ``bdm`` and ``office_assistant``
 instead, once, and drops the group. A group nothing names would otherwise stay on
 the user sheet under its key.
 
-Both roles for those addresses, not only ``bdm``: an application administrator
+Both roles for those addresses, not only ``bdm``: whoever is in STAFF_EMAILS
 starts out able to do everything and takes off what they do not need.
 
 Whoever holds the group itself gets ``bdm``, address list or not: the roles screen

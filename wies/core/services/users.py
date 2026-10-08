@@ -106,7 +106,7 @@ def create_user(
 ):
     """Creates the person and the roles asked for, by the user form or the CSV import.
 
-    Refuses an address in ``STAFF_EMAILS`` to anyone but application administration
+    Refuses an address in ``STAFF_EMAILS`` to anyone but the Applicatiebeheerder
     (``may_change_email``, ``features/roles.md``).
 
     :param creator: can be None when user create is triggered from system itself
@@ -120,7 +120,7 @@ def create_user(
     validate_email_domain(email)
 
     if not may_change_email(creator, "", email):
-        msg = "Only application administration may create a user on an application administrator's address"
+        msg = "Only an Applicatiebeheerder may create a user on an Applicatiebeheerder's address"
         raise PermissionDenied(msg)
 
     if User.objects.filter(email__iexact=email).exists():
@@ -185,7 +185,7 @@ def update_user(
     # Read the stored address: a ModelForm has already written the new one onto ``user``.
     stored_email = User.objects.values_list("email", flat=True).get(pk=user.pk)
     if not may_change_email(updater, stored_email, email):
-        msg = "Only application administration may move an application administrator's address"
+        msg = "Only an Applicatiebeheerder may move an Applicatiebeheerder's address"
         raise PermissionDenied(msg)
 
     user.first_name = first_name
@@ -308,7 +308,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
             # block: a single such row would roll the whole import back with nothing
             # to show for it, so name the row here like every other check does.
             if not may_change_email(creator, "", email):
-                row_errors.append(f"Row {row_num}: only application administration may create a user on '{email}'")
+                row_errors.append(f"Row {row_num}: only an Applicatiebeheerder may create a user on '{email}'")
 
         for column in role_columns:
             value = (row.get(column) or "").strip()
@@ -388,7 +388,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 if dropped:
                     errors.append(
                         f"Row {row_num}: {', '.join(sorted(role_label(name) for name in dropped))} not applied, "
-                        "only application administration may grant it"
+                        "only an Applicatiebeheerder may grant it"
                     )
     except (DataError, IntegrityError) as e:
         logger.warning("User-CSV import failed with a data error", exc_info=e)

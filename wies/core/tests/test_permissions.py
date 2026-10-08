@@ -271,7 +271,7 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
 
 @override_settings(STAFF_EMAILS=["staff@x.nl"])
 class StaffMemberHasNoAssignmentRightsTest(_Setup):
-    """Application administration (``STAFF_EMAILS``) carries no functional rights:
+    """The Applicatiebeheerder (``STAFF_EMAILS``) carries no functional rights:
     without the Business Manager role a staff member may not edit or delete an assignment."""
 
     def setUp(self):
@@ -434,7 +434,7 @@ class UserEmailFieldRuleTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["app@x.nl"])
     def test_application_administration_cannot_either(self):
-        """Application administration is the one authority that may move a
+        """The Applicatiebeheerder is the one authority that may move a
         ``STAFF_EMAILS`` address at all, so if any route stayed open it would be
         this one."""
         assert has_permission(Verb.UPDATE, self.user, self.staff, UserEditables.email) is False

@@ -128,7 +128,7 @@ class AccessControlTest(TestCase):
 
     @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
     def test_a_bdm_cannot_access_staff_page(self):
-        """Business Manager is a functional role, not application administration."""
+        """Business Manager is a functional role, not the Applicatiebeheerder."""
         self.client.force_login(grant_business_manager(self.test_user))
 
         for path in ("/beheer/statistieken/", "/beheer/database/"):

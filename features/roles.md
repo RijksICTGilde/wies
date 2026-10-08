@@ -20,7 +20,7 @@ steps are recorded as an `Event`.
 `Consultant` is also a population: `occupancy.py` filters Bezetting on
 `user__groups__name=ROLE_CONSULTANT`, so a new colleague appears there only once
 somebody gives them the role. That is why the Gebruikersbeheerder grants the
-roles; onboarding would otherwise stall on an application administrator.
+roles; onboarding would otherwise stall on an Applicatiebeheerder.
 
 `STAFF_EMAILS` keeps the name it had when the authority was still called staff.
 
@@ -98,12 +98,12 @@ from the panel swaps the panel's slice back in; how the surface travels along wi
 the request is `_contract_surface`.
 
 The Applicatiebeheerder follows the email address, so moving an address to or from
-a `STAFF_EMAILS` one is application administration too (`may_change_email`). The
+a `STAFF_EMAILS` one is theirs to do too (`may_change_email`). The
 inline-edit route for `email` is closed to everyone: it cannot see the new address,
 so it cannot apply that check.
 
 Creating asks the same question, with `""` as the address the account comes from:
-a new user on a `STAFF_EMAILS` address is an application administrator the moment
+a new user on a `STAFF_EMAILS` address is an Applicatiebeheerder the moment
 their subject binds at login, so only the Applicatiebeheerder may put one there.
 Both write paths ask it (`UserForm.clean_email` so the editor sees the reason,
 `create_user` as the backstop), and the CSV import names the row it refuses,
@@ -168,8 +168,8 @@ combination.
   **every** role, whether it had them or not. Only the address is required; the
   two name variables fill in a new account's name and nothing else.
 
-Without `STAFF_EMAILS` set, an environment has no application administrator at
-all and nobody reaches the maintenance pages.
+Without `STAFF_EMAILS` set, an environment has no Applicatiebeheerder at all
+and nobody reaches the maintenance pages.
 
 ### The way back in
 
@@ -178,7 +178,7 @@ account, the way into a fresh environment is also the way back into a stuck one.
 That matters, because the lockout is easy to reach: the roles are handed out on
 the user sheet behind `rijksauth.change_user`, the Gebruikersbeheerder carries
 that, and nothing stops the last one from taking the role off themselves. After
-that nobody can reach the sheet, and an application administrator cannot help:
+that nobody can reach the sheet, and an Applicatiebeheerder cannot help:
 that authority is the maintenance pages and carries nothing on users.
 
 So: set `INITIAL_USER_EMAIL` to the address that needs the roles, redeploy, and
@@ -201,11 +201,11 @@ Three things worth knowing about that route:
   without a role is not the one route that is invisible. A start that changes
   nothing writes no event.
 
-### Adding an application administrator
+### Adding an Applicatiebeheerder
 
 Create the account on the user sheet **first** and add the address to
 `STAFF_EMAILS` after. The order matters: once the address is on the list,
-`may_change_email` wants an application administrator and the sheet wants
+`may_change_email` wants an Applicatiebeheerder and the sheet wants
 `rijksauth.add_user`, and after this split those two need not sit with the same
 person. Doing it the other way round leaves nobody able to create the account,
 and the way out is then `INITIAL_USER_EMAIL` again.

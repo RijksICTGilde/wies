@@ -55,13 +55,13 @@ class RoleGrantTest(TestCase):
         self.consultant_group = Group.objects.get(name=ROLE_CONSULTANT)
         self.business_manager_group = Group.objects.get(name=ROLE_BUSINESS_MANAGER)
 
-        # Gebruikersbeheerder, not application administration.
+        # Gebruikersbeheerder, not Applicatiebeheerder.
         self.user_admin = User.objects.create_user(
             email="gebruikersbeheer@rijksoverheid.nl", first_name="G", last_name="B"
         )
         self.user_admin.groups.add(self.user_admin_group)
 
-        # Application administration and nothing else: it runs the platform and
+        # Applicatiebeheerder and nothing else: it runs the platform and
         # holds nothing on users or roles.
         self.staff = User.objects.create_user(email=STAFF_EMAIL, first_name="P", last_name="B")
 
@@ -264,7 +264,7 @@ class RoleGrantTest(TestCase):
     def test_the_beheer_menu_offers_no_page_the_visitor_cannot_open(self):
         """Read off a page the visitor actually opened.
 
-        Application administration gets a 403 on the users page, and the refusal
+        The Applicatiebeheerder gets a 403 on the users page, and the refusal
         page renders the Beheer sidebar and the utility menu as well, so a body read
         from there is the menu of a page this visitor never reached. The roles page
         is the one it may open, and ``view_user`` is exactly what it does not hold,
@@ -373,7 +373,7 @@ class RoleGrantTest(TestCase):
 
     def test_user_admin_grants_and_revokes_user_admin(self):
         """The Gebruikersbeheerder hands itself on, which is why onboarding does not stall
-        on an application administrator."""
+        on an Applicatiebeheerder."""
         self.client.force_login(self.user_admin)
 
         granted = self._post_roles(self.target, [self.user_admin_group])
@@ -615,7 +615,7 @@ class StaffEmailChangeTest(TestCase):
         response = self._edit_email(self.staff, "weg@rijksoverheid.nl")
 
         assert "HX-Redirect" not in response
-        self.assertContains(response, "Alleen de applicatiebeheerder mag dit e-mailadres wijzigen.")
+        self.assertContains(response, "Alleen de Applicatiebeheerder mag dit e-mailadres wijzigen.")
 
     def _create(self, email):
         payload = {"first_name": "Nieuw", "last_name": "Account", "email": email}
@@ -623,15 +623,15 @@ class StaffEmailChangeTest(TestCase):
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL, FREE_STAFF_EMAIL])
     def test_user_admin_cannot_create_a_user_on_a_staff_address(self):
-        """The other way onto an application administrator's address: not moving an
+        """The other way onto an Applicatiebeheerder's address: not moving an
         account there, but being born there. ``FREE_STAFF_EMAIL`` is in the list with
-        no account yet, so whoever fills it hands out application administration."""
+        no account yet, so whoever fills it hands out the Applicatiebeheerder."""
         self.client.force_login(self.user_admin)
 
         response = self._create(FREE_STAFF_EMAIL)
 
         assert "HX-Redirect" not in response
-        self.assertContains(response, "Alleen de applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken.")
+        self.assertContains(response, "Alleen de Applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken.")
         assert not User.objects.filter(email__iexact=FREE_STAFF_EMAIL).exists()
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL, FREE_STAFF_EMAIL])
@@ -663,7 +663,7 @@ class StaffEmailChangeTest(TestCase):
         result = create_users_from_csv(self.user_admin, csv_content)
 
         assert not result["success"]
-        assert result["errors"] == [f"Row 3: only application administration may create a user on '{FREE_STAFF_EMAIL}'"]
+        assert result["errors"] == [f"Row 3: only an Applicatiebeheerder may create a user on '{FREE_STAFF_EMAIL}'"]
         # Row 2 is fine and still does not land: a row error stops the whole file,
         # as it does for an unknown merk or a bad domain.
         assert result["users_created"] == 0

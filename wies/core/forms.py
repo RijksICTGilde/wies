@@ -283,9 +283,9 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         # Creating asks it too, with "" as the address it comes from (``features/roles.md``).
         if not may_change_email(self._editor, self.instance.email, email):
             msg = (
-                "Alleen de applicatiebeheerder mag dit e-mailadres wijzigen."
+                "Alleen de Applicatiebeheerder mag dit e-mailadres wijzigen."
                 if self.instance.pk
-                else "Alleen de applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken."
+                else "Alleen de Applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken."
             )
             raise ValidationError(msg)
         return email
