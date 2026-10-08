@@ -19,8 +19,18 @@
 
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
-  // Mirrors PANEL_PARAMS in views.py minus 'pagina', which belongs to the list.
-  const PANEL_PARAMS = ["collega", "opdracht", "plaatsing", "nieuwe-opdracht"];
+  // The params that open a panel: their presence means "a panel belongs here".
+  const PANEL_PARAMS = ["collega", "opdracht", "aanvraag", "nieuwe-opdracht"];
+
+  // Everything the panel puts in the URL, stripped when it closes. The ones
+  // above plus the params that only modify an open panel; 'pagina' is the
+  // list's, not the panel's, so PANEL_PARAMS in views.py has one more.
+  const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
+    "bewerken",
+    "teamlid",
+    "veld",
+    "uitgeklapt",
+  ]);
 
   function hasPanelParam(url) {
     return PANEL_PARAMS.some((name) => url.searchParams.has(name));
@@ -117,8 +127,7 @@
     closeSheet();
     clearContent();
     const url = new URL(window.location);
-    PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
-    url.searchParams.delete("bewerken");
+    PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
     history.replaceState({}, "", url.toString());
   }
 
@@ -138,9 +147,31 @@
     }
   }
 
+  // The panel's scroller is a div in nldd-page's shadow root, out of app.css's
+  // reach; an adopted sheet, since the CSP allows no inline styles. The gutter
+  // stops "Toon meer" shifting the panel sideways; the padding replaces a
+  // bottom inset the component derives from a footer this sheet does not have.
+  function styleScroller(page) {
+    if (!page.shadowRoot || !("adoptedStyleSheets" in page.shadowRoot)) return;
+    const sheet = new CSSStyleSheet();
+    sheet.replaceSync(
+      ".page__scroll { scrollbar-gutter: stable; padding-bottom: 24px; }",
+    );
+    page.shadowRoot.adoptedStyleSheets = [
+      ...page.shadowRoot.adoptedStyleSheets,
+      sheet,
+    ];
+  }
+
   function init() {
     // Open the sheet when the content was server-rendered (?collega=N on load).
     const content = document.getElementById(CONTENT_ID);
+    if (content) {
+      customElements
+        .whenDefined("nldd-page")
+        .then(() => content.updateComplete)
+        .then(() => styleScroller(content));
+    }
     if (content && content.innerHTML.trim()) {
       // show() before the first render leaves the dialog closed.
       const sheet = getSheet();
@@ -243,9 +274,7 @@
         if (hasPanelParam(url)) {
           panelStack.length = 0;
           clearContent();
-          PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
-          url.searchParams.delete("bewerken");
-          url.searchParams.delete("teamlid");
+          PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
           history.replaceState({}, "", url.toString());
           document.documentElement.style.overflow = "";
         }

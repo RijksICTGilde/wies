@@ -134,7 +134,7 @@ class SuccessMessageTest(TestCase):
         # What HX-Location fetches next: the placement panel, with the banner out
         # of band. Not read through last_message() first: reading marks a message
         # used, and then the next request would not carry it any more.
-        panel = self.client.get(f"/?plaatsing={placement.public_id}", HTTP_HX_TARGET="side-panel-content", **HX)
+        panel = self.client.get(f"/?opdracht={assignment.public_id}", HTTP_HX_TARGET="side-panel-content", **HX)
         assert panel.status_code == 200
         self.assertContains(panel, 'hx-swap-oob="outerHTML"')
         self.assertContains(panel, f'text="Plaatsing van {owner.name} is aangepast."')

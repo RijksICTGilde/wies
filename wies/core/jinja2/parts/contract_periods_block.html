@@ -1,32 +1,31 @@
-{# Contract periods of one colleague: read-only in the colleague panel, with
-   buttons in the user sheet. Every action opens in the shared mount (the
-   add/edit sheet, the delete confirmation) and swaps this block back in
-   afterwards, so the sheet stays as it is. #}
-{# The id carries the colleague: an out-of-band swap replaces every match, and
-   the panel and the sheet may show different colleagues. #}
+{# Contract periods of one colleague, on the user sheet: that is where they are
+   kept. Every action opens in the shared mount (the add/edit sheet, the delete
+   confirmation) and swaps this block back in afterwards, so the sheet stays as
+   it is. #}
+{# The id carries the colleague: an out-of-band swap replaces every match. #}
+{% macro period_dates(period) -%}
+  {% if period.end_date %}
+    {{ period.start_date|datum_nl }} t/m {{ period.end_date|datum_nl }}
+  {% elif period.start_date <= contract_block.today %}
+    {{ period.start_date|datum_nl }} t/m heden
+  {% else %}
+    Vanaf {{ period.start_date|datum_nl }}
+  {% endif %}
+{%- endmacro %}
 <div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"
      {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}>
+  {% set periods = contract_block.periods %}
   <nldd-title size="5">
   <h3>Contracturen</h3>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-  {% set periods = contract_block.periods %}
   {% if periods %}
-    {# Newest first, as the model orders them; a running period has no end. The
-       panel gets only the running and coming periods, the sheet all of them. #}
+    {# Newest first, as the model orders them; a running period has no end. #}
     <nldd-list dividers="always" accessible-label="Contractperioden">
     {% for period in periods %}
       <nldd-list-item size="sm">
       <nldd-text-cell text="{{ period.hours_per_week }} uur">
-      <span slot="supporting-text">
-        {% if period.end_date %}
-          {{ period.start_date|datum_nl }} t/m {{ period.end_date|datum_nl }}
-        {% elif period.start_date <= contract_block.today %}
-          {{ period.start_date|datum_nl }} t/m heden
-        {% else %}
-          Vanaf {{ period.start_date|datum_nl }}
-        {% endif %}
-      </span>
+      <span slot="supporting-text">{{ period_dates(period) }}</span>
       </nldd-text-cell>
       {% if contract_block.can_edit %}
         <nldd-cell>
