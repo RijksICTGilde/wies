@@ -238,11 +238,8 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
         return None
 
 
-def _build_assignment_panel_data(assignment, request, *, child_sheets=True):
-    """Builds the assignment panel context, shared by both views.
-
-    With ``child_sheets`` off, ``?bewerken=`` and ``?teamlid=`` are ignored.
-    """
+def _build_assignment_panel_data(assignment, request):
+    """Builds the assignment panel context, shared by both views."""
     from wies.core.editables.assignment import (  # noqa: PLC0415
         AssignmentEditables,
         _organizations_initial,
@@ -278,8 +275,6 @@ def _build_assignment_panel_data(assignment, request, *, child_sheets=True):
     # Child sheets: ?bewerken= opens the combined assignment form, ?teamlid= the
     # form for one team member. Without the rights the param falls back to the
     # read-only panel.
-    if not child_sheets:
-        return data
     if request.GET.get("bewerken"):
         edit_panel = _build_assignment_edit_panel_data(assignment, request)
         if edit_panel is not None:
@@ -595,7 +590,7 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-def _resolve_service_panel(request, public_id):
+def _resolve_aanvraag_panel(request, public_id):
     """Resolves ``?aanvraag=`` to an open role, through the viewer's own rows.
 
     Only a vacancy has this panel: a filled row's hours and role text follow
@@ -620,12 +615,12 @@ def _resolve_service_panel(request, public_id):
     return None
 
 
-def _build_service_panel_data(service, request):
+def _build_aanvraag_panel_data(service, request):
     """Builds the aanvraag panel: the read view of one open role on an opdracht.
 
     A team row for a placement opens that colleague's panel; an aanvraag has no
     colleague, so it opens this one. Reached only through
-    ``_resolve_service_panel``, which keeps this to real vacancies.
+    ``_resolve_aanvraag_panel``, which keeps this to real vacancies.
     """
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
@@ -633,7 +628,7 @@ def _build_service_panel_data(service, request):
 
     assignment = service.assignment
     return {
-        "panel_content_template": "parts/service_panel_content.html",
+        "panel_content_template": "parts/aanvraag_panel_content.html",
         "panel_title": f"Aanvraag: {service.skill.name}" if service.skill else "Aanvraag",
         "close_url": _build_close_url(request),
         "service": service,
@@ -765,9 +760,9 @@ def bezetting(request):
         # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
         # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
         # opdracht panel opens, and it returns to the aanvraag when done.
-        service = _resolve_service_panel(request, service_id)
+        service = _resolve_aanvraag_panel(request, service_id)
         if service is not None:
-            panel_data = _build_service_panel_data(service, request)
+            panel_data = _build_aanvraag_panel_data(service, request)
     elif panel_data is None and assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
@@ -1813,9 +1808,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         service_id = self.request.GET.get("aanvraag")
 
         if service_id and not self.request.GET.get("teamlid"):
-            service = _resolve_service_panel(self.request, service_id)
+            service = _resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
-                context["panel_data"] = _build_service_panel_data(service, self.request)
+                context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
             colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
@@ -2059,9 +2054,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         if create_panel is not None:
             context["panel_data"] = create_panel
         elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
-            service = _resolve_service_panel(self.request, self.request.GET["aanvraag"])
+            service = _resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
             if service is not None:
-                context["panel_data"] = _build_service_panel_data(service, self.request)
+                context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
             colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
@@ -3564,9 +3559,9 @@ def user_profile(request):
     panel_data = None
 
     if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
-        service = _resolve_service_panel(request, request.GET["aanvraag"])
+        service = _resolve_aanvraag_panel(request, request.GET["aanvraag"])
         if service is not None:
-            panel_data = _build_service_panel_data(service, request)
+            panel_data = _build_aanvraag_panel_data(service, request)
     elif assignment_id:
         assignment = _resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
