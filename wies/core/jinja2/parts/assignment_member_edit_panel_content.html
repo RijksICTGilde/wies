@@ -131,17 +131,20 @@
   </div>
   {{ svc_form.hours_per_week.as_field_group() }}
   {# has_custom_period is inverted: checked means inherit the assignment period. The
-     segmented control does not post; the hidden input below carries the choice
-     ("on" = inherit, empty = own period). #}
+     segmented controls do not post; the hidden inputs at the bottom carry the
+     choices ("on" = inherit, start_mode, end_mode). #}
   {% set inherits = svc_form.has_custom_period.value() %}
+  {% set starts_now = is_request and svc_form.start_mode.value() == "NOW" %}
+  {% set end_mode = svc_form.end_mode.value() or "OPEN" %}
+  {% set end_mode = "OPEN" if end_mode == "DURATION" and not is_request else end_mode %}
   <nldd-form-field label="Periode">
-  <nldd-segmented-control name="periode-keuze" width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
+  <nldd-segmented-control width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
   <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
   <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
   </nldd-segmented-control>
   {# Only meaningful for "Van opdracht"; member_form.js hides it once you pick
      your own period. #}
-  <nldd-form-field-help-text data-assignment-period-help>
+  <nldd-form-field-help-text data-assignment-period-help{% if not inherits %} hidden{% endif %}>
   {# The verb sits in each branch: "is vanaf" and "is t/m" do not read as Dutch,
      "loopt vanaf" and "loopt t/m" do, and the unknown case still wants "is". #}
   De periode van de opdracht
@@ -156,23 +159,25 @@
   {%- endif %}
   </nldd-form-field-help-text>
   </nldd-form-field>
-  <input type="hidden"
-         name="{{ svc_form.has_custom_period.html_name }}"
-         value="{{ 'on' if inherits else '' }}"
-         data-inherit-input>
-  {# Hand-rolled instead of as_field_group(): the `hidden` must be server-rendered so
-     the first paint matches the collapsed state member_form.js sets on init, without
-     a visible-then-collapsed flash. as_field_group() renders the wrapper itself and
-     cannot pass it through, so wire_field_errors links the error message here. #}
-  {# Aanvraag only: "Per direct" stands in for a start date. Posts through the
-     hidden input at the bottom, like the end-date switch drives its field. #}
-  {% set starts_now = is_request and svc_form.starts_immediately.value() %}
-  <nldd-form-field{% if inherits or not is_request %} hidden{% endif %}>
-  <nldd-switch-field label="Per direct" data-starts-now {% if starts_now %}checked{% endif %}></nldd-switch-field>
-  </nldd-form-field>
+  {# An own period: start and end in one box, each a choice with its field
+     under it. "Per direct" and "Duur" are an aanvraag's; a placement runs on
+     dates, so its end has a choice without "Duur" (an item cannot be hidden).
+     Every `hidden` is server-rendered to match member_form.js's first paint. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
-  <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits or starts_now %} hidden{% endif %}>
-  {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
+  {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
+  <nldd-box data-period-box{% if inherits %} hidden{% endif %}>
+  <nldd-container padding="16" gap="16">
+  <nldd-form-field label="Start">
+  <div data-start-choice-field{% if not is_request %} hidden{% endif %}>
+    <nldd-segmented-control width="full" accessible-label="Start" value="{{ 'NOW' if starts_now else 'DATE' }}" data-start-choice>
+    <nldd-segmented-control-item value="NOW" text="Per direct"></nldd-segmented-control-item>
+    <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
+    </nldd-segmented-control>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  </div>
+  <div data-start-date{% if starts_now %} hidden{% endif %}>
+    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum"}) }}
+  </div>
   {% if svc_form.placement_start_date.errors %}
     <nldd-validation-list>
     {% for error in svc_form.placement_start_date.errors %}
@@ -181,15 +186,30 @@
     </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
-  {# Off means no known end date, the placement runs on. The switch does not post;
-     it only drives the end-date field. #}
-  <nldd-form-field{% if inherits %} hidden{% endif %}>
-  <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if end_known %}checked{% endif %}></nldd-switch-field>
-  </nldd-form-field>
-  {% set end_known = svc_form.placement_end_date.value() or inherits %}
-  {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
-  <nldd-form-field label="{{ svc_form.placement_end_date.label }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
-  {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
+  <nldd-form-field label="Einde">
+  <div data-end-choice-field="request"
+       {% if not is_request %} hidden{% endif %}>
+    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ end_mode }}" data-end-choice>
+    <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
+    <nldd-segmented-control-item value="DURATION" text="Duur"></nldd-segmented-control-item>
+    <nldd-segmented-control-item value="OPEN" text="Onbekend"></nldd-segmented-control-item>
+    </nldd-segmented-control>
+  </div>
+  <div data-end-choice-field="placement"
+       {% if is_request %} hidden{% endif %}>
+    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ 'DATE' if end_mode == 'DATE' else 'OPEN' }}" data-end-choice>
+    <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
+    <nldd-segmented-control-item value="OPEN" text="Onbekend"></nldd-segmented-control-item>
+    </nldd-segmented-control>
+  </div>
+  <div data-end-date{% if end_mode != "DATE" %} hidden{% endif %}>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum"}) }}
+  </div>
+  <div data-duration{% if end_mode != "DURATION" %} hidden{% endif %}>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur"}) }}
+  </div>
   {% if svc_form.placement_end_date.errors %}
     <nldd-validation-list>
     {% for error in svc_form.placement_end_date.errors %}
@@ -198,11 +218,8 @@
     </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
-  {# Aanvraag only: without an end date, how long it runs. #}
-  <div data-duration-field
-       {% if inherits or not is_request or end_known %}hidden{% endif %}>
-    {{ svc_form.duration_months.as_field_group() }}
-  </div>
+  </nldd-container>
+  </nldd-box>
   {# A wrapper per field: nldd-form spaces its direct children only. #}
   <div data-request-field {% if not is_request %}hidden{% endif %}>{{ svc_form.location.as_field_group() }}</div>
   <div data-request-field {% if not is_request %}hidden{% endif %}>
@@ -211,9 +228,17 @@
   {# Hidden inputs last: nldd-form spaces all siblings, so one at the top pushes
      the first visible field down. #}
   <input type="hidden"
-         name="{{ svc_form.starts_immediately.html_name }}"
-         value="{{ 'on' if starts_now and not inherits else '' }}"
-         data-starts-now-input>
+         name="{{ svc_form.has_custom_period.html_name }}"
+         value="{{ 'on' if inherits else '' }}"
+         data-inherit-input>
+  <input type="hidden"
+         name="{{ svc_form.start_mode.html_name }}"
+         value="{{ 'NOW' if starts_now else 'DATE' }}"
+         data-start-mode-input>
+  <input type="hidden"
+         name="{{ svc_form.end_mode.html_name }}"
+         value="{{ end_mode }}"
+         data-end-mode-input>
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <input type="hidden" name="member_heading" value="{{ panel_heading }}">
   <nldd-form-actions>

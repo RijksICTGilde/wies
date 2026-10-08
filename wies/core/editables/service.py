@@ -25,7 +25,6 @@ class ServiceEditables(EditableSet):
         display="forms/displays/textarea.html",
     )
     location = Editable(label="Standplaats")
-    starts_immediately = Editable(label="Per direct")
     duration_months = Editable(
         label="Duur",
         widget=forms.Select(choices=[("", " "), *REQUEST_DURATION_CHOICES]),

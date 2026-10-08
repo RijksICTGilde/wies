@@ -6,7 +6,7 @@ end.
 """
 
 import re
-from datetime import timedelta
+from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
@@ -290,7 +290,7 @@ class AanvraagFormRequestDescriptionTest(TestCase):
 
         assert re.search(r"<div data-request-field\s*>", body)
         assert re.search(r"<div data-tasks-field\s*hidden>", body)
-        assert 'label="Per direct"' in body
+        assert 'text="Per direct"' in body
 
     def test_a_new_placement_shows_the_taken_and_hides_the_description(self):
         body = self.client.get(
@@ -323,7 +323,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
         return self.client.get(url, headers=HX).content.decode()
 
     def test_per_direct_for_a_year_is_saved_and_shown(self):
-        response = self._post(starts_immediately="on", duration_months="12", location="Den Haag, hybride")
+        response = self._post(start_mode="NOW", end_mode="DURATION", duration_months="12", location="Den Haag, hybride")
 
         assert response.status_code == 204, response.content
         [service] = self.assignment.services.all()
@@ -335,7 +335,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
         assert 'text="Den Haag, hybride"' in body
 
     def test_per_direct_drops_a_leftover_start_date(self):
-        response = self._post(starts_immediately="on", placement_start_date="2026-11-01")
+        response = self._post(start_mode="NOW", placement_start_date="2026-11-01")
 
         assert response.status_code == 204, response.content
         [service] = self.assignment.services.all()
@@ -376,7 +376,8 @@ class AanvraagFlexiblePeriodTest(TestCase):
             service_public_id=str(service.public_id),
             is_filled="ingevuld",
             colleague=str(consultant.public_id),
-            starts_immediately="on",
+            start_mode="NOW",
+            end_mode="DURATION",
             duration_months="12",
             placement_start_date="2026-11-01",
         )
@@ -417,7 +418,48 @@ class AanvraagFlexiblePeriodTest(TestCase):
         ).content.decode()
 
         assert re.search(r'value="PLACEMENT"[^>]*data-period-choice', body)
-        assert re.search(r'label="Per direct" data-starts-now\s+checked', body)
+        assert re.search(r'value="NOW"[^>]*data-start-choice', body)
+        assert re.search(r'value="DURATION"[^>]*data-end-choice', body)
+
+    def test_the_sheet_reopens_on_an_end_date(self):
+        """The end-date choice must open on "Op datum" for a saved end date;
+        the old switch read its state too late and the date was wiped on save."""
+        service = Service.objects.create(
+            assignment=self.assignment,
+            skill=self.skill,
+            period_source=Service.SERVICE,
+            specific_start_date=date(2026, 11, 1),
+            specific_end_date=date(2027, 4, 30),
+            source="wies",
+        )
+
+        body = self.client.get(
+            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": str(service.public_id)}
+        ).content.decode()
+
+        assert re.search(r'value="DATE"[^>]*data-end-choice', body)
+        assert re.search(r"<div data-end-date\s*>", body)
+        assert re.search(r'name="end_mode"\s+value="DATE"', body)
+
+    def test_onbekend_drops_a_leftover_end_date_and_duration(self):
+        response = self._post(
+            placement_start_date="2026-11-01",
+            end_mode="OPEN",
+            placement_end_date="2027-04-30",
+            duration_months="6",
+        )
+
+        assert response.status_code == 204, response.content
+        service = self.assignment.services.get()
+        assert service.specific_end_date is None
+        assert service.duration_months is None
+
+    def test_op_datum_drops_a_leftover_duration(self):
+        self._post(
+            placement_start_date="2026-11-01", end_mode="DATE", placement_end_date="2027-04-30", duration_months="6"
+        )
+
+        assert self.assignment.services.get().duration_months is None
 
 
 class FillingAanvraagTakesOverDescriptionTest(TestCase):

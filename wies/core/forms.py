@@ -463,13 +463,30 @@ class ServiceForm(NlddFormMixin, forms.Form):
     has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
-    starts_immediately = ServiceEditables.starts_immediately.form_field()
     duration_months = ServiceEditables.duration_months.form_field()
+    # Which of the period choices was picked. Hidden inputs, since the segmented
+    # controls do not post; clean() drops the fields the choice leaves out. Absent
+    # (another client), they follow from what was filled in.
+    start_mode = forms.ChoiceField(choices=[("NOW", "Per direct"), ("DATE", "Op datum")], required=False)
+    end_mode = forms.ChoiceField(
+        choices=[("DATE", "Op datum"), ("DURATION", "Duur"), ("OPEN", "Onbekend")], required=False
+    )
 
     def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
         # `skill_choices` is always supplied by the caller in editables/assignment.py.
         self.fields["skill"].choices = skill_choices
+        if not self.is_bound:
+            initial = self.initial
+            initial.setdefault("start_mode", "NOW" if initial.get("starts_immediately") else "DATE")
+            initial.setdefault(
+                "end_mode",
+                "DATE"
+                if initial.get("placement_end_date")
+                else "DURATION"
+                if initial.get("duration_months")
+                else "OPEN",
+            )
 
     def clean(self):
         cleaned_data = super().clean()
@@ -484,23 +501,15 @@ class ServiceForm(NlddFormMixin, forms.Form):
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
-        # "Per direct" and a duration are an aanvraag's way to say when; a
-        # placement runs on dates, so filling one asks for those.
-        if inherit_from_assignment or cleaned_data.get("is_filled") == "ingevuld":
-            cleaned_data["starts_immediately"] = False
-            cleaned_data["duration_months"] = None
+        self._apply_period_modes(cleaned_data, inherit=inherit_from_assignment)
         if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
             cleaned_data["placement_start_date"] = None
             cleaned_data["placement_end_date"] = None
         else:
-            starts_now = cleaned_data.get("starts_immediately")
-            if starts_now:
-                cleaned_data["placement_start_date"] = None
+            starts_now = cleaned_data["starts_immediately"]
             p_start = cleaned_data.get("placement_start_date")
             p_end = cleaned_data.get("placement_end_date")
-            if p_end:
-                cleaned_data["duration_months"] = None
             duration = cleaned_data.get("duration_months")
             cleaned_data["has_custom_period"] = bool(p_start or p_end or starts_now or duration)
             if not cleaned_data["has_custom_period"]:
@@ -508,3 +517,25 @@ class ServiceForm(NlddFormMixin, forms.Form):
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
+
+    @staticmethod
+    def _apply_period_modes(cleaned_data: dict, *, inherit: bool) -> None:
+        """Keeps only the period fields the start and end choices point at.
+
+        "Per direct" and a duration are an aanvraag's way to say when; a
+        placement runs on dates, so filling one (or inheriting) drops both.
+        """
+        p_end = cleaned_data.get("placement_end_date")
+        duration = cleaned_data.get("duration_months")
+        start_mode = cleaned_data.get("start_mode") or "DATE"
+        end_mode = cleaned_data.get("end_mode") or ("DATE" if p_end else "DURATION" if duration else "OPEN")
+        if inherit or cleaned_data.get("is_filled") == "ingevuld":
+            start_mode = "DATE"
+            end_mode = "OPEN" if end_mode == "DURATION" else end_mode
+        cleaned_data["starts_immediately"] = start_mode == "NOW"
+        if start_mode == "NOW":
+            cleaned_data["placement_start_date"] = None
+        if end_mode != "DATE":
+            cleaned_data["placement_end_date"] = None
+        if end_mode != "DURATION":
+            cleaned_data["duration_months"] = None
