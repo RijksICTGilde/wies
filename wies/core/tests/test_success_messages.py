@@ -25,7 +25,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
 
@@ -106,7 +106,7 @@ class SuccessMessageTest(TestCase):
         assert last_message(response) == 'Merk "Merk C" is verwijderd.'
 
     def test_placement_save_shows_the_banner_in_the_panel_it_returns_to(self):
-        owner_user = grant_bdm(
+        owner_user = grant_business_manager(
             User.objects.create_user(email="owner@rijksoverheid.nl", first_name="Oma", last_name="Eigenaar")
         )
         self.client.force_login(owner_user)
@@ -140,7 +140,12 @@ class SuccessMessageTest(TestCase):
         self.assertContains(panel, f'text="Plaatsing van {owner.name} is aangepast."')
 
     def test_team_member_delete(self):
-        self.user.user_permissions.add(*Permission.objects.filter(codename__in=["change_assignment", "delete_service"]))
+        # The Business Manager role, not a Django permission on Assignment or
+        # Service: those are no audience any more, and ownership alone grants
+        # nothing. See features/roles.md.
+        grant_business_manager(self.user)
+        self.user = User.objects.get(pk=self.user.pk)
+        self.client.force_login(self.user)
         org = OrganizationUnit.objects.create(name="Org", label="Org")
         assignment = Assignment.objects.create(
             name="Aanvraag",

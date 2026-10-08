@@ -370,6 +370,9 @@ class EventAction(models.TextChoices):
 class EventSource(models.TextChoices):
     USER = "user", "Gebruiker"
     SYNC = "sync", "Sync"
+    # No actor: the deploy did it. Today only ensure_initial_user, which grants
+    # roles from an environment variable and so has nobody to attribute them to.
+    SYSTEM = "system", "Systeem"
 
 
 class Event(models.Model):

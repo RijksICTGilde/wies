@@ -32,6 +32,16 @@ This files lists the changes during the lifetime of this project.
 - 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
 - 699: the production image no longer ships pip, uv, git, vim, sudo, the docs and the tests
 - 699: bump dependencies because of cve's
+- ?
+- 703: (migration) authority is split by what it lets you do: the `Applicatiebeheerder` (the address list `STAFF_EMAILS`) keeps the maintenance pages and carries no functional rights, `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours, and `Business Manager` now carries every wies-sourced opdracht instead of only the ones it owns. Everyone in `STAFF_EMAILS` receives both roles once, and anyone who held the dropped `Opdrachtbeheer` role becomes a `Business Manager`. See `features/roles.md`
+- 703: the roles `Beheerder` and `Business Development Manager` are now called `Gebruikersbeheerder` and `Business Manager`; a role's screen name is separate from the key it is stored under, so this is a rename and not a reassignment
+- 703: the user CSV import columns follow the new role names, `Gebruikersbeheerder` and `Business Manager`, and both renamed roles also keep the header existing import files were written with, `Beheerder` and `BDM`, so an onboarding file from before the rename still hands out its roles
+- 703: roles are set on the user sheet under Beheer > Gebruikers, where an editor is offered only the roles they may grant
+- 703: new page Beheer > Rollen shows what each role may do, read from the rules themselves; a cell is green for yes and red for no, and a row that holds whatever your role, because it is about yourself, says so in words after the row name
+- 703: only the `Applicatiebeheerder` may create an account on a `STAFF_EMAILS` address or move an address to or from one, and the user form is the only place an e-mail address can be changed
+- 703: contract hours can be kept from the colleague panel as well as from the user sheet, and the block is shown only to whoever may read the hours; keeping them stays with the `Gebruikersbeheerder` and a Business Manager reads them
+- 703: the hours on a team member's role are no longer visible to the `Applicatiebeheerder`; a Business Manager and the placed colleague read them, as before, and Beheer > Rollen lists it alongside the wider audience of the contract hours
+- 703: `INITIAL_USER_EMAIL` is the way back in as well as the way in: while it is set, every start gives that account every role, also when the account already exists, so an environment whose last `Gebruikersbeheerder` is gone is recovered with a redeploy instead of a database command. Remove the variable once the deploy is done, or every restart keeps restoring those roles. The grant is recorded in the audit log as a system action naming the variable
 
 ## 2026-09-24
 

@@ -30,6 +30,7 @@ from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
+from wies.core import role_matrix as role_matrix_rules
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import (
     Editable,
@@ -47,7 +48,7 @@ from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.visibility_rules import (
     LABELS,
-    PRIVACY_BDM,
+    PRIVACY_BM,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
@@ -88,7 +89,13 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_view_role_hours, is_bdm, is_staff_member
+from .roles import (
+    can_view_role_hours,
+    is_business_manager,
+    is_staff_member,
+    may_view_role_matrix,
+    role_label,
+)
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -361,8 +368,7 @@ def _get_colleague_assignments(request, colleague):
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague, the Business Managers (BDM role) and
-        # support staff.
+        # visible to the placed colleague and the Business Managers.
         result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
@@ -392,7 +398,7 @@ def _get_colleague_assignments(request, colleague):
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         # Active and not-yet-started owned assignments are public; ended ones are
-        # only shown to a privileged viewer (BDM role or support staff).
+        # only shown to a privileged viewer (the Business Manager role).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
 
         existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
@@ -458,8 +464,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "contract_block": _contract_block(colleague, "panel"),
-        "can_view_contract": has_permission(Verb.READ, ContractPeriod(colleague=colleague), request.user),
+        "contract_block": _contract_block(colleague, "panel", request.user),
         "assignments": assignments,
     }
 
@@ -536,7 +541,7 @@ def _resolve_placement_panel(request, public_id):
     """Fetches a placement for the side panel, enforcing the team list's rule.
 
     Ended or not-yet-started placements are only shown to the placed colleague
-    and Business Managers (the BDM role). Not-found, malformed and not-visible are
+    and Business Managers. Not-found, malformed and not-visible are
     indistinguishable — all raise Http404 for the HTMX panel request, so a hidden
     placement's existence is never revealed, and return None for a full-page load.
     """
@@ -583,9 +588,8 @@ def staff_required(view_func):
 
 
 def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Development Managers plus
-    support staff."""
-    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
+    """Gate the "Business management" section: Business Managers."""
+    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
 
 
 def _assignment_create_button(request):
@@ -781,6 +785,24 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
+
+
+def role_matrix_access_required(view_func):
+    return user_passes_test(may_view_role_matrix, login_url="/geen-toegang/")(view_func)
+
+
+@role_matrix_access_required
+def role_matrix(request):
+    return render(
+        request,
+        "role_matrix.html",
+        {
+            "columns": [heading for heading, _groups, _staff in role_matrix_rules.COLUMNS],
+            "sections": role_matrix_rules.build_matrix(),
+            "group_permissions": role_matrix_rules.group_permissions(),
+            "may_assign_roles": request.user.has_perm("rijksauth.change_user"),
+        },
+    )
 
 
 ERRORS_PER_PAGE = 10
@@ -2195,8 +2217,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         role_options = [{"value": "", "label": ""}]
         role_selected_values = []
-        for group in Group.objects.all().order_by("name"):
-            role_options.append({"value": str(group.id), "label": group.name, "count": role_counts.get(group.id, 0)})
+        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
+        for group in sorted(Group.objects.all(), key=lambda g: role_label(g.name)):
+            role_options.append(
+                {"value": str(group.id), "label": role_label(group.name), "count": role_counts.get(group.id, 0)}
+            )
             # ?rol= holds a single Group id, so compare exactly.
             if str(group.id) == self.role_filter:
                 role_options[-1]["selected"] = True
@@ -2267,7 +2292,7 @@ def user_create(request):
     element_id = "userFormModal"
 
     if request.method == "GET":
-        form = UserForm()
+        form = UserForm(editor=request.user)
         form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
             request,
@@ -2282,7 +2307,7 @@ def user_create(request):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST)
+        form = UserForm(request.POST, editor=request.user)
         if form.is_valid():
             create_user(
                 request.user,
@@ -2330,10 +2355,10 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, "user") if colleague else None
+    contract_block = _contract_block(colleague, "user", request.user) if colleague else None
 
     if request.method == "GET":
-        form = UserForm(instance=edited_user)
+        form = UserForm(instance=edited_user, editor=request.user)
         return render(
             request,
             "parts/user_form_modal.html",
@@ -2348,7 +2373,7 @@ def user_edit(request, public_id):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST, instance=edited_user)
+        form = UserForm(request.POST, instance=edited_user, editor=request.user)
         if form.is_valid():
             update_user(
                 updater=request.user,
@@ -2481,7 +2506,7 @@ def user_delete(request, public_id):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "label_names": label_names,
-                "group_names": [g.name for g in user.groups.all()],
+                "group_names": [role_label(g.name) for g in user.groups.all()],
                 "left_on": left_on.isoformat() if left_on else None,
                 "contract_ended": _contract_period_snapshot(ended) if ended else None,
                 "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
@@ -2680,18 +2705,39 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-def _contract_block(colleague, surface):
-    """Context for parts/contract_periods_block.html.
+PANEL_SURFACE_QUERY = "?vanuit=paneel"
 
-    One block for two places: the colleague panel (read-only, for who plans
-    with the hours) and the user sheet, which carries the buttons: keeping
-    periods is user administration. A consultant does not see their own
-    contract hours in Wies; that is a matter for them and their manager.
+
+def _contract_surface(request):
+    """Which surface the contract-period button was pressed on.
+
+    The panel and the user sheet show a different slice of the same periods, and
+    they share the three write routes, which cannot tell them apart. So the
+    surface travels with the request: the panel's buttons carry ``?vanuit=paneel``,
+    the sheet posts back to the url it was opened with. Guessing it from the route
+    swaps the sheet's whole history into the panel.
+    """
+    return "panel" if request.GET.get("vanuit") == "paneel" else "user"
+
+
+def _contract_url(name, args, surface):
+    """A contract-period url that keeps the surface it was reached from."""
+    return reverse(name, args=args) + (PANEL_SURFACE_QUERY if surface == "panel" else "")
+
+
+def _contract_block(colleague, surface, user):
+    """Context for parts/contract_periods_block.html, or None for a viewer who
+    may not read the hours.
+
+    A consultant does not see their own contract hours in Wies; that is a matter
+    for them and their manager.
 
     The panel answers "how many hours now, and soon": it lists the running
     period and the ones still to start. The sheet keeps the whole history,
     since that is where it is kept.
     """
+    if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
+        return None
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
     if surface == "panel":
@@ -2709,8 +2755,10 @@ def _contract_block(colleague, surface):
         "periods": periods,
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
-        "can_edit": surface == "user",
-        "add_url": reverse("contract-period-add", args=[colleague.public_id]),
+        "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
+        "add_url": _contract_url("contract-period-add", [colleague.public_id], surface),
+        # The template appends this to the per-period urls it builds.
+        "surface_query": PANEL_SURFACE_QUERY if surface == "panel" else "",
         "empty_text": empty_text,
     }
 
@@ -2781,8 +2829,9 @@ def contract_period_add(request, colleague_public_id):
     period = ContractPeriod(colleague=colleague)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, "user"))
+    surface = _contract_surface(request)
+    post_url = _contract_url("contract-period-add", [colleague.public_id], surface)
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, surface, request.user))
 
 
 @login_required
@@ -2790,8 +2839,9 @@ def contract_period_edit(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
-    post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, "user"))
+    surface = _contract_surface(request)
+    post_url = _contract_url("contract-period-edit", [period.public_id], surface)
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, surface, request.user))
 
 
 @login_required
@@ -2802,6 +2852,7 @@ def contract_period_delete(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
+    surface = _contract_surface(request)
     if request.method != "POST":
         return render(
             request,
@@ -2814,14 +2865,14 @@ def contract_period_delete(request, public_id):
                 ),
                 "confirm_label": "Verwijder periode",
                 "cancel_label": "Behoud periode",
-                "form_post_url": reverse("contract-period-delete", args=[period.public_id]),
+                "form_post_url": _contract_url("contract-period-delete", [period.public_id], surface),
             },
         )
     colleague = period.colleague
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, "user")
+    block = _contract_block(colleague, surface, request.user)
     return render(request, "parts/contract_period_saved.html", {"contract_block": block})
 
 
@@ -3311,11 +3362,11 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
     viewer = getattr(request.user, "colleague", None)
     if viewer is not None and hidden == {viewer.name}:
         # The only hidden person the event names is the viewer themselves —
-        # a non-BDM only ever reaches this case (their filtered list drops
-        # changes naming hidden others), and a placed BDM gets the wording
-        # matching their own row.
+        # someone without the role only ever reaches this case (their filtered
+        # list drops changes naming hidden others), and a placed Business Manager
+        # gets the wording matching their own row.
         return PRIVACY_OWN
-    return PRIVACY_BDM
+    return PRIVACY_BM
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
@@ -3356,7 +3407,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # A viewer who sees more than an outsider (the BDM or staff gets the unfiltered
+            # A viewer who sees more than an outsider (a Business Manager gets the unfiltered
             # list) should know this row is hidden from others. Team rows only:
             # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)
