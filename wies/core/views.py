@@ -2739,10 +2739,6 @@ def _own_colleague_or_404(request):
 def _contract_block(colleague):
     """Context for parts/contract_periods_block.html.
 
-    The user sheet is where contract periods are kept, so it carries the
-    buttons and the whole history. The colleague panel used to show a quiet
-    line with the running hours; it no longer does -- the hours matter when you
-    plan with them, which happens on Bezetting, not when you look someone up.
     """
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
