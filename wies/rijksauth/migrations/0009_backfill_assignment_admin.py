@@ -16,7 +16,8 @@ from django.db import migrations
 def backfill(apps, schema_editor):
     Group = apps.get_model("auth", "Group")
     User = apps.get_model("rijksauth", "User")
-    # 0011 renames this group to its key, taking the members along.
+    # Stays under this label until 0012 removes the group; 0012 looks for both
+    # names because 0011 does not take this one along.
     group, _ = Group.objects.get_or_create(name="Opdrachtbeheer")
     emails = {e.strip().lower() for e in os.environ.get("STAFF_EMAILS", "").split(",") if e.strip()}
     for user in User.objects.all():

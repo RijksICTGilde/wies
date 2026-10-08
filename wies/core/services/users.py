@@ -31,14 +31,16 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 # The role columns of the user CSV, by the header a file writes: labels, not keys,
-# so an import file stays readable (``features/roles.md``). Two headers reach the
-# Business Manager role: the label it carries today, and the "BDM" existing import
-# files were written with.
+# so an import file stays readable (``features/roles.md``). Both renamed roles keep
+# the header existing import files were written with, because a header that matches
+# nothing is skipped in silence: dropping one would import those rows without the
+# role and without saying so.
 CSV_ROLE_COLUMNS = {
     ROLE_LABELS[ROLE_USER_ADMIN]: ROLE_USER_ADMIN,
     ROLE_LABELS[ROLE_CONSULTANT]: ROLE_CONSULTANT,
     ROLE_LABELS[ROLE_BUSINESS_MANAGER]: ROLE_BUSINESS_MANAGER,
     "BDM": ROLE_BUSINESS_MANAGER,
+    "Beheerder": ROLE_USER_ADMIN,
 }
 
 

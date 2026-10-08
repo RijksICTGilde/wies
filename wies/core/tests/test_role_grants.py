@@ -521,6 +521,21 @@ class RoleGrantTest(TestCase):
             ROLE_BUSINESS_MANAGER,
         }
 
+    def test_csv_import_keeps_working_with_the_headers_from_before_the_rename(self):
+        """Both renamed roles keep their old header. A header that matches nothing is
+        skipped in silence, so dropping one would import last month's onboarding file
+        with no roles at all and report success: no error, no warning, and the
+        colleague also off Bezetting for want of Consultant."""
+        csv_content = "first_name,last_name,email,Beheerder,Consultant,BDM\nJohn,Doe,john.doe@rijksoverheid.nl,y,n,y\n"
+
+        result = create_users_from_csv(self.user_admin, csv_content)
+
+        assert result["success"], result
+        assert self._group_names(User.objects.get(email="john.doe@rijksoverheid.nl")) == {
+            ROLE_USER_ADMIN,
+            ROLE_BUSINESS_MANAGER,
+        }
+
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
             f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"

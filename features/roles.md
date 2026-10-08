@@ -39,9 +39,11 @@ Two places deliberately use the label instead:
   then. An event records how something was called when it happened.
 - **The CSV import.** Column headers are names a person reads rather than keys,
   matched case-insensitively (`CSV_ROLE_COLUMNS`), so an import file stays
-  readable. A header that matches nothing is skipped in silence, so renaming a
-  label renames the column: that is why a rename says so in `CHANGES.md` and
-  moves the header row of `example_users_import.csv`.
+  readable. A header that matches nothing is skipped in silence, which is why a
+  renamed role keeps its old header there as well: without it, last month's
+  onboarding file would import its rows with no role and still report success.
+  A rename moves the header row of `example_users_import.csv` and says so in
+  `CHANGES.md`, and adds the old name to `CSV_ROLE_COLUMNS`.
 
 ## Who may grant what
 

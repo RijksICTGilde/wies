@@ -245,14 +245,16 @@ class RoleMatrixReaderTest(TestCase):
         # relation-free grant these field rules name alongside it.
         allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BUSINESS_MANAGER)}
 
-        for label in (
-            "Naam van een opdracht bewerken",
-            "Extra informatie bewerken",
-            "Dienstomschrijving bewerken",
+        # The relation per row, because a dienst names the narrower one: placed on
+        # that dienst, not anywhere on the opdracht.
+        for label, scope in (
+            ("Naam van een opdracht bewerken", PLACED),
+            ("Extra informatie bewerken", PLACED),
+            ("Dienstomschrijving bewerken", PLACED_ON_SERVICE),
         ):
             for heading, _groups, _staff in role_matrix.COLUMNS:
                 with self.subTest(row=label, column=heading):
-                    assert cells[(f"{label} ({PLACED.label})", heading)] is (heading in allowed)
+                    assert cells[(f"{label} ({scope.label})", heading)] is (heading in allowed)
             assert not cells[(f"{label} ({ANY.label})", "Consultant")]
 
     def test_account_authority_reaches_the_colleague_record(self):
@@ -545,7 +547,10 @@ class RoleMatrixViewTest(TestCase):
         role-free, neither through the note nor through the paragraph that
         explains it."""
         notes = _notes()
-        placed = [label for label in notes if label.endswith(f"({PLACED.label})")]
+        # Both relations: they word themselves differently, and a filter on one of
+        # them would quietly stop checking the rows of the other.
+        wordings = tuple(f"({scope.label})" for scope in (PLACED, PLACED_ON_SERVICE))
+        placed = [label for label in notes if label.endswith(wordings)]
         assert placed, "no row about being placed at all"
         for label in placed:
             with self.subTest(row=label):

@@ -5,6 +5,12 @@ and a key that says something else makes the code read against the product. Both
 keys were introduced by this same unreleased change, so nothing outside it has
 ever matched on them.
 
+Not to be folded into 0009 through 0012, however much they look like they cancel
+each other out: the main environment already applied that whole run, so the files
+have to stay as they were executed there. Net effect of the five together:
+Beheerder -> user_admin, Business Development Manager -> business_manager,
+Consultant -> consultant, and everyone in STAFF_EMAILS both beheer roles once.
+
 The keys are spelled out rather than imported, and the screen names are left out
 altogether: a migration is frozen in time, app code is not, and a label lives in
 ``ROLE_LABELS`` precisely so it can move again. If both groups already exist

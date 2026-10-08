@@ -288,7 +288,11 @@ The vocabulary is fixed and lives in `permission_engine.py`:
   relation is the grant's.
 - **Scopes**: `ANY` (default), `OWN`, `PLACED`, `PLACED_ON_SERVICE`, `SELF`. Each
   carries both the predicate behind it and the wording it gets on the role page, so
-  a sentence used by three rules is written once. `all_of(A, B)` builds the relation
+  a sentence used by three rules is written once. No two of them share a wording:
+  the page lays out one row per relation, so a shared one would print two identical
+  rows with different answers. `PLACED` is a placement anywhere on the opdracht,
+  `PLACED_ON_SERVICE` one on that dienst, and neither is usable on the other's
+  target, so a rule's target decides which of the two it can name. `all_of(A, B)` builds the relation
   that is both at once; "either of these" is two grants with the same holder.
 - **Conditions**: `WIES_SOURCED`, about the object rather than the viewer.
 
