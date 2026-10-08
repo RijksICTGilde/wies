@@ -1,5 +1,12 @@
 {% from "parts/row_actions.html" import render_row_actions %}
 {% from "parts/privacy_chip.html" import privacy_chip %}
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap. Only under htmx: a full page load already renders them in base.html. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 {% if not panel_data %}
   {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Plaatsing" dismiss-text="Sluit"></nldd-top-title-bar>

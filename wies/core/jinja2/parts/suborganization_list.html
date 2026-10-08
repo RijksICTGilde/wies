@@ -1,5 +1,11 @@
 {# The brand list; also re-rendered by htmx after a change, so this is the only
-   markup for it. #}
+   markup for it. That re-render does not reload base.html, so the confirmation
+   banner rides along as an OOB swap, as the assignment panel does. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 {% if suborganizations %}
   <nldd-list accessible-label="Merken">
   {% for suborganization in suborganizations %}

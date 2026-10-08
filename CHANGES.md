@@ -4,9 +4,36 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TBD: (post-release actions) new ODI knowledge start portal at `/odi-startpagina/`
-- TBD: (migration) tasks in staff tabel not carry task label
-- ?
+- 689: (post-release actions) new ODI knowledge start portal at `/odi-startpagina/`, serving the built content site from object storage to logged-in users only
+- 689: a beheerder publishes the latest knowledge base from the Database page; the task appears in "Recente taken" with the release and the number of files published
+- 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
+
+## 2026-10-07_2
+
+- 709: fixed the organization sync importing 0 organizations after the overheid.nl export schema version changed to 2.6.13
+
+## 2026-10-07
+
+- 700: the WCAG 2.2 audit report is published at /toegankelijkheid/onderzoek/, readable without logging in, because the toegankelijkheidsverklaring in the DigiToegankelijk register links straight at it; the Toegankelijkheid page links to it too
+- 690: removed the unused DEBUG-only "Opdrachtgevers" admin page (organization unit tree)
+- 690: (migration)(post-release actions) the organisation picker nests agentschappen, zbo's, adviescolleges and inspecties under their ministry instead of in separate top-level type folders
+- 692: Bezetting counts a role without hours as 0 instead of leaving the free hours unknown; the free-hours line says "uren niet overal ingevuld" so the number reads as an upper bound, and the role's own bar says "uren niet ingevuld" where it is wide enough
+- 692: Bezetting has a search box on name or e-mail, shows 60 rows at a time with a "Meer tonen" button, and no longer offers the "Volledig ingezet" status filter
+- 692: (migration) a role's description is optional on the model, so the "Rol bewerken" sheet no longer demands one; the member form never did
+- 692: the card titles on Wie zit waar? and Aanvragen are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
+- 692: the page had two elements with the same id for the live region; the unused one is gone
+- 692: Bezetting no longer has a horizontal scrollbar under the timeline on a wide window; the last month label hung past the edge of the track
+- 692: a colleague whose roles exactly fill their contract now also says "uren niet overal ingevuld" when one of those roles has no hours recorded; that row said nothing at all
+- 673: after changing a filter, keyboard focus stays on the filter you used instead of jumping to the top of the page; the same for other page parts that refresh in place
+- 673: a screen reader now hears the number of results after a filter change, a notification after saving or deleting, and why a form was rejected, with the error read out at the field itself
+- 673: saving or deleting a user, label, category, merk, team member or opdracht, and saving your profile, now confirms it with a notification, as the other saves already did
+- 673: the notification after editing something says "is aangepast" instead of "is opgeslagen", so it reads differently from adding ("is toegevoegd") and deleting ("is verwijderd")
+- 673: the notification after creating an opdracht no longer carries a "Bekijk opdracht" button: the opdracht's panel opens by itself
+- 673: the filter groups in the sidebar are level-2 headings, so a screen reader walking the headings no longer meets a level-3 heading straight after the page title (WCAG 1.3.1)
+- 673: the name fields on Mijn profiel tell the browser they are your given and family name (WCAG 1.3.5)
+- 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
+- 699: the production image no longer ships pip, uv, git, vim, sudo, the docs and the tests
+- 699: bump dependencies because of cve's
 
 ## 2026-09-24
 

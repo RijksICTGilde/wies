@@ -9,6 +9,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
+# pip is unused (uv installs into /opt/venv); ensurepip carries a bundled
+# wheel that would put it back
+RUN python -m pip uninstall --yes pip \
+  && rm -rf /usr/local/lib/python3*/ensurepip
+
 #-----------------------------------------------------------------------------------------------------------------------
 # Python build stage
 #-----------------------------------------------------------------------------------------------------------------------
@@ -18,14 +23,6 @@ ENV UV_CACHE_DIR=/opt/uv-cache/
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV VIRTUAL_ENV=/opt/venv
-
-# Install git to enable installation of jrc from github
-# can be removed when jrc is on pypi
-RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
-  git \
-  # Cleaning up unused files
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
 
 # Production images exclude all dependency groups so dev/test tooling stays out
 # of the runtime image. Local dev / in-container test runs pass INSTALL_DEV=true
@@ -44,31 +41,18 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
 #-----------------------------------------------------------------------------------------------------------------------
 FROM python AS django-run
 
-# Create app user
+# Create app user; /app is created by WORKDIR as root
 RUN groupadd --gid 1000 app \
-  && useradd --gid app --uid 1000 --shell /bin/bash --home-dir /app app
-
-# Install (required) system dependencies
-RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
-  # Devcontainer dependencies and utils
-  sudo git bash-completion vim \
-  # Cleaning up unused files
-  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-  && rm -rf /var/lib/apt/lists/*
+  && useradd --gid app --uid 1000 --shell /bin/bash --home-dir /app app \
+  && chown app:app /app
 
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 
-# copy uv to enable runtime including editable package during development
-COPY --from=uv /uv /bin/uv
-
-COPY --chown=app:app . /app
-RUN chown -R app:app /app
-RUN rm -rf /app/docker && \
-  rm -rf /app/.dockerignore && \
-  rm -rf /app/pyproject.toml && \
-  rm -rf /app/uv.lock && \
-  rm -rf /app/temp
+# Copy by name, most stable first, so a change in the app leaves the layers above it cached
+COPY --chown=app:app manage.py docker-entrypoint.sh ./
+COPY --chown=app:app config ./config
+COPY --chown=app:app wies ./wies
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so

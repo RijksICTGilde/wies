@@ -18,7 +18,8 @@ the worker.
 import tempfile
 from pathlib import Path
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
 
 from wies.kb import storage
 
@@ -59,6 +60,13 @@ class Command(BaseCommand):
     help = "Seed MinIO with a small dummy KB site (local development only)"
 
     def handle(self, *args, **options):
+        # set_current_prefix below repoints the live KB at this placeholder, so
+        # refuse to run anywhere DEBUG is off: a stray invocation against a
+        # deployed bucket would replace the real site with dummy articles.
+        if not settings.DEBUG:
+            msg = "kb_seed_dummy is a development-only command and refuses to run with DEBUG=False"
+            raise CommandError(msg)
+
         client = storage.get_client()
         storage.ensure_bucket(client=client)
 

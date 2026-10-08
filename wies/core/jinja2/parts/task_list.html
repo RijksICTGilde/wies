@@ -1,3 +1,12 @@
+{# The task actions swap in this list instead of reloading base.html, so the
+   "gestart" / "al een taak actief" banners ride along as an OOB swap. Without
+   it the message is consumed but never shown, and resurfaces on the next page
+   load. Only under htmx: a full page load renders them in base.html. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 <nldd-title size="4">
 <h3>Recente taken</h3>
 </nldd-title>
@@ -46,7 +55,9 @@
        count (or an error message), sync_organizations reports record counts. #}
     {% if task.command == 'kb_publish' %}
       {% if task.status == 'completed' and task.result %}
-        {% set result_text = "Release " ~ (task.result.release ~ ", " if task.result.release else "") ~ task.result.objects ~ " bestanden gepubliceerd" %}
+        {# The release tag is the only part that can be absent (a publish of an
+           untagged artifact), and "Release" without one reads as truncated. #}
+        {% set result_text = (("Release " ~ task.result.release ~ ", ") if task.result.release else "") ~ task.result.objects ~ " bestanden gepubliceerd" %}
       {% elif task.status == 'failed' and task.error_message %}
         {% set result_text = task.error_message %}
       {% else %}

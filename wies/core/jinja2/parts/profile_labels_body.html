@@ -2,7 +2,8 @@
    only this part, so the open sheet stays. Fields come from the database (one per
    label category), hence the loop instead of naming them. #}
 <nldd-form>
-<form method="post"
+<form novalidate
+      method="post"
       action="{{ form_post_url }}"
       hx-post="{{ form_post_url }}"
       hx-target="#profileLabelsBody"

@@ -19,11 +19,6 @@ from django.shortcuts import redirect
 
 from wies.kb import storage
 
-# The publish task command + timeout. Kept here (the KB app owns the task) and
-# imported by the Wies admin view that triggers it.
-KB_PUBLISH_COMMAND = "kb_publish"
-KB_PUBLISH_TIMEOUT_MINUTES = 15
-
 
 def _resolve_key(path: str, prefix: str) -> str:
     """Map a request path under the KB mount to a MinIO object key.

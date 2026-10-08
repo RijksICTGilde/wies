@@ -23,6 +23,11 @@ _GITHUB_API = "https://api.github.com"
 _DOWNLOAD_TIMEOUT = 300
 _SITE_PREFIX_ROOT = "sites"
 
+# The task command name + timeout, declared next to the work they describe and
+# imported by the staff view that enqueues it.
+KB_PUBLISH_COMMAND = "kb_publish"
+KB_PUBLISH_TIMEOUT_MINUTES = 15
+
 
 @dataclass
 class PublishResult:

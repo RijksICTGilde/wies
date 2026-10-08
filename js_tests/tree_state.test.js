@@ -460,3 +460,129 @@ describe("collapseToParent: false (filter picker behaviour)", function () {
     assert.ok(!ts.explicitSelections.has("child"));
   });
 });
+
+describe("groupSelectsChildren (assignment picker: virtual folders)", function () {
+  // Ministeries(group) > AZ(org) > Agentschappen(group) > ODI(org), Logius(org)
+  function groupTree() {
+    return [
+      {
+        id: "group-Min",
+        label: "Ministeries",
+        group: true,
+        children: [
+          {
+            id: "az",
+            label: "AZ",
+            children: [
+              {
+                id: "group-Ag",
+                label: "Agentschappen",
+                group: true,
+                children: [
+                  { id: "odi", label: "ODI" },
+                  { id: "logius", label: "Logius" },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+  }
+
+  var opts = { collapseToParent: false, groupSelectsChildren: true };
+
+  it("ticking a group selects the concrete orgs, not the folder", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Ag");
+    // Folder ticks (checkbox) but is not itself a selection (no grey fill).
+    assert.equal(ts.getNode("group-Ag").checked, true);
+    assert.ok(!ts.explicitSelections.has("group-Ag"));
+    // The concrete orgs beneath it are the selection.
+    assert.ok(ts.explicitSelections.has("odi"));
+    assert.ok(ts.explicitSelections.has("logius"));
+  });
+
+  it("ticking a real-org parent keeps the org itself as the selection", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("az");
+    assert.ok(ts.explicitSelections.has("az"));
+    assert.ok(!ts.explicitSelections.has("odi"));
+  });
+
+  it("descends through nested groups to the concrete orgs", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Min"); // top group over AZ (a real org)
+    assert.ok(ts.explicitSelections.has("az"));
+    assert.ok(!ts.explicitSelections.has("group-Min"));
+  });
+
+  it("indexes the nested flag of a ministry-scoped folder", function () {
+    var data = groupTree();
+    data[0].children[0].children[0].nested = true;
+    var ts = new TreeState(data, opts);
+    assert.equal(ts.getNode("group-Ag").nested, true);
+    assert.equal(ts.getNode("group-Min").nested, false);
+  });
+
+  it("unticking one child leaves the rest selected, folder unticked", function () {
+    var ts = new TreeState(groupTree(), opts);
+    ts.check("group-Ag");
+    ts.uncheck("odi");
+    assert.ok(ts.explicitSelections.has("logius"));
+    assert.ok(!ts.explicitSelections.has("odi"));
+    assert.ok(!ts.explicitSelections.has("group-Ag"));
+  });
+});
+
+describe("unticking a child of a selected parent that holds a virtual folder", function () {
+  // BZ(org) > Adviescolleges van BZ(group) > AIV, CAVV ; Bestuur(org) ; DGES(org)
+  function ministryTree() {
+    return [
+      {
+        id: "bz",
+        label: "BZ",
+        children: [
+          {
+            id: "group-bz-Adviescollege",
+            label: "Adviescolleges van BZ",
+            group: true,
+            nested: true,
+            children: [
+              { id: "aiv", label: "AIV" },
+              { id: "cavv", label: "CAVV" },
+            ],
+          },
+          { id: "bestuur", label: "Bestuur" },
+          { id: "dges", label: "DGES" },
+        ],
+      },
+    ];
+  }
+
+  it("assignment picker: the folder's orgs become the selection, not the folder", function () {
+    var ts = new TreeState(ministryTree(), {
+      collapseToParent: false,
+      groupSelectsChildren: true,
+    });
+    ts.check("bz");
+    ts.uncheck("bestuur");
+    assert.deepEqual(Array.from(ts.explicitSelections.keys()).sort(), [
+      "aiv",
+      "cavv",
+      "dges",
+    ]);
+    assert.equal(ts.getNode("group-bz-Adviescollege").checked, true);
+    assert.equal(ts.getNode("bz").indeterminate, true);
+  });
+
+  it("filter picker: the folder itself stays the selection", function () {
+    var ts = new TreeState(ministryTree(), { collapseToParent: false });
+    ts.check("bz");
+    ts.uncheck("bestuur");
+    assert.deepEqual(Array.from(ts.explicitSelections.keys()).sort(), [
+      "dges",
+      "group-bz-Adviescollege",
+    ]);
+  });
+});

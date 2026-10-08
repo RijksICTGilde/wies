@@ -2,7 +2,7 @@ export COMPOSE_FILE := "docker-compose.yml"
 
 # Vendor package versies
 HTMX_VERSION := "2.0.8"
-NLDD_VERSION := "0.8.82"
+NLDD_VERSION := "0.8.92"
 
 # Default command to list all available commands.
 default:
@@ -47,8 +47,11 @@ up-production-postgres:
 
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production
+# Runs with production settings (the entrypoint's default): only those serve
+# static files under gunicorn, via WhiteNoise. Plain http on localhost needs
+# the host allowed and the https redirect off.
 up-production-django:
-  docker run --rm  --env-file .env -e DJANGO_SETTINGS_MODULE=config.settings.local -p 8000:8000 --network wies-network wies
+  docker run --rm --env-file .env -e DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1 -e DJANGO_SECURE_SSL_REDIRECT=false -p 8080:8000 --network wies-network wies
 
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production

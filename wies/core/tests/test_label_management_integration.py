@@ -362,7 +362,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         )
         response = self.client.post(self.url, data)
         assert response.status_code == 200
-        self.assertNotContains(response, "nldd-form-field-error-text")
+        self.assertNotContains(response, "nldd-validation-item")
         self.assertNotContains(response, "bestaat al")
         self.assertContains(response, 'name="form-1-name" value="b"')
         self.assertContains(response, 'name="form-2-name"')
@@ -377,7 +377,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         assert response.status_code == 200
         assert response.headers.get("HX-Redirect") is None
         self.assertContains(response, "Dit veld is verplicht.")
-        self.assertContains(response, "nldd-form-field-error-text")
+        self.assertContains(response, "nldd-validation-item")
         category.refresh_from_db()
         assert category.name == "Skills"
 
@@ -427,7 +427,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         assert response.headers.get("HX-Redirect") is None
         assert LabelCategory.objects.filter(name="Bestaand").count() == 1
 
-        self.assertContains(response, "nldd-form-field-error-text")
+        self.assertContains(response, "nldd-validation-item")
         self.assertContains(response, "invalid")
 
         # Surviving rows keep their values, with exactly three contiguous rows
