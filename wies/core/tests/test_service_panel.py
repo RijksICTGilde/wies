@@ -10,10 +10,11 @@ import re
 from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
-from django.test import Client, TestCase
+from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
+from wies.core.editables.service import request_period_text
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.role_helpers import make_bdm_user
 
@@ -468,6 +469,32 @@ class AanvraagFlexiblePeriodTest(TestCase):
         )
 
         assert self.assignment.services.get().duration_months is None
+
+
+class RequestPeriodTextTest(SimpleTestCase):
+    """Every combination the period of an aanvraag can be in, in words."""
+
+    def _text(self, **fields):
+        return request_period_text(Service(period_source=Service.SERVICE, **fields))
+
+    def test_each_combination_reads_as_a_sentence(self):
+        cases = {
+            "1 nov 2026 t/m 30 apr 2027": {
+                "specific_start_date": date(2026, 11, 1),
+                "specific_end_date": date(2027, 4, 30),
+            },
+            "Per direct t/m 30 apr 2027": {"starts_immediately": True, "specific_end_date": date(2027, 4, 30)},
+            "t/m 30 apr 2027": {"specific_end_date": date(2027, 4, 30)},
+            "Per direct, voor 1 jaar": {"starts_immediately": True, "duration_months": 12},
+            "Vanaf 1 nov 2026, voor 6 maanden": {"specific_start_date": date(2026, 11, 1), "duration_months": 6},
+            "Voor 6 maanden": {"duration_months": 6},
+            "Per direct": {"starts_immediately": True},
+            "Vanaf 1 nov 2026": {"specific_start_date": date(2026, 11, 1)},
+            "": {},
+        }
+        for expected, fields in cases.items():
+            with self.subTest(expected):
+                assert self._text(**fields) == expected
 
 
 class LeavingAnAanvraagTest(TestCase):

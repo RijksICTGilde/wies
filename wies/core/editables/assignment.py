@@ -13,7 +13,7 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.editables.service import ServiceEditables
+from wies.core.editables.service import ServiceEditables, request_period_text
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
@@ -194,6 +194,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
     aanvraag row shows them to everyone. ``shown_hours`` is the outcome.
+    ``period_text`` is an aanvraag row's period in words.
 
     ``panel_url`` is where the row leads: a placed row to the colleague panel
     with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
@@ -210,6 +211,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
         if placement is None:  # vacancy → visible to everyone
             row["panel_url"] = _panel_query(opdracht=row["assignment_public_id"], aanvraag=row["service_public_id"])
             row["shown_hours"] = row["hours_per_week"]
+            row["period_text"] = request_period_text(row["service"])
             visible.append(row)
             continue
         row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])

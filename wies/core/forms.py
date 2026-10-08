@@ -520,6 +520,14 @@ class ServiceForm(NlddFormMixin, forms.Form):
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 
+    def shown_period_modes(self) -> tuple[str, str]:
+        """The start and end choice the sheet shows, by the same rule clean()
+        applies on save."""
+        names = ("start_mode", "end_mode", "is_filled", "placement_end_date", "duration_months")
+        values = {name: self[name].value() for name in names}
+        end_mode = self._apply_period_modes(values, inherit=False)
+        return ("NOW" if values["starts_immediately"] else "DATE"), end_mode
+
     @staticmethod
     def _apply_period_modes(cleaned_data: dict, *, inherit: bool) -> str:
         """Keeps only the period fields the start and end choices point at, and

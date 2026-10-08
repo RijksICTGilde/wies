@@ -1,10 +1,7 @@
 {% set svc_form = panel_data.member_form %}
 {% set obj = panel_data.assignment %}
 {% set panel_heading = panel_data.member_heading %}
-{# Opened from the aanvraag panel, the sheet returns there (parent_url keeps
-   ?aanvraag=), so the back button names it. #}
-{% set back_text = "Aanvraag" if "aanvraag=" in panel_data.parent_url else obj.name %}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ back_text }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
 <h3 id="panel-title" tabindex="-1">{{ panel_heading }}</h3>
@@ -138,9 +135,7 @@
      segmented controls do not post; the hidden inputs at the bottom carry the
      choices ("on" = inherit, start_mode, end_mode). #}
   {% set inherits = svc_form.has_custom_period.value() %}
-  {% set starts_now = is_request and svc_form.start_mode.value() == "NOW" %}
-  {% set end_mode = svc_form.end_mode.value() or "OPEN" %}
-  {% set end_mode = "OPEN" if end_mode == "DURATION" and not is_request else end_mode %}
+  {% set start_mode, end_mode = svc_form.shown_period_modes() %}
   <nldd-form-field label="Periode">
   <nldd-segmented-control width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
   <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
@@ -174,13 +169,13 @@
   <nldd-container padding="16" gap="16">
   <nldd-form-field label="Start">
   <div data-start-choice-field{% if not is_request %} hidden{% endif %}>
-    <nldd-segmented-control width="full" accessible-label="Start" value="{{ 'NOW' if starts_now else 'DATE' }}" data-start-choice>
+    <nldd-segmented-control width="full" accessible-label="Start" value="{{ start_mode }}" data-start-choice>
     <nldd-segmented-control-item value="NOW" text="Per direct"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
     </nldd-segmented-control>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   </div>
-  <div data-start-date{% if starts_now %} hidden{% endif %}>
+  <div data-start-date{% if start_mode == "NOW" %} hidden{% endif %}>
     {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum"}) }}
   </div>
   {% if svc_form.placement_start_date.errors %}
@@ -247,7 +242,7 @@
          data-inherit-input>
   <input type="hidden"
          name="{{ svc_form.start_mode.html_name }}"
-         value="{{ 'NOW' if starts_now else 'DATE' }}"
+         value="{{ start_mode }}"
          data-start-mode-input>
   <input type="hidden"
          name="{{ svc_form.end_mode.html_name }}"

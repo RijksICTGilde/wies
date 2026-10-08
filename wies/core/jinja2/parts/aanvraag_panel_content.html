@@ -1,4 +1,3 @@
-{% from "parts/request_period.html" import request_period %}
 {# The read view of one aanvraag (an open role on an opdracht). A team row for
    a placement opens that colleague's panel; an aanvraag has no colleague, so
    it opens this. Same box-tinted label/value list as the opdracht panel. #}
@@ -54,8 +53,7 @@
   <nldd-list-item>
   <nldd-text-cell width="140px" text="Periode" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  {% set period_text = request_period(service)|trim %}
-  <nldd-text-cell vertical-alignment="top" text="{{ period_text or 'Geen periode opgegeven' }}"></nldd-text-cell>
+  <nldd-text-cell vertical-alignment="top" text="{{ panel_data.period_text }}"></nldd-text-cell>
   </nldd-list-item>
   {% if service.hours_per_week %}
     <nldd-list-item>

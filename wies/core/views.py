@@ -625,6 +625,7 @@ def _build_aanvraag_panel_data(service, request):
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.service import request_period_text  # noqa: PLC0415
 
     assignment = service.assignment
     return {
@@ -634,6 +635,7 @@ def _build_aanvraag_panel_data(service, request):
         "service": service,
         "assignment": assignment,
         "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
+        "period_text": request_period_text(service) or "Geen periode opgegeven",
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         # Keeps ?aanvraag=, so saving or going back lands on this panel again.
         "edit_url": _build_panel_url(
@@ -4602,14 +4604,18 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
             member_heading = "Teamlid wijzigen"
         member_form = ServiceForm(initial=initial_row, skill_choices=skill_choices())
 
+    if parent_url is None:
+        parent_url = _url_drop_params(request.path, request.GET, ("teamlid",))
+    from_aanvraag = QueryDict(urllib.parse.urlparse(parent_url).query).get("aanvraag")
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
         "assignment": assignment,
         "member_form": member_form,
         "member_heading": member_heading,
-        "parent_url": parent_url
-        if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "parent_url": parent_url,
+        # Opened from the aanvraag panel, the sheet returns there, so the back
+        # button names it.
+        "back_text": "Aanvraag" if from_aanvraag else assignment.name,
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
