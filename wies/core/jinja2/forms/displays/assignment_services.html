@@ -1,4 +1,5 @@
 {% from "parts/privacy_chip.html" import privacy_chip %}
+{% from "parts/request_period.html" import request_period %}
 {# Display partial for the Assignment services EditableCollection. Renders the
 team list from `value` (row dicts from _services_initial, viewer-filtered and
 vacancies-first via _services_display_context). Edit mode swaps the inline-edit
@@ -97,12 +98,11 @@ profiel" with the actions. #}
       {% else %}
         <span>Aanvraag: {{ row.skill_name }}</span>
       {% endif %}
-      {% if (svc and (svc.start_date or svc.end_date)) or row.hours_per_week %}
+      {% set period_text = request_period(svc)|trim if svc else "" %}
+      {% if period_text or row.hours_per_week %}
         <span slot="supporting-text" class="wies-team-row-meta">
-          {% if svc and (svc.start_date or svc.end_date) %}
-            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-              {%- if svc.start_date and svc.end_date %}{{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}{% elif svc.start_date %}Vanaf {{ svc.start_date|datum_nl }}{% else %}t/m {{ svc.end_date|datum_nl }}{% endif -%}
-            </span>
+          {% if period_text %}
+            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>{{ period_text }}</span>
           {% endif %}
           {% if row.hours_per_week %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.hours_per_week }} uur</span>{% endif %}
         </span>

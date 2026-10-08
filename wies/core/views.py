@@ -589,7 +589,10 @@ def _build_service_panel_data(service, request):
         "assignment": assignment,
         "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
-        "edit_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid=service.public_id),
+        # Keeps ?aanvraag=, so saving or going back lands on this panel again.
+        "edit_url": _build_panel_url(
+            request, opdracht=assignment.public_id, aanvraag=service.public_id, teamlid=service.public_id
+        ),
     }
 
 
@@ -763,8 +766,10 @@ def bezetting(request):
     panel_data = _assignment_create_panel(request)
     if panel_data is None and placement_id:
         panel_data = _placement_alias_panel(request, placement_id)
-    elif panel_data is None and service_id:
+    elif panel_data is None and service_id and not request.GET.get("teamlid"):
         # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
+        # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
+        # opdracht panel opens, and it returns to the aanvraag when done.
         service = _resolve_service_panel(request, service_id)
         if service is not None:
             panel_data = _build_service_panel_data(service, request)
@@ -1821,7 +1826,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
-        elif service_id:
+        elif service_id and not self.request.GET.get("teamlid"):
             service = _resolve_service_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = _build_service_panel_data(service, self.request)
@@ -2076,7 +2081,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             panel_data = _placement_alias_panel(self.request, placement_id)
             if panel_data is not None:
                 context["panel_data"] = panel_data
-        elif self.request.GET.get("aanvraag"):
+        elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
             service = _resolve_service_panel(self.request, self.request.GET["aanvraag"])
             if service is not None:
                 context["panel_data"] = _build_service_panel_data(service, self.request)
@@ -3587,7 +3592,7 @@ def user_profile(request):
 
     if placement_id:
         panel_data = _placement_alias_panel(request, placement_id)
-    elif request.GET.get("aanvraag"):
+    elif request.GET.get("aanvraag") and not request.GET.get("teamlid"):
         service = _resolve_service_panel(request, request.GET["aanvraag"])
         if service is not None:
             panel_data = _build_service_panel_data(service, request)

@@ -7,6 +7,18 @@
   const statusGroup = form.querySelector("[data-status-choice]");
   const colleagueField = form.querySelector("[data-colleague-field]");
   const colleagueSelect = form.querySelector("[name='colleague']");
+  const requestFields = form.querySelectorAll("[data-request-field]");
+  const tasksField = form.querySelector("[data-tasks-field]");
+  const tasksInput = form.querySelector("[name='description']");
+  const requestInput = form.querySelector("[name='request_description']");
+  const requestSource = form.querySelector("[data-request-source]");
+  const previewToggle = form.querySelector("[data-request-preview-toggle]");
+  const preview = form.querySelector("[data-request-preview]");
+  const previewText = form.querySelector("[data-request-preview-text]");
+  const copyButton = form.querySelector("[data-copy-request]");
+  const checkedStatus = form.querySelector("[data-status-choice] [checked]");
+  let status = checkedStatus ? checkedStatus.getAttribute("value") : "aanvraag";
+  let period = null;
   const skillCombo = form.querySelector("[data-skill-choice]");
   const newSkillField = form.querySelector("[data-new-skill-field]");
   const newSkillInput = form.querySelector("[data-new-skill-input]");
@@ -25,11 +37,78 @@
       if (e.detail && e.detail.checked === false) return;
       const value = e.detail && e.detail.value;
       if (!value) return;
+      status = value;
       const filled = value === "ingevuld";
       if (colleagueField) colleagueField.hidden = !filled;
+      requestFields.forEach((field) => (field.hidden = filled));
+      if (tasksField) tasksField.hidden = !filled;
       // An aanvraag names nobody; drop a leftover consultant choice.
       if (!filled && colleagueSelect) colleagueSelect.value = "";
+      if (period) period.refresh();
+      updateRequestSource();
     });
+  }
+
+  function requestText() {
+    return requestInput ? (requestInput.value || "").trim() : "";
+  }
+
+  // Only when filling a role that has a vacancy text to offer.
+  function updateRequestSource() {
+    if (requestSource)
+      requestSource.hidden = status !== "ingevuld" || !requestText();
+  }
+
+  if (previewToggle && preview) {
+    previewToggle.addEventListener("click", () => {
+      const open = preview.hidden;
+      if (open && previewText) previewText.textContent = requestInput.value;
+      preview.hidden = !open;
+      previewToggle.toggleAttribute("expanded", open);
+      previewToggle.setAttribute(
+        "start-icon",
+        open ? "chevron-up" : "chevron-down",
+      );
+      previewToggle.setAttribute(
+        "text",
+        open
+          ? "Omschrijving van de aanvraag verbergen"
+          : "Omschrijving van de aanvraag bekijken",
+      );
+    });
+  }
+
+  const copyDialog = document.querySelector("[data-copy-request-dialog]");
+
+  function copyRequest() {
+    tasksInput.value = requestInput.value;
+    tasksInput.focus();
+  }
+
+  if (copyButton && tasksInput) {
+    copyButton.addEventListener("click", async () => {
+      const current = (tasksInput.value || "").trim();
+      // Taken already written by hand are not overwritten unasked.
+      if (!current || current === requestText() || !copyDialog) {
+        copyRequest();
+        return;
+      }
+      // show() does nothing before Lit has rendered the shadow <dialog>.
+      await copyDialog.updateComplete;
+      copyDialog.show();
+    });
+  }
+
+  if (copyDialog) {
+    copyDialog
+      .querySelector("[data-copy-request-cancel]")
+      .addEventListener("click", () => copyDialog.hide());
+    copyDialog
+      .querySelector("[data-copy-request-confirm]")
+      .addEventListener("click", () => {
+        copyDialog.hide();
+        copyRequest();
+      });
   }
 
   if (skillCombo && newSkillField) {
@@ -48,12 +127,16 @@
 
   if (!periodGroup) return;
 
-  window.WiesPeriodFields({
+  period = window.WiesPeriodFields({
     group: periodGroup,
     startInput,
     endInput,
     endKnownSwitch,
     periodHelp,
+    startsNowSwitch: form.querySelector("[data-starts-now]"),
+    startsNowInput: form.querySelector("[data-starts-now-input]"),
+    durationField: form.querySelector("[data-duration-field]"),
+    isRequest: () => status !== "ingevuld",
     inheritStart: assignmentStart,
     inheritEnd: assignmentEnd,
     writeInherit: (inherit) => {

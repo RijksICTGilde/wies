@@ -8,7 +8,7 @@ from django import forms
 from django.core.validators import MaxValueValidator, MinValueValidator
 
 from wies.core.inline_edit import Editable, EditableSet
-from wies.core.models import HOURS_PER_WEEK_CHOICES, MAX_HOURS_PER_WEEK, Service
+from wies.core.models import HOURS_PER_WEEK_CHOICES, MAX_HOURS_PER_WEEK, REQUEST_DURATION_CHOICES, Service
 
 
 class ServiceEditables(EditableSet):
@@ -18,6 +18,18 @@ class ServiceEditables(EditableSet):
     description = Editable(
         label="Taken",
         widget=forms.Textarea(attrs={"rows": 2}),
+    )
+    request_description = Editable(
+        label="Omschrijving",
+        widget=forms.Textarea(attrs={"rows": 8}),
+        display="forms/displays/textarea.html",
+    )
+    location = Editable(label="Standplaats")
+    starts_immediately = Editable(label="Per direct")
+    duration_months = Editable(
+        label="Duur",
+        widget=forms.Select(choices=[("", " "), *REQUEST_DURATION_CHOICES]),
+        display=lambda s: s.get_duration_months_display() if s.duration_months else "",
     )
     skill = Editable(label="Rol")
     hours_per_week = Editable(

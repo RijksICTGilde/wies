@@ -436,10 +436,12 @@ class ServiceForm(NlddFormMixin, forms.Form):
     skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
         label="Taken",
-        max_length=500,
+        max_length=2000,
         required=False,
         widget=forms.Textarea(attrs={"rows": 2}),
     )
+    request_description = ServiceEditables.request_description.form_field()
+    location = ServiceEditables.location.form_field()
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     # Hours belong to the role, so an open aanvraag carries them too. A list,
     # not a number input: nldd-text-field has no number type.
@@ -461,6 +463,8 @@ class ServiceForm(NlddFormMixin, forms.Form):
     has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
+    starts_immediately = ServiceEditables.starts_immediately.form_field()
+    duration_months = ServiceEditables.duration_months.form_field()
 
     def __init__(self, *args, skill_choices, **kwargs):
         super().__init__(*args, **kwargs)
@@ -480,15 +484,26 @@ class ServiceForm(NlddFormMixin, forms.Form):
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
+        # "Per direct" and a duration are an aanvraag's way to say when; a
+        # placement runs on dates, so filling one asks for those.
+        if inherit_from_assignment or cleaned_data.get("is_filled") == "ingevuld":
+            cleaned_data["starts_immediately"] = False
+            cleaned_data["duration_months"] = None
         if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
             cleaned_data["placement_start_date"] = None
             cleaned_data["placement_end_date"] = None
         else:
+            starts_now = cleaned_data.get("starts_immediately")
+            if starts_now:
+                cleaned_data["placement_start_date"] = None
             p_start = cleaned_data.get("placement_start_date")
             p_end = cleaned_data.get("placement_end_date")
-            cleaned_data["has_custom_period"] = bool(p_start or p_end)
-            if not p_start and not p_end:
+            if p_end:
+                cleaned_data["duration_months"] = None
+            duration = cleaned_data.get("duration_months")
+            cleaned_data["has_custom_period"] = bool(p_start or p_end or starts_now or duration)
+            if not cleaned_data["has_custom_period"]:
                 self.add_error("placement_start_date", "Vul een periode in of neem de opdrachtperiode over.")
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")

@@ -10,12 +10,20 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
   const inheritStart = options.inheritStart || "";
   const inheritEnd = options.inheritEnd || "";
   const writeInherit = options.writeInherit;
+  // Aanvraag only (member_form.js): "Per direct" in place of a start date and
+  // a duration in place of an end date. Absent elsewhere, so the block
+  // behaves as before.
+  const startsNowSwitch = options.startsNowSwitch;
+  const startsNowInput = options.startsNowInput;
+  const durationField = options.durationField;
+  const isRequest = options.isRequest || (() => false);
 
   // Hide the whole field, not just the input, or the label stays behind.
   const fieldOf = (el) => el && (el.closest("nldd-form-field") || el);
   const startField = fieldOf(startInput);
   const endField = fieldOf(endInput);
   const endKnownField = fieldOf(endKnownSwitch);
+  const startsNowField = fieldOf(startsNowSwitch);
 
   function inherits() {
     if (!group) return checkbox.checked;
@@ -26,18 +34,30 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
     return !endKnownSwitch || endKnownSwitch.hasAttribute("checked");
   }
 
+  function startsNowOn() {
+    return !!startsNowSwitch && startsNowSwitch.hasAttribute("checked");
+  }
+
   // So toggling the switch off and on does not wipe the entered date. An
   // inherited period is not the user's own choice and is not remembered.
   let lastEndDate = endInput ? endInput.value : "";
 
-  function update(inherit, knownOverride) {
+  function update(inherit, knownOverride, startsNowOverride) {
     writeInherit(inherit);
+    const request = isRequest();
+    // The overrides: during the change event the attribute is not updated yet.
+    const startsNow =
+      request &&
+      (startsNowOverride === undefined ? startsNowOn() : startsNowOverride);
     if (periodHelp) periodHelp.hidden = !inherit;
-    if (startField) startField.hidden = inherit;
+    if (startsNowField) startsNowField.hidden = inherit || !request;
+    if (startsNowInput)
+      startsNowInput.value = !inherit && startsNow ? "on" : "";
+    if (startField) startField.hidden = inherit || startsNow;
     if (endKnownField) endKnownField.hidden = inherit;
-    // knownOverride: during the change event the attribute is not updated yet.
     const known = knownOverride === undefined ? endDateKnown() : knownOverride;
     if (endField) endField.hidden = inherit || !known;
+    if (durationField) durationField.hidden = inherit || !request || known;
     if (inherit) {
       if (startInput) startInput.value = inheritStart;
       if (endInput) endInput.value = inheritEnd;
@@ -69,5 +89,13 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
     });
   }
 
+  if (startsNowSwitch) {
+    startsNowSwitch.addEventListener("change", (e) => {
+      const on = e.detail ? e.detail.checked : startsNowOn();
+      update(inherits(), undefined, on);
+    });
+  }
+
   update(inherits());
+  return { refresh: () => update(inherits()) };
 };

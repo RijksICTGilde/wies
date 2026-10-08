@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ???: an aanvraag has its own "Omschrijving", long enough for a full vacancy text (up to 10000 characters), apart from the role's "Taken", and a "Standplaats". Its period can start "per direct" and run for a duration (3 months to 2 years) instead of an end date; filling the aanvraag asks for dates as before, and offers its description to read and take over as "Taken" (now up to 2000 characters). Existing aanvragen start with their old taken as description.
 - 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the taken. Old `?plaatsing=` links keep working.
 - 693: an aanvraag on a team row opens its own panel instead of being a dead end, and only a real aanvraag does: a filled role used to open it too, showing the placed colleague's hours and taken past the rules the team row applies.
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere, never "bewerken", and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".

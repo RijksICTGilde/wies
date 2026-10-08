@@ -141,7 +141,14 @@ def _services_initial(assignment):
         effective_end = placement.end_date if placement else service.end_date
         # Compared on the effective period rather than placement.period_source,
         # which lies for a placement inheriting from a service with pinned dates.
-        inherits_assignment_period = effective_start == assignment.start_date and effective_end == assignment.end_date
+        # "Per direct" or a duration is a period of its own, even when the
+        # dates it leaves empty happen to match an opdracht without dates.
+        inherits_assignment_period = (
+            effective_start == assignment.start_date
+            and effective_end == assignment.end_date
+            and not service.starts_immediately
+            and not service.duration_months
+        )
         rows.append(
             {
                 # public_id strings: these identify the row across the client
@@ -154,6 +161,10 @@ def _services_initial(assignment):
                 "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
+                "request_description": service.request_description,
+                "location": service.location,
+                "starts_immediately": service.starts_immediately,
+                "duration_months": service.duration_months,
                 "hours_per_week": service.hours_per_week,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
@@ -257,6 +268,8 @@ def _service_audit_row(row: dict) -> dict:
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
         "description": row["description"] or "",
+        # No request_description: a vacancy text is too long to quote in the
+        # timeline's running sentence, so like the hours it leaves no entry.
         # No hours_per_week: no history is kept of a role's hours (agreed with
         # Patrick, 13 July 2026), so an hours-only edit leaves no timeline entry.
         # Included so a period-only edit registers as a change (#393).

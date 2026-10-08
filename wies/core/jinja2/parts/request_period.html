@@ -1,0 +1,17 @@
+{# The period of an aanvraag in words: dates where known, otherwise "Per
+   direct" for the start and the duration for the end. Empty without either.
+
+   Import with: {% from "parts/request_period.html" import request_period %} #}
+{% macro request_period(svc) -%}
+  {%- set start = "Per direct" if svc.starts_immediately else (svc.start_date|datum_nl if svc.start_date else "") -%}
+  {%- set duration = svc.get_duration_months_display() if svc.duration_months else "" -%}
+  {%- if svc.end_date -%}
+    {{ start ~ " t/m " if start else "t/m " }}{{ svc.end_date|datum_nl }}
+  {%- elif duration -%}
+    {{ ("" if svc.starts_immediately else "Vanaf ") ~ start ~ ", voor " if start else "Voor " }}{{ duration }}
+  {%- elif svc.starts_immediately -%}
+    Per direct
+  {%- elif start -%}
+    Vanaf {{ start }}
+  {%- endif -%}
+{%- endmacro %}
