@@ -2,7 +2,10 @@ import copy
 import io
 from datetime import date
 from pathlib import Path
+from unittest.mock import patch
 
+import pytest
+import requests
 from django.test import TestCase
 from django.utils import timezone
 
@@ -1271,3 +1274,75 @@ class OrgBreadcrumbMinistryTest(TestCase):
         gem = OrganizationUnit.objects.create(name="Gemeente X", label="Gemeente X")
         crumb = get_org_breadcrumb(gem, "/")
         assert crumb["ancestors"] == []
+
+
+class ExportNamespaceTest(TestCase):
+    """The schema version in the export's namespace changes without notice."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
+        with fixture_path.open("rb") as f:
+            cls.xml_content = f.read()
+
+    def test_other_schema_version_parses_the_same(self):
+        assert b"oo/export/2.6.13" in self.xml_content
+        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.7.0")
+
+        assert _parse_xml(bumped) == _parse_xml(self.xml_content)
+
+    def test_namespaced_attributes_are_read(self):
+        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.7.0")
+        result = _parse_xml(bumped)
+
+        assert any(org["tooi_identifier"] for org in result)
+        assert any(org["system_id"] for org in result)
+        assert any(org["related_ministry_tooi"] for org in result)
+
+    def test_foreign_namespace_raises(self):
+        foreign = self.xml_content.replace(
+            b"https://organisaties.overheid.nl/static/schema/oo/export/2.6.13", b"https://example.org/other"
+        )
+
+        with self.assertRaisesMessage(ValueError, "https://example.org/other"):
+            _parse_xml(foreign)
+
+    def test_document_without_namespace_raises(self):
+        with self.assertRaisesMessage(ValueError, "Unexpected XML namespace"):
+            _parse_xml(b"<overheidsorganisaties><organisaties/></overheidsorganisaties>")
+
+
+class SyncOrganizationsFailureTest(TestCase):
+    """A sync that cannot have worked must fail instead of reporting success."""
+
+    EMPTY_EXPORT = (
+        b'<p:overheidsorganisaties xmlns:p="https://organisaties.overheid.nl/static/schema/oo/export/2.6.13">'
+        b"<p:organisaties></p:organisaties></p:overheidsorganisaties>"
+    )
+
+    def test_export_without_organizations_raises_and_leaves_data_alone(self):
+        active = OrganizationUnit.objects.create(
+            name="Bestaand", label="Bestaand", source_url="https://organisaties.overheid.nl/1/Bestaand/"
+        )
+        inactive = OrganizationUnit.objects.create(name="Oud", label="Oud", end_date=date(2020, 1, 1))
+
+        with self.assertRaisesMessage(ValueError, "No organizations found"):
+            sync_organizations(xml_content=self.EMPTY_EXPORT, dry_run=False)
+
+        active.refresh_from_db()
+        assert active.end_date is None
+        assert OrganizationUnit.objects.filter(pk=inactive.pk).exists()
+
+    def test_http_error_raises(self):
+        response = requests.Response()
+        response.status_code = 500
+        response.raw = io.BytesIO(b"")
+
+        with (
+            patch("wies.core.services.organizations.requests.get", return_value=response) as mock_get,
+            pytest.raises(requests.HTTPError),
+        ):
+            sync_organizations()
+
+        mock_get.assert_called_once()

@@ -27,7 +27,10 @@ from wies.core.services.events import create_event
 logger = logging.getLogger(__name__)
 
 ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.xml"
-NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.13"}
+# The export's XML namespace ends in a schema version (e.g. ".../export/2.6.13")
+# that overheid.nl bumps without notice, so only the prefix is fixed here and
+# the full namespace is read from each document.
+NS_PREFIX = "https://organisaties.overheid.nl/static/schema/oo/export/"
 
 # Organizations excluded from sync (intelligence services).
 # All comparisons are case-insensitive.
@@ -118,17 +121,20 @@ class SyncResult:
 
 def parse_organization_element(
     org_elem: ET.Element,
+    ns: dict[str, str],
 ) -> dict | None:
     """Parse a single organization element from XML.
 
+    ``ns`` maps the ``p`` prefix to the document's namespace.
+
     Returns dict with organization data, including nested children and end_date.
     """
-    name = org_elem.findtext("p:naam", "", NS).strip()
-    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
+    name = org_elem.findtext("p:naam", "", ns).strip()
+    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", ns) if a.text]
 
     # Parse eindDatum into end_date
     end_date = None
-    einddatum_elem = org_elem.find("p:eindDatum", NS)
+    einddatum_elem = org_elem.find("p:eindDatum", ns)
     if einddatum_elem is not None and einddatum_elem.text:
         try:
             end_date = datetime.fromisoformat(einddatum_elem.text.strip()).date()
@@ -136,11 +142,11 @@ def parse_organization_element(
             # Invalid date format, log and continue processing
             logger.warning("Invalid eindDatum format for organization '%s': %s", name, einddatum_elem.text)
 
-    org_type_names = [t.text for t in org_elem.findall("p:types/p:type", NS) if t.text]
+    org_type_names = [t.text for t in org_elem.findall("p:types/p:type", ns) if t.text]
 
     # Get identifiers
-    tooi = org_elem.get(f"{{{NS['p']}}}resourceIdentifierTOOI", "")
-    system_id = org_elem.get(f"{{{NS['p']}}}systeemId", org_elem.get("systeemId", ""))
+    tooi = org_elem.get(f"{{{ns['p']}}}resourceIdentifierTOOI", "")
+    system_id = org_elem.get(f"{{{ns['p']}}}systeemId", org_elem.get("systeemId", ""))
 
     # Initialize label with default value
     label = name
@@ -151,17 +157,17 @@ def parse_organization_element(
 
     # Get related ministry TOOI from relatieMetMinisterie element's attribute
     related_ministry_tooi = ""
-    related_ministry_elem = org_elem.find("p:relatieMetMinisterie", NS)
+    related_ministry_elem = org_elem.find("p:relatieMetMinisterie", ns)
     if related_ministry_elem is not None:
-        related_ministry_tooi = related_ministry_elem.get(f"{{{NS['p']}}}resourceIdentifierTOOI", "")
+        related_ministry_tooi = related_ministry_elem.get(f"{{{ns['p']}}}resourceIdentifierTOOI", "")
 
     # Build source URL
     source_url = build_source_url(system_id, name)
 
     # Parse nested organizations
     children = []
-    for child_elem in org_elem.findall("p:organisaties/p:organisatie", NS):
-        child_data = parse_organization_element(child_elem)
+    for child_elem in org_elem.findall("p:organisaties/p:organisatie", ns):
+        child_data = parse_organization_element(child_elem, ns)
         if child_data:
             # Propagate parent's end_date to children without an earlier one
             if end_date is not None:
@@ -184,32 +190,44 @@ def parse_organization_element(
     }
 
 
-_ROOT_ORG_TAG = f"{{{NS['p']}}}organisatie"
-_ORGS_WRAPPER_TAG = f"{{{NS['p']}}}organisaties"
-
-
 def iter_root_organizations(xml_source: IO[bytes] | str) -> Iterator[dict]:
     """Stream top-level organizations from XML, clearing parsed elements as we go.
 
     Yields one parsed dict per root <organisatie> and then drops the underlying
     Element so the DOM never grows to hold the full document. Keeps peak memory
     bounded to a single org subtree instead of the entire 30+ MB export.
+
+    Raises ValueError when the document is not an overheid.nl organization export.
     """
     context = ET.iterparse(xml_source, events=("start", "end"))  # noqa: S314 (xml.etree vulnerable to XML attacks) — input is trusted government export from organisaties.overheid.nl
     depth = 0
     root_wrapper: ET.Element | None = None
+    ns: dict[str, str] = {}
+    org_tag = ""
+    orgs_wrapper_tag = ""
 
     for event, elem in context:
+        if not ns:
+            # First event is the start of the document root; its namespace
+            # (including the schema version) applies to the whole export.
+            namespace = elem.tag[1:].partition("}")[0] if elem.tag.startswith("{") else ""
+            if not namespace.startswith(NS_PREFIX):
+                msg = f"Unexpected XML namespace for organization export: {namespace!r}"
+                raise ValueError(msg)
+            ns = {"p": namespace}
+            org_tag = f"{{{namespace}}}organisatie"
+            orgs_wrapper_tag = f"{{{namespace}}}organisaties"
+
         if event == "start":
-            if elem.tag == _ORGS_WRAPPER_TAG and root_wrapper is None:
+            if elem.tag == orgs_wrapper_tag and root_wrapper is None:
                 # The first <organisaties> we see is the document-level wrapper
                 # whose direct children are the top-level orgs.
                 root_wrapper = elem
-            if elem.tag == _ROOT_ORG_TAG:
+            if elem.tag == org_tag:
                 depth += 1
             continue
 
-        if elem.tag != _ROOT_ORG_TAG:
+        if elem.tag != org_tag:
             continue
 
         depth -= 1
@@ -217,7 +235,7 @@ def iter_root_organizations(xml_source: IO[bytes] | str) -> Iterator[dict]:
             # Nested <organisatie> — parent will process it as a child.
             continue
 
-        org_data = parse_organization_element(elem)
+        org_data = parse_organization_element(elem, ns)
         if org_data is not None:
             yield org_data
 
@@ -468,13 +486,17 @@ def sync_organizations(
         logger.info("Fetching organizations from %s", fetch_url)
 
         with requests.get(fetch_url, timeout=120, stream=True) as response:
-            if response.status_code != 200:  # noqa: PLR2004 (status code is not magic)
-                logger.error("Unable to get xml content")
-                return None
+            response.raise_for_status()
             # Stream the response body straight into iterparse so the raw XML
             # is never fully buffered in memory.
             response.raw.decode_content = True
             result = result + _sync_stream(iter_root_organizations(response.raw))
+
+    if root_count == 0:
+        # An export without organizations is never valid; reporting it as a
+        # successful sync hides a broken source until the data has gone stale.
+        msg = "No organizations found in XML export"
+        raise ValueError(msg)
 
     logger.info("Synced %d root organizations from XML (streamed)", root_count)
 
