@@ -26,6 +26,15 @@ MAX_HOURS_PER_WEEK = 40
 DEFAULT_HOURS_PER_WEEK = 36
 # A select rather than a number input: nldd-text-field has no number type.
 HOURS_PER_WEEK_CHOICES = [("", " "), *((h, f"{h} uur") for h in range(1, MAX_HOURS_PER_WEEK + 1))]
+# How long an aanvraag runs, for when it has no end date yet.
+REQUEST_DURATION_CHOICES = [
+    (3, "3 maanden"),
+    (6, "6 maanden"),
+    (9, "9 maanden"),
+    (12, "1 jaar"),
+    (18, "18 maanden"),
+    (24, "2 jaar"),
+]
 
 
 DEFAULT_SUBORGANIZATIONS = {
@@ -317,7 +326,15 @@ class Service(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
-    description = models.CharField(max_length=500, blank=True)
+    description = models.CharField(max_length=2000, blank=True)
+    # The vacancy text of an aanvraag, apart from ``description`` (the role's
+    # "Taken"), so a long posting does not become the placed colleague's cv text.
+    request_description = models.TextField("Aanvraagomschrijving", blank=True, max_length=10000)
+    location = models.CharField("Standplaats", max_length=100, blank=True)
+    # An aanvraag often knows when and how long, not which dates: "per direct,
+    # for a year". Only an aanvraag carries these; filling it asks for dates.
+    starts_immediately = models.BooleanField("Per direct", default=False)
+    duration_months = models.PositiveSmallIntegerField("Duur", null=True, blank=True, choices=REQUEST_DURATION_CHOICES)
     skill = models.ForeignKey("Skill", models.SET_NULL, related_name="services", null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True)  # do not use directly, see property below

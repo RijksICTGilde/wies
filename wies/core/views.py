@@ -175,6 +175,19 @@ def _url_drop_params(path, query, names, **overrides):
     return f"{path}?{encoded}" if encoded else path
 
 
+def _url_without_aanvraag(url: str, service_public_id) -> str:
+    """Drops ``?aanvraag=`` from ``url`` when it names this service.
+
+    For a service that just stopped being an aanvraag (filled or deleted): its
+    panel would 404, and htmx swaps nothing on an error, leaving the sheet open.
+    """
+    parsed = urllib.parse.urlparse(url)
+    query = QueryDict(parsed.query)
+    if service_public_id is None or query.get("aanvraag") != str(service_public_id):
+        return url
+    return _url_drop_params(parsed.path, query, ("aanvraag",))
+
+
 def _build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
@@ -612,6 +625,7 @@ def _build_aanvraag_panel_data(service, request):
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.service import request_period_text  # noqa: PLC0415
 
     assignment = service.assignment
     return {
@@ -621,8 +635,12 @@ def _build_aanvraag_panel_data(service, request):
         "service": service,
         "assignment": assignment,
         "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
+        "period_text": request_period_text(service) or "Geen periode opgegeven",
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
-        "edit_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid=service.public_id),
+        # Keeps ?aanvraag=, so saving or going back lands on this panel again.
+        "edit_url": _build_panel_url(
+            request, opdracht=assignment.public_id, aanvraag=service.public_id, teamlid=service.public_id
+        ),
     }
 
 
@@ -740,8 +758,10 @@ def bezetting(request):
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
     panel_data = _assignment_create_panel(request)
-    if panel_data is None and service_id:
+    if panel_data is None and service_id and not request.GET.get("teamlid"):
         # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
+        # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
+        # opdracht panel opens, and it returns to the aanvraag when done.
         service = _resolve_aanvraag_panel(request, service_id)
         if service is not None:
             panel_data = _build_aanvraag_panel_data(service, request)
@@ -1789,7 +1809,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         assignment_id = self.request.GET.get("opdracht")
         service_id = self.request.GET.get("aanvraag")
 
-        if service_id:
+        if service_id and not self.request.GET.get("teamlid"):
             service = _resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
@@ -2035,7 +2055,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         create_panel = _assignment_create_panel(self.request)
         if create_panel is not None:
             context["panel_data"] = create_panel
-        elif self.request.GET.get("aanvraag"):
+        elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
             service = _resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
             if service is not None:
                 context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
@@ -3534,7 +3554,7 @@ def user_profile(request):
     assignment_id = request.GET.get("opdracht")
     panel_data = None
 
-    if request.GET.get("aanvraag"):
+    if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
         service = _resolve_aanvraag_panel(request, request.GET["aanvraag"])
         if service is not None:
             panel_data = _build_aanvraag_panel_data(service, request)
@@ -4578,14 +4598,18 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
             member_heading = "Teamlid wijzigen"
         member_form = ServiceForm(initial=initial_row, skill_choices=skill_choices())
 
+    if parent_url is None:
+        parent_url = _url_drop_params(request.path, request.GET, ("teamlid",))
+    from_aanvraag = QueryDict(urllib.parse.urlparse(parent_url).query).get("aanvraag")
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
         "assignment": assignment,
         "member_form": member_form,
         "member_heading": member_heading,
-        "parent_url": parent_url
-        if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "parent_url": parent_url,
+        # Opened from the aanvraag panel, the sheet returns there, so the back
+        # button names it.
+        "back_text": "Aanvraag" if from_aanvraag else assignment.name,
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
@@ -4643,6 +4667,8 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
+    if form.cleaned_data.get("is_filled") == "ingevuld":
+        return_path = _url_without_aanvraag(return_path, form.cleaned_data.get("service_public_id"))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
@@ -4676,6 +4702,7 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
     )
+    return_path = _url_without_aanvraag(return_path, service.public_id)
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

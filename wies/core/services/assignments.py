@@ -48,6 +48,12 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
     cd = form.cleaned_data
     skill = _resolve_skill_from_cleaned(cd)
     description = cd.get("description", "")
+    request_fields = {
+        "request_description": cd.get("request_description", ""),
+        "location": cd.get("location", ""),
+        "starts_immediately": cd.get("starts_immediately", False),
+        "duration_months": cd.get("duration_months"),
+    }
     hours_per_week = cd.get("hours_per_week")
     has_custom_period = cd.get("has_custom_period", False)
     start = cd.get("placement_start_date")
@@ -65,10 +71,12 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
             msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
         service.description = description
+        for field, value in request_fields.items():
+            setattr(service, field, value)
         service.skill = skill
         service.hours_per_week = hours_per_week
         service.status = "OPEN"
-        update_fields = ["description", "skill", "hours_per_week", "status"]
+        update_fields = ["description", *request_fields, "skill", "hours_per_week", "status"]
         if has_custom_period:
             service.period_source = Service.SERVICE
             service.specific_start_date = start
@@ -83,6 +91,7 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
         create_kwargs = {
             "assignment": assignment,
             "description": description,
+            **request_fields,
             "skill": skill,
             "hours_per_week": hours_per_week,
             "status": "OPEN",

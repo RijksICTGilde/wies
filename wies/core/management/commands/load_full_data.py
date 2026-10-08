@@ -573,6 +573,33 @@ SERVICE_DESCRIPTIONS: dict[str, list[str]] = {
     ],
 }
 
+REQUEST_INTROS = [
+    "Voor deze opdracht zoeken we een {role} die snel kan schakelen tussen beleid en uitvoering.",
+    "Het team groeit en zoekt een ervaren {role} die zelfstandig werkt en anderen meeneemt.",
+    "We zoeken een {role} die houdt van complexe vraagstukken in een politiek-bestuurlijke omgeving.",
+]
+
+# Share of open roles that say "per direct, for <duration>" instead of dates.
+FLEXIBLE_REQUEST_SHARE = 0.5
+
+REQUEST_LOCATIONS = [
+    "Den Haag",
+    "Den Haag, 2 dagen op kantoor",
+    "Utrecht",
+    "Utrecht of Den Haag, hybride",
+    "Zwolle",
+    "Amsterdam",
+]
+
+REQUEST_REQUIREMENTS = [
+    "Minimaal drie jaar ervaring in een vergelijkbare rol",
+    "Ervaring binnen de Rijksoverheid of een andere grote publieke organisatie",
+    "Je kunt technische keuzes helder uitleggen aan niet-technische collega's",
+    "Je werkt graag in een multidisciplinair team volgens Scrum",
+    "Kennis van de Baseline Informatiebeveiliging Overheid (BIO)",
+    "Je bent in het bezit van een VOG of bereid die aan te vragen",
+]
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -600,6 +627,17 @@ def generate_assignment_name(rng: random.Random) -> str:
         lambda: f"{rng.choice(PROJECT_TOPICS)} {rng.choice(PROJECT_DOMAINS)}",
     ]
     return rng.choice(patterns)()
+
+
+def generate_request_description(rng: random.Random, skill_name: str) -> str:
+    """Builds a vacancy text in the shape of a real posting: intro, tasks, asks."""
+    tasks = SERVICE_DESCRIPTIONS.get(skill_name, [])
+    requirements = rng.sample(REQUEST_REQUIREMENTS, 3)
+    parts = [rng.choice(REQUEST_INTROS).format(role=skill_name)]
+    if tasks:
+        parts.append("Wat ga je doen?\n" + "\n".join(f"- {task}" for task in tasks))
+    parts.append("Wat vragen we?\n" + "\n".join(f"- {req}" for req in requirements))
+    return "\n\n".join(parts)
 
 
 def active_dates(rng: random.Random, ref: date) -> tuple[date, date]:
@@ -988,11 +1026,17 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     shuffled_assignments = list(assignments)
     rng.shuffle(shuffled_assignments)
 
+    # Own generator for the vacancy texts, so adding them left the rest of the
+    # seeded data (and the occupancy the base profile is tuned to) as it was.
+    request_rng = random.Random(43)  # noqa: S311 (insecure PRNG) — dummy text, seeded on purpose for repeatable data
+
     for assignment in shuffled_assignments:
         skill = rng.choice(skills)
         service = Service.objects.create(
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            request_description=generate_request_description(request_rng, skill.name),
+            location=request_rng.choice(REQUEST_LOCATIONS),
             skill=skill,
             hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
@@ -1009,6 +1053,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         service = Service.objects.create(
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            request_description=generate_request_description(request_rng, skill.name),
+            location=request_rng.choice(REQUEST_LOCATIONS),
             skill=skill,
             hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
@@ -1059,6 +1105,26 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             placement_count += 1
 
     write(f"Placements: {placement_count}")
+
+    # ── 9. Aanvraag periods ──────────────────────────────────────────
+    # Some open roles say "per direct" and how long, as real postings do. Only
+    # after the placements, since a filled role runs on dates.
+    for service in Service.objects.filter(assignment__in=assignments, placements__isnull=True):
+        if request_rng.random() < FLEXIBLE_REQUEST_SHARE:
+            service.period_source = Service.SERVICE
+            service.starts_immediately = True
+            service.specific_start_date = None
+            service.specific_end_date = None
+            service.duration_months = request_rng.choice([6, 12, 12, 24])
+            service.save(
+                update_fields=[
+                    "period_source",
+                    "starts_immediately",
+                    "specific_start_date",
+                    "specific_end_date",
+                    "duration_months",
+                ]
+            )
 
 
 class Command(BaseCommand):
