@@ -2757,13 +2757,7 @@ def _own_colleague_or_404(request):
 
 
 def _contract_block(colleague):
-    """Context for parts/contract_periods_block.html.
-
-    The user sheet is where contract periods are kept, so it carries the
-    buttons and the whole history. The colleague panel used to show a quiet
-    line with the running hours; it no longer does -- the hours matter when you
-    plan with them, which happens on Bezetting, not when you look someone up.
-    """
+    """Context for parts/contract_periods_block.html."""
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
     # exists(), not bool(): the add/edit sheet builds this block before it saves
@@ -4425,6 +4419,8 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     row of the panel (``?veld=`` on a POST).
     """
     only = only or request.GET.get("veld") or None
+    if parent_url is None:
+        parent_url = _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid"))
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
@@ -4442,9 +4438,7 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
         "edit_heading": heading,
         # The sheet is a child of the opdracht panel; the back button names it.
         "back_text": placement.service.assignment.name,
-        "parent_url": parent_url
-        if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid")),
+        "parent_url": parent_url,
         "edit_url": reverse("placement-edit", args=[placement.public_id]) + (f"?veld={only}" if only else ""),
     }
 
