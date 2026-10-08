@@ -501,7 +501,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
         # The checkbox is inverted: checked means "inherit the assignment
         # period", i.e. no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
-        self._apply_period_modes(cleaned_data, inherit=inherit_from_assignment)
+        end_mode = self._apply_period_modes(cleaned_data, inherit=inherit_from_assignment)
         if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
             cleaned_data["placement_start_date"] = None
@@ -512,15 +512,18 @@ class ServiceForm(NlddFormMixin, forms.Form):
             p_end = cleaned_data.get("placement_end_date")
             duration = cleaned_data.get("duration_months")
             cleaned_data["has_custom_period"] = bool(p_start or p_end or starts_now or duration)
-            if not cleaned_data["has_custom_period"]:
+            if end_mode == "DURATION" and not duration:
+                self.add_error("duration_months", "Kies een duur.")
+            elif not cleaned_data["has_custom_period"]:
                 self.add_error("placement_start_date", "Vul een periode in of neem de opdrachtperiode over.")
             elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 
     @staticmethod
-    def _apply_period_modes(cleaned_data: dict, *, inherit: bool) -> None:
-        """Keeps only the period fields the start and end choices point at.
+    def _apply_period_modes(cleaned_data: dict, *, inherit: bool) -> str:
+        """Keeps only the period fields the start and end choices point at, and
+        returns the end choice that applies.
 
         "Per direct" and a duration are an aanvraag's way to say when; a
         placement runs on dates, so filling one (or inheriting) drops both.
@@ -539,3 +542,4 @@ class ServiceForm(NlddFormMixin, forms.Form):
             cleaned_data["placement_end_date"] = None
         if end_mode != "DURATION":
             cleaned_data["duration_months"] = None
+        return end_mode

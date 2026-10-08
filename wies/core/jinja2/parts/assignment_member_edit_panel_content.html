@@ -126,7 +126,11 @@
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <div class="wies-role-description__text" data-request-preview-text></div>
       <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-      <nldd-button size="sm" variant="secondary" text="Overnemen in Taken" data-copy-request></nldd-button>
+      <div data-copy-request-action
+           data-tasks-max="{{ svc_form.description.field.max_length }}">
+        <nldd-button size="sm" variant="secondary" text="Overnemen in Taken" data-copy-request></nldd-button>
+      </div>
+      <p data-copy-request-too-long hidden>Deze omschrijving is langer dan {{ svc_form.description.field.max_length }} tekens en past niet in Taken. Neem de belangrijkste taken zelf over.</p>
     </div>
   </div>
   {{ svc_form.hours_per_week.as_field_group() }}
@@ -165,6 +169,7 @@
      Every `hidden` is server-rendered to match member_form.js's first paint. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
+  {% set duration_errors = wire_field_errors(svc_form.duration_months) %}
   <nldd-box data-period-box{% if inherits %} hidden{% endif %}>
   <nldd-container padding="16" gap="16">
   <nldd-form-field label="Start">
@@ -208,12 +213,21 @@
   </div>
   <div data-duration{% if end_mode != "DURATION" %} hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur"}) }}
+    {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur", "id": "member-duration"}) }}
   </div>
   {% if svc_form.placement_end_date.errors %}
     <nldd-validation-list>
     {% for error in svc_form.placement_end_date.errors %}
       <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
+  {% endif %}
+  {# "Einde" wires its errors to its first control, the end date; `for`
+     points this list at the duration instead. #}
+  {% if svc_form.duration_months.errors %}
+    <nldd-validation-list for="member-duration">
+    {% for error in svc_form.duration_months.errors %}
+      <nldd-validation-item id="{{ duration_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
     </nldd-validation-list>
   {% endif %}

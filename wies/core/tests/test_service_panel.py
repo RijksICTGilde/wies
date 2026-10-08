@@ -5,6 +5,7 @@ colleague, so ``?aanvraag=`` opens this one instead of leaving the row a dead
 end.
 """
 
+import json
 import re
 from datetime import date, timedelta
 
@@ -361,6 +362,13 @@ class AanvraagFlexiblePeriodTest(TestCase):
         assert response.status_code == 200
         assert not self.assignment.services.exists()
 
+    def test_duur_without_a_duration_asks_for_one(self):
+        response = self._post(start_mode="NOW", end_mode="DURATION")
+
+        assert response.status_code == 200
+        assert "Kies een duur." in response.content.decode()
+        assert not self.assignment.services.exists()
+
     def test_filling_an_aanvraag_drops_per_direct_and_the_duration(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
         service = Service.objects.create(
@@ -462,6 +470,71 @@ class AanvraagFlexiblePeriodTest(TestCase):
         assert self.assignment.services.get().duration_months is None
 
 
+class LeavingAnAanvraagTest(TestCase):
+    """Filling or deleting an aanvraag from its panel returns to the opdracht:
+    the aanvraag panel the sheet came from no longer exists, and htmx swaps
+    nothing on its 404, leaving the sheet open."""
+
+    def setUp(self):
+        self.client = Client()
+        self.bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
+        self.skill = Skill.objects.create(name="Dev")
+        self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
+        self.terug_url = f"/?opdracht={self.assignment.public_id}&aanvraag={self.service.public_id}"
+        self.client.force_login(self.bdm)
+
+    def _follow(self, response):
+        assert response.status_code == 204, response.content
+        path = json.loads(response["HX-Location"])["path"]
+        return path, self.client.get(path, headers=HX)
+
+    def test_filling_returns_to_the_opdracht_panel(self):
+        consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
+
+        response = self.client.post(
+            reverse("assignment-member-edit", args=[self.assignment.public_id]),
+            {
+                "service_public_id": str(self.service.public_id),
+                "skill": str(self.skill.public_id),
+                "is_filled": "ingevuld",
+                "colleague": str(consultant.public_id),
+                "has_custom_period": "on",
+                "terug_url": self.terug_url,
+            },
+        )
+
+        path, follow = self._follow(response)
+        assert path == f"/?opdracht={self.assignment.public_id}"
+        assert follow.status_code == 200
+
+    def test_editing_an_aanvraag_returns_to_its_panel(self):
+        response = self.client.post(
+            reverse("assignment-member-edit", args=[self.assignment.public_id]),
+            {
+                "service_public_id": str(self.service.public_id),
+                "skill": str(self.skill.public_id),
+                "is_filled": "aanvraag",
+                "has_custom_period": "on",
+                "terug_url": self.terug_url,
+            },
+        )
+
+        path, follow = self._follow(response)
+        assert path == self.terug_url
+        assert follow.status_code == 200
+
+    def test_deleting_returns_to_the_opdracht_panel(self):
+        response = self.client.post(
+            reverse("assignment-member-delete", args=[self.assignment.public_id, self.service.public_id]),
+            {"terug_url": self.terug_url},
+        )
+
+        path, follow = self._follow(response)
+        assert path == f"/?opdracht={self.assignment.public_id}"
+        assert follow.status_code == 200
+
+
 class FillingAanvraagTakesOverDescriptionTest(TestCase):
     """Filling an aanvraag offers its vacancy text to read and take over as
     taken; the copy itself is member_form.js, this covers what the server
@@ -497,6 +570,18 @@ class FillingAanvraagTakesOverDescriptionTest(TestCase):
         Placement.objects.create(colleague=consultant, service=service, source="wies")
 
         assert re.search(r"<div data-request-source\s*>", self._sheet(service))
+
+    def test_the_offer_knows_the_taken_limit(self):
+        """member_form.js swaps the button for the note when the vacancy text is
+        longer than this; the limit comes from the form, not the script."""
+        service = Service.objects.create(
+            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
+        )
+
+        body = self._sheet(service)
+
+        assert 'data-tasks-max="2000"' in body
+        assert "langer dan 2000 tekens en past niet in Taken" in body
 
     def test_taken_take_a_vacancy_text_up_to_2000_characters(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")

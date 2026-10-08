@@ -16,6 +16,8 @@
   const preview = form.querySelector("[data-request-preview]");
   const previewText = form.querySelector("[data-request-preview-text]");
   const copyButton = form.querySelector("[data-copy-request]");
+  const copyAction = form.querySelector("[data-copy-request-action]");
+  const tooLongNote = form.querySelector("[data-copy-request-too-long]");
   const checkedStatus = form.querySelector("[data-status-choice] [checked]");
   let status = checkedStatus ? checkedStatus.getAttribute("value") : "aanvraag";
   const skillCombo = form.querySelector("[data-skill-choice]");
@@ -55,7 +57,19 @@
   function updateRequestSource() {
     if (requestSource)
       requestSource.hidden = status !== "ingevuld" || !requestText();
+    updateCopyFit();
   }
+
+  // A text longer than Taken accepts would only fail on save; say so up front.
+  function updateCopyFit() {
+    if (!copyAction || !tooLongNote) return;
+    // The browser posts a line break as two characters, the server counts both.
+    const length = requestText().replace(/\n/g, "\r\n").length;
+    const tooLong = length > Number(copyAction.dataset.tasksMax);
+    copyAction.hidden = tooLong;
+    tooLongNote.hidden = !tooLong;
+  }
+  updateCopyFit();
 
   if (previewToggle && preview) {
     previewToggle.addEventListener("click", () => {

@@ -175,6 +175,19 @@ def _url_drop_params(path, query, names, **overrides):
     return f"{path}?{encoded}" if encoded else path
 
 
+def _url_without_aanvraag(url: str, service_public_id) -> str:
+    """Drops ``?aanvraag=`` from ``url`` when it names this service.
+
+    For a service that just stopped being an aanvraag (filled or deleted): its
+    panel would 404, and htmx swaps nothing on an error, leaving the sheet open.
+    """
+    parsed = urllib.parse.urlparse(url)
+    query = QueryDict(parsed.query)
+    if service_public_id is None or query.get("aanvraag") != str(service_public_id):
+        return url
+    return _url_drop_params(parsed.path, query, ("aanvraag",))
+
+
 def _build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
@@ -4659,6 +4672,8 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
+    if form.cleaned_data.get("is_filled") == "ingevuld":
+        return_path = _url_without_aanvraag(return_path, form.cleaned_data.get("service_public_id"))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
@@ -4692,6 +4707,7 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
     )
+    return_path = _url_without_aanvraag(return_path, service.public_id)
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
