@@ -182,17 +182,31 @@ def visible_service_rows(assignment, request) -> list[dict]:
     follow the assignment's edit rights, like the role itself.
 
     ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
-    aanvraag row shows them to everyone.
+    aanvraag row shows them to everyone. ``shown_hours`` is the outcome.
+
+    ``panel_url`` is where the row leads: a placed row to the colleague panel
+    with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
+    opens the row's sheet for a team editor, ``own_edit_url`` the placed
+    viewer's Taken sheet.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
+        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
+            row["panel_url"] = _panel_query(opdracht=row["assignment_public_id"], aanvraag=row["service_public_id"])
+            row["shown_hours"] = row["hours_per_week"]
             visible.append(row)
             continue
+        row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])
+        row["own_edit_url"] = _panel_query(
+            opdracht=row["assignment_public_id"],
+            collega=placement.colleague.public_id,
+            teamlid=row["service_public_id"],
+        )
         # Only the viewer's own row can qualify, so the rule (a query) runs for
         # that one and not for every member of the team.
         row["can_edit_role"] = (
@@ -201,6 +215,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             and has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
         )
         row["show_hours"] = can_view_role_hours(request.user, placement)
+        row["shown_hours"] = row["hours_per_week"] if row["show_hours"] else None
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],
@@ -222,6 +237,10 @@ def visible_service_rows(assignment, request) -> list[dict]:
                 }
             )
     return visible
+
+
+def _panel_query(**params) -> str:
+    return "?" + urllib.parse.urlencode(params)
 
 
 def visible_service_or_404(assignment, request, service_public_id):

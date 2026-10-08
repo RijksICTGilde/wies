@@ -941,9 +941,7 @@ class ServiceHoursPermissionTest(TestCase):
         client = Client()
         client.force_login(self.user)
         assignment = self.service.assignment
-        edit_link = (
-            f"?opdracht={assignment.public_id}&collega={self.colleague.public_id}&teamlid={self.service.public_id}"
-        )
+        edit_link = f"?opdracht={assignment.public_id}&amp;collega={self.colleague.public_id}&amp;teamlid={self.service.public_id}"
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
         assert "Mijn taken wijzigen" in body
         assert edit_link in body

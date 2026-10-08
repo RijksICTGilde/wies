@@ -4,29 +4,12 @@
    This is the colleague's page, so the entry leads with the role they had and
    names the opdracht under it. The Opdracht row is the link to it and the
    Taken row holds the toggle, so the two never compete for a click. The period is the
-   placement's, not the opdracht's; the hours follow the hours rule.
-   `expanded` on an entry (?uitgeklapt=, the way in from a team row) renders
-   its description open. #}
+   placement's, not the opdracht's; the hours follow the hours rule. The Rol
+   and Taken rows are built in the view (_add_cv_rows). #}
 {% if assignments %}
-  {# Bound once, outside the loop: inside it `assignments` is the caller's
-     {% with %} binding and does not count reliably. #}
-  {% set only_one = assignments|list|length == 1 %}
   <ul class="wies-cv">
     {% for assignment in assignments %}
-      {# A placement carries dates; the "Business Manager" tag does not. #}
-      {% set roles = assignment.tags|selectattr("start", "defined")|list %}
-      {% set described = roles|selectattr("description")|list %}
-      {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
-      {# Nothing behind the fold: no toggle. The preview runs every role's text
-       together, so what has to fit is that whole string, not the first role's
-       alone. 240 is three clamped lines at roughly 90 characters; nothing
-       re-measures in the browser, so the clamp is the only safeguard. #}
-      {% set all_text = described|map(attribute="description")|join(" ") %}
-      {% set fits = all_text|length <= 240 %}
-      {% set has_more = described and not fits %}
-      {# One opdracht: show it open. There is room in the panel, and with a single
-       entry a collapsed description reads as if the list itself were cut off. #}
-      {% set open = has_more and (assignment.expanded or only_one) %}
+      {% set taken = assignment.taken %}
       <li class="wies-cv__item">
         <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
         {# The rule hides the whole entry from others, not just its period, so it
@@ -50,15 +33,11 @@
         <nldd-title-cell size="5" text="{{ assignment.name }}" {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
         <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
         </nldd-list-item>
-        {% if role_names %}
+        {% if assignment.role_text %}
           <nldd-list-item>
-          {# "Business Manager" is an ownership tag, not a role filled on the
-           opdracht; it reads as "Rol" only because it shares the tag list. #}
           <nldd-text-cell width="120px" text="Rol" vertical-alignment="top"></nldd-text-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          {% set role_text = role_names[:3]|join(", ") ~ (" +" ~ (role_names|length - 3) ~ " meer" if role_names|length > 3 else "") %}
-          {% set role_hours = (roles[0].hours ~ " uur per week") if roles|length == 1 and roles[0].hours else "" %}
-          <nldd-text-cell vertical-alignment="top" text="{{ role_text }}" supporting-text="{{ role_hours }}"></nldd-text-cell>
+          <nldd-text-cell vertical-alignment="top" text="{{ assignment.role_text }}" supporting-text="{{ assignment.role_hours }}"></nldd-text-cell>
           </nldd-list-item>
         {% endif %}
         <nldd-list-item>
@@ -91,44 +70,40 @@
       </span>
       </nldd-text-cell>
       </nldd-list-item>
-      {# The viewer's own role: the pencil opens the same sheet the team row
-         offers as "Mijn taken wijzigen". Only with one role, because with
-         several the sheet is per role and the row cannot say which. #}
-      {% set own_edit_url = described[0].edit_url if described and described|length == 1 else none %}
-      {% if described %}
+      {# The pencil opens the same sheet the team row offers as "Mijn taken
+         wijzigen". An empty Taken still gets its row, so the pencil is there
+         to fill it in. #}
+      {% if taken %}
         <nldd-list-item>
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="top">
-        {# Closed, every role's text runs together, clamped to three lines, so
+        {% if taken.preview %}
+          {# Closed, every role's text runs together, clamped to three lines, so
              what is cut off is visibly cut off and "Toon meer" names what it
-             reveals. Showing only the first role's text left the preview
-             ending on a full stop with a button under it that seemed to do
-             nothing. Open, the per-role blocks below take over. #}
-        <p class="wies-cv__preview"{% if open %} hidden{% endif %}>{{ described|map(attribute="description") |join(" ") }}</p>
-        {% if has_more %}
-          <div class="wies-cv__more"{% if not open %} hidden{% endif %}>
-            {% for role in roles %}
-              {% if role.description %}
+             reveals. Open, the per-role blocks below take over. #}
+          <p class="wies-cv__preview"{% if taken.open %} hidden{% endif %}>{{ taken.preview }}</p>
+          {% if taken.has_more %}
+            <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
+              {% for block in taken.blocks %}
                 <div class="wies-cv__role-block">
-                  {# With several roles each description says which one it is. #}
-                  {% if roles|length > 1 %}<p class="wies-cv__role-label">{{ role.skill }}</p>{% endif %}
-                  <div class="wies-role-description"><span class="wies-role-description__text">{{ role.description }}</span></div>
+                  {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
+                  <div class="wies-role-description"><span class="wies-role-description__text">{{ block.text }}</span></div>
                 </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        {% endif %}
-        {# The toggle belongs under the text it unfolds, not in a row of its
-           own: a lone button in an empty row reads as if it were a value. #}
-        {% if has_more %}
-          <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if open else 'chevron-down' }}" text="{{ 'Toon minder' if open else 'Toon meer' }}"{% if open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
+              {% endfor %}
+            </div>
+            {# The toggle belongs under the text it unfolds, not in a row of its
+               own: a lone button in an empty row reads as if it were a value. #}
+            <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
+          {% endif %}
+        {% else %}
+          <span class="wies-text-secondary">Niet ingevuld</span>
         {% endif %}
         </nldd-text-cell>
-        {% if own_edit_url %}
+        {% if taken.edit_url %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell vertical-alignment="top">
-          <nldd-icon-button class="wies-cv__edit" size="sm" icon="edit" text="{{ described[0].edit_label }}" hx-get="{{ own_edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+          <nldd-icon-button class="wies-cv__edit" size="sm" icon="edit" text="{{ taken.edit_label }}" hx-get="{{ taken.edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
           </nldd-cell>
         {% endif %}
         </nldd-list-item>

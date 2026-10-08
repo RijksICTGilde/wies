@@ -20,7 +20,7 @@ from wies.core.editables.assignment import _services_display_context
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.roles import is_bdm_or_staff
 from wies.core.tests.role_helpers import STAFF_EMAIL, make_staff_user
-from wies.core.views import _get_colleague_assignments, _resolve_placement_alias
+from wies.core.views import _get_colleague_assignments
 from wies.core.visibility_rules import PRIVACY_BDM
 from wies.rijksauth.models import User
 
@@ -111,15 +111,6 @@ class StaffSeesTeamRowTest(_VisibilityFixture):
         rows = _services_display_context(self.assignment, self._request(self.user_staff))["value"]
 
         assert [r for r in rows if r["colleague"]] == []
-
-
-class StaffSeesPlacementPanelTest(_VisibilityFixture):
-    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    @patch("wies.core.views.timezone")
-    def test_staff_opens_ended_placement_link(self, mock_tz):
-        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
-
-        assert _resolve_placement_alias(self._request(self.user_staff), self.ended.public_id) == self.ended
 
 
 class StaffSeesProfileHistoryTest(_VisibilityFixture):

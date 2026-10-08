@@ -20,13 +20,7 @@
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
   // The params that open a panel: their presence means "a panel belongs here".
-  const PANEL_PARAMS = [
-    "collega",
-    "opdracht",
-    "aanvraag",
-    "plaatsing",
-    "nieuwe-opdracht",
-  ];
+  const PANEL_PARAMS = ["collega", "opdracht", "aanvraag", "nieuwe-opdracht"];
 
   // Everything the panel puts in the URL, stripped when it closes. The ones
   // above plus the params that only modify an open panel; 'pagina' is the

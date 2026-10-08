@@ -31,9 +31,6 @@ PRIVACY_BDM = "Alleen zichtbaar voor de consultant en de Business Managers"
 PRIVACY_BM_OWNED = "Alleen zichtbaar voor de Business Managers"
 
 # Chip labels per timing, for the non-active states.
-# No label for a future placement: its dates already say it has not started,
-# and the privacy chip beside them says who may see it. An ended one keeps its
-# label, since a past end date is easy to miss.
 LABELS = {"ended": "Afgelopen"}
 
 

@@ -148,6 +148,21 @@ class PlacementEditViewTest(TestCase):
 
         assert response.status_code == 405
 
+    def test_hidden_placement_returns_404_not_403(self):
+        """An ended placement the viewer may not see answers like a missing one."""
+        ended = Assignment.objects.create(
+            name="Oud", source="wies", owner=self.owner, start_date=date(2020, 1, 1), end_date=date(2020, 12, 31)
+        )
+        service = Service.objects.create(assignment=ended, skill=self.skill, description="", source="wies")
+        placement = Placement.objects.create(
+            colleague=self.owner, service=service, period_source=Placement.SERVICE, source="wies"
+        )
+        self.client.force_login(self.other_user)
+
+        response = self.client.post(reverse("placement-edit", args=[placement.public_id]), self._valid_payload())
+
+        assert response.status_code == 404
+
     def test_unknown_pk_returns_404(self):
         self.client.force_login(self.owner_user)
 
