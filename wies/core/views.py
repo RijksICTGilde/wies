@@ -2737,9 +2737,7 @@ def _own_colleague_or_404(request):
 
 
 def _contract_block(colleague):
-    """Context for parts/contract_periods_block.html.
-
-    """
+    """Context for parts/contract_periods_block.html."""
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
     # exists(), not bool(): the add/edit sheet builds this block before it saves
