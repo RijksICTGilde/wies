@@ -225,11 +225,8 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
         return None
 
 
-def _build_assignment_panel_data(assignment, request, *, child_sheets=True):
-    """Builds the assignment panel context, shared by both views.
-
-    With ``child_sheets`` off, ``?bewerken=`` and ``?teamlid=`` are ignored.
-    """
+def _build_assignment_panel_data(assignment, request):
+    """Builds the assignment panel context, shared by both views."""
     from wies.core.editables.assignment import (  # noqa: PLC0415
         AssignmentEditables,
         _organizations_initial,
@@ -265,8 +262,6 @@ def _build_assignment_panel_data(assignment, request, *, child_sheets=True):
     # Child sheets: ?bewerken= opens the combined assignment form, ?teamlid= the
     # form for one team member. Without the rights the param falls back to the
     # read-only panel.
-    if not child_sheets:
-        return data
     if request.GET.get("bewerken"):
         edit_panel = _build_assignment_edit_panel_data(assignment, request)
         if edit_panel is not None:
