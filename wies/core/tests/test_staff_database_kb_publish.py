@@ -108,17 +108,17 @@ class TaskListRenderingTest(TestCase):
     def test_task_is_named_by_its_label_not_its_status(self):
         self.client.force_login(make_staff_user())
         Task.objects.create(
-            command=KB_PUBLISH_COMMAND, label="Kennisbank publiceren", status="pending", timeout_minutes=15
+            command=KB_PUBLISH_COMMAND, label="ODI startpagina publiceren", status="pending", timeout_minutes=15
         )
         body = self.client.get(reverse("staff-database")).content.decode()
-        assert 'text="Kennisbank publiceren"' in body
+        assert 'text="ODI startpagina publiceren"' in body
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_publish_result_reports_release_and_file_count(self):
         self.client.force_login(make_staff_user())
         Task.objects.create(
             command=KB_PUBLISH_COMMAND,
-            label="Kennisbank publiceren",
+            label="ODI startpagina publiceren",
             status="completed",
             timeout_minutes=15,
             result={"release": "v1.2.3", "objects": 42},
@@ -132,7 +132,7 @@ class TaskListRenderingTest(TestCase):
         self.client.force_login(make_staff_user())
         Task.objects.create(
             command=KB_PUBLISH_COMMAND,
-            label="Kennisbank publiceren",
+            label="ODI startpagina publiceren",
             status="completed",
             timeout_minutes=15,
             result={"release": "", "objects": 7},
@@ -146,7 +146,7 @@ class TaskListRenderingTest(TestCase):
         self.client.force_login(make_staff_user())
         Task.objects.create(
             command=KB_PUBLISH_COMMAND,
-            label="Kennisbank publiceren",
+            label="ODI startpagina publiceren",
             status="failed",
             timeout_minutes=15,
             error_message="Could not fetch latest release (404)",
@@ -166,7 +166,7 @@ class TaskLabelTest(TestCase):
     """``create_task`` snapshots the label a TaskCommand declares for itself."""
 
     def test_label_comes_from_the_command_class(self):
-        assert get_task_label(KB_PUBLISH_COMMAND) == "Kennisbank publiceren"
+        assert get_task_label(KB_PUBLISH_COMMAND) == "ODI startpagina publiceren"
         assert get_task_label("sync_organizations") == "Organisaties synchroniseren"
 
     def test_unknown_command_falls_back_to_its_name(self):

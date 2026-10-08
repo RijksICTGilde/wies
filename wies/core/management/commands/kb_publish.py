@@ -14,7 +14,7 @@ from wies.kb.publish import publish_latest
 
 class Command(TaskCommand):
     help = "Download the latest KB release artifact and publish it to MinIO"
-    task_label = "Kennisbank publiceren"
+    task_label = "ODI startpagina publiceren"
 
     def run_task(self, *args, **options):
         # Error handling (logging + failure result) is centralised in TaskCommand.
