@@ -4,7 +4,6 @@ The int PK stays internal; URLs expose the public_id, so sequential-PK
 enumeration is not possible.
 """
 
-import datetime
 import uuid
 
 import pytest
@@ -17,7 +16,6 @@ from django.db import IntegrityError
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
-from django.utils import timezone
 
 from wies.core.editables.colleague import ColleagueEditables
 from wies.core.inline_edit.forms import use_public_id_choices
@@ -34,7 +32,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
+from wies.core.tests.role_helpers import grant_bdm
 
 User = get_user_model()
 
@@ -217,128 +215,6 @@ class PlacementPublicIdTests(TestCase):
 
         assert_is_public_id(p1.public_id)
         assert p1.public_id != p2.public_id
-
-
-class PlacementPanelParamTests(TestCase):
-    """An old ?plaatsing= link resolves by public_id to the opdracht panel, and
-    keeps placement visibility, so a placement the viewer may not see looks like
-    a nonexistent one."""
-
-    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
-
-    def setUp(self):
-        self.client = Client()
-        self.viewer = User.objects.create_user(email="v@rijksoverheid.nl", first_name="V", last_name="i")
-        Colleague.objects.create(user=self.viewer, name="Viewer", email="v@rijksoverheid.nl", source="wies")
-        self.owner = Colleague.objects.create(name="Owner", email="o@rijksoverheid.nl", source="wies")
-        self.placed = Colleague.objects.create(name="Placed Person", email="p@rijksoverheid.nl", source="wies")
-        self.assignment = Assignment.objects.create(name="A", owner=self.owner, source="wies")
-        skill = Skill.objects.create(name="Dev")
-        self.service = Service.objects.create(assignment=self.assignment, description="", skill=skill, source="wies")
-        self.client.force_login(self.viewer)
-
-    def _placement(self, *, start_offset, end_offset):
-        today = timezone.now().date()
-        return Placement.objects.create(
-            colleague=self.placed,
-            service=self.service,
-            period_source=Placement.PLACEMENT,
-            specific_start_date=today + datetime.timedelta(days=start_offset),
-            specific_end_date=today + datetime.timedelta(days=end_offset),
-            source="wies",
-        )
-
-    def _panel(self, value):
-        return self.client.get(reverse("home") + f"?plaatsing={value}", headers=self.HX)
-
-    def test_active_placement_opens_by_public_id(self):
-        active = self._placement(start_offset=-5, end_offset=5)
-
-        response = self._panel(active.public_id)
-
-        assert response.status_code == 200
-        self.assertContains(response, "Placed Person")
-
-    def test_htmx_alias_ignores_the_old_sheet_params(self):
-        # The owner with BDM rights would get an edit sheet on ?opdracht=&bewerken=1;
-        # an old placement link with those params opens the read-only panel.
-        owner_user = grant_bdm(User.objects.create_user(email="o@rijksoverheid.nl"))
-        self.owner.user = owner_user
-        self.owner.save(update_fields=["user"])
-        self.client.force_login(owner_user)
-        active = self._placement(start_offset=-5, end_offset=5)
-
-        body = self._panel(f"{active.public_id}&bewerken=1&veld=period").content.decode()
-
-        assert "Placed Person" in body
-        assert 'name="specific_start_date"' not in body
-        assert "Opdracht wijzigen" not in body
-
-    def test_full_page_load_redirects_to_the_canonical_url_with_filters_kept(self):
-        active = self._placement(start_offset=-5, end_offset=5)
-
-        response = self.client.get(reverse("home") + f"?zoek=x&plaatsing={active.public_id}&bewerken=1&veld=skill")
-
-        assert response.status_code == 302
-        assert response["Location"] == (
-            reverse("home") + f"?zoek=x&opdracht={self.assignment.public_id}&collega={self.placed.public_id}"
-        )
-
-    def test_hidden_placement_indistinguishable_from_missing(self):
-        """A hidden placement returns the same 404 as a nonexistent public_id, so
-        its existence cannot be probed."""
-        hidden = self._placement(start_offset=-30, end_offset=-10)
-
-        assert self._panel(hidden.public_id).status_code == 404
-        assert self._panel(uuid.uuid4()).status_code == 404
-
-    def test_ended_placement_shown_to_placed_colleague(self):
-        """The entitled viewer (the placed colleague) opens an ended placement's
-        panel over HTTP and sees it — the positive mirror of the 404 above."""
-        placed_user = User.objects.create_user(email="p@rijksoverheid.nl")
-        self.placed.user = placed_user
-        self.placed.save(update_fields=["user"])
-        self.client.force_login(placed_user)
-        ended = self._placement(start_offset=-30, end_offset=-10)
-
-        response = self._panel(ended.public_id)
-
-        assert response.status_code == 200
-        self.assertContains(response, "Placed Person")
-
-    def test_ended_placement_shown_to_bdm(self):
-        """A BDM (not the placed colleague, not the owner) opens the same ended
-        placement's panel over HTTP and sees it."""
-        bdm_user = make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm")
-        self.client.force_login(bdm_user)
-        ended = self._placement(start_offset=-30, end_offset=-10)
-
-        response = self._panel(ended.public_id)
-
-        assert response.status_code == 200
-        self.assertContains(response, "Placed Person")
-
-    def test_ended_placement_hidden_from_non_bdm_owner(self):
-        """The BM-owner is no longer entitled by ownership alone: a non-BDM owner
-        gets the same 404 as any unrelated viewer."""
-        owner_user = User.objects.create_user(email="o@rijksoverheid.nl")
-        self.owner.user = owner_user
-        self.owner.save(update_fields=["user"])
-        self.client.force_login(owner_user)
-        ended = self._placement(start_offset=-30, end_offset=-10)
-
-        assert self._panel(ended.public_id).status_code == 404
-
-    def test_malformed_value_is_404(self):
-        assert self._panel("not-a-uuid").status_code == 404
-
-    def test_full_page_with_hidden_placement_stays_graceful(self):
-        hidden = self._placement(start_offset=-30, end_offset=-10)
-
-        response = self.client.get(reverse("home") + f"?plaatsing={hidden.public_id}")
-
-        assert response.status_code == 200
-        self.assertNotContains(response, "Placed Person")
 
 
 class UserPublicIdTests(TestCase):

@@ -228,6 +228,22 @@ class AssignmentPanelRowsTest(TestCase):
         service = Service.objects.get(placements__colleague=self.anke)
         assert f"teamlid={service.public_id}" in entry
 
+    def test_empty_taken_reads_niet_ingevuld_with_the_pencil_on_your_own(self):
+        """An empty Taken keeps its row, as an empty Omschrijving does, so the
+        placed colleague finds the pencil to fill it in."""
+        anke_panel = reverse("home") + f"?collega={self.anke.public_id}"
+
+        other = self.client.get(anke_panel, headers=HX).content.decode().split('<ul class="wies-cv">')[1]
+        assert 'text="Taken"' in other
+        assert "Niet ingevuld" in other
+        assert 'icon="edit"' not in other
+
+        self.client.force_login(self.anke_user)
+        own = self.client.get(anke_panel, headers=HX).content.decode().split('<ul class="wies-cv">')[1]
+        assert "Niet ingevuld" in own
+        assert 'text="Mijn taken wijzigen"' in own
+        assert "wies-cv__toggle" not in own
+
     def test_a_hidden_placement_states_that_above_the_whole_entry(self):
         """The rule hides the entry, not just its period, so the note is a band
         at the top of the block rather than a chip beside one value."""

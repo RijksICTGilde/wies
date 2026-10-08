@@ -5,8 +5,7 @@ Two holes found in review:
 - The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
   team list, so a viewer with UPDATE rights but without visibility (a
   ``change_assignment`` holder, staff) could read a hidden ended placement's
-  colleague and dates through a crafted URL — data the 404 anti-oracle in
-  ``_resolve_placement_alias`` exists to withhold.
+  colleague and dates through a crafted URL.
 - The timeline's privacy note was taken from the *first* noted row of the
   viewer's current team list, so an event about one colleague could carry
   another row's note ("jou"-wording on someone else's event), and an event

@@ -148,12 +148,6 @@ class BezettingPanelTest(TestCase):
         assert b"Optimalisatie API" in response.content
         assert b"bezetting-timeline" not in response.content
 
-    def test_plaatsing_link_returns_the_opdracht_fragment(self):
-        response = self.client.get(self.url, {"plaatsing": str(self.placement.public_id)}, headers=self.panel_headers)
-        assert response.status_code == 200
-        assert b"Optimalisatie API" in response.content
-        assert b"bezetting-timeline" not in response.content
-
 
 class BezettingNavVisibilityTest(TestCase):
     def setUp(self):

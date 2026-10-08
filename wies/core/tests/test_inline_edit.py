@@ -1028,7 +1028,7 @@ class AssignmentServicesDisplayTest(TestCase):
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
         service = Placement.objects.get(colleague=self.colleague).service
-        assert f"opdracht={self.assignment.public_id}&teamlid={service.public_id}" in filled_row
+        assert f"opdracht={self.assignment.public_id}&amp;teamlid={service.public_id}" in filled_row
         # Never the integer service or assignment PK.
         assert f"teamlid={service.id}" not in filled_row
         assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
