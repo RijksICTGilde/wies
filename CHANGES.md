@@ -9,7 +9,6 @@ This files lists the changes during the lifetime of this project.
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere, never "bewerken", and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
 - 693: the side panel is 800px wide, keeps room under its last card, and clears every param it set when it closes.
 - 693: fixed on the way: "Toon meer" unfolds long text again, a pencil no longer appears on an opdracht from another system where it opened nothing, and a placement that has not started carries no "Gepland" chip.
-  -?
 
 ## 2026-10-07_2
 

@@ -19,9 +19,8 @@
       {% set role_names = assignment.tags|map(attribute="skill", default=none)|select|list or assignment.tags|select("string")|list %}
       {# Nothing behind the fold: no toggle. The preview runs every role's text
        together, so what has to fit is that whole string, not the first role's
-       alone -- two short roles fit the three clamped lines just as well as one
-       long one. Roughly 90 characters a line in this panel; the browser
-       measures for real afterwards (uncollapseWhatFits in inline_edit.js). #}
+       alone. 240 is three clamped lines at roughly 90 characters; nothing
+       re-measures in the browser, so the clamp is the only safeguard. #}
       {% set all_text = described|map(attribute="description")|join(" ") %}
       {% set fits = all_text|length <= 240 %}
       {% set has_more = described and not fits %}

@@ -114,15 +114,8 @@ class ServicePanelTest(TestCase):
 
 
 class ServicePanelOnlyVacanciesTest(TestCase):
-    """``?aanvraag=`` is the read view of a *vacancy*, so it resolves through
-    the viewer's own team rows (#693).
-
-    A filled row belongs to the placed colleague: its hours follow
-    ``can_view_role_hours`` and an ended one is hidden altogether. This panel
-    applies neither rule, so resolving a filled or hidden row here would hand
-    out exactly what the team list withholds -- to anyone holding a service
-    public_id, which every shared ``teamlid=`` link carries.
-    """
+    """A filled or hidden row resolved here would show the hours and taken that
+    the team row withholds, to anyone holding a service public_id (#693)."""
 
     def setUp(self):
         self.client = Client()

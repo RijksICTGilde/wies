@@ -153,17 +153,10 @@
     }
   }
 
-  // Two fixes on the panel's own scroller, a div in nldd-page's shadow root
-  // that app.css cannot reach. An adopted sheet, not an injected <style>:
-  // the CSP allows no inline styles.
-  //
-  // scrollbar-gutter: the component sets none, so without it "Toon meer"
-  // shifts the whole panel a bar's width to the left when the bar appears.
-  //
-  // padding-bottom: the scroller's bottom inset counts the footer's height,
-  // and this sheet has no footer, so scrolled to the end the last card sits
-  // flush against the edge with nothing under it. The top inset is 50px; half
-  // of that is enough to read as an end.
+  // The panel's scroller is a div in nldd-page's shadow root, out of app.css's
+  // reach; an adopted sheet, since the CSP allows no inline styles. The gutter
+  // stops "Toon meer" shifting the panel sideways; the padding replaces a
+  // bottom inset the component derives from a footer this sheet does not have.
   function styleScroller(page) {
     if (!page.shadowRoot || !("adoptedStyleSheets" in page.shadowRoot)) return;
     const sheet = new CSSStyleSheet();

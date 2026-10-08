@@ -433,10 +433,8 @@ def _get_colleague_assignments(request, colleague):
             )
         else:
             _merge_date_range(bucket[assignment_id], start, end)
-        # The rights are per opdracht: an externally sourced one is read-only
-        # for everyone, and only its owner-BDM or staff edits the whole team.
-        # The viewer is placed on every row here, so being placed is a given
-        # and the remaining facts come from the values() row -- no extra query.
+        # Per opdracht, not per panel: an externally sourced one is read-only
+        # for everyone, so a pencil there would open nothing (#311).
         is_wies_sourced = placement["service__assignment__source"] in ("wies", "")
         edits_whole_team = is_own_panel and is_wies_sourced and is_bdm_or_staff(request)
         can_edit_own_role = is_own_panel and is_wies_sourced
@@ -449,13 +447,7 @@ def _get_colleague_assignments(request, colleague):
                 "start": start,
                 "end": end,
                 "hours": placement["service__hours_per_week"] if show_hours else None,
-                # The pencil on the viewer's own role, to the same sheet the
-                # team row opens. The right is per opdracht, not per panel: an
-                # externally sourced one (OTYS) is read-only for everyone, so a
-                # pencil there would open nothing (#311). The label follows the
-                # sheet that right opens: a team editor gets the full "Mijn rol
-                # wijzigen", a placed consultant the text-only "Mijn taken
-                # wijzigen".
+                # The label names the sheet the right opens, not the pencil.
                 "edit_url": (
                     _build_panel_url(
                         request,
@@ -555,16 +547,11 @@ def _build_colleague_panel_data(colleague, request):
 def _resolve_service_panel(request, public_id):
     """Resolves ``?aanvraag=`` to an open role, through the viewer's own rows.
 
-    Only a vacancy has this panel. A filled row is the placed colleague's, and
-    its hours and role text follow the team-row rules (``show_hours``,
-    ``evaluate_placement_visibility``), which this read view does not apply — so
-    resolving it here would hand out exactly what the team list withholds, to
-    anyone holding a service public_id from a shared ``teamlid=`` link (#693).
-
-    Same gate as ``visible_service_or_404`` uses for mutations (#655): the row
-    must be in the viewer's filtered rows *and* hold no placement. Not-found,
-    hidden and filled are indistinguishable: Http404 for the HTMX panel request,
-    None for a full-page load.
+    Only a vacancy has this panel: a filled row's hours and role text follow
+    the team-row rules this read view does not apply, so resolving one here
+    would hand out what the team list withholds (#693). Same gate as
+    ``visible_service_or_404`` uses for mutations (#655). Not-found, hidden and
+    filled are indistinguishable.
     """
     # Deferred: wies.core.editables imports from views at module level.
     from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415
@@ -4388,12 +4375,6 @@ def inline_edit_view(request, model_label, public_id, name):
     return _render_inline_edit_display(request, editable_set, spec, editables, obj)
 
 
-# The placement panel edits three things spread over TWO models: Service.skill,
-# Service.description and the Placement.period group. An EditableGroup belongs to
-# one model and cannot cover that, so one form is built from the separate specs,
-# reusing inline_edit_view's save and audit machinery per spec.
-
-
 def _safe_return_path(raw: str | None, fallback: str) -> str:
     """Returns ``raw`` only when it is a path on this site, else the fallback.
 
@@ -4473,9 +4454,8 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     if form is None:
         form_cls, initial = build_combined_form_class(specs)
         form = form_cls(initial=initial)
-    # ``only="skill"`` comes from the own-role sheet alone, which opens only for
-    # a viewer without UPDATE on the opdracht -- the right the skill field needs.
-    # So that sheet is always the description one, and says so.
+    # only="skill" reaches here from the own-role sheet alone, whose viewer
+    # lacks the UPDATE the skill field needs: it is always the taken sheet.
     heading = "Taken wijzigen" if only == "skill" else "Teamlid wijzigen"
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
@@ -4492,14 +4472,11 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     }
 
 
-# Same pattern as the placement above: all assignment data in one form, built
-# from the existing specs so save and audit behaviour stay identical to inline
-# edit. The team form is a formset and does not fit in this flat form, so it has
-# its own child sheet.
-
-
 def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
     """Context for the assignment edit child sheet, or None without edit rights.
+
+    The team is a formset and does not fit this flat form, so it keeps a child
+    sheet of its own.
 
     The single source for this sheet (see ``_build_placement_edit_panel_data``):
     pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
