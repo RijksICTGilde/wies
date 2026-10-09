@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 689: (post-release actions) new ODI knowledge start portal at `/odi-startpagina/`, serving the built content site from object storage to logged-in users only. Triggered by button on database page.
+- 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
 - 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
 - 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the "Taken". Empty "Taken" read "Niet ingevuld", so the placed colleague finds the pencil to fill them in.

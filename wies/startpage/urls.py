@@ -1,4 +1,4 @@
-"""URLs for the knowledge base app.
+"""URLs for the start page app.
 
 Mounted under a single ``include()`` in ``config/urls.py`` (at
 ``/odi-startpagina/``, matching the content site's Hugo ``baseURL`` path). Kept
@@ -13,9 +13,9 @@ The site owns its own landing page, so there is no separate Django portal.
 
 from django.urls import re_path
 
-from wies.kb import views
+from wies.startpage import views
 
 urlpatterns = [
     # Catch-all for the built Hugo site (homepage + articles + assets).
-    re_path(r"^(?P<path>.*)$", views.article, name="kb-article"),
+    re_path(r"^(?P<path>.*)$", views.article, name="startpage-article"),
 ]

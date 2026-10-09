@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "wies.rijksauth",
     "wies.core",
-    "wies.kb",
+    "wies.startpage",
 ]
 
 MIDDLEWARE = [
@@ -175,8 +175,8 @@ SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
 # (exception_type, path) is persisted + posted to Mattermost
 ERROR_THROTTLE_MINUTES = 5
 
-# Knowledge base (ODI start portal) — see wies/kb/.
-# The built Hugo site lives in a MinIO bucket; the KB serves it auth-gated and
+# ODI start page — see wies/startpage/.
+# The built Hugo site lives in a MinIO bucket; the start page app serves it auth-gated and
 # the db_worker publish job pulls a GitHub release artifact into a new prefix.
 # Read from env with dev-friendly defaults here; production.py and worker.py
 # re-require the ones each process actually needs (fail-fast on missing secrets).
@@ -194,9 +194,9 @@ OBJECT_STORE_BUCKET_NAME = os.environ.get("OBJECT_STORE_BUCKET_NAME", "")
 # Region is cosmetic for MinIO but boto3 requires one.
 OBJECT_STORE_REGION = os.environ.get("OBJECT_STORE_REGION", "us-east-1")
 # Object key holding the name of the currently-active site prefix (atomic publish).
-KB_CURRENT_POINTER_KEY = os.environ.get("KB_CURRENT_POINTER_KEY", "sites/CURRENT")
+STARTPAGE_CURRENT_POINTER_KEY = os.environ.get("STARTPAGE_CURRENT_POINTER_KEY", "sites/CURRENT")
 
 # Private content repo (owner/name) whose latest GitHub release artifact holds
 # the built site, and a read token to download it. Only the worker needs these.
-KB_CONTENT_GITHUB_REPO = os.environ.get("KB_CONTENT_GITHUB_REPO", "DigiGilde/odi-startpagina")
-KB_CONTENT_GITHUB_TOKEN = os.environ.get("KB_CONTENT_GITHUB_TOKEN", "")
+STARTPAGE_CONTENT_GITHUB_REPO = os.environ.get("STARTPAGE_CONTENT_GITHUB_REPO", "DigiGilde/odi-startpagina")
+STARTPAGE_CONTENT_GITHUB_TOKEN = os.environ.get("STARTPAGE_CONTENT_GITHUB_TOKEN", "")

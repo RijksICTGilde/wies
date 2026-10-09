@@ -1,7 +1,7 @@
 from django.apps import AppConfig
 
 
-class KbConfig(AppConfig):
+class StartpageConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "wies.kb"
-    label = "kb"
+    name = "wies.startpage"
+    label = "startpage"

@@ -1,4 +1,4 @@
-# Local knowledge-base MinIO config, shared by django + db_worker so both reach
+# Local start-page MinIO config, shared by django + db_worker so both reach
 # the same bucket. Set here (not only in .env*) so a fresh checkout works after
 # `just setup` regardless of what the copied .env files contain — compose
 # `environment:` overrides `env_file`. These are dev-only credentials.
@@ -7,7 +7,7 @@ x-object-store-env: &object-store-env
   OBJECT_STORE_PORT: "9000"
   OBJECT_STORE_USER: minioadmin
   OBJECT_STORE_PASSWORD: minioadmin
-  OBJECT_STORE_BUCKET_NAME: wies-kb
+  OBJECT_STORE_BUCKET_NAME: wies-startpage
 
 services:
   postgres:

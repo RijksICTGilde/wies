@@ -1,11 +1,11 @@
-# Plan: ODI Knowledge Base — SSO-gated portal + article reader inside Wies
+# Plan: ODI Start Page — SSO-gated portal + article reader inside Wies
 
 ## Context
 
-ODI wants a **private knowledge base / start portal**: full-page articles authored as
+ODI wants a **private start page**: full-page articles authored as
 Markdown in a **private git repo**, built to static HTML by **Hugo in GitHub Actions**,
 readable only by ODI staff via SSO. Wies (at `wies.rijksorganisatieodi.nl`) already solves
-ODI SSO auth and deploys to the ZAD platform, so the KB is built **as an app inside the Wies
+ODI SSO auth and deploys to the ZAD platform, so the start page is built **as an app inside the Wies
 codebase** to reuse auth, the user list, and the deploy pipeline.
 
 **Iteration 1 ships at `wies.rijksorganisatieodi.nl/start/`** (a path under Wies), _not_ the
@@ -19,12 +19,12 @@ the app code is identical, only the mount point and infra items differ, and a 30
 `/start/` bookmark alive.
 
 The full decision analysis (every architectural fork, both sides, the deciding factor)
-lives in `kb-architecture-comparison.md` (same folder). This plan is the chosen
+lives in `startpage-architecture-comparison.md` (same folder). This plan is the chosen
 design only.
 
 **Decisions taken (this session):**
 
-- **App inside Wies** (`wies/kb/`), not a separate service — one DB, one `User` model,
+- **App inside Wies** (`wies/startpage/`), not a separate service — one DB, one `User` model,
   `rijksauth` imported directly, `wies.core`'s `no_access` reused. **No shared-DB
   machinery, no new image** (ships in the existing `web`/`worker` images).
 - **MinIO bucket** holds the built HTML (replica-safe; Wies may scale to >1 `web`
@@ -40,7 +40,7 @@ design only.
   (atomic publish). Designed so a future GitHub webhook can trigger the same job — build
   the button now, webhook later, no rework.
 - **Portal + reader, mounted at a path**: it's a hub (curated portal pages that link out to
-  the KB, Wies, and other tools — real Django views) _plus_ the article catch-all underneath.
+  the kennisbank, Wies, and other tools — real Django views) _plus_ the article catch-all underneath.
   Iteration 1 mounts the whole thing at `wies.rijksorganisatieodi.nl/start/` via a single
   `include()` in `config/urls.py`.
 - **Auth is free (same origin)**: because `/start/` is the same host as Wies, it inherits
@@ -55,17 +55,17 @@ design only.
 
 ## Approach
 
-### 1. The `wies/kb/` app
+### 1. The `wies/startpage/` app
 
-- New Django app `wies/kb/` in the existing project. `rijksauth` is already installed and
-  wired; the KB reuses it and `wies.core`'s `no_access` view + `no_access.html` +
+- New Django app `wies/startpage/` in the existing project. `rijksauth` is already installed and
+  wired; the start page reuses it and `wies.core`'s `no_access` view + `no_access.html` +
   `login_error.html`. No auth code is written or copied.
 - **Portal views**: server-rendered landing/portal page(s) using the same NLDD components
   as the rest of Wies (curated links to articles, to Wies, etc.).
 - **Article catch-all view** (the one genuinely new serving path), gated by the existing
   `LoginRequiredMiddleware`:
   - Take the request path, **sanitize** it (reject `..`, absolute paths — no escaping the
-    KB prefix in the bucket).
+    start page prefix in the bucket).
   - Resolve to a MinIO object key, applying Hugo's **pretty-URL** rule: a trailing-slash
     path → `<path>index.html`; redirect `/x` → `/x/` for consistency.
   - `s3.get_object(Bucket=..., Key=...)`; on missing key → `Http404`.
@@ -81,7 +81,7 @@ design only.
 Same `web` image, same ZAD component, **same host** — so this section is nearly empty, which
 is the whole point of shipping a path first.
 
-- **Mount**: one line in `config/urls.py` — `path("start/", include("wies.kb.urls"))`.
+- **Mount**: one line in `config/urls.py` — `path("start/", include("wies.startpage.urls"))`.
   Portal routes first, article catch-all last (see §1).
 - **Settings**: **none required.** `/start/` inherits Wies's session cookie, Keycloak client,
   redirect URI, `ALLOWED_HOSTS`, and `CSRF_TRUSTED_ORIGINS` unchanged because it's the same
@@ -107,17 +107,17 @@ is the whole point of shipping a path first.
   (`wies/core/management/task.py`): download the latest **GitHub release artifact** from
   the private content repo (GitHub read token, new ZAD secret) → unpack → upload objects to
   a new MinIO prefix → flip the current-pointer.
-- **Trigger**: a **role-gated button** in the KB portal (gate via `wies/core/roles.py`,
+- **Trigger**: a **role-gated button** on the Database admin page (gate via `wies/core/roles.py`,
   e.g. Beheerder) that enqueues the job; status shown via HTMX polling/swap (Wies pattern).
 - **Webhook-ready**: factor the job so a future GitHub "release published" webhook can
   enqueue the _same_ job with no rework (still a pull — CI never gets infra credentials).
 
 ## Critical files
 
-- **New**: `wies/kb/` — app (portal views, article catch-all view, urls), the
+- **New**: `wies/startpage/` — app (portal views, article catch-all view, urls), the
   `db_worker` publish task (subclass `wies/core/management/task.py`'s `TaskCommand`), MinIO
   client helper, templates for portal pages.
-- **Edit**: `config/urls.py` (`path("start/", include("wies.kb.urls"))`), `config/settings/*`
+- **Edit**: `config/urls.py` (`path("start/", include("wies.startpage.urls"))`), `config/settings/*`
   (MinIO + GitHub-token settings only — **no auth/cookie/host changes in iteration 1**),
   `pyproject.toml` (`boto3`).
 - **Reuse (no change)**: `wies/rijksauth/*`, `wies.core`'s `no_access` view + templates,
@@ -132,7 +132,7 @@ is the whole point of shipping a path first.
 2. **Non-ODI user**: no `auth_user` row → `AuthBackend` denies → `geen-toegang/`.
 3. **Serving**: seed the bucket; `/start/onboarding/` streams `onboarding/index.html`;
    a referenced asset (`/start/css/…`) streams with correct content-type; unknown path → 404.
-4. **Path traversal**: `../`-style keys are rejected → 404, never escape the KB prefix.
+4. **Path traversal**: `../`-style keys are rejected → 404, never escape the start page prefix.
 5. **Portal vs. catch-all**: `/start/` renders the portal view (not a MinIO lookup);
    article paths fall through to the catch-all; no shadowing either way.
 6. **Publish**: click the button as a Beheerder → `db_worker` pulls the release artifact,
@@ -140,7 +140,7 @@ is the whole point of shipping a path first.
    request never sees a half-written site. Non-privileged users don't see the button.
 7. **Relative-URL discipline**: grep the app for hardcoded `/start/` and absolute hosts —
    there should be none (all via `include()` + `reverse()`), so promotion stays a one-liner.
-8. **Tests** in `wies/kb/tests/`: catch-all (authed 200, unauthed redirect, traversal 404,
+8. **Tests** in `wies/startpage/tests/`: catch-all (authed 200, unauthed redirect, traversal 404,
    pretty-URL resolution), portal view, publish task (mock MinIO + GitHub), button role
    gate. Run with `DJANGO_SETTINGS_MODULE=config.settings.test`.
 
@@ -162,7 +162,7 @@ config + one redirect, no app rewrite — provided the relative-URL discipline (
   cert; else a request), ZAD ingress routing `start.` → the existing `web` component, and the
   ingress **must forward the real `Host` header** (not rewrite to an internal name) —
   `rijksauth` derives the OIDC redirect URI from the request host.
-- **Django**: host-based routing (`start.` → KB urlconf, `wies.` → Wies), `ALLOWED_HOSTS` +=
+- **Django**: host-based routing (`start.` → start page urlconf, `wies.` → Wies), `ALLOWED_HOSTS` +=
   `start.`, `CSRF_TRUSTED_ORIGINS` += `https://start.rijksorganisatieodi.nl`.
 - **Cookies**: keep them **host-scoped** — do NOT set `SESSION_COOKIE_DOMAIN` to
   `.rijksorganisatieodi.nl`. We don't govern every subdomain, so a domain-wide cookie would
@@ -178,7 +178,7 @@ config + one redirect, no app rewrite — provided the relative-URL discipline (
 ## Deferred (a "later" concern, not now)
 
 - **nginx / reverse proxy** in front of Wies — justified on Wies's _own_ merits (static
-  serving, TLS termination, proxy hardening), not the KB. If added, the KB could adopt
+  serving, TLS termination, proxy hardening), not the start page. If added, the start page could adopt
   presigned-URL redirects for large-file efficiency; neither is needed at current scale.
 - **Webhook auto-publish** — the pull job is built webhook-ready; wiring the GitHub webhook
   is a follow-up once the manual button is proven.

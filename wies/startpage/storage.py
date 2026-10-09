@@ -1,8 +1,8 @@
-"""MinIO/S3 access for the knowledge base.
+"""MinIO/S3 access for the ODI start page.
 
 The built Hugo site lives in a MinIO bucket. Each publish uploads the site under
 its own prefix (``sites/<release-tag>/``) and then flips a tiny pointer object
-(``KB_CURRENT_POINTER_KEY``) that holds the name of the active prefix. Readers
+(``STARTPAGE_CURRENT_POINTER_KEY``) that holds the name of the active prefix. Readers
 resolve the active prefix through that pointer, so they never see a half-written
 site and a rollback is just repointing.
 
@@ -45,7 +45,7 @@ class ObjectNotFoundError(Exception):
 
 
 def ensure_bucket(client=None) -> None:
-    """Create the KB bucket if it doesn't exist yet (idempotent).
+    """Create the start page bucket if it doesn't exist yet (idempotent).
 
     Only needed for local/dev seeding — in production the bucket is provisioned
     by ZAD. ``BucketAlreadyOwnedByYou``/``BucketAlreadyExists`` are treated as
@@ -73,20 +73,20 @@ def get_current_prefix(client=None) -> str:
     """
     client = client or get_client()
     try:
-        obj = client.get_object(Bucket=settings.OBJECT_STORE_BUCKET_NAME, Key=settings.KB_CURRENT_POINTER_KEY)
+        obj = client.get_object(Bucket=settings.OBJECT_STORE_BUCKET_NAME, Key=settings.STARTPAGE_CURRENT_POINTER_KEY)
     except ClientError as error:
         if _is_missing(error):
-            raise ObjectNotFoundError(settings.KB_CURRENT_POINTER_KEY) from error
+            raise ObjectNotFoundError(settings.STARTPAGE_CURRENT_POINTER_KEY) from error
         raise
     return obj["Body"].read().decode("utf-8").strip().rstrip("/")
 
 
 def set_current_prefix(prefix: str, client=None) -> None:
-    """Point the KB at ``prefix`` (atomic publish flip)."""
+    """Point the start page at ``prefix`` (atomic publish flip)."""
     client = client or get_client()
     client.put_object(
         Bucket=settings.OBJECT_STORE_BUCKET_NAME,
-        Key=settings.KB_CURRENT_POINTER_KEY,
+        Key=settings.STARTPAGE_CURRENT_POINTER_KEY,
         Body=prefix.rstrip("/").encode("utf-8"),
         ContentType="text/plain",
     )

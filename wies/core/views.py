@@ -970,23 +970,23 @@ def staff_database(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
-        elif action == "publish_knowledge_base":
-            # Publish the knowledge base from the content repo — the db_worker runs
-            # the kb_publish task. Shares the same task list as the other actions.
-            # Local import: wies.kb.publish pulls in boto3, which the rest of this
+        elif action == "publish_startpage":
+            # Publish the start page from the content repo — the db_worker runs
+            # the startpage_publish task. Shares the same task list as the other actions.
+            # Local import: wies.startpage.publish pulls in boto3, which the rest of this
             # module never needs, so it stays off the startup import path.
-            from wies.kb.publish import (  # noqa: PLC0415 — conditional import for a rare admin action
-                KB_PUBLISH_COMMAND,
-                KB_PUBLISH_TIMEOUT_MINUTES,
+            from wies.startpage.publish import (  # noqa: PLC0415 — conditional import for a rare admin action
+                STARTPAGE_PUBLISH_COMMAND,
+                STARTPAGE_PUBLISH_TIMEOUT_MINUTES,
             )
 
-            if has_active_task(KB_PUBLISH_COMMAND):
+            if has_active_task(STARTPAGE_PUBLISH_COMMAND):
                 messages.error(request, "Er is al een publicatietaak actief. Wacht tot deze is afgerond.")
             else:
                 create_task(
-                    command=KB_PUBLISH_COMMAND,
+                    command=STARTPAGE_PUBLISH_COMMAND,
                     created_by=request.user,
-                    timeout_minutes=KB_PUBLISH_TIMEOUT_MINUTES,
+                    timeout_minutes=STARTPAGE_PUBLISH_TIMEOUT_MINUTES,
                 )
                 messages.success(request, "Publicatie is gestart")
 

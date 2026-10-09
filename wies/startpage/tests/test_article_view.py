@@ -1,4 +1,4 @@
-"""Tests for the KB article catch-all view (auth gate, serving, traversal)."""
+"""Tests for the start page article catch-all view (auth gate, serving, traversal)."""
 
 from unittest.mock import patch
 
@@ -8,8 +8,8 @@ from django.http import Http404
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.kb import storage
-from wies.kb.views import _resolve_key
+from wies.startpage import storage
+from wies.startpage.views import _resolve_key
 
 User = get_user_model()
 

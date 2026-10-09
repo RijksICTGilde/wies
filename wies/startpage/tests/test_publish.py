@@ -1,4 +1,4 @@
-"""Tests for the KB publish service (GitHub pull -> MinIO upload -> pointer flip)."""
+"""Tests for the start page publish service (GitHub pull -> MinIO upload -> pointer flip)."""
 
 import io
 import tarfile
@@ -9,15 +9,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 from django.test import TestCase, override_settings
 
-from wies.kb import publish, storage
+from wies.startpage import publish, storage
 
 _SETTINGS = {
-    "KB_CONTENT_GITHUB_REPO": "org/content",
-    "KB_CONTENT_GITHUB_TOKEN": "tok",
+    "STARTPAGE_CONTENT_GITHUB_REPO": "org/content",
+    "STARTPAGE_CONTENT_GITHUB_TOKEN": "tok",
     "OBJECT_STORE_ENDPOINT": "http://minio:9000",
     "OBJECT_STORE_USER": "ak",
     "OBJECT_STORE_PASSWORD": "sk",
-    "OBJECT_STORE_BUCKET_NAME": "kb",
+    "OBJECT_STORE_BUCKET_NAME": "startpage",
 }
 
 
@@ -76,12 +76,12 @@ class PublishLatestTest(TestCase):
         with pytest.raises(publish.PublishError, match="not configured"):
             publish.publish_latest()
 
-    @override_settings(KB_CONTENT_GITHUB_TOKEN="")
+    @override_settings(STARTPAGE_CONTENT_GITHUB_TOKEN="")
     @patch.object(storage, "set_current_prefix")
     @patch.object(storage, "upload_site", return_value=1)
     @patch.object(storage, "get_client")
     def test_no_token_sends_no_auth_header(self, mock_client, mock_upload, mock_flip):
-        # A public repo publishes token-free: with no token, kb_publish must not send
+        # A public repo publishes token-free: with no token, startpage_publish must not send
         # an Authorization header (a bogus/empty one would 401 on a public repo).
         release = {"tag_name": "v9", "assets": [{"name": "site.tar.gz", "url": "https://api/asset/1"}]}
         tarball = _make_tarball({"index.html": b"<h1>hi</h1>"})

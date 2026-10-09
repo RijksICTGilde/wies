@@ -155,8 +155,8 @@ urlpatterns = [
         assignment_member_delete_view,
         name="assignment-member-delete",
     ),
-    # ODI knowledge base / start portal
-    path("odi-startpagina/", include("wies.kb.urls")),
+    # ODI start page
+    path("odi-startpagina/", include("wies.startpage.urls")),
 ]
 
 # Custom error handlers

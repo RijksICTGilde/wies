@@ -51,9 +51,9 @@
       {% set supporting = supporting ~ " door " ~ (task.created_by.get_full_name() or task.created_by.username) %}
     {% endif %}
     <nldd-title-cell divider-start text="{{ task_label }}" supporting-text="{{ supporting }}"></nldd-title-cell>
-    {# The result payload differs per command: kb_publish reports a release + file
+    {# The result payload differs per command: startpage_publish reports a release + file
        count (or an error message), sync_organizations reports record counts. #}
-    {% if task.command == 'kb_publish' %}
+    {% if task.command == 'startpage_publish' %}
       {% if task.status == 'completed' and task.result %}
         {# The release tag is the only part that can be absent (a publish of an
            untagged artifact), and "Release" without one reads as truncated. #}

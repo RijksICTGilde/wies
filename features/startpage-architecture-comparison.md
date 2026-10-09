@@ -1,6 +1,6 @@
-# ODI Knowledge Base — Architectural Decision Comparison
+# ODI Start Page — Architectural Decision Comparison
 
-A private, SSO-gated knowledge base: articles authored as Markdown in a **private
+A private, SSO-gated start page: articles authored as Markdown in a **private
 git repo**, built to static HTML by **Hugo in GitHub Actions**, readable only by ODI
 staff. The build pipeline is fixed; this document works through the _serving and access_
 architecture — every fork we considered, both sides, and why the chosen option won.
@@ -15,35 +15,35 @@ the article content is **not**.
 
 ## Decision 1 — Separate service vs. app inside Wies
 
-**The question:** is the KB its own Django project/repo/deployment, or another Django app
+**The question:** is the start page its own Django project/repo/deployment, or another Django app
 inside the existing Wies codebase?
 
-|                              | Separate service                                                  | App inside Wies (`wies/kb/`)                                  |
+|                              | Separate service                                                  | App inside Wies (`wies/startpage/`)                           |
 | ---------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------- |
 | Reuse `rijksauth`            | Copy it in                                                        | Import it directly                                            |
 | User list / `auth_user`      | **Shared DB** → migration guard, drift guard, co-upgrade coupling | One DB, one model, one migration owner — **nothing to guard** |
 | `no_access` view + templates | Reimplement (they live in `wies.core`, not `rijksauth`)           | Reuse as-is                                                   |
 | Release cadence              | Independent                                                       | Coupled to Wies                                               |
-| Blast radius                 | Isolated process                                                  | A KB bug is a Wies-deployment bug                             |
+| Blast radius                 | Isolated process                                                  | A start page bug is a Wies-deployment bug                     |
 
 **Parts considered:** the auth reuse story, the cost of sharing one Postgres between two
-independently-migrating Django apps, and how independent the KB's releases/failures need
+independently-migrating Django apps, and how independent the start page's releases/failures need
 to be.
 
 **Why app-inside-Wies wins:** the _only_ advantage of a separate service is independence
 — independent deploys and an isolated blast radius. For an internal, ODI-sized tool, that
 independence was judged **not worth its price**. And the price is steep: two Django apps on
 one `auth_user` table forces a migration-ownership guard, a schema-drift guard, and a
-permanent "KB must upgrade when Wies changes `rijksauth.User`" coupling that _no packaging
+permanent "start page must upgrade when Wies changes `rijksauth.User`" coupling that _no packaging
 trick removes_ (sharing a table inherently couples the schema; only _not_ sharing it would
 sever that). Collapsing to one app deletes that entire category of problem: one database,
 one `User` definition, `rijksauth` imported not copied, and the existing `no_access`
 view/templates reused. **The separate-service plan was ~80% shared-DB machinery that the
 app-in-Wies approach simply never incurs.**
 
-**What we accept:** a KB serving bug runs in the Wies process, and the KB ships on Wies's
-cadence. Mitigated by keeping the KB app dependency-light. Reversible later if ODI ever
-needs the KB to outlive Wies — but not free to reverse, so it's a deliberate today-choice.
+**What we accept:** a start page serving bug runs in the Wies process, and the start page ships on Wies's
+cadence. Mitigated by keeping the start page app dependency-light. Reversible later if ODI ever
+needs the start page to outlive Wies — but not free to reverse, so it's a deliberate today-choice.
 
 ---
 
@@ -71,7 +71,7 @@ and what new dependencies/infra each option drags in.
 
 1. **Baked-into-image is eliminated by edit cadence.** Articles change frequently, and
    baking them into the image means _every article edit is an image rebuild + ZAD redeploy_.
-   That's backwards for a knowledge base, whose whole purpose is frequent content edits.
+   That's backwards for a start page, whose whole purpose is frequent content edits.
    (It was also the "third build target" the team wanted to avoid.)
 
 2. **The choice narrows to volume vs. bucket, and replicas decide it.** In the _pull_ model
@@ -173,7 +173,7 @@ never see a half-written site (atomic publish). Gated by an existing role in
 
 ## Decision 5 — How it's reached (URL / host) and when
 
-**The question:** the KB is meant to be a **hub / front door** (it links out to the KB, Wies,
+**The question:** the start page is meant to be a **hub / front door** (it links out to the kennisbank, Wies,
 and other ODI tools). What URL do people visit, and does it need its own host?
 
 Candidates: a **path under Wies** (`wies.rijksorganisatieodi.nl/start/`), a **separate
@@ -235,14 +235,14 @@ diverging from Wies's SSO behavior.
 **Serve through the app (auth-gated) vs. a public CDN/bucket.** The entire requirement is
 "not public," so the static output can never be served by an unauthenticated CDN or by
 WhiteNoise (which in Wies runs _before_ auth middleware and is public by design). Everything
-must pass the KB view behind `LoginRequiredMiddleware`. This was a constraint, not really a
+must pass the start page view behind `LoginRequiredMiddleware`. This was a constraint, not really a
 choice.
 
 ---
 
 ## The resulting architecture (one line per layer)
 
-- **App:** `wies/kb/` inside Wies — imports `rijksauth`, reuses `wies.core`'s `no_access`,
+- **App:** `wies/startpage/` inside Wies — imports `rijksauth`, reuses `wies.core`'s `no_access`,
   gated by `LoginRequiredMiddleware`.
 - **URL:** iteration 1 at `wies.rijksorganisatieodi.nl/start/` (a path); promote to the
   `start.rijksorganisatieodi.nl` subdomain later (config + 301, lossless).

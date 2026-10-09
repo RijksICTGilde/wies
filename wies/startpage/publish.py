@@ -1,8 +1,8 @@
-"""Pull the latest built KB site from GitHub and publish it to MinIO.
+"""Pull the latest built start page site from GitHub and publish it to MinIO.
 
 The private content repo's CI attaches the built Hugo site as a ``.tar.gz`` asset
 on each GitHub release. This module (run on the ``db_worker`` via the
-``kb_publish`` task) downloads that asset, unpacks it, uploads every file under a
+``startpage_publish`` task) downloads that asset, unpacks it, uploads every file under a
 fresh ``sites/<release-tag>`` prefix, then flips the current-pointer so readers
 switch over atomically. CI never gets credentials to our infra — we pull.
 """
@@ -17,7 +17,7 @@ from pathlib import Path
 import requests
 from django.conf import settings
 
-from wies.kb import storage
+from wies.startpage import storage
 
 _GITHUB_API = "https://api.github.com"
 _DOWNLOAD_TIMEOUT = 300
@@ -25,8 +25,8 @@ _SITE_PREFIX_ROOT = "sites"
 
 # The task command name + timeout, declared next to the work they describe and
 # imported by the staff view that enqueues it.
-KB_PUBLISH_COMMAND = "kb_publish"
-KB_PUBLISH_TIMEOUT_MINUTES = 15
+STARTPAGE_PUBLISH_COMMAND = "startpage_publish"
+STARTPAGE_PUBLISH_TIMEOUT_MINUTES = 15
 
 
 @dataclass
@@ -47,13 +47,13 @@ def _headers() -> dict[str, str]:
     # Only authenticate when a token is configured. A public content repo is
     # readable anonymously; sending an *invalid* token there fails with 401 (worse
     # than sending none). A private repo (later) provides a token and authenticates.
-    if settings.KB_CONTENT_GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {settings.KB_CONTENT_GITHUB_TOKEN}"
+    if settings.STARTPAGE_CONTENT_GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {settings.STARTPAGE_CONTENT_GITHUB_TOKEN}"
     return headers
 
 
 def _latest_release() -> dict:
-    url = f"{_GITHUB_API}/repos/{settings.KB_CONTENT_GITHUB_REPO}/releases/latest"
+    url = f"{_GITHUB_API}/repos/{settings.STARTPAGE_CONTENT_GITHUB_REPO}/releases/latest"
     response = requests.get(url, headers=_headers(), timeout=30)
     if response.status_code != 200:  # noqa: PLR2004 (status code is not magic)
         msg = f"Could not fetch latest release ({response.status_code})"
@@ -110,9 +110,9 @@ def _site_root(extracted: Path) -> Path:
 
 
 def _require_config() -> None:
-    """Fail with a clear message if the KB secrets aren't configured.
+    """Fail with a clear message if the start page secrets aren't configured.
 
-    Validated here (not at worker boot) so a missing KB secret grounds only this
+    Validated here (not at worker boot) so a missing start page secret grounds only this
     task, not the whole multi-purpose worker.
     """
     # The token is intentionally NOT required: a public content repo publishes
@@ -124,11 +124,11 @@ def _require_config() -> None:
         "OBJECT_STORE_USER": settings.OBJECT_STORE_USER,
         "OBJECT_STORE_PASSWORD": settings.OBJECT_STORE_PASSWORD,
         "OBJECT_STORE_BUCKET_NAME": settings.OBJECT_STORE_BUCKET_NAME,
-        "KB_CONTENT_GITHUB_REPO": settings.KB_CONTENT_GITHUB_REPO,
+        "STARTPAGE_CONTENT_GITHUB_REPO": settings.STARTPAGE_CONTENT_GITHUB_REPO,
     }
     missing = [name for name, value in required.items() if not value]
     if missing:
-        msg = f"KB publish is not configured; missing: {', '.join(missing)}"
+        msg = f"Start page publish is not configured; missing: {', '.join(missing)}"
         raise PublishError(msg)
 
 

@@ -1,6 +1,6 @@
-"""Seed MinIO with a small dummy KB site for local development.
+"""Seed MinIO with a small dummy start page site for local development.
 
-The real publish path (kb_publish) needs a GitHub release artifact from the
+The real publish path (startpage_publish) needs a GitHub release artifact from the
 private content repo, which may not exist locally. This dev-only command puts a
 browsable placeholder site in the bucket instead, using the *same* storage code
 paths as production (ensure_bucket -> upload_site -> set_current_prefix), so
@@ -21,7 +21,7 @@ from pathlib import Path
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 
-from wies.kb import storage
+from wies.startpage import storage
 
 _PREFIX = "sites/dummy"
 
@@ -57,14 +57,14 @@ _CSS = "body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2re
 
 
 class Command(BaseCommand):
-    help = "Seed MinIO with a small dummy KB site (local development only)"
+    help = "Seed MinIO with a small dummy start page site (local development only)"
 
     def handle(self, *args, **options):
-        # set_current_prefix below repoints the live KB at this placeholder, so
+        # set_current_prefix below repoints the live start page at this placeholder, so
         # refuse to run anywhere DEBUG is off: a stray invocation against a
         # deployed bucket would replace the real site with dummy articles.
         if not settings.DEBUG:
-            msg = "kb_seed_dummy is a development-only command and refuses to run with DEBUG=False"
+            msg = "startpage_seed_dummy is a development-only command and refuses to run with DEBUG=False"
             raise CommandError(msg)
 
         client = storage.get_client()
@@ -72,15 +72,15 @@ class Command(BaseCommand):
 
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            # A root homepage (index.html) is served at /odi-startpagina/; the KB's
+            # A root homepage (index.html) is served at /odi-startpagina/; the kennisbank's
             # own pages sit under kennisbank/; shared assets (css) stay at the site
             # root so /odi-startpagina/css/app.css resolves for every page.
             (root / "index.html").write_text(_HOME)
-            kb = root / "kennisbank"
-            kb.mkdir()
-            (kb / "index.html").write_text(_INDEX)
-            (kb / "onboarding").mkdir()
-            (kb / "onboarding" / "index.html").write_text(_ONBOARDING)
+            kennisbank = root / "kennisbank"
+            kennisbank.mkdir()
+            (kennisbank / "index.html").write_text(_INDEX)
+            (kennisbank / "onboarding").mkdir()
+            (kennisbank / "onboarding" / "index.html").write_text(_ONBOARDING)
             (root / "css").mkdir()
             (root / "css" / "app.css").write_text(_CSS)
 

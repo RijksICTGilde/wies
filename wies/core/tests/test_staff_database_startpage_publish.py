@@ -1,6 +1,6 @@
-"""Tests for the staff-gated KB publish trigger on the Database admin page.
+"""Tests for the staff-gated start page publish trigger on the Database admin page.
 
-Publishing the knowledge base was folded into ``beheer/database/`` (it used to
+Publishing the start page was folded into ``beheer/database/`` (it used to
 have its own ``beheer/kennisbank/`` page). The action shares the page's staff gate
 and its "Recente taken" list.
 """
@@ -12,7 +12,7 @@ from django.urls import reverse
 from wies.core.models import Task
 from wies.core.services.tasks import get_task_label
 from wies.core.tests.role_helpers import STAFF_EMAIL, make_staff_user
-from wies.kb.publish import KB_PUBLISH_COMMAND
+from wies.startpage.publish import STARTPAGE_PUBLISH_COMMAND
 
 User = get_user_model()
 
@@ -37,7 +37,7 @@ class DatabasePublishButtonTest(TestCase):
         self.client.force_login(make_staff_user())
         response = self.client.get(reverse("staff-database"))
         assert response.status_code == 200
-        assert b'value="publish_knowledge_base"' in response.content
+        assert b'value="publish_startpage"' in response.content
 
 
 class DatabasePublishTriggerTest(TestCase):
@@ -47,29 +47,29 @@ class DatabasePublishTriggerTest(TestCase):
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_staff_publish_enqueues_task(self):
         self.client.force_login(make_staff_user())
-        response = self.client.post(reverse("staff-database"), {"action": "publish_knowledge_base"})
+        response = self.client.post(reverse("staff-database"), {"action": "publish_startpage"})
         assert response.status_code == 302
-        assert Task.objects.filter(command=KB_PUBLISH_COMMAND, status="pending").count() == 1
+        assert Task.objects.filter(command=STARTPAGE_PUBLISH_COMMAND, status="pending").count() == 1
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_htmx_publish_returns_task_list_partial(self):
         self.client.force_login(make_staff_user())
         response = self.client.post(
             reverse("staff-database"),
-            {"action": "publish_knowledge_base"},
+            {"action": "publish_startpage"},
             headers={"hx-request": "true"},
         )
         assert response.status_code == 200
-        # The shared task list is swapped in, not a KB-specific partial.
+        # The shared task list is swapped in, not a start-page-specific partial.
         assert "Recente taken" in response.content.decode()
-        assert Task.objects.filter(command=KB_PUBLISH_COMMAND).count() == 1
+        assert Task.objects.filter(command=STARTPAGE_PUBLISH_COMMAND).count() == 1
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_second_publish_while_active_does_not_enqueue(self):
         self.client.force_login(make_staff_user())
-        self.client.post(reverse("staff-database"), {"action": "publish_knowledge_base"})
-        self.client.post(reverse("staff-database"), {"action": "publish_knowledge_base"})
-        assert Task.objects.filter(command=KB_PUBLISH_COMMAND).count() == 1
+        self.client.post(reverse("staff-database"), {"action": "publish_startpage"})
+        self.client.post(reverse("staff-database"), {"action": "publish_startpage"})
+        assert Task.objects.filter(command=STARTPAGE_PUBLISH_COMMAND).count() == 1
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_htmx_swap_carries_the_flash_message(self):
@@ -79,7 +79,7 @@ class DatabasePublishTriggerTest(TestCase):
         self.client.force_login(make_staff_user())
         response = self.client.post(
             reverse("staff-database"),
-            {"action": "publish_knowledge_base"},
+            {"action": "publish_startpage"},
             headers={"hx-request": "true"},
         )
         body = response.content.decode()
@@ -89,10 +89,10 @@ class DatabasePublishTriggerTest(TestCase):
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_htmx_swap_shows_the_already_active_error(self):
         self.client.force_login(make_staff_user())
-        self.client.post(reverse("staff-database"), {"action": "publish_knowledge_base"})
+        self.client.post(reverse("staff-database"), {"action": "publish_startpage"})
         response = self.client.post(
             reverse("staff-database"),
-            {"action": "publish_knowledge_base"},
+            {"action": "publish_startpage"},
             headers={"hx-request": "true"},
         )
         assert "Er is al een publicatietaak actief" in response.content.decode()
@@ -108,7 +108,7 @@ class TaskListRenderingTest(TestCase):
     def test_task_is_named_by_its_label_not_its_status(self):
         self.client.force_login(make_staff_user())
         Task.objects.create(
-            command=KB_PUBLISH_COMMAND, label="ODI startpagina publiceren", status="pending", timeout_minutes=15
+            command=STARTPAGE_PUBLISH_COMMAND, label="ODI startpagina publiceren", status="pending", timeout_minutes=15
         )
         body = self.client.get(reverse("staff-database")).content.decode()
         assert 'text="ODI startpagina publiceren"' in body
@@ -117,7 +117,7 @@ class TaskListRenderingTest(TestCase):
     def test_publish_result_reports_release_and_file_count(self):
         self.client.force_login(make_staff_user())
         Task.objects.create(
-            command=KB_PUBLISH_COMMAND,
+            command=STARTPAGE_PUBLISH_COMMAND,
             label="ODI startpagina publiceren",
             status="completed",
             timeout_minutes=15,
@@ -131,7 +131,7 @@ class TaskListRenderingTest(TestCase):
         # An untagged artifact left a dangling "Release 7 bestanden gepubliceerd".
         self.client.force_login(make_staff_user())
         Task.objects.create(
-            command=KB_PUBLISH_COMMAND,
+            command=STARTPAGE_PUBLISH_COMMAND,
             label="ODI startpagina publiceren",
             status="completed",
             timeout_minutes=15,
@@ -145,7 +145,7 @@ class TaskListRenderingTest(TestCase):
     def test_failed_publish_shows_the_error(self):
         self.client.force_login(make_staff_user())
         Task.objects.create(
-            command=KB_PUBLISH_COMMAND,
+            command=STARTPAGE_PUBLISH_COMMAND,
             label="ODI startpagina publiceren",
             status="failed",
             timeout_minutes=15,
@@ -157,16 +157,16 @@ class TaskListRenderingTest(TestCase):
     def test_non_staff_publish_is_denied(self):
         user = User.objects.create_user(email="reader@rijksoverheid.nl", first_name="R", last_name="R")
         self.client.force_login(user)
-        response = self.client.post(reverse("staff-database"), {"action": "publish_knowledge_base"}, follow=False)
+        response = self.client.post(reverse("staff-database"), {"action": "publish_startpage"}, follow=False)
         assert response.status_code == 302  # bounced by staff_required, not executed
-        assert Task.objects.filter(command=KB_PUBLISH_COMMAND).count() == 0
+        assert Task.objects.filter(command=STARTPAGE_PUBLISH_COMMAND).count() == 0
 
 
 class TaskLabelTest(TestCase):
     """``create_task`` snapshots the label a TaskCommand declares for itself."""
 
     def test_label_comes_from_the_command_class(self):
-        assert get_task_label(KB_PUBLISH_COMMAND) == "ODI startpagina publiceren"
+        assert get_task_label(STARTPAGE_PUBLISH_COMMAND) == "ODI startpagina publiceren"
         assert get_task_label("sync_organizations") == "Organisaties synchroniseren"
 
     def test_unknown_command_falls_back_to_its_name(self):

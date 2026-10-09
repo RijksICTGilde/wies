@@ -1,4 +1,4 @@
-"""Views for the ODI knowledge base / start portal.
+"""Views for the ODI start page.
 
 A single surface, behind the project-wide ``LoginRequiredMiddleware`` (so a
 logged-out request is bounced to SSO before it reaches here):
@@ -17,11 +17,11 @@ import posixpath
 from django.http import Http404, StreamingHttpResponse
 from django.shortcuts import redirect
 
-from wies.kb import storage
+from wies.startpage import storage
 
 
 def _resolve_key(path: str, prefix: str) -> str:
-    """Map a request path under the KB mount to a MinIO object key.
+    """Map a request path under the start page mount to a MinIO object key.
 
     Applies Hugo's pretty-URL rule (a directory path resolves to its
     ``index.html``) and refuses anything that could escape ``prefix``.
