@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: the organization sync no longer depends on the overheid.nl export schema version, and fails visibly instead of reporting success when it finds no organizations
+- 711: the organization sync no longer depends on the overheid.nl export schema version, and fails visibly instead of reporting success when it finds no organizations
 
 ## 2026-10-07_2
 
