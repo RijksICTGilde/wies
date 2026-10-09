@@ -27,7 +27,7 @@ from wies.core.services.events import create_event
 logger = logging.getLogger(__name__)
 
 ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.xml"
-NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.9"}
+NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.13"}
 
 # Organizations hidden from display and refused as opdrachtgever (intelligence
 # services). They are still synced; see get_excluded_org_ids.

@@ -1,0 +1,79 @@
+{# The read view of one aanvraag (an open role on an opdracht). A team row for
+   a placement opens that colleague's panel; an aanvraag has no colleague, so
+   it opens this. Same box-tinted label/value list as the opdracht panel. #}
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap. Only under htmx: a full page load already renders them in base.html. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
+{% if not panel_data %}
+  {# nldd-sheet closes itself on the dismiss of its own top-title-bar. #}
+  <nldd-top-title-bar slot="header" text="Aanvraag" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-inline-dialog variant="alert" text="Niet gevonden" supporting-text="Dit item bestaat niet meer of je hebt er geen toegang toe."></nldd-inline-dialog>
+  </nldd-simple-section>
+{% else %}
+  {% set service = panel_data.service %}
+  {% set assignment = panel_data.assignment %}
+  {# collapse-anchor: the title appears in the bar only once it scrolls out of view. #}
+  <nldd-top-title-bar slot="header" text="{{ panel_data.panel_title }}" collapse-anchor="panel-title" dismiss-text="Sluit">
+  {% if panel_data.user_can_edit_team %}
+    <nldd-toolbar-item slot="end">
+    <nldd-icon-button icon="edit" text="Aanvraag wijzigen" hx-get="{{ panel_data.edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+    </nldd-toolbar-item>
+  {% endif %}
+  </nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-title size="6">
+  <p>Aanvraag</p>
+  </nldd-title>
+  <nldd-spacer size="2" direction="vertical"></nldd-spacer>
+  <nldd-title size="3">
+  {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
+     in the new panel matches where they came from. #}
+  <h2 id="panel-title" tabindex="-1">{{ service.skill.name if service.skill else "Rol niet ingevuld" }}</h2>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-list variant="box-tinted" accessible-label="Aanvraaggegevens">
+  {# The opdracht this role is on: the way back up, as a row like the rest. #}
+  <nldd-list-item class="wies-cv__link" href="{{ panel_data.assignment_url }}" hx-get="{{ panel_data.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-text-cell width="140px" text="Opdracht" vertical-alignment="top"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell vertical-alignment="top" text="{{ assignment.name }}"></nldd-text-cell>
+  <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="140px" text="Periode" vertical-alignment="top"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  {# Built up front so no Jinja tag sits inside the attribute value. #}
+  {% set period_text %}
+    {%- if service.start_date and service.end_date %}{{ service.start_date|datum_nl }} t/m {{ service.end_date|datum_nl }}
+    {%- elif service.start_date %}Vanaf {{ service.start_date|datum_nl }}
+    {%- elif service.end_date %}t/m {{ service.end_date|datum_nl }}
+  {%- else %}Geen periode opgegeven{% endif -%}
+{% endset %}
+<nldd-text-cell vertical-alignment="top" text="{{ period_text|trim }}"></nldd-text-cell>
+</nldd-list-item>
+{% if service.hours_per_week %}
+  <nldd-list-item>
+  <nldd-text-cell width="140px" text="Uren per week" vertical-alignment="top"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell vertical-alignment="top" text="{{ service.hours_per_week }} uur"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}
+{# The role description, rendered from Markdown with the same fold as the
+       opdracht's own description. #}
+<nldd-list-item>
+<nldd-text-cell width="140px" text="Taken" vertical-alignment="top"></nldd-text-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell vertical-alignment="top">
+{% with value = service.description %}
+  {% include "forms/displays/textarea.html" %}
+{% endwith %}
+</nldd-text-cell>
+</nldd-list-item>
+</nldd-list>
+</nldd-simple-section>
+{% endif %}

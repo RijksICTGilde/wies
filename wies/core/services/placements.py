@@ -286,7 +286,7 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
 
 
 def placement_edit_specs(placement, user, only=None):
-    """Returns the placement panel's editable specs, each with its own object.
+    """Returns the placement edit sheet's editable specs, each with its own object.
 
     Four fields across two models (Service.skill, Service.description,
     Service.hours_per_week, Placement.period). Only specs the user may UPDATE come back, so the form never
