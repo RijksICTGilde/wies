@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_not_required
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from wies.core.views import (
@@ -155,6 +155,8 @@ urlpatterns = [
         assignment_member_delete_view,
         name="assignment-member-delete",
     ),
+    # ODI start page
+    path("odi-startpagina/", include("wies.startpage.urls")),
 ]
 
 # Custom error handlers

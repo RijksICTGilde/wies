@@ -24,6 +24,8 @@ class TaskCommand(BaseCommand):
     failed immediately instead of hanging in ``running`` until its timeout.
     """
 
+    task_label: str = ""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.result = None
@@ -31,6 +33,15 @@ class TaskCommand(BaseCommand):
     def run_task(self, *args, **options):
         """Do the work and return a JSON-serialisable success payload."""
         raise NotImplementedError
+
+    def summarize_result(self, result: dict) -> str:
+        """One-line Dutch summary of a success payload for the recent-tasks list.
+
+        The payload shape is the command's own, so the wording lives here too
+        instead of in a per-command branch in the template. Read keys with
+        ``.get``: rows stored by an older version of the command still render.
+        """
+        return ""
 
     def handle(self, *args, **options):
         try:

@@ -970,6 +970,28 @@ def staff_database(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
+        elif action == "publish_startpage":
+            # Publish the start page from the content repo — the db_worker runs
+            # the startpage_publish task. Shares the same task list as the other actions.
+            from wies.startpage.publish import (  # noqa: PLC0415 (import not at top level) — only this rare admin action needs it
+                STARTPAGE_PUBLISH_COMMAND,
+                STARTPAGE_PUBLISH_TIMEOUT_MINUTES,
+            )
+
+            if has_active_task(STARTPAGE_PUBLISH_COMMAND):
+                messages.error(request, "Er is al een publicatietaak actief. Wacht tot deze is afgerond.")
+            else:
+                create_task(
+                    command=STARTPAGE_PUBLISH_COMMAND,
+                    created_by=request.user,
+                    timeout_minutes=STARTPAGE_PUBLISH_TIMEOUT_MINUTES,
+                )
+                messages.success(request, "Publicatie is gestart")
+
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "parts/task_list.html", context)
+
         elif action == "merge_duplicates_preview":
             from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
 
