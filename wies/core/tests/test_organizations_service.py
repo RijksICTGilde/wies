@@ -1277,7 +1277,10 @@ class OrgBreadcrumbMinistryTest(TestCase):
 
 
 class ExportNamespaceTest(TestCase):
-    """The schema version in the export's namespace changes without notice."""
+    """The schema version in the export's namespace changes without notice.
+
+    A patch bump is accepted; a minor or major bump stops the sync.
+    """
 
     @classmethod
     def setUpClass(cls):
@@ -1286,14 +1289,25 @@ class ExportNamespaceTest(TestCase):
         with fixture_path.open("rb") as f:
             cls.xml_content = f.read()
 
-    def test_other_schema_version_parses_the_same(self):
+    def test_patch_version_parses_the_same(self):
         assert b"oo/export/2.6.13" in self.xml_content
-        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.7.0")
+        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.6.14")
 
         assert _parse_xml(bumped) == _parse_xml(self.xml_content)
 
+    def test_other_minor_or_major_version_raises(self):
+        for version in ("2.7.0", "3.6.13", "2.60.1", "2.6"):
+            with self.subTest(version=version):
+                bumped = self.xml_content.replace(b"oo/export/2.6.13", f"oo/export/{version}".encode())
+
+                with pytest.raises(ValueError, match="is not supported") as exc_info:
+                    _parse_xml(bumped)
+
+                assert f"schema version {version} " in str(exc_info.value)
+                assert "2.6.x" in str(exc_info.value)
+
     def test_namespaced_attributes_are_read(self):
-        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.7.0")
+        bumped = self.xml_content.replace(b"oo/export/2.6.13", b"oo/export/2.6.14")
         result = _parse_xml(bumped)
 
         assert any(org["tooi_identifier"] for org in result)
@@ -1333,6 +1347,22 @@ class SyncOrganizationsFailureTest(TestCase):
         active.refresh_from_db()
         assert active.end_date is None
         assert OrganizationUnit.objects.filter(pk=inactive.pk).exists()
+
+    def test_unsupported_schema_version_raises_and_leaves_data_alone(self):
+        active = OrganizationUnit.objects.create(
+            name="Bestaand", label="Bestaand", source_url="https://organisaties.overheid.nl/1/Bestaand/"
+        )
+        inactive = OrganizationUnit.objects.create(name="Oud", label="Oud", end_date=date(2020, 1, 1))
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
+        bumped = fixture_path.read_bytes().replace(b"oo/export/2.6.13", b"oo/export/2.7.0")
+
+        with self.assertRaisesMessage(ValueError, "schema version 2.7.0 is not supported"):
+            sync_organizations(xml_content=bumped, dry_run=False)
+
+        active.refresh_from_db()
+        assert active.end_date is None
+        assert OrganizationUnit.objects.filter(pk=inactive.pk).exists()
+        assert OrganizationUnit.objects.count() == 2
 
     def test_http_error_raises(self):
         response = requests.Response()

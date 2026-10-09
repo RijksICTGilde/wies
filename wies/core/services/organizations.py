@@ -31,6 +31,11 @@ ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.x
 # that overheid.nl bumps without notice, so only the prefix is fixed here and
 # the full namespace is read from each document.
 NS_PREFIX = "https://organisaties.overheid.nl/static/schema/oo/export/"
+# Patch versions within this minor version are accepted. A minor bump can change
+# the structure of the export, so it stops the sync until someone has checked
+# the overheid.nl changelog and raised this constant.
+SUPPORTED_SCHEMA_MINOR = "2.6"
+_SUPPORTED_SCHEMA_VERSION_RE = re.compile(rf"{re.escape(SUPPORTED_SCHEMA_MINOR)}\.\d+")
 
 # Organizations excluded from sync (intelligence services).
 # All comparisons are case-insensitive.
@@ -197,7 +202,8 @@ def iter_root_organizations(xml_source: IO[bytes] | str) -> Iterator[dict]:
     Element so the DOM never grows to hold the full document. Keeps peak memory
     bounded to a single org subtree instead of the entire 30+ MB export.
 
-    Raises ValueError when the document is not an overheid.nl organization export.
+    Raises ValueError when the document is not an overheid.nl organization export,
+    or when its schema version is outside the supported minor version.
     """
     context = ET.iterparse(xml_source, events=("start", "end"))  # noqa: S314 (xml.etree vulnerable to XML attacks) — input is trusted government export from organisaties.overheid.nl
     depth = 0
@@ -213,6 +219,15 @@ def iter_root_organizations(xml_source: IO[bytes] | str) -> Iterator[dict]:
             namespace = elem.tag[1:].partition("}")[0] if elem.tag.startswith("{") else ""
             if not namespace.startswith(NS_PREFIX):
                 msg = f"Unexpected XML namespace for organization export: {namespace!r}"
+                raise ValueError(msg)
+            version = namespace.removeprefix(NS_PREFIX)
+            if not _SUPPORTED_SCHEMA_VERSION_RE.fullmatch(version):
+                msg = (
+                    f"Organization export schema version {version} is not supported "
+                    f"(supported: {SUPPORTED_SCHEMA_MINOR}.x). Check the overheid.nl export changelog; "
+                    "if the change is compatible, update SUPPORTED_SCHEMA_MINOR in "
+                    "wies/core/services/organizations.py."
+                )
                 raise ValueError(msg)
             ns = {"p": namespace}
             org_tag = f"{{{namespace}}}organisatie"

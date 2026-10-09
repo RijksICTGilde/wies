@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 711: the organization sync no longer depends on the overheid.nl export schema version, and fails visibly instead of reporting success when it finds no organizations
+- 711: the organization sync accepts patch versions of the overheid.nl export schema (2.6.x), stops with a clear error on a new minor or major version, and fails visibly instead of reporting success when it finds no organizations
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
 - 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the "Taken". Empty "Taken" read "Niet ingevuld", so the placed colleague finds the pencil to fill them in.
 - 693: an aanvraag on a team row opens its own panel, a filled role no longer does
