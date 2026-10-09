@@ -31,7 +31,9 @@
   </nldd-title>
   <nldd-spacer size="2" direction="vertical"></nldd-spacer>
   <nldd-title size="3">
-  <h2 id="panel-title">{{ panel_data.assignment.name }}</h2>
+  {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
+     in the new panel matches where they came from. #}
+  <h2 id="panel-title" tabindex="-1">{{ panel_data.assignment.name }}</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
@@ -50,8 +52,8 @@
        needs hx-trigger="select", because the overflow menu clicks a clone. #}
     {% if panel_data.user_can_edit %}
       <nldd-toolbar-item slot="end">
-      <nldd-icon-button icon="edit" text="Gegevens bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
-      <nldd-menu-item slot="overflow" text="Gegevens bewerken" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+      <nldd-icon-button icon="edit" text="Gegevens wijzigen" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      <nldd-menu-item slot="overflow" text="Gegevens wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
     {% if _can_delete %}
@@ -69,19 +71,18 @@
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
     {# The description sits in this list, not above the tabs, where a long text
-       pushed the tabs and fields out of view. Its label is shortened because
-       "Opdrachtomschrijving" wrapped in the label column. #}
+       pushed the tabs and fields out of view, and last in it, so the short
+       facts above it stay in view when it runs long. Its label is shortened
+       because "Opdrachtomschrijving" wrapped in the label column. #}
     {% set _rows = [
       ("Externe bron", "source"),
-      ("Omschrijving", "extra_info"),
       ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
       ("Periode", "period"),
-      ("Plaatsingsdatum", "created_at"),
       ("Business Manager", "owner"),
+      ("Omschrijving", "extra_info"),
     ] %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
-      {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
       {% else %}
         <nldd-list-item>
         <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
@@ -109,8 +110,6 @@
         {% elif row_kind == "period" %}
           {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
           {% include "forms/displays/assignment_period.html" %}
-        {% elif row_kind == "created_at" %}
-          {{ panel_data.assignment.created_at|datum_nl }}
         {% elif row_kind == "owner" %}
           {% if panel_data.assignment.owner %}
             {{ panel_data.assignment.owner.name }}
@@ -130,7 +129,7 @@
              that name unreachable. Only non-editing actions remain here. #}
           {% set _actions = [] %}
           {% if panel_data.owner_display.owner_url %}
-            {% set _ = _actions.append({"text": "Bekijk profiel", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
+            {% set _ = _actions.append({"text": "Profiel bekijken", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
           {% endif %}
           {% if panel_data.assignment.owner.email %}
             {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": 'data-href="' ~ (panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email)) ~ '"'}) %}

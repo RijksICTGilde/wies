@@ -32,7 +32,6 @@ from wies.core.views import (
     PlacementListView,
     _build_assignment_panel_data,
     _get_colleague_assignments,
-    _resolve_placement_panel,
 )
 from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
@@ -650,7 +649,8 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         ]
 
         assert len(rows) == 1
-        assert rows[0]["period_label"] == "Gepland"
+        # No "Gepland" label: the dates say it; the note still marks the row.
+        assert rows[0]["period_label"] is None
         assert rows[0]["privacy_warning_text"] == PRIVACY_OWN
 
     @patch("wies.core.editables.assignment.timezone")
@@ -665,7 +665,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         ]
 
         assert len(rows) == 1
-        assert rows[0]["period_label"] == "Gepland"
+        assert rows[0]["period_label"] is None
         assert rows[0]["privacy_warning_text"] == PRIVACY_BDM
 
     @patch("wies.core.views.timezone")
@@ -703,8 +703,7 @@ class AssignmentServicesFutureAndCountTest(TestCase):
 
 
 class PlacementPanelVisibilityTest(TestCase):
-    """_resolve_placement_panel enforces the same rule as the team list for the
-    standalone ?plaatsing=N side panel (previously reachable by guessing the URL)."""
+    """The period chips a placement's row carries in the opdracht panel."""
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
@@ -744,43 +743,16 @@ class PlacementPanelVisibilityTest(TestCase):
             source="wies",
         )
 
-    @patch("wies.core.views.timezone")
-    def test_ended_placement_denied_to_unrelated(self, mock_tz):
-        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
-
-        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id) is None
-
-    @patch("wies.core.views.timezone")
-    def test_future_placement_denied_to_unrelated(self, mock_tz):
-        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
-
-        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id) is None
-
-    @patch("wies.core.views.timezone")
-    def test_ended_placement_shown_to_colleague_with_note(self, mock_tz):
-        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
-
-        data = _resolve_placement_panel(self._request(self.user_alice), pl.public_id)
-
-        assert data is not None
-        card = data["assignment_card"]
-        assert card["historical"] is True
-        assert card["period_label"] == "Afgelopen"
-        assert card["privacy_warning_text"] == PRIVACY_OWN
-
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.editables.assignment.timezone")
     def test_ended_panel_renders_the_period_chip(self, mock_tz):
-        # End-to-end: the rendered panel shows the "Afgelopen" tag plus the
-        # icon-only privacy chip beside the period, the same chip as the team row.
+        # End-to-end: the opdracht panel shows the "Afgelopen"
+        # tag plus the icon-only privacy chip on the colleague's own row.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
         self.client.force_login(self.user_alice)
 
         body = self.client.get(
-            reverse("home") + f"?plaatsing={pl.public_id}",
+            reverse("home") + f"?opdracht={pl.service.assignment.public_id}",
             headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
         ).content.decode()
 
@@ -789,7 +761,7 @@ class PlacementPanelVisibilityTest(TestCase):
         assert 'variant="icon"' in body
         assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.editables.assignment.timezone")
     def test_active_panel_renders_no_period_chip(self, mock_tz):
         # An active placement carries no label or note, so no chip clutters the panel.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
@@ -797,44 +769,38 @@ class PlacementPanelVisibilityTest(TestCase):
         self.client.force_login(self.user_alice)
 
         body = self.client.get(
-            reverse("home") + f"?plaatsing={pl.public_id}",
+            reverse("home") + f"?opdracht={pl.service.assignment.public_id}",
             headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
         ).content.decode()
 
         assert 'text="Afgelopen"' not in body
         assert "wies-privacy-chip" not in body
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.editables.assignment.timezone")
     def test_future_placement_shown_to_bdm_with_gepland(self, mock_tz):
-        # A Business Manager (BDM role), neither placed nor the owner, still sees
-        # the future placement panel, with the BDM note.
+        # A Business Manager (BDM role), neither placed nor the owner, sees the row with the BDM note; no "Gepland" label,
+        # the dates already say it.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
+        self.client.force_login(self.user_bdm)
 
-        data = _resolve_placement_panel(self._request(self.user_bdm), pl.public_id)
+        body = self.client.get(
+            reverse("home") + f"?opdracht={pl.service.assignment.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
 
-        assert data is not None
-        card = data["assignment_card"]
-        assert card["period_label"] == "Gepland"
-        assert card["privacy_warning_text"] == PRIVACY_BDM
-
-    @patch("wies.core.views.timezone")
-    def test_active_placement_visible_to_unrelated(self, mock_tz):
-        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        pl = self._placement(start=date(2026, 1, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
-
-        data = _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id)
-
-        assert data is not None
-        assert data["assignment_card"]["privacy_warning_text"] is None
+        assert 'text="Gepland"' not in body
+        assert PRIVACY_BDM in body
 
 
-class PlacementPanelPencilPermissionTest(TestCase):
-    """The Period and Role pencils in the placement panel are gated per field.
+class OwnRoleSheetPermissionTest(TestCase):
+    """``?opdracht=&teamlid=`` opens the right sheet for who asks.
 
-    A placed colleague may edit their own role description but not the period, so
-    the panel must offer the Role pencil and withhold the Period one (it used to
-    show both off a single shared flag, giving a dead Period pencil)."""
+    A placed colleague may edit their own role description but not the role,
+    hours or period, so their row opens "Taken wijzigen" with the role
+    read-only; the BDM owner gets the full "Teamlid wijzigen" form instead."""
+
+    HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
@@ -846,6 +812,8 @@ class PlacementPanelPencilPermissionTest(TestCase):
         self.colleague_bob = Colleague.objects.create(
             name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
         )
+        self.user_carol = User.objects.create_user(email="carol@rijksoverheid.nl")
+        Colleague.objects.create(name="Carol", email="carol@rijksoverheid.nl", source="wies", user=self.user_carol)
 
     def _placement(self, *, owner):
         assignment = Assignment.objects.create(name="Test", source="wies", owner=owner)
@@ -859,34 +827,101 @@ class PlacementPanelPencilPermissionTest(TestCase):
             source="wies",
         )
 
-    def _request(self, user):
-        request = RequestFactory().get(reverse("home"))
-        request.user = user
-        return request
+    def _sheet(self, user, pl):
+        self.client.force_login(user)
+        url = reverse("home") + f"?opdracht={pl.service.assignment.public_id}&teamlid={pl.service.public_id}"
+        return self.client.get(url, headers=self.HX)
 
     @patch("wies.core.views.timezone")
-    def test_own_placement_offers_role_pencil_not_period(self, mock_tz):
+    def test_own_row_opens_the_description_sheet_with_the_role_read_only(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         # Bob owns the assignment; Alice is only the placed colleague.
         pl = self._placement(owner=self.colleague_bob)
 
-        data = _resolve_placement_panel(self._request(self.user_alice), pl.public_id)
+        body = self._sheet(self.user_alice, pl).content.decode()
 
-        assert data["can_edit_role"] is True
-        assert data["can_edit_period"] is False
+        assert "Taken wijzigen" in body
+        assert "Teamlid wijzigen" not in body
+        assert 'name="description"' in body
+        assert "<nldd-text-field readonly" in body
+        assert 'name="hours_per_week"' not in body
+        assert 'name="specific_start_date"' not in body
+        # The back button leads to the opdracht panel, not to a person.
+        assert 'back-text="Test"' in body
 
     @patch("wies.core.views.timezone")
-    def test_owner_gets_both_pencils(self, mock_tz):
+    def test_owner_gets_the_full_member_form(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
-        # Bob owns the assignment and holds the BDM role, so he may edit every
-        # field (ownership alone no longer grants edit rights).
         grant_bdm(self.user_bob)
         pl = self._placement(owner=self.colleague_bob)
 
-        data = _resolve_placement_panel(self._request(self.user_bob), pl.public_id)
+        body = self._sheet(self.user_bob, pl).content.decode()
 
-        assert data["can_edit_role"] is True
-        assert data["can_edit_period"] is True
+        assert "Teamlid wijzigen" in body
+        assert "Taken wijzigen" not in body
+
+    @patch("wies.core.views.timezone")
+    def test_own_row_menu_says_mijn(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        grant_bdm(self.user_bob)
+        pl = self._placement(owner=self.colleague_bob)
+        panel = reverse("home") + f"?opdracht={pl.service.assignment.public_id}"
+
+        def row(body):
+            return body.split("Acties voor Alice")[1].split("</nldd-menu>")[0]
+
+        self.client.force_login(self.user_alice)
+        alice = row(self.client.get(panel, headers=self.HX).content.decode())
+        assert "Mijn taken wijzigen" in alice
+        assert "Mijn profiel" in alice
+        assert "Profiel bekijken" not in alice
+
+        self.client.force_login(self.user_bob)
+        bob = row(self.client.get(panel, headers=self.HX).content.decode())
+        assert "Teamlid wijzigen" in bob
+        assert "Profiel bekijken" in bob
+        assert "Mijn" not in bob
+
+    @patch("wies.core.views.timezone")
+    def test_a_row_without_actions_is_one_link_to_the_person_with_a_chevron(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        grant_bdm(self.user_bob)
+        pl = self._placement(owner=self.colleague_bob)
+        panel = reverse("home") + f"?opdracht={pl.service.assignment.public_id}"
+        person_url = (
+            f'href="?collega={self.colleague_alice.public_id}&amp;uitgeklapt={pl.service.assignment.public_id}"'
+        )
+
+        def alice_row(body):
+            return next(r for r in body.split("<nldd-list-item")[1:] if "Alice" in r)
+
+        self.client.force_login(self.user_carol)
+        carol = alice_row(self.client.get(panel, headers=self.HX).content.decode())
+        # The opening tag carries the link; no name link, no menu.
+        assert person_url in carol.split(">")[0]
+        assert 'icon="chevron-right"' in carol
+        assert "<nldd-link" not in carol
+        assert "Acties voor Alice" not in carol
+
+        self.client.force_login(self.user_bob)
+        bob = alice_row(self.client.get(panel, headers=self.HX).content.decode())
+        assert person_url not in bob.split(">")[0]
+        quiet_link = next(t for t in bob.split("<a ") if "wies-quiet-link" in t)
+        assert person_url in quiet_link.split(">")[0]
+        assert 'text="Profiel bekijken" icon="user" ' + person_url.replace("href=", "hx-get=") in bob
+        assert "Acties voor Alice" in bob
+        assert 'icon="chevron-right"' not in bob
+
+    @patch("wies.core.views.timezone")
+    def test_someone_elses_row_stays_the_read_only_panel(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(owner=self.colleague_bob)
+
+        body = self._sheet(self.user_carol, pl).content.decode()
+
+        assert "Taken wijzigen" not in body
+        assert "Teamlid wijzigen" not in body
+        assert "Alice" in body
 
 
 class ColleagueProfileFutureVisibilityTest(TestCase):
@@ -937,7 +972,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
-        assert historical[0]["period_label"] == "Gepland"
+        assert historical[0]["period_label"] is None
         assert historical[0]["privacy_warning_text"] == PRIVACY_OWN
 
     @patch("wies.core.views.timezone")
@@ -951,7 +986,7 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
-        assert historical[0]["period_label"] == "Gepland"
+        assert historical[0]["period_label"] is None
         assert historical[0]["privacy_warning_text"] == PRIVACY_BDM
 
     @patch("wies.core.views.timezone")
@@ -984,10 +1019,10 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Planned Opdracht")
 
-    def test_restricted_card_merges_the_note_into_the_period_chip(self):
-        """The card shows the period ("Gepland") as plain text with an icon-only
-        chip beside it that carries the note in its tooltip and accessible name.
-        No separate "Beperkt zichtbaar" chip up with the role tags."""
+    def test_a_restricted_entry_states_the_note_above_the_whole_block(self):
+        """The rule hides the whole entry, not just its period, so the note is a
+        band at the top of the block. Beside the dates it read as if only the
+        period were restricted. No "Gepland" word either."""
         today = timezone.now().date()
         assignment = Assignment.objects.create(name="Planned Opdracht", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -1003,11 +1038,12 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
 
         body = self.client.get(reverse("user-profile")).content.decode()
 
-        assert 'class="wies-team-row-meta">Gepland ' in body
-        assert 'text="Beperkt zichtbaar"' not in body
-        assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
-        assert 'variant="icon"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+        assert "Gepland" not in body
+        entry = next(item for item in body.split('<li class="wies-cv__item">')[1:] if "Planned Opdracht" in item)
+        band = entry.split('<nldd-list-item class="wies-cv__privacy">')[1]
+        assert PRIVACY_OWN in band
+        # Above the opdracht's own row, so it covers everything under it.
+        assert entry.index("wies-cv__privacy") < entry.index("wies-cv__link")
 
     def test_future_placement_card_hidden_on_unrelated_profile_page(self):
         """End-to-end negative: an unrelated viewer loading Alice's data must not

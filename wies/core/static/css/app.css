@@ -242,7 +242,8 @@ a > nldd-icon:last-child {
   margin-top: 0.5rem;
 }
 
-.assignment-card__chevron {
+.assignment-card__chevron,
+.wies-team-row__chevron {
   pointer-events: none;
   color: var(--semantics-content-secondary-color, #64748b);
 }
@@ -263,23 +264,135 @@ a > nldd-icon:last-child {
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--primitives-space-16, 16px);
+  gap: var(--primitives-space-24, 24px);
+  margin-top: var(--primitives-space-4, 4px);
+  /* Period and hours are facts, not commentary: the primary text colour, not
+     the muted one the supporting-text slot gives them. */
+  color: var(--semantics-content-color);
 }
 
-/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
-   double spaces and indentation of a pasted description should survive.
-   `:not([hidden])` is needed because inline_edit.js swaps the two spans via the
-   hidden attribute, and a display from the document beats [hidden]. */
-.inline-edit-long-text__truncated:not([hidden]),
-.inline-edit-long-text__full:not([hidden]) {
-  display: block;
-  white-space: pre-wrap;
+/* Icon and its value read as one unit; the icon inherits the muted text colour. */
+.wies-team-row-meta__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
 }
 
 /* nldd-button draws itself; only position is ours. No display on the host: the
    component relies on its own inline-flex and blows its icon up otherwise. The
    negative margin offsets the button padding so the label lines up with the text. */
 .inline-edit-show-more {
+  margin-top: var(--primitives-space-4, 4px);
+  margin-left: calc(-1 * var(--primitives-space-8, 8px));
+}
+
+/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
+   double spaces and indentation of a pasted description should survive.
+   `:not([hidden])` is needed because toggle-long-text swaps the two spans via
+   the hidden attribute, and a display from the document beats [hidden]. */
+.inline-edit-long-text__truncated:not([hidden]),
+.inline-edit-long-text__full:not([hidden]) {
+  display: block;
+  white-space: pre-wrap;
+}
+
+/* A name that opens the colleague panel, on a row that already has a menu:
+   text colour and no underline until hover or focus, so the row stays quiet;
+   plain <a>, so no component styling to fight. */
+.wies-quiet-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.wies-quiet-link:hover,
+.wies-quiet-link:focus-visible {
+  text-decoration: underline;
+}
+
+/* A colleague's opdrachten: one box-tinted label/value list per opdracht, the
+   same pattern the opdracht panel uses for its own details. */
+.wies-cv {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The note that a whole entry is hidden from others. It heads the block, so
+   it reads as being about everything under it -- but it states a condition,
+   not a problem, so it is a quiet line rather than a warning-coloured band:
+   the eye-slash carries the meaning and the text does the rest. */
+.wies-cv__privacy-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 8px);
+  color: var(--semantics-content-secondary-color, #64748b);
+  font: var(--primitives-font-body-sm-regular-flat);
+}
+
+/* The dates and the "Afgelopen" tag read as one value, so they share a line and
+   wrap together when the panel is narrow. */
+.wies-cv__period {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-8, 8px);
+}
+
+/* Three lines, then it cuts: the clamp is the signal that the text goes on,
+   which a single ellipsised line ending in a full stop was not. */
+/* :not([hidden]): a display from the stylesheet beats the hidden attribute the
+   toggle sets, so an open entry would show the preview above its own text. */
+.wies-cv__preview:not([hidden]) {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* The pencil floats over the first lines of the text (it is a cell of the same
+   row), so the clamped preview keeps its width clear. The open text runs the
+   full width again: the button is level with the first line only. */
+.wies-cv__item:has(.wies-cv__edit) .wies-cv__preview:not([hidden]) {
+  padding-right: var(--primitives-space-40, 40px);
+}
+
+.wies-cv__more:not([hidden]) {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+}
+
+.wies-cv__role-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
+}
+
+/* Names which role a description belongs to, when there are several. */
+.wies-cv__role-label {
+  margin: 0;
+  color: var(--semantics-content-secondary-color, #64748b);
+  font: var(--primitives-font-body-xs-regular-flat);
+}
+
+.wies-role-description {
+  display: block;
+  margin: 0;
+}
+
+/* The description is plain text here; pre-wrap keeps its line breaks. */
+.wies-role-description__text {
+  white-space: pre-wrap;
+}
+
+/* Aligned with the text above it: nldd-button carries its own side padding. */
+.wies-cv__toggle {
+  align-self: flex-start;
   margin-top: var(--primitives-space-4, 4px);
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }

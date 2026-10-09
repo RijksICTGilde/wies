@@ -537,7 +537,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         assert "nldd-sheet" in content or "modal-content" in content
-        assert "Gebruiker bewerken" in content
+        assert "Gebruiker wijzigen" in content
         # Check that form is pre-populated
         assert self.user1.first_name in content
         assert self.user1.last_name in content
