@@ -3,7 +3,7 @@
 The real publish path (startpage_publish) needs a GitHub release artifact from the
 private content repo, which may not exist locally. This dev-only command puts a
 browsable placeholder site in the bucket instead, using the *same* storage code
-paths as production (ensure_bucket -> upload_site -> set_current_prefix), so
+paths as production (ensure_bucket -> upload_site), so
 ``/odi-startpagina/`` renders end-to-end without the content repo.
 
 Like the real site, the dummy owns its homepage: a root ``index.html`` served at
@@ -22,7 +22,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from wies.startpage import storage
 
-_PREFIX = f"{settings.STARTPAGE_OBJECT_PREFIX}/dummy"
+_PREFIX = settings.STARTPAGE_OBJECT_PREFIX
 
 # The real site ships its own homepage at the root (index.html), served by the
 # mount; the dummy mirrors that with a root landing page.
@@ -59,7 +59,7 @@ class Command(BaseCommand):
     help = "Seed MinIO with a small dummy start page site (local development only)"
 
     def handle(self, *args, **options):
-        # set_current_prefix below repoints the live start page at this placeholder, so
+        # upload_site below replaces the live start page with this placeholder, so
         # refuse to run anywhere DEBUG is off: a stray invocation against a
         # deployed bucket would replace the real site with dummy articles.
         if not settings.DEBUG:
@@ -85,7 +85,6 @@ class Command(BaseCommand):
 
             count = storage.upload_site(root, _PREFIX, client=client)
 
-        storage.set_current_prefix(_PREFIX, client=client)
         self.stdout.write(
             self.style.SUCCESS(f"Seeded {count} objects under {_PREFIX!r}; /odi-startpagina/ is now browsable.")
         )

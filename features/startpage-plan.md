@@ -1,5 +1,12 @@
 # Plan: ODI Start Page — SSO-gated portal + article reader inside Wies
 
+> **As built** (this plan is the original design; where they differ, this note wins):
+> the mount is `/odi-startpagina/`, not `/start/`. There are no Django portal views:
+> the Hugo site owns its homepage and a single catch-all serves everything. The bucket
+> holds one live copy of the site under `startpage/`, with no versioned prefixes and
+> no pointer; a publish replaces it in place and a rollback is a new release upstream.
+> See `startpage-testing.md` for current behaviour.
+
 ## Context
 
 ODI wants a **private start page**: full-page articles authored as
@@ -155,6 +162,23 @@ path-first approach.)
 
 ## Future: promote to `start.rijksorganisatieodi.nl` subdomain
 
+**Why the subdomain matters for security.** While the start page is served from the
+Wies host, the browser treats its content as Wies. Any JavaScript in a release runs
+with the reader's Wies session: it can read every page that user can see and submit
+any form they can, including user management for a Beheerder. No header can separate
+the two on one origin, so today the content repo is as trusted as the Wies codebase
+and every release must be reviewed with that in mind.
+
+On its own host with host-scoped cookies, the start page becomes a different origin.
+Its scripts can no longer read Wies responses, and Django rejects their POSTs to Wies
+on the Origin check. A bad release can then only damage the start page itself. The
+content repo drops to "trusted to publish articles", the theme can use JavaScript
+freely, and each host can carry its own CSP.
+
+One condition: `start.` must **not** become a trusted CSRF origin for the Wies host.
+The two hosts are same-site, so the browser still sends the Wies cookie on requests
+from `start.`; the Origin check is what stops them.
+
 When the subdomain infra is available, promote the (unchanged) app to its own host. This is
 config + one redirect, no app rewrite — provided the relative-URL discipline (§1) held:
 
@@ -163,7 +187,9 @@ config + one redirect, no app rewrite — provided the relative-URL discipline (
   ingress **must forward the real `Host` header** (not rewrite to an internal name) —
   `rijksauth` derives the OIDC redirect URI from the request host.
 - **Django**: host-based routing (`start.` → start page urlconf, `wies.` → Wies), `ALLOWED_HOSTS` +=
-  `start.`, `CSRF_TRUSTED_ORIGINS` += `https://start.rijksorganisatieodi.nl`.
+  `start.`. Do **not** add `https://start.rijksorganisatieodi.nl` to `CSRF_TRUSTED_ORIGINS`:
+  the setting is project-wide, so it would let start page scripts POST to Wies (see above).
+  The start page itself needs no entry: its own requests are same-origin.
 - **Cookies**: keep them **host-scoped** — do NOT set `SESSION_COOKIE_DOMAIN` to
   `.rijksorganisatieodi.nl`. We don't govern every subdomain, so a domain-wide cookie would
   leak the session to hosts we don't control. Cross-host SSO comes from **Keycloak** instead:

@@ -12,10 +12,14 @@ from __future__ import annotations
 
 import posixpath
 
-from django.http import Http404, StreamingHttpResponse
+from django.conf import settings
+from django.http import Http404, HttpResponseNotModified, StreamingHttpResponse
 from django.shortcuts import redirect
+from django.views.decorators.http import require_GET
 
 from wies.startpage import storage
+
+_ASSET_CACHE_CONTROL = "private, no-cache"
 
 
 def _resolve_key(path: str, prefix: str) -> str:
@@ -44,6 +48,7 @@ def _resolve_key(path: str, prefix: str) -> str:
     return key
 
 
+@require_GET
 def article(request, path: str = ""):
     """Stream a built article/asset from MinIO, gated by the login middleware."""
     # A path without a trailing slash and no file extension is a Hugo pretty URL;
@@ -51,22 +56,32 @@ def article(request, path: str = ""):
     if path and not path.endswith("/") and "." not in posixpath.basename(path):
         return redirect(request.path + "/")
 
-    try:
-        prefix = storage.get_current_prefix()
-    except storage.ObjectNotFoundError as error:
-        # Nothing published yet — treat as not-found rather than a 500.
-        raise Http404 from error
-
-    key = _resolve_key(path, prefix)
+    key = _resolve_key(path, settings.STARTPAGE_OBJECT_PREFIX.strip("/"))
 
     try:
-        obj = storage.get_object(key)
+        # If-None-Match compares weakly (RFC 9110), MinIO only matches the exact
+        # strong tag; a compressing proxy in front of us weakens ours to W/"...".
+        etag = request.headers.get("If-None-Match", "").replace("W/", "")
+        obj = storage.get_object(key, if_none_match=etag or None)
     except storage.ObjectNotFoundError as error:
+        # Also the answer when nothing has been published yet.
         raise Http404 from error
+    except storage.ObjectNotModifiedError:
+        # Only assets carry an ETag (below), so only they are revalidated.
+        response = HttpResponseNotModified()
+        response["Cache-Control"] = _ASSET_CACHE_CONTROL
+        return response
 
     content_type = obj.get("ContentType") or "application/octet-stream"
     response = StreamingHttpResponse(storage.iter_body(obj["Body"]), content_type=content_type)
-    # These objects are private, behind auth — never let a shared cache (or the
-    # browser, across a re-auth) hold on to them.
-    response["Cache-Control"] = "private, no-store"
+    if content_type.startswith("text/html"):
+        # Pages are never kept, like the rest of Wies's HTML.
+        response["Cache-Control"] = "private, no-store"
+    else:
+        # Assets may be kept by the browser (never a shared cache) but are
+        # revalidated on every use, so a publish shows up immediately and an
+        # unchanged asset costs a 304 instead of a re-stream.
+        response["Cache-Control"] = _ASSET_CACHE_CONTROL
+        if obj.get("ETag"):
+            response["ETag"] = obj["ETag"]
     return response

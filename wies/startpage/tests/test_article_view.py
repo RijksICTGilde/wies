@@ -73,8 +73,7 @@ class ArticleViewServingTest(TestCase):
         self.client.force_login(self.user)
 
     @patch.object(storage, "get_object")
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_root_serves_site_homepage(self, mock_prefix, mock_get):
+    def test_root_serves_site_homepage(self, mock_get):
         # The site owns its landing page: the root resolves to <prefix>/index.html,
         # streamed from MinIO.
         mock_get.return_value = _fake_object(b"<h1>Start</h1>", "text/html")
@@ -82,47 +81,67 @@ class ArticleViewServingTest(TestCase):
         assert response.status_code == 200
         assert response["Content-Type"] == "text/html"
         assert b"".join(response.streaming_content) == b"<h1>Start</h1>"
-        mock_get.assert_called_once_with("startpage/v1/index.html")
+        mock_get.assert_called_once_with("startpage/index.html", if_none_match=None)
 
     @patch.object(storage, "get_object")
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_serves_html_article(self, mock_prefix, mock_get):
+    def test_serves_html_article(self, mock_get):
         mock_get.return_value = _fake_object(b"<h1>Hi</h1>", "text/html")
         response = self.client.get("/odi-startpagina/onboarding/")
         assert response.status_code == 200
         assert response["Content-Type"] == "text/html"
         assert b"".join(response.streaming_content) == b"<h1>Hi</h1>"
-        mock_get.assert_called_once_with("startpage/v1/onboarding/index.html")
+        mock_get.assert_called_once_with("startpage/onboarding/index.html", if_none_match=None)
 
     @patch.object(storage, "get_object")
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_serves_asset_with_content_type(self, mock_prefix, mock_get):
+    def test_serves_asset_with_content_type(self, mock_get):
         mock_get.return_value = _fake_object(b"body{}", "text/css")
         response = self.client.get("/odi-startpagina/css/app.css")
         assert response.status_code == 200
         assert response["Content-Type"] == "text/css"
-        mock_get.assert_called_once_with("startpage/v1/css/app.css")
+        mock_get.assert_called_once_with("startpage/css/app.css", if_none_match=None)
 
     @patch.object(storage, "get_object", side_effect=storage.ObjectNotFoundError("x"))
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_unknown_key_is_404(self, mock_prefix, mock_get):
+    def test_unknown_key_is_404(self, mock_get):
         response = self.client.get("/odi-startpagina/does-not-exist/")
         assert response.status_code == 404
 
-    @patch.object(storage, "get_current_prefix", side_effect=storage.ObjectNotFoundError("CURRENT"))
-    def test_nothing_published_is_404(self, mock_prefix):
-        response = self.client.get("/odi-startpagina/onboarding/")
-        assert response.status_code == 404
-
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_extensionless_path_redirects_to_trailing_slash(self, mock_prefix):
+    def test_extensionless_path_redirects_to_trailing_slash(self):
         response = self.client.get("/odi-startpagina/onboarding", follow=False)
         assert response.status_code == 302
         assert response.url == "/odi-startpagina/onboarding/"
 
     @patch.object(storage, "get_object")
-    @patch.object(storage, "get_current_prefix", return_value="startpage/v1")
-    def test_response_is_not_cached(self, mock_prefix, mock_get):
-        mock_get.return_value = _fake_object(b"x", "text/html")
+    def test_html_is_not_cached(self, mock_get):
+        mock_get.return_value = {**_fake_object(b"x", "text/html"), "ETag": '"abc"'}
         response = self.client.get("/odi-startpagina/onboarding/")
-        assert "no-store" in response["Cache-Control"]
+        assert response["Cache-Control"] == "private, no-store"
+        assert "ETag" not in response
+
+    @patch.object(storage, "get_object")
+    def test_asset_is_revalidated_by_etag(self, mock_get):
+        mock_get.return_value = {**_fake_object(b"body{}", "text/css"), "ETag": '"abc"'}
+        response = self.client.get("/odi-startpagina/css/app.css")
+        assert response["Cache-Control"] == "private, no-cache"
+        assert response["ETag"] == '"abc"'
+
+    @patch.object(storage, "get_object", side_effect=storage.ObjectNotModifiedError("x"))
+    def test_matching_etag_is_304_without_body(self, mock_get):
+        response = self.client.get("/odi-startpagina/css/app.css", headers={"If-None-Match": '"abc"'})
+        assert response.status_code == 304
+        assert response.content == b""
+        mock_get.assert_called_once_with("startpage/css/app.css", if_none_match='"abc"')
+
+    @patch.object(storage, "get_object", side_effect=storage.ObjectNotModifiedError("x"))
+    def test_weakened_etag_still_matches(self, mock_get):
+        # A compressing proxy turns our ETag into a weak one; MinIO wants the strong form.
+        response = self.client.get("/odi-startpagina/css/app.css", headers={"If-None-Match": 'W/"abc"'})
+        assert response.status_code == 304
+        mock_get.assert_called_once_with("startpage/css/app.css", if_none_match='"abc"')
+
+    @patch.object(storage, "get_object")
+    def test_only_get_is_allowed(self, mock_get):
+        for method in ("post", "head", "put", "delete"):
+            with self.subTest(method=method):
+                response = getattr(self.client, method)("/odi-startpagina/css/app.css")
+                assert response.status_code == 405
+        mock_get.assert_not_called()

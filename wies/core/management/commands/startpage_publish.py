@@ -22,6 +22,9 @@ class Command(TaskCommand):
 
     def summarize_result(self, result: dict) -> str:
         published = f"{result.get('objects', 0)} bestanden gepubliceerd"
+        # Files outside the publish allowlist (see wies.startpage.publish).
+        if result.get("skipped"):
+            published += f", {result['skipped']} overgeslagen"
         # The release tag is the only part that can be absent (a publish of an
         # untagged artifact), and "Release" without one reads as truncated.
         release = result.get("release")

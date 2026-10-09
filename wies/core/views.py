@@ -973,9 +973,7 @@ def staff_database(request):
         elif action == "publish_startpage":
             # Publish the start page from the content repo — the db_worker runs
             # the startpage_publish task. Shares the same task list as the other actions.
-            # Local import: wies.startpage.publish pulls in boto3, which the rest of this
-            # module never needs, so it stays off the startup import path.
-            from wies.startpage.publish import (  # noqa: PLC0415 — conditional import for a rare admin action
+            from wies.startpage.publish import (  # noqa: PLC0415 (import not at top level) — only this rare admin action needs it
                 STARTPAGE_PUBLISH_COMMAND,
                 STARTPAGE_PUBLISH_TIMEOUT_MINUTES,
             )

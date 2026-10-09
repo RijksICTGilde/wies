@@ -21,12 +21,15 @@ Then log in and browse:
 
 Re-seed at any time with `docker compose run --rm django python manage.py startpage_seed_dummy`. Inspect the bucket in the MinIO console
 at `http://localhost:9001` (`minioadmin` / `minioadmin`): bucket `wies`,
-objects under `startpage/dummy/`, and the `startpage/CURRENT` pointer.
+objects under `startpage/`. There is one live copy of the site; seeding or
+publishing replaces it.
 
 Verified behaviour (real Django + real MinIO): logged-out request → redirect to
 `/inloggen/`; homepage (root) → 200 `text/html`; article → 200 `text/html` with
-`Cache-Control: private, no-store`; asset → 200 `text/css`; a pretty URL without a
-trailing slash → 302 to its `/`-suffixed form; unknown path → 404.
+`Cache-Control: private, no-store`; asset → 200 `text/css` with an `ETag` and
+`Cache-Control: private, no-cache`, and 304 on a reload; a pretty URL without a
+trailing slash → 302 to its `/`-suffixed form; unknown path → 404; any method
+other than GET → 405.
 
 Automated coverage: `just test django` runs `wies/startpage/tests/` (catch-all auth
 gate, homepage + article serving, pretty-URL resolution, traversal rejection,
@@ -36,7 +39,14 @@ publish service with mocked GitHub + MinIO, staff gate).
 
 The publish button (staff-only) enqueues the `startpage_publish` background job, which
 pulls the **latest GitHub release artifact** from the content repo, unpacks it,
-uploads it under a new `startpage/<tag>` prefix, and flips the pointer.
+and replaces the site under `startpage/` with it: new files are uploaded (HTML
+last), then objects the release no longer contains are deleted. There is no
+versioning in the bucket; to roll back, publish a new release upstream.
+
+The archive is not trusted blindly: at most 200 MB to download, 10,000 entries
+and 500 MB unpacked, and only known web file types are published (see
+`PUBLISHABLE_SUFFIXES` in `wies/startpage/publish.py`). Dotfiles and other types
+are skipped; the task result reports how many, the worker log names them.
 
 The content repo is `DigiGilde/odi-startpagina`, private. Its CI attaches the
 built site as a `.tar.gz` release artifact on every merge to `main`.
@@ -57,7 +67,7 @@ assets.
 
 Without the token configured, the button enqueues the job but `startpage_publish` fails
 its config check with a clear message. The local loop uses `startpage_seed_dummy` as a
-stand-in: it exercises the identical upload → pointer-flip path, so the only piece
+stand-in: it exercises the identical upload path, so the only piece
 not tested against reality is the GitHub download + unpack step — which is covered
 by mocked tests in `wies/startpage/tests/test_publish.py`.
 

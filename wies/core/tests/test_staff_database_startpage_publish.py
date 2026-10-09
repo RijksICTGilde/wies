@@ -125,6 +125,19 @@ class TaskListRenderingTest(TestCase):
         assert "Release v1.2.3, 42 bestanden gepubliceerd" in body
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+    def test_publish_result_reports_skipped_files(self):
+        self.client.force_login(make_staff_user())
+        Task.objects.create(
+            command=STARTPAGE_PUBLISH_COMMAND,
+            label="ODI startpagina publiceren",
+            status="completed",
+            timeout_minutes=15,
+            result={"release": "v1.2.3", "objects": 42, "skipped": 2},
+        )
+        body = self.client.get(reverse("staff-database")).content.decode()
+        assert "Release v1.2.3, 42 bestanden gepubliceerd, 2 overgeslagen" in body
+
+    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_publish_result_without_a_release_tag_omits_the_word_release(self):
         # Without a tag, "Release 7 bestanden gepubliceerd" would read as truncated.
         self.client.force_login(make_staff_user())

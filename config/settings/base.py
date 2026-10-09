@@ -177,9 +177,10 @@ ERROR_THROTTLE_MINUTES = 5
 
 # ODI start page — see wies/startpage/.
 # The built Hugo site lives in a MinIO bucket; the start page app serves it auth-gated and
-# the db_worker publish job pulls a GitHub release artifact into a new prefix.
-# Read from env with dev-friendly defaults here; production.py and worker.py
-# re-require the ones each process actually needs (fail-fast on missing secrets).
+# the db_worker publish job replaces it with the latest GitHub release artifact.
+# Read from env with dev-friendly defaults; nothing is required at boot. The
+# publish task checks its own config, and a web process without an object store
+# fails per request (and so shows up in monitoring).
 # ZAD (the deploy platform) injects OBJECT_STORE_* directly for a provisioned MinIO
 # service, so read those verbatim — no deploy-side remap. boto3 needs a single
 # endpoint URL, so compose it from host+port; ZAD gives no scheme, default http
@@ -193,10 +194,9 @@ OBJECT_STORE_PASSWORD = os.environ.get("OBJECT_STORE_PASSWORD", "")
 OBJECT_STORE_BUCKET_NAME = os.environ.get("OBJECT_STORE_BUCKET_NAME", "")
 # Region is cosmetic for MinIO but boto3 requires one.
 OBJECT_STORE_REGION = os.environ.get("OBJECT_STORE_REGION", "us-east-1")
-# The bucket is shared; every start page object lives under this prefix.
+# The bucket is shared; the start page owns everything under this prefix (a
+# publish deletes what it did not upload there).
 STARTPAGE_OBJECT_PREFIX = os.environ.get("STARTPAGE_OBJECT_PREFIX", "startpage")
-# Object key holding the name of the currently-active site prefix (atomic publish).
-STARTPAGE_CURRENT_POINTER_KEY = f"{STARTPAGE_OBJECT_PREFIX}/CURRENT"
 
 # Private content repo (owner/name) whose latest GitHub release artifact holds
 # the built site, and a read token to download it. Only the worker needs these.
