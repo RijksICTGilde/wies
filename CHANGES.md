@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 707: (migration) the Updates tab of an opdracht decides on the colleague, not on their name, who may see a team change
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
 - 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the "Taken". Empty "Taken" read "Niet ingevuld", so the placed colleague finds the pencil to fill them in.
 - 693: an aanvraag on a team row opens its own panel, a filled role no longer does
