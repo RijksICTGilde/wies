@@ -7,7 +7,7 @@ x-object-store-env: &object-store-env
   OBJECT_STORE_PORT: "9000"
   OBJECT_STORE_USER: minioadmin
   OBJECT_STORE_PASSWORD: minioadmin
-  OBJECT_STORE_BUCKET_NAME: wies-startpage
+  OBJECT_STORE_BUCKET_NAME: wies
 
 services:
   postgres:

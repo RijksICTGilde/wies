@@ -20,8 +20,8 @@ Then log in and browse:
 - `/odi-startpagina/css/app.css` — a dummy asset (served as `text/css`)
 
 Re-seed at any time with `docker compose run --rm django python manage.py startpage_seed_dummy`. Inspect the bucket in the MinIO console
-at `http://localhost:9001` (`minioadmin` / `minioadmin`): bucket `wies-startpage`,
-objects under `sites/dummy/`, and the `sites/CURRENT` pointer.
+at `http://localhost:9001` (`minioadmin` / `minioadmin`): bucket `wies`,
+objects under `startpage/dummy/`, and the `startpage/CURRENT` pointer.
 
 Verified behaviour (real Django + real MinIO): logged-out request → redirect to
 `/inloggen/`; homepage (root) → 200 `text/html`; article → 200 `text/html` with
@@ -36,7 +36,7 @@ publish service with mocked GitHub + MinIO, staff gate).
 
 The publish button (staff-only) enqueues the `startpage_publish` background job, which
 pulls the **latest GitHub release artifact** from the content repo, unpacks it,
-uploads it under a new `sites/<tag>` prefix, and flips the pointer.
+uploads it under a new `startpage/<tag>` prefix, and flips the pointer.
 
 The content repo is `DigiGilde/odi-startpagina`, private. Its CI attaches the
 built site as a `.tar.gz` release artifact on every merge to `main`.

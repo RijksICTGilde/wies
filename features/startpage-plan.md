@@ -96,7 +96,7 @@ is the whole point of shipping a path first.
   endpoint.
 - New ZAD secrets: MinIO endpoint + access/secret keys.
 - Bucket layout supporting **atomic publish**: upload each release under a versioned prefix
-  (e.g. `sites/<release-tag>/…`), then flip a small **current-pointer** object (or a
+  (e.g. `startpage/<release-tag>/…`), then flip a small **current-pointer** object (or a
   settings/DB value) the catch-all view reads to resolve the active prefix. Readers never
   see a half-written site; rollback = point back at a previous prefix (object versioning
   also available).

@@ -1,7 +1,8 @@
 """MinIO/S3 access for the ODI start page.
 
-The built Hugo site lives in a MinIO bucket. Each publish uploads the site under
-its own prefix (``sites/<release-tag>/``) and then flips a tiny pointer object
+The built Hugo site lives in a MinIO bucket. The bucket is shared with the rest
+of Wies; ``startpage/`` is this app's namespace in it. Each publish uploads the site under
+its own prefix (``startpage/<release-tag>/``) and then flips a tiny pointer object
 (``STARTPAGE_CURRENT_POINTER_KEY``) that holds the name of the active prefix. Readers
 resolve the active prefix through that pointer, so they never see a half-written
 site and a rollback is just repointing.
@@ -67,7 +68,7 @@ def _is_missing(error: ClientError) -> bool:
 
 
 def get_current_prefix(client=None) -> str:
-    """Return the active site prefix (e.g. ``sites/v1.2.3``), no trailing slash.
+    """Return the active site prefix (e.g. ``startpage/v1.2.3``), no trailing slash.
 
     Raises :class:`ObjectNotFoundError` if nothing has been published yet.
     """

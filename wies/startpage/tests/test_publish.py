@@ -63,9 +63,9 @@ class PublishLatestTest(TestCase):
         assert result.release == "v1.2.3"
         assert result.objects == 3
         # Upload happens under the versioned prefix...
-        assert mock_upload.call_args.args[1] == "sites/v1.2.3"
+        assert mock_upload.call_args.args[1] == "startpage/v1.2.3"
         # ...and the pointer flip happens after (atomic publish).
-        mock_flip.assert_called_once_with("sites/v1.2.3", client=mock_upload.call_args.kwargs["client"])
+        mock_flip.assert_called_once_with("startpage/v1.2.3", client=mock_upload.call_args.kwargs["client"])
 
     @override_settings(OBJECT_STORE_ENDPOINT="")
     def test_missing_config_raises_before_any_network(self):

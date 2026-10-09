@@ -22,7 +22,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from wies.startpage import storage
 
-_PREFIX = "sites/dummy"
+_PREFIX = f"{settings.STARTPAGE_OBJECT_PREFIX}/dummy"
 
 # The real site ships its own homepage at the root (index.html), served by the
 # mount; the dummy mirrors that with a root landing page.

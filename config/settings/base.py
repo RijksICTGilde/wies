@@ -193,8 +193,10 @@ OBJECT_STORE_PASSWORD = os.environ.get("OBJECT_STORE_PASSWORD", "")
 OBJECT_STORE_BUCKET_NAME = os.environ.get("OBJECT_STORE_BUCKET_NAME", "")
 # Region is cosmetic for MinIO but boto3 requires one.
 OBJECT_STORE_REGION = os.environ.get("OBJECT_STORE_REGION", "us-east-1")
+# The bucket is shared; every start page object lives under this prefix.
+STARTPAGE_OBJECT_PREFIX = os.environ.get("STARTPAGE_OBJECT_PREFIX", "startpage")
 # Object key holding the name of the currently-active site prefix (atomic publish).
-STARTPAGE_CURRENT_POINTER_KEY = os.environ.get("STARTPAGE_CURRENT_POINTER_KEY", "sites/CURRENT")
+STARTPAGE_CURRENT_POINTER_KEY = f"{STARTPAGE_OBJECT_PREFIX}/CURRENT"
 
 # Private content repo (owner/name) whose latest GitHub release artifact holds
 # the built site, and a read token to download it. Only the worker needs these.

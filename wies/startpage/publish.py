@@ -3,7 +3,7 @@
 The private content repo's CI attaches the built Hugo site as a ``.tar.gz`` asset
 on each GitHub release. This module (run on the ``db_worker`` via the
 ``startpage_publish`` task) downloads that asset, unpacks it, uploads every file under a
-fresh ``sites/<release-tag>`` prefix, then flips the current-pointer so readers
+fresh ``startpage/<release-tag>`` prefix, then flips the current-pointer so readers
 switch over atomically. CI never gets credentials to our infra — we pull.
 """
 
@@ -21,7 +21,6 @@ from wies.startpage import storage
 
 _GITHUB_API = "https://api.github.com"
 _DOWNLOAD_TIMEOUT = 300
-_SITE_PREFIX_ROOT = "sites"
 
 # The task command name + timeout, declared next to the work they describe and
 # imported by the staff view that enqueues it.
@@ -141,7 +140,7 @@ def publish_latest() -> PublishResult:
 
     client = storage.get_client()
     # A slash-free prefix segment keeps object keys clean.
-    prefix = f"{_SITE_PREFIX_ROOT}/{tag.replace('/', '-')}"
+    prefix = f"{settings.STARTPAGE_OBJECT_PREFIX}/{tag.replace('/', '-')}"
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_path = Path(tmp)
