@@ -8,8 +8,7 @@ paths as production (ensure_bucket -> upload_site -> set_current_prefix), so
 
 Like the real site, the dummy owns its homepage: a root ``index.html`` served at
 ``/odi-startpagina/`` links to ``/odi-startpagina/kennisbank/``, whose index links
-on to ``/odi-startpagina/kennisbank/onboarding/``. There is no separate Django
-portal — the mount streams the whole site (homepage included) from MinIO.
+on to ``/odi-startpagina/kennisbank/onboarding/``.
 
 Not a TaskCommand: it's run directly (e.g. from ``just setup``), not queued on
 the worker.
@@ -25,8 +24,8 @@ from wies.startpage import storage
 
 _PREFIX = "sites/dummy"
 
-# The real site ships its own homepage at the root (index.html); the mount serves
-# it directly (no Django portal). The dummy mirrors that: a root landing page.
+# The real site ships its own homepage at the root (index.html), served by the
+# mount; the dummy mirrors that with a root landing page.
 _HOME = """<!doctype html>
 <html lang="nl"><head><meta charset="utf-8"><title>Start (dummy)</title>
 <link rel="stylesheet" href="/odi-startpagina/css/app.css"></head>

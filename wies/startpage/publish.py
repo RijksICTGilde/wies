@@ -44,9 +44,9 @@ def _headers() -> dict[str, str]:
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     }
-    # Only authenticate when a token is configured. A public content repo is
-    # readable anonymously; sending an *invalid* token there fails with 401 (worse
-    # than sending none). A private repo (later) provides a token and authenticates.
+    # Only authenticate when a token is configured. A private content repo needs
+    # one; a public repo is readable anonymously, and sending an *invalid* token
+    # there fails with 401 (worse than sending none).
     if settings.STARTPAGE_CONTENT_GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {settings.STARTPAGE_CONTENT_GITHUB_TOKEN}"
     return headers

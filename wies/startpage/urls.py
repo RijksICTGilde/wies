@@ -8,7 +8,6 @@ not a prefix hunt.
 
 A single catch-all streams the whole published site from MinIO, including the
 homepage: the empty path resolves to ``<prefix>/index.html`` in ``views.article``.
-The site owns its own landing page, so there is no separate Django portal.
 """
 
 from django.urls import re_path

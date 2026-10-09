@@ -1,13 +1,11 @@
 """Views for the ODI start page.
 
-A single surface, behind the project-wide ``LoginRequiredMiddleware`` (so a
-logged-out request is bounced to SSO before it reaches here):
-
-- :func:`article` — a catch-all that streams the built Hugo site (homepage, HTML
-  articles *and* assets) out of MinIO. The site owns its own landing page, so the
-  root path resolves to ``<prefix>/index.html`` here — there is no separate Django
-  portal. It must go through Django precisely because these objects are private;
-  WhiteNoise runs before auth and would serve them to anyone.
+:func:`article` is a catch-all that streams the built Hugo site (homepage, HTML
+articles *and* assets) out of MinIO, behind the project-wide
+``LoginRequiredMiddleware`` (so a logged-out request is bounced to SSO before it
+reaches here). The site owns its landing page, so the root path resolves to
+``<prefix>/index.html``. It must go through Django precisely because these
+objects are private; WhiteNoise runs before auth and would serve them to anyone.
 """
 
 from __future__ import annotations

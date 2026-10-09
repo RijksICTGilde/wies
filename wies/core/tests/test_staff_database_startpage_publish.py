@@ -1,8 +1,6 @@
 """Tests for the staff-gated start page publish trigger on the Database admin page.
 
-Publishing the start page was folded into ``beheer/database/`` (it used to
-have its own ``beheer/kennisbank/`` page). The action shares the page's staff gate
-and its "Recente taken" list.
+The action shares the page's staff gate and its "Recente taken" list.
 """
 
 from django.contrib.auth import get_user_model
@@ -60,7 +58,7 @@ class DatabasePublishTriggerTest(TestCase):
             headers={"hx-request": "true"},
         )
         assert response.status_code == 200
-        # The shared task list is swapped in, not a start-page-specific partial.
+        # The shared task list is swapped in.
         assert "Recente taken" in response.content.decode()
         assert Task.objects.filter(command=STARTPAGE_PUBLISH_COMMAND).count() == 1
 
@@ -128,7 +126,7 @@ class TaskListRenderingTest(TestCase):
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_publish_result_without_a_release_tag_omits_the_word_release(self):
-        # An untagged artifact left a dangling "Release 7 bestanden gepubliceerd".
+        # Without a tag, "Release 7 bestanden gepubliceerd" would read as truncated.
         self.client.force_login(make_staff_user())
         Task.objects.create(
             command=STARTPAGE_PUBLISH_COMMAND,

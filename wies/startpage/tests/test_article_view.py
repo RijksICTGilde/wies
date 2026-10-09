@@ -60,7 +60,7 @@ class ArticleViewAuthTest(TestCase):
         assert response.url.startswith(reverse("login"))
 
     def test_unauthenticated_root_redirects_to_login(self):
-        # The homepage is gated too — the site root now streams from MinIO.
+        # The homepage is gated too.
         response = self.client.get("/odi-startpagina/", follow=False)
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))
@@ -76,7 +76,7 @@ class ArticleViewServingTest(TestCase):
     @patch.object(storage, "get_current_prefix", return_value="sites/v1")
     def test_root_serves_site_homepage(self, mock_prefix, mock_get):
         # The site owns its landing page: the root resolves to <prefix>/index.html,
-        # streamed from MinIO (no separate Django portal).
+        # streamed from MinIO.
         mock_get.return_value = _fake_object(b"<h1>Start</h1>", "text/html")
         response = self.client.get("/odi-startpagina/")
         assert response.status_code == 200
