@@ -5,8 +5,7 @@ Two holes found in review:
 - The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
   team list, so a viewer with UPDATE rights but without visibility (a
   ``change_assignment`` holder, staff) could read a hidden ended placement's
-  colleague and dates through a crafted URL — data the 404 anti-oracle in
-  ``_resolve_placement_panel`` exists to withhold.
+  colleague and dates through a crafted URL.
 - The timeline's privacy note was taken from the *first* noted row of the
   viewer's current team list, so an event about one colleague could carry
   another row's note ("jou"-wording on someone else's event), and an event
@@ -83,13 +82,14 @@ class MemberSheetHiddenRowTest(TestCase):
         # back to the read-only panel — which strips the hidden member too.
         assert response.status_code == 200
         self.assertNotContains(response, "Hidden Member")
-        self.assertNotContains(response, "Teamlid bewerken")
+        # The sheet's own heading, not the row menu's item of the same name.
+        self.assertNotContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
 
     def test_visible_row_sheet_still_opens_for_that_editor(self):
         response = self.editor_client.get(self._sheet_url(self.active_placement), headers=self.HX)
 
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
         self.assertContains(response, "Active Member")
 
     def test_bdm_owner_still_opens_the_hidden_row_sheet(self):
@@ -105,7 +105,7 @@ class MemberSheetHiddenRowTest(TestCase):
         response = owner_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
         self.assertContains(response, "Hidden Member")
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
@@ -119,7 +119,7 @@ class MemberSheetHiddenRowTest(TestCase):
         response = staff_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
         self.assertContains(response, "Hidden Member")
 
     # ── Mutation paths: the same visibility gate as the sheet (#655) ──────────

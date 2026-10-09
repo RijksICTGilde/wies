@@ -31,7 +31,7 @@ PRIVACY_BDM = "Alleen zichtbaar voor de consultant en de Business Managers"
 PRIVACY_BM_OWNED = "Alleen zichtbaar voor de Business Managers"
 
 # Chip labels per timing, for the non-active states.
-LABELS = {"ended": "Afgelopen", "future": "Gepland"}
+LABELS = {"ended": "Afgelopen"}
 
 
 def show_bm_page(request) -> bool:
