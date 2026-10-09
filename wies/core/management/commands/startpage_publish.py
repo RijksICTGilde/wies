@@ -19,3 +19,10 @@ class Command(TaskCommand):
     def run_task(self, *args, **options):
         # Error handling (logging + failure result) is centralised in TaskCommand.
         return asdict(publish_latest())
+
+    def summarize_result(self, result: dict) -> str:
+        published = f"{result.get('objects', 0)} bestanden gepubliceerd"
+        # The release tag is the only part that can be absent (a publish of an
+        # untagged artifact), and "Release" without one reads as truncated.
+        release = result.get("release")
+        return f"Release {release}, {published}" if release else published

@@ -51,28 +51,9 @@
       {% set supporting = supporting ~ " door " ~ (task.created_by.get_full_name() or task.created_by.username) %}
     {% endif %}
     <nldd-title-cell divider-start text="{{ task_label }}" supporting-text="{{ supporting }}"></nldd-title-cell>
-    {# The result payload differs per command: startpage_publish reports a release + file
-       count (or an error message), sync_organizations reports record counts. #}
-    {% if task.command == 'startpage_publish' %}
-      {% if task.status == 'completed' and task.result %}
-        {# The release tag is the only part that can be absent (a publish of an
-           untagged artifact), and "Release" without one reads as truncated. #}
-        {% set result_text = (("Release " ~ task.result.release ~ ", ") if task.result.release else "") ~ task.result.objects ~ " bestanden gepubliceerd" %}
-      {% elif task.status == 'failed' and task.error_message %}
-        {% set result_text = task.error_message %}
-      {% else %}
-        {% set result_text = "-" %}
-      {% endif %}
-    {% elif task.result %}
-      {% set result_text = "Aangemaakt: " ~ task.result.created ~
-        ", Bijgewerkt: " ~ task.result.updated ~
-        ", Ongewijzigd: " ~ task.result.unchanged ~
-        ", Gedeactiveerd: " ~ task.result.deactivated ~
-      ", Verwijderd: " ~ task.result.deleted %}
-    {% else %}
-      {% set result_text = "-" %}
-    {% endif %}
-    <nldd-text-cell text="{{ result_text }}"></nldd-text-cell>
+    {# The result payload differs per command, so each command words its own
+       summary (TaskCommand.summarize_result); see get_task_result_text. #}
+    <nldd-text-cell text="{{ task.result_text }}"></nldd-text-cell>
     {# djlint:on #}
     </nldd-list-item>
   {% endfor %}

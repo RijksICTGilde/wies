@@ -34,6 +34,15 @@ class TaskCommand(BaseCommand):
         """Do the work and return a JSON-serialisable success payload."""
         raise NotImplementedError
 
+    def summarize_result(self, result: dict) -> str:
+        """One-line Dutch summary of a success payload for the recent-tasks list.
+
+        The payload shape is the command's own, so the wording lives here too
+        instead of in a per-command branch in the template. Read keys with
+        ``.get``: rows stored by an older version of the command still render.
+        """
+        return ""
+
     def handle(self, *args, **options):
         try:
             payload = self.run_task(*args, **options)

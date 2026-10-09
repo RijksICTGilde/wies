@@ -1,13 +1,8 @@
 """Service functions for managing background tasks."""
 
-from typing import TYPE_CHECKING
-
 from django.contrib.auth import get_user_model
 from django.core import management
 from django.utils import timezone
-
-if TYPE_CHECKING:
-    from django.db.models import QuerySet
 
 from wies.core.models import Task
 
@@ -40,7 +35,7 @@ def create_task(command: str, created_by: User, timeout_minutes: int, parameters
     )
 
 
-def get_latest_tasks(limit: int = 3) -> QuerySet[Task]:
+def get_latest_tasks(limit: int = 3) -> list[Task]:
     """
     Fetch the most recent tasks.
 
@@ -48,9 +43,31 @@ def get_latest_tasks(limit: int = 3) -> QuerySet[Task]:
         limit: Maximum number of tasks to return
 
     Returns:
-        QuerySet of Task objects ordered by creation date (newest first)
+        Task objects ordered by creation date (newest first), each carrying a
+        ``result_text`` for the task list
     """
-    return Task.objects.select_related("created_by").order_by("-created_at")[:limit]
+    tasks = list(Task.objects.select_related("created_by").order_by("-created_at")[:limit])
+    for task in tasks:
+        task.result_text = get_task_result_text(task)
+    return tasks
+
+
+def get_task_result_text(task: Task) -> str:
+    """What a task has to show for itself in the task list; "-" when nothing yet.
+
+    A failure shows its error message. A success is summarised by the command
+    that produced the payload (``TaskCommand.summarize_result``), loaded the same
+    way as in :func:`get_task_label`.
+    """
+    if task.status == "failed" and task.error_message:
+        return task.error_message
+    if task.status != "completed" or not task.result:
+        return "-"
+    try:
+        cmd = management.load_command_class("wies.core", task.command)
+        return cmd.summarize_result(task.result) or "-"
+    except Exception:  # noqa: BLE001 (blind except) — a removed command or an outdated payload must not break the staff page
+        return "-"
 
 
 def get_task_label(command: str) -> str:

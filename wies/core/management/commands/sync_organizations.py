@@ -16,3 +16,13 @@ class Command(TaskCommand):
     def run_task(self, *args, **options):
         # Error handling (logging + failure result) is centralised in TaskCommand.
         return asdict(sync_organizations(url=options.get("url")))
+
+    def summarize_result(self, result: dict) -> str:
+        counts = {
+            "Aangemaakt": "created",
+            "Bijgewerkt": "updated",
+            "Ongewijzigd": "unchanged",
+            "Gedeactiveerd": "deactivated",
+            "Verwijderd": "deleted",
+        }
+        return ", ".join(f"{label}: {result.get(key, 0)}" for label, key in counts.items())

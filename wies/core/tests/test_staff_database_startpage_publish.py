@@ -10,7 +10,7 @@ from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Task
-from wies.core.services.tasks import get_task_label
+from wies.core.services.tasks import get_task_label, get_task_result_text
 from wies.core.tests.role_helpers import STAFF_EMAIL, make_staff_user
 from wies.startpage.publish import STARTPAGE_PUBLISH_COMMAND
 
@@ -181,3 +181,30 @@ class TaskLabelTest(TestCase):
         Task.objects.create(command="sync_organizations", label="", status="pending", timeout_minutes=5)
         body = self.client.get(reverse("staff-database")).content.decode()
         assert 'text="sync_organizations"' in body
+
+
+class TaskResultTextTest(TestCase):
+    """Each TaskCommand words the summary of its own result payload."""
+
+    def test_sync_result_reports_the_record_counts(self):
+        task = Task(
+            command="sync_organizations",
+            status="completed",
+            result={"created": 1, "updated": 2, "unchanged": 3, "deactivated": 4, "deleted": 5, "errors": []},
+        )
+        assert (
+            get_task_result_text(task)
+            == "Aangemaakt: 1, Bijgewerkt: 2, Ongewijzigd: 3, Gedeactiveerd: 4, Verwijderd: 5"
+        )
+
+    def test_failed_task_shows_its_error_whatever_the_command(self):
+        task = Task(command="sync_organizations", status="failed", error_message="network down")
+        assert get_task_result_text(task) == "network down"
+
+    def test_unfinished_task_has_no_result_yet(self):
+        assert get_task_result_text(Task(command="sync_organizations", status="running")) == "-"
+
+    def test_result_of_an_unknown_command_renders_a_dash(self):
+        # A command that has since been removed still has rows in the list.
+        task = Task(command="no_such_command", status="completed", result={"count": 3})
+        assert get_task_result_text(task) == "-"
