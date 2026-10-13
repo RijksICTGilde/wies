@@ -3340,18 +3340,18 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
     """The note on one team row in the timeline, or "" when there is nothing to say.
 
     Only for a viewer who sees the row while others do not. Derived from the
-    event's own names, not from the current team rows: the change is a frozen
+    event's own colleagues, not from the current team rows: the change is a frozen
     snapshot, so the hidden placement it names may since have been deleted (no
     current row carries a note then), and an unrelated row's note must not label
     this event.
     """
-    from wies.core.editables.assignment import restricted_change_names  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.assignment import restricted_change_ids  # noqa: PLC0415 — avoids import cycle
 
-    hidden = restricted_change_names(assignment, changes)
+    hidden = restricted_change_ids(assignment, changes)
     if not hidden:
         return ""
     viewer = getattr(request.user, "colleague", None)
-    if viewer is not None and hidden == {viewer.name}:
+    if viewer is not None and hidden == {viewer.id}:
         # The only hidden person the event names is the viewer themselves —
         # a non-BDM only ever reaches this case (their filtered list drops
         # changes naming hidden others), and a placed BDM gets the wording
