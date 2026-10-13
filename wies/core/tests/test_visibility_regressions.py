@@ -187,8 +187,8 @@ class MemberSheetHiddenRowTest(TestCase):
 
 
 class TeamEventPrivacyNoteTest(TestCase):
-    """The timeline note derives from the event's own names, not from whichever
-    current team row happens to carry a note."""
+    """The timeline note derives from the event's own colleagues, not from
+    whichever current team row happens to carry a note."""
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
@@ -203,6 +203,8 @@ class TeamEventPrivacyNoteTest(TestCase):
             start=self.today - timedelta(days=10),
             end=self.today + timedelta(days=10),
         )
+        # Named by an event, but no longer placed on the assignment.
+        self.ghost = Colleague.objects.create(name="Ghost", email="ghost@rijksoverheid.nl", source="wies")
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -210,19 +212,19 @@ class TeamEventPrivacyNoteTest(TestCase):
         return request
 
     @staticmethod
-    def _removal_of(name) -> list[dict]:
+    def _removal_of(colleague) -> list[dict]:
         # The frozen audit snapshot of a row removal: only the old side exists.
-        return [{"old": {"colleague_name": name}, "new": None}]
+        return [{"old": {"colleague_name": colleague.name, "colleague_id": colleague.id}, "new": None}]
 
     def test_deleted_hidden_placement_still_gets_the_bdm_note(self):
         # The event names a colleague whose placement no longer exists, so no
         # current row carries a note — the chip must survive on the event's own
-        # names instead of vanishing.
+        # colleagues instead of vanishing.
         bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
         Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
         grant_bdm(bdm_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of(self.ghost))
 
         assert note == PRIVACY_BDM
 
@@ -240,7 +242,7 @@ class TeamEventPrivacyNoteTest(TestCase):
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of(self.ghost))
 
         assert note == PRIVACY_BDM
 
@@ -257,7 +259,7 @@ class TeamEventPrivacyNoteTest(TestCase):
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(self.assignment, self._request(placed_user), self._removal_of("Placed"))
+        note = _team_event_privacy_note(self.assignment, self._request(placed_user), self._removal_of(placed))
 
         assert note == PRIVACY_OWN
 
@@ -266,6 +268,6 @@ class TeamEventPrivacyNoteTest(TestCase):
         Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
         grant_bdm(bdm_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Active Member"))
+        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of(self.active))
 
         assert note == ""
