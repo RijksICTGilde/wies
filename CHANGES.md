@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
+- 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
 - 705: hidden organization units can no longer be set as opdrachtgever through the form or CSV import
 - 711: the organization sync accepts patch versions of the overheid.nl export schema (2.6.x), stops with a clear error on a new minor or major version, and fails visibly instead of reporting success when it finds no organizations
 - 707: (migration) the Updates tab of an opdracht decides on the colleague, not on their name, who may see a team change
