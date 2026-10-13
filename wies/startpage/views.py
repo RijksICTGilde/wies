@@ -48,6 +48,17 @@ def _resolve_key(path: str, prefix: str) -> str:
     return key
 
 
+def _not_found(prefix: str) -> StreamingHttpResponse:
+    """The site's own 404 page; Wies's when nothing has been published yet."""
+    try:
+        obj = storage.get_object(f"{prefix}/404.html")
+    except storage.ObjectNotFoundError:
+        raise Http404 from None
+    response = StreamingHttpResponse(storage.iter_body(obj["Body"]), content_type="text/html", status=404)
+    response["Cache-Control"] = "private, no-store"
+    return response
+
+
 @require_GET
 def article(request, path: str = ""):
     """Stream a built article/asset from MinIO, gated by the login middleware."""
@@ -56,16 +67,16 @@ def article(request, path: str = ""):
     if path and not path.endswith("/") and "." not in posixpath.basename(path):
         return redirect(request.path + "/")
 
-    key = _resolve_key(path, settings.STARTPAGE_OBJECT_PREFIX.strip("/"))
+    prefix = settings.STARTPAGE_OBJECT_PREFIX.strip("/")
+    key = _resolve_key(path, prefix)
 
     try:
         # If-None-Match compares weakly (RFC 9110), MinIO only matches the exact
         # strong tag; a compressing proxy in front of us weakens ours to W/"...".
         etag = request.headers.get("If-None-Match", "").replace("W/", "")
         obj = storage.get_object(key, if_none_match=etag or None)
-    except storage.ObjectNotFoundError as error:
-        # Also the answer when nothing has been published yet.
-        raise Http404 from error
+    except storage.ObjectNotFoundError:
+        return _not_found(prefix)
     except storage.ObjectNotModifiedError:
         # Only assets carry an ETag (below), so only they are revalidated.
         response = HttpResponseNotModified()

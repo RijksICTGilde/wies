@@ -100,10 +100,23 @@ class ArticleViewServingTest(TestCase):
         assert response["Content-Type"] == "text/css"
         mock_get.assert_called_once_with("startpage/css/app.css", if_none_match=None)
 
-    @patch.object(storage, "get_object", side_effect=storage.ObjectNotFoundError("x"))
-    def test_unknown_key_is_404(self, mock_get):
+    @patch.object(storage, "get_object")
+    def test_unknown_key_serves_site_404_page(self, mock_get):
+        # The site ships its own 404 page; a reader stays in the start page's layout.
+        mock_get.side_effect = [storage.ObjectNotFoundError("x"), _fake_object(b"<h1>Niet gevonden</h1>", "text/html")]
         response = self.client.get("/odi-startpagina/does-not-exist/")
         assert response.status_code == 404
+        assert response["Content-Type"] == "text/html"
+        assert response["Cache-Control"] == "private, no-store"
+        assert b"".join(response.streaming_content) == b"<h1>Niet gevonden</h1>"
+        assert mock_get.call_args_list[1].args == ("startpage/404.html",)
+
+    @patch.object(storage, "get_object", side_effect=storage.ObjectNotFoundError("x"))
+    def test_unknown_key_without_site_404_page_is_wies_404(self, mock_get):
+        # Nothing published yet: there is no site 404 page to fall back on.
+        response = self.client.get("/odi-startpagina/does-not-exist/")
+        assert response.status_code == 404
+        assert not response.streaming
 
     def test_extensionless_path_redirects_to_trailing_slash(self):
         response = self.client.get("/odi-startpagina/onboarding", follow=False)
