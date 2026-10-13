@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 
 from wies.core.models import OrganizationUnit, OrganizationUnitRole
 from wies.core.public_id import parse_public_ids
+from wies.core.services.organizations import get_excluded_org_ids
 from wies.core.widgets import OrgPickerWidget
 
 
@@ -29,7 +30,9 @@ class OrganizationsField(forms.Field):
 
         Uses a single ``in_bulk`` lookup on ``public_id`` (the client only
         ever sees public_ids, never pks). Raises ``ValidationError`` (code
-        ``unknown_org``) when a token is malformed or matches no row.
+        ``unknown_org``) when a token is malformed or matches no row. An
+        excluded organization (``get_excluded_org_ids``) is refused with the
+        same error, so the response does not reveal that it exists.
         Unknown role values silently collapse to ``INVOLVED``.
         """
         if not value:
@@ -50,10 +53,11 @@ class OrganizationsField(forms.Field):
                 parse_public_ids(public_ids), field_name="public_id"
             ).items()
         }
+        excluded_org_ids = get_excluded_org_ids()
         out: list[dict] = []
         for v in value:
             org = resolved_map.get(str(v["organization"]))
-            if org is None:
+            if org is None or org.id in excluded_org_ids:
                 raise ValidationError(
                     self.error_messages["unknown_org"],
                     code="unknown_org",

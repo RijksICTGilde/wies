@@ -37,7 +37,8 @@ NS_PREFIX = "https://organisaties.overheid.nl/static/schema/oo/export/"
 SUPPORTED_SCHEMA_MINOR = "2.6"
 _SUPPORTED_SCHEMA_VERSION_RE = re.compile(rf"{re.escape(SUPPORTED_SCHEMA_MINOR)}\.\d+")
 
-# Organizations excluded from sync (intelligence services).
+# Organizations hidden from display and refused as opdrachtgever (intelligence
+# services). They are still synced; see get_excluded_org_ids.
 # All comparisons are case-insensitive.
 EXCLUDED_ORG_NAMES: set[str] = {
     "algemene inlichtingen- en veiligheidsdienst",

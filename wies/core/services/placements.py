@@ -18,6 +18,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.events import create_event
+from wies.core.services.organizations import get_excluded_org_ids
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.services.users import validate_email_domain
 
@@ -57,6 +58,19 @@ def filter_visible_placements(queryset, today):
     queryset = filter_placements_by_min_end_date(queryset, today)
     started = Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today)
     return queryset.filter(started)
+
+
+def _client_organization(url: str, excluded_org_ids: set[int], row_number: int) -> OrganizationUnit | None:
+    """Resolves a CSV client URL to its organization; an unknown URL gives None.
+
+    An excluded organization (``get_excluded_org_ids``) raises ValueError, which
+    fails the whole import like every other row error.
+    """
+    organization = OrganizationUnit.objects.filter(source_url=url).first()
+    if organization and organization.id in excluded_org_ids:
+        msg = f"Rij {row_number}: deze organisatie kan niet als opdrachtgever worden gebruikt ({url})."
+        raise ValueError(msg)
+    return organization
 
 
 def create_assignments_from_csv(creator, csv_content: str, request=None):
@@ -117,7 +131,8 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
             placements_created = 0
             skills_created = 0
             organizations_linked = 0
-            for _, row in enumerate(csv_reader, start=2):  # Row 1 is the header.
+            excluded_org_ids = get_excluded_org_ids()
+            for row_number, row in enumerate(csv_reader, start=2):  # Row 1 is the header.
                 owner_suborg = resolve_suborganization(row.get("owner_brand"))
                 colleague_suborg = resolve_suborganization(row.get("colleague_brand"))
 
@@ -176,7 +191,7 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
                 for url, role in client_urls:
                     if not url:
                         continue
-                    organization = OrganizationUnit.objects.filter(source_url=url).first()
+                    organization = _client_organization(url, excluded_org_ids, row_number)
                     if organization and not assignment.organizations.filter(id=organization.id).exists():
                         AssignmentOrganizationUnit.objects.create(
                             assignment=assignment, organization=organization, role=role
