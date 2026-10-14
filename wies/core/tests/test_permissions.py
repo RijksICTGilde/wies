@@ -212,12 +212,12 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
         service = Service.objects.get(pk=self.service.pk)
         placement = Placement.objects.get(pk=self.placement.pk)
         return [
-            ("Opdracht bewerken", assignment, None),
-            ("Dienst bewerken", service, None),
-            ("Teamlid verplaatsen", placement, None),
-            ("Naam van een opdracht bewerken", assignment, AssignmentEditables.name),
-            ("Extra informatie bewerken", assignment, AssignmentEditables.extra_info),
-            ("Dienstomschrijving bewerken", service, ServiceEditables.description),
+            ("Opdracht wijzigen", assignment, None),
+            ("Teamlid of aanvraag wijzigen", service, None),
+            ("Plaatsing wijzigen", placement, None),
+            ("Naam van een opdracht wijzigen", assignment, AssignmentEditables.name),
+            ("Opdrachtomschrijving wijzigen", assignment, AssignmentEditables.extra_info),
+            ("Taken wijzigen", service, ServiceEditables.description),
         ]
 
     def test_an_externally_managed_opdracht_refuses_every_rule_under_it(self):
@@ -259,12 +259,12 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
         assert has_permission(Verb.UPDATE, self.service, self.owner_user) is True
 
     def test_a_bdm_who_does_not_own_the_opdracht_reaches_both(self):
-        for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
+        for label, obj in (("Teamlid of aanvraag wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
             with self.subTest(rule=label):
                 assert has_permission(Verb.UPDATE, obj, self.other_business_manager_user) is True
 
     def test_without_the_role_neither_is_reached(self):
-        for label, obj in (("Dienst bewerken", self.service), ("Teamlid verplaatsen", self.placement)):
+        for label, obj in (("Teamlid of aanvraag wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
             with self.subTest(rule=label):
                 assert has_permission(Verb.UPDATE, obj, self.unrelated_user) is False
 
@@ -376,28 +376,26 @@ class ServiceDescriptionRuleTest(_Setup):
 
 
 class PlacedWithoutTheConsultantRoleTest(_Setup):
-    """A colleague placed on the opdracht in another role reaches its text
-    fields through no other door."""
+    """Being placed is enough to keep the opdracht's text fields: an OR member or
+    another ODI colleague in the team must not need the Consultant role for it,
+    since that role puts them in the Business Managers' availability overviews."""
 
     def setUp(self):
         super().setUp()
-        # Gebruikersbeheerder: a role with no rights on an opdracht at all, so the
-        # placement is the only door left to try.
         self.placed_other_user = User.objects.create_user(email="placed-other@x.nl", first_name="P", last_name="B")
-        self.placed_other_user.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
         placed_other = Colleague.objects.create(
             user=self.placed_other_user, name="P B", email="placed-other@x.nl", source="wies"
         )
-        # Placed on the same dienst as the consultant, and not the owner of it.
+        # Placed on the same dienst as the consultant, not the owner of it, no role.
         Placement.objects.create(colleague=placed_other, service=self.service, source="wies")
 
-    def test_a_placement_in_another_role_reaches_no_opdracht_text_field(self):
+    def test_a_placed_colleague_without_a_role_keeps_the_opdracht_text_fields(self):
         for editable in (AssignmentEditables.name, AssignmentEditables.extra_info):
             with self.subTest(field=editable.name):
-                assert has_permission(Verb.UPDATE, self.assignment, self.placed_other_user, editable) is False
+                assert has_permission(Verb.UPDATE, self.assignment, self.placed_other_user, editable) is True
 
-    def test_a_placement_in_another_role_reaches_no_dienstomschrijving(self):
-        assert has_permission(Verb.UPDATE, self.service, self.placed_other_user, ServiceEditables.description) is False
+    def test_a_placed_colleague_without_a_role_keeps_the_taken_of_their_dienst(self):
+        assert has_permission(Verb.UPDATE, self.service, self.placed_other_user, ServiceEditables.description) is True
 
 
 class UserEmailFieldRuleTest(TestCase):

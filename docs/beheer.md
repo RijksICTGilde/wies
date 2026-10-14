@@ -34,9 +34,9 @@ Wies is een interne webapplicatie voor medewerkers bij ODI om inzicht te krijgen
 
 ## 4\. Beveiliging & continuïteit
 
-- Authenticatie: Rijks SSO, alleen expliciet toegevoegde ODI-gebruikers; beheerd via speciale rol (“Gebruikersbeheerder”), die door die rol zelf wordt toegekend; applicatiebeheer komt niet op de gebruikerspagina. Elke wijziging aan de gebruikerslijst wordt gelogd en kan later geïnspecteerd worden.
+- Authenticatie: Rijks SSO, alleen expliciet toegevoegde ODI-gebruikers; beheerd via de rol Gebruikersbeheerder. Een gebruikersbeheerder kent die rol ook aan anderen toe. Applicatiebeheerders hebben zonder die rol geen toegang tot de gebruikerspagina. Elke wijziging aan de gebruikerslijst wordt gelogd en kan later geïnspecteerd worden.
 - Logging (BIO): bij elke wijzigingsactie en bij in-/uitlogpogingen wordt vastgelegd: het event, de actor (gebruiker/e-mail), het tijdstip, het IP-adres, de User-Agent en het resultaat. Deze gegevens worden niet in de UI getoond (privacy) en zijn uitsluitend beschikbaar voor incidentonderzoek.
-- Onboarding/offboarding: voor elk merk binnen ODI wordt er 1 Gebruikersbeheerder aangesteld. Deze kan bij indiensttreding/uitdiensttreding gebruikers toevoegen/verwijderen.
+- Onboarding/offboarding: voor elk merk binnen ODI wordt er 1 gebruikersbeheerder aangesteld. Die kan bij indiensttreding/uitdiensttreding gebruikers toevoegen/verwijderen.
 - Data & privacy: er wordt een zeer beperkte set gegevens opgeslagen per persoon, waarbij slechts de huidige opdrachten zichtbaar zijn voor collega’s. Een Pre-scan DPIA heeft aangetoond dat er geen DPIA nodig is.
 - Updates: per sprint en daarnaast direct na beveiligingspatches.
 - Testen: automatische tests voor bestaande en nieuwe functionaliteiten.

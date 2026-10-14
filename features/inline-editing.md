@@ -247,30 +247,30 @@ declares what the object must be (`requires`) and who it serves (`grants`), each
 ```python
 from wies.core.editables import AssignmentEditables, UserEditables
 from wies.core.models import Assignment, Placement
-from wies.core.permission_engine import PLACED, WIES_SOURCED, Grant, Role, Verb, rule
-from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT
+from wies.core.permission_engine import PLACED, WIES_SOURCED, Anyone, Grant, Role, Verb, rule
+from wies.core.roles import ROLE_BUSINESS_MANAGER
 
 UPDATE = Verb.UPDATE
 
 rule(UPDATE, Assignment,                               # whole-object
-     label="Opdracht bewerken",
+     label="Opdracht wijzigen",
      requires=WIES_SOURCED,
      grants=[Grant(Role(ROLE_BUSINESS_MANAGER))])
 
 rule(UPDATE, Placement,                                # a plaatsing hangs under an opdracht,
-     label="Teamlid verplaatsen",                      # and WIES_SOURCED finds it
+     label="Plaatsing wijzigen",                       # and WIES_SOURCED finds it
      requires=WIES_SOURCED,
      grants=[Grant(Role(ROLE_BUSINESS_MANAGER))])
 
 rule(UPDATE, AssignmentEditables.extra_info,           # field-level: more permissive
-     label="Extra informatie bewerken",
+     label="Opdrachtomschrijving wijzigen",
      requires=WIES_SOURCED,
      grants=[Grant(Role(ROLE_BUSINESS_MANAGER)),
-             Grant(Role(ROLE_CONSULTANT), PLACED)])
+             Grant(Anyone(), PLACED)])
 
 rule(UPDATE, UserEditables.email,                      # field-level: stricter
-     label="E-mailadres inline wijzigen",
-     grants=[])                                        # nobody: see features/roles.md
+     label="E-mailadres wijzigen met het potlood",
+     grants=[])                                        # nobody: see docs/roles.md
 ```
 
 No module-level names: nothing refers to a rule by name, `has_permission(...)`
@@ -291,13 +291,13 @@ The vocabulary is fixed and lives in `permission_engine.py`:
   a sentence used by three rules is written once. No two of them share a wording:
   the page lays out one row per relation, so a shared one would print two identical
   rows with different answers. `PLACED` is a placement anywhere on the opdracht,
-  `PLACED_ON_SERVICE` one on that dienst, and neither is usable on the other's
+  `PLACED_ON_SERVICE` one on that dienst (the viewer's own placement), and neither is usable on the other's
   target, so a rule's target decides which of the two it can name. `all_of(A, B)` builds the relation
   that is both at once; "either of these" is two grants with the same holder.
 - **Conditions**: `WIES_SOURCED`, about the object rather than the viewer.
 
 `label` and `grants` are mandatory keywords, so a right cannot be added without
-a row on the role page (`features/roles.md`).
+a row on the role page (`docs/roles.md`).
 
 A scope has to be one of the constants in `SCOPES`, and `rule()` refuses one that
 is not, at import time. The role page lays its rows out by walking that tuple, so

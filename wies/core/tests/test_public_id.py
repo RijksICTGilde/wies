@@ -32,7 +32,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_business_manager, make_business_manager_user
+from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
 

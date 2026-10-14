@@ -7,10 +7,15 @@ Wies separates authority by what it lets you do, not by seniority.
 | Applicatiebeheerder | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional     |
 | Gebruikersbeheerder | role (Django group)      | users, labels, merken, and keeping contract hours |
 | Business Manager    | role (Django group)      | any wies-sourced opdracht, and reading the hours  |
-| Consultant          | role (Django group)      | the text fields of an opdracht they are placed on |
+| Consultant          | role (Django group)      | being counted in Bezetting                        |
 
 What each may do is on the page **Beheer > Rollen**, which reads the rules
 themselves.
+
+Being placed on an opdracht is a relation, not a role: whoever is placed may keep
+the opdracht's name and description and the Taken of their own placement, with or
+without a role. An OR member or another ODI colleague in the team needs no
+Consultant role for that, and should not get one only for that.
 
 The Applicatiebeheerder carries **no** functional rights. An application
 administrator who also does assignment work holds `Business Manager` as well, and
@@ -68,36 +73,26 @@ authority. The alternative was to keep it behind the Applicatiebeheerder, which
 would stall onboarding a Business Manager on a deploy-level address list; the team
 chose onboarding.
 
-Granting happens on the user sheet, Bewerken in the row menu on **Beheer >
+Granting happens on the user sheet, Wijzigen in the row menu on **Beheer >
 Gebruikers**, behind `rijksauth.change_user`. Nieuwe gebruiker is the same sheet
-under its own `rijksauth.add_user`, and hands out roles under the same narrowing.
-It is enforced twice: `UserForm(editor=...)` offers only the roles the editor may
-grant, and that queryset is what a submitted id is validated against;
-`_apply_groups` runs the same filter again and is the only `groups.set` in the
-tree, so the sheet and the CSV import both pass it. It also keeps the roles the
-editor may not grant, which today keeps nothing: the only thing `may_grant`
-refuses is the Applicatiebeheerder, and that is an address list, not a `Group`
-anyone holds. The half is the seam a future restriction would land in.
+under its own `rijksauth.add_user`. `_apply_groups` asks `may_grant` per role and
+is the only `groups.set` in the tree, so the sheet and the CSV import both pass
+it. It also keeps the roles the editor may not grant, which today keeps nothing:
+the only thing `may_grant` refuses is the Applicatiebeheerder, and that is an
+address list, not a `Group` anyone holds. That is the seam a future restriction
+would land in.
 
 The Applicatiebeheerder is not on this sheet at all, and needs nothing on it:
-the initial user of an environment is created with every role
-(`ensure_initial_user`), so the way in exists without giving the address list a
-functional right. The command skips an account that already exists, and a login
+the initial user of an environment gets every role (`ensure_initial_user`), so
+the way in exists without giving the address list a functional right. A login
 cannot get there first: the OIDC backend claims a pre-provisioned account, it
-never creates one. An environment that already has accounts gets its way in from
-`rijksauth/0012`, which hands every address in `STAFF_EMAILS` both roles once.
+never creates one.
 
 Under the form sits a third thing that is not part of it: the contract hours of
-the linked colleague. `_contract_block` asks the rule and not the surface, in both
-directions: it returns nothing to someone who may not read the hours, and carries
-the buttons for whoever may keep them, on the user sheet and in the colleague
-panel alike. A Business Manager plans with the hours and so reads them there;
-keeping them is beheer and stays with the Gebruikersbeheerder.
-
-_Which_ periods it shows is the surface's question and not the rule's: the panel
-lists the running and coming ones, the sheet the whole history. A save or a delete
-from the panel swaps the panel's slice back in; how the surface travels along with
-the request is `_contract_surface`.
+the linked colleague. They are kept there and nowhere else; `_contract_block`
+asks the rule, so the buttons show for whoever may keep them. A Business Manager
+plans with the hours and reads them in Bezetting; keeping them is beheer and stays
+with the Gebruikersbeheerder.
 
 The Applicatiebeheerder follows the email address, so moving an address to or from
 a `STAFF_EMAILS` one is theirs to do too (`may_change_email`). The
@@ -132,8 +127,8 @@ How a rule itself is written is in `features/inline-editing.md`, under
 
 ## Role page
 
-`/beheer/rollen/` (for `rijksauth.view_user` or the Applicatiebeheerder) shows
-per role what it may do on its own. `role_matrix.py` **reads** the rules rather than
+`/beheer/rollen/` (for the Gebruikersbeheerder, `is_user_admin`) shows per role
+what it may do on its own. `services/role_matrix.py` **reads** the rules rather than
 repeating them: one row per relation, one column per authority. Completeness is
 structural: `rule()` demands a `label` and a `grants`, so a right cannot be
 registered without a row, and it refuses a relation outside `SCOPES`, which the
@@ -142,8 +137,8 @@ page would have no row to print.
 There is one column per authority and never one per combination: roles add up, so
 holding two means holding both columns. The rows underneath about visibility and
 the screens are not rules; they ask their own predicate with a stand-in viewer.
-`can_view_role_hours` has a row of its own ("Uren van de rol van een collega
-zien"), because a right nobody can look up drifts unseen. It is narrower than the
+`can_view_role_hours` has a row of its own ("Uren per week van een geplaatste
+collega zien"), because a right nobody can look up drifts unseen. It is narrower than the
 `ContractPeriod` rows above: a contract is beheer and the Gebruikersbeheerder
 reads it, the hours on an opdracht are planning and it does not.
 
@@ -151,20 +146,10 @@ reads it, the hours on an opdracht are planning and it does not.
 answers a saved user, when a rule produces no row, or when a column stands for a
 combination.
 
-## Deploy
+## Every start
 
-- `setup_roles()` (every container start) creates the three role groups;
-  `Consultant` gets no Django permissions, all its rights are rules.
-  The Applicatiebeheerder has no group at all, it is the address list.
-- `rijksauth/0010`, `0011` and `0013` move the groups from their old screen names
-  to their keys, keeping members and permissions: `Beheerder` ends up as
-  `user_admin` and `Business Development Manager` as `business_manager`.
-- `rijksauth/0012` drops the `Opdrachtbeheer` group and gives everyone in
-  `STAFF_EMAILS` the `Business Manager` and `Gebruikersbeheerder` roles **once**,
-  so an address added later does not get them and has to be granted on the user
-  sheet. Whoever held the group itself becomes a `Business Manager`, address list
-  or not: the roles screen handed `Opdrachtbeheer` out too, and dropping the group
-  would otherwise take their rights along in silence.
+- `setup_roles()` creates the three role groups; `Consultant` gets no Django
+  permissions. The Applicatiebeheerder has no group at all, it is the address list.
 - `ensure_initial_user` runs on every container start, after `setup_roles()`.
   While `INITIAL_USER_EMAIL` is set it makes sure that account exists and holds
   **every** role, whether it had them or not. Only the address is required; the

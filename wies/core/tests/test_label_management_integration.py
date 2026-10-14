@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Colleague, Label, LabelCategory
+from wies.core.roles import ROLE_USER_ADMIN
 
 User = get_user_model()
 
@@ -199,13 +200,18 @@ class LabelManagementIntegrationTest(TestCase):
         assert Label.objects.filter(name="Common Name").count() == 2
 
     def test_navigation_menu_visibility(self):
-        """The Beheer menu is visible only with the right permissions."""
+        """The Beheer menu follows the Gebruikersbeheerder role, not loose permissions."""
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, "Beheer")
 
         self.client.force_login(self.admin_user)
+        response = self.client.get(reverse("home"))
+        assert response.status_code == 200
+        self.assertNotContains(response, "Beheer")
+
+        self.admin_user.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "Beheer")

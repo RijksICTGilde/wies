@@ -103,7 +103,7 @@ class UserCSVCaseInsensitiveDuplicateTest(TestCase):
         result = create_users_from_csv(None, csv_content)
 
         assert result["success"] is False
-        assert any("duplicate email" in err for err in result["errors"])
+        assert any("staat dubbel in het bestand" in err for err in result["errors"])
 
 
 class UserEmailCaseInsensitiveUniqueTest(TestCase):

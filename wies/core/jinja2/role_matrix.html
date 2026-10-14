@@ -14,28 +14,26 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-rich-text>
+  <p>Hier zie je wat elke rol mag. Heb je meer rollen, dan mag je alles wat in die kolommen staat.</p>
   <p>
-    Wat elke rol op zichzelf mag, rechtstreeks uit de regels van Wies. Wie meer rollen heeft, mag alles
-    uit die kolommen samen.
+    "Waarop je geplaatst bent" betekent: je staat in het team van die opdracht. "Je eigen plaatsing"
+    betekent: alleen de plaatsing waar jij op staat.
   </p>
   <p>
-    "Eigen" is een opdracht waarvan je de Business Manager bent. "Waarop je geplaatst bent" betekent dat je
-    op een dienst van die opdracht staat, "op de dienst waarop je geplaatst bent" alleen die ene dienst.
-    Beide vragen daarbovenop nog een rol.
-  </p>
-  <p>
-    Staat er (ongeacht je rol) achter een handeling, dan mag iedereen die: het gaat dan over jezelf, je eigen
-    gegevens of je eigen plaatsing.
+    Staat er "ongeacht je rol" bij een handeling, dan mag iedereen die: het gaat dan over jezelf, je eigen
+    gegevens of een opdracht waarop je geplaatst bent.
   </p>
   {% if may_assign_roles %}
     <p>
-      Rollen ken je toe op <a href="{{ url('admin-users') }}">Gebruikers</a>, via het actiemenu achter een naam.
+      Rollen geef je op de pagina <a href="{{ url('admin-users') }}">Gebruikers</a>: open het menu "Acties" achter een naam en kies "Wijzigen".
     </p>
   {% endif %}
   {# Icon plus a visually hidden word: colour alone may not carry the meaning
    (WCAG 1.4.1), and nldd-icon is aria-hidden, so a reader hears an empty cell.
    Two states, ja and nee: that a whole row is role-free is said in its row
-   header, by role_matrix.ROLE_FREE_NOTE. #}
+   header, by role_matrix.ROLE_FREE_NOTE. Each table scrolls on its own, so a
+   narrow screen keeps the page itself in place (WCAG 1.4.10); the wrapper is
+   focusable so a keyboard can scroll it too. #}
   {% macro allowed_cell(yes) -%}
     <td>
       {%- if yes -%}
@@ -46,43 +44,55 @@
     </td>
   {%- endmacro %}
   {% for title, rows in sections %}
-    <h2>{{ title }}</h2>
+    <h2 id="rollen-{{ loop.index }}">{{ title }}</h2>
+    <div class="wies-table-scroll"
+         tabindex="0"
+         role="region"
+         aria-labelledby="rollen-{{ loop.index }}">
+      <table>
+        <caption class="wies-visually-hidden">{{ title }}: wat elke rol mag</caption>
+        <thead>
+          <tr>
+            <th scope="col">Handeling</th>
+            {% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for header, allowed in rows %}
+            <tr>
+              <th scope="row">{{ header }}</th>
+              {% for yes in allowed %}{{ allowed_cell(yes) }}{% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endfor %}
+  <h2 id="rollen-django">Technische rechten (Django)</h2>
+  <p>Dit zijn de technische rechten achter de tabellen hierboven. Je hebt ze niet nodig om de tabellen te lezen.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-labelledby="rollen-django">
     <table>
-      <caption class="wies-visually-hidden">{{ title }}: wat elke rol mag</caption>
+      <caption class="wies-visually-hidden">Technische rechten (Django) per rol</caption>
       <thead>
         <tr>
-          <th scope="col">Handeling</th>
+          <th scope="col">Permissie</th>
           {% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}
         </tr>
       </thead>
       <tbody>
-        {% for label, note, allowed in rows %}
+        {% for name, held in group_permissions %}
           <tr>
-            <th scope="row">{{ label }}{{ note }}</th>
-            {% for yes in allowed %}{{ allowed_cell(yes) }}{% endfor %}
+            {# Django's own names, in English (WCAG 3.1.2). #}
+            <th scope="row" lang="en">{{ name }}</th>
+            {% for yes in held %}{{ allowed_cell(yes) }}{% endfor %}
           </tr>
         {% endfor %}
       </tbody>
     </table>
-  {% endfor %}
-  <h2>Django-permissies per rol</h2>
-  <table>
-    <caption class="wies-visually-hidden">Django-permissies per rol</caption>
-    <thead>
-      <tr>
-        <th scope="col">Permissie</th>
-        {% for column in columns %}<th scope="col">{{ column }}</th>{% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      {% for name, held in group_permissions %}
-        <tr>
-          <th scope="row">{{ name }}</th>
-          {% for yes in held %}{{ allowed_cell(yes) }}{% endfor %}
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  </div>
   {# Copies of the cell icons, hidden word included: change these and allowed_cell
    together. Without that word a dt holds nothing a reader can hear, because
    nldd-icon is aria-hidden, and the legend explaining the colours would be blank
@@ -93,7 +103,7 @@
     <nldd-icon name="check-circle-filled" color="success" size="20"></nldd-icon><span class="wies-visually-hidden">Ja</span>
   </dt>
   <dd>
-    Deze rol geeft je dit recht.
+    Deze rol mag dit.
   </dd>
   <dt>
   <nldd-icon name="close-circle-filled" color="critical" size="20"></nldd-icon><span class="wies-visually-hidden">Nee</span>

@@ -1,5 +1,5 @@
 """Group/permission setup and role predicates for Gebruikersbeheerder, Consultant
-and Business Manager. The authority model is described in ``features/roles.md``.
+and Business Manager. The authority model is described in ``docs/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
 ``wies/core/permissions.py``. This module owns the Django Group definitions,
@@ -111,13 +111,9 @@ def may_change_email(editor, old: str, new: str) -> bool:
     return editor is not None and is_staff_member(editor)
 
 
-def may_view_role_matrix(user) -> bool:
-    """Whether the user may read the role matrix (``/beheer/rollen/``): the
-    Gebruikersbeheerder, whose Beheer section it sits in, and the
-    Applicatiebeheerder, who owns the roles.
-    The page shows no data, so the gate is wide.
-    """
-    return user.has_perm("rijksauth.view_user") or is_staff_member(user)
+def is_user_admin(user) -> bool:
+    """Whether the user holds the Gebruikersbeheerder role (group ``ROLE_USER_ADMIN``)."""
+    return user.is_authenticated and user.groups.filter(name=ROLE_USER_ADMIN).exists()
 
 
 def may_grant(_editor, role: str) -> bool:

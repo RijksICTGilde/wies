@@ -1,4 +1,4 @@
-"""The role matrix on ``/beheer/rollen/`` (``wies/core/role_matrix.py``).
+"""The role matrix on ``/beheer/rollen/`` (``wies/core/services/role_matrix.py``).
 
 What these tests check is the reader: that the cell the page prints for a rule
 and a relation is the answer the engine gives a saved user acting on a saved row.
@@ -16,7 +16,6 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
-from wies.core import role_matrix
 from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import (
     ANY,
@@ -37,6 +36,7 @@ from wies.core.roles import (
     role_label,
     setup_roles,
 )
+from wies.core.services import role_matrix
 from wies.core.visibility_rules import evaluate_assignment_visibility, evaluate_placement_visibility, show_bm_page
 from wies.rijksauth.models import User
 
@@ -84,25 +84,40 @@ def _rendered_cells(html):
 
 
 def _cells():
+    """``{(row header, column heading): allowed}``, keyed by the header the page prints."""
     headings = [heading for heading, _groups, _staff in role_matrix.COLUMNS]
     return {
-        (label, heading): allowed
+        (header, heading): allowed
         for _title, rows in role_matrix.build_matrix()
-        for label, _note, cells in rows
+        for header, cells in rows
         for heading, allowed in zip(headings, cells, strict=True)
     }
 
 
-def _notes():
-    """``{row label: the note printed after it}``, empty string when there is none."""
-    return {label: note for _title, rows in role_matrix.build_matrix() for label, note, _cells in rows}
+def _headers():
+    return [header for _title, rows in role_matrix.build_matrix() for header, _cells in rows]
+
+
+def _role_free(header):
+    return f"{role_matrix.ROLE_FREE_NOTE})" in header
+
+
+def _row(label, relation=""):
+    """The printed header of one row, found by its label and the relation it names.
+
+    Without a relation, a label that only prints with the role-free note counts too.
+    """
+    prefix = f"{label} ({relation}" if relation else f"{label} ({role_matrix.ROLE_FREE_NOTE})"
+    matches = [h for h in _headers() if (h == label and not relation) or h.startswith(prefix)]
+    assert len(matches) == 1, (label, relation, matches)
+    return matches[0]
 
 
 class RoleMatrixShapeTest(SimpleTestCase):
     def test_every_rule_becomes_a_row(self):
         """Completeness is structural (a rule *is* its rows); this is what that
         claim looks like from the outside."""
-        in_the_table = {rule for _section, _label, rule, _scope in role_matrix.rule_rows()}
+        in_the_table = {rule for _section, _label, _relation, rule, _scope in role_matrix.rule_rows()}
 
         assert in_the_table == set(registered_rules().values())
 
@@ -112,7 +127,7 @@ class RoleMatrixShapeTest(SimpleTestCase):
         rule would still be enforced, and the page would be quiet about it;
         ``rule()`` refuses such a scope, and this is that refusal seen from the
         page's end."""
-        printed = {(rule, scope) for _section, _label, rule, scope in role_matrix.rule_rows()}
+        printed = {(rule, scope) for _section, _label, _relation, rule, scope in role_matrix.rule_rows()}
 
         for rule in registered_rules().values():
             for scope in role_matrix.row_scopes(rule):
@@ -130,11 +145,11 @@ class RoleMatrixShapeTest(SimpleTestCase):
                 assert row.section in role_matrix.SECTION_ORDER
 
     def test_no_two_rows_carry_the_same_label(self):
-        """Two relations can share a wording (both placed scopes do), so a rule
-        that reached both would print the same row twice and the second would
-        read as a contradiction of the first."""
-        labels = [label for _section, label, _rule, _scope in role_matrix.rule_rows()]
-        labels += [row.label for row in role_matrix.EXTRA_ROWS]
+        """Two relations sharing a wording, or a relation left unnamed on a rule
+        with more than one row, would print the same row twice and the second
+        would read as a contradiction of the first."""
+        labels = [(label, relation) for _section, label, relation, _rule, _scope in role_matrix.rule_rows()]
+        labels += [(row.label, "") for row in role_matrix.EXTRA_ROWS]
 
         assert len(labels) == len(set(labels)), sorted({label for label in labels if labels.count(label) > 1})
 
@@ -237,36 +252,34 @@ class RoleMatrixReaderTest(TestCase):
                     with self.subTest(rule=rule.label, scope=scope):
                         assert scope in shown
 
-    def test_the_placed_rows_are_for_the_placed_consultant(self):
-        """The rule branch behind them asks for the Consultant role on top of
-        the placement, so no other role reaches them through the placement."""
+    def test_the_placed_rows_hold_for_every_role(self):
+        """Being placed is enough: a team member without the Consultant role (an OR
+        member, another ODI colleague) keeps these fields too. Somebody else's
+        opdracht still asks for the Business Manager role."""
         cells = _cells()
-        # The placement grants it to the consultant; Business Manager is already through on the
-        # relation-free grant these field rules name alongside it.
-        allowed = {role_label(ROLE_CONSULTANT), role_label(ROLE_BUSINESS_MANAGER)}
 
-        # The relation per row, because a dienst names the narrower one: placed on
-        # that dienst, not anywhere on the opdracht.
+        # The relation per row, because a dienst names the narrower one: your own
+        # placement, not anywhere on the opdracht.
         for label, scope in (
-            ("Naam van een opdracht bewerken", PLACED),
-            ("Extra informatie bewerken", PLACED),
-            ("Dienstomschrijving bewerken", PLACED_ON_SERVICE),
+            ("Naam van een opdracht wijzigen", PLACED),
+            ("Opdrachtomschrijving wijzigen", PLACED),
+            ("Taken wijzigen", PLACED_ON_SERVICE),
         ):
             for heading, _groups, _staff in role_matrix.COLUMNS:
                 with self.subTest(row=label, column=heading):
-                    assert cells[(f"{label} ({scope.label})", heading)] is (heading in allowed)
-            assert not cells[(f"{label} ({ANY.label})", "Consultant")]
+                    assert cells[(_row(label, scope.label), heading)]
+            assert not cells[(_row(label, ANY.label), "Consultant")]
 
     def test_account_authority_reaches_the_colleague_record(self):
         """Whoever may edit someone else's account may edit their colleague record
         too. Only that direction is pinned, because only that direction holds; why the
-        two models are separate at all is in ``features/roles.md``."""
+        two models are separate at all is in ``docs/roles.md``."""
         cells = _cells()
 
         for heading, _groups, _staff in role_matrix.COLUMNS:
             with self.subTest(column=heading):
-                edits_account = cells[("Gebruiker bewerken (van een ander)", heading)]
-                edits_colleague = cells[("Collega bewerken (van een ander)", heading)]
+                edits_account = cells[(_row("Gebruiker wijzigen", ANY.label), heading)]
+                edits_colleague = cells[(_row("Collega wijzigen", ANY.label), heading)]
                 assert not edits_account or edits_colleague
 
     def test_known_cells(self):
@@ -275,16 +288,17 @@ class RoleMatrixReaderTest(TestCase):
         a rule moves both at once and only a named cell notices."""
         cells = _cells()
 
-        assert cells[("Opdracht bewerken (van een ander)", role_label(ROLE_BUSINESS_MANAGER))]
-        assert not cells[("Opdracht bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
+        # A rule with one row names no relation: there is nothing to tell apart.
+        assert cells[("Opdracht wijzigen", role_label(ROLE_BUSINESS_MANAGER))]
+        assert not cells[("Opdracht wijzigen", role_label(ROLE_USER_ADMIN))]
 
-        assert cells[("Gebruiker bewerken (je eigen)", "Consultant")]
-        assert not cells[("Gebruiker bewerken (van een ander)", "Consultant")]
-        assert cells[("Gebruiker bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
+        assert cells[("Gebruiker wijzigen (je eigen, ongeacht je rol)", "Consultant")]
+        assert not cells[("Gebruiker wijzigen (van een ander)", "Consultant")]
+        assert cells[("Gebruiker wijzigen (van een ander)", role_label(ROLE_USER_ADMIN))]
 
-        assert cells[("Collega bewerken (je eigen)", "Consultant")]
-        assert not cells[("Collega bewerken (van een ander)", "Consultant")]
-        assert cells[("Collega bewerken (van een ander)", role_label(ROLE_USER_ADMIN))]
+        assert cells[("Collega wijzigen (je eigen, ongeacht je rol)", "Consultant")]
+        assert not cells[("Collega wijzigen (van een ander)", "Consultant")]
+        assert cells[("Collega wijzigen (van een ander)", role_label(ROLE_USER_ADMIN))]
 
     def test_the_table_only_reads(self):
         """Nothing about the matrix may write, and nothing may probe: the queries
@@ -357,23 +371,31 @@ class RoleMatrixExtraRowTest(TestCase):
             "Afgelopen plaatsing van een collega zien": lambda u: (
                 evaluate_placement_visibility(*PAST, self.other.pk, SimpleNamespace(user=u), TODAY).visible
             ),
-            "Afgelopen opdracht van een Business Manager zien": lambda u: (
+            "Afgelopen opdracht op het profiel van een Business Manager zien": lambda u: (
                 evaluate_assignment_visibility(*PAST, SimpleNamespace(user=u), TODAY).visible
             ),
-            "Business management-sectie": lambda u: show_bm_page(SimpleNamespace(user=u)),
+            "Business management openen": lambda u: show_bm_page(SimpleNamespace(user=u)),
             # The predicate reads only ``colleague_id``, so the placement need not be
             # saved; the user is, which is what this test compares against.
-            "Uren van de rol van een collega zien": lambda u: can_view_role_hours(
+            "Uren per week van een geplaatste collega zien": lambda u: can_view_role_hours(
                 u, Placement(colleague_id=self.other.pk)
             ),
-            "Gebruiker aanmaken en verwijderen": lambda u: u.has_perms(["rijksauth.add_user", "rijksauth.delete_user"]),
-            "E-mailadres wijzigen (van een ander)": lambda u: self._form_accepts(
+            "Gebruikers, labels, merken en rollen openen": lambda u: all(
+                self._page_opens(u, reverse(name))
+                for name in ("admin-users", "label-admin", "suborganization-admin", "role-matrix")
+            ),
+            "Gebruiker toevoegen en verwijderen": lambda u: u.has_perms(
+                ["rijksauth.add_user", "rijksauth.delete_user"]
+            ),
+            "E-mailadres wijzigen in het gebruikersformulier": lambda u: self._form_accepts(
                 u, {"email": "nieuw-adres@rijksoverheid.nl"}
             ),
             "Rollen toekennen": lambda u: self._roles_screen_accepts(
                 u, (ROLE_CONSULTANT, ROLE_BUSINESS_MANAGER, ROLE_USER_ADMIN)
             ),
-            "Statistieken en database": is_staff_member,
+            "Statistieken en database zien": lambda u: (
+                is_staff_member(u) and self._page_opens(u, reverse("staff-dashboard"))
+            ),
         }
         # A new row needs a question here, or the stand-in could answer it wrongly unseen.
         assert set(questions) == {row.label for row in role_matrix.EXTRA_ROWS}
@@ -382,7 +404,7 @@ class RoleMatrixExtraRowTest(TestCase):
         for label, ask in questions.items():
             for heading, user in self.users.items():
                 with self.subTest(row=label, column=heading):
-                    assert cells[(label, heading)] == ask(user)
+                    assert cells[(_row(label), heading)] == ask(user)
 
     def test_no_extra_row_needs_a_combination_of_columns(self):
         """A row that only a combination may do is "Nee" in every column, which
@@ -397,7 +419,7 @@ class RoleMatrixExtraRowTest(TestCase):
         for row in role_matrix.EXTRA_ROWS:
             if row.check(everything):
                 with self.subTest(row=row.label):
-                    assert any(cells[(row.label, heading)] for heading in headings)
+                    assert any(cells[(_row(row.label), heading)] for heading in headings)
 
     def test_group_permissions_match_a_saved_user(self):
         headings = [heading for heading, _groups, _staff in role_matrix.COLUMNS]
@@ -413,14 +435,14 @@ class RoleMatrixExtraRowTest(TestCase):
 
     @override_settings(STAFF_EMAILS=[])
     def test_without_configured_addresses_staff_column_has_no_extra_rights(self):
-        """Only what asks for no role at all is left: the SELF-scoped rules, plus
-        seeing your own ended placement, which is a visibility rule and not a rule()."""
+        """Only what asks for no role at all is left: the rows about yourself and
+        your own placements, which are exactly the role-free ones."""
         cells = _cells()
-        labels = {label for label, _heading in cells}
+        headers = {header for header, _heading in cells}
 
-        assert {label for label in labels if cells[(label, role_matrix.STAFF)]} == {
-            label for label in labels if label.endswith(f"({SELF.label})")
-        } | {"Eigen afgelopen plaatsing zien"}
+        assert {header for header in headers if cells[(header, role_matrix.STAFF)]} == {
+            header for header in headers if _role_free(header)
+        }
 
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
@@ -442,7 +464,7 @@ class RoleMatrixViewTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "Opdracht bewerken (van een ander)" in content
+        assert "Opdracht wijzigen" in content
         assert "Can add user" in content
         assert content.count(f'<th scope="col">{role_matrix.STAFF}</th>') == len(role_matrix.SECTION_ORDER) + 1
         assert "Platformbeheer" not in content  # the term the page used to carry
@@ -456,7 +478,7 @@ class RoleMatrixViewTest(TestCase):
 
         Two words and no third: a cell says ja or nee. Whether the whole row is
         role-free is said in the row header, which is why the key here is the
-        header the page prints, label and note together.
+        header the page prints.
         """
         self.client.force_login(self._user_admin())
 
@@ -464,9 +486,9 @@ class RoleMatrixViewTest(TestCase):
 
         expected = {}
         for _title, rows in role_matrix.build_matrix():
-            for label, note, cells in rows:
+            for header, cells in rows:
                 for index, allowed in enumerate(cells):
-                    expected[(f"{label}{note}", index)] = "Ja" if allowed else "Nee"
+                    expected[(header, index)] = "Ja" if allowed else "Nee"
         assert expected, "no rows to compare"
         assert set(expected.values()) == {"Ja", "Nee"}, "a cell state nobody renders"
         for (header, index), word in expected.items():
@@ -524,51 +546,51 @@ class RoleMatrixViewTest(TestCase):
         to: this row asks for no role at all.
 
         Both directions, because the note is read from the cells and a row that
-        gained a "Nee" must lose it. The set is spelled out as well: these three
-        are what the page's explanation of the note is written about, so a fourth
-        row arriving here means that sentence has to be written again.
+        gained a "Nee" must lose it. The set is spelled out as well: these rows
+        are what the page's explanation of the note is written about, so a new
+        one arriving here means that sentence has to be written again.
         """
-        notes = _notes()
         cells = _cells()
         headings = [heading for heading, _groups, _staff in role_matrix.COLUMNS]
 
-        for label, note in notes.items():
-            with self.subTest(row=label):
-                assert bool(note) == all(cells[(label, heading)] for heading in headings)
+        for header in _headers():
+            with self.subTest(row=header):
+                assert _role_free(header) == all(cells[(header, heading)] for heading in headings)
 
-        assert {label for label, note in notes.items() if note} == {
-            "Eigen afgelopen plaatsing zien",
-            "Collega bewerken (je eigen)",
-            "Gebruiker bewerken (je eigen)",
+        assert {header for header in _headers() if _role_free(header)} == {
+            "Eigen afgelopen plaatsing zien (ongeacht je rol)",
+            "Collega wijzigen (je eigen, ongeacht je rol)",
+            "Gebruiker wijzigen (je eigen, ongeacht je rol)",
+            "Naam van een opdracht wijzigen (waarop je geplaatst bent, ongeacht je rol)",
+            "Opdrachtomschrijving wijzigen (waarop je geplaatst bent, ongeacht je rol)",
+            "Taken wijzigen (je eigen plaatsing, ongeacht je rol)",
         }
 
-    def test_no_row_about_being_placed_is_called_role_free(self):
-        """Being placed asks for a role on top, so no placed row may read as
-        role-free, neither through the note nor through the paragraph that
-        explains it."""
-        notes = _notes()
+    def test_every_row_about_being_placed_is_called_role_free(self):
+        """Being placed is enough, so every placed row reads as role-free, and the
+        paragraph that explains the placed wordings asks for no role on top."""
         # Both relations: they word themselves differently, and a filter on one of
         # them would quietly stop checking the rows of the other.
-        wordings = tuple(f"({scope.label})" for scope in (PLACED, PLACED_ON_SERVICE))
-        placed = [label for label in notes if label.endswith(wordings)]
+        wordings = tuple(f"({scope.label}" for scope in (PLACED, PLACED_ON_SERVICE))
+        placed = [header for header in _headers() if any(w in header for w in wordings)]
         assert placed, "no row about being placed at all"
-        for label in placed:
-            with self.subTest(row=label):
-                assert notes[label] == ""
+        for header in placed:
+            with self.subTest(row=header):
+                assert _role_free(header)
 
         self.client.force_login(self._user_admin())
         html = self.client.get(self.url).content.decode()
 
         intro = next(p for p in re.findall(r"<p>(.*?)</p>", html, re.S) if "Waarop je geplaatst bent" in p)
-        # The ways this paragraph has claimed the placed rows are role-free.
-        for claim in ("gelijk", "ongeacht", "elke rol", "los van"):
+        # The ways this paragraph has claimed a placement needs a role on top.
+        for claim in ("daarbovenop", "nog een rol", "rol uit de kolom"):
             with self.subTest(claim=claim):
                 assert claim not in intro
 
     def test_the_page_explains_the_note_it_prints(self):
         """The note is words, not a colour, and words the reader has not met need
-        saying once. Only one of the role-free rows is about a placement and it is
-        the reader's own, so the explanation may mention a placement only as theirs.
+        saying once. The role-free rows are about yourself and the opdrachten you
+        are placed on, so the explanation has to name both.
         """
         self.client.force_login(self._user_admin())
         html = self.client.get(self.url).content.decode()
@@ -580,46 +602,44 @@ class RoleMatrixViewTest(TestCase):
         explanation = next(
             " ".join(p.split()) for p in re.findall(r"<p>(.*?)</p>", html, re.S) if note in p and "<th" not in p
         )
-        # Matched on the stem: "geplaatst" and "plaatsing" are one claim.
-        for mention in re.finditer(r"\w*plaats\w*", explanation):
-            with self.subTest(mention=mention.group()):
-                assert explanation[: mention.start()].rstrip().endswith("je eigen"), explanation
+        assert "jezelf" in explanation, explanation
+        assert "geplaatst" in explanation, explanation
 
     def test_the_page_names_no_exception_to_the_table(self):
         self.client.force_login(self._user_admin())
 
         content = " ".join(self.client.get(self.url).content.decode().split())
 
-        assert "Naam van een opdracht bewerken (waarop je geplaatst bent)" in content
+        assert "Naam van een opdracht wijzigen (waarop je geplaatst bent, ongeacht je rol)" in content
         for aside in ("niet in deze tabel", "staan niet in de tabel", "tegelijk"):
             with self.subTest(phrase=aside):
                 assert aside not in content
 
-    def test_who_may_grant_sees_the_link_to_the_users_page(self):
-        """The two who may not grant read the page but would land on a closed door,
-        so they are offered no link. Matched on the anchor the page text renders and
-        not on the url: the sidebar carries that one under its own condition."""
+    def test_the_user_admin_sees_the_link_to_the_users_page(self):
+        """Matched on the anchor the page text renders and not on the url: the
+        sidebar carries that one under its own condition."""
         in_page_link = f'<a href="{reverse("admin-users")}">Gebruikers</a>'
+        self.client.force_login(self._user_admin())
+
+        response = self.client.get(self.url)
+
+        assert response.status_code == 200
+        assert in_page_link in response.content.decode()
+
+    def test_neither_staff_nor_a_loose_view_user_opens_the_matrix(self):
+        """The page belongs to the Gebruikersbeheerder; the Applicatiebeheerder keeps
+        the maintenance pages and is not offered it there either."""
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
-        for user, shown in (
-            (self._user_admin(), True),
-            (User.objects.create_user(email=STAFF_EMAIL), False),
-            (User.objects.get(pk=reader.pk), False),
-        ):
+        staff = User.objects.create_user(email=STAFF_EMAIL)
+        for user in (staff, User.objects.get(pk=reader.pk)):
             with self.subTest(email=user.email):
                 self.client.force_login(user)
 
-                response = self.client.get(self.url)
+                assert self.client.get(self.url).status_code == 302
 
-                assert response.status_code == 200
-                assert (in_page_link in response.content.decode()) is shown
-
-    def test_staff_sees_the_matrix_and_its_menu_entry(self):
-        self.client.force_login(User.objects.create_user(email=STAFF_EMAIL))
-
-        assert self.client.get(self.url).status_code == 200
-        assert self.url in self.client.get(reverse("staff-dashboard")).content.decode()
+        self.client.force_login(staff)
+        assert self.url not in self.client.get(reverse("staff-dashboard")).content.decode()
 
     def test_without_either_authority_is_closed(self):
         self.client.force_login(User.objects.create_user(email="consultant@rijksoverheid.nl"))

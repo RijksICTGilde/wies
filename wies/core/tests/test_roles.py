@@ -18,8 +18,8 @@ from wies.core.roles import (
     ROLE_USER_ADMIN,
     is_business_manager,
     is_staff_member,
+    is_user_admin,
     may_grant,
-    may_view_role_matrix,
     role_label,
     setup_roles,
 )
@@ -45,11 +45,6 @@ class RBACSetupTest(TestCase):
         no entry in ``ROLE_LABELS`` prints its key on the user sheet, and a label
         with no group can never be granted. The Applicatiebeheerder is absent on purpose:
         an address list rather than a group.
-
-        It is also what keeps ``rijksauth/0012`` done. That migration drops the
-        Opdrachtbeheer group, and ``setup_roles()`` runs on every container start,
-        so a role put back here would return on the next deploy and stand on the
-        user sheet under its key.
         """
         Group.objects.all().delete()
 
@@ -177,7 +172,7 @@ class LabelRenameCostsOneStringTest(TestCase):
         return {
             "is_business_manager": is_business_manager(user),
             "is_staff_member": is_staff_member(user),
-            "may_view_role_matrix": may_view_role_matrix(user),
+            "is_user_admin": is_user_admin(user),
             "may_grant": {role: may_grant(user, role) for role in ROLE_LABELS},
         }
 
@@ -191,7 +186,7 @@ class LabelRenameCostsOneStringTest(TestCase):
         expected = {
             "is_business_manager": True,  # setUp gave the holder this role
             "is_staff_member": False,  # the address list holds a different address
-            "may_view_role_matrix": True,  # through view_user, which the role carries
+            "is_user_admin": True,  # setUp gave the holder this role
             "may_grant": dict.fromkeys(ROLE_LABELS, True) | {ROLE_STAFF: False},
         }
         assert self._gates() == expected

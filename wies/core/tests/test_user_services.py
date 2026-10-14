@@ -440,7 +440,7 @@ Jan,Jansen,jan.jansen@gmail.com"""
         assert result["success"] is False
         assert result["users_created"] == 0
         assert len(result["errors"]) == 1
-        assert "invalid domain" in result["errors"][0]
+        assert "niet-toegestaan domein" in result["errors"][0]
         assert "@rijksoverheid.nl" in result["errors"][0]
 
     def test_csv_import_mixed_valid_invalid_emails(self):
@@ -455,7 +455,7 @@ Kees,Ansen,kees@minbzk.nl"""
         assert result["success"] is False
         assert result["users_created"] == 0  # No users created when any validation fails
         assert len(result["errors"]) == 1
-        assert "Row 3" in result["errors"][0]  # Piet is on row 3
+        assert "Rij 3" in result["errors"][0]  # Piet is on row 3
 
     def test_csv_import_client_email_rejected(self):
         """Test CSV import rejects client email addresses"""
@@ -465,4 +465,4 @@ Jan,Jansen,jan.jansen@clientorganisatie.nl"""
         result = create_users_from_csv(None, csv_content)
 
         assert result["success"] is False
-        assert "invalid domain" in result["errors"][0]
+        assert "niet-toegestaan domein" in result["errors"][0]

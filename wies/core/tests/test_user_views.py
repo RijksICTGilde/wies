@@ -257,7 +257,7 @@ class UserViewsTest(TestCase):
         """The form writes labels onto someone else's colleague record, and asks
         nothing of ``Colleague`` to do it: ``auth_user`` holds the four ``rijksauth``
         user permissions, no permission on the colleague and no role, so neither gate
-        that guards a colleague is standing. ``features/roles.md`` leans on that when
+        that guards a colleague is standing. ``docs/roles.md`` leans on that when
         it explains why the rule on ``Colleague`` may not contradict the form."""
         assert self.colleague1.user != self.auth_user
         assert not self.auth_user.has_perm("core.change_colleague")
@@ -1008,7 +1008,7 @@ John,Doe,john.doe@rijksoverheid.nl,{self.existing_suborg.name},n,n,n"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "Missing required columns" in content
+        assert "Verplichte kolommen ontbreken" in content
         assert "email" in content
 
     def test_import_validates_missing_required_fields(self):
@@ -1024,9 +1024,9 @@ John,,john@rijksoverheid.nl
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "Row 2" in content
+        assert "Rij 2" in content
         assert "last_name" in content
-        assert "Row 3" in content
+        assert "Rij 3" in content
         assert "first_name" in content
 
     def test_import_validates_email_format(self):
@@ -1042,7 +1042,7 @@ Jane,Smith,also-invalid"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "invalid email format" in content
+        assert "ongeldig e-mailadres" in content
 
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
@@ -1058,7 +1058,7 @@ Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         content = response.content.decode()
         assert "Import mislukt" in content
         assert role_label(ROLE_USER_ADMIN) in content
-        assert "must be" in content
+        assert "moet" in content
         assert role_label(ROLE_CONSULTANT) in content
 
     def test_import_detects_duplicate_emails_in_csv(self):
@@ -1074,7 +1074,7 @@ Jane,Smith,duplicate@rijksoverheid.nl"""
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import mislukt" in content
-        assert "duplicate email" in content
+        assert "staat dubbel in het bestand" in content
 
     def test_import_skips_existing_users(self):
         """Test that import skips users with existing email addresses"""
@@ -1093,7 +1093,7 @@ Jane,Smith,existing@rijksoverheid.nl"""
         content = response.content.decode()
         assert "Import geslaagd" in content
         assert "1" in content  # Only 1 user created
-        assert "already exists" in content
+        assert "bestaat al" in content
 
         # Verify only John was created
         assert User.objects.filter(email="john@rijksoverheid.nl").exists()
@@ -1112,7 +1112,7 @@ Jane,Smith,Existing@Rijksoverheid.nl"""
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "already exists" in content
+        assert "bestaat al" in content
         assert User.objects.filter(email__iexact="existing@rijksoverheid.nl").count() == 1
 
     def test_import_without_optional_fields(self):
@@ -1153,7 +1153,7 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
     def test_import_without_application_administration_applies_every_column(self):
         """None of the three role columns is the Applicatiebeheerder's alone, so an importer
-        without it grants all of them (features/roles.md)."""
+        without it grants all of them (docs/roles.md)."""
         self.client.force_login(self.auth_user)
         csv_content = f"""first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager
 John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
@@ -1162,7 +1162,7 @@ John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
 
         content = response.content.decode()
         assert "Import geslaagd" in content
-        assert "not applied" not in content
+        assert "niet toegekend" not in content
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert set(john.groups.values_list("name", flat=True)) == {
             ROLE_USER_ADMIN,

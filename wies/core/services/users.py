@@ -31,7 +31,7 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 # The role columns of the user CSV, by the header a file writes: labels, not keys,
-# so an import file stays readable (``features/roles.md``). Both renamed roles keep
+# so an import file stays readable (``docs/roles.md``). Both renamed roles keep
 # the header existing import files were written with, because a header that matches
 # nothing is skipped in silence: dropping one would import those rows without the
 # role and without saying so.
@@ -109,7 +109,7 @@ def create_user(
     """Creates the person and the roles asked for, by the user form or the CSV import.
 
     Refuses an address in ``STAFF_EMAILS`` to anyone but the Applicatiebeheerder
-    (``may_change_email``, ``features/roles.md``).
+    (``may_change_email``, ``docs/roles.md``).
 
     :param creator: can be None when user create is triggered from system itself
     :param request: optional, for logging client IP + User-Agent on the audit event
@@ -276,7 +276,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         return {
             "success": False,
             "users_created": 0,
-            "errors": [f"Missing required columns: {', '.join(sorted(missing_columns))}"],
+            "errors": [f"Verplichte kolommen ontbreken: {', '.join(sorted(missing_columns))}"],
         }
 
     # Read all rows and validate
@@ -288,34 +288,38 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         row_errors = []
 
         if not row.get("first_name", "").strip():
-            row_errors.append(f"Row {row_num}: first_name is required")
+            row_errors.append(f"Rij {row_num}: first_name is verplicht")
         if not row.get("last_name", "").strip():
-            row_errors.append(f"Row {row_num}: last_name is required")
+            row_errors.append(f"Rij {row_num}: last_name is verplicht")
         if not row.get("email", "").strip():
-            row_errors.append(f"Row {row_num}: email is required")
+            row_errors.append(f"Rij {row_num}: email is verplicht")
 
         email = row.get("email", "").strip()
         if email:
             try:
                 validate_email(email)
             except ValidationError:
-                row_errors.append(f"Row {row_num}: invalid email format '{email}'")
+                row_errors.append(f"Rij {row_num}: ongeldig e-mailadres '{email}'")
 
             if not is_allowed_email_domain(email):
                 allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
                 domains_str = ", ".join(allowed_domains)
-                row_errors.append(f"Row {row_num}: email '{email}' has invalid domain. Allowed: {domains_str}")
+                row_errors.append(
+                    f"Rij {row_num}: e-mailadres '{email}' heeft een niet-toegestaan domein. Toegestaan: {domains_str}"
+                )
 
             # ``create_user`` refuses this one as well, but from inside the atomic
             # block: a single such row would roll the whole import back with nothing
             # to show for it, so name the row here like every other check does.
             if not may_change_email(creator, "", email):
-                row_errors.append(f"Row {row_num}: only an Applicatiebeheerder may create a user on '{email}'")
+                row_errors.append(
+                    f"Rij {row_num}: alleen een applicatiebeheerder mag een gebruiker toevoegen op '{email}'"
+                )
 
         for column in role_columns:
             value = (row.get(column) or "").strip()
             if value.lower() not in {"y", "n", ""}:
-                row_errors.append(f"Row {row_num}: {column} must be 'y' or 'n', got '{row[column]}'")
+                row_errors.append(f"Rij {row_num}: {column} moet 'y' of 'n' zijn, niet '{row[column]}'")
 
         brand_name = row.get("brand", "").strip()
         if brand_name and not Suborganization.objects.filter(name__iexact=brand_name).exists():
@@ -324,7 +328,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         if email:
             email_key = email.lower()
             if email_key in emails_found:
-                row_errors.append(f"Row {row_num}: duplicate email '{email}' in CSV")
+                row_errors.append(f"Rij {row_num}: e-mailadres '{email}' staat dubbel in het bestand")
             else:
                 emails_found.add(email_key)
 
@@ -371,7 +375,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 existing_user = User.objects.filter(email__iexact=email).first()
                 if existing_user:
                     # Skip existing users
-                    errors.append(f"User with email '{email}' already exists, skipped")
+                    errors.append(f"Gebruiker met e-mailadres '{email}' bestaat al, overgeslagen")
                     continue
 
                 user = create_user(
@@ -389,8 +393,8 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
                 if dropped:
                     errors.append(
-                        f"Row {row_num}: {', '.join(sorted(role_label(name) for name in dropped))} not applied, "
-                        "only an Applicatiebeheerder may grant it"
+                        f"Rij {row_num}: {', '.join(sorted(role_label(name) for name in dropped))} niet toegekend; "
+                        "alleen een applicatiebeheerder mag die rol geven"
                     )
     except (DataError, IntegrityError) as e:
         logger.warning("User-CSV import failed with a data error", exc_info=e)

@@ -126,7 +126,7 @@ OWN = Scope("own", "eigen", _is_assignment_owner)
 PLACED = Scope("placed", "waarop je geplaatst bent", _is_placed_on_assignment)
 # Its own wording, not PLACED's: the matrix lays out one row per relation, so two
 # relations sharing a label would print two identical rows with different answers.
-PLACED_ON_SERVICE = Scope("placed_on_service", "op de dienst waarop je geplaatst bent", _is_placed_on_service)
+PLACED_ON_SERVICE = Scope("placed_on_service", "je eigen plaatsing", _is_placed_on_service)
 SELF = Scope("self", "je eigen", _is_self)
 
 # Narrowest relation first, so a row is read before the row that widens it.

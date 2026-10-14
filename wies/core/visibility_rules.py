@@ -15,7 +15,7 @@ each rule stays identical across surfaces.
 
 from dataclasses import dataclass
 
-from wies.core.roles import is_business_manager_request, is_staff_member
+from wies.core.roles import is_business_manager_request, is_staff_member, is_user_admin
 
 # Shown to the placed colleague on their own ended/future placement.
 PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Managers"
@@ -36,6 +36,12 @@ LABELS = {"ended": "Afgelopen"}
 def show_bm_page(request) -> bool:
     """Whether to show the "Business management" section."""
     return is_business_manager_request(request)
+
+
+def show_user_admin_pages(request) -> bool:
+    """Whether to show the Gebruikersbeheerder's pages (Gebruikers, Labels, Merken, Rollen)."""
+    user = getattr(request, "user", None)
+    return user is not None and is_user_admin(user)
 
 
 def show_staff_pages(request) -> bool:

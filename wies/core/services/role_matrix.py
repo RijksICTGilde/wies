@@ -1,4 +1,4 @@
-"""The role matrix on ``/beheer/rollen/``, see ``features/roles.md``.
+"""The role matrix on ``/beheer/rollen/``, see ``docs/roles.md``.
 
 The rows about opdrachten, diensten, collega's and gebruikers are *read* from the
 rules in ``permissions.py``: one row per relation a rule mentions, one column per
@@ -31,12 +31,17 @@ from wies.core.roles import (
     ROLE_STAFF,
     ROLE_USER_ADMIN,
     can_view_role_hours,
-    is_staff_member,
     may_change_email,
     may_grant,
     role_label,
 )
-from wies.core.visibility_rules import evaluate_assignment_visibility, evaluate_placement_visibility, show_bm_page
+from wies.core.visibility_rules import (
+    evaluate_assignment_visibility,
+    evaluate_placement_visibility,
+    show_bm_page,
+    show_staff_pages,
+    show_user_admin_pages,
+)
 from wies.rijksauth.models import User
 
 if TYPE_CHECKING:
@@ -103,14 +108,17 @@ def cells_for(rule, scope, users) -> list[bool]:
     return [_rule_cell(rule, scope, user) for user in users]
 
 
-def rule_rows() -> list[tuple[str, str, object, object]]:
-    """``[(section, label, rule, scope)]``, the label composed from the rule and
-    the relation, each of which carries its own wording."""
+def rule_rows() -> list[tuple[str, str, str, object, object]]:
+    """``[(section, label, relation, rule, scope)]``.
+
+    The relation is only named when a rule has more than one row: a rule that
+    holds for anyone's object alone has nothing to tell apart.
+    """
     rows = []
     for rule in registered_rules().values():
         scopes = row_scopes(rule)
         rows += [
-            (section_of(rule.model), f"{rule.label} ({scope.label})", rule, scope)
+            (section_of(rule.model), rule.label, scope.label if len(scopes) > 1 else "", rule, scope)
             for scope in SCOPES
             if scope in scopes
         ]
@@ -188,26 +196,31 @@ EXTRA_ROWS = [
     Row("Zichtbaarheid", "Afgelopen plaatsing van een collega zien", lambda u: _sees_ended_placement(u, own=False)),
     Row(
         "Zichtbaarheid",
-        "Afgelopen opdracht van een Business Manager zien",
+        "Afgelopen opdracht op het profiel van een Business Manager zien",
         lambda u: evaluate_assignment_visibility(_PAST_START, _PAST_END, SimpleNamespace(user=u), _TODAY).visible,
     ),
-    Row("Zichtbaarheid", "Business management-sectie", lambda u: show_bm_page(SimpleNamespace(user=u))),
+    Row("Zichtbaarheid", "Business management openen", lambda u: show_bm_page(SimpleNamespace(user=u))),
     # The hours on someone else's role; the own row is not a question, the
     # consultant always sees their own. Why this is narrower than the
     # ContractPeriod rows: ``can_view_role_hours``.
     Row(
         "Zichtbaarheid",
-        "Uren van de rol van een collega zien",
+        "Uren per week van een geplaatste collega zien",
         lambda u: can_view_role_hours(u, Placement(colleague_id=_OTHER)),
     ),
     Row(
         "Gebruikers en collega's",
-        "Gebruiker aanmaken en verwijderen",
+        "Gebruikers, labels, merken en rollen openen",
+        lambda u: show_user_admin_pages(SimpleNamespace(user=u)),
+    ),
+    Row(
+        "Gebruikers en collega's",
+        "Gebruiker toevoegen en verwijderen",
         lambda u: u.has_perm("rijksauth.add_user") and u.has_perm("rijksauth.delete_user"),
     ),
     Row(
         "Gebruikers en collega's",
-        "E-mailadres wijzigen (van een ander)",
+        "E-mailadres wijzigen in het gebruikersformulier",
         lambda u: _in_user_screen(u, allowed=may_change_email(u, "a@example.invalid", "b@example.invalid")),
     ),
     # One row: no role has a granter of its own, so a row per role would repeat
@@ -219,7 +232,7 @@ EXTRA_ROWS = [
         "Rollen toekennen",
         lambda u: _in_user_screen(u, allowed=any(may_grant(u, role) for role in ROLE_LABELS)),
     ),
-    Row("Applicatie", "Statistieken en database", is_staff_member),
+    Row("Applicatie", "Statistieken en database zien", lambda u: show_staff_pages(SimpleNamespace(user=u))),
 ]
 
 
@@ -229,27 +242,26 @@ EXTRA_ROWS = [
 #: colour: being role-free is a property of the whole row, and a cell could only
 #: carry it by colour, which may not be the only difference (WCAG 1.4.1).
 #: Read from the cells, not from a rule's scope: an ``EXTRA_ROWS`` row has none.
-ROLE_FREE_NOTE = " (ongeacht je rol)"
+ROLE_FREE_NOTE = "ongeacht je rol"
 
 
-def _note(cells: list[bool]) -> str:
-    return ROLE_FREE_NOTE if all(cells) else ""
+def row_header(label: str, relation: str, cells: list[bool]) -> str:
+    """The printed row header: the relation and the note share one pair of
+    parentheses, so a row never ends in two."""
+    remarks = [part for part in (relation, ROLE_FREE_NOTE if all(cells) else "") if part]
+    return f"{label} ({', '.join(remarks)})" if remarks else label
 
 
-def build_matrix() -> list[tuple[str, list[tuple[str, str, list[bool]]]]]:
-    """``[(section, [(row label, row note, [allowed per column])])]``.
-
-    The note is separate from the label so the label stays the row's name; the
-    page prints the two together.
-    """
+def build_matrix() -> list[tuple[str, list[tuple[str, list[bool]]]]]:
+    """``[(section, [(row header, [allowed per column])])]``."""
     users = column_stand_ins()
-    rows: dict[str, list[tuple[str, str, list[bool]]]] = {section: [] for section in SECTION_ORDER}
-    for section, label, rule, scope in rule_rows():
+    rows: dict[str, list[tuple[str, list[bool]]]] = {section: [] for section in SECTION_ORDER}
+    for section, label, relation, rule, scope in rule_rows():
         cells = cells_for(rule, scope, users)
-        rows[section].append((label, _note(cells), cells))
+        rows[section].append((row_header(label, relation, cells), cells))
     for row in EXTRA_ROWS:
         cells = [bool(row.check(user)) for user in users]
-        rows[row.section].append((row.label, _note(cells), cells))
+        rows[row.section].append((row_header(row.label, "", cells), cells))
     return [(section, rows[section]) for section in SECTION_ORDER]
 
 

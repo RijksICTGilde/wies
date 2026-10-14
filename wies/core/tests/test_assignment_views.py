@@ -958,7 +958,9 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_legacy_row_without_colleague_id_stays_visible_to_bdm(self):
         self._legacy_event()
         business_manager_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
-        Colleague.objects.create(user=business_manager_user, name="Business Manager Colleague", email="bdm@rijksoverheid.nl", source="wies")
+        Colleague.objects.create(
+            user=business_manager_user, name="Business Manager Colleague", email="bdm@rijksoverheid.nl", source="wies"
+        )
         grant_business_manager(business_manager_user)
 
         response = self._get_timeline(business_manager_user)
@@ -1121,7 +1123,9 @@ class TimelineColleagueIdentityTests(TestCase):
         self._make_placement_active()
         self._rename_placed_colleague()
         business_manager_user = User.objects.create_user(email="bdm@rijksoverheid.nl", first_name="B", last_name="dm")
-        Colleague.objects.create(user=business_manager_user, name="Business Manager Colleague", email="bdm@rijksoverheid.nl", source="wies")
+        Colleague.objects.create(
+            user=business_manager_user, name="Business Manager Colleague", email="bdm@rijksoverheid.nl", source="wies"
+        )
         grant_business_manager(business_manager_user)
 
         response = self._get_timeline(business_manager_user)

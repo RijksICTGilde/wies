@@ -228,7 +228,9 @@ class TeamEventPrivacyNoteTest(TestCase):
         Colleague.objects.create(name="Bm", email="bdm@rijksoverheid.nl", source="wies", user=business_manager_user)
         grant_business_manager(business_manager_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(business_manager_user), self._removal_of(self.ghost))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.ghost)
+        )
 
         assert note == PRIVACY_BM
 
@@ -248,7 +250,9 @@ class TeamEventPrivacyNoteTest(TestCase):
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(self.assignment, self._request(business_manager_user), self._removal_of(self.ghost))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.ghost)
+        )
 
         assert note == PRIVACY_BM
 
@@ -276,6 +280,8 @@ class TeamEventPrivacyNoteTest(TestCase):
         )
         grant_business_manager(business_manager_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(business_manager_user), self._removal_of(self.active))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.active)
+        )
 
         assert note == ""

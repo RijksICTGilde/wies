@@ -142,7 +142,7 @@ class SuccessMessageTest(TestCase):
     def test_team_member_delete(self):
         # The Business Manager role, not a Django permission on Assignment or
         # Service: those are no audience any more, and ownership alone grants
-        # nothing. See features/roles.md.
+        # nothing. See docs/roles.md.
         grant_business_manager(self.user)
         self.user = User.objects.get(pk=self.user.pk)
         self.client.force_login(self.user)

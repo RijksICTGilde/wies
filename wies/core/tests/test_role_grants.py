@@ -1,4 +1,4 @@
-"""Who may grant which role (the grant matrix in ``features/roles.md``)."""
+"""Who may grant which role (the grant matrix in ``docs/roles.md``)."""
 
 import re
 from types import SimpleNamespace
@@ -137,14 +137,13 @@ class RoleGrantTest(TestCase):
         assert self.client.get(reverse("admin-users")).status_code == 403
         assert self.client.get(self._roles_url(self.target), headers=HX).status_code == 403
 
-    def test_a_reader_is_offered_no_action_they_cannot_carry_out(self):
-        """``view_user`` opens the list; Bewerken, Nieuwe gebruiker and Verwijderen
-        each ask their own permission, in the template as well as on the route."""
+    def test_each_action_route_asks_its_own_permission(self):
+        """The page only shows to the Gebruikersbeheerder, who holds all three, so
+        the template offers them without asking; the routes still each refuse a
+        visitor who holds ``view_user`` alone."""
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(reader)
-
-        content = self.client.get(reverse("admin-users")).content.decode()
 
         for name, url in (
             ("user-edit", self._roles_url(self.target)),
@@ -152,13 +151,11 @@ class RoleGrantTest(TestCase):
             ("user-delete", reverse("user-delete", args=[self.target.public_id])),
         ):
             with self.subTest(route=name):
-                assert url not in content, "offered an action the visitor cannot carry out"
                 assert self.client.get(url, headers=HX).status_code == 403
 
     def test_the_row_menu_never_ends_in_a_divider(self):
-        """Bewerken and Verwijderen are each withheld on their own gate, so the
-        dividers between them have to move with them: a reader who may only look
-        would otherwise get a menu that closes on a line with nothing under it."""
+        """A divider only sits between two items, for every visitor who reaches the
+        page, so no menu closes on a line with nothing under it."""
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
 
@@ -264,22 +261,28 @@ class RoleGrantTest(TestCase):
     def test_the_beheer_menu_offers_no_page_the_visitor_cannot_open(self):
         """Read off a page the visitor actually opened.
 
-        The Applicatiebeheerder gets a 403 on the users page, and the refusal
-        page renders the Beheer sidebar and the utility menu as well, so a body read
-        from there is the menu of a page this visitor never reached. The roles page
-        is the one it may open, and ``view_user`` is exactly what it does not hold,
-        so the users entry has to be withheld in both menus or it links to a 403.
+        The Applicatiebeheerder opens the maintenance pages and none of the
+        Gebruikersbeheerder's, the roles page included, so a menu read from the
+        statistics page must link to none of those.
         """
-        behind_user_admin = (reverse("admin-users"), reverse("label-admin"), reverse("suborganization-admin"))
+        behind_user_admin = (
+            reverse("admin-users"),
+            reverse("label-admin"),
+            reverse("suborganization-admin"),
+            reverse("role-matrix"),
+        )
         self.client.force_login(self.staff)
 
-        content = self.client.get(reverse("role-matrix")).content.decode()
+        content = self.client.get(reverse("staff-dashboard")).content.decode()
 
-        assert f' href="{reverse("role-matrix")}"' in content, "the Beheer sidebar did not render at all"
-        assert f'data-href="{reverse("role-matrix")}"' in content, "the utility menu's Beheer section did not render"
+        assert f' href="{reverse("staff-dashboard")}"' in content, "the Beheer sidebar did not render at all"
+        assert f'data-href="{reverse("staff-dashboard")}"' in content, (
+            "the utility menu's Beheer section did not render"
+        )
         for url in behind_user_admin:
             with self.subTest(url=url, visitor=role_label(ROLE_STAFF)):
-                assert self.client.get(url).status_code == 403
+                # The roles page redirects to the refusal page, the others answer 403.
+                assert self.client.get(url).status_code in (302, 403)
                 assert url not in content
 
         self.client.force_login(self.user_admin)
@@ -288,19 +291,13 @@ class RoleGrantTest(TestCase):
             with self.subTest(url=url, visitor=role_label(ROLE_USER_ADMIN)):
                 assert url in content
 
-    def test_reading_the_roles_is_not_granting_them(self):
-        """``rijksauth.view_user`` opens the role matrix but not the screen that
-        changes roles, so the two menus must offer the one and not the other."""
+    def test_view_user_alone_opens_neither_the_roles_nor_the_role_sheet(self):
+        """Both ask the Gebruikersbeheerder role; a loose ``view_user`` is not it."""
         reader = User.objects.create_user(email="lezer@rijksoverheid.nl", first_name="L", last_name="Z")
         reader.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(reader)
 
-        content = self.client.get(reverse("admin-users")).content.decode()
-
-        assert f' href="{reverse("role-matrix")}"' in content, "the sidebar withheld Rollen from a view_user reader"
-        assert f'data-href="{reverse("role-matrix")}"' in content, "the utility menu withheld Rollen"
-        assert self._roles_url(self.target) not in content, "offered Bewerken to someone who may not grant roles"
-
+        assert self.client.get(reverse("role-matrix")).status_code == 302
         assert self.client.get(self._roles_url(self.target)).status_code == 403
 
     def test_granting_the_roles_is_not_reading_them(self):
@@ -446,26 +443,13 @@ class RoleGrantTest(TestCase):
         # In label order: Business Manager before Consultant.
         assert event.context["group_names"] == [role_label(ROLE_BUSINESS_MANAGER), role_label(ROLE_CONSULTANT)]
 
-    def test_the_beheer_menus_offer_the_users_page_to_whoever_may_open_it(self):
-        """The entries ask the same ``view_user`` the page does, so a reader who may
-        open it is offered it and does not need the url bar."""
-        reader = User.objects.create_user(email="lezer2@rijksoverheid.nl", first_name="L", last_name="Z")
-        reader.user_permissions.add(Permission.objects.get(codename="view_user"))
-        sidebar_entry = f'<nldd-list-item href="{reverse("admin-users")}"'
-        for viewer in (self.user_admin, reader):
-            with self.subTest(viewer=viewer.email):
-                self.client.force_login(User.objects.get(pk=viewer.pk))
-
-                content = self.client.get(reverse("admin-users")).content.decode()
-
-                assert sidebar_entry in content, "the Beheer sidebar withheld Gebruikers from someone who may open it"
-
-        # The utility menu's whole Beheer section sits behind the role matrix gate,
-        # so only a visitor who passes that one can be asked about the entry inside.
+    def test_the_beheer_menus_offer_the_users_page_to_the_user_admin(self):
+        """Both menus ask the role the page belongs to, so its holder does not need the url bar."""
         self.client.force_login(User.objects.get(pk=self.user_admin.pk))
 
         content = self.client.get(reverse("admin-users")).content.decode()
 
+        assert f'<nldd-list-item href="{reverse("admin-users")}"' in content, "the Beheer sidebar withheld Gebruikers"
         assert f'data-href="{reverse("admin-users")}"' in content, "the utility menu withheld Gebruikers"
 
     def test_csv_import_by_user_admin_grants_user_admin(self):
@@ -498,7 +482,7 @@ class RoleGrantTest(TestCase):
 
         assert result["success"], result
         assert result["users_created"] == 3
-        assert result["errors"] == [f"User with email '{self.target.email}' already exists, skipped"]
+        assert result["errors"] == [f"Gebruiker met e-mailadres '{self.target.email}' bestaat al, overgeslagen"]
         assert self._group_names(User.objects.get(email="eva@rijksoverheid.nl")) == {
             ROLE_USER_ADMIN,
             ROLE_BUSINESS_MANAGER,
@@ -630,7 +614,10 @@ class StaffEmailChangeTest(TestCase):
         response = self._edit_email(self.staff, "weg@rijksoverheid.nl")
 
         assert "HX-Redirect" not in response
-        self.assertContains(response, "Alleen de Applicatiebeheerder mag dit e-mailadres wijzigen.")
+        self.assertContains(
+            response,
+            "Dit e-mailadres hoort bij een applicatiebeheerder. Vraag een applicatiebeheerder om het te wijzigen.",
+        )
 
     def _create(self, email):
         payload = {"first_name": "Nieuw", "last_name": "Account", "email": email}
@@ -646,7 +633,7 @@ class StaffEmailChangeTest(TestCase):
         response = self._create(FREE_STAFF_EMAIL)
 
         assert "HX-Redirect" not in response
-        self.assertContains(response, "Alleen de Applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken.")
+        self.assertContains(response, "Vraag een applicatiebeheerder om deze gebruiker toe te voegen.")
         assert not User.objects.filter(email__iexact=FREE_STAFF_EMAIL).exists()
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL, FREE_STAFF_EMAIL])
@@ -678,7 +665,9 @@ class StaffEmailChangeTest(TestCase):
         result = create_users_from_csv(self.user_admin, csv_content)
 
         assert not result["success"]
-        assert result["errors"] == [f"Row 3: only an Applicatiebeheerder may create a user on '{FREE_STAFF_EMAIL}'"]
+        assert result["errors"] == [
+            f"Rij 3: alleen een applicatiebeheerder mag een gebruiker toevoegen op '{FREE_STAFF_EMAIL}'"
+        ]
         # Row 2 is fine and still does not land: a row error stops the whole file,
         # as it does for an unknown merk or a bad domain.
         assert result["users_created"] == 0
@@ -756,7 +745,7 @@ class MayGrantTest(SimpleTestCase):
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
 class TheWayIntoAFreshEnvironmentTest(TestCase):
-    """What ``features/roles.md`` rests on where it says the Applicatiebeheerder needs
+    """What ``docs/roles.md`` rests on where it says the Applicatiebeheerder needs
     nothing on users or roles: the first user of an environment is created with
     every role, so somebody can administer users without the address list being
     handed a functional right.

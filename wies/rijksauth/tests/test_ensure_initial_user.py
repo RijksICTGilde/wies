@@ -4,7 +4,7 @@ The command runs on every container start. While ``INITIAL_USER_EMAIL`` is set i
 puts every role back on that account, which is what makes it a recovery and not
 only a bootstrap: an environment whose last Gebruikersbeheerder is gone has no
 other route, because the user sheet asks for the very role that is missing.
-Removing the variable after the deploy is what ends it. See ``features/roles.md``.
+Removing the variable after the deploy is what ends it. See ``docs/roles.md``.
 """
 
 from unittest.mock import patch
@@ -150,7 +150,7 @@ class AuditTrailTest(TestCase):
 
     def test_a_forgotten_variable_is_visible_in_the_log(self):
         """Removing the variable after the deploy is a process step with nothing
-        enforcing it, so the one start that notices says so (``features/roles.md``)."""
+        enforcing it, so the one start that notices says so (``docs/roles.md``)."""
         call_command("ensure_initial_user")
 
         with self.assertLogs("wies.rijksauth.management.commands.ensure_initial_user", "WARNING") as logged:

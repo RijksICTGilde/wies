@@ -103,9 +103,11 @@ class _BaseFormMixin:
         # a wrapper (nldd-dropdown) or a control with no visible label of its own.
         # Without an explicit name the control is unlabelled for screen readers,
         # so derive one from the field label. The native <select> takes plain
-        # aria-label; the NLDD components expose accessible-label instead.
+        # aria-label; the NLDD components expose accessible-label instead. A
+        # checkbox group puts it on the group around the boxes (group-label).
         label_attr = {
             "Select": "aria-label",
+            "CheckboxSelectMultiple": "group-label",
             "CheckboxInput": "accessible-label",
             "ComboBoxSelect": "accessible-label",
             "MultiselectDropdown": "accessible-label",

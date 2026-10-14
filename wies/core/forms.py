@@ -16,7 +16,7 @@ from wies.core.editables.user import UserEditables
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
 from .querysets import annotate_placement_dates
-from .roles import may_change_email, may_grant, role_label
+from .roles import may_change_email, role_label
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -248,13 +248,20 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
 
-    The roles are a field here too: whoever may open this form may hand them out,
-    and which ones is ``may_grant``'s answer. See ``features/roles.md``.
+    The roles are a field here too: whoever may open this form may hand them out.
+    Saving asks ``may_grant`` per role. See ``docs/roles.md``.
     """
 
     first_name = UserEditables.first_name.form_field()
     last_name = UserEditables.last_name.form_field()
     email = UserEditables.email.form_field()
+    groups = RoleChoiceField(
+        label="Rollen",
+        queryset=Group.objects.order_by("name"),
+        required=False,
+        help_text="Zonder rol kan deze gebruiker inloggen en kijken. Met de rol Consultant staat iemand in Bezetting.",
+        widget=forms.CheckboxSelectMultiple(),
+    )
     suborganization = forms.ModelChoiceField(
         label="Merk",
         queryset=Suborganization.objects.all(),
@@ -280,12 +287,13 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         if qs.exists():
             msg = "Er bestaat al een gebruiker met dit e-mailadres."
             raise ValidationError(msg)
-        # Creating asks it too, with "" as the address it comes from (``features/roles.md``).
+        # Creating asks it too, with "" as the address it comes from (``docs/roles.md``).
         if not may_change_email(self._editor, self.instance.email, email):
             msg = (
-                "Alleen de Applicatiebeheerder mag dit e-mailadres wijzigen."
+                "Dit e-mailadres hoort bij een applicatiebeheerder. Vraag een applicatiebeheerder om het te wijzigen."
                 if self.instance.pk
-                else "Alleen de Applicatiebeheerder mag een gebruiker op dit e-mailadres aanmaken."
+                else "Dit e-mailadres hoort bij een applicatiebeheerder. "
+                "Vraag een applicatiebeheerder om deze gebruiker toe te voegen."
             )
             raise ValidationError(msg)
         return email
@@ -297,7 +305,10 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         instance = kwargs.get("instance")
         self._category_field_names = set()
         self._add_person_fields(instance)
-        self._add_role_field(editor, instance)
+        # groups isn't in Meta.fields (the service saves it), so ModelForm won't populate it.
+        if instance and instance.pk:
+            self.fields["groups"].initial = list(instance.groups.all())
+        self._configure_field("groups")
 
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
@@ -327,22 +338,6 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
             # Form init already ran, so configure here or the wrong templates apply.
             self._configure_field(field_name)
-
-    def _add_role_field(self, editor, instance):
-        """The roles the editor may grant, as checkboxes.
-
-        The queryset is also what submitted ids are validated against, so a role
-        the editor may not grant is refused server-side, not only left unrendered.
-        """
-        withheld = [name for name in Group.objects.values_list("name", flat=True) if not may_grant(editor, name)]
-        self.fields["groups"] = RoleChoiceField(
-            label="Rollen",
-            queryset=Group.objects.exclude(name__in=withheld).order_by("name"),
-            required=False,
-            initial=list(instance.groups.all()) if instance and instance.pk else [],
-            widget=forms.CheckboxSelectMultiple(),
-        )
-        self._configure_field("groups")
 
     def clean(self):
         cleaned_data = super().clean()

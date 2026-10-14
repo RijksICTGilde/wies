@@ -30,7 +30,6 @@ from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
-from wies.core import role_matrix as role_matrix_rules
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import (
     Editable,
@@ -46,6 +45,7 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
+from wies.core.services import role_matrix as role_matrix_rules
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
@@ -93,7 +93,7 @@ from .roles import (
     can_view_role_hours,
     is_business_manager,
     is_staff_member,
-    may_view_role_matrix,
+    is_user_admin,
     role_label,
 )
 from .services.assignments import (
@@ -373,6 +373,7 @@ def _make_assignment_entry(
 
 
 def _get_colleague_assignments(request, colleague):
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415 — avoids import cycle
 
     today = timezone.now().date()
 
@@ -406,7 +407,6 @@ def _get_colleague_assignments(request, colleague):
     # is not, the same for every placement on this panel.
     viewer = getattr(request.user, "colleague", None)
     is_own_panel = viewer is not None and viewer.id == colleague.id
-    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415 (import not at top level) — avoids import cycle
 
     # The pencil asks the rules, so it shows exactly when the sheet would open.
     own_services = (
@@ -859,7 +859,7 @@ def bezetting(request):
 
 
 def role_matrix_access_required(view_func):
-    return user_passes_test(may_view_role_matrix, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(is_user_admin, login_url="/geen-toegang/")(view_func)
 
 
 @role_matrix_access_required
@@ -2862,7 +2862,11 @@ def _contract_period_sheet(request, period, post_url, contract_block):
                 if closed is not None:
                     _contract_period_event(request, closed, "update", running_before)
                 _contract_period_event(request, period, "update" if before else "create", before)
-                return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+                return render(
+                    request,
+                    "parts/contract_period_saved.html",
+                    {"contract_block": contract_block, "announce": "Contractperiode opgeslagen"},
+                )
             transaction.set_rollback(True)
         if form.running is not None:
             # The rollback undid the database write, not the end_date set on the
@@ -2927,7 +2931,9 @@ def contract_period_delete(request, public_id):
     period.delete()
     _contract_period_event(request, period, "delete", before)
     block = _contract_block(colleague, request.user)
-    return render(request, "parts/contract_period_saved.html", {"contract_block": block})
+    return render(
+        request, "parts/contract_period_saved.html", {"contract_block": block, "announce": "Contractperiode verwijderd"}
+    )
 
 
 @login_required

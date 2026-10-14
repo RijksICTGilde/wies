@@ -29,7 +29,6 @@ from wies.core.permission_engine import (
 )
 from wies.core.roles import (
     ROLE_BUSINESS_MANAGER,
-    ROLE_CONSULTANT,
     ROLE_USER_ADMIN,
 )
 from wies.rijksauth.models import User
@@ -43,7 +42,7 @@ DELETE = Verb.DELETE
 rule(
     UPDATE,
     Assignment,
-    label="Opdracht bewerken",
+    label="Opdracht wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
@@ -53,7 +52,7 @@ rule(
 rule(
     UPDATE,
     Service,
-    label="Dienst bewerken",
+    label="Teamlid of aanvraag wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
@@ -63,7 +62,7 @@ rule(
 rule(
     UPDATE,
     Placement,
-    label="Teamlid verplaatsen",
+    label="Plaatsing wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
@@ -73,7 +72,7 @@ rule(
 rule(
     UPDATE,
     Colleague,
-    label="Collega bewerken",
+    label="Collega wijzigen",
     grants=[
         Grant(Role(ROLE_USER_ADMIN)),
         Grant(Anyone(), SELF),
@@ -83,7 +82,7 @@ rule(
 rule(
     UPDATE,
     User,
-    label="Gebruiker bewerken",
+    label="Gebruiker wijzigen",
     grants=[
         Grant(Role(ROLE_USER_ADMIN)),
         Grant(Anyone(), SELF),
@@ -109,33 +108,33 @@ rule(
 rule(
     UPDATE,
     AssignmentEditables.name,
-    label="Naam van een opdracht bewerken",
+    label="Naam van een opdracht wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
-        Grant(Role(ROLE_CONSULTANT), PLACED),
+        Grant(Anyone(), PLACED),
     ],
 )
 
 rule(
     UPDATE,
     AssignmentEditables.extra_info,
-    label="Extra informatie bewerken",
+    label="Opdrachtomschrijving wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
-        Grant(Role(ROLE_CONSULTANT), PLACED),
+        Grant(Anyone(), PLACED),
     ],
 )
 
 rule(
     UPDATE,
     ServiceEditables.description,
-    label="Dienstomschrijving bewerken",
+    label="Taken wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
-        Grant(Role(ROLE_CONSULTANT), PLACED_ON_SERVICE),
+        Grant(Anyone(), PLACED_ON_SERVICE),
     ],
 )
 
@@ -162,6 +161,6 @@ rule(
 rule(
     UPDATE,
     UserEditables.email,
-    label="E-mailadres inline wijzigen",
+    label="E-mailadres wijzigen met het potlood",
     grants=[],
 )
