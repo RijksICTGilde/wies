@@ -32,7 +32,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_business_manager, make_business_manager_user
 
 User = get_user_model()
 
@@ -75,8 +75,8 @@ class AssignmentPublicIdRoutingTests(TestCase):
         self.client = Client()
         self.user = User.objects.create_user(email="u@rijksoverheid.nl", first_name="U", last_name="s")
         self.owner = Colleague.objects.create(user=self.user, name="Owner", email="u@rijksoverheid.nl", source="wies")
-        # Ownership only grants edit/delete rights combined with the BDM role.
-        grant_bdm(self.user)
+        # Ownership only grants edit/delete rights combined with the Business Manager role.
+        grant_business_manager(self.user)
         self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner, source="wies")
         self.client.force_login(self.user)
 

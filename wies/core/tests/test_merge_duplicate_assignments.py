@@ -20,8 +20,10 @@ User = get_user_model()
 
 class MergeDuplicateAssignmentsTest(TestCase):
     def setUp(self):
-        user = User.objects.create_user(email="owner@x.nl", first_name="Owner", last_name="BDM")
-        self.owner = Colleague.objects.create(user=user, name="Owner BDM", email="owner@x.nl", source="wies")
+        user = User.objects.create_user(email="owner@x.nl", first_name="Owner", last_name="Business Manager")
+        self.owner = Colleague.objects.create(
+            user=user, name="Owner Business Manager", email="owner@x.nl", source="wies"
+        )
         self.org = OrganizationUnit.objects.create(name="Org A", abbreviations=["OA"])
         self.org_b = OrganizationUnit.objects.create(name="Org B", abbreviations=["OB"])
         self.skill = Skill.objects.create(name="Developer")
@@ -69,8 +71,8 @@ class MergeDuplicateAssignmentsTest(TestCase):
         assert len(groups) == 0
 
     def test_different_owners_not_grouped(self):
-        user2 = User.objects.create_user(email="other@x.nl", first_name="Other", last_name="BDM")
-        owner2 = Colleague.objects.create(user=user2, name="Other BDM", email="other@x.nl", source="wies")
+        user2 = User.objects.create_user(email="other@x.nl", first_name="Other", last_name="Business Manager")
+        owner2 = Colleague.objects.create(user=user2, name="Other Business Manager", email="other@x.nl", source="wies")
 
         self._make_assignment("CIV", self.org)
         a2 = Assignment.objects.create(name="CIV", owner=owner2, source="wies")
