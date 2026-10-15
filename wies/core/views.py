@@ -10,7 +10,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_not_required, login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_not_required, login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
@@ -90,11 +90,11 @@ from .querysets import (
     annotate_usage_counts,
 )
 from .roles import (
+    business_management_access_required,
     can_view_role_hours,
-    is_business_manager,
-    is_staff_member,
-    is_user_admin,
     role_label,
+    staff_required,
+    user_admin_required,
 )
 from .services.assignments import (
     assignment_edit_specs,
@@ -651,15 +651,6 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
-def staff_required(view_func):
-    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
-
-
-def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Managers."""
-    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
-
-
 def _assignment_create_button(request):
     """The "Opdracht invoeren" action, or None without the permission.
 
@@ -858,11 +849,7 @@ def bezetting(request):
     return render(request, "bezetting.html", context)
 
 
-def role_matrix_access_required(view_func):
-    return user_passes_test(is_user_admin, login_url="/geen-toegang/")(view_func)
-
-
-@role_matrix_access_required
+@user_admin_required
 def role_matrix(request):
     return render(
         request,

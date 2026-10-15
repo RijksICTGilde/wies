@@ -3,14 +3,16 @@ and Business Manager. The authority model is described in ``docs/roles.md``.
 
 Per-row authorization for inline-edit and views lives in
 ``wies/core/permissions.py``. This module owns the Django Group definitions,
-the group-membership / app-admin predicates they build on, and the request-cached
-visibility gate those feed. It imports nothing from ``permissions.py`` (the
-dependency runs the other way), so low-level modules like
-``editables/assignment.py`` can import these predicates without a cycle.
+the group-membership / app-admin predicates they build on, the view decorators
+that ask them, and the request-cached visibility gate those feed. It imports
+nothing from ``permissions.py`` (the dependency runs the other way), so
+low-level modules like ``editables/assignment.py`` can import these predicates
+without a cycle.
 """
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
@@ -114,6 +116,19 @@ def may_change_email(editor, old: str, new: str) -> bool:
 def is_user_admin(user) -> bool:
     """Whether the user holds the Gebruikersbeheerder role (group ``ROLE_USER_ADMIN``)."""
     return user.is_authenticated and user.groups.filter(name=ROLE_USER_ADMIN).exists()
+
+
+def staff_required(view_func):
+    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
+
+
+def business_management_access_required(view_func):
+    """Gate the "Business management" section: Business Managers."""
+    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
+
+
+def user_admin_required(view_func):
+    return user_passes_test(is_user_admin, login_url="/geen-toegang/")(view_func)
 
 
 def may_grant(_editor, role: str) -> bool:
