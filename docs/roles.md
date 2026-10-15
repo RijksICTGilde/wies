@@ -134,6 +134,11 @@ structural: `rule()` demands a `label` and a `grants`, so a right cannot be
 registered without a row, and it refuses a relation outside `SCOPES`, which the
 page would have no row to print.
 
+The page shows what each role may do, not what the viewer or this environment
+happens to allow. The Applicatiebeheerder column is no exception: it is an
+address list and not a group, so its stand-in counts as one while the matrix is
+built (`staff_stand_in` in `roles.py`), whatever `STAFF_EMAILS` holds here.
+
 There is one column per authority and never one per combination: roles add up, so
 holding two means holding both columns. The rows underneath about visibility and
 the screens are not rules; they ask their own predicate with a stand-in viewer.

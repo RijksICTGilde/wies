@@ -10,6 +10,10 @@ low-level modules like ``editables/assignment.py`` can import these predicates
 without a cycle.
 """
 
+from contextlib import contextmanager
+from contextvars import ContextVar
+from typing import TYPE_CHECKING
+
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import user_passes_test
@@ -27,6 +31,9 @@ from wies.core.models import (
     Service,
     Suborganization,
 )
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 
 User = get_user_model()
 
@@ -66,13 +73,32 @@ def is_business_manager(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_BUSINESS_MANAGER).exists()
 
 
+# The role matrix shows what the Applicatiebeheerder may do, whatever this
+# environment's address list holds; its stand-in counts as one while it is built.
+_staff_stand_in: ContextVar[str | None] = ContextVar("staff_stand_in", default=None)
+
+
+@contextmanager
+def staff_stand_in(email: str) -> Iterator[None]:
+    token = _staff_stand_in.set(email.lower())
+    try:
+        yield
+    finally:
+        _staff_stand_in.reset(token)
+
+
+def is_staff_address(email: str) -> bool:
+    email = email.lower()
+    return email in settings.STAFF_EMAILS or email == _staff_stand_in.get()
+
+
 def is_staff_member(user) -> bool:
     """Whether the user is an Applicatiebeheerder (``STAFF_EMAILS``).
 
     Gates the maintenance pages (``/beheer/statistieken/``, ``/beheer/database/``).
     It carries no rights on assignments; those come from the Business Manager role.
     """
-    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
+    return user.is_authenticated and is_staff_address(user.email)
 
 
 def can_view_role_hours(user, placement) -> bool:
@@ -108,7 +134,7 @@ def may_change_email(editor, old: str, new: str) -> bool:
     whether it was moved there or born there.
     """
     old, new = old.lower(), new.lower()
-    if old == new or (old not in settings.STAFF_EMAILS and new not in settings.STAFF_EMAILS):
+    if old == new or (not is_staff_address(old) and not is_staff_address(new)):
         return True
     return editor is not None and is_staff_member(editor)
 

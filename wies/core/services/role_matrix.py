@@ -15,7 +15,6 @@ from datetime import date
 from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
-from django.conf import settings
 from django.contrib.auth.models import Group, Permission
 
 from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
@@ -34,6 +33,7 @@ from wies.core.roles import (
     may_change_email,
     may_grant,
     role_label,
+    staff_stand_in,
 )
 from wies.core.visibility_rules import (
     evaluate_assignment_visibility,
@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from collections.abc import Callable
 
 STAFF = role_label(ROLE_STAFF)
+STAFF_STAND_IN_EMAIL = "applicatiebeheerder@rollenmatrix.invalid"
 # (column heading, Django groups, is Applicatiebeheerder)
 COLUMNS = [
     (role_label(ROLE_CONSULTANT), (ROLE_CONSULTANT,), False),
@@ -157,7 +158,7 @@ class StandIn:
 
 def stand_in(group_names, *, staff: bool, pk: int = -1) -> StandIn:
     """The stand-in for one column of ``COLUMNS``."""
-    email = next(iter(sorted(settings.STAFF_EMAILS)), "") if staff else "rollenmatrix@example.invalid"
+    email = STAFF_STAND_IN_EMAIL if staff else "rollenmatrix@example.invalid"
     perms = frozenset(
         f"{app_label}.{codename}"
         for app_label, codename in Permission.objects.filter(group__name__in=group_names).values_list(
@@ -256,12 +257,13 @@ def build_matrix() -> list[tuple[str, list[tuple[str, list[bool]]]]]:
     """``[(section, [(row header, [allowed per column])])]``."""
     users = column_stand_ins()
     rows: dict[str, list[tuple[str, list[bool]]]] = {section: [] for section in SECTION_ORDER}
-    for section, label, relation, rule, scope in rule_rows():
-        cells = cells_for(rule, scope, users)
-        rows[section].append((row_header(label, relation, cells), cells))
-    for row in EXTRA_ROWS:
-        cells = [bool(row.check(user)) for user in users]
-        rows[row.section].append((row_header(row.label, "", cells), cells))
+    with staff_stand_in(STAFF_STAND_IN_EMAIL):
+        for section, label, relation, rule, scope in rule_rows():
+            cells = cells_for(rule, scope, users)
+            rows[section].append((row_header(label, relation, cells), cells))
+        for row in EXTRA_ROWS:
+            cells = [bool(row.check(user)) for user in users]
+            rows[row.section].append((row_header(row.label, "", cells), cells))
     return [(section, rows[section]) for section in SECTION_ORDER]
 
 

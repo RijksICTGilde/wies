@@ -433,16 +433,24 @@ class RoleMatrixExtraRowTest(TestCase):
             Permission.objects.filter(group__user__in=self.users.values()).values_list("name", flat=True)
         )
 
-    @override_settings(STAFF_EMAILS=[])
-    def test_without_configured_addresses_staff_column_has_no_extra_rights(self):
-        """Only what asks for no role at all is left: the rows about yourself and
-        your own placements, which are exactly the role-free ones."""
-        cells = _cells()
-        headers = {header for header, _heading in cells}
+    def test_the_matrix_does_not_depend_on_the_environment(self):
+        """The page shows what each role may do, so the address list of this
+        environment changes nothing: the Applicatiebeheerder column is the role's
+        answer with the list empty, set, or naming somebody else."""
+        expected = role_matrix.build_matrix()
+        for addresses in ([], ["iemand-anders@rijksoverheid.nl"]):
+            with self.subTest(staff_emails=addresses), override_settings(STAFF_EMAILS=addresses):
+                assert role_matrix.build_matrix() == expected
 
-        assert {header for header in headers if cells[(header, role_matrix.STAFF)]} == {
-            header for header in headers if _role_free(header)
-        }
+    @override_settings(STAFF_EMAILS=[])
+    def test_the_staff_column_holds_the_maintenance_pages_without_configured_addresses(self):
+        cells = _cells()
+        assert cells[("Statistieken en database zien", role_matrix.STAFF)]
+
+    def test_the_stand_in_counts_as_staff_only_while_the_matrix_is_built(self):
+        """Its address is not a way in: outside ``build_matrix`` it is nobody."""
+        stand_in = role_matrix.stand_in((), staff=True)
+        assert not is_staff_member(stand_in)
 
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
