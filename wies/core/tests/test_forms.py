@@ -2,13 +2,11 @@ import re
 
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.form_mixins import NlddFormMixin
 from wies.core.forms import LabelCategoryForm, UserForm
 from wies.core.models import Label, LabelCategory
-from wies.core.roles import BDM_GROUP_NAME
 from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 
 User = get_user_model()
@@ -18,14 +16,10 @@ class NlddUserFormRenderingTest(TestCase):
     """Tests for NlddFormMixin rendering via UserForm."""
 
     def setUp(self):
-        """Creates the labels and groups the rendering tests read back."""
+        """Creates the labels the rendering tests read back."""
         self.category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
         self.label_a = Label.objects.create(name="AI", category=self.category)
         self.label_b = Label.objects.create(name="ICT", category=self.category)
-
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name=BDM_GROUP_NAME)
 
     def test_form_renders_with_nldd_classes(self):
         """Text-like fields render real nldd-form-field + nldd-text-field components."""
@@ -191,12 +185,6 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
 class UserFormEmailDomainValidationTest(TestCase):
     """Tests for email domain validation in UserForm."""
 
-    def setUp(self):
-        """Creates the role groups UserForm renders."""
-        Group.objects.get_or_create(name="Beheerder")
-        Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name=BDM_GROUP_NAME)
-
     def test_valid_rijksoverheid_email(self):
         """@rijksoverheid.nl addresses are accepted."""
         form = UserForm(
@@ -304,9 +292,6 @@ class NlddFormMixinTest(TestCase):
     )
 
     def setUp(self):
-        Group.objects.get_or_create(name="Beheerder")
-        Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name=BDM_GROUP_NAME)
         self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
         Label.objects.create(name="Brand A", category=self.category)
 

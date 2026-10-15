@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.tests.role_helpers import make_bdm_user
+from wies.core.tests.role_helpers import make_business_manager_user
 
 User = get_user_model()
 
@@ -69,7 +69,7 @@ class AssignmentPanelRowsTest(TestCase):
 
         assert "Eva Eind" not in self._panel(collega=ended.public_id)
 
-        self.client.force_login(make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm"))
+        self.client.force_login(make_business_manager_user(email="bdm@rijksoverheid.nl", name="Bm"))
         assert "Eva Eind" in self._panel(collega=ended.public_id)
 
     def test_a_viewer_without_actions_gets_the_row_as_a_link_without_description(self):
@@ -254,7 +254,7 @@ class AssignmentPanelRowsTest(TestCase):
         headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 
         # Only a privileged viewer sees an ended placement at all.
-        self.client.force_login(make_bdm_user(email="band@rijksoverheid.nl"))
+        self.client.force_login(make_business_manager_user(email="band@rijksoverheid.nl"))
         body = self.client.get(reverse("home") + f"?collega={self.anke.public_id}", headers=headers).content.decode()
 
         entry = body.split('<li class="wies-cv__item">')[1]
@@ -406,7 +406,7 @@ class SidePanelSheetTest(TestCase):
 
     def test_every_list_page_renders_one_sheet_at_the_same_width(self):
         client = Client()
-        client.force_login(make_bdm_user(email="bdm@rijksoverheid.nl", name="Bdm"))
+        client.force_login(make_business_manager_user(email="bdm@rijksoverheid.nl", name="Bm"))
         for name in ("home", "assignment-list", "bezetting", "user-profile"):
             body = client.get(reverse(name)).content.decode()
             sheets = re.findall(r'<nldd-sheet id="side-panel"[^>]*>', body)

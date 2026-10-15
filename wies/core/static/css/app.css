@@ -150,6 +150,12 @@ a > nldd-icon:last-child {
   border: 0;
 }
 
+/* A wide data table scrolls inside its own box, so the page does not scroll
+   sideways on a narrow screen (WCAG 1.4.10). */
+.wies-table-scroll {
+  overflow-x: auto;
+}
+
 /* Caption at the foot of the search suggestions. It has to be a [disabled] menu
    item: that is the one attribute the menu skips while navigating and counts
    while deciding it is empty. But disabled means "a choice you cannot make", and

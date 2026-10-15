@@ -2,13 +2,17 @@
    nldd-form-field: the field is form-associated since DS 0.8.71, so it submits
    its own value and the DS handles label and spacing.
 
-   There is no wrapping group, so nldd-form-field._findInput() picks the FIRST
-   checkbox field — hence the error wiring only on that one. nldd-checkbox-field
-   does not reflect `invalid`, but _syncErrorText reads `invalid`/`unmet`
-   via get/hasAttribute, so the message shows and aria-describedby lands on the
-   first box. The checkbox itself never turns red; that is a component limit. #}
-{% for group, options, index in widget.optgroups %}
-  {% for option_widget in options %}
-    <nldd-checkbox-field name="{{ option_widget.name }}" value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %} {% if loop.first and index == 0 and widget.attrs.invalid %}invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %} {% for name, value in option_widget.attrs.items() %} {% if value is not sameas False and name not in ('id', 'autocomplete') %} {{ name }} {% if value is not sameas True %}="{{ value }}"{% endif %} {% endif %} {% endfor %}></nldd-checkbox-field>
+   The boxes sit in a role="group" named after the field label (WCAG 1.3.1), so a
+   screen reader hears what they are choices for. _findInput() searches inside
+   that wrapper and picks the FIRST checkbox field, hence the error wiring only
+   on that one. nldd-checkbox-field does not reflect `invalid`, but
+   _syncErrorText reads `invalid`/`unmet` via get/hasAttribute, so the message
+   shows and aria-describedby lands on the first box. The checkbox itself never turns red; that is a component limit. #}
+<div role="group"
+     {% if widget.attrs['group-label'] %} aria-label="{{ widget.attrs['group-label'] }}"{% endif %}>
+  {% for group, options, index in widget.optgroups %}
+    {% for option_widget in options %}
+      <nldd-checkbox-field name="{{ option_widget.name }}" value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %} {% if loop.first and index == 0 and widget.attrs.invalid %}invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %} {% for name, value in option_widget.attrs.items() %} {% if value is not sameas False and name not in ('id', 'autocomplete', 'group-label') %} {{ name }} {% if value is not sameas True %}="{{ value }}"{% endif %} {% endif %} {% endfor %}></nldd-checkbox-field>
+    {% endfor %}
   {% endfor %}
-{% endfor %}
+</div>

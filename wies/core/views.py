@@ -10,7 +10,7 @@ from functools import cached_property
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_not_required, login_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_not_required, login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
@@ -45,9 +45,10 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
+from wies.core.services import role_matrix as role_matrix_rules
 from wies.core.visibility_rules import (
     LABELS,
-    PRIVACY_BDM,
+    PRIVACY_BM,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
@@ -88,7 +89,13 @@ from .querysets import (
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
 )
-from .roles import can_view_role_hours, is_bdm, is_bdm_or_staff, is_staff_member
+from .roles import (
+    business_management_access_required,
+    can_view_role_hours,
+    role_label,
+    staff_required,
+    user_admin_required,
+)
 from .services.assignments import (
     assignment_edit_specs,
     member_audit_event,
@@ -366,6 +373,7 @@ def _make_assignment_entry(
 
 
 def _get_colleague_assignments(request, colleague):
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415 — avoids import cycle
 
     today = timezone.now().date()
 
@@ -399,13 +407,21 @@ def _get_colleague_assignments(request, colleague):
     # is not, the same for every placement on this panel.
     viewer = getattr(request.user, "colleague", None)
     is_own_panel = viewer is not None and viewer.id == colleague.id
+
+    # The pencil asks the rules, so it shows exactly when the sheet would open.
+    own_services = (
+        Service.objects.select_related("assignment")
+        .filter(placements__colleague=colleague)
+        .in_bulk(field_name="public_id")
+        if is_own_panel
+        else {}
+    )
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
         start = placement.get("actual_start_date")
         end = placement.get("actual_end_date")
         # Active placements are public; ended or not-yet-started ones are only
-        # visible to the placed colleague, the Business Managers (BDM role) and
-        # support staff.
+        # visible to the placed colleague and the Business Managers.
         result = evaluate_placement_visibility(start, end, colleague.id, request, today)
         if not result.visible:
             continue
@@ -428,9 +444,11 @@ def _get_colleague_assignments(request, colleague):
             _merge_date_range(bucket[assignment_id], start, end)
         # Per opdracht, not per panel: an externally sourced one is read-only
         # for everyone, so a pencil there would open nothing (#311).
-        is_wies_sourced = placement["service__assignment__source"] in ("wies", "")
-        edits_whole_team = is_own_panel and is_wies_sourced and is_bdm_or_staff(request)
-        can_edit_own_role = is_own_panel and is_wies_sourced
+        service = own_services.get(placement["service__public_id"])
+        can_edit_own_role = service is not None and has_permission(
+            Verb.UPDATE, service, request.user, ServiceEditables.description
+        )
+        edits_whole_team = can_edit_own_role and has_permission(Verb.UPDATE, service, request.user)
         skill_name = placement["service__skill__name"]
         if skill_name:
             # The open card shows the placement itself: its own dates, hours
@@ -460,7 +478,7 @@ def _get_colleague_assignments(request, colleague):
     )
     for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         # Active and not-yet-started owned assignments are public; ended ones are
-        # only shown to a privileged viewer (BDM role or support staff).
+        # only shown to a privileged viewer (the Business Manager role).
         result = evaluate_assignment_visibility(start_date, end_date, request, today)
 
         existing = historical_by_id.get(assignment_id) or active_by_id.get(assignment_id)
@@ -631,16 +649,6 @@ def no_access(request):
     email = request.session.pop("failed_login_email", None)
     is_allowed_domain = email and is_allowed_email_domain(email)
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
-
-
-def staff_required(view_func):
-    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
-
-
-def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Development Managers plus
-    support staff."""
-    return user_passes_test(lambda u: is_bdm(u) or is_staff_member(u), login_url="/geen-toegang/")(view_func)
 
 
 def _assignment_create_button(request):
@@ -839,6 +847,20 @@ def bezetting(request):
         return render(request, "parts/bezetting_results.html", context)
 
     return render(request, "bezetting.html", context)
+
+
+@user_admin_required
+def role_matrix(request):
+    return render(
+        request,
+        "role_matrix.html",
+        {
+            "columns": [heading for heading, _groups, _staff in role_matrix_rules.COLUMNS],
+            "sections": role_matrix_rules.build_matrix(),
+            "group_permissions": role_matrix_rules.group_permissions(),
+            "may_assign_roles": request.user.has_perm("rijksauth.change_user"),
+        },
+    )
 
 
 ERRORS_PER_PAGE = 10
@@ -2273,8 +2295,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         role_options = [{"value": "", "label": ""}]
         role_selected_values = []
-        for group in Group.objects.all().order_by("name"):
-            role_options.append({"value": str(group.id), "label": group.name, "count": role_counts.get(group.id, 0)})
+        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
+        for group in sorted(Group.objects.all(), key=lambda g: role_label(g.name)):
+            role_options.append(
+                {"value": str(group.id), "label": role_label(group.name), "count": role_counts.get(group.id, 0)}
+            )
             # ?rol= holds a single Group id, so compare exactly.
             if str(group.id) == self.role_filter:
                 role_options[-1]["selected"] = True
@@ -2345,7 +2370,7 @@ def user_create(request):
     element_id = "userFormModal"
 
     if request.method == "GET":
-        form = UserForm()
+        form = UserForm(editor=request.user)
         form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
             request,
@@ -2360,7 +2385,7 @@ def user_create(request):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST)
+        form = UserForm(request.POST, editor=request.user)
         if form.is_valid():
             create_user(
                 request.user,
@@ -2408,10 +2433,10 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague) if colleague else None
+    contract_block = _contract_block(colleague, request.user) if colleague else None
 
     if request.method == "GET":
-        form = UserForm(instance=edited_user)
+        form = UserForm(instance=edited_user, editor=request.user)
         return render(
             request,
             "parts/user_form_modal.html",
@@ -2426,7 +2451,7 @@ def user_edit(request, public_id):
             },
         )
     if request.method == "POST":
-        form = UserForm(request.POST, instance=edited_user)
+        form = UserForm(request.POST, instance=edited_user, editor=request.user)
         if form.is_valid():
             update_user(
                 updater=request.user,
@@ -2559,7 +2584,7 @@ def user_delete(request, public_id):
                 "first_name": user.first_name,
                 "last_name": user.last_name,
                 "label_names": label_names,
-                "group_names": [g.name for g in user.groups.all()],
+                "group_names": [role_label(g.name) for g in user.groups.all()],
                 "left_on": left_on.isoformat() if left_on else None,
                 "contract_ended": _contract_period_snapshot(ended) if ended else None,
                 "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
@@ -2758,8 +2783,11 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-def _contract_block(colleague):
-    """Context for parts/contract_periods_block.html."""
+def _contract_block(colleague, user):
+    """Context for parts/contract_periods_block.html, or None for a viewer who
+    may not read the hours."""
+    if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
+        return None
     today = timezone.now().date()
     periods = colleague.contract_periods.all()
     # exists(), not bool(): the add/edit sheet builds this block before it saves
@@ -2773,7 +2801,7 @@ def _contract_block(colleague):
         "periods": periods,
         # For the label: a running period reads "t/m heden", one still to start "Vanaf".
         "today": today,
-        "can_edit": True,
+        "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
         "add_url": reverse("contract-period-add", args=[colleague.public_id]),
         "empty_text": empty_text,
     }
@@ -2821,7 +2849,11 @@ def _contract_period_sheet(request, period, post_url, contract_block):
                 if closed is not None:
                     _contract_period_event(request, closed, "update", running_before)
                 _contract_period_event(request, period, "update" if before else "create", before)
-                return render(request, "parts/contract_period_saved.html", {"contract_block": contract_block})
+                return render(
+                    request,
+                    "parts/contract_period_saved.html",
+                    {"contract_block": contract_block, "announce": "Contractperiode opgeslagen"},
+                )
             transaction.set_rollback(True)
         if form.running is not None:
             # The rollback undid the database write, not the end_date set on the
@@ -2846,7 +2878,7 @@ def contract_period_add(request, colleague_public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague))
+    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, request.user))
 
 
 @login_required
@@ -2855,7 +2887,7 @@ def contract_period_edit(request, public_id):
     if not has_permission(Verb.UPDATE, period, request.user):
         return HttpResponseForbidden()
     post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague))
+    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, request.user))
 
 
 @login_required
@@ -2885,8 +2917,10 @@ def contract_period_delete(request, public_id):
     before = _contract_period_snapshot(period)
     period.delete()
     _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague)
-    return render(request, "parts/contract_period_saved.html", {"contract_block": block})
+    block = _contract_block(colleague, request.user)
+    return render(
+        request, "parts/contract_period_saved.html", {"contract_block": block, "announce": "Contractperiode verwijderd"}
+    )
 
 
 @login_required
@@ -3375,11 +3409,11 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
     viewer = getattr(request.user, "colleague", None)
     if viewer is not None and hidden == {viewer.id}:
         # The only hidden person the event names is the viewer themselves —
-        # a non-BDM only ever reaches this case (their filtered list drops
-        # changes naming hidden others), and a placed BDM gets the wording
-        # matching their own row.
+        # someone without the role only ever reaches this case (their filtered
+        # list drops changes naming hidden others), and a placed Business Manager
+        # gets the wording matching their own row.
         return PRIVACY_OWN
-    return PRIVACY_BDM
+    return PRIVACY_BM
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
@@ -3420,7 +3454,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 return False
             if changes and not visible:
                 return False
-            # A viewer who sees more than an outsider (the BDM or staff gets the unfiltered
+            # A viewer who sees more than an outsider (a Business Manager gets the unfiltered
             # list) should know this row is hidden from others. Team rows only:
             # other fields look the same to everyone.
             event.privacy_note = _team_event_privacy_note(obj, request, visible)

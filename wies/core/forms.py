@@ -16,6 +16,7 @@ from wies.core.editables.user import UserEditables
 from .form_mixins import NlddFormMixin
 from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
 from .querysets import annotate_placement_dates
+from .roles import may_change_email, role_label
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -223,20 +224,42 @@ class LabelForm(NlddFormMixin, forms.ModelForm):
         return cleaned
 
 
+class RoleChoiceIterator(forms.models.ModelChoiceIterator):
+    """Sorts the checkboxes by label: the queryset can only order on ``Group.name``,
+    which is a key, so its A-Z is not the reader's."""
+
+    def __iter__(self):
+        yield from sorted(super().__iter__(), key=lambda choice: str(choice[1]))
+
+
+class RoleChoiceField(forms.ModelMultipleChoiceField):
+    """Roles as checkboxes, each shown by its label while the submitted value stays
+    the Group id."""
+
+    iterator = RoleChoiceIterator
+
+    def label_from_instance(self, obj):
+        return role_label(obj.name)
+
+
 class UserForm(NlddFormMixin, forms.ModelForm):
-    """Form for creating and updating User instances.
+    """Form for creating and updating User instances: the person and their roles.
 
     Name and email fields come from ``UserEditables`` so the admin form stays
     in lockstep with the inline-edit declarations on the profile page.
+
+    The roles are a field here too: whoever may open this form may hand them out.
+    Saving asks ``may_grant`` per role. See ``docs/roles.md``.
     """
 
     first_name = UserEditables.first_name.form_field()
     last_name = UserEditables.last_name.form_field()
     email = UserEditables.email.form_field()
-    groups = forms.ModelMultipleChoiceField(
+    groups = RoleChoiceField(
         label="Rollen",
-        queryset=Group.objects.filter(),
+        queryset=Group.objects.order_by("name"),
         required=False,
+        help_text="Zonder rol kan deze gebruiker inloggen en kijken. Met de rol Consultant staat iemand in Bezetting.",
         widget=forms.CheckboxSelectMultiple(),
     )
     suborganization = forms.ModelChoiceField(
@@ -252,7 +275,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["first_name", "last_name", "email", "groups"]
+        fields = ["first_name", "last_name", "email"]
         # label attribute is manually constructed and serialized below
 
     def clean_email(self):
@@ -264,13 +287,30 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         if qs.exists():
             msg = "Er bestaat al een gebruiker met dit e-mailadres."
             raise ValidationError(msg)
+        # Creating asks it too, with "" as the address it comes from (``docs/roles.md``).
+        if not may_change_email(self._editor, self.instance.email, email):
+            msg = (
+                "Dit e-mailadres hoort bij een applicatiebeheerder. Vraag een applicatiebeheerder om het te wijzigen."
+                if self.instance.pk
+                else "Dit e-mailadres hoort bij een applicatiebeheerder. "
+                "Vraag een applicatiebeheerder om deze gebruiker toe te voegen."
+            )
+            raise ValidationError(msg)
         return email
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, editor=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self._editor = editor
 
         instance = kwargs.get("instance")
+        self._category_field_names = set()
+        self._add_person_fields(instance)
+        # groups isn't in Meta.fields (the service saves it), so ModelForm won't populate it.
+        if instance and instance.pk:
+            self.fields["groups"].initial = list(instance.groups.all())
+        self._configure_field("groups")
 
+    def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
             current_merk = instance.colleague.suborganization
@@ -278,7 +318,6 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         self._configure_field("suborganization")
 
         # Map the labels m2m onto one dynamically built field per category.
-        self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
 

@@ -3,7 +3,6 @@ can not be set as opdrachtgever: the form field and the CSV import refuse it."""
 
 import pytest
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -18,6 +17,7 @@ from wies.core.models import (
     Service,
 )
 from wies.core.services.placements import create_assignments_from_csv
+from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
 
@@ -79,7 +79,7 @@ class InlineEditExcludedOrgTests(ExcludedOrgTestCase):
         super().setUp()
         self.client = Client()
         self.user = User.objects.create_user(email="orgs@rijksoverheid.nl", first_name="O", last_name="O")
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
         self.assignment = Assignment.objects.create(
             name="Orgs test", owner=Colleague.objects.get(user=self.user), source="wies"
