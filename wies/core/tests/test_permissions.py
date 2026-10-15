@@ -213,7 +213,7 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
         placement = Placement.objects.get(pk=self.placement.pk)
         return [
             ("Opdracht wijzigen", assignment, None),
-            ("Teamlid of aanvraag wijzigen", service, None),
+            ("Teamlid wijzigen", service, None),
             ("Plaatsing wijzigen", placement, None),
             ("Naam van een opdracht wijzigen", assignment, AssignmentEditables.name),
             ("Opdrachtomschrijving wijzigen", assignment, AssignmentEditables.extra_info),
@@ -259,12 +259,12 @@ class TheRoleNotOwnershipReachesTheDienstAndPlaatsingTest(_Setup):
         assert has_permission(Verb.UPDATE, self.service, self.owner_user) is True
 
     def test_a_bdm_who_does_not_own_the_opdracht_reaches_both(self):
-        for label, obj in (("Teamlid of aanvraag wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
+        for label, obj in (("Teamlid wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
             with self.subTest(rule=label):
                 assert has_permission(Verb.UPDATE, obj, self.other_business_manager_user) is True
 
     def test_without_the_role_neither_is_reached(self):
-        for label, obj in (("Teamlid of aanvraag wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
+        for label, obj in (("Teamlid wijzigen", self.service), ("Plaatsing wijzigen", self.placement)):
             with self.subTest(rule=label):
                 assert has_permission(Verb.UPDATE, obj, self.unrelated_user) is False
 

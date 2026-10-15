@@ -52,7 +52,7 @@ rule(
 rule(
     UPDATE,
     Service,
-    label="Teamlid of aanvraag wijzigen",
+    label="Teamlid wijzigen",
     requires=WIES_SOURCED,
     grants=[
         Grant(Role(ROLE_BUSINESS_MANAGER)),
