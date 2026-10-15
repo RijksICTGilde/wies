@@ -4,14 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 703: (migration)(post-release actions) authority is split by what it lets you do. The `Applicatiebeheerder` (the address list `STAFF_EMAILS`) keeps the maintenance pages (Statistieken, Database) and has no other rights. `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours. `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only the ones it owns. Everyone in `STAFF_EMAILS` gets `Business Manager` and `Gebruikersbeheerder` once, on deploy. The user CSV import accepts both the new and the old column names. After the deploy: remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again. See `docs/roles.md`
-- 703: new page Beheer > Rollen shows what each role may do, read from the rules themselves; it is for the `Gebruikersbeheerder`
-- 703: a user can only be created on, or have their e-mail address changed to or from, an `Applicatiebeheerder` address by an `Applicatiebeheerder`; a `Gebruikersbeheerder` who tries gets a message saying whom to ask
-- 703: `INITIAL_USER_EMAIL` is now also the way back in: while it is set, every start gives that account every role, also when the account already exists. An environment whose last `Gebruikersbeheerder` is gone is recovered by setting it and redeploying. The grant is recorded in the audit log
-- 703: the role checkboxes on the user form are one group named "Rollen" for a screen reader (WCAG 1.3.1), and say what having no role means
-- 703: saving or deleting a contract period is announced to a screen reader (WCAG 4.1.3)
-- 703: the error messages of the user CSV import are in Dutch
-- 703: a logged-in user who opens a page their role does not allow is told so, instead of being asked to log out and in again
+- 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
 - 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
 - 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
 - 705: hidden organization units can no longer be set as opdrachtgever through the form or CSV import
