@@ -22,7 +22,6 @@ from wies.core.editables import (
 )
 from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
-from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import role_label
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
@@ -200,8 +199,6 @@ def environment(**options):
             "current_page_path": current_page_path,
             "url_with_param": url_with_param,
             "url_without_param": url_without_param,
-            "has_permission": has_permission,
-            "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,
             "ColleagueEditables": ColleagueEditables,
             "PlacementEditables": PlacementEditables,

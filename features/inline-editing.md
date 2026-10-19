@@ -317,11 +317,8 @@ def assignment_panel(request, public_id):
     assignment = get_object_or_404(Assignment, public_id=public_id)
     return render(..., {"user_can_edit": has_permission(Verb.UPDATE, assignment, request.user)})
 
-# Jinja template (`has_permission`, `Verb`, and each EditableSet are
-# registered as Jinja globals in config/jinja2.py)
-{% if has_permission(Verb.UPDATE, assignment, user, AssignmentEditables.extra_info) %}
-  <pencil />
-{% endif %}
+# Jinja templates do not ask: the view puts the answer in the context
+# (`user_can_edit` above), so a rule change is made in one place.
 ```
 
 Denial in the inline-edit view returns the display partial with a

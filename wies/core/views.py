@@ -255,6 +255,7 @@ def _build_assignment_panel_data(assignment, request):
         # IIR", not the raw key "OTYS_IIR".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
+        "user_can_delete": has_permission(Verb.DELETE, assignment, request.user),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
