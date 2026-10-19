@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
 - 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
 - 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
 - 705: hidden organization units can no longer be set as opdrachtgever through the form or CSV import

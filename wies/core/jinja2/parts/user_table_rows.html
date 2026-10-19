@@ -20,7 +20,7 @@
   <span>
     {{ user.first_name }} {{ user.last_name }}
     {% for group in user.groups.all() %}
-      <nldd-tag size="sm" color="neutral" text="{{ group.name }}"></nldd-tag>
+      <nldd-tag size="sm" color="neutral" text="{{ role_label(group.name) }}"></nldd-tag>
     {% endfor %}
   </span>
   </nldd-text-cell>

@@ -13,7 +13,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.tests.role_helpers import make_bdm_user
+from wies.core.tests.role_helpers import make_business_manager_user
 
 User = get_user_model()
 
@@ -71,7 +71,7 @@ class ServicePanelTest(TestCase):
         assert "Aanvraag wijzigen" not in body
 
     def test_a_team_editor_can_reach_the_edit_sheet_from_the_panel(self):
-        bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)
@@ -99,7 +99,7 @@ class ServicePanelTest(TestCase):
         """A row with a menu cannot be the link, so the title is a quiet one --
         as the name is on a person's row. Without it a team editor had no way
         in but the menu."""
-        bdm = make_bdm_user(email="bdm2@rijksoverheid.nl")
+        bdm = make_business_manager_user(email="bdm2@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)

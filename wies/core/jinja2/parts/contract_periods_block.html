@@ -13,7 +13,8 @@
   {% endif %}
 {%- endmacro %}
 <div id="contractPeriodsBlock-{{ contract_block.colleague.public_id }}"
-     {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}>
+     {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}
+     {% if announce is defined and announce %} data-announce="{{ announce }}"{% endif %}>
   {% set periods = contract_block.periods %}
   <nldd-title size="5">
   <h3>Contracturen</h3>
