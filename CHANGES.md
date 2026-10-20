@@ -10,6 +10,9 @@ This files lists the changes during the lifetime of this project.
 - 712: (migration) an aanvraag has its own "Wie we zoeken", long enough for a full vacancy text (up to 10000 characters), apart from the role's "Taken", and a "Standplaats". Its period can start "per direct" and run for a duration (3 months to 2 years) instead of an end date; filling the aanvraag asks for dates as before, and offers that text to read and take over as "Taken" (now up to 2000 characters). Existing aanvragen start with their old taken as "Wie we zoeken". The opdracht's "Opdrachtomschrijving", the aanvraag's "Wie we zoeken" and a role's "Taken" each carry a help line saying what goes in.
 - 712: entering an opdracht points at running opdrachten of the same primary opdrachtgever with an overlapping period, with their team ("2 aanvragen, 1 plaatsing"), and offers to add an aanvraag or a placed consultant to one of them instead; "Toch nieuwe opdracht invoeren" dismisses the hint
 - 712: the "Aanvraag toevoegen" item in the opdracht panel's "Toevoegen" menu shows its icon again; it named an icon that does not exist
+
+## 2026-10-19
+
 - 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
 - 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
 - 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
