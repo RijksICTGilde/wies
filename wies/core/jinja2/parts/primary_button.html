@@ -1,5 +1,19 @@
 {# Shared primary action button. The view sets ``primary_button`` with either an
-   ``href`` (plain link) or ``attrs`` (htmx). #}
-{% if primary_button %}
+   ``href`` (plain link) or ``attrs`` (htmx); with a ``menu`` it is a split
+   button whose main part fires ``action-click`` (a plain click would also
+   catch the chevron). A ``None`` in the menu is a divider. #}
+{% if primary_button and primary_button.menu %}
+  <nldd-split-button variant="primary" icon="{{ primary_button.icon }}" text="{{ primary_button.button_text }}" hx-trigger="action-click" {%- for name, value in primary_button.attrs.items() %} {{ name }}="{{ value }}"{% endfor %}>
+  <nldd-menu placement="bottom-end">
+  {% for item in primary_button.menu %}
+    {% if item %}
+      <nldd-menu-item text="{{ item.text }}" icon="{{ item.icon }}" {%- for name, value in item.attrs.items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
+    {% else %}
+      <nldd-menu-divider></nldd-menu-divider>
+    {% endif %}
+  {% endfor %}
+  </nldd-menu>
+  </nldd-split-button>
+{% elif primary_button %}
   <nldd-button variant="primary" start-icon="plus" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-button>
 {% endif %}

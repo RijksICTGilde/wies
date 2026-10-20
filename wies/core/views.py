@@ -162,6 +162,9 @@ PANEL_PARAMS = (
     "teamlid",
     "veld",
     "nieuwe-opdracht",
+    "nieuwe-aanvraag",
+    "nieuwe-plaatsing",
+    "daarna",
     "uitgeklapt",
 )
 
@@ -322,6 +325,13 @@ def _build_own_role_panel_data(request, team_rows):
     )
 
 
+def _create_daarna(request) -> str | None:
+    """What follows saving a new opdracht (``aanvraag``/``plaatsing``), when it
+    was entered from "Bij welke opdracht?"."""
+    daarna = request.POST.get("daarna") or request.GET.get("daarna")
+    return daarna if daarna in PICK_KINDS else None
+
+
 def _build_assignment_create_panel_data(request, form, *, parent_url=None):
     """Builds panel_data for the empty or invalid create form.
 
@@ -329,12 +339,27 @@ def _build_assignment_create_panel_data(request, form, *, parent_url=None):
     ``parent_url`` lets an invalid POST pass the sanitised ``terug_url`` back, so
     the return address survives a failed submit.
     """
+    daarna = _create_daarna(request)
+    parent_url = parent_url if parent_url is not None else _build_close_url(request)
+    back = {}
+    if daarna:
+        parsed = urllib.parse.urlparse(parent_url)
+        back = {
+            "back_text": PICK_KINDS[daarna]["title"],
+            "back_url": _url_drop_params(
+                parsed.path, QueryDict(parsed.query), PANEL_PARAMS, **{PICK_KINDS[daarna]["param"]: ""}
+            ),
+        }
     return {
+        **back,
         "form": form,
         "panel_content_template": "parts/assignment_create_panel_content.html",
         "edit_url": reverse("assignment-create-sheet"),  # POST target
-        "parent_url": parent_url if parent_url is not None else _build_close_url(request),
-        "edit_heading": "Opdracht invoeren",
+        "parent_url": parent_url,
+        # Reached from "Bij welke opdracht?": the opdracht is a step on the way
+        # to the aanvraag or placement, which follows once it is saved.
+        "daarna": daarna,
+        "edit_heading": "Nieuwe opdracht invoeren" if daarna else "Opdracht invoeren",
         "submit_label": "Voer opdracht in",
         # Opdrachten the user already dismissed in the duplicate hint; kept
         # through a failed submit, as the rest of the input is.
@@ -702,21 +727,37 @@ def no_access(request):
 
 
 def _assignment_create_button(request):
-    """The "Opdracht invoeren" action, or None without the permission.
+    """The split button "Aanvraag toevoegen", with "Geplaatste consultant
+    toevoegen" and "Opdracht invoeren" in its menu, or None without the
+    permission.
 
-    Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
-    entering an assignment works identically wherever a business manager is.
+    Aanvraag first: what a business manager adds most is a role on an opdracht
+    that already exists. Same button on Aanvragen and Bezetting, so adding
+    works identically wherever a business manager is.
     """
     if not request.user.has_perm("core.add_assignment"):
         return None
-    return {
-        "button_text": "Opdracht invoeren",
-        "attrs": {
-            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+
+    # hx-push-url false: side_panel.js puts the URL in the address bar itself.
+    # When htmx pushes it, browser-back restores that entry from the server and
+    # the sheet does not open.
+    def panel_attrs(param):
+        return {
+            "hx-get": _build_panel_url(request, **{param: ""}),
             "hx-target": "#side-panel-content",
             "hx-swap": "innerHTML",
-            "hx-push-url": "true",
-        },
+            "hx-push-url": "false",
+        }
+
+    return {
+        "button_text": "Aanvraag toevoegen",
+        "icon": "new-text-document",
+        "attrs": panel_attrs("nieuwe-aanvraag"),
+        "menu": [
+            {"text": "Geplaatste consultant toevoegen", "icon": "add-user", "attrs": panel_attrs("nieuwe-plaatsing")},
+            None,  # divider
+            {"text": "Opdracht invoeren", "icon": "plus", "attrs": panel_attrs("nieuwe-opdracht")},
+        ],
     }
 
 
@@ -737,6 +778,85 @@ def _assignment_create_panel(request):
     if getattr(request.user, "colleague", None):
         initial["owner"] = request.user.colleague
     return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
+# The "Bij welke opdracht?" step: ?nieuwe-aanvraag or ?nieuwe-plaatsing.
+PICK_KINDS = {
+    "aanvraag": {"param": "nieuwe-aanvraag", "title": "Aanvraag toevoegen", "member_url": "member_add_aanvraag_url"},
+    "plaatsing": {
+        "param": "nieuwe-plaatsing",
+        "title": "Geplaatste consultant toevoegen",
+        "member_url": "member_add_ingevuld_url",
+    },
+}
+PICK_LIMIT = 20
+
+
+def _pick_results_context(request, kind: str, term: str, path: str, query: QueryDict) -> dict:
+    """The opdrachten to choose from, as rows that open the add-sheet of
+    ``kind`` on the page ``path``/``query``."""
+    from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
+        find_pickable_assignments,
+        team_count_text,
+    )
+
+    assignments, total = find_pickable_assignments(
+        term,
+        owner=getattr(request.user, "colleague", None),
+        today=timezone.now().date(),
+        limit=PICK_LIMIT,
+    )
+    rows = []
+    for assignment in assignments:
+        primary = next(
+            (rel.organization for rel in assignment.organization_relations.all() if rel.role == "PRIMARY"), None
+        )
+        details = [primary.label or primary.name] if primary else []
+        details += [
+            _assignment_period_text(assignment),
+            team_count_text(assignment.open_count, assignment.placed_count),
+        ]
+        rows.append(
+            {
+                "assignment": assignment,
+                "details": " · ".join(details),
+                "url": _member_add_urls(path, query, assignment)[PICK_KINDS[kind]["member_url"]],
+            }
+        )
+    return {"pick_rows": rows, "pick_total": total, "pick_term": term}
+
+
+def _assignment_pick_panel(request):
+    """panel_data for "Bij welke opdracht?", or None when it does not apply.
+
+    Adding an aanvraag or a placed consultant starts at the opdracht it
+    belongs to, which usually exists already. Without the permission it falls
+    away silently, like the create panel.
+    """
+    kind = next((k for k, v in PICK_KINDS.items() if v["param"] in request.GET), None)
+    if kind is None or not request.user.has_perm("core.add_assignment"):
+        return None
+    return {
+        "panel_content_template": "parts/assignment_pick_panel_content.html",
+        "panel_title": PICK_KINDS[kind]["title"],
+        "kind": kind,
+        "results_url": f"{reverse('assignment-pick-results')}?soort={kind}",
+        "new_assignment_url": _build_panel_url(request, **{"nieuwe-opdracht": "", "daarna": kind}),
+        **_pick_results_context(request, kind, "", request.path, request.GET),
+    }
+
+
+def assignment_pick_results(request):
+    """The rows of "Bij welke opdracht?" for a search term; the panel itself
+    comes from ``_assignment_pick_panel``."""
+    if not request.user.has_perm("core.add_assignment"):
+        return HttpResponseForbidden()
+    kind = request.GET.get("soort")
+    if kind not in PICK_KINDS:
+        return HttpResponseBadRequest("Onbekende soort")
+    path, query = _page_behind_panel(request)
+    context = _pick_results_context(request, kind, request.GET.get("zoek", "").strip(), path, query)
+    return render(request, "parts/assignment_pick_results.html", context)
 
 
 def _bezetting_status_group(selected, summary):
@@ -797,7 +917,7 @@ def bezetting(request):
     service_id = request.GET.get("aanvraag")
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
-    panel_data = _assignment_create_panel(request)
+    panel_data = _assignment_pick_panel(request) or _assignment_create_panel(request)
     if panel_data is None and service_id and not request.GET.get("teamlid"):
         # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
         # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
@@ -2110,7 +2230,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # ?nieuwe-opdracht opens the empty create form as a panel on the list.
         # Checked before the object lookups: this panel has no object. Without the
         # permission it falls away silently — this is the list view, not a 403.
-        create_panel = _assignment_create_panel(self.request)
+        create_panel = _assignment_pick_panel(self.request) or _assignment_create_panel(self.request)
         if create_panel is not None:
             context["panel_data"] = create_panel
         elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
@@ -4621,19 +4741,23 @@ def assignment_create_sheet(request):
             request=request,
             context=_assignment_audit_snapshot(assignment),
         )
-        sep = "&" if "?" in return_to else "?"
-        path = f"{return_to}{sep}opdracht={assignment.public_id}"
+        daarna = _create_daarna(request)
+        parsed = urllib.parse.urlparse(return_to)
+        if daarna:
+            # On to the aanvraag or placement the user set out to add.
+            path = _member_add_urls(parsed.path, QueryDict(parsed.query), assignment)[PICK_KINDS[daarna]["member_url"]]
+        else:
+            path = _url_drop_params(parsed.path, QueryDict(parsed.query), (), opdracht=assignment.public_id)
         # base.html does not reload on the panel swap that follows HX-Location,
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
         # Aanvragen lists aanvragen only, so a new opdracht without one would be
         # gone after the panel closes. Until entering an opdracht asks for its
         # roles itself, the message says so.
-        messages.success(
-            request,
-            f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe. '
-            "Zonder aanvraag staat de opdracht niet bij Aanvragen.",
-        )
+        message = f'Opdracht "{assignment.name}" is aangemaakt.'
+        if not daarna:
+            message += " Voeg een aanvraag toe. Zonder aanvraag staat de opdracht niet bij Aanvragen."
+        messages.success(request, message)
         response = HttpResponse(status=204)
         response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
         return response

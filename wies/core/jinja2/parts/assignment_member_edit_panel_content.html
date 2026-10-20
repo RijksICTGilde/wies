@@ -1,7 +1,14 @@
+{# Panel loads do not reload base.html, so flash banners ride along as an OOB
+   swap: after "Voer opdracht in" this sheet is where the user lands. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 {% set svc_form = panel_data.member_form %}
 {% set obj = panel_data.assignment %}
 {% set panel_heading = panel_data.member_heading %}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" {%- if panel_data.parent_url %} data-back-url="{{ panel_data.parent_url }}"{% endif %} dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
 <h3 id="panel-title" tabindex="-1">{{ panel_heading }}</h3>

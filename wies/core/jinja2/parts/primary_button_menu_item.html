@@ -1,7 +1,12 @@
 {# Menu counterpart of parts/primary_button.html, for when the button ends up in
-   the toolbar's overflow menu. The menu shows a CLONE of this item and reports
+   the toolbar's overflow menu. The menu shows a CLONE of each item and reports
    the choice back as `select` on the original, so htmx listens for that
-   instead of a click. #}
+   instead of a click. A split button becomes its action plus its menu items. #}
 {% if primary_button %}
-  <nldd-menu-item slot="overflow" icon="plus" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- if primary_button.attrs %} hx-trigger="select"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
+  <nldd-menu-item slot="overflow" icon="{{ primary_button.icon or 'plus' }}" text="{{ primary_button.button_text }}" {%- if primary_button.href %} href="{{ primary_button.href }}"{% endif %} {%- if primary_button.attrs %} hx-trigger="select"{% endif %} {%- for name, value in (primary_button.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
+  {% for item in primary_button.menu or [] %}
+    {% if item %}
+      <nldd-menu-item slot="overflow" icon="{{ item.icon }}" text="{{ item.text }}" hx-trigger="select" {%- for name, value in item.attrs.items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
+    {% endif %}
+  {% endfor %}
 {% endif %}

@@ -20,12 +20,20 @@
   const SHEET_ID = "side-panel";
   const CONTENT_ID = "side-panel-content";
   // The params that open a panel: their presence means "a panel belongs here".
-  const PANEL_PARAMS = ["collega", "opdracht", "aanvraag", "nieuwe-opdracht"];
+  const PANEL_PARAMS = [
+    "collega",
+    "opdracht",
+    "aanvraag",
+    "nieuwe-opdracht",
+    "nieuwe-aanvraag",
+    "nieuwe-plaatsing",
+  ];
 
   // Everything the panel puts in the URL, stripped when it closes. The ones
   // above plus the params that only modify an open panel; 'pagina' is the
   // list's, not the panel's, so PANEL_PARAMS in views.py has one more.
   const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
+    "daarna",
     "bewerken",
     "teamlid",
     "veld",
@@ -88,6 +96,12 @@
   // Called from afterSwap, before first paint: doing it in afterSettle redraws
   // the bar a frame later and the header visibly jumps.
   function writeBackButton(bar, section, parent) {
+    // The server named the parent (data-back-url): its back-text stays, also
+    // on a full page load where the stack is empty.
+    if (bar.hasAttribute("data-back-url")) {
+      if (section) section.removeAttribute("padding-top");
+      return;
+    }
     if (parent)
       bar.setAttribute(
         "back-text",
@@ -131,7 +145,62 @@
     history.replaceState({}, "", url.toString());
   }
 
+  // A panel opened from a toolbar's overflow menu: on a narrow screen the main
+  // actions live there. The dialog hands focus back to the menu item's clone in
+  // the closed menu, so it lands on <body>; the toolbar's "Meer" button is
+  // where the user was.
+  let openedFromToolbar = null;
+  document.addEventListener("htmx:beforeRequest", (event) => {
+    const elt = event.detail && event.detail.elt;
+    if (!elt || event.detail.target?.id !== CONTENT_ID) return;
+    // Steps inside the panel keep where it was opened from.
+    if (elt.closest("#" + SHEET_ID)) return;
+    openedFromToolbar =
+      elt.getAttribute("slot") === "overflow"
+        ? elt.closest("nldd-toolbar")
+        : null;
+  });
+
+  function returnFocusToOverflow() {
+    const toolbar = openedFromToolbar;
+    openedFromToolbar = null;
+    if (!toolbar || !toolbar.isConnected) return;
+    // 'close' fires while focus is still on the sheet; it drops to <body> just
+    // after, so look a frame later and count the closed sheet as lost too.
+    requestAnimationFrame(() => {
+      const active = document.activeElement;
+      const sheet = getSheet();
+      const lost =
+        !active ||
+        active === document.body ||
+        (sheet && (active === sheet || sheet.contains(active)));
+      if (!lost) return;
+      const more =
+        toolbar.shadowRoot &&
+        toolbar.shadowRoot.querySelector("nldd-icon-button");
+      if (more && typeof more.focus === "function") more.focus();
+    });
+  }
+
+  // A sheet whose server-rendered back-text names its parent also says where
+  // that is (data-back-url): back goes there, so the label and the target agree
+  // however the sheet was reached, also after a save that left the stack behind.
+  function serverBackUrl() {
+    const content = document.getElementById(CONTENT_ID);
+    const bar = content && content.querySelector(":scope > nldd-top-title-bar");
+    return bar ? bar.getAttribute("data-back-url") : null;
+  }
+
   function panelBack() {
+    const backUrl = serverBackUrl();
+    if (backUrl) {
+      const backTo = panelStack.findIndex((entry) => entry.url === backUrl);
+      panelStack.length = backTo === -1 ? 0 : backTo;
+      history.replaceState({}, "", backUrl);
+      _skipNextPush = true;
+      swapPanel(backUrl);
+      return;
+    }
     if (panelStack.length > 0) {
       const prevUrl = panelStack.pop().url;
       const url = new URL(prevUrl, window.location.origin);
@@ -270,6 +339,7 @@
         // Overlays inside the content (a date picker is a sheet itself) bubble
         // a 'close' too.
         if (e.target !== sheet) return;
+        returnFocusToOverflow();
         const url = new URL(window.location);
         if (hasPanelParam(url)) {
           panelStack.length = 0;

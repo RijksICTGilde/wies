@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count, F, Q
+from django.db.models import Case, Count, F, Q, Value, When
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
 from wies.core.services.organizations import get_excluded_org_ids
@@ -288,16 +288,56 @@ def find_running_assignments_for_client(
 
 def team_summary_text(rows: list[dict]) -> str:
     """The team in words ("2 aanvragen, 1 plaatsing"), from ``visible_service_rows``."""
-    if not rows:
-        return "nog geen rollen"
     open_count = sum(1 for row in rows if row["placement"] is None)
-    placed_count = len(rows) - open_count
+    return team_count_text(open_count, len(rows) - open_count)
+
+
+def team_count_text(open_count: int, placed_count: int) -> str:
+    """The team in words from its counts; "nog geen rollen" when empty."""
     parts = []
     if open_count:
         parts.append(f"{open_count} {'aanvraag' if open_count == 1 else 'aanvragen'}")
     if placed_count:
         parts.append(f"{placed_count} {'plaatsing' if placed_count == 1 else 'plaatsingen'}")
-    return ", ".join(parts)
+    return ", ".join(parts) or "nog geen rollen"
+
+
+def find_pickable_assignments(
+    term: str, *, owner: Colleague | None, today: date, limit: int = 20
+) -> tuple[list[Assignment], int]:
+    """Running wies opdrachten to add an aanvraag or placement to, for the
+    "Bij welke opdracht?" step: the owner's own first, then the newest.
+
+    Not limited to opdrachten with an open aanvraag: a placement belongs on any
+    running opdracht. An excluded organisation hides the opdracht whatever its
+    role there, the safe side for a list one picks from. Each carries ``open_count`` and ``placed_count``. Returns
+    at most ``limit`` and the total.
+    """
+    qs = Assignment.objects.filter(source="wies").filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+    excluded_org_ids = get_excluded_org_ids()
+    if excluded_org_ids:
+        qs = qs.exclude(organizations__id__in=excluded_org_ids)
+    if term:
+        # The opdrachtgever through a subquery, so two matching ones do not give
+        # the opdracht twice.
+        by_client = Assignment.objects.filter(
+            Q(organizations__name__icontains=term)
+            | Q(organizations__label__icontains=term)
+            | Q(organizations__abbreviations__icontains=term)
+        )
+        qs = qs.filter(Q(name__icontains=term) | Q(pk__in=by_client))
+    total = qs.count()
+    own_first = Case(When(owner=owner, then=Value(0)), default=Value(1)) if owner else Value(1)
+    page = (
+        qs.annotate(
+            open_count=Count("services", filter=Q(services__placements__isnull=True), distinct=True),
+            placed_count=Count("services__placements", distinct=True),
+            own_first=own_first,
+        )
+        .prefetch_related("organization_relations__organization")
+        .order_by("own_first", F("created_at").desc(nulls_last=True), "-id")[:limit]
+    )
+    return list(page), total
 
 
 def find_duplicate_groups():
