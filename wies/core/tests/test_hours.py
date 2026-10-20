@@ -460,7 +460,8 @@ class ServiceHoursTest(TestCase):
         ).content.decode()
         assert "24 uur" in panel
         cards = self.client.get(reverse("assignment-list")).content.decode()
-        assert "Data engineer · 24 uur" in cards
+        assert "<h2>Data engineer</h2>" in cards
+        assert 'text="24 uur per week"' in cards
 
     def test_a_new_member_starts_at_36_hours(self):
         for kind in ("nieuw-ingevuld", "nieuw-aanvraag"):

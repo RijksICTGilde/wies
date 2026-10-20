@@ -240,6 +240,16 @@ FocusRestore.prototype.handleSettle = function (container) {
   var landing = container.querySelector("#panel-title[tabindex='-1']");
   if (landing && this.focusFirst([landing])) return;
 
+  // "Meer tonen" swaps the next cards in where the button was, and each card
+  // settles on its own. The card is the link, so it takes the focus itself:
+  // the first new card, as the later ones find focus already placed.
+  if (
+    typeof container.matches === "function" &&
+    container.matches("nldd-card[href]") &&
+    this.focusFirst([container])
+  )
+    return;
+
   // The first operable element inside the new content, explicitly not the
   // container itself. That container is a component (`nldd-page`, `nldd-sheet`)
   // and so a shadow host, where the host's tabindex decides whether its content

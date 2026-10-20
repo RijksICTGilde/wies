@@ -1,0 +1,58 @@
+{# One card per open aanvraag, the opdracht as context. #}
+{% for svc in object_list %}
+  {% set title = svc.skill.name if svc.skill else "Rol niet ingevuld" %}
+  {% set link_name = (svc.skill.name if svc.skill else "Aanvraag zonder rol") ~ " bij " ~ svc.assignment.name %}
+  {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
+     hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
+  <nldd-card background="tinted" accessible-label="{{ link_name }}" href="{{ svc.panel_url }}" hx-get="{{ svc.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-container padding="16">
+  <nldd-title size="5">
+  <h2>{{ title }}</h2>
+  </nldd-title>
+  <nldd-spacer size="4"></nldd-spacer>
+  {# A paragraph of its own, so a screen reader pauses between the opdracht
+     and the hours; it is what tells two cards for the same role apart. #}
+  <nldd-rich-text spacing="flat">
+  <p class="wies-text-secondary">{{ svc.assignment.name }}</p>
+  </nldd-rich-text>
+  {% if svc.hours_per_week %}
+    <nldd-spacer size="8"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    <nldd-tag size="sm" text="{{ svc.hours_per_week }} uur per week"></nldd-tag>
+    </nldd-container>
+  {% endif %}
+  </nldd-container>
+  <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+  <nldd-list variant="simple" dividers="never" accessible-label="Aanvraaggegevens">
+  {% if svc.org_label %}
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-text-cell size="sm" text="{{ svc.org_label }}"></nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
+  {% if svc.location %}
+    <nldd-list-item size="sm">
+    <nldd-icon-cell size="16" icon="location"></nldd-icon-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-text-cell size="sm" text="{{ svc.location }}"></nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
+  {# The period row is always there, also without a date: the card would
+     shrink and the cards in the grid would no longer line up. #}
+  <nldd-list-item size="sm">
+  <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell size="sm" text="{{ svc.period_text }}"></nldd-text-cell>
+  </nldd-list-item>
+  </nldd-list>
+  </nldd-container>
+  </nldd-card>
+{% endfor %}
+{% if next_page_url %}
+  {# Click instead of auto-load, see placement_cards.html. The button is a grid
+     cell in the nldd-collection and replaces itself with the next cards. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+  </div>
+{% endif %}
