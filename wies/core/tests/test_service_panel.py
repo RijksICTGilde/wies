@@ -54,6 +54,56 @@ class ServicePanelTest(TestCase):
         assert "Zaaksysteem" in body
         assert 'icon="chevron-right"' in body
 
+    def _place(self, name, **placement):
+        colleague = Colleague.objects.create(
+            name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl", source="wies"
+        )
+        role = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
+        Placement.objects.create(colleague=colleague, service=role, source="wies", **placement)
+        return colleague
+
+    def _team_text(self):
+        body = self._panel()
+        row = re.search(r'text="Team".*?text="([^"]*)"', body, re.S)
+        assert row, "team row missing"
+        return row.group(1)
+
+    def test_the_team_row_names_who_is_placed(self):
+        cases = (
+            ([], "Nog niemand geplaatst"),
+            (["Anke de Vries"], "Anke de Vries"),
+            (["Bram Jansen"], "Anke de Vries en Bram Jansen"),
+            (["Chris Bakker"], "Anke de Vries, Bram Jansen en 1 ander"),
+            (["Dewi Smit"], "Anke de Vries, Bram Jansen en 2 anderen"),
+        )
+        for new_names, expected in cases:
+            for name in new_names:
+                self._place(name)
+            with self.subTest(expected=expected):
+                assert self._team_text() == expected
+
+    def test_a_colleague_in_two_roles_counts_once(self):
+        anke = self._place("Anke de Vries")
+        second_role = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
+        Placement.objects.create(colleague=anke, service=second_role, source="wies")
+        assert self._team_text() == "Anke de Vries"
+
+    def test_the_team_row_leaves_out_an_ended_placement_the_viewer_may_not_see(self):
+        yesterday = timezone.now().date() - timedelta(days=1)
+        self._place(
+            "Oud Lid",
+            period_source=Placement.PLACEMENT,
+            specific_start_date=yesterday - timedelta(days=90),
+            specific_end_date=yesterday,
+        )
+        assert self._team_text() == "Nog niemand geplaatst"
+
+    def test_the_team_row_leads_to_the_opdracht(self):
+        body = self._panel()
+        team_item = re.search(r'<nldd-list-item[^>]*>(?:(?!</nldd-list-item>).)*text="Team"', body, re.S)
+        assert team_item
+        assert f'hx-get="/?opdracht={self.assignment.public_id}"' in team_item.group(0)
+
     def test_the_panel_shows_the_hours_and_the_description(self):
         body = self._panel()
 
