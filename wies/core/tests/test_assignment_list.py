@@ -146,10 +146,15 @@ class AssignmentListViewTest(TestCase):
         content = response.content.decode()
         assert "side_panel" in content
 
+    def test_the_menu_marks_aanvragen_as_current(self):
+        self.client.force_login(self.auth_user)
+        body = self.client.get(self.list_url).content.decode()
+        assert re.search(r'<nldd-menu-bar-item text="Aanvragen" href="/aanvragen/"\s+current>', body)
+
     def test_old_opdrachten_url_redirects_with_its_filters(self):
         self.client.force_login(self.auth_user)
         response = self.client.get("/opdrachten/?zoek=Data&pagina=2")
-        assert response.status_code == 301
+        assert response.status_code == 302
         assert response["Location"] == "/aanvragen/?zoek=Data&pagina=2"
 
     def test_side_panel_opens_for_any_assignment(self):

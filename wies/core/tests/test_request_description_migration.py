@@ -1,7 +1,8 @@
 """Tests for the move in the 0020 migration that seeds Service.request_description.
 
 An open role (no placement) gets its role text as its vacancy text and starts
-without taken; a filled role keeps its taken and gets no vacancy text.
+without taken; a filled role keeps its taken and gets no vacancy text. Back
+down, the vacancy text returns as taken, cut to the 500 characters taken hold.
 """
 
 from django.db import connection
@@ -61,3 +62,13 @@ class RequestDescriptionMigrationTest(TransactionTestCase):
 
     def test_an_open_role_without_text_stays_empty(self):
         assert self._migrated(self.empty).request_description == ""
+
+    def test_migrating_back_returns_the_vacancy_text_as_taken(self):
+        migrated = self._migrated(self.open)
+        migrated.request_description = "x" * 600
+        migrated.save()
+
+        self._migrate(MIGRATE_FROM)
+
+        restored = self._apps_at(MIGRATE_FROM).get_model(APP, "Service").objects.get(pk=self.open.pk)
+        assert restored.description == "x" * 500

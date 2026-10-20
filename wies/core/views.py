@@ -46,6 +46,7 @@ from wies.core.inline_edit.forms import (
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.services import role_matrix as role_matrix_rules
+from wies.core.services.dates import date_range_text
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
@@ -675,9 +676,9 @@ TEAM_NAMES_SHOWN = 2
 
 
 def _team_names_text(rows: list[dict]) -> str:
-    """Who is placed on the opdracht, from ``visible_service_rows``: "Anke de
+    """Who is on the opdracht now, from ``visible_service_rows``: "Anke de
     Vries, Bram Jansen en 3 anderen". A colleague in two roles counts once."""
-    names = list(dict.fromkeys(row["colleague"].name for row in rows if row["placement"] is not None))
+    names = list(dict.fromkeys(row["colleague"].name for row in rows if row["placement"] and not row.get("historical")))
     if not names:
         return "Nog niemand geplaatst"
     shown, rest = names[:TEAM_NAMES_SHOWN], len(names) - TEAM_NAMES_SHOWN
@@ -4778,17 +4779,7 @@ def assignment_create_sheet(request):
 
 def _assignment_period_text(assignment) -> str:
     """The period as the opdracht cards word it."""
-    # Deferred: config.jinja2 imports the editables, which import views code.
-    from config.jinja2 import datum_nl  # noqa: PLC0415 (import not at top level) — see above
-
-    start, end = assignment.start_date, assignment.end_date
-    if start and end:
-        return f"{datum_nl(start)} t/m {datum_nl(end)}"
-    if start:
-        return f"Vanaf {datum_nl(start)}"
-    if end:
-        return f"t/m {datum_nl(end)}"
-    return "Geen periode opgegeven"
+    return date_range_text(assignment.start_date, assignment.end_date) or "Geen periode opgegeven"
 
 
 def _build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):

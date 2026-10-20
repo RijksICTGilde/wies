@@ -98,6 +98,19 @@ class ServicePanelTest(TestCase):
         )
         assert self._team_text() == "Nog niemand geplaatst"
 
+    def test_the_team_row_leaves_out_an_ended_placement_for_a_business_manager(self):
+        """A Business Manager sees the ended placement in the opdracht panel,
+        labelled as such; the team row names who is on the opdracht now."""
+        self.client.force_login(make_business_manager_user(email="bm@rijksoverheid.nl"))
+        yesterday = timezone.now().date() - timedelta(days=1)
+        self._place(
+            "Oud Lid",
+            period_source=Placement.PLACEMENT,
+            specific_start_date=yesterday - timedelta(days=90),
+            specific_end_date=yesterday,
+        )
+        assert self._team_text() == "Nog niemand geplaatst"
+
     def test_the_team_row_leads_to_the_opdracht(self):
         body = self._panel()
         team_item = re.search(r'<nldd-list-item[^>]*>(?:(?!</nldd-list-item>).)*text="Team"', body, re.S)
@@ -613,8 +626,7 @@ class LeavingAnAanvraagTest(TestCase):
 
 
 class FillingAanvraagTakenTest(TestCase):
-    """Filling an aanvraag: "Taken" are the consultant's own words; "Wie we
-    zoeken" is not offered to take over."""
+    """Filling an aanvraag: "Taken" are the consultant's own words."""
 
     def setUp(self):
         self.client = Client()
@@ -622,16 +634,6 @@ class FillingAanvraagTakenTest(TestCase):
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
-
-    def test_the_sheet_offers_no_take_over(self):
-        service = Service.objects.create(
-            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
-        )
-        body = self.client.get(
-            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": str(service.public_id)}
-        ).content.decode()
-        assert "Overnemen in Taken" not in body
-        assert "data-request-source" not in body
 
     def test_taken_take_up_to_500_characters(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")

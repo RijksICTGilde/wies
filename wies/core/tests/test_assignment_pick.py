@@ -14,10 +14,10 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from config.jinja2 import datum_nl
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, OrganizationUnit, Placement, Service
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.assignments import find_pickable_assignments, team_count_text
+from wies.core.services.dates import datum_nl
 from wies.core.tests.role_helpers import (
     STAFF_EMAIL,
     grant_business_manager,
