@@ -14,14 +14,7 @@
 <nldd-button variant="secondary" start-icon="plus" text="Nieuwe opdracht invoeren" hx-get="{{ panel_data.new_assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {# Only the results are swapped, so the caret stays in the field while typing. #}
-<nldd-search-field name="zoek"
-                   placeholder="Opdracht of opdrachtgever zoeken"
-                   accessible-label="Zoek op opdracht of opdrachtgever"
-                   hx-get="{{ panel_data.results_url }}"
-                   hx-trigger="input changed delay:300ms, search"
-                   hx-target="#assignment-pick-results"
-                   hx-swap="innerHTML"
-                   hx-push-url="false"></nldd-search-field>
+<nldd-search-field name="zoek" placeholder="Opdracht of opdrachtgever zoeken" accessible-label="Zoek op opdracht of opdrachtgever" hx-get="{{ panel_data.results_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#assignment-pick-results" hx-swap="innerHTML" hx-push-url="false"></nldd-search-field>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <div id="assignment-pick-results">
   {% with pick_rows = panel_data.pick_rows, pick_total = panel_data.pick_total, pick_term = panel_data.pick_term %}
