@@ -455,7 +455,7 @@ class ServiceHoursTest(TestCase):
             assignment=self.assignment, description="", skill=self.skill, source="wies", hours_per_week=24
         )
         panel = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         ).content.decode()
         assert "24 uur" in panel

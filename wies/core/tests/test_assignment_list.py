@@ -146,6 +146,12 @@ class AssignmentListViewTest(TestCase):
         content = response.content.decode()
         assert "side_panel" in content
 
+    def test_old_opdrachten_url_redirects_with_its_filters(self):
+        self.client.force_login(self.auth_user)
+        response = self.client.get("/opdrachten/?zoek=Data&pagina=2")
+        assert response.status_code == 301
+        assert response["Location"] == "/aanvragen/?zoek=Data&pagina=2"
+
     def test_side_panel_opens_for_any_assignment(self):
         """An opdracht without an open aanvraag has no card, but its panel still
         opens on the list via ?opdracht=."""

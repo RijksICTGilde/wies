@@ -1239,9 +1239,9 @@ class OrgBreadcrumbMinistryTest(TestCase):
         odi = OrganizationUnit.objects.create(name="ODI", label="ODI", related_ministry_tooi=MNRE_BZK)
         self._typed(odi, self.agentschap)
 
-        crumb = get_org_breadcrumb(odi, "/opdrachten/")
+        crumb = get_org_breadcrumb(odi, "/aanvragen/")
         assert [a["label"] for a in crumb["ancestors"]] == ["BZK"]
-        assert crumb["ancestors"][0]["url"] == f"/opdrachten/?org={self.bzk.public_id}"
+        assert crumb["ancestors"][0]["url"] == f"/aanvragen/?org={self.bzk.public_id}"
         assert crumb["label"] == "ODI"  # leaf unchanged
 
     def test_descendant_of_nestable_root_gets_ministry_before_the_root(self):
@@ -1255,9 +1255,9 @@ class OrgBreadcrumbMinistryTest(TestCase):
         atelier = OrganizationUnit.objects.create(name="Atelier", label="Atelier Rijksbouwmeester", parent=rvb)
         self._typed(atelier, self.onderdeel)
 
-        crumb = get_org_breadcrumb(atelier, "/opdrachten/")
+        crumb = get_org_breadcrumb(atelier, "/aanvragen/")
         assert [a["label"] for a in crumb["ancestors"]] == ["BZK", "RVB"]
-        assert crumb["ancestors"][0]["url"] == f"/opdrachten/?org={self.bzk.public_id}"
+        assert crumb["ancestors"][0]["url"] == f"/aanvragen/?org={self.bzk.public_id}"
         assert crumb["label"] == "Atelier Rijksbouwmeester"
 
     def test_db_descendant_of_ministry_unchanged(self):
