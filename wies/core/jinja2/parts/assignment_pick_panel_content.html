@@ -1,0 +1,22 @@
+<nldd-top-title-bar slot="header" text="{{ panel_data.panel_title }}" collapse-anchor="panel-title" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="6">
+<p>{{ panel_data.panel_title }}</p>
+</nldd-title>
+<nldd-spacer size="2" direction="vertical"></nldd-spacer>
+<nldd-title size="3">
+<h2 id="panel-title" tabindex="-1">Bij welke opdracht?</h2>
+</nldd-title>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+<nldd-button variant="secondary" start-icon="plus" text="Nieuwe opdracht invoeren" hx-get="{{ panel_data.new_assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{# Only the results are swapped, so the caret stays in the field while typing.
+   Plain htmx, not data-wies-search-input: there are no chips or suggestions to keep in step. #}
+<nldd-search-field name="zoek" placeholder="Opdracht of opdrachtgever zoeken" accessible-label="Zoek op opdracht of opdrachtgever" hx-get="{{ panel_data.results_url }}" hx-trigger="input changed delay:300ms, search" hx-target="#assignment-pick-results" hx-swap="innerHTML" hx-push-url="false"></nldd-search-field>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<div id="assignment-pick-results">
+  {% with pick = panel_data.pick %}
+    {% include "parts/assignment_pick_results.html" %}
+  {% endwith %}
+</div>
+</nldd-simple-section>

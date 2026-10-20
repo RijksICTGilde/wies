@@ -5,7 +5,9 @@
    nldd-form gets its own <form> as direct child (user-provided form mode),
    because htmx needs its attributes on the real form. #}
 {% set form = panel_data.form %}
-<nldd-top-title-bar slot="header" text="{{ panel_data.edit_heading }}" collapse-anchor="panel-title" dismiss-text="Annuleer"></nldd-top-title-bar>
+{# From "Bij welke opdracht?" the form names its way back itself, so a
+   rejected submit (a POST, no step in the panel stack) keeps it. #}
+<nldd-top-title-bar slot="header" text="{{ panel_data.edit_heading }}" collapse-anchor="panel-title" {%- if panel_data.back_url %} back-text="{{ panel_data.back_text }}" data-back-url="{{ panel_data.back_url }}"{% endif %} dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
 <h3 id="panel-title" tabindex="-1">{{ panel_data.edit_heading }}</h3>
@@ -31,6 +33,7 @@
   {# Hidden fields last: nldd-form spaces all siblings, so a hidden input at the
      top pushes the first visible field down. #}
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  {% if panel_data.daarna %}<input type="hidden" name="daarna" value="{{ panel_data.daarna }}">{% endif %}
   <nldd-form-actions>
   <nldd-button type="submit" variant="primary" width="full" text="{{ panel_data.submit_label }}"></nldd-button>
   </nldd-form-actions>

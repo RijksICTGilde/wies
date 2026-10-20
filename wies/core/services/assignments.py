@@ -5,9 +5,10 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Case, Count, F, Q, Value, When
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.services.organizations import get_excluded_org_ids
 
 if TYPE_CHECKING:
     from datetime import date
@@ -48,6 +49,12 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
     cd = form.cleaned_data
     skill = _resolve_skill_from_cleaned(cd)
     description = cd.get("description", "")
+    request_fields = {
+        "request_description": cd.get("request_description", ""),
+        "location": cd.get("location", ""),
+        "starts_immediately": cd.get("starts_immediately", False),
+        "duration_months": cd.get("duration_months"),
+    }
     hours_per_week = cd.get("hours_per_week")
     has_custom_period = cd.get("has_custom_period", False)
     start = cd.get("placement_start_date")
@@ -65,10 +72,12 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
             msg = "Een of meer diensten bestaan niet meer. Herlaad de pagina en probeer opnieuw."
             raise ValidationError(msg)
         service.description = description
+        for field, value in request_fields.items():
+            setattr(service, field, value)
         service.skill = skill
         service.hours_per_week = hours_per_week
         service.status = "OPEN"
-        update_fields = ["description", "skill", "hours_per_week", "status"]
+        update_fields = ["description", *request_fields, "skill", "hours_per_week", "status"]
         if has_custom_period:
             service.period_source = Service.SERVICE
             service.specific_start_date = start
@@ -83,6 +92,7 @@ def save_service_from_form(assignment: Assignment, form) -> Service:
         create_kwargs = {
             "assignment": assignment,
             "description": description,
+            **request_fields,
             "skill": skill,
             "hours_per_week": hours_per_week,
             "status": "OPEN",
@@ -240,6 +250,54 @@ def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
         primary_organization_id=primary_org.id if primary_org else None,
         involved_organization_ids=[o.id for o in involved_orgs],
     )
+
+
+def team_count_text(open_count: int, placed_count: int) -> str:
+    """The team in words from its counts; "nog geen rollen" when empty."""
+    parts = []
+    if open_count:
+        parts.append(f"{open_count} {'aanvraag' if open_count == 1 else 'aanvragen'}")
+    if placed_count:
+        parts.append(f"{placed_count} {'plaatsing' if placed_count == 1 else 'plaatsingen'}")
+    return ", ".join(parts) or "nog geen rollen"
+
+
+def find_pickable_assignments(
+    term: str, *, owner: Colleague | None, today: date, limit: int = 20
+) -> tuple[list[Assignment], int]:
+    """Running wies opdrachten to add an aanvraag or placement to, for the
+    "Bij welke opdracht?" step: the owner's own first, then the newest.
+
+    Not limited to opdrachten with an open aanvraag: a placement belongs on any
+    running opdracht. An excluded organisation hides the opdracht whatever its
+    role there, the safe side for a list one picks from. Each carries ``open_count`` and ``placed_count``. Returns
+    at most ``limit`` and the total.
+    """
+    qs = Assignment.objects.filter(source="wies").filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+    excluded_org_ids = get_excluded_org_ids()
+    if excluded_org_ids:
+        qs = qs.exclude(organizations__id__in=excluded_org_ids)
+    if term:
+        # The opdrachtgever through a subquery, so two matching ones do not give
+        # the opdracht twice.
+        by_client = Assignment.objects.filter(
+            Q(organizations__name__icontains=term)
+            | Q(organizations__label__icontains=term)
+            | Q(organizations__abbreviations__icontains=term)
+        )
+        qs = qs.filter(Q(name__icontains=term) | Q(pk__in=by_client))
+    total = qs.count()
+    own_first = Case(When(owner=owner, then=Value(0)), default=Value(1)) if owner else Value(1)
+    page = (
+        qs.annotate(
+            open_count=Count("services", filter=Q(services__placements__isnull=True), distinct=True),
+            placed_count=Count("services__placements", distinct=True),
+            own_first=own_first,
+        )
+        .prefetch_related("organization_relations__organization")
+        .order_by("own_first", F("created_at").desc(nulls_last=True), "-id")[:limit]
+    )
+    return list(page), total
 
 
 def find_duplicate_groups():

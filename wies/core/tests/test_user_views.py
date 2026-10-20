@@ -659,7 +659,7 @@ class UserViewsTest(TestCase):
         # The header is client controlled: only the list's own path is followed,
         # and never the host it names.
         self.client.force_login(self.auth_user)
-        for current in ("http://testserver/opdrachten/?x=1", "https://evil.example/elders/?x=1"):
+        for current in ("http://testserver/aanvragen/?x=1", "https://evil.example/elders/?x=1"):
             response = self.client.post(
                 reverse("user-edit", args=[self.user1.public_id]),
                 {"first_name": "Updated", "last_name": "Name", "email": "updated@rijksoverheid.nl"},

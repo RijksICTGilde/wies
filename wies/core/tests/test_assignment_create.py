@@ -3,6 +3,7 @@ import re
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
+from django.contrib.messages import get_messages
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -224,6 +225,146 @@ class AssignmentCreateTest(TestCase):
         # The panel that opens is the opdracht, so the banner carries no link to it.
         assert 'text="Bekijk opdracht"' not in html
 
+    def test_success_message_asks_for_an_aanvraag(self):
+        """Aanvragen lists aanvragen only, so until entering asks for the roles
+        (PR C) the message tells a new opdracht needs one to show up there."""
+        self.client.force_login(self.business_manager_user)
+        self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Opdracht Zonder Rol",
+                "owner": self.business_manager_colleague.public_id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assignment = Assignment.objects.get(name="Opdracht Zonder Rol")
+        panel = self.client.get(
+            reverse("assignment-list"),
+            {"opdracht": assignment.public_id},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        self.assertContains(panel, "Voeg een aanvraag toe. Zonder aanvraag staat de opdracht niet bij Aanvragen.")
+
+    # --- daarna: the create form reached from "Bij welke opdracht?" ---
+    # ``daarna`` (aanvraag | plaatsing) says which add-sheet follows the save.
+
+    def create_panel(self, **params):
+        self.client.force_login(self.business_manager_user)
+        response = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": "", **params},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert response.status_code == 200
+        return response.content.decode()
+
+    def post_create(self, name, **data):
+        self.client.force_login(self.business_manager_user)
+        return self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": name,
+                "owner": self.business_manager_colleague.public_id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+                **data,
+            },
+        )
+
+    def test_daarna_gives_heading_and_hidden_input(self):
+        html = self.create_panel(daarna="plaatsing")
+        assert re.search(r'<nldd-top-title-bar[^>]*text="Nieuwe opdracht invoeren"', html)
+        assert '<input type="hidden" name="daarna" value="plaatsing">' in html
+        assert 'text="Opdracht invoeren"' not in html
+
+    def test_without_daarna_the_form_is_as_before(self):
+        html = self.create_panel()
+        assert re.search(r'<nldd-top-title-bar[^>]*text="Opdracht invoeren"', html)
+        assert 'name="daarna"' not in html
+
+    def test_unknown_daarna_is_ignored(self):
+        html = self.create_panel(daarna="onzin")
+        assert re.search(r'<nldd-top-title-bar[^>]*text="Opdracht invoeren"', html)
+        assert 'name="daarna"' not in html
+
+    def test_daarna_survives_a_rejected_form(self):
+        self.client.force_login(self.business_manager_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Zonder Opdrachtgever",
+                "owner": self.business_manager_colleague.public_id,
+                **org_formset_data([]),
+                "terug_url": reverse("assignment-list"),
+                "daarna": "aanvraag",
+            },
+        )
+        assert response.status_code == 200
+        html = response.content.decode()
+        assert '<input type="hidden" name="daarna" value="aanvraag">' in html
+        assert re.search(r'<nldd-top-title-bar[^>]*text="Nieuwe opdracht invoeren"', html)
+        # The way back to "Bij welke opdracht?" stays, though a POST is no
+        # step in the panel stack.
+        bar = re.search(r"<nldd-top-title-bar\b[^>]*>", html).group(0)
+        assert 'back-text="Aanvraag toevoegen"' in bar
+        assert f'data-back-url="{reverse("assignment-list")}?nieuwe-aanvraag="' in bar
+
+    def test_daarna_aanvraag_goes_on_to_the_aanvraag_sheet(self):
+        response = self.post_create("Met Aanvraag", daarna="aanvraag")
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Met Aanvraag")
+        location = json.loads(response["HX-Location"])
+        assert (
+            location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}&teamlid=nieuw-aanvraag"
+        )
+        assert location["target"] == "#side-panel-content"
+
+    def test_daarna_plaatsing_goes_on_to_the_placement_sheet_keeping_the_page(self):
+        terug = f"{reverse('bezetting')}?merk=x"
+        response = self.post_create("Met Plaatsing", daarna="plaatsing", terug_url=terug)
+        assignment = Assignment.objects.get(name="Met Plaatsing")
+        location = json.loads(response["HX-Location"])
+        assert location["path"] == f"{terug}&opdracht={assignment.public_id}&teamlid=nieuw-ingevuld"
+
+    def test_sheet_after_daarna_goes_back_to_the_new_opdracht(self):
+        """Terug in the add-sheet leads to the opdracht, not to the create form
+        that was already sent."""
+        response = self.post_create("Terug Naar Opdracht", daarna="aanvraag")
+        path = json.loads(response["HX-Location"])["path"]
+        sheet = self.client.get(path, headers={"hx-request": "true", "hx-target": "side-panel-content"})
+        assignment = Assignment.objects.get(name="Terug Naar Opdracht")
+        bar = re.search(r"<nldd-top-title-bar\b[^>]*>", sheet.content.decode()).group(0)
+        assert 'text="Aanvraag toevoegen"' in bar
+        assert f'data-back-url="{reverse("assignment-list")}?opdracht={assignment.public_id}"' in bar
+
+    def test_the_sheet_after_daarna_shows_the_message(self):
+        """The add-sheet is where the user lands, so the confirmation rides
+        along with it."""
+        response = self.post_create("Met Melding", daarna="aanvraag")
+        path = json.loads(response["HX-Location"])["path"]
+        sheet = self.client.get(path, headers={"hx-request": "true", "hx-target": "side-panel-content"})
+        assert 'Opdracht "Met Melding" is aangemaakt.' in sheet.content.decode().replace("&#34;", '"')
+
+    def test_message_with_daarna_leaves_out_the_aanvraag_hint(self):
+        response = self.post_create("Stap Op Weg", daarna="plaatsing")
+        texts = [str(m) for m in get_messages(response.wsgi_request)]
+        assert texts == ['Opdracht "Stap Op Weg" is aangemaakt.']
+
+    def test_unknown_daarna_on_post_behaves_as_without(self):
+        response = self.post_create("Onzin Daarna", daarna="onzin")
+        assignment = Assignment.objects.get(name="Onzin Daarna")
+        location = json.loads(response["HX-Location"])
+        assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
+        (text,) = [str(m) for m in get_messages(response.wsgi_request)]
+        assert text.startswith('Opdracht "Onzin Daarna" is aangemaakt.')
+        assert "Voeg een aanvraag toe. Zonder aanvraag staat de opdracht niet bij Aanvragen." in text
+
+    def test_post_with_daarna_requires_add_assignment_permission(self):
+        self.client.force_login(self.regular_user)
+        response = self.client.post(reverse("assignment-create-sheet"), {"daarna": "aanvraag"})
+        assert response.status_code == 403
+
 
 class AssignmentListButtonTest(TestCase):
     def setUp(self):
@@ -241,19 +382,25 @@ class AssignmentListButtonTest(TestCase):
         )
 
     def test_bdm_sees_create_button(self):
+        # Since K1 the primary action is the split button "Aanvraag toevoegen";
+        # "Opdracht invoeren" is an item in its menu.
         self.client.force_login(self.business_manager_user)
         response = self.client.get(reverse("assignment-list"))
         assert response.status_code == 200
-        assert b"Opdracht invoeren" in response.content
+        html = response.content.decode()
+        assert re.search(r'<nldd-split-button[^>]*text="Aanvraag toevoegen"', html)
+        assert re.search(r'<nldd-menu-item text="Opdracht invoeren"', html)
 
     def test_create_button_targets_list_sentinel(self):
-        # The button opens the create sheet as a panel on the list
-        # (?nieuwe-opdracht) and pushes the URL, not via /invoeren/?terug=.
+        # The menu item opens the create sheet as a panel on the list
+        # (?nieuwe-opdracht), not via /invoeren/?terug=.
         self.client.force_login(self.business_manager_user)
         response = self.client.get(reverse("assignment-list"))
         html = response.content.decode()
-        assert "nieuwe-opdracht" in html
-        assert 'hx-push-url="true"' in html
+        item = re.search(r'<nldd-menu-item text="Opdracht invoeren"[^>]*>', html).group(0)
+        assert "nieuwe-opdracht" in item
+        # side_panel.js pushes the URL; htmx pushing it broke browser-back.
+        assert 'hx-push-url="false"' in item
         assert "invoeren/?terug=" not in html
 
     def test_regular_user_does_not_see_create_button(self):
@@ -261,3 +408,4 @@ class AssignmentListButtonTest(TestCase):
         response = self.client.get(reverse("assignment-list"))
         assert response.status_code == 200
         assert b"Opdracht invoeren" not in response.content
+        assert b"<nldd-split-button" not in response.content

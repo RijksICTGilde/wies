@@ -93,12 +93,10 @@ profiel" with the actions. #}
       {% else %}
         <span>Aanvraag: {{ row.skill_name }}</span>
       {% endif %}
-      {% if (svc and (svc.start_date or svc.end_date)) or row.shown_hours %}
+      {% if row.period_text or row.shown_hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
-          {% if svc and (svc.start_date or svc.end_date) %}
-            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-              {%- if svc.start_date and svc.end_date %}{{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}{% elif svc.start_date %}Vanaf {{ svc.start_date|datum_nl }}{% else %}t/m {{ svc.end_date|datum_nl }}{% endif -%}
-            </span>
+          {% if row.period_text %}
+            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>{{ row.period_text }}</span>
           {% endif %}
           {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
         </span>
