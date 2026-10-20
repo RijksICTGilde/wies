@@ -50,6 +50,14 @@
   <nldd-text-cell vertical-alignment="top" text="{{ assignment.name }}"></nldd-text-cell>
   <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
   </nldd-list-item>
+  {# Who you would work with. The whole team, with roles and periods, is on
+     the opdracht panel, so this row leads there too. #}
+  <nldd-list-item class="wies-cv__link" href="{{ panel_data.assignment_url }}" hx-get="{{ panel_data.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-text-cell width="140px" text="Team" vertical-alignment="top"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell vertical-alignment="top" text="{{ panel_data.team_text }}"></nldd-text-cell>
+  <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
+  </nldd-list-item>
   <nldd-list-item>
   <nldd-text-cell width="140px" text="Periode" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>

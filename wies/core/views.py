@@ -635,6 +635,22 @@ def _resolve_aanvraag_panel(request, public_id):
     return None
 
 
+# How many placed colleagues the aanvraag panel names; the rest is a count.
+TEAM_NAMES_SHOWN = 2
+
+
+def _team_names_text(rows: list[dict]) -> str:
+    """Who is placed on the opdracht, from ``visible_service_rows``: "Anke de
+    Vries, Bram Jansen en 3 anderen". A colleague in two roles counts once."""
+    names = list(dict.fromkeys(row["colleague"].name for row in rows if row["placement"] is not None))
+    if not names:
+        return "Nog niemand geplaatst"
+    shown, rest = names[:TEAM_NAMES_SHOWN], len(names) - TEAM_NAMES_SHOWN
+    if rest <= 0:
+        return " en ".join(shown)
+    return f"{', '.join(shown)} en {rest} {'ander' if rest == 1 else 'anderen'}"
+
+
 def _build_aanvraag_panel_data(service, request):
     """Builds the aanvraag panel: the read view of one open role on an opdracht.
 
@@ -644,11 +660,12 @@ def _build_aanvraag_panel_data(service, request):
     """
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, visible_service_rows  # noqa: PLC0415
     from wies.core.editables.service import request_period_text  # noqa: PLC0415
 
     assignment = service.assignment
     return {
+        "team_text": _team_names_text(visible_service_rows(assignment, request)),
         "panel_content_template": "parts/aanvraag_panel_content.html",
         "panel_title": f"Aanvraag: {service.skill.name}" if service.skill else "Aanvraag",
         "close_url": _build_close_url(request),
