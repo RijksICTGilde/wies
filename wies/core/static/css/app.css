@@ -501,19 +501,3 @@ nldd-card[button]:hover {
     min-width: 326px;
   }
 }
-
-/* The "Toevoegen" menu in the duplicate hint on the create form: with its text
-   the button left a name of a few letters per line on a phone. nldd-button has
-   no icon-only mode of its own, so the hint renders an nldd-icon-button beside
-   it and shows one of the two per width. */
-.wies-duplicate-add--icon {
-  display: none;
-}
-@media (max-width: 640px) {
-  .wies-duplicate-add--text {
-    display: none;
-  }
-  .wies-duplicate-add--icon {
-    display: inline-flex;
-  }
-}

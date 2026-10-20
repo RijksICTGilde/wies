@@ -24,22 +24,6 @@
   {# as_field_group, not as_widget plus a manual error loop: it links the error
      to the widget by id, without which nldd-form-field renders it at height 0. #}
   {% if form.organizations %}{{ form.organizations.as_field_group() }}{% endif %}
-  {# Points at a running opdracht of the same opdrachtgever; see
-     assignment_duplicate_check. Only the fields that can change the outcome
-     set it off: on every blur it would read the banner out again. #}
-  <div id="assignment-duplicate-hint"
-       hx-post="{{ url('assignment-duplicate-check') }}"
-       hx-trigger="change from:#assignment-org-inputs delay:300ms, change from:[name=start_date] delay:300ms, change from:[name=end_date] delay:300ms"
-       hx-include="closest form"
-       hx-target="this"
-       hx-swap="innerHTML"
-       hx-push-url="false">
-    {% if panel_data.dismissed_duplicates %}
-      <input type="hidden"
-             name="dubbel_genegeerd"
-             value="{{ panel_data.dismissed_duplicates }}">
-    {% endif %}
-  </div>
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}

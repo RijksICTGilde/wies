@@ -26,7 +26,6 @@ from wies.core.views import (
     UserListView,
     assignment_create_sheet,
     assignment_delete,
-    assignment_duplicate_check,
     assignment_edit_view,
     assignment_events_partial,
     assignment_import_csv,
@@ -102,7 +101,6 @@ urlpatterns = [
     # bookmarks keep working, filters included.
     path("opdrachten/", RedirectView.as_view(pattern_name="assignment-list", query_string=True, permanent=True)),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
-    path("opdrachten/invoeren/dubbel/", assignment_duplicate_check, name="assignment-duplicate-check"),
     path("opdrachten/kiezen/", assignment_pick_results, name="assignment-pick-results"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
     path("opdrachten/<uuid:public_id>/events/", assignment_events_partial, name="assignment-events-partial"),

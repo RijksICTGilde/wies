@@ -15,7 +15,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from config.jinja2 import datum_nl
-from wies.core.models import Assignment, Colleague, OrganizationUnit
+from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, OrganizationUnit, Placement, Service
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.assignments import find_pickable_assignments, team_count_text
 from wies.core.tests.role_helpers import (
@@ -25,12 +25,36 @@ from wies.core.tests.role_helpers import (
     make_business_manager_user,
     make_staff_user,
 )
-from wies.core.tests.test_assignment_duplicate_hint import add_placement, add_request, make_assignment
 from wies.rijksauth.models import User
 
 PICK_URL = reverse("assignment-pick-results")
 LIST_URL = reverse("assignment-list")
 PANEL_HEADERS = {"hx-request": "true", "hx-target": "side-panel-content"}
+
+
+def make_assignment(name, organization=None, *, role="PRIMARY", start=None, end=None, source="wies", owner=None):
+    assignment = Assignment.objects.create(name=name, start_date=start, end_date=end, source=source, owner=owner)
+    if organization is not None:
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=organization, role=role)
+    return assignment
+
+
+def add_request(assignment):
+    return Service.objects.create(assignment=assignment, source="wies")
+
+
+def add_placement(assignment, colleague, *, start=None, end=None):
+    service = Service.objects.create(assignment=assignment, source="wies")
+    if start is None and end is None:
+        return Placement.objects.create(service=service, colleague=colleague, source="wies")
+    return Placement.objects.create(
+        service=service,
+        colleague=colleague,
+        source="wies",
+        period_source=Placement.PLACEMENT,
+        specific_start_date=start,
+        specific_end_date=end,
+    )
 
 
 def set_created(assignment, days_ago):
@@ -536,3 +560,17 @@ class MemberSheetBackUrlTest(PickBase):
         )
         assert "data-back-url" not in content
         assert "Aanvraag toevoegen" not in content
+
+
+class PanelMemberAddUrlsTest(PickBase):
+    """The opdracht panel's "Toevoegen" menu builds its URLs with
+    _member_add_urls, as the rows of "Bij welke opdracht?" do."""
+
+    def test_panel_member_add_urls_keep_filters_and_drop_panel_params(self):
+        assignment = make_assignment("Zaaksysteem", self.org)
+        self.login()
+        response = self.client.get(LIST_URL, {"zoek": "data", "opdracht": assignment.public_id, "uitgeklapt": "x"})
+        assert response.status_code == 200
+        pid = assignment.public_id
+        self.assertContains(response, f'hx-get="{LIST_URL}?zoek=data&amp;opdracht={pid}&amp;teamlid=nieuw-aanvraag"')
+        self.assertContains(response, f'hx-get="{LIST_URL}?zoek=data&amp;opdracht={pid}&amp;teamlid=nieuw-ingevuld"')

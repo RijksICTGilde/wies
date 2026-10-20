@@ -361,9 +361,6 @@ def _build_assignment_create_panel_data(request, form, *, parent_url=None):
         "daarna": daarna,
         "edit_heading": "Nieuwe opdracht invoeren" if daarna else "Opdracht invoeren",
         "submit_label": "Voer opdracht in",
-        # Opdrachten the user already dismissed in the duplicate hint; kept
-        # through a failed submit, as the rest of the input is.
-        "dismissed_duplicates": ",".join(map(str, _dismissed_duplicate_ids(request))),
     }
 
 
@@ -4768,24 +4765,6 @@ def assignment_create_sheet(request):
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
-# How many look-alike opdrachten the hint lists; the rest is a count.
-DUPLICATE_HINT_LIMIT = 3
-
-
-def _iso_date_or_none(value) -> date | None:
-    try:
-        return date.fromisoformat(value or "")
-    except ValueError:
-        return None
-
-
-def _dismissed_duplicate_ids(request, *extra_fields) -> list:
-    """The opdrachten dismissed in the duplicate hint (``dubbel_genegeerd``,
-    plus ``extra_fields``), comma-separated public_ids in the POST."""
-    names = ("dubbel_genegeerd", *extra_fields)
-    return parse_public_ids([value for name in names for value in request.POST.get(name, "").split(",")])
-
-
 def _assignment_period_text(assignment) -> str:
     """The period as the opdracht cards word it."""
     # Deferred: config.jinja2 imports the editables, which import views code.
@@ -4799,66 +4778,6 @@ def _assignment_period_text(assignment) -> str:
     if end:
         return f"t/m {datum_nl(end)}"
     return "Geen periode opgegeven"
-
-
-@require_POST
-def assignment_duplicate_check(request):
-    """The hint on the create form that the opdracht may already exist.
-
-    POST although it writes nothing: htmx sends the whole create form along,
-    and its omschrijving does not belong in a query string. The response is the
-    hint fragment, empty when nothing matches.
-    """
-    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
-    from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
-        find_running_assignments_for_client,
-        team_summary_text,
-    )
-    from wies.core.widgets import OrgPickerWidget  # noqa: PLC0415 — avoids import cycle
-
-    if not request.user.has_perm("core.add_assignment"):
-        return HttpResponseForbidden()
-
-    # "Toch nieuwe opdracht invoeren" adds the opdrachten it dismissed; they
-    # stay away for every later check on this form.
-    dismissed = _dismissed_duplicate_ids(request, "negeer")
-    context = {
-        "dismissed": ",".join(str(pid) for pid in dismissed),
-        "just_dismissed": bool(request.POST.get("negeer")),
-        "matches": [],
-        "more_count": 0,
-    }
-
-    picked = OrgPickerWidget().value_from_datadict(request.POST, None, "organizations")
-    primary = next((p["organization"] for p in picked if p["role"] == "PRIMARY"), None)
-    organization = (
-        OrganizationUnit.objects.filter(public_id__in=parse_public_ids([primary])).first() if primary else None
-    )
-    if organization is not None:
-        found = find_running_assignments_for_client(
-            organization,
-            _iso_date_or_none(request.POST.get("start_date")),
-            _iso_date_or_none(request.POST.get("end_date")),
-            today=timezone.now().date(),
-            exclude_public_ids=dismissed,
-        )
-        found_ids = [str(pid) for pid in found.values_list("public_id", flat=True)]
-        page_path, page_query = _page_behind_panel(request)
-        context["organization_name"] = organization.label or organization.name
-        context["more_count"] = max(len(found_ids) - DUPLICATE_HINT_LIMIT, 0)
-        # "Toch nieuwe opdracht invoeren" dismisses all of them, not only the
-        # ones on show, or the next three would take their place.
-        context["found_ids"] = ",".join(found_ids)
-        context["matches"] = [
-            {
-                "assignment": assignment,
-                "period": _assignment_period_text(assignment),
-                "team": team_summary_text(visible_service_rows(assignment, request)),
-                **_member_add_urls(page_path, page_query, assignment),
-            }
-            for assignment in found[:DUPLICATE_HINT_LIMIT]
-        ]
-    return render(request, "parts/assignment_duplicate_hint.html", context)
 
 
 def _build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):

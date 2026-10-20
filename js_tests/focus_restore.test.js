@@ -595,38 +595,3 @@ describe("bind", () => {
     assert.deepEqual(seen, [target]);
   });
 });
-
-describe("operableAfter", () => {
-  // Document order as an index: compareDocumentPosition answers FOLLOWING (4)
-  // for anything with a higher index.
-  function placed(index, extra) {
-    const el = element({}, extra);
-    el.index = index;
-    return el;
-  }
-
-  it("returns the fields of the form that come after the container", () => {
-    const before = placed(0);
-    const inside = placed(2);
-    const after = placed(3);
-    const form = {
-      querySelectorAll() {
-        return [before, inside, after];
-      },
-    };
-    const container = placed(1, { children: [inside] });
-    container.closest = () => form;
-    container.compareDocumentPosition = (other) =>
-      other.index > container.index ? 4 : 2;
-
-    const restore = new FocusRestore(doc);
-    assert.deepEqual(restore.operableAfter(container), [after]);
-  });
-
-  it("returns nothing outside a form", () => {
-    const container = placed(1);
-    container.closest = () => null;
-    const restore = new FocusRestore(doc);
-    assert.deepEqual(restore.operableAfter(container), []);
-  });
-});
