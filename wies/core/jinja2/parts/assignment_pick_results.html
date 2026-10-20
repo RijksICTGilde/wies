@@ -1,15 +1,11 @@
-{# The opdrachten to choose from in "Bij welke opdracht?". data-announce:
-   live_region.js reads the outcome after each search. #}
-{% if pick_rows %}
-  {% set count_text = pick_total ~ (" opdracht" if pick_total == 1 else " opdrachten") %}
-  {% set summary = ("De eerste " ~ pick_rows|length ~ " van " ~ count_text) if pick_total > pick_rows|length else ((count_text ~ " gevonden") if pick_term else count_text) %}
-  <div data-announce="{{ summary }}">
+{% if pick.rows %}
+  <div data-announce="{{ pick.summary }}">
     <nldd-rich-text spacing="flat">
-    <p class="wies-text-secondary">{{ summary }}{% if pick_total > pick_rows|length %}. Zoek om de lijst kleiner te maken.{% endif %}</p>
+    <p class="wies-text-secondary">{{ pick.summary }}{% if pick.cut_off %}. Zoek om de lijst kleiner te maken.{% endif %}</p>
     </nldd-rich-text>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-list variant="box-tinted" accessible-label="Lopende opdrachten">
-    {% for row in pick_rows %}
+    {% for row in pick.rows %}
       <nldd-list-item button hx-get="{{ row.url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false">
       <nldd-text-cell>
       <span>{{ row.assignment.name }}</span>
@@ -21,7 +17,7 @@
     {% endfor %}
     </nldd-list>
   </div>
-{% elif pick_term %}
+{% elif pick.term %}
   <nldd-inline-dialog icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Zoek op een andere naam of opdrachtgever. Of voer een nieuwe opdracht in." data-announce="Geen opdrachten gevonden"></nldd-inline-dialog>
 {% else %}
   <nldd-inline-dialog icon="magnifier" text="Er lopen nu geen opdrachten" supporting-text="Voer eerst een nieuwe opdracht in." data-announce="Er lopen nu geen opdrachten"></nldd-inline-dialog>

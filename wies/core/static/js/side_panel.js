@@ -145,10 +145,8 @@
     history.replaceState({}, "", url.toString());
   }
 
-  // A panel opened from a toolbar's overflow menu: on a narrow screen the main
-  // actions live there. The dialog hands focus back to the menu item's clone in
-  // the closed menu, so it lands on <body>; the toolbar's "Meer" button is
-  // where the user was.
+  // Closing a panel opened from a toolbar's overflow menu drops focus on
+  // <body> (the menu item was a clone); "Meer" is where the user was.
   let openedFromToolbar = null;
   document.addEventListener("htmx:beforeRequest", (event) => {
     const elt = event.detail && event.detail.elt;
@@ -182,9 +180,8 @@
     });
   }
 
-  // A sheet whose server-rendered back-text names its parent also says where
-  // that is (data-back-url): back goes there, so the label and the target agree
-  // however the sheet was reached, also after a save that left the stack behind.
+  // A sheet that names its parent (data-back-url) goes back there, so label and
+  // target agree also after a save or reload left the stack behind.
   function serverBackUrl() {
     const content = document.getElementById(CONTENT_ID);
     const bar = content && content.querySelector(":scope > nldd-top-title-bar");

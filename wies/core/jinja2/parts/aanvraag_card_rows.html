@@ -1,13 +1,10 @@
-{# One card per open aanvraag, the opdracht as context. #}
 {% for svc in object_list %}
-  {% set title = svc.skill.name if svc.skill else "Rol niet ingevuld" %}
-  {% set link_name = (svc.skill.name if svc.skill else "Aanvraag zonder rol") ~ " bij " ~ svc.assignment.name %}
   {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
      hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
-  <nldd-card background="tinted" accessible-label="{{ link_name }}" href="{{ svc.panel_url }}" hx-get="{{ svc.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-card background="tinted" accessible-label="{{ svc.link_name }}" href="{{ svc.panel_url }}" hx-get="{{ svc.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
-  <h2>{{ title }}</h2>
+  <h2>{{ svc.card_title }}</h2>
   </nldd-title>
   <nldd-spacer size="4"></nldd-spacer>
   {# A paragraph of its own, so a screen reader pauses between the opdracht

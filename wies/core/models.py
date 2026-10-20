@@ -26,7 +26,6 @@ MAX_HOURS_PER_WEEK = 40
 DEFAULT_HOURS_PER_WEEK = 36
 # A select rather than a number input: nldd-text-field has no number type.
 HOURS_PER_WEEK_CHOICES = [("", " "), *((h, f"{h} uur") for h in range(1, MAX_HOURS_PER_WEEK + 1))]
-# How long an aanvraag runs, for when it has no end date yet.
 REQUEST_DURATION_CHOICES = [
     (3, "3 maanden"),
     (6, "6 maanden"),

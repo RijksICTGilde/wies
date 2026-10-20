@@ -4,11 +4,11 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 712: the primary action on Aanvragen and Bezetting is "Aanvraag toevoegen", with "Geplaatste consultant toevoegen" and "Opdracht invoeren" in its menu. Adding an aanvraag or a placed consultant first asks which running opdracht it belongs to, searchable on name or opdrachtgever with your own opdrachten first; "Nieuwe opdracht invoeren" is there too and goes on to the aanvraag or placement once the opdracht is saved. Back on a team member sheet now always returns to the opdracht or aanvraag its button names, also after saving
-- 712: Aanvragen shows one card per open aanvraag instead of one per opdracht: the role as title, the opdracht under it, hours per week, opdrachtgever, standplaats and period; a card opens the aanvraag panel. The counts, the search and the filters count and match aanvragen, and the search also finds a role, a standplaats or a word from "Wie we zoeken". "Beschikbaar vanaf" keeps an aanvraag that starts per direct, has no start date or has already started. An opdracht without an open aanvraag no longer appears on the list. The page is at /aanvragen/; /opdrachten/ redirects there, filters included
-- 712: the aanvraag panel has a "Team" row naming who is placed on the opdracht, two names and how many others ("Anke de Vries, Bram Jansen en 3 anderen"); the row opens the opdracht panel with the whole team
-- 712: (migration) an aanvraag has its own "Wie we zoeken", long enough for a full vacancy text (up to 10000 characters), apart from the role's "Taken", and a "Standplaats". Its period can start "per direct" and run for a duration (3 months to 2 years) instead of an end date; filling the aanvraag asks for dates as before, and "Taken" stay empty for the consultant to fill in. Existing aanvragen move their old taken to "Wie we zoeken". The opdracht's "Opdrachtomschrijving", the aanvraag's "Wie we zoeken" and a role's "Taken" each carry a help line saying what goes in.
-- 712: the "Aanvraag toevoegen" item in the opdracht panel's "Toevoegen" menu shows its icon again; it named an icon that does not exist
+- 712: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
+- 712: the aanvraag panel names who is placed on the opdracht; "Opdrachtomschrijving", "Wie we zoeken" and "Taken" each get a help line
+- 712: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag; it moved to /aanvragen/ (/opdrachten/ redirects)
+- 712: "Aanvraag toevoegen" is the primary action on Aanvragen and Bezetting and starts by choosing the running opdracht; "Geplaatste consultant toevoegen" and "Opdracht invoeren" are in its menu
+- 712: the "Aanvraag toevoegen" item in the opdracht panel shows its icon again
 
 ## 2026-10-19
 

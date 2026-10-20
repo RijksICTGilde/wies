@@ -820,7 +820,15 @@ def _pick_results_context(request, kind: str, term: str, path: str, query: Query
                 "url": _member_add_urls(path, query, assignment)[PICK_KINDS[kind]["member_url"]],
             }
         )
-    return {"pick_rows": rows, "pick_total": total, "pick_term": term}
+    count = f"{total} {'opdracht' if total == 1 else 'opdrachten'}"
+    cut_off = total > len(rows)
+    if cut_off:
+        summary = f"De eerste {len(rows)} van {count}"
+    elif term:
+        summary = f"{count} gevonden"
+    else:
+        summary = count
+    return {"pick": {"rows": rows, "summary": summary, "cut_off": cut_off, "term": term}}
 
 
 def _assignment_pick_panel(request):
@@ -2126,6 +2134,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             first_org = next(iter(service.assignment.organizations_by_pk), None)
             service.org_label = (first_org.label or first_org.name) if first_org else None
             service.period_text = request_period_text(service) or "Geen periode opgegeven"
+            service.card_title = service.skill.name if service.skill else "Rol niet ingevuld"
+            role = service.skill.name if service.skill else "Aanvraag zonder rol"
+            service.link_name = f"{role} bij {service.assignment.name}"
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
