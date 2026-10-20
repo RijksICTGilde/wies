@@ -177,7 +177,7 @@ class DuplicateCheckBase(TestCase):
 
     @staticmethod
     def dismissed_value(response) -> str:
-        match = re.search(r'name="dubbel_genegeerd" value="([^"]*)"', response.content.decode())
+        match = re.search(r'name="dubbel_genegeerd"\s+value="([^"]*)"', response.content.decode())
         assert match, "hidden dubbel_genegeerd input missing"
         return match.group(1)
 
