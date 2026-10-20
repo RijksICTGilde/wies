@@ -232,6 +232,15 @@ FocusRestore.prototype.handleSettle = function (container) {
   )
     return;
 
+  // Content that swapped itself empty inside a form (the dismissed duplicate
+  // hint) keeps the user in place: on the next field after it, not back on a
+  // field from the trail above it.
+  if (
+    !container.querySelector(FOCUSABLE) &&
+    this.focusFirst(this.operableAfter(container))
+  )
+    return;
+
   if (this.focusFromTrail()) return;
 
   // A panel names its own landing: the title, made focusable for this. A menu
@@ -257,6 +266,23 @@ FocusRestore.prototype.handleSettle = function (container) {
   // it gives. If nothing takes, leaving focus on <body> beats breaking the tab
   // order.
   this.focusFirst(container.querySelectorAll(FOCUSABLE));
+};
+
+// The operable elements of the container's form that come after it.
+FocusRestore.prototype.operableAfter = function (container) {
+  var form =
+    typeof container.closest === "function" ? container.closest("form") : null;
+  if (!form) return [];
+  return Array.prototype.filter.call(
+    form.querySelectorAll(FOCUSABLE),
+    function (el) {
+      // 4 = Node.DOCUMENT_POSITION_FOLLOWING
+      return (
+        !container.contains(el) &&
+        (container.compareDocumentPosition(el) & 4) !== 0
+      );
+    },
+  );
 };
 
 FocusRestore.prototype.bind = function () {

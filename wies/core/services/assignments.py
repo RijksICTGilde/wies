@@ -5,14 +5,18 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Count
+from django.db.models import Count, F, Q
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.services.organizations import get_excluded_org_ids
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
     from datetime import date
 
-    from wies.core.models import Colleague
+    from django.db.models import QuerySet
+
+    from wies.core.models import Colleague, OrganizationUnit
 
 
 def _resolve_skill_from_cleaned(cd: dict) -> Skill:
@@ -249,6 +253,51 @@ def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
         primary_organization_id=primary_org.id if primary_org else None,
         involved_organization_ids=[o.id for o in involved_orgs],
     )
+
+
+def find_running_assignments_for_client(
+    organization: OrganizationUnit,
+    start: date | None,
+    end: date | None,
+    *,
+    today: date,
+    exclude_public_ids: Iterable = (),
+) -> QuerySet[Assignment]:
+    """Running wies opdrachten with ``organization`` as primary opdrachtgever
+    whose period overlaps ``start`` to ``end``, newest first.
+
+    Backs the hint on the create form that the opdracht may already exist. Only
+    wies opdrachten: a role cannot be added to one from another system. An
+    empty date is open-ended on either side, so without a period every running
+    opdracht of the opdrachtgever matches.
+    """
+    # The picker refuses these units (#705), but the endpoint takes any id.
+    if organization.id in get_excluded_org_ids():
+        return Assignment.objects.none()
+    qs = Assignment.objects.filter(
+        source="wies",
+        organization_relations__organization=organization,
+        organization_relations__role="PRIMARY",
+    ).filter(Q(end_date__isnull=True) | Q(end_date__gte=today))
+    if start is not None:
+        qs = qs.filter(Q(end_date__isnull=True) | Q(end_date__gte=start))
+    if end is not None:
+        qs = qs.filter(Q(start_date__isnull=True) | Q(start_date__lte=end))
+    return qs.exclude(public_id__in=list(exclude_public_ids)).order_by(F("created_at").desc(nulls_last=True), "-id")
+
+
+def team_summary_text(rows: list[dict]) -> str:
+    """The team in words ("2 aanvragen, 1 plaatsing"), from ``visible_service_rows``."""
+    if not rows:
+        return "nog geen rollen"
+    open_count = sum(1 for row in rows if row["placement"] is None)
+    placed_count = len(rows) - open_count
+    parts = []
+    if open_count:
+        parts.append(f"{open_count} {'aanvraag' if open_count == 1 else 'aanvragen'}")
+    if placed_count:
+        parts.append(f"{placed_count} {'plaatsing' if placed_count == 1 else 'plaatsingen'}")
+    return ", ".join(parts)
 
 
 def find_duplicate_groups():
