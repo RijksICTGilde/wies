@@ -161,6 +161,16 @@
     );
   }
 
+  // The hidden inputs change without an input event of their own; the
+  // duplicate hint on the create form listens for "change" on the form. Only
+  // after a user's choice: renderFromInputs runs after every settle, the
+  // hint's own too, and would set off the check again.
+  function announceChange() {
+    var container = document.getElementById(INPUTS_ID);
+    if (container)
+      container.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
   function renderFromInputs() {
     if (!document.getElementById(INPUTS_ID)) return;
     // Only when missing: the server already renders the chip list.
@@ -200,6 +210,7 @@
       return;
     }
     renderSelection(rows);
+    announceChange();
   });
 
   document.addEventListener("wies:org-selection-applied", function (e) {
@@ -215,6 +226,7 @@
       rows.push({ nodeId: row.nodeId, label: row.label, role: "INVOLVED" });
     });
     renderSelection(rows);
+    announceChange();
   });
 
   // show() no-ops until the freshly swapped element has upgraded and rendered.

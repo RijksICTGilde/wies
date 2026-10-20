@@ -1,0 +1,47 @@
+{# The hint on the create form that the opdracht may already exist; filled by
+   assignment_duplicate_check when the opdrachtgever or a date changes. The
+   hidden input travels with each later check, so dismissed opdrachten stay
+   away. #}
+<input type="hidden"
+       name="dubbel_genegeerd"
+       value="{{ dismissed }}"
+       {% if just_dismissed %} data-announce="Melding gesloten"{% endif %}>
+{% if matches %}
+  {% set single = matches|length == 1 and not more_count %}
+  {% set heading = "Er loopt al een opdracht bij " ~ organization_name if single else "Er lopen al opdrachten bij " ~ organization_name %}
+  {% set supporting = "Hoort je aanvraag of plaatsing bij deze opdracht? Kies dan Toevoegen." if single else "Hoort je aanvraag of plaatsing bij een van deze opdrachten? Kies dan Toevoegen bij die opdracht." %}
+  {# data-announce: a banner inserted with its text in place is not read out
+     by itself; live_region.js does that after the swap. #}
+  <div data-announce="{{ heading }}">
+    <nldd-banner variant="accent" text="{{ heading }}" supporting-text="{{ supporting }}">
+    <nldd-list variant="box-tinted" accessible-label="Lopende opdrachten bij {{ organization_name }}">
+    {% for match in matches %}
+      {% set a = match.assignment %}
+      <nldd-list-item>
+      <nldd-text-cell>
+      <span>{{ a.name }}</span>
+      <span slot="supporting-text">{{ match.period }} · {{ match.team }}</span>
+      </nldd-text-cell>
+      <nldd-cell>
+      {# The same menu as "Toevoegen" in the opdracht panel; below md as an icon
+       button, so the name keeps the width (app.css). hx-params="none": the
+       mount's hx-include would send the whole form into the URL. #}
+      {% set menu %}
+        <nldd-menu slot="popup" placement="bottom-end">
+        <nldd-menu-item text="Aanvraag toevoegen" icon="new-text-document" hx-get="{{ match.member_add_aanvraag_url }}" hx-params="none" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ match.member_add_ingevuld_url }}" hx-params="none" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+        </nldd-menu>
+      {% endset %}
+      <nldd-button class="wies-duplicate-add wies-duplicate-add--text" type="button" size="sm" variant="secondary" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen aan {{ a.name }}">{{ menu }}</nldd-button>
+      <nldd-icon-button class="wies-duplicate-add wies-duplicate-add--icon" size="sm" icon="plus" tooltip-timing="never" text="Teamlid toevoegen aan {{ a.name }}">{{ menu }}</nldd-icon-button>
+      </nldd-cell>
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+    {% if more_count %}
+      <p>En nog {{ more_count }} {{ "andere lopende opdracht" if more_count == 1 else "andere lopende opdrachten" }} bij {{ organization_name }}.</p>
+    {% endif %}
+    <nldd-button slot="actions" type="button" variant="neutral-transparent" text="Toch nieuwe opdracht invoeren" hx-post="{{ url('assignment-duplicate-check') }}" hx-include="closest form" hx-vals='{"negeer": "{{ found_ids }}"}' hx-target="#assignment-duplicate-hint" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
+    </nldd-banner>
+  </div>
+{% endif %}
