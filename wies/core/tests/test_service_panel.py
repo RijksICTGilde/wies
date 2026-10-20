@@ -612,10 +612,9 @@ class LeavingAnAanvraagTest(TestCase):
         assert follow.status_code == 200
 
 
-class FillingAanvraagTakesOverDescriptionTest(TestCase):
-    """Filling an aanvraag offers its vacancy text to read and take over as
-    taken; the copy itself is member_form.js, this covers what the server
-    renders and accepts."""
+class FillingAanvraagTakenTest(TestCase):
+    """Filling an aanvraag: "Taken" are the consultant's own words; "Wie we
+    zoeken" is not offered to take over."""
 
     def setUp(self):
         self.client = Client()
@@ -624,43 +623,17 @@ class FillingAanvraagTakesOverDescriptionTest(TestCase):
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
 
-    def _sheet(self, service):
-        return self.client.get(
+    def test_the_sheet_offers_no_take_over(self):
+        service = Service.objects.create(
+            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
+        )
+        body = self.client.get(
             reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": str(service.public_id)}
         ).content.decode()
+        assert "Overnemen in Taken" not in body
+        assert "data-request-source" not in body
 
-    def test_the_offer_waits_until_the_status_is_ingevuld(self):
-        service = Service.objects.create(
-            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
-        )
-
-        body = self._sheet(service)
-
-        assert "Overnemen in Taken" in body
-        assert re.search(r"<div data-request-source\s*hidden>", body)
-
-    def test_a_filled_role_with_a_vacancy_text_shows_the_offer(self):
-        service = Service.objects.create(
-            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
-        )
-        consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
-        Placement.objects.create(colleague=consultant, service=service, source="wies")
-
-        assert re.search(r"<div data-request-source\s*>", self._sheet(service))
-
-    def test_the_offer_knows_the_taken_limit(self):
-        """member_form.js swaps the button for the note when the vacancy text is
-        longer than this; the limit comes from the form, not the script."""
-        service = Service.objects.create(
-            assignment=self.assignment, skill=self.skill, request_description="Vacature.", source="wies"
-        )
-
-        body = self._sheet(service)
-
-        assert 'data-tasks-max="2000"' in body
-        assert "langer dan 2000 tekens en past niet in Taken" in body
-
-    def test_taken_take_a_vacancy_text_up_to_2000_characters(self):
+    def test_taken_take_up_to_500_characters(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
         url = reverse("assignment-member-edit", args=[self.assignment.public_id])
         fields = {
@@ -670,6 +643,6 @@ class FillingAanvraagTakesOverDescriptionTest(TestCase):
             "has_custom_period": "on",
         }
 
-        assert self.client.post(url, {**fields, "description": "x" * 2001}).status_code == 200
-        assert self.client.post(url, {**fields, "description": "x" * 2000}).status_code == 204
-        assert self.assignment.services.get().description == "x" * 2000
+        assert self.client.post(url, {**fields, "description": "x" * 501}).status_code == 200
+        assert self.client.post(url, {**fields, "description": "x" * 500}).status_code == 204
+        assert self.assignment.services.get().description == "x" * 500

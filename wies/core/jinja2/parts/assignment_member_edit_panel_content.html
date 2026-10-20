@@ -114,29 +114,11 @@
     {% endif %}
     </nldd-form-field>
   </div>
-  {# One text per status: an aanvraag has its vacancy text (below the period,
-     being long), a placement its taken. Both post, so switching status loses
-     neither. #}
+  {# One text per status: an aanvraag has "Wie we zoeken" (below the period,
+     being long), a placement its taken, which the consultant fills in. Both
+     post, so switching status loses neither. #}
   {% set is_request = status_value != "ingevuld" %}
   <div data-tasks-field {% if is_request %}hidden{% endif %}>{{ svc_form.description.as_field_group() }}</div>
-  {# Filling an aanvraag: its vacancy text, to read or take over as taken.
-     member_form.js reads the text from the (hidden) "Wie we zoeken" field, so
-     edits made in this sheet count too. #}
-  <div data-request-source
-       {% if is_request or not svc_form.request_description.value() %}hidden{% endif %}>
-    <nldd-button size="sm" variant="accent-transparent" start-icon="chevron-down" text="Wie we zoeken bekijken" data-request-preview-toggle></nldd-button>
-    {# Read first, then take over: the button sits under the text it copies. #}
-    <div data-request-preview hidden>
-      <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-      <div class="wies-role-description__text" data-request-preview-text></div>
-      <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-      <div data-copy-request-action
-           data-tasks-max="{{ svc_form.description.field.max_length }}">
-        <nldd-button size="sm" variant="secondary" text="Overnemen in Taken" data-copy-request></nldd-button>
-      </div>
-      <p data-copy-request-too-long hidden>Deze tekst is langer dan {{ svc_form.description.field.max_length }} tekens en past niet in Taken. Neem de belangrijkste taken zelf over.</p>
-    </div>
-  </div>
   {{ svc_form.hours_per_week.as_field_group() }}
   {# has_custom_period is inverted: checked means inherit the assignment period. The
      segmented controls do not post; the hidden inputs at the bottom carry the
@@ -262,11 +244,5 @@
   </nldd-form-actions>
 </form>
 </nldd-form>
-{# Outside the form, so its buttons can never submit it. member_form.js opens
-   it when "Overnemen in Taken" would overwrite taken written by hand. #}
-<nldd-modal-dialog data-copy-request-dialog text="Taken vervangen?" supporting-text="De taken die er nu staan, worden vervangen door de omschrijving van de aanvraag.">
-<nldd-button slot="actions" variant="secondary" text="Annuleer" data-copy-request-cancel></nldd-button>
-<nldd-button slot="actions" variant="primary" text="Vervangen" data-copy-request-confirm></nldd-button>
-</nldd-modal-dialog>
 </nldd-simple-section>
 <script src="{{ app_asset('js/member_form.js') }}"></script>

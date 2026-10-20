@@ -1,7 +1,7 @@
-"""Tests for the copy in the 0020 migration that seeds Service.request_description.
+"""Tests for the move in the 0020 migration that seeds Service.request_description.
 
-An open role (no placement) gets its role text as a starting vacancy text; a
-filled role keeps an empty one, and the role text itself is left alone.
+An open role (no placement) gets its role text as its vacancy text and starts
+without taken; a filled role keeps its taken and gets no vacancy text.
 """
 
 from django.db import connection
@@ -50,7 +50,11 @@ class RequestDescriptionMigrationTest(TransactionTestCase):
         migrated = self._migrated(self.open)
 
         assert migrated.request_description == "Bouwt de koppeling."
-        assert migrated.description == "Bouwt de koppeling."
+        # Moved: the consultant who fills the aanvraag writes the taken.
+        assert migrated.description == ""
+
+    def test_a_filled_role_keeps_its_taken(self):
+        assert self._migrated(self.filled).description == "Taken van Anke."
 
     def test_a_filled_role_gets_no_vacancy_text(self):
         assert self._migrated(self.filled).request_description == ""

@@ -2,16 +2,25 @@
 
 from django.db import migrations, models
 from django.db.models import F
+from django.db.models.functions import Left
 
 
-def copy_open_role_text(apps, schema_editor):
-    """Gives each existing aanvraag its role text as a starting description.
+def move_open_role_text(apps, schema_editor):
+    """Moves each existing aanvraag's role text to "Wie we zoeken".
 
-    Copied, not moved: "Taken" stays as it was, so filling the aanvraag later
-    still finds it, and the reverse step has nothing to restore.
+    Moved, not copied: "Taken" is what the placed consultant fills in later,
+    so an aanvraag starts without it.
     """
     Service = apps.get_model("core", "Service")
-    Service.objects.filter(placements__isnull=True).exclude(description="").update(request_description=F("description"))
+    open_roles = Service.objects.filter(placements__isnull=True).exclude(description="")
+    open_roles.update(request_description=F("description"), description="")
+
+
+def move_back(apps, schema_editor):
+    Service = apps.get_model("core", "Service")
+    Service.objects.filter(placements__isnull=True, description="").exclude(request_description="").update(
+        description=Left(F("request_description"), 500)
+    )
 
 
 class Migration(migrations.Migration):
@@ -20,12 +29,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        # Room for a vacancy text taken over as taken when the aanvraag is filled.
-        migrations.AlterField(
-            model_name="service",
-            name="description",
-            field=models.CharField(blank=True, max_length=2000),
-        ),
         migrations.AddField(
             model_name="service",
             name="duration_months",
@@ -58,5 +61,5 @@ class Migration(migrations.Migration):
             name="starts_immediately",
             field=models.BooleanField(default=False, verbose_name="Per direct"),
         ),
-        migrations.RunPython(copy_open_role_text, migrations.RunPython.noop),
+        migrations.RunPython(move_open_role_text, move_back),
     ]
