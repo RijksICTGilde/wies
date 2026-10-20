@@ -25,7 +25,6 @@
 {% else %}
   <nldd-top-title-bar slot="header" text="{{ panel_data.assignment.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  {% set _can_delete = has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
   <nldd-title size="6">
   <p>Opdracht</p>
   </nldd-title>
@@ -36,7 +35,7 @@
   <h2 id="panel-title" tabindex="-1">{{ panel_data.assignment.name }}</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
+  {% if panel_data.show_updates_tab or panel_data.user_can_edit or panel_data.user_can_delete %}
     <nldd-toolbar label="Opdracht">
     {% if panel_data.show_updates_tab %}
       {# Higher priority than the buttons: the tabs are this panel's navigation
@@ -56,7 +55,7 @@
       <nldd-menu-item slot="overflow" text="Gegevens wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
-    {% if _can_delete %}
+    {% if panel_data.user_can_delete %}
       {# priority="-1": delete moves to the overflow menu first, so editing (the
          most common action) stays visible when space is tight. #}
       <nldd-toolbar-item slot="end" priority="-1">
@@ -199,7 +198,7 @@
       <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
       </nldd-modal-dialog>
     {% endif %}
-    {% if _can_delete %}
+    {% if panel_data.user_can_delete %}
       <div id="assignmentDeleteModal"></div>
     {% endif %}
   </div>

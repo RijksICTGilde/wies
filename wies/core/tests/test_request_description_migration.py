@@ -1,4 +1,4 @@
-"""Tests for the copy in the 0017 migration that seeds Service.request_description.
+"""Tests for the copy in the 0020 migration that seeds Service.request_description.
 
 An open role (no placement) gets its role text as a starting vacancy text; a
 filled role keeps an empty one, and the role text itself is left alone.
@@ -10,8 +10,8 @@ from django.db.migrations.loader import MigrationLoader
 from django.test import TransactionTestCase
 
 APP = "core"
-MIGRATE_FROM = "0016_service_description_optional"
-MIGRATE_TO = "0017_service_request_fields"
+MIGRATE_FROM = "0019_event_source_system"
+MIGRATE_TO = "0020_service_request_fields"
 
 
 class RequestDescriptionMigrationTest(TransactionTestCase):

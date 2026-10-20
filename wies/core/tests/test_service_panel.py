@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from wies.core.editables.service import request_period_text
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.tests.role_helpers import make_bdm_user
+from wies.core.tests.role_helpers import make_business_manager_user
 
 User = get_user_model()
 
@@ -93,7 +93,7 @@ class ServicePanelTest(TestCase):
         assert "Aanvraag wijzigen" not in body
 
     def test_a_team_editor_can_reach_the_edit_sheet_from_the_panel(self):
-        bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)
@@ -106,7 +106,7 @@ class ServicePanelTest(TestCase):
     def test_editing_from_the_panel_opens_the_sheet_and_returns_to_the_aanvraag(self):
         """The edit URL carries ?aanvraag= as well, so saving and going back
         land on this panel; with ?teamlid= the sheet wins over the panel."""
-        bdm = make_bdm_user(email="bdm3@rijksoverheid.nl")
+        bdm = make_business_manager_user(email="bdm3@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)
@@ -143,7 +143,7 @@ class ServicePanelTest(TestCase):
         """A row with a menu cannot be the link, so the title is a quiet one --
         as the name is on a person's row. Without it a team editor had no way
         in but the menu."""
-        bdm = make_bdm_user(email="bdm2@rijksoverheid.nl")
+        bdm = make_business_manager_user(email="bdm2@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)
@@ -250,7 +250,7 @@ class AanvraagFormRequestDescriptionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        self.bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
@@ -309,7 +309,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        self.bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
@@ -504,7 +504,7 @@ class LeavingAnAanvraagTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        self.bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
@@ -569,7 +569,7 @@ class FillingAanvraagTakesOverDescriptionTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.bdm = make_bdm_user(email="bdm@rijksoverheid.nl")
+        self.bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)

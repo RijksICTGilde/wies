@@ -4,7 +4,13 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 712: an aanvraag has its own "Omschrijving", long enough for a full vacancy text (up to 10000 characters), apart from the role's "Taken", and a "Standplaats". Its period can start "per direct" and run for a duration (3 months to 2 years) instead of an end date; filling the aanvraag asks for dates as before, and offers its description to read and take over as "Taken" (now up to 2000 characters). Existing aanvragen start with their old taken as description.
+- 712: (migration) an aanvraag has its own "Omschrijving", long enough for a full vacancy text (up to 10000 characters), apart from the role's "Taken", and a "Standplaats". Its period can start "per direct" and run for a duration (3 months to 2 years) instead of an end date; filling the aanvraag asks for dates as before, and offers its description to read and take over as "Taken" (now up to 2000 characters). Existing aanvragen start with their old taken as description.
+- 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
+- 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
+- 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status
+- 705: hidden organization units can no longer be set as opdrachtgever through the form or CSV import
+- 711: the organization sync accepts patch versions of the overheid.nl export schema (2.6.x), stops with a clear error on a new minor or major version, and fails visibly instead of reporting success when it finds no organizations
+- 707: (migration) the Updates tab of an opdracht decides on the colleague, not on their name, who may see a team change
 - 693: the text on a role is called "Taken" everywhere; "Omschrijving" now only means the text on an opdracht. Editing is "wijzigen" everywhere and the view actions in a row menu read as "Profiel bekijken" and "Aanvraag bekijken".
 - 693: the separate placement panel is gone. A person opens the colleague panel, where their opdrachten read as a cv: one labelled list per opdracht, with the role, the period and the "Taken". Empty "Taken" read "Niet ingevuld", so the placed colleague finds the pencil to fill them in.
 - 693: an aanvraag on a team row opens its own panel, a filled role no longer does

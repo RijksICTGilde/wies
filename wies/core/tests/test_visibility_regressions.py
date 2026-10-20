@@ -1,11 +1,10 @@
-"""Regression tests for the BDM visibility rule's edge surfaces (#636).
+"""Regression tests for the Business Manager visibility rule's edge surfaces (#636).
 
 Two holes found in review:
 
 - The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
-  team list, so a viewer with UPDATE rights but without visibility (a
-  ``change_assignment`` holder, staff) could read a hidden ended placement's
-  colleague and dates through a crafted URL.
+  team list, so a viewer with UPDATE rights but without visibility could read
+  a hidden ended placement's colleague and dates through a crafted URL.
 - The timeline's privacy note was taken from the *first* noted row of the
   viewer's current team list, so an event about one colleague could carry
   another row's note ("jou"-wording on someone else's event), and an event
@@ -13,16 +12,17 @@ Two holes found in review:
 """
 
 from datetime import timedelta
+from unittest import mock
 
-from django.contrib.auth.models import Permission
-from django.test import Client, RequestFactory, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.tests.role_helpers import STAFF_EMAIL, grant_bdm, make_staff_user
+from wies.core.permission_engine import _RULES, Verb, registered_rules
+from wies.core.tests.role_helpers import grant_business_manager, make_other_business_manager_user
 from wies.core.views import _team_event_privacy_note
-from wies.core.visibility_rules import PRIVACY_BDM, PRIVACY_OWN
+from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_OWN
 from wies.rijksauth.models import User
 
 
@@ -63,11 +63,17 @@ class MemberSheetHiddenRowTest(TestCase):
             self.assignment, self.skill, hidden, start=today - timedelta(days=100), end=today - timedelta(days=10)
         )
 
-        # The surviving edit-but-not-see class: UPDATE via change_assignment,
-        # no visibility (not placed, not a BDM).
+        # An edit-but-not-see user: UPDATE via a stand-in rule, no visibility
+        # (not placed, not a Business Manager).
         self.editor_user = User.objects.create_user(email="editor@rijksoverheid.nl")
         Colleague.objects.create(name="Editor", email="editor@rijksoverheid.nl", source="wies", user=self.editor_user)
-        self.editor_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        update_assignment = registered_rules()[(Verb.UPDATE, Assignment, None)]
+        patcher = mock.patch.dict(
+            _RULES,
+            {(Verb.UPDATE, Assignment, None): lambda u, a: u == self.editor_user or update_assignment(u, a)},
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
         self.editor_client = Client()
         self.editor_client.force_login(self.editor_user)
 
@@ -98,7 +104,7 @@ class MemberSheetHiddenRowTest(TestCase):
         owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.owner.user = owner_user
         self.owner.save(update_fields=["user"])
-        grant_bdm(owner_user)
+        grant_business_manager(owner_user)
         owner_client = Client()
         owner_client.force_login(owner_user)
 
@@ -108,15 +114,13 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
         self.assertContains(response, "Hidden Member")
 
-    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    def test_staff_opens_the_hidden_row_sheet(self):
-        # Support staff are privileged viewers, so unlike the change_assignment
-        # editor above they DO see the hidden row and its edit sheet.
-        staff_user = make_staff_user()
-        staff_client = Client()
-        staff_client.force_login(staff_user)
+    def test_a_bdm_opens_the_hidden_row_sheet(self):
+        # A Business Manager is a privileged viewer, so unlike the stand-in
+        # editor above it DOES see the hidden row and its edit sheet.
+        admin_client = Client()
+        admin_client.force_login(make_other_business_manager_user())
 
-        response = staff_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
+        response = admin_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
         assert response.status_code == 200
         self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
@@ -160,7 +164,7 @@ class MemberSheetHiddenRowTest(TestCase):
         owner_user = User.objects.create_user(email="owner@rijksoverheid.nl")
         self.owner.user = owner_user
         self.owner.save(update_fields=["user"])
-        grant_bdm(owner_user)
+        grant_business_manager(owner_user)
         owner_client = Client()
         owner_client.force_login(owner_user)
 
@@ -187,8 +191,8 @@ class MemberSheetHiddenRowTest(TestCase):
 
 
 class TeamEventPrivacyNoteTest(TestCase):
-    """The timeline note derives from the event's own names, not from whichever
-    current team row happens to carry a note."""
+    """The timeline note derives from the event's own colleagues, not from
+    whichever current team row happens to carry a note."""
 
     def setUp(self):
         self.skill = Skill.objects.create(name="Python Developer")
@@ -203,6 +207,8 @@ class TeamEventPrivacyNoteTest(TestCase):
             start=self.today - timedelta(days=10),
             end=self.today + timedelta(days=10),
         )
+        # Named by an event, but no longer placed on the assignment.
+        self.ghost = Colleague.objects.create(name="Ghost", email="ghost@rijksoverheid.nl", source="wies")
 
     def _request(self, user):
         request = RequestFactory().get(reverse("home"))
@@ -210,39 +216,45 @@ class TeamEventPrivacyNoteTest(TestCase):
         return request
 
     @staticmethod
-    def _removal_of(name) -> list[dict]:
+    def _removal_of(colleague) -> list[dict]:
         # The frozen audit snapshot of a row removal: only the old side exists.
-        return [{"old": {"colleague_name": name}, "new": None}]
+        return [{"old": {"colleague_name": colleague.name, "colleague_id": colleague.id}, "new": None}]
 
     def test_deleted_hidden_placement_still_gets_the_bdm_note(self):
         # The event names a colleague whose placement no longer exists, so no
         # current row carries a note — the chip must survive on the event's own
-        # names instead of vanishing.
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
-        Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
-        grant_bdm(bdm_user)
+        # colleagues instead of vanishing.
+        business_manager_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
+        Colleague.objects.create(name="Bm", email="bdm@rijksoverheid.nl", source="wies", user=business_manager_user)
+        grant_business_manager(business_manager_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.ghost)
+        )
 
-        assert note == PRIVACY_BDM
+        assert note == PRIVACY_BM
 
     def test_placed_bdm_does_not_lend_their_own_note_to_anothers_event(self):
         # The viewer's own ended row carries PRIVACY_OWN; an event about a
         # different hidden colleague must not borrow that "jou" wording.
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
-        bdm_colleague = Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
-        grant_bdm(bdm_user)
+        business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
+        business_manager_colleague = Colleague.objects.create(
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
+        )
+        grant_business_manager(business_manager_user)
         _place(
             self.assignment,
             self.skill,
-            bdm_colleague,
+            business_manager_colleague,
             start=self.today - timedelta(days=100),
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Ghost"))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.ghost)
+        )
 
-        assert note == PRIVACY_BDM
+        assert note == PRIVACY_BM
 
     def test_own_event_keeps_the_own_note_for_the_placed_colleague(self):
         placed_user = User.objects.create_user(email="placed@rijksoverheid.nl")
@@ -257,15 +269,19 @@ class TeamEventPrivacyNoteTest(TestCase):
             end=self.today - timedelta(days=10),
         )
 
-        note = _team_event_privacy_note(self.assignment, self._request(placed_user), self._removal_of("Placed"))
+        note = _team_event_privacy_note(self.assignment, self._request(placed_user), self._removal_of(placed))
 
         assert note == PRIVACY_OWN
 
     def test_publicly_visible_names_get_no_note(self):
-        bdm_user = User.objects.create_user(email="bdm@rijksoverheid.nl")
-        Colleague.objects.create(name="Bdm", email="bdm@rijksoverheid.nl", source="wies", user=bdm_user)
-        grant_bdm(bdm_user)
+        business_manager_user = User.objects.create_user(email="business_manager@rijksoverheid.nl")
+        Colleague.objects.create(
+            name="Bm", email="business_manager@rijksoverheid.nl", source="wies", user=business_manager_user
+        )
+        grant_business_manager(business_manager_user)
 
-        note = _team_event_privacy_note(self.assignment, self._request(bdm_user), self._removal_of("Active Member"))
+        note = _team_event_privacy_note(
+            self.assignment, self._request(business_manager_user), self._removal_of(self.active)
+        )
 
         assert note == ""

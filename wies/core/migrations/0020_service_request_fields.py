@@ -16,7 +16,7 @@ def copy_open_role_text(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0016_service_description_optional"),
+        ("core", "0019_event_source_system"),
     ]
 
     operations = [

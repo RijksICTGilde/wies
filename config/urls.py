@@ -17,7 +17,7 @@ Including another URLconf
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_not_required
-from django.urls import path
+from django.urls import include, path
 from django.views.generic import RedirectView
 
 from wies.core.views import (
@@ -59,6 +59,7 @@ from wies.core.views import (
     profile_labels_edit,
     profile_name_edit,
     robots_txt,
+    role_matrix,
     search_suggestions,
     staff_dashboard,
     staff_database,
@@ -121,6 +122,7 @@ urlpatterns = [
     path("beheer/merken/aanmaken/", suborganization_create, name="suborganization-create"),
     path("beheer/merken/<uuid:public_id>/bewerken/", suborganization_edit, name="suborganization-edit"),
     path("beheer/merken/<uuid:public_id>/verwijderen/", suborganization_delete, name="suborganization-delete"),
+    path("beheer/rollen/", role_matrix, name="role-matrix"),
     path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
     path("beheer/statistieken/foutmeldingen/", error_table, name="error-table"),
     path("beheer/statistieken/fout/<uuid:public_id>/", error_detail, name="error-detail"),
@@ -155,6 +157,8 @@ urlpatterns = [
         assignment_member_delete_view,
         name="assignment-member-delete",
     ),
+    # ODI start page
+    path("odi-startpagina/", include("wies.startpage.urls")),
 ]
 
 # Custom error handlers

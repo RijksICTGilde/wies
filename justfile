@@ -21,6 +21,7 @@ setup:
   docker compose run --rm django python manage.py load_dummy_data --profile base
   docker compose run --rm django python manage.py ensure_initial_user
   docker compose run --rm django python manage.py setup_initial_user
+  docker compose run --rm django python manage.py startpage_seed_dummy
 
 # Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
 load-full-data:
