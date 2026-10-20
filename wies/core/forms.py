@@ -475,6 +475,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
     skill = forms.ChoiceField(label="Rol", choices=(), required=True)
     description = forms.CharField(
         label="Taken",
+        help_text="Wat doet deze collega op de opdracht?",
         max_length=2000,
         required=False,
         widget=forms.Textarea(attrs={"rows": 2}),

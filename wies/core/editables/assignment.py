@@ -485,6 +485,7 @@ class AssignmentEditables(EditableSet):
 
     extra_info = Editable(
         label="Opdrachtomschrijving",
+        help_text="Waar gaat de opdracht over?",
         widget=forms.Textarea(attrs={"rows": 2}),
         display="forms/displays/textarea.html",
     )

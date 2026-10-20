@@ -83,9 +83,7 @@
       );
       previewToggle.setAttribute(
         "text",
-        open
-          ? "Omschrijving van de aanvraag verbergen"
-          : "Omschrijving van de aanvraag bekijken",
+        open ? "Wie we zoeken verbergen" : "Wie we zoeken bekijken",
       );
     });
   }

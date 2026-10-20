@@ -59,7 +59,7 @@ class ServicePanelTest(TestCase):
 
         assert "24 uur" in body
         assert "Uren per week" in body
-        assert 'text="Omschrijving"' in body
+        assert 'text="Wie we zoeken"' in body
         assert "We zoeken een developer voor het zaaksysteem." in body
 
     def test_the_panel_shows_the_vacancy_text_not_the_taken(self):

@@ -113,11 +113,11 @@
   {% set is_request = status_value != "ingevuld" %}
   <div data-tasks-field {% if is_request %}hidden{% endif %}>{{ svc_form.description.as_field_group() }}</div>
   {# Filling an aanvraag: its vacancy text, to read or take over as taken.
-     member_form.js reads the text from the (hidden) Omschrijving field, so
+     member_form.js reads the text from the (hidden) "Wie we zoeken" field, so
      edits made in this sheet count too. #}
   <div data-request-source
        {% if is_request or not svc_form.request_description.value() %}hidden{% endif %}>
-    <nldd-button size="sm" variant="accent-transparent" start-icon="chevron-down" text="Omschrijving van de aanvraag bekijken" data-request-preview-toggle></nldd-button>
+    <nldd-button size="sm" variant="accent-transparent" start-icon="chevron-down" text="Wie we zoeken bekijken" data-request-preview-toggle></nldd-button>
     {# Read first, then take over: the button sits under the text it copies. #}
     <div data-request-preview hidden>
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
@@ -127,7 +127,7 @@
            data-tasks-max="{{ svc_form.description.field.max_length }}">
         <nldd-button size="sm" variant="secondary" text="Overnemen in Taken" data-copy-request></nldd-button>
       </div>
-      <p data-copy-request-too-long hidden>Deze omschrijving is langer dan {{ svc_form.description.field.max_length }} tekens en past niet in Taken. Neem de belangrijkste taken zelf over.</p>
+      <p data-copy-request-too-long hidden>Deze tekst is langer dan {{ svc_form.description.field.max_length }} tekens en past niet in Taken. Neem de belangrijkste taken zelf over.</p>
     </div>
   </div>
   {{ svc_form.hours_per_week.as_field_group() }}

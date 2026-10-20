@@ -20,7 +20,8 @@ class ServiceEditables(EditableSet):
         widget=forms.Textarea(attrs={"rows": 2}),
     )
     request_description = Editable(
-        label="Omschrijving",
+        label="Wie we zoeken",
+        help_text="Welke kennis en ervaring vraagt de opdrachtgever?",
         widget=forms.Textarea(attrs={"rows": 8}),
         display="forms/displays/textarea.html",
     )
