@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ???: (security) return paths taken from the client (`terug_url`, `HX-Current-URL`) also reject the backslash form `/\host`, which browsers read as `//host`
 - ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment
 - 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
 - 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
