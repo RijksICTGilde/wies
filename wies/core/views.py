@@ -4590,8 +4590,8 @@ def assignment_create_sheet(request):
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
         # Aanvragen lists aanvragen only, so a new opdracht without one would be
-        # gone after the panel closes. Until entering asks for the roles itself
-        # (plans/opdracht-invoeren-met-rollen.md, PR C), the message says so.
+        # gone after the panel closes. Until entering an opdracht asks for its
+        # roles itself, the message says so.
         messages.success(
             request,
             f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe. '
