@@ -20,7 +20,7 @@ def inline_edit(ctx, obj, name, **extras):
     not carry them, so partials must degrade gracefully without them.
     """
     if obj is None:
-        return mark_safe("")
+        return ""
 
     # obj._meta (not type(obj)._meta) — request.user is a SimpleLazyObject wrapper
     # whose class has no _meta; instance attribute access resolves through the wrapper.
@@ -66,9 +66,8 @@ def inline_edit(ctx, obj, name, **extras):
         **(spec.display_context(obj, request) if getattr(spec, "display_context", None) else {}),
         **extras,
     }
-    # Trusted template; any user-supplied values go through Jinja's auto-escape.
     html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
-    return mark_safe(html)  # noqa: S308
+    return mark_safe(html)  # noqa: S308 (mark_safe) — output of an autoescaped template render, not string concatenation
 
 
 @pass_context
@@ -80,7 +79,7 @@ def inline_edit_form(ctx, obj, name, **extras):
     wizard that is "Volgende".
     """
     if obj is None:
-        return mark_safe("")
+        return ""
 
     model_label = obj._meta.model_name
     editable_set = REGISTRY.get(model_label)
@@ -115,4 +114,4 @@ def inline_edit_form(ctx, obj, name, **extras):
         **extras,
     }
     html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
-    return mark_safe(html)  # noqa: S308
+    return mark_safe(html)  # noqa: S308 (mark_safe) — output of an autoescaped template render, not string concatenation

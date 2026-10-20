@@ -20,6 +20,7 @@
 - Located in `wies/core/jinja2/`
 - Use @nldd/design-system web components
 - Dutch labels for all user-facing text
+- No `|safe`: the filter is removed from the Jinja environment. Render attributes from a dict, escaped per value (see `parts/primary_button.html`), or build markup with `format_html` in Python
 
 ## JavaScript
 
