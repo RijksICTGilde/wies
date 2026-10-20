@@ -728,11 +728,11 @@ class BezettingFilterChipTest(TestCase):
         assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-user-filter-open', content)
 
     def test_bm_gets_the_create_action_with_its_overflow_twin(self):
-        """Same split button and same panels as the Aanvragen list; the full
-        check is in test_assignment_pick.py."""
+        """The Aanvragen split button, led by "Collega plaatsen"; the full check
+        is in test_assignment_pick.py."""
         content = self.client.get(self.url).content.decode()
-        assert re.search(r'<nldd-split-button[^>]*text="Aanvraag toevoegen"', content)
-        for text in ("Aanvraag toevoegen", "Geplaatste consultant toevoegen", "Opdracht invoeren"):
+        assert re.search(r'<nldd-split-button[^>]*text="Collega plaatsen"', content)
+        for text in ("Collega plaatsen", "Aanvraag toevoegen", "Opdracht invoeren"):
             assert re.search(rf'<nldd-menu-item slot="overflow"[^>]*text="{text}"', content), text
         panel = self.client.get(self.url, {"nieuwe-opdracht": ""}).content.decode()
         assert "Nieuwe opdracht" in panel or "Opdracht invoeren" in panel

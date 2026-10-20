@@ -188,7 +188,7 @@ def _url_drop_params(path, query, names, **overrides):
 
 
 def _member_add_urls(path, query, assignment) -> dict:
-    """The "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" sheets of
+    """The "Aanvraag toevoegen" and "Collega plaatsen" sheets of
     ``assignment``, on the page ``path``/``query`` with its filters kept."""
     return {
         f"member_add_{kind}_url": _url_drop_params(
@@ -724,14 +724,13 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
-def _assignment_create_button(request):
-    """The split button "Aanvraag toevoegen", with "Geplaatste consultant
-    toevoegen" and "Opdracht invoeren" in its menu, or None without the
-    permission.
+def _assignment_create_button(request, *, with_placement: bool = False):
+    """The split button "Aanvraag toevoegen", with "Opdracht invoeren" in its
+    menu, or None without the permission.
 
-    Aanvraag first: what a business manager adds most is a role on an opdracht
-    that already exists. Same button on Aanvragen and Bezetting, so adding
-    works identically wherever a business manager is.
+    Aanvragen is about open roles, so adding one leads. Bezetting is about who
+    is placed: ``with_placement`` makes "Collega plaatsen" the button there and
+    moves "Aanvraag toevoegen" into the menu.
     """
     if not request.user.has_perm("core.add_assignment"):
         return None
@@ -739,24 +738,23 @@ def _assignment_create_button(request):
     # hx-push-url false: side_panel.js puts the URL in the address bar itself.
     # When htmx pushes it, browser-back restores that entry from the server and
     # the sheet does not open.
-    def panel_attrs(param):
-        return {
+    def action(text, icon, param):
+        attrs = {
             "hx-get": _build_panel_url(request, **{param: ""}),
             "hx-target": "#side-panel-content",
             "hx-swap": "innerHTML",
             "hx-push-url": "false",
         }
+        return {"text": text, "icon": icon, "attrs": attrs}
 
-    return {
-        "button_text": "Aanvraag toevoegen",
-        "icon": "new-text-document",
-        "attrs": panel_attrs("nieuwe-aanvraag"),
-        "menu": [
-            {"text": "Geplaatste consultant toevoegen", "icon": "add-user", "attrs": panel_attrs("nieuwe-plaatsing")},
-            None,  # divider
-            {"text": "Opdracht invoeren", "icon": "plus", "attrs": panel_attrs("nieuwe-opdracht")},
-        ],
-    }
+    aanvraag = action("Aanvraag toevoegen", "new-text-document", "nieuwe-aanvraag")
+    create = action("Opdracht invoeren", "plus", "nieuwe-opdracht")
+    if with_placement:
+        main, menu = action("Collega plaatsen", "add-user", "nieuwe-plaatsing"), [aanvraag, None, create]
+    else:
+        main, menu = aanvraag, [create]
+    # None in the menu: a divider before the exception.
+    return {"button_text": main["text"], "icon": main["icon"], "attrs": main["attrs"], "menu": menu}
 
 
 def _assignment_create_panel(request):
@@ -783,7 +781,7 @@ PICK_KINDS = {
     "aanvraag": {"param": "nieuwe-aanvraag", "title": "Aanvraag toevoegen", "member_url": "member_add_aanvraag_url"},
     "plaatsing": {
         "param": "nieuwe-plaatsing",
-        "title": "Geplaatste consultant toevoegen",
+        "title": "Collega plaatsen",
         "member_url": "member_add_ingevuld_url",
     },
 }
@@ -1010,7 +1008,7 @@ def bezetting(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "primary_button": _assignment_create_button(request),
+        "primary_button": _assignment_create_button(request, with_placement=True),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
@@ -4807,7 +4805,7 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
                 "has_custom_period": True,
                 "hours_per_week": DEFAULT_HOURS_PER_WEEK,
             }
-            member_heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
+            member_heading = "Collega plaatsen" if filled else "Aanvraag toevoegen"
         else:
             # teamlid is a Service public_id (UUID string); match it against the row
             # identity. A non-matching or malformed value just misses → 404 panel.

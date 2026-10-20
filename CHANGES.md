@@ -7,7 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 712: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
 - 712: the aanvraag panel names who is placed on the opdracht; "Opdrachtomschrijving", "Wie we zoeken" and "Taken" each get a help line
 - 712: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag; it moved to /aanvragen/ (/opdrachten/ redirects)
-- 712: "Aanvraag toevoegen" is the primary action on Aanvragen and Bezetting and starts by choosing the running opdracht; "Geplaatste consultant toevoegen" and "Opdracht invoeren" are in its menu
+- 712: "Aanvraag toevoegen" is the primary action on Aanvragen and "Collega plaatsen" on Bezetting; both start by choosing the running opdracht, with "Opdracht invoeren" in the menu
 - 712: the "Aanvraag toevoegen" item in the opdracht panel shows its icon again
 
 ## 2026-10-19

@@ -256,7 +256,7 @@ class PickPanelTest(PickBase):
     def test_plaatsing_panel(self):
         assignment = make_assignment("Zaaksysteem", self.org)
         content = self.panel({"nieuwe-plaatsing": ""})
-        assert re.search(r'<nldd-top-title-bar[^>]*text="Geplaatste consultant toevoegen"', content)
+        assert re.search(r'<nldd-top-title-bar[^>]*text="Collega plaatsen"', content)
         assert "Bij welke opdracht?" in content
         assert f'hx-get="{PICK_URL}?soort=plaatsing"' in content
         button = tag(content, "nldd-button", "Nieuwe opdracht invoeren")
@@ -421,34 +421,42 @@ class SplitButtonTest(PickBase):
         assert response.status_code == 200
         return response.content.decode()
 
-    def assert_split_button(self, content, base):
+    def assert_split_button(self, content, base, *, with_placement=False):
+        main, menu_items = ("Aanvraag toevoegen", "nieuwe-aanvraag"), [("Opdracht invoeren", "nieuwe-opdracht")]
+        if with_placement:
+            main, menu_items = (
+                ("Collega plaatsen", "nieuwe-plaatsing"),
+                [("Aanvraag toevoegen", "nieuwe-aanvraag"), *menu_items],
+            )
         split = re.search(r"<nldd-split-button\b[^>]*>", content)
         assert split, "split button missing"
         split = split.group(0)
         assert 'variant="primary"' in split
-        assert 'text="Aanvraag toevoegen"' in split
+        assert f'text="{main[0]}"' in split
         assert 'hx-trigger="action-click"' in split
-        assert f'hx-get="{base}nieuwe-aanvraag="' in split
+        assert f'hx-get="{base}{main[1]}="' in split
         assert 'hx-push-url="false"' in split
         menu = re.search(r"<nldd-split-button\b.*?</nldd-split-button>", content, re.DOTALL).group(0)
-        placed = tag(menu, "nldd-menu-item", "Geplaatste consultant toevoegen")
-        assert f'hx-get="{base}nieuwe-plaatsing="' in placed
-        create = tag(menu, "nldd-menu-item", "Opdracht invoeren")
-        assert f'hx-get="{base}nieuwe-opdracht="' in create
-        # Placement first, then a divider, then the exception.
-        assert menu.index(placed) < menu.index("<nldd-menu-divider") < menu.index(create)
+        items = [tag(menu, "nldd-menu-item", text) for text, _ in menu_items]
+        for item, (_, param) in zip(items, menu_items, strict=True):
+            assert f'hx-get="{base}{param}="' in item
+        if not with_placement:
+            assert "nieuwe-plaatsing" not in menu
+            return
+        # Aanvraag first, then a divider, then the exception.
+        assert menu.index(items[0]) < menu.index("<nldd-menu-divider") < menu.index(items[1])
 
-    def assert_overflow_twins(self, content):
+    def assert_overflow_twins(self, content, *, with_placement=False):
         overflow = re.findall(r'<nldd-menu-item slot="overflow"[^>]*>', content)
         texts = {}
         for item in overflow:
             text = re.search(r'text="([^"]*)"', item).group(1)
             texts[text] = item
-        for text, param in (
-            ("Aanvraag toevoegen", "nieuwe-aanvraag"),
-            ("Geplaatste consultant toevoegen", "nieuwe-plaatsing"),
-            ("Opdracht invoeren", "nieuwe-opdracht"),
-        ):
+        expected = [("Aanvraag toevoegen", "nieuwe-aanvraag"), ("Opdracht invoeren", "nieuwe-opdracht")]
+        if with_placement:
+            expected.append(("Collega plaatsen", "nieuwe-plaatsing"))
+        assert ("Collega plaatsen" in texts) == with_placement
+        for text, param in expected:
             assert text in texts, f"overflow item {text!r} missing"
             assert 'hx-trigger="select"' in texts[text]
             assert f"{param}=" in texts[text]
@@ -462,11 +470,11 @@ class SplitButtonTest(PickBase):
         content = self.page(params={"zoek": "data"})
         self.assert_split_button(content, f"{LIST_URL}?zoek=data&amp;")
 
-    def test_bezetting_has_the_same_split_button(self):
+    def test_bezetting_leads_with_collega_plaatsen(self):
         url = reverse("bezetting")
         content = self.page(url)
-        self.assert_split_button(content, f"{url}?")
-        self.assert_overflow_twins(content)
+        self.assert_split_button(content, f"{url}?", with_placement=True)
+        self.assert_overflow_twins(content, with_placement=True)
 
     def test_without_the_permission_no_button(self):
         for user in (self.consultant_user(), self.user_admin_user(), self.no_role_user()):
