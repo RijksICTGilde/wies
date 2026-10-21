@@ -22,6 +22,16 @@
     {% endif %}
   {% endfor %}
   {{ content.groups.as_field_group() }}
+  {# Creating only: the first period posts with the user, since there is no
+     colleague yet for the block below to hang it on. #}
+  {% if content.with_contract_period %}
+    {# One fieldset for both: the pair is optional as a whole (one without the
+       other is refused), so the badge sits on the section, not on each field. #}
+    <nldd-form-section text="Arbeidsuren" supporting-text="Optioneel">
+    {{ content.contract_hours_per_week.as_field_group() }}
+    {{ content.contract_start_date.as_field_group() }}
+    </nldd-form-section>
+  {% endif %}
   <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>
 </nldd-form>
