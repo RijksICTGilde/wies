@@ -3,12 +3,18 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Event, Placement, Service
-from wies.core.tests.role_helpers import STAFF_EMAIL, make_bdm_user, make_staff_user
+from wies.core.roles import ROLE_USER_ADMIN
+from wies.core.tests.role_helpers import (
+    STAFF_EMAIL,
+    make_business_manager_user,
+    make_other_business_manager_user,
+    make_staff_user,
+)
 
 User = get_user_model()
 
@@ -19,9 +25,9 @@ NOTE = "Budget nog niet rond"
 class AssignmentBmFieldsTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.owner_user = make_bdm_user(email="owner@rijksoverheid.nl", name="Owner")
+        self.owner_user = make_business_manager_user()
         # A Business Manager who does not own this assignment.
-        self.bdm_user = make_bdm_user(email="bdm@rijksoverheid.nl", name="Other Bdm")
+        self.business_manager_user = make_other_business_manager_user()
         self.assignment = Assignment.objects.create(
             name="Opdracht",
             source="wies",
@@ -39,8 +45,8 @@ class AssignmentBmFieldsTest(TestCase):
         service = Service.objects.create(description="Rol", assignment=self.assignment, source="wies")
         Placement.objects.create(colleague=consultant, service=service)
 
-        self.beheerder_user = User.objects.create_user(email="beheerder@rijksoverheid.nl")
-        self.beheerder_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        self.user_admin = User.objects.create_user(email="gebruikersbeheerder@rijksoverheid.nl")
+        self.user_admin.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
 
     def _panel(self, user):
         self.client.force_login(user)
@@ -76,13 +82,14 @@ class AssignmentBmFieldsTest(TestCase):
         assert response.status_code == 200
         return response.content.decode()
 
-    def _save(self, user, data):
+    def _save(self, user, field, value):
+        """One field through the edit sheet, as its row menu opens it."""
         self.client.force_login(user)
-        url = reverse("assignment-edit", args=[self.assignment.public_id])
-        return self.client.post(url, {**data, "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"})
+        url = reverse("assignment-edit", args=[self.assignment.public_id]) + f"?veld={field}"
+        return self.client.post(url, {field: value, "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"})
 
-    def test_bdm_sees_both_fields_marked_as_bm_only(self):
-        body = self._panel(self.bdm_user)
+    def test_business_manager_sees_both_fields_marked_as_business_manager_only(self):
+        body = self._panel(self.business_manager_user)
         assert CONTACT in body
         assert NOTE in body
         assert "Alleen zichtbaar voor de Business Managers" in body
@@ -92,8 +99,8 @@ class AssignmentBmFieldsTest(TestCase):
         assert CONTACT not in body
         assert NOTE not in body
 
-    def test_beheerder_does_not_see_them(self):
-        body = self._panel(self.beheerder_user)
+    def test_user_admin_does_not_see_them(self):
+        body = self._panel(self.user_admin)
         assert CONTACT not in body
         assert NOTE not in body
 
@@ -103,26 +110,27 @@ class AssignmentBmFieldsTest(TestCase):
         assert CONTACT not in body
         assert NOTE not in body
 
-    def test_bdm_does_not_see_them_on_an_external_assignment(self):
+    def test_business_manager_does_not_see_them_on_an_external_assignment(self):
         """Nobody can fill them in there, so the rows would stay empty for good."""
         self.assignment.source = "otys_iir"
         self.assignment.save()
-        body = self._panel(self.bdm_user)
+        body = self._panel(self.business_manager_user)
         assert CONTACT not in body
         assert "Contactpersoon" not in body
 
-    def test_bdm_who_is_not_the_owner_can_save_them(self):
-        response = self._save(self.bdm_user, {"contact_person": "Piet", "internal_note": "Nieuw"})
-        assert response.status_code == 204
+    def test_business_manager_who_is_not_the_owner_can_save_them(self):
+        assert self._save(self.business_manager_user, "contact_person", "Piet").status_code == 204
+        assert self._save(self.business_manager_user, "internal_note", "Nieuw").status_code == 204
         self.assignment.refresh_from_db()
         assert self.assignment.contact_person == "Piet"
         assert self.assignment.internal_note == "Nieuw"
         assert self.assignment.name == "Opdracht"
 
     def test_both_are_capped_at_200_characters(self):
-        response = self._save(self.bdm_user, {"contact_person": "a" * 201, "internal_note": "b" * 201})
-        assert response.status_code == 200
-        assert response.content.decode().count("Gebruik maximaal 200 tekens. Het zijn er nu 201.") == 2
+        for field in ("contact_person", "internal_note"):
+            response = self._save(self.business_manager_user, field, "a" * 201)
+            assert response.status_code == 200
+            assert "Gebruik maximaal 200 tekens. Het zijn er nu 201." in response.content.decode()
         self.assignment.refresh_from_db()
         assert self.assignment.contact_person == CONTACT
         assert self.assignment.internal_note == NOTE
@@ -131,27 +139,11 @@ class AssignmentBmFieldsTest(TestCase):
         body = self._edit_sheet(self.owner_user)
         assert 'name="contact_person"' in body
         assert 'name="internal_note"' in body
-        assert "Opdracht bewerken" in body
+        assert "Opdracht wijzigen" in body
         assert "Alleen zichtbaar voor de Business Managers." in body
 
-    def test_other_bdm_edit_sheet_is_named_after_the_two_fields(self):
-        body = self._edit_sheet(self.bdm_user)
-        assert "Contactpersoon en opmerking wijzigen" in body
-        assert 'name="name"' not in body
-
-    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    def test_staff_edit_sheet_leaves_them_out(self):
-        """Staff may edit the rest of the assignment, but not these two."""
-        body = self._edit_sheet(make_staff_user())
-        assert 'name="name"' in body
-        assert 'name="contact_person"' not in body
-        assert 'name="internal_note"' not in body
-
     def test_placed_consultant_cannot_save_them(self):
-        self.client.force_login(self.consultant_user)
-        url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=internal_note"
-        response = self.client.post(url, {"internal_note": "Gehackt"})
-        assert response.status_code == 403
+        assert self._save(self.consultant_user, "internal_note", "Gehackt").status_code == 403
         self.assignment.refresh_from_db()
         assert self.assignment.internal_note == NOTE
 
@@ -162,22 +154,21 @@ class AssignmentBmFieldsTest(TestCase):
         assert NOTE not in response.content.decode()
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    def test_inline_edit_endpoint_does_not_leak_to_those_who_may_edit_the_rest(self):
-        """Beheerder and staff pass the whole-object rule, but not the field rule."""
+    def test_inline_edit_endpoint_does_not_leak_to_the_beheer_roles(self):
+        """Neither the Gebruikersbeheerder nor the Applicatiebeheerder plans."""
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "internal_note"])
-        for user in (self.beheerder_user, make_staff_user()):
+        for user in (self.user_admin, make_staff_user()):
             self.client.force_login(user)
             for query in ("", "?edit=1", "?cancel=1"):
                 assert NOTE not in self.client.get(url + query).content.decode()
 
-    def test_bdm_cannot_edit_them_on_an_external_assignment(self):
+    def test_business_manager_cannot_edit_them_on_an_external_assignment(self):
         self.assignment.source = "otys_iir"
         self.assignment.save()
-        response = self._save(self.bdm_user, {"internal_note": "Nieuw"})
-        assert response.status_code == 403
+        assert self._save(self.business_manager_user, "internal_note", "Nieuw").status_code == 403
 
-    def test_timeline_shows_the_change_to_a_bdm(self):
-        body = self._timeline(self.bdm_user)
+    def test_timeline_shows_the_change_to_a_business_manager(self):
+        body = self._timeline(self.business_manager_user)
         assert NOTE in body
         assert "Beperkt zichtbaar" in body
 
@@ -188,7 +179,7 @@ class AssignmentBmFieldsTest(TestCase):
             "old_value": CONTACT,
             "new_value": "",
         }
-        assert "heeft de contactpersoon verwijderd." in self._timeline(self.bdm_user, context)
+        assert "heeft de contactpersoon verwijderd." in self._timeline(self.business_manager_user, context)
 
     def test_timeline_hides_the_values_of_a_field_no_longer_declared(self):
         """Without a declaration there is no read rule left to check."""
@@ -199,4 +190,4 @@ class AssignmentBmFieldsTest(TestCase):
 
     def test_timeline_hides_the_change_from_others(self):
         assert NOTE not in self._timeline(self.consultant_user)
-        assert "opmerking" not in self._timeline(self.beheerder_user)
+        assert "opmerking" not in self._timeline(self.user_admin)

@@ -16,7 +16,7 @@ class ServiceEditables(EditableSet):
         model = Service
 
     description = Editable(
-        label="Omschrijving rol",
+        label="Taken",
         widget=forms.Textarea(attrs={"rows": 2}),
     )
     skill = Editable(label="Rol")

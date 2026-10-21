@@ -1,20 +1,18 @@
-{# Child sheet of the placement panel: one form over Service.skill,
-   Service.description, Service.hours_per_week and the Placement period group. The back button fires a
-   `back` event that side_panel.js handles; saving re-renders the parent panel.
+{# Child sheet of the opdracht panel: one form over Service.skill,
+   Service.description, Service.hours_per_week and the Placement period group,
+   narrowed to what the viewer may edit. The back button fires a `back` event
+   that side_panel.js handles; saving re-renders the parent panel.
 
    nldd-form gets its own <form> as a direct child (user-provided form mode),
    because htmx needs its attributes on the real form element. #}
-{% set colleague = panel_data.colleague %}
 {% set form = panel_data.form %}
-{# The view supplies a heading when ?veld= edits a single row; without it the
-   whole form is shown. #}
-{% set panel_heading = panel_data.edit_heading or "Plaatsing bewerken" %}
+{% set panel_heading = panel_data.edit_heading %}
 {# collapse-anchor: the bar shows the same title only once the heading below
    scrolls out of view. #}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ colleague.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
-<h3 id="panel-title">{{ panel_heading }}</h3>
+<h3 id="panel-title" tabindex="-1">{{ panel_heading }}</h3>
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>

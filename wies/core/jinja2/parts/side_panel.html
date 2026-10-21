@@ -1,0 +1,11 @@
+{# The side panel every list page opens: one sheet, one width. 800px is the
+   NLDD ceiling for readable text; 640 wrapped the opdrachtgever and the team
+   rows. nldd-page must be a direct child: the sheet only stretches
+   ::slotted(nldd-page). #}
+<nldd-sheet id="side-panel" placement="right" width="800px" accessible-label="Detail">
+<nldd-page id="side-panel-content" sticky-header>
+{% if panel_data %}
+  {% include panel_data.panel_content_template %}
+{% endif %}
+</nldd-page>
+</nldd-sheet>

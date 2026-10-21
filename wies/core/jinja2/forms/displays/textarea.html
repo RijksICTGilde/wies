@@ -1,4 +1,4 @@
-{# Show-more toggle lives in inline_edit.js. #}
+{# Show-more toggle: toggle-long-text in ui_handlers.js. #}
 {% if value %}
   {% set lines = value.splitlines() %}
   {% set too_many_chars = value|length > 300 %}
@@ -8,8 +8,7 @@
     <span class="inline-edit-long-text">
       <span class="inline-edit-long-text__truncated">{{ truncated }}…</span>
       <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
-      {# Tekst en icoon wisselen via attributen (inline_edit.js). #}
-      <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer"></nldd-button>
+      <nldd-button class="inline-edit-show-more" size="sm" variant="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text"></nldd-button>
     </span>
   {% else %}
     <span class="inline-edit-long-text__truncated">{{ value }}</span>

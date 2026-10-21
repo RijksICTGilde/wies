@@ -11,7 +11,6 @@ import re
 import uuid
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
 from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -40,11 +39,11 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
-from wies.core.roles import BDM_GROUP_NAME
+from wies.core.roles import ROLE_BUSINESS_MANAGER
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
+from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -107,8 +106,8 @@ class InlineEditInfrastructureTest(TestCase):
             first_name="Inline",
             last_name="Tester",
         )
-        # Ownership only grants edit rights combined with the BDM role.
-        grant_bdm(self.user)
+        # Ownership only grants edit rights combined with the Business Manager role.
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
         # The user_logged_in signal auto-creates a Colleague for the
         # user. Grab it for use as assignment owner.
@@ -161,7 +160,7 @@ class InlineEditInfrastructureTest(TestCase):
         assert "edit=true" in content
         assert "edit-icon-button" in content
         # And a tooltip aiding discoverability now the value isn't clickable.
-        assert 'title="Bewerk ' in content
+        assert 'title="Wijzig ' in content
 
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
@@ -252,7 +251,7 @@ class InlineEditPermissionTest(TestCase):
         _restore_rules(self._prev_rules)
 
     def test_object_permission_denied_returns_display_with_alert(self):
-        # No placement, no ownership, no Beheerder perm → whole-object
+        # No placement, no ownership, no role → whole-object
         # rule update_assignment denies → alert rendered.
         _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
@@ -269,7 +268,7 @@ class InlineEditPermissionTest(TestCase):
         # always returns False, even though the whole-object rule might
         # otherwise allow.
         cls = _register(_make_set("FieldDeniedEditables", Assignment, name=Editable()))
-        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
+        rule(Verb.UPDATE, cls.name, label="Testregel", grants=[])
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
@@ -277,7 +276,7 @@ class InlineEditPermissionTest(TestCase):
 
     def test_post_denied_does_not_save(self):
         cls = _register(_make_set("PostDeniedEditables", Assignment, name=Editable()))
-        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
+        rule(Verb.UPDATE, cls.name, label="Testregel", grants=[])
         url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.post(url, {"name": "hacked"})
         assert resp.status_code == 200
@@ -290,10 +289,10 @@ class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, "G", "G", "group@rijksoverheid.nl")
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so the permission engine allows all UPDATEs
+        # Business Manager owner so the permission engine allows all UPDATEs
         # these tests focus on group rendering/save, not auth.
         self.assignment = Assignment.objects.create(
             name="G",
@@ -415,10 +414,10 @@ class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = create_user(None, email="cs@rijksoverheid.nl", first_name="C", last_name="S")
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so permission checks pass;
+        # Business Manager owner so permission checks pass;
         # this test focuses on the custom-save dispatch, not auth.
         self.assignment = Assignment.objects.create(
             name="Before",
@@ -456,10 +455,10 @@ class InlineEditDisplayTest(TestCase):
             first_name="D",
             last_name="D",
         )
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
 
-        # BDM owner so permission checks pass;
+        # Business Manager owner so permission checks pass;
         # this test focuses on display rendering, not auth.
         self.assignment = Assignment.objects.create(
             name="Shown",
@@ -505,9 +504,9 @@ class AssignmentPanelRenderTest(TestCase):
         )
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
-        # The owner field only offers BDM colleagues, so the combined edit form
+        # The owner field only offers Business Manager colleagues, so the combined edit form
         # needs the owner to be a valid choice for itself.
-        grant_bdm(self.user)
+        grant_business_manager(self.user)
         self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
@@ -542,7 +541,7 @@ class AssignmentPanelRenderTest(TestCase):
         all assignment fields, posting to the assignment-edit endpoint."""
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken=1")
         assert response.status_code == 200
-        self.assertContains(response, "Opdracht bewerken")
+        self.assertContains(response, "Opdracht wijzigen")
         self.assertContains(response, f"/opdracht/{self.assignment.public_id}/bewerken/")
         for field in ("name", "extra_info", "owner", "start_date", "end_date"):
             self.assertContains(response, f'name="{field}"')
@@ -566,7 +565,7 @@ class AssignmentPanelRenderTest(TestCase):
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, "Teamlid wijzigen")
         self.assertContains(response, 'name="service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
@@ -712,10 +711,8 @@ class AssignmentEditablesFullTest(TestCase):
             first_name="F",
             last_name="F",
         )
-        # Grant change_assignment so the user can edit regardless of ownership.
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
-        # Put user's Colleague in the BDM group so it shows up in owner choices.
-        grant_bdm(self.user)
+        # Business Manager owner: may edit, and the Colleague shows up in owner choices.
+        grant_business_manager(self.user)
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -761,15 +758,15 @@ class AssignmentEditablesFullTest(TestCase):
         assert self.assignment.end_date is None
 
     def test_owner_edit_form_limits_choices_to_bdms(self):
-        # A non-BDM colleague should not appear as an option.
+        # A non-Business-Manager colleague should not appear as an option.
         User.objects.create_user(
             email="notbdm@rijksoverheid.nl",
             first_name="Not",
-            last_name="BDM",
+            last_name="Business Manager",
         )
         resp = self.client.get(self._url("owner") + "?edit=true")
         self.assertContains(resp, self.colleague.name)
-        self.assertNotContains(resp, "Not BDM")
+        self.assertNotContains(resp, "Not Business Manager")
 
     def test_owner_display_uses_custom_partial(self):
         resp = self.client.get(self._url("owner"))
@@ -805,10 +802,10 @@ class AssignmentCreateFormIntegrationTest(TestCase):
     """
 
     def setUp(self):
-        self.bdm_user = make_bdm_user()
+        self.business_manager_user = make_business_manager_user()
 
     def _form_cls(self):
-        form_cls, _ = build_combined_form_class(assignment_create_specs(self.bdm_user))
+        form_cls, _ = build_combined_form_class(assignment_create_specs(self.business_manager_user))
         return form_cls
 
     def test_labels_come_from_editables(self):
@@ -818,10 +815,10 @@ class AssignmentCreateFormIntegrationTest(TestCase):
 
     def test_owner_queryset_filtered_to_bdm_group(self):
         # The owner queryset is derived from the Editable's choices — it includes
-        # the BDM group filter defined in the editables module.
+        # the Business Manager group filter defined in the editables module.
         form = self._form_cls()()
         qs = form.fields["owner"].queryset
-        assert BDM_GROUP_NAME in str(qs.query)
+        assert ROLE_BUSINESS_MANAGER in str(qs.query)
 
     def test_period_cross_field_rule_applies(self):
         form = self._form_cls()(
@@ -847,7 +844,7 @@ class PlacementServiceEditablesTest(TestCase):
             first_name="P",
             last_name="S",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         assignment = Assignment.objects.create(
@@ -930,7 +927,7 @@ class AssignmentServicesDisplayTest(TestCase):
             first_name="Svc",
             last_name="Display",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -959,17 +956,18 @@ class AssignmentServicesDisplayTest(TestCase):
         )
         self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
-    def test_filled_row_is_clickable_to_placement_panel(self):
+    def test_filled_row_offers_the_colleague_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         # Renders inside the open NLDD side panel, so it swaps the inner
         # content (#side-panel-content) rather than rebuilding the sheet.
         self.assertContains(resp, 'hx-target="#side-panel-content"')
-        self.assertContains(resp, "plaatsing=")
+        self.assertContains(resp, "collega=")
         self.assertContains(resp, self.colleague.name)
         filled_row = self._row_containing(resp, self.colleague.name)
         assert "hx-get" in filled_row
-        assert "plaatsing=" in filled_row
+        assert "collega=" in filled_row
+        assert "plaatsing=" not in filled_row
 
     @staticmethod
     def _rows(resp) -> list[str]:
@@ -1023,27 +1021,27 @@ class AssignmentServicesDisplayTest(TestCase):
         assert "edit-icon-button" not in team_outer
 
     def test_row_menu_edit_url_uses_public_id(self):
-        """The row "Aanvraag/Rol wijzigen" action must build its panel URL from
-        the assignment's public_id, not its integer PK — the panel resolver
+        """The row "Teamlid/Aanvraag wijzigen" action must build its panel URL
+        from the assignment's public_id, not its integer PK — the panel resolver
         looks up by public_id and a bare integer 404s ("Niet gevonden")."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
         service = Placement.objects.get(colleague=self.colleague).service
-        assert f"opdracht={self.assignment.public_id}&teamlid={service.public_id}" in filled_row
+        assert f"opdracht={self.assignment.public_id}&amp;teamlid={service.public_id}" in filled_row
         # Never the integer service or assignment PK.
         assert f"teamlid={service.id}" not in filled_row
         assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
 
     def test_row_menu_view_url_uses_public_id(self):
-        """ "Bekijk teamlid" must build ?plaatsing= from the placement's
+        """ "Profiel bekijken" must build ?collega= from the colleague's
         public_id, not its integer PK."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
-        placement = Placement.objects.get(colleague=self.colleague)
-        assert f"plaatsing={placement.public_id}" in filled_row
-        assert f"plaatsing={placement.id}&" not in filled_row
+        assert "Profiel bekijken" in filled_row
+        assert f"collega={self.colleague.public_id}" in filled_row
+        assert f"collega={self.colleague.id}" not in filled_row
 
     def test_row_menu_edit_url_resolves_to_member_panel(self):
         """End-to-end: the URL the row menu emits must actually open the
@@ -1054,7 +1052,7 @@ class AssignmentServicesDisplayTest(TestCase):
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert panel.status_code == 200
-        self.assertContains(panel, "Teamlid bewerken")
+        self.assertContains(panel, "Teamlid wijzigen")
 
 
 class AssignmentServicesAuditTest(TestCase):
@@ -1078,9 +1076,8 @@ class AssignmentServicesAuditTest(TestCase):
             email="svc-audit@rijksoverheid.nl",
             first_name="Svc",
             last_name="Audit",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_business_manager(self.user)  # Business Manager owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
@@ -1144,7 +1141,9 @@ class AssignmentServicesAuditTest(TestCase):
         change = changes[0]
         assert change["old"]["id"] == self.vacant_service.id
         assert change["old"]["colleague_name"] is None
+        assert change["old"]["colleague_id"] is None
         assert change["new"]["colleague_name"] == self.colleague.name
+        assert change["new"]["colleague_id"] == self.colleague.id
 
     def test_services_post_no_change_no_event(self):
         # Re-post the filled row exactly as it stands: no field changes, so
@@ -1384,9 +1383,8 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             email="svc-period@rijksoverheid.nl",
             first_name="Svc",
             last_name="Period",
-            is_superuser=True,
-            is_staff=True,
         )
+        grant_business_manager(self.user)  # Business Manager owner of the assignment below
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
@@ -1667,13 +1665,15 @@ class ServiceDescriptionPermissionTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.owner_user = User.objects.create_user(email="bm@rijksoverheid.nl", first_name="Bm", last_name="Boss")
-        # Ownership only grants edit rights combined with the BDM role.
-        grant_bdm(self.owner_user)
+        # Ownership only grants edit rights combined with the Business Manager role.
+        grant_business_manager(self.owner_user)
         self.owner = Colleague.objects.create(
             user=self.owner_user, name="Bm Boss", email="bm@rijksoverheid.nl", source="wies"
         )
 
-        self.placed_user = User.objects.create_user(email="placed@rijksoverheid.nl", first_name="P", last_name="Laced")
+        self.placed_user = grant_consultant(
+            User.objects.create_user(email="placed@rijksoverheid.nl", first_name="P", last_name="Laced")
+        )
         self.placed = Colleague.objects.create(
             user=self.placed_user, name="P Laced", email="placed@rijksoverheid.nl", source="wies"
         )
@@ -1725,7 +1725,7 @@ class ServiceDescriptionPermissionTest(TestCase):
         assert self.my_service.skill_id != new_skill.id
 
     def test_owner_can_use_inline_pencil(self):
-        """A BDM owner can edit descriptions inline, consistent with skill and period."""
+        """A Business Manager owner can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
         resp = post_inline_edit(self.client, self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
@@ -1815,7 +1815,7 @@ class InlineOrganizationsEditTest(TestCase):
             first_name="O",
             last_name="O",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+        grant_business_manager(self.user)  # Business Manager owner of the assignments below
         self.client.force_login(self.user)
         col = Colleague.objects.get(user=self.user)
         self.assignment = Assignment.objects.create(
@@ -1907,8 +1907,9 @@ class ColleagueLabelsInlineEditTest(TestCase):
             first_name="L",
             last_name="L",
         )
-        self.user.user_permissions.add(Permission.objects.get(codename="change_colleague"))
         self.client.force_login(self.user)
+        # Their own colleague record: the SELF grant on ``rule(UPDATE, Colleague, ...)``
+        # is what lets this through, no role and no Django permission.
         self.colleague = Colleague.objects.get(user=self.user)
 
         self.expertise = LabelCategory.objects.create(name="Expertise", color="#DCE3EA")

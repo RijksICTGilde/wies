@@ -27,12 +27,5 @@
   </nldd-simple-section>
 {% endblock content %}
 {% block panel %}
-  {# nldd-page must be a direct child: the sheet only stretches ::slotted(nldd-page). #}
-  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
-  <nldd-page id="side-panel-content" sticky-header>
-  {% if panel_data %}
-    {% include panel_data.panel_content_template %}
-  {% endif %}
-  </nldd-page>
-  </nldd-sheet>
+  {% include "parts/side_panel.html" %}
 {% endblock panel %}

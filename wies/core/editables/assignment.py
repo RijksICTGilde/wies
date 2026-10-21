@@ -18,19 +18,20 @@ from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.roles import BDM_GROUP_NAME, can_view_role_hours, is_bdm_or_staff
+from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, PRIVACY_BM_OWNED, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
 
 
-def _bdm_queryset(assignment=None):
+def _business_manager_queryset(assignment=None):
     # A callable so `choices` evaluates lazily per request.
     #
-    # The current owner is always included, even outside the BDM group: without a
-    # matching option the combo box renders empty and saving clears the Business
-    # Manager. Owners are usually in that group, but the odd one isn't.
-    in_group = Q(user__groups__name=BDM_GROUP_NAME)
+    # The current owner is always included, even outside the Business Manager
+    # group: without a matching option the combo box renders empty and saving
+    # clears the Business Manager. Owners are usually in that group, but the odd
+    # one isn't.
+    in_group = Q(user__groups__name=ROLE_BUSINESS_MANAGER)
     owner_id = getattr(assignment, "owner_id", None)
     if owner_id is not None:
         in_group |= Q(pk=owner_id)
@@ -172,27 +173,41 @@ def visible_service_rows(assignment, request) -> list[dict]:
     """Returns viewer-filtered team rows for display.
 
     ``_services_initial`` returns every placement; here a placement that is not
-    currently active is hidden from unrelated viewers — only the placed colleague,
-    Business Managers (the BDM role) and support staff see it, flagged
-    ``historical`` with a label and privacy note.
+    currently active is hidden from unrelated viewers — only the placed colleague
+    and Business Managers see it, flagged ``historical`` with a label and privacy
+    note.
 
     ``can_edit_role`` marks the row of a placed viewer: the consultant keeps the
-    description of their own role from the team list too, through the same
-    sheet as on the placement panel. The hours are not theirs to keep: those
+    description of their own role from the team list ("Taken wijzigen"
+    in the row menu). The hours are not theirs to keep: those
     follow the assignment's edit rights, like the role itself.
 
     ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
-    aanvraag row shows them to everyone.
+    aanvraag row shows them to everyone. ``shown_hours`` is the outcome.
+
+    ``panel_url`` is where the row leads: a placed row to the colleague panel
+    with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
+    opens the row's sheet for a team editor, ``own_edit_url`` the placed
+    viewer's Taken sheet.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
+        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
+            row["panel_url"] = _panel_query(opdracht=row["assignment_public_id"], aanvraag=row["service_public_id"])
+            row["shown_hours"] = row["hours_per_week"]
             visible.append(row)
             continue
+        row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])
+        row["own_edit_url"] = _panel_query(
+            opdracht=row["assignment_public_id"],
+            collega=placement.colleague.public_id,
+            teamlid=row["service_public_id"],
+        )
         # Only the viewer's own row can qualify, so the rule (a query) runs for
         # that one and not for every member of the team.
         row["can_edit_role"] = (
@@ -201,6 +216,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
             and has_permission(Verb.UPDATE, row["service"], request.user, ServiceEditables.description)
         )
         row["show_hours"] = can_view_role_hours(request.user, placement)
+        row["shown_hours"] = row["hours_per_week"] if row["show_hours"] else None
         result = evaluate_placement_visibility(
             row["placement_start_date"],
             row["placement_end_date"],
@@ -217,11 +233,15 @@ def visible_service_rows(assignment, request) -> list[dict]:
                 {
                     **row,
                     "historical": True,
-                    "period_label": LABELS[result.timing],
+                    "period_label": LABELS.get(result.timing),
                     "privacy_warning_text": result.privacy_note,
                 }
             )
     return visible
+
+
+def _panel_query(**params) -> str:
+    return "?" + urllib.parse.urlencode(params)
 
 
 def visible_service_or_404(assignment, request, service_public_id):
@@ -256,6 +276,9 @@ def _service_audit_row(row: dict) -> dict:
         "id": row["id"],
         "skill_name": row["skill_name"],
         "colleague_name": row["colleague"].name if row["colleague"] else None,
+        # The name is for display only; visibility is decided on the id, since a
+        # name can change and two colleagues can share one (#551).
+        "colleague_id": row["colleague"].id if row["colleague"] else None,
         "description": row["description"] or "",
         # No hours_per_week: no history is kept of a role's hours (agreed with
         # Patrick, 13 July 2026), so an hours-only edit leaves no timeline entry.
@@ -319,69 +342,76 @@ def _date_nl(iso: str | None) -> str | None:
     return f"{d}-{m}-{y}"
 
 
-def _change_colleague_names(change: dict) -> set[str]:
-    names = set()
+def _change_colleague_ids(change: dict) -> set[int | None]:
+    """Returns the ids of the colleagues a team change names.
+
+    A row written before the snapshot froze the id names someone it cannot
+    identify. That comes back as ``None``, which is no colleague's id, so such a
+    row is cleared for nobody instead of being matched on its name (#551).
+    """
+    ids = set()
     for side in ("old", "new"):
         row = change.get(side)
         if row and row.get("colleague_name"):
-            names.add(row["colleague_name"])
-    return names
+            ids.add(row.get("colleague_id"))
+    return ids
 
 
-def _visible_colleague_names(assignment, request, viewer) -> set[str]:
-    """Returns the names ``viewer`` may already see on this assignment.
+def _visible_colleague_ids(assignment, request, viewer) -> set[int]:
+    """Returns the ids of the colleagues ``viewer`` may already see on this assignment.
 
     Cached on the request, keyed by assignment: the timeline calls this once per
     team event and ``visible_service_rows`` costs a query each time. The request
     is the cache key because the answer depends on the viewer, and a request has
     exactly one.
     """
-    if not hasattr(request, "wies_visible_colleague_names"):
-        request.wies_visible_colleague_names = {}
-    cache = request.wies_visible_colleague_names
+    if not hasattr(request, "wies_visible_colleague_ids"):
+        request.wies_visible_colleague_ids = {}
+    cache = request.wies_visible_colleague_ids
     if assignment.id not in cache:
-        names = {row["colleague"].name for row in visible_service_rows(assignment, request) if row["colleague"]}
+        ids = {row["colleague"].id for row in visible_service_rows(assignment, request) if row["colleague"]}
         if viewer is not None:
-            names.add(viewer.name)
-        cache[assignment.id] = names
+            ids.add(viewer.id)
+        cache[assignment.id] = ids
     return cache[assignment.id]
 
 
-def restricted_change_names(assignment, changes: list[dict]) -> set[str]:
-    """Returns the names these team rows mention that not everyone sees.
+def restricted_change_ids(assignment, changes: list[dict]) -> set[int | None]:
+    """Returns the colleagues these team rows mention that not everyone sees.
 
     Drives the note on a timeline row: a viewer who gets a change naming someone
-    outside the public row set (a BDM, or the person themselves) should know the
-    row is hidden from others. Tested against what an outsider would see, not
-    against the viewer's own rights, since their own name would otherwise always
-    make the row look visible.
+    outside the public row set (a Business Manager, or the person themselves)
+    should know the row is hidden from others. Tested against what an outsider
+    would see, not against the viewer's own rights, since their own id would
+    otherwise always make the row look visible. Holds ``None`` for a row that
+    names someone it cannot identify (see ``_change_colleague_ids``).
     """
     if not changes:
         return set()
     # visible_service_rows only reads request.user, so a bare object without one
     # yields the rows as an outsider sees them.
     public_rows = visible_service_rows(assignment, SimpleNamespace(user=None))
-    public_names = {row["colleague"].name for row in public_rows if row["colleague"]}
-    return {name for change in changes for name in _change_colleague_names(change)} - public_names
+    public_ids = {row["colleague"].id for row in public_rows if row["colleague"]}
+    return {colleague_id for change in changes for colleague_id in _change_colleague_ids(change)} - public_ids
 
 
 def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:
     """Returns viewer-filtered team changes for the audit timeline.
 
-    Mirrors ``visible_service_rows``: a change survives only if every name it
-    mentions is one the viewer may already see, so vacancies always survive.
-    Matched on the colleague name rather than the row id, because the snapshot is
-    frozen and a since-removed or re-filled row would leak the earlier name.
+    Mirrors ``visible_service_rows``: a change survives only if every colleague
+    it mentions is one the viewer may already see, so vacancies always survive.
+    Matched on the colleague rather than the row id, because the snapshot is
+    frozen and a since-removed or re-filled row would leak the earlier name. And
+    on the colleague's id rather than their name, which can change and need not
+    be unique (#551).
     Changes are dropped whole rather than redacted, so the timeline cannot betray
     that a hidden placement exists.
     """
     viewer = getattr(getattr(request, "user", None), "colleague", None)
-    if is_bdm_or_staff(request):
-        # A privileged viewer (BDM or support staff) sees the unfiltered list;
-        # they may see any team row.
+    if is_business_manager_request(request):
         return changes
-    allowed = _visible_colleague_names(assignment, request, viewer)
-    return [change for change in changes if _change_colleague_names(change) <= allowed]
+    allowed = _visible_colleague_ids(assignment, request, viewer)
+    return [change for change in changes if _change_colleague_ids(change) <= allowed]
 
 
 def _services_render_change(change: dict) -> dict:
@@ -469,7 +499,7 @@ class AssignmentEditables(EditableSet):
 
     owner = Editable(
         label="Business Manager",
-        choices=_bdm_queryset,
+        choices=_business_manager_queryset,
         widget=ComboBoxSelect,
         required=True,
         empty_label=" ",

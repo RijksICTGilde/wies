@@ -12,6 +12,7 @@ let doc;
 
 const INVALID = "[invalid]";
 const AUTOFOCUS = "[autofocus]";
+const LANDING = "#panel-title[tabindex='-1']";
 
 function element(attributes, options) {
   const opts = options || {};
@@ -59,12 +60,15 @@ function swapTarget(content) {
   const invalid = held.invalid || [];
   const autofocus = held.autofocus || [];
   const focusable = held.focusable || [];
+  const landing = held.landing || [];
   return {
     matches(selector) {
       return selector === AUTOFOCUS && held.selfAutofocus === true;
     },
     querySelector(selector) {
-      const found = selector === AUTOFOCUS ? autofocus : focusable;
+      let found = focusable;
+      if (selector === AUTOFOCUS) found = autofocus;
+      if (selector === LANDING) found = landing;
       return found.length ? found[0] : null;
     },
     querySelectorAll(selector) {
@@ -403,6 +407,32 @@ describe("handleSettle", () => {
 
     assert.equal(doc.activeElement, searchField);
     assert.equal(button.focusCalls.length, 0);
+  });
+
+  it("lands on the panel title when the trail misses", () => {
+    const title = element({ id: "panel-title", tabindex: "-1" });
+    const chip = element({ tabindex: "0" });
+    doc = makeDoc([]);
+    const restore = new FocusRestore(doc);
+    restore.trail = [{ attribute: "hx-get", value: "?collega=1" }]; // the menu item, gone with its panel
+
+    restore.handleSettle(swapTarget({ landing: [title], focusable: [chip] }));
+
+    assert.equal(doc.activeElement, title);
+    assert.equal(chip.focusCalls.length, 0);
+  });
+
+  it("prefers where the user came from over the panel title", () => {
+    const button = element({ id: "edit" });
+    const title = element({ id: "panel-title", tabindex: "-1" });
+    doc = makeDoc([button]);
+    const restore = new FocusRestore(doc);
+    restore.trail = [{ attribute: "id", value: "edit" }];
+
+    restore.handleSettle(swapTarget({ landing: [title], focusable: [title] }));
+
+    assert.equal(doc.activeElement, button);
+    assert.equal(title.focusCalls.length, 0);
   });
 
   it("stays out of the way when the server set autofocus", () => {

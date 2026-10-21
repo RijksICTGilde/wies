@@ -262,15 +262,17 @@ class TestPersonCards:
         assert list(cards) == ["Jan de Vries"]
         assert len(cards["Jan de Vries"]["assignments"]) == 2
 
-    def test_single_assignment_card_links_to_the_placement(self):
-        """One assignment means one placement to show, so the panel opens it."""
+    def test_single_assignment_card_links_to_the_colleague(self):
+        """A person opens the colleague panel, also with one assignment; the
+        opdracht is one click on from there."""
         colleague = _make_colleague("Jan de Vries")
-        placement = _place(colleague, _make_assignment("Cloud Migratie"), self.skill)
+        _place(colleague, _make_assignment("Cloud Migratie"), self.skill)
 
         card = self._cards()["Jan de Vries"]
         assert card["assignment"] is not None
-        assert f"plaatsing={placement.public_id}" in card["panel_url"]
-        assert "collega=" not in card["panel_url"]
+        assert f"collega={colleague.public_id}" in card["panel_url"]
+        assert "opdracht=" not in card["panel_url"]
+        assert "plaatsing=" not in card["panel_url"]
 
     def test_multiple_assignments_card_links_to_the_colleague(self):
         """With more than one assignment there is no single placement to open."""
@@ -281,7 +283,7 @@ class TestPersonCards:
         card = self._cards()["Jan de Vries"]
         assert card["assignment"] is None
         assert f"collega={colleague.public_id}" in card["panel_url"]
-        assert "plaatsing=" not in card["panel_url"]
+        assert "opdracht=" not in card["panel_url"]
 
     def test_roles_are_deduplicated(self):
         """Two placements with the same skill list that role once."""

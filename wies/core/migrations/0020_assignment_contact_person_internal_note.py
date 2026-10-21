@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0016_service_description_optional"),
+        ("core", "0019_event_source_system"),
     ]
 
     operations = [
