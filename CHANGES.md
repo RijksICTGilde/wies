@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TBD: dependency bump to address security advisory
+- 754: dependency bump to address security advisory
 - 747: contract hours (hours per week and start date) can be filled in when adding a user, not only when editing one
 
 ## 2026-10-19
