@@ -5,7 +5,6 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 749: (migration) an opdracht from Wies has a contact person and a remark, entered, shown and edited only by Business Managers
-- placeholder
 
 ## 2026-10-19
 
