@@ -8,7 +8,7 @@ save does not reload the page.
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
@@ -25,6 +25,7 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
+from wies.core.roles import ROLE_USER_ADMIN
 from wies.core.tests.role_helpers import grant_business_manager
 
 User = get_user_model()
@@ -58,6 +59,8 @@ class SuccessMessageTest(TestCase):
                 ]
             )
         )
+        # Creating a user also sets contract hours, which only this role may keep.
+        self.user.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
         self.client.force_login(self.user)
 
     def test_user_create_edit_delete(self):

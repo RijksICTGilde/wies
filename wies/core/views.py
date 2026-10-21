@@ -2370,6 +2370,11 @@ def user_create(request):
     modal_title = "Nieuwe gebruiker"
     element_id = "userFormModal"
 
+    # The sheet carries the first contract period, so creating is all or nothing:
+    # whoever may not keep contract hours may not create a user through it.
+    if not has_permission(Verb.UPDATE, ContractPeriod(), request.user):
+        return HttpResponseForbidden()
+
     if request.method == "GET":
         form = UserForm(editor=request.user)
         form.fields["first_name"].widget.attrs["autofocus"] = True
@@ -2387,17 +2392,7 @@ def user_create(request):
         )
     if request.method == "POST":
         form = UserForm(request.POST, editor=request.user)
-        if form.is_valid():
-            create_user(
-                request.user,
-                first_name=form.cleaned_data["first_name"],
-                last_name=form.cleaned_data["last_name"],
-                email=form.cleaned_data["email"],
-                labels=form.cleaned_data.get("labels"),
-                groups=form.cleaned_data.get("groups"),
-                suborganization=form.cleaned_data.get("suborganization"),
-                request=request,
-            )
+        if form.is_valid() and _create_user_with_contract_period(request, form):
             # HTMX needs HX-Redirect to force a full page redirect.
             messages.success(
                 request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is toegevoegd."
@@ -2421,6 +2416,43 @@ def user_create(request):
             },
         )
     return HttpResponse(status=405)
+
+
+def _create_user_with_contract_period(request, form) -> bool:
+    """Creates the user and, when filled in, its first contract period.
+
+    One transaction: a period that does not validate (the colleague may be an
+    existing one with periods of its own) leaves no user behind. Returns False
+    with the error on the form then.
+    """
+    hours = form.cleaned_data.get("contract_hours_per_week")
+    with transaction.atomic():
+        user = create_user(
+            request.user,
+            first_name=form.cleaned_data["first_name"],
+            last_name=form.cleaned_data["last_name"],
+            email=form.cleaned_data["email"],
+            labels=form.cleaned_data.get("labels"),
+            groups=form.cleaned_data.get("groups"),
+            suborganization=form.cleaned_data.get("suborganization"),
+            request=request,
+        )
+        if hours:
+            period = ContractPeriod(
+                colleague=user.colleague,
+                hours_per_week=hours,
+                start_date=form.cleaned_data["contract_start_date"],
+            )
+            try:
+                period.full_clean()
+            except ValidationError as e:
+                transaction.set_rollback(True)
+                for field, errors in e.message_dict.items():
+                    form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
+                return False
+            period.save()
+            _contract_period_event(request, period, "create")
+    return True
 
 
 @permission_required("rijksauth.change_user", raise_exception=True)
