@@ -97,6 +97,14 @@ MULTI_LABEL_PROBABILITY = 0.3
 MAX_LABELS_PER_CATEGORY = 2
 # Roughly half the assignments also get a second (update) audit event.
 EVENT_UPDATE_PROBABILITY = 0.5
+# Share of assignments where a Business Manager noted a contact person and a remark.
+BM_NOTE_PROBABILITY = 0.4
+BM_NOTES = [
+    "Opdrachtgever wil maandelijks een voortgangsgesprek.",
+    "Verlenging wordt in het volgende kwartaal besproken.",
+    "Let op: budget is nog niet definitief toegekend.",
+    "Contactpersoon is op vrijdag niet bereikbaar.",
+]
 
 # ── Skills ───────────────────────────────────────────────────────────────────
 SKILLS = [
@@ -801,6 +809,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     reused by email, since deleting them would orphan logins.
     """
     rng = random.Random(42)  # noqa: S311
+    # Its own stream, so adding BM notes left the seeded data above and below unchanged.
+    note_rng = random.Random(43)  # noqa: S311 (pseudo-random generator) — dummy data, not security
     today = timezone.now().date()
 
     # Role groups are needed for the per-colleague user role; seed them if this
@@ -942,12 +952,15 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     for _ in range(profile.num_assignments):
         is_active = rng.random() < ACTIVE_RATIO
         start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
+        has_bm_note = note_rng.random() < BM_NOTE_PROBABILITY
 
         assignment = Assignment.objects.create(
             name=generate_assignment_name(rng),
             start_date=start,
             end_date=end,
             extra_info="",
+            contact_person=generate_name(note_rng) if has_bm_note else "",
+            internal_note=note_rng.choice(BM_NOTES) if has_bm_note else "",
             # Owners are drawn only from BDM colleagues, matching production
             # where the assignment owner is a Business Development Manager.
             owner=rng.choice(bdm_colleagues),

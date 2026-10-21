@@ -444,6 +444,14 @@ class AssignmentEditables(EditableSet):
         display="forms/displays/textarea.html",
     )
 
+    contact_person = Editable(label="Contactpersoon")
+
+    internal_note = Editable(
+        label="Opmerking",
+        widget=forms.Textarea(attrs={"rows": 2}),
+        display="forms/displays/textarea.html",
+    )
+
     start_date = Editable(label="Startdatum")
 
     end_date = Editable(label="Einddatum")

@@ -88,6 +88,17 @@ def has_permission(
     return False
 
 
+def can_read_field(obj, user, field: Editable | EditableGroup | EditableCollection) -> bool:
+    """False only when ``field`` has its own READ rule and it denies ``user``.
+
+    Fields are readable by whoever sees the object, so most have no READ rule;
+    ``has_permission`` would fall through to a missing model rule and deny them.
+    """
+    if (Verb.READ, field.model, field.name) not in _RULES:
+        return True
+    return has_permission(Verb.READ, obj, user, field)
+
+
 def registered_rules() -> dict[tuple[Verb, type, str | None], Callable]:
     """Read-only view of the registry. For use in startup checks and tests."""
     return dict(_RULES)

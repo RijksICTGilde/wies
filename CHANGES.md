@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
--?
+- ?: (migration) an opdracht has a contact person and a remark, shown and edited only by Business Managers; changes to them stay out of the Updates tab for everyone else
 
 ## 2026-10-07
 

@@ -135,6 +135,21 @@ def update_assignment_name(user, a):
     return _can_edit_assignment_text_field(user, a)
 
 
+@rule(READ, AssignmentEditables.contact_person)
+@rule(READ, AssignmentEditables.internal_note)
+def read_assignment_bm_field(user, _a):
+    """Business Managers only: what they note on an opdracht is for planning,
+    not for the consultants on it."""
+    return is_bdm(user)
+
+
+@rule(UPDATE, AssignmentEditables.contact_person)
+@rule(UPDATE, AssignmentEditables.internal_note)
+def update_assignment_bm_field(user, a):
+    """Any Business Manager, not only the owner, on a wies-sourced opdracht."""
+    return _is_wies_sourced(a) and is_bdm(user)
+
+
 @rule(UPDATE, ServiceEditables.description)
 def update_service_description(user, s):
     """Assignment owner (BM) or the consultant placed on this specific service."""

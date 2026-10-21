@@ -43,11 +43,12 @@ from wies.core.inline_edit.forms import (
     build_form_class,
     resolve_editables,
 )
-from wies.core.permission_engine import Verb, has_permission
+from wies.core.permission_engine import Verb, can_read_field, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BDM,
+    PRIVACY_BM_OWNED,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
@@ -237,6 +238,8 @@ def _build_assignment_panel_data(assignment, request):
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
+        "can_view_bm_fields": has_permission(Verb.READ, assignment, request.user, AssignmentEditables.internal_note),
+        "bm_fields_note": PRIVACY_BM_OWNED,
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
         # Read-only display context: per-field inline edit was replaced by the
@@ -3337,6 +3340,9 @@ def _attach_audit_render_data(event, obj, request) -> bool:
     spec = editable_set._editables.get(event.context.get("field_name", ""))
     if spec is None:
         return True
+    # The event holds the old and new value, so it is a read path of its own.
+    if not can_read_field(obj, request.user, spec):
+        return False
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
