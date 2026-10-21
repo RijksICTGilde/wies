@@ -140,15 +140,16 @@
   flex-shrink: 0;
 }
 
-/* Match the clickable-card hover on "Aanvragen" (app.css): darken the background
-   via the card's own --_background-color, which inherits into the shadow root so
-   the radius and clipping stay intact. One neutral token covers light and dark. */
+/* The card only draws its hover when it is the action itself; here the
+   <button> around it is. --_card-background-color is what .card reads, and a
+   document rule on the host beats the :host default, so radius and clipping
+   stay intact. The hover borrows the card's own colour for both themes. */
 .bezetting-stat:hover nldd-card {
-  --_background-color: var(--primitives-color-neutral-50);
+  --_card-background-color: var(--_card-is-hovered-background-color);
 }
 
 .bezetting-stat[aria-pressed="true"] nldd-card {
-  --_background-color: var(--primitives-color-neutral-150);
+  --_card-background-color: var(--primitives-color-neutral-150);
 }
 
 /* Phase colours for the timeline bars.

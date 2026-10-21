@@ -22,7 +22,7 @@
     {% if task.status == 'completed' %}
       <nldd-icon icon="check-circle-filled" color="success"></nldd-icon>
     {% elif task.status == 'failed' %}
-      <nldd-icon icon="exclamation-triangle-filled" color="error"></nldd-icon>
+      <nldd-icon icon="exclamation-triangle-filled" color="critical"></nldd-icon>
     {% elif task.status == 'running' %}
       <nldd-icon size="inherit" icon="arrow-2-counter-clockwise"></nldd-icon>
     {% else %}

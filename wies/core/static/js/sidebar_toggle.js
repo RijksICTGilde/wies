@@ -17,15 +17,33 @@
     item.closest("nldd-sidebar-section")?.show();
   });
 
-  function reflectExpanded(open) {
-    return (e) =>
-      e.target
-        .querySelectorAll?.("#sidebar-toggle, #sidebar-toggle-menu-item")
-        .forEach((el) => el.setAttribute("aria-expanded", String(open)));
+  // Opened from the overflow menu, the sheet hands focus back to a menu item
+  // that leaves with the menu, so it drops to <body>. "Meer" is where it came
+  // from. Opened from the visible button, the sheet already gets this right.
+  function restoreFocus(section) {
+    if (section.querySelector("#sidebar-toggle")?.checkVisibility()) return;
+    section
+      .querySelector("nldd-toolbar")
+      ?.shadowRoot?.querySelector('nldd-icon-button[popup-type="menu"]')
+      ?.focus();
   }
 
-  document.addEventListener("open", reflectExpanded(true));
-  document.addEventListener("close", reflectExpanded(false));
+  // Only the section's own sheet: the toolbar's overflow menu inside it sends
+  // open and close too. Capture, because the sheet's close does not bubble.
+  function reflectExpanded(open) {
+    return (e) => {
+      if (e.composedPath()[0].localName !== "nldd-sheet") return;
+      const toggles = e.target.querySelectorAll?.(
+        "#sidebar-toggle, #sidebar-toggle-menu-item",
+      );
+      if (!toggles?.length) return;
+      toggles.forEach((el) => el.setAttribute("aria-expanded", String(open)));
+      if (!open) restoreFocus(e.target);
+    };
+  }
+
+  document.addEventListener("open", reflectExpanded(true), true);
+  document.addEventListener("close", reflectExpanded(false), true);
 
   // With the sidebar in view its filters are already there, so a "Filter" entry
   // in the overflow menu would open what is open. CSS cannot reach it: the

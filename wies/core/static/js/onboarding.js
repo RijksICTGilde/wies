@@ -99,6 +99,17 @@
     if (finishWrap) finishWrap.hidden = !onLast;
   }
 
+  // A step change can hide the control that has focus (Terug on step 1,
+  // Volgende on the last), and the step bar announces nothing. The new step's
+  // heading covers both: focus stays in the window and the step is read out.
+  function goTo(step) {
+    show(step);
+    var heading = wizard.querySelector(
+      'section[data-step="' + current + '"] [data-step-title]',
+    );
+    if (heading) heading.focus();
+  }
+
   function complete() {
     if (completing || !completeForm) return;
     completing = true;
@@ -123,7 +134,7 @@
   if (nextBtn) {
     nextBtn.addEventListener("click", function () {
       saveStep(current);
-      show(current + 1);
+      goTo(current + 1);
     });
   }
   if (progress) {
@@ -131,7 +142,7 @@
       var item = e.target.closest("nldd-step-bar-item");
       if (!item || !item.hasAttribute("button")) return;
       var index = Array.prototype.indexOf.call(steps, item);
-      if (index >= 0) show(index + 1);
+      if (index >= 0) goTo(index + 1);
     });
   }
   if (detailSave) {
@@ -165,7 +176,7 @@
   document.body.addEventListener("onboardingDetailClose", closeDetail);
   wizard.addEventListener("back", function () {
     if (detail && !detail.hidden) closeDetail();
-    else show(current - 1);
+    else goTo(current - 1);
   });
 
   document.body.addEventListener("closeOnboarding", function () {

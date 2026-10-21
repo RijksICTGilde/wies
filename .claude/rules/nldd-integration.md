@@ -64,9 +64,11 @@ element targeten staan onder een comment dat hun bestaan verantwoordt.
 
 Een onbekende icoonnaam rendert **stil niets**; een onbekende `appearance` of
 `variant` valt terug op de default, net als een attribuut dat een upgrade
-hernoemde (`name` → `icon` op `nldd-icon` in 0.8.93). De naam die logisch klinkt is vaak net niet de echte
-(`edit` → `pencil`, `lock` → `lock-closed`, `tertiary` →
-`neutral-transparent`, `warning-subtle` → `critical-tinted`).
+hernoemde (`variant` → `appearance` op `nldd-button`). Dat geldt ook voor de
+private `--_`-variabelen: 0.9.0 gaf ze een componentprefix
+(`--_background-color` → `--_card-background-color`). De naam die logisch
+klinkt is vaak net niet de echte (`edit` → `pencil`, `lock` → `lock-closed`,
+`tertiary` → `neutral-transparent`, `warning-subtle` → `critical-tinted`).
 
 Zoek op in `skills/nldd/reference.md` van de `nldd`-skill, of in de broncode
 van `MinBZK/storybook` (`src/components/<groep>/<naam>/`). Niet gissen in de

@@ -162,7 +162,7 @@ a > nldd-icon:last-child {
    the component says so by dimming the label to 30% -- 2.0:1 against the menu,
    under the 4.5:1 that WCAG AA asks. The label sits in a nested text-cell with
    its own shadow root, so only these custom properties reach it: the opacity
-   goes back to 1 and the muted content colour carries "not a choice" at 11.4:1. */
+   goes back to 1 and the muted content colour carries "not a choice" at 6.2:1. */
 .wies-search-menu-hint {
   --primitives-opacity-disabled: 1;
   --context-content-color: var(--semantics-content-secondary-color);
@@ -405,21 +405,6 @@ a > nldd-icon:last-child {
    not run on behind "Naar:". */
 .wies-event-value {
   margin-top: var(--primitives-space-4, 4px);
-}
-
-/* nldd-card draws no hover state of its own; only clickable cards get one, so
-   the statistics tiles do not look clickable. `--_background-color` is the
-   variable .card reads, and it inherits into the shadow root, so the card keeps
-   its radius and clipping. The neutral scale darkens in light mode and lightens
-   in dark, so one token covers both themes.
-
-   `[href]:not([href=""])` rather than `[href]`: the component reflects its own
-   default (`href = ''`) to the attribute, so every card carries `href=""` in the
-   DOM. An attribute selector tests for presence, not content, so `[href]`
-   matched them all. */
-nldd-card[href]:not([href=""]):hover,
-nldd-card[button]:hover {
-  --_background-color: var(--primitives-color-neutral-50);
 }
 
 /* "Meer tonen" button below a list or card grid. grid-column spans every column

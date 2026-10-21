@@ -653,6 +653,19 @@ class UserSheetContractPeriodTest(TestCase):
         running.refresh_from_db()
         assert running.end_date is None
 
+    def test_an_end_date_error_is_wired_to_the_field(self):
+        response = self.client.post(
+            self.add_url,
+            {
+                "hours_per_week": "32",
+                "start_date": self.today.isoformat(),
+                "end_date": (self.today - timedelta(days=1)).isoformat(),
+            },
+        )
+        body = response.content.decode()
+        assert '<nldd-validation-item id="error-end_date-1">' in body
+        assert 'unmet="error-end_date-1"' in body
+
     def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
         running = ContractPeriod.objects.create(
             colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
