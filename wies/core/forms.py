@@ -326,8 +326,10 @@ class UserForm(NlddFormMixin, forms.ModelForm):
             required=False,
         )
         self.fields["contract_start_date"] = forms.DateField(label="Startdatum", required=False)
-        self._configure_field("contract_hours_per_week")
-        self._configure_field("contract_start_date")
+        for name in ("contract_hours_per_week", "contract_start_date"):
+            # Optional as a pair, which the section heading says once.
+            self.fields[name].widget.attrs["hide-optional"] = True
+            self._configure_field(name)
 
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.

@@ -360,7 +360,7 @@ class ProfileContractPeriodTest(TestCase):
             if group:
                 self.user.groups.add(Group.objects.get(name=group))
             body = self.client.get(reverse("user-profile")).content.decode()
-            assert "Contracturen" not in body, group
+            assert "Arbeidsuren" not in body, group
             assert "36 uur" not in body, group
 
     def test_consultant_may_not_keep_periods(self):
@@ -381,7 +381,7 @@ class ProfileContractPeriodTest(TestCase):
         ContractPeriod.objects.create(colleague=other, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": other.public_id}).content.decode()
         assert "36 uur" not in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
 
 class ColleagueContractPeriodPermissionTest(TestCase):
@@ -412,7 +412,7 @@ class ColleagueContractPeriodPermissionTest(TestCase):
         response = self.client.post(url, {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""})
         assert response.status_code == 200
         body = response.content.decode()
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         assert self.colleague.contract_periods.count() == 1
 
@@ -512,7 +512,7 @@ class UserSheetContractPeriodTest(TestCase):
     def test_sheet_lists_periods_with_the_actions(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("user-edit", args=[self.user.public_id])).content.decode()
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         assert self.add_url in body
         assert reverse("contract-period-edit", args=[period.public_id]) in body
@@ -525,7 +525,7 @@ class UserSheetContractPeriodTest(TestCase):
         assert response.status_code == 200, response.content
         body = response.content.decode()
         assert 'id="contractPeriodMount" hx-swap-oob="innerHTML"' in body
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         [period] = self.colleague.contract_periods.all()
         assert (period.hours_per_week, period.start_date) == (36, self.today)
@@ -702,7 +702,7 @@ class UserSheetContractPeriodTest(TestCase):
     def test_user_without_colleague_gets_no_block(self):
         loose = User.objects.create(email="los@rijksoverheid.nl", onboarding_completed_at=timezone.now())
         body = self.client.get(reverse("user-edit", args=[loose.public_id])).content.decode()
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
     def test_deleting_the_user_ends_the_contract_on_the_chosen_day(self):
         """The colleague outlives the user, so the contract ends on the day the
@@ -913,7 +913,7 @@ class UserCreateContractPeriodTest(TestCase):
 
     def test_create_sheet_offers_the_fields(self):
         body = self.client.get(reverse("user-create")).content.decode()
-        assert "<h3>Contracturen</h3>" in body
+        assert '<nldd-form-section text="Arbeidsuren" supporting-text="Optioneel">' in body
         assert 'name="contract_hours_per_week"' in body
         assert 'name="contract_start_date"' in body
 
@@ -1137,7 +1137,7 @@ class ApplicationAdministrationHoursTest(TestCase):
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
 
         assert self.colleague.name in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
     def test_the_user_sheet_does_not_open_for_it_at_all(self):
         """``user_edit`` asks ``rijksauth.change_user``, which no address list carries,
@@ -1228,7 +1228,7 @@ class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
         assert response.status_code == 200
         body = response.content.decode()
         assert "Rollen" in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
 
 class ContractHoursAudienceTest(TestCase):
