@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - placeholder
-- ???: upgrade NLDD design system from 0.8.92 to 0.9.0: renamed attributes migrated (`icon` on `nldd-icon`, `appearance` on buttons and lists, `accessible-label` on toolbars, `item-min-width` on collections, `nldd-step-bar` in onboarding)
+- 748: upgrade NLDD design system from 0.8.92 to 0.9.0: renamed attributes migrated (`icon` on `nldd-icon`, `appearance` on buttons and lists, `accessible-label` on toolbars, `item-min-width` on collections, `nldd-step-bar` in onboarding)
 
 ## 2026-10-19
 
