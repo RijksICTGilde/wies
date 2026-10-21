@@ -43,7 +43,7 @@ from wies.core.inline_edit.forms import (
     build_form_class,
     resolve_editables,
 )
-from wies.core.permission_engine import Verb, can_read_field, has_permission
+from wies.core.permission_engine import Verb, can_read_field, has_own_read_rule, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.visibility_rules import (
     LABELS,
@@ -238,7 +238,9 @@ def _build_assignment_panel_data(assignment, request):
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
-        "can_view_bm_fields": has_permission(Verb.READ, assignment, request.user, AssignmentEditables.internal_note),
+        # Only a Wies opdracht can be filled in; elsewhere the rows would stay empty for good.
+        "can_view_bm_fields": assignment.source in ("wies", "")
+        and can_read_field(assignment, request.user, AssignmentEditables.internal_note),
         "bm_fields_note": PRIVACY_BM_OWNED,
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
@@ -622,7 +624,7 @@ def _assignment_create_panel(request):
         assignment_create_specs,
     )
 
-    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    form_cls, initial = build_combined_form_class(assignment_create_specs(request.user))
     # Prefill: the creator is usually the BM themselves.
     if getattr(request.user, "colleague", None):
         initial["owner"] = request.user.colleague
@@ -3292,7 +3294,7 @@ def _attach_audit_sentence(event) -> None:
     elif new:
         event.sentence = f'{author} heeft {label} naar "{new}" gewijzigd.'
     elif old:
-        event.sentence = f"{author} heeft {label} leeggemaakt."
+        event.sentence = f"{author} heeft {label} verwijderd."
     else:
         event.sentence = f"{author} heeft {label} gewijzigd."
 
@@ -3339,10 +3341,17 @@ def _attach_audit_render_data(event, obj, request) -> bool:
         return True
     spec = editable_set._editables.get(event.context.get("field_name", ""))
     if spec is None:
+        # A field no longer declared has no read rule left to check: say that it
+        # changed, not what to.
+        event.formatted_old = event.formatted_new = None
         return True
     # The event holds the old and new value, so it is a read path of its own.
     if not can_read_field(obj, request.user, spec):
         return False
+    # The same chip as on the panel row. Only the Business Manager notes have a
+    # READ rule of their own on an opdracht.
+    if has_own_read_rule(spec):
+        event.privacy_note = PRIVACY_BM_OWNED
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
@@ -4389,6 +4398,19 @@ def _build_placement_edit_panel_data(placement, request, *, form=None, parent_ur
 # its own child sheet.
 
 
+def _assignment_edit_heading(specs, only) -> str:
+    """Names what the sheet edits when that is less than the whole opdracht."""
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
+    if only:
+        return f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen"
+    # A Business Manager who does not own the opdracht gets only these two;
+    # "Opdracht bewerken" would make the missing fields look like a bug.
+    if {spec.name for _, spec, _ in specs} == {"contact_person", "internal_note"}:
+        return "Contactpersoon en opmerking wijzigen"
+    return "Opdracht bewerken"
+
+
 def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
     """Context for the assignment edit child sheet, or None without edit rights.
 
@@ -4396,7 +4418,6 @@ def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_
     pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
     submission instead of a fresh form.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     only = request.GET.get("veld") or None
     specs = assignment_edit_specs(assignment, request.user, only=only)
@@ -4409,8 +4430,7 @@ def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_
         "panel_content_template": "parts/assignment_edit_panel_content.html",
         "assignment": assignment,
         "form": form,
-        # Single-field sheet: the title names that field ("Business Manager wijzigen").
-        "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
+        "edit_heading": _assignment_edit_heading(specs, only),
         "parent_url": parent_url
         if parent_url is not None
         else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
@@ -4470,7 +4490,7 @@ def assignment_create_sheet(request):
     if not request.user.has_perm("core.add_assignment"):
         return HttpResponseForbidden()
 
-    specs = assignment_create_specs()
+    specs = assignment_create_specs(request.user)
     form_cls, _ = build_combined_form_class(specs)
     return_to = _safe_return_path(request.POST.get("terug_url"), reverse("assignment-list"))
 

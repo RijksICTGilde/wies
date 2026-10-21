@@ -127,6 +127,9 @@
           {% else %}
             <span class="wies-text-secondary">Niet ingevuld</span>
           {% endif %}
+          {# Visible text, inline: nldd-list drops the chip from the Tab order, and
+             a cell of its own squeezed the value apart on a phone. #}
+          {{ privacy_chip(panel_data.bm_fields_note, size="sm", label="Beperkt zichtbaar") }}
         {% elif row_kind == "internal_note" %}
           {% with value = panel_data.assignment.internal_note %}
             {% include "forms/displays/textarea.html" %}
@@ -152,11 +155,6 @@
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
           {{ render_row_actions(_actions, "Acties voor Business Manager") }}
-          </nldd-cell>
-        {% elif row_kind in ("contact_person", "internal_note") %}
-          <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          <nldd-cell>
-          {{ privacy_chip(panel_data.bm_fields_note, size="sm") }}
           </nldd-cell>
         {% endif %}
         </nldd-list-item>

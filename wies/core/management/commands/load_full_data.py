@@ -809,7 +809,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     reused by email, since deleting them would orphan logins.
     """
     rng = random.Random(42)  # noqa: S311
-    # Its own stream, so adding BM notes left the seeded data above and below unchanged.
+    # A stream of its own: the rest of the seeded data stays the same whether or
+    # not an opdracht gets a note.
     note_rng = random.Random(43)  # noqa: S311 (pseudo-random generator) — dummy data, not security
     today = timezone.now().date()
 
@@ -952,19 +953,24 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     for _ in range(profile.num_assignments):
         is_active = rng.random() < ACTIVE_RATIO
         start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
-        has_bm_note = note_rng.random() < BM_NOTE_PROBABILITY
+        # Keep this draw order: changing it shifts every rng value that follows.
+        name = generate_assignment_name(rng)
+        # Owners are drawn only from BDM colleagues, matching production
+        # where the assignment owner is a Business Development Manager.
+        owner = rng.choice(bdm_colleagues)
+        source = weighted_choice(rng, SOURCE_WEIGHTS)
+        # Only a Wies opdracht can carry these notes.
+        has_bm_note = source == "wies" and note_rng.random() < BM_NOTE_PROBABILITY
 
         assignment = Assignment.objects.create(
-            name=generate_assignment_name(rng),
+            name=name,
             start_date=start,
             end_date=end,
             extra_info="",
             contact_person=generate_name(note_rng) if has_bm_note else "",
             internal_note=note_rng.choice(BM_NOTES) if has_bm_note else "",
-            # Owners are drawn only from BDM colleagues, matching production
-            # where the assignment owner is a Business Development Manager.
-            owner=rng.choice(bdm_colleagues),
-            source=weighted_choice(rng, SOURCE_WEIGHTS),
+            owner=owner,
+            source=source,
             source_id="",
         )
         assignments.append(assignment)

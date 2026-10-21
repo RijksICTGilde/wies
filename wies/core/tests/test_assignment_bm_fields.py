@@ -60,7 +60,7 @@ class AssignmentBmFieldsTest(TestCase):
         assert response.status_code == 200
         return response.content.decode()
 
-    def _timeline(self, user):
+    def _timeline(self, user, context=None):
         Event.objects.create(
             user=self.owner_user,
             user_email=self.owner_user.email,
@@ -68,7 +68,8 @@ class AssignmentBmFieldsTest(TestCase):
             action="update",
             source="user",
             object_id=self.assignment.id,
-            context={"field_name": "internal_note", "field_label": "Opmerking", "old_value": "", "new_value": NOTE},
+            context=context
+            or {"field_name": "internal_note", "field_label": "Opmerking", "old_value": "", "new_value": NOTE},
         )
         self.client.force_login(user)
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
@@ -102,6 +103,14 @@ class AssignmentBmFieldsTest(TestCase):
         assert CONTACT not in body
         assert NOTE not in body
 
+    def test_bdm_does_not_see_them_on_an_external_assignment(self):
+        """Nobody can fill them in there, so the rows would stay empty for good."""
+        self.assignment.source = "otys_iir"
+        self.assignment.save()
+        body = self._panel(self.bdm_user)
+        assert CONTACT not in body
+        assert "Contactpersoon" not in body
+
     def test_bdm_who_is_not_the_owner_can_save_them(self):
         response = self._save(self.bdm_user, {"contact_person": "Piet", "internal_note": "Nieuw"})
         assert response.status_code == 204
@@ -110,10 +119,25 @@ class AssignmentBmFieldsTest(TestCase):
         assert self.assignment.internal_note == "Nieuw"
         assert self.assignment.name == "Opdracht"
 
+    def test_both_are_capped_at_200_characters(self):
+        response = self._save(self.bdm_user, {"contact_person": "a" * 201, "internal_note": "b" * 201})
+        assert response.status_code == 200
+        assert response.content.decode().count("Gebruik maximaal 200 tekens. Het zijn er nu 201.") == 2
+        self.assignment.refresh_from_db()
+        assert self.assignment.contact_person == CONTACT
+        assert self.assignment.internal_note == NOTE
+
     def test_owner_edit_sheet_offers_them(self):
         body = self._edit_sheet(self.owner_user)
         assert 'name="contact_person"' in body
         assert 'name="internal_note"' in body
+        assert "Opdracht bewerken" in body
+        assert "Alleen zichtbaar voor de Business Managers." in body
+
+    def test_other_bdm_edit_sheet_is_named_after_the_two_fields(self):
+        body = self._edit_sheet(self.bdm_user)
+        assert "Contactpersoon en opmerking wijzigen" in body
+        assert 'name="name"' not in body
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
     def test_staff_edit_sheet_leaves_them_out(self):
@@ -137,6 +161,15 @@ class AssignmentBmFieldsTest(TestCase):
         response = self.client.get(url + "?cancel=1")
         assert NOTE not in response.content.decode()
 
+    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+    def test_inline_edit_endpoint_does_not_leak_to_those_who_may_edit_the_rest(self):
+        """Beheerder and staff pass the whole-object rule, but not the field rule."""
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "internal_note"])
+        for user in (self.beheerder_user, make_staff_user()):
+            self.client.force_login(user)
+            for query in ("", "?edit=1", "?cancel=1"):
+                assert NOTE not in self.client.get(url + query).content.decode()
+
     def test_bdm_cannot_edit_them_on_an_external_assignment(self):
         self.assignment.source = "otys_iir"
         self.assignment.save()
@@ -144,7 +177,25 @@ class AssignmentBmFieldsTest(TestCase):
         assert response.status_code == 403
 
     def test_timeline_shows_the_change_to_a_bdm(self):
-        assert NOTE in self._timeline(self.bdm_user)
+        body = self._timeline(self.bdm_user)
+        assert NOTE in body
+        assert "Beperkt zichtbaar" in body
+
+    def test_timeline_says_a_cleared_contact_person_was_removed(self):
+        context = {
+            "field_name": "contact_person",
+            "field_label": "Contactpersoon",
+            "old_value": CONTACT,
+            "new_value": "",
+        }
+        assert "heeft de contactpersoon verwijderd." in self._timeline(self.bdm_user, context)
+
+    def test_timeline_hides_the_values_of_a_field_no_longer_declared(self):
+        """Without a declaration there is no read rule left to check."""
+        context = {"field_name": "removed_field", "field_label": "Verlenging", "old_value": "", "new_value": NOTE}
+        body = self._timeline(self.consultant_user, context)
+        assert "heeft de verlenging gewijzigd." in body
+        assert NOTE not in body
 
     def test_timeline_hides_the_change_from_others(self):
         assert NOTE not in self._timeline(self.consultant_user)

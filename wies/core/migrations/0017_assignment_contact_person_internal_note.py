@@ -17,6 +17,6 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="assignment",
             name="internal_note",
-            field=models.TextField(blank=True, max_length=5000, verbose_name="Opmerking"),
+            field=models.TextField(blank=True, max_length=200, verbose_name="Opmerking"),
         ),
     ]

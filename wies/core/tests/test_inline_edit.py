@@ -44,7 +44,7 @@ from wies.core.roles import BDM_GROUP_NAME
 from wies.core.services.assignments import assignment_create_specs
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.tests.role_helpers import grant_bdm
+from wies.core.tests.role_helpers import grant_bdm, make_bdm_user
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -804,8 +804,11 @@ class AssignmentCreateFormIntegrationTest(TestCase):
     ``assignment_create_specs()`` (the live create-sheet flow).
     """
 
+    def setUp(self):
+        self.bdm_user = make_bdm_user()
+
     def _form_cls(self):
-        form_cls, _ = build_combined_form_class(assignment_create_specs())
+        form_cls, _ = build_combined_form_class(assignment_create_specs(self.bdm_user))
         return form_cls
 
     def test_labels_come_from_editables(self):

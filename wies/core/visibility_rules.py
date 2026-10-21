@@ -25,9 +25,8 @@ PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Managers"
 # PRIVACY_OWN seen from the other side: the placed consultant and the Business
 # Managers.
 PRIVACY_BDM = "Alleen zichtbaar voor de consultant en de Business Managers"
-# Shown on an ended assignment a colleague *owns* as Business Manager (no
-# consultant is placed on the row, so PRIVACY_BDM's "de consultant" would not
-# fit). Only Business Managers see it.
+# For whatever only Business Managers see, with no consultant in the audience:
+# an ended assignment someone owns, or a Business Manager's own notes on one.
 PRIVACY_BM_OWNED = "Alleen zichtbaar voor de Business Managers"
 
 # Chip labels per timing, for the non-active states.

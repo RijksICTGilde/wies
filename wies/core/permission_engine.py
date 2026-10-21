@@ -88,13 +88,18 @@ def has_permission(
     return False
 
 
+def has_own_read_rule(field: Editable | EditableGroup | EditableCollection) -> bool:
+    """True when ``field`` is readable by fewer people than its object."""
+    return (Verb.READ, field.model, field.name) in _RULES
+
+
 def can_read_field(obj, user, field: Editable | EditableGroup | EditableCollection) -> bool:
     """False only when ``field`` has its own READ rule and it denies ``user``.
 
     Fields are readable by whoever sees the object, so most have no READ rule;
     ``has_permission`` would fall through to a missing model rule and deny them.
     """
-    if (Verb.READ, field.model, field.name) not in _RULES:
+    if not has_own_read_rule(field):
         return True
     return has_permission(Verb.READ, obj, user, field)
 

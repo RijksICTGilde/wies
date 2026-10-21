@@ -248,7 +248,7 @@ class Assignment(models.Model):
     extra_info = models.TextField(blank=True, max_length=5000)
     # Business Manager only, read and write: see the rules in permissions.py.
     contact_person = models.CharField("Contactpersoon", blank=True, max_length=200)
-    internal_note = models.TextField("Opmerking", blank=True, max_length=5000)
+    internal_note = models.TextField("Opmerking", blank=True, max_length=200)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)

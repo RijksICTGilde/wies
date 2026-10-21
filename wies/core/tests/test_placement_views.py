@@ -2659,7 +2659,8 @@ class PrivacyNoteSurfacesTest(TestCase):
         # The period is a plain tag; the icon-only chip beside it carries the
         # sentence in its tooltip. No separate team-wide "Beperkt zichtbaar" banner.
         assert 'text="Afgelopen"' in body
-        assert 'text="Beperkt zichtbaar"' not in body
+        # The one labelled chip is the Contactpersoon row's, not a banner.
+        assert body.count('text="Beperkt zichtbaar"') == 1
         assert f'<nldd-tooltip text="{PRIVACY_BDM}" timing="instant">' in body
         assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.

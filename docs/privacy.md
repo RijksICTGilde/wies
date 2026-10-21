@@ -30,6 +30,7 @@ opdrachten. Het gaat om de volgende gegevens:
 - Gegevens over plaatsingen en opdrachten van de huidige opdracht (zoals opdrachtgever, looptijd en status)
 - Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en beheerders
 - Uren per week van je rol op een opdracht; zichtbaar voor business managers, beheerders en jezelf
+- Naam van de contactpersoon bij de opdrachtgever van een opdracht; alleen zichtbaar voor business managers
 - De datum waarop je uit dienst bent gegaan, als einde van je laatste contractperiode
 
 ## Waarvoor gebruiken wij jouw gegevens?

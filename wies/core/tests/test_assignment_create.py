@@ -99,6 +99,8 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 200
         assert b"Opdracht invoeren" in response.content
         assert b"Voer opdracht in" in response.content
+        assert b'name="contact_person"' in response.content
+        assert b'name="internal_note"' in response.content
 
     def test_list_sentinel_full_page_opens_create_panel(self):
         # Full-page GET (refresh/bookmark): the whole list plus the create panel.
@@ -132,6 +134,48 @@ class AssignmentCreateTest(TestCase):
         assert f"opdracht={assignment.public_id}" in response["HX-Location"]
         # No roles: those are added later via the panel.
         assert assignment.services.count() == 0
+
+    def test_sheet_post_saves_contact_person_and_remark(self):
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Sheet Opdracht",
+                "owner": self.bdm_colleague.public_id,
+                "contact_person": "Jan de Vries",
+                "internal_note": "Budget nog niet rond",
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Sheet Opdracht")
+        assert assignment.contact_person == "Jan de Vries"
+        assert assignment.internal_note == "Budget nog niet rond"
+
+    def test_beheerder_does_not_get_contact_person_and_remark(self):
+        """They could fill them in, but never see them again afterwards."""
+        beheerder = User.objects.create(email="beheerder@rijksoverheid.nl")
+        beheerder.user_permissions.add(Permission.objects.get(codename="add_assignment"))
+        self.client.force_login(beheerder)
+        form = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": ""},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        assert b'name="contact_person"' not in form.content
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Sheet Opdracht",
+                "owner": self.bdm_colleague.public_id,
+                "contact_person": "Jan de Vries",
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assert response.status_code == 204
+        assert Assignment.objects.get(name="Sheet Opdracht").contact_person == ""
 
     def test_sheet_post_emits_create_event(self):
         self.client.force_login(self.bdm_user)

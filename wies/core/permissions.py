@@ -139,15 +139,19 @@ def update_assignment_name(user, a):
 @rule(READ, AssignmentEditables.internal_note)
 def read_assignment_bm_field(user, _a):
     """Business Managers only: what they note on an opdracht is for planning,
-    not for the consultants on it."""
+    not for the consultants on it. Staff is left out on purpose too: unlike
+    contract hours this is no data support needs to look at."""
     return is_bdm(user)
 
 
 @rule(UPDATE, AssignmentEditables.contact_person)
 @rule(UPDATE, AssignmentEditables.internal_note)
 def update_assignment_bm_field(user, a):
-    """Any Business Manager, not only the owner, on a wies-sourced opdracht."""
-    return _is_wies_sourced(a) and is_bdm(user)
+    """Any Business Manager, not only the owner, on a wies-sourced opdracht.
+
+    Built on the READ rule, so whoever may write a value may also read it.
+    """
+    return _is_wies_sourced(a) and read_assignment_bm_field(user, a)
 
 
 @rule(UPDATE, ServiceEditables.description)
