@@ -150,6 +150,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_get_returns_form(self):
         """Test that GET to user-create returns the form modal"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("user-create"))
 
@@ -160,6 +161,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_success(self):
         """Test successful user creation"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         initial_count = User.objects.filter(is_superuser=False).count()
@@ -198,6 +200,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_with_merk(self):
         """Test that the selected merk (suborganization) is assigned to the new user's colleague"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         response = self.client.post(
@@ -306,6 +309,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_without_labels(self):
         """Test user creation without labels (optional field)"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         response = self.client.post(
@@ -326,6 +330,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_validation_errors(self):
         """Test user creation with validation errors"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         # Missing required field
@@ -346,6 +351,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_duplicate_email(self):
         """Test that a new user cannot be created with an existing email"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         initial_count = User.objects.count()
@@ -367,6 +373,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_duplicate_email_case_insensitive(self):
         """Duplicate detection must match the case-insensitive DB constraint"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
 
         initial_count = User.objects.count()
@@ -780,6 +787,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_uses_nldd_styling(self):
         """Test that user create/edit views use NLDD design system styling"""
+        self.auth_user.groups.add(self.admin_group)  # creating also sets contract hours
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("user-create"))
 
