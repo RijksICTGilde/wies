@@ -7,7 +7,7 @@ the remaining height. #}
 {% set list_oob = request.headers.get("HX-Request") %}
 {% if paginator.count %}
   {# data-announce: live_region.js reads this out after a filter change. #}
-  <nldd-list id="user-table" variant="simple" accessible-label="Gebruikers" data-announce="{{ paginator.count }} {{ 'gebruiker' if paginator.count == 1 else 'gebruikers' }}" {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}>
+  <nldd-list id="user-table" appearance="simple" accessible-label="Gebruikers" data-announce="{{ paginator.count }} {{ 'gebruiker' if paginator.count == 1 else 'gebruikers' }}" {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/user_table_rows.html" %}
   </nldd-list>
 {% else %}

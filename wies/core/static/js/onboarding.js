@@ -11,9 +11,7 @@
   var current = 1;
 
   var progress = wizard.querySelector("[data-onboarding-progress]");
-  var steps = progress
-    ? progress.querySelectorAll("nldd-step-indicator-item")
-    : [];
+  var steps = progress ? progress.querySelectorAll("nldd-step-bar-item") : [];
   var stepTitles = Array.prototype.map.call(steps, function (step) {
     return step.getAttribute("text") || "";
   });
@@ -73,9 +71,10 @@
     panels.forEach(function (panel) {
       panel.hidden = Number(panel.getAttribute("data-step")) !== current;
     });
-    if (progress) progress.setAttribute("current", String(current));
     // Backwards only; forward goes through Volgende, which also saves.
     steps.forEach(function (step, index) {
+      if (index + 1 === current) step.setAttribute("status", "current");
+      else step.removeAttribute("status");
       if (index + 1 < current) step.setAttribute("button", "");
       else step.removeAttribute("button");
     });
@@ -129,7 +128,7 @@
   }
   if (progress) {
     progress.addEventListener("click", function (e) {
-      var item = e.target.closest("nldd-step-indicator-item");
+      var item = e.target.closest("nldd-step-bar-item");
       if (!item || !item.hasAttribute("button")) return;
       var index = Array.prototype.indexOf.call(steps, item);
       if (index >= 0) show(index + 1);

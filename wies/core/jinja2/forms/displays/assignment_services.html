@@ -12,7 +12,7 @@ be: nldd-list-item wraps its slots in one anchor, and the row menu cannot sit
 inside that, so there the name is a quiet link and the menu also holds "Bekijk
 profiel" with the actions. #}
 {% if value %}
-  <nldd-list variant="box-tinted">
+  <nldd-list appearance="box-tinted">
   {% for row in value %}
     {% if row.colleague %}
       {% set pl = row.placement %}
@@ -43,11 +43,11 @@ profiel" with the actions. #}
              left the dates stepping in and out down the list. Icons are
              decorative: the text says what the number is. #}
           {% if pl.start_date or pl.end_date %}
-            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+            <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>
               {%- if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}{% elif pl.start_date %}Vanaf {{ pl.start_date|datum_nl }}{% else %}t/m {{ pl.end_date|datum_nl }}{% endif -%}
             </span>
           {% endif %}
-          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
+          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
           {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
           {# A visible non-active row carries a note; only an ended one also a
              label (see visibility_rules.LABELS). #}
@@ -96,11 +96,11 @@ profiel" with the actions. #}
       {% if (svc and (svc.start_date or svc.end_date)) or row.shown_hours %}
         <span slot="supporting-text" class="wies-team-row-meta">
           {% if svc and (svc.start_date or svc.end_date) %}
-            <span class="wies-team-row-meta__item"><nldd-icon name="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+            <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>
               {%- if svc.start_date and svc.end_date %}{{ svc.start_date|datum_nl }} t/m {{ svc.end_date|datum_nl }}{% elif svc.start_date %}Vanaf {{ svc.start_date|datum_nl }}{% else %}t/m {{ svc.end_date|datum_nl }}{% endif -%}
             </span>
           {% endif %}
-          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon name="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
+          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
         </span>
       {% endif %}
       </nldd-text-cell>

@@ -36,7 +36,7 @@
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or panel_data.user_can_delete %}
-    <nldd-toolbar label="Opdracht">
+    <nldd-toolbar accessible-label="Opdracht">
     {% if panel_data.show_updates_tab %}
       {# Higher priority than the buttons: the tabs are this panel's navigation
       and have no sensible equivalent in the overflow menu. #}
@@ -59,7 +59,7 @@
       {# priority="-1": delete moves to the overflow menu first, so editing (the
          most common action) stays visible when space is tight. #}
       <nldd-toolbar-item slot="end" priority="-1">
-      <nldd-icon-button variant="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      <nldd-icon-button appearance="destructive" icon="delete" text="Opdracht verwijderen" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
       <nldd-menu-item slot="overflow" text="Opdracht verwijderen" icon="delete" destructive hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}" hx-trigger="select" hx-target="#assignmentDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
@@ -68,7 +68,7 @@
   {% endif %}
   <div id="tab-panel-gegevens">
     {% set _base_url = current_page_path(request) %}
-    <nldd-list variant="box-tinted" accessible-label="Opdrachtgegevens">
+    <nldd-list appearance="box-tinted" accessible-label="Opdrachtgegevens">
     {# The description sits in this list, not above the tabs, where a long text
        pushed the tabs and fields out of view, and last in it, so the short
        facts above it stay in view when it runs long. Its label is shortened
@@ -90,7 +90,7 @@
         {% if row_kind == "source" %}
           {% if panel_data.assignment.source_url %}
             <a href="{{ panel_data.assignment.source_url }}" target="_blank">
-            {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon name="square-arrow-right-top" size="16"></nldd-icon></a>
+            {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
           {% else %}
             {{ panel_data.assignment.get_source_display() }}
           {% endif %}
@@ -172,7 +172,7 @@
        own row (an eye chip beside the period), not once for the whole team. #}
     {% if panel_data.user_can_edit_team %}
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-      <nldd-toolbar label="Team" size="sm">
+      <nldd-toolbar accessible-label="Team" size="sm">
       {# size="sm" repeated on item and button: nldd-toolbar only forwards its
            size in a deferred build (setTimeout(0)), so without this the button
            paints at the md default and then shrinks — a visible resize flash. #}
@@ -194,8 +194,8 @@
       {# side_panel.js fills in name, supporting text and action URL from the
       chosen row menu item, then opens this dialog. #}
       <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
-      <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
-      <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
+      <nldd-button slot="actions" appearance="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
+      <nldd-button slot="actions" appearance="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
       </nldd-modal-dialog>
     {% endif %}
     {% if panel_data.user_can_delete %}

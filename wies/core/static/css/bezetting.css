@@ -73,9 +73,9 @@
   color: inherit;
   text-align: left;
   cursor: pointer;
-  /* The card's own radius token, so the focus ring keeps hugging the card edge
+  /* The radius the card takes, so the focus ring keeps hugging the card edge
      if the design system ever changes that corner. */
-  border-radius: var(--components-card-corner-radius);
+  border-radius: var(--semantics-surfaces-corner-radius);
 }
 
 /* The card is a flex item of our button, which lives outside its shadow root:

@@ -62,8 +62,9 @@ element targeten staan onder een comment dat hun bestaan verantwoordt.
 
 ## Namen niet raden
 
-Een onbekende icoonnaam rendert **stil niets**; een onbekende `variant` valt
-terug op de default. De naam die logisch klinkt is vaak net niet de echte
+Een onbekende icoonnaam rendert **stil niets**; een onbekende `appearance` of
+`variant` valt terug op de default, net als een attribuut dat een upgrade
+hernoemde (`name` → `icon` op `nldd-icon` in 0.8.93). De naam die logisch klinkt is vaak net niet de echte
 (`edit` → `pencil`, `lock` → `lock-closed`, `tertiary` →
 `neutral-transparent`, `warning-subtle` → `critical-tinted`).
 

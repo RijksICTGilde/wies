@@ -10,13 +10,13 @@
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Overslaan"></nldd-top-title-bar>
 <nldd-container data-onboarding-chrome padding="16">
-<nldd-step-indicator data-onboarding-progress current="1" accessible-label="Voortgang">
-<nldd-step-indicator-item text="Welkom"></nldd-step-indicator-item>
-<nldd-step-indicator-item text="Je profiel"></nldd-step-indicator-item>
+<nldd-step-bar data-onboarding-progress accessible-label="Voortgang">
+<nldd-step-bar-item text="Welkom" status="current"></nldd-step-bar-item>
+<nldd-step-bar-item text="Je profiel"></nldd-step-bar-item>
 {% if onboarding_assignments %}
-  <nldd-step-indicator-item text="{{ 'Je opdrachten' if onboarding_assignments|length > 1 else 'Je opdracht' }}"></nldd-step-indicator-item>
+  <nldd-step-bar-item text="{{ 'Je opdrachten' if onboarding_assignments|length > 1 else 'Je opdracht' }}"></nldd-step-bar-item>
 {% endif %}
-</nldd-step-indicator>
+</nldd-step-bar>
 </nldd-container>
 <nldd-simple-section data-onboarding-section padding-top="0">
 {% set ns.step = ns.step + 1 %}
@@ -112,15 +112,15 @@
    not over it. #}
 <nldd-container slot="footer" padding="16" padding-top="0">
 <nldd-container data-onboarding-nav layout="row" horizontal-alignment="right">
-<nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
+<nldd-button data-onboarding-next appearance="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
 </nldd-container>
 <nldd-container data-onboarding-finish-wrap hidden>
-<nldd-button data-onboarding-finish variant="primary" width="full" text="Aan de slag"></nldd-button>
+<nldd-button data-onboarding-finish appearance="primary" width="full" text="Aan de slag"></nldd-button>
 </nldd-container>
 {# Save sits where "Aan de slag" does. The button is outside the form, so
    onboarding.js submits it. #}
 <nldd-container data-onboarding-detail-nav hidden>
-<nldd-button data-onboarding-detail-save variant="primary" width="full" text="Opslaan"></nldd-button>
+<nldd-button data-onboarding-detail-save appearance="primary" width="full" text="Opslaan"></nldd-button>
 </nldd-container>
 </nldd-container>
 </nldd-page>

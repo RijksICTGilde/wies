@@ -14,7 +14,7 @@
      {% if widget.attrs.invalid %} invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %}>
   <div id="assignment-org-selections">
     {% if selections %}
-      <nldd-list variant="box-tinted" accessible-label="Gekozen opdrachtgevers">
+      <nldd-list appearance="box-tinted" accessible-label="Gekozen opdrachtgevers">
       {% for row in selections %}
         {% set org_id = row.organization.public_id if row.organization.public_id is defined else row.organization %}
         {% set org_name = row.organization.name if row.organization.name is defined else '' %}
@@ -47,7 +47,7 @@
   {% if selections %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}
-  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen"{% if widget.attrs.invalid %} invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %} hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
+  <nldd-button id="assignment-org-trigger-btn" appearance="secondary" start-icon="plus" text="Opdrachtgever toevoegen"{% if widget.attrs.invalid %} invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %} hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
   <div id="assignment-org-inputs">
     {% if selections %}
       <input type="hidden"

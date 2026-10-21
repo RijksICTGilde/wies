@@ -36,7 +36,7 @@
   <h2 id="panel-title" tabindex="-1">{{ service.skill.name if service.skill else "Rol niet ingevuld" }}</h2>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <nldd-list variant="box-tinted" accessible-label="Aanvraaggegevens">
+  <nldd-list appearance="box-tinted" accessible-label="Aanvraaggegevens">
   {# The opdracht this role is on: the way back up, as a row like the rest. #}
   <nldd-list-item class="wies-cv__link" href="{{ panel_data.assignment_url }}" hx-get="{{ panel_data.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-text-cell width="140px" text="Opdracht" vertical-alignment="top"></nldd-text-cell>

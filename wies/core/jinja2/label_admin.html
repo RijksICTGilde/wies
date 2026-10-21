@@ -11,7 +11,7 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# No search field on this page, so the buttons sit on the left. #}
-  <nldd-toolbar label="Labels">
+  <nldd-toolbar accessible-label="Labels">
   <nldd-toolbar-item slot="start">
   <nldd-button start-icon="plus" text="Nieuw label" hx-get="{{ url('label-form-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
@@ -20,7 +20,7 @@
   <nldd-menu-item slot="overflow" text="Nieuw label" icon="plus" hx-get="{{ url('label-form-create') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start">
-  <nldd-button variant="secondary" start-icon="categories" text="Categorieën beheren" hx-get="{{ url('label-category-manage') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  <nldd-button appearance="secondary" start-icon="categories" text="Categorieën beheren" hx-get="{{ url('label-category-manage') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
   <nldd-menu-item slot="overflow" text="Categorieën beheren" icon="categories" hx-get="{{ url('label-category-manage') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>

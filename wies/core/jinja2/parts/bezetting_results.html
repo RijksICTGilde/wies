@@ -31,7 +31,7 @@
          itself carries the accessible label and its pressed state. #}
     <span class="bezetting-stat__chevron assignment-card__chevron"
           aria-hidden="true">
-      <nldd-icon size="20" name="chevron-right"></nldd-icon>
+      <nldd-icon size="20" icon="chevron-right"></nldd-icon>
     </span>
     </nldd-container>
     </nldd-card>
@@ -60,7 +60,7 @@
        read for who is free. #}
     <li>{{ status_card('ends_soon', ends_soon_count, 'eindigt binnen 3 maanden', 'eindigt bijna') }}</li>
   </ul>
-  <nldd-toolbar label="Filters en acties">
+  <nldd-toolbar accessible-label="Filters en acties">
   {# Same search bridge as the user list (filter_interactions.js). nldd-toolbar
      clears from low priority upwards, so the highest number goes last: a search
      field has no menu twin. placeholder="" is deliberate -- nldd-search-field
@@ -72,7 +72,7 @@
   {# Lower priority than the search field, so it clears first: the cards are a
      shortcut, this is the way to every filter. #}
   <nldd-toolbar-item slot="end" priority="3">
-  <nldd-button id="user-filter-button" variant="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
+  <nldd-button id="user-filter-button" appearance="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
   <nldd-menu-item slot="overflow" icon="filter" text="Filters" data-user-filter-open></nldd-menu-item>
   </nldd-toolbar-item>
   {# The same create action as on Aanvragen, with its menu twin. #}

@@ -58,10 +58,10 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-container layout="wrap" gap="8">
   {% if entry.user_can_edit %}
-    <nldd-button variant="secondary" size="sm" start-icon="edit" text="Wijzigen" hx-get="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}" hx-target="#onboarding-detail" hx-swap="innerHTML"></nldd-button>
+    <nldd-button appearance="secondary" size="sm" start-icon="edit" text="Wijzigen" hx-get="{{ url('onboarding-assignment-edit', args=[assignment.public_id]) }}" hx-target="#onboarding-detail" hx-swap="innerHTML"></nldd-button>
   {% endif %}
   {% if assignment.owner and entry.owner_mailto %}
-    <nldd-button variant="secondary" size="sm" start-icon="envelope" text="E-mail {{ assignment.owner.name }}" href="{{ entry.owner_mailto }}"></nldd-button>
+    <nldd-button appearance="secondary" size="sm" start-icon="envelope" text="E-mail {{ assignment.owner.name }}" href="{{ entry.owner_mailto }}"></nldd-button>
   {% endif %}
   </nldd-container>
   </nldd-container>

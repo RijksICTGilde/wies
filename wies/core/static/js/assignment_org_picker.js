@@ -89,7 +89,7 @@
     if (rows.length === 0) return;
 
     var list = cell("nldd-list", {
-      variant: "box",
+      appearance: "box-tinted",
       "accessible-label": "Gekozen opdrachtgevers",
     });
 

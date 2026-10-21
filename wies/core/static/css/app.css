@@ -165,9 +165,7 @@ a > nldd-icon:last-child {
    goes back to 1 and the muted content colour carries "not a choice" at 11.4:1. */
 .wies-search-menu-hint {
   --primitives-opacity-disabled: 1;
-  --components-menu-item-content-color: var(
-    --semantics-content-secondary-color
-  );
+  --context-content-color: var(--semantics-content-secondary-color);
 }
 
 /* Colour only. A font-size here made an empty value smaller than the value that

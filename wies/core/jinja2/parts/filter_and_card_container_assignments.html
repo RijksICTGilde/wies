@@ -2,13 +2,13 @@
 {% from "parts/filter_chips.html" import filter_chips %}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
-  <nldd-toolbar label="Zoeken en filteren">
+  <nldd-toolbar accessible-label="Zoeken en filteren">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
   <nldd-search-field id="search-input" placeholder="Opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
-  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
+  <nldd-button id="sidebar-toggle" appearance="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
   </nldd-button>
   {# The overflow menu shows a CLONE and reports the choice back as a select on this
      original, so sidebar_toggle.js listens for both events. #}
