@@ -309,6 +309,24 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         if instance and instance.pk:
             self.fields["groups"].initial = list(instance.groups.all())
         self._configure_field("groups")
+        # Only when creating: an existing user keeps its periods in the block on
+        # the sheet, which needs a colleague to hang them on.
+        self.with_contract_period = not (instance and instance.pk)
+        if self.with_contract_period:
+            self._add_contract_period_fields()
+
+    def _add_contract_period_fields(self):
+        """The first contract period, optional: hours and the day they start."""
+        self.fields["contract_hours_per_week"] = forms.TypedChoiceField(
+            label="Uren per week",
+            choices=HOURS_PER_WEEK_CHOICES,
+            coerce=int,
+            empty_value=None,
+            required=False,
+        )
+        self.fields["contract_start_date"] = forms.DateField(label="Startdatum", required=False)
+        self._configure_field("contract_hours_per_week")
+        self._configure_field("contract_start_date")
 
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
@@ -348,6 +366,15 @@ class UserForm(NlddFormMixin, forms.ModelForm):
             selected_labels = cleaned_data.pop(category_field_name, None)
             if selected_labels:
                 cleaned_data["labels"].extend(selected_labels)
+
+        # Hours and start belong together: one without the other is no period.
+        if self.with_contract_period:
+            hours = cleaned_data.get("contract_hours_per_week")
+            start = cleaned_data.get("contract_start_date")
+            if hours and not start and "contract_start_date" not in self.errors:
+                self.add_error("contract_start_date", "Vul de startdatum van de contracturen in.")
+            if start and not hours:
+                self.add_error("contract_hours_per_week", "Vul het aantal uren per week in.")
 
         return cleaned_data
 

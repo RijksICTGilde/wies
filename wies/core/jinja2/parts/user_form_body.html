@@ -22,6 +22,21 @@
     {% endif %}
   {% endfor %}
   {{ content.groups.as_field_group() }}
+  {# Creating only: the first period posts with the user, since there is no
+     colleague yet for the block below to hang it on. #}
+  {% if content.with_contract_period %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-title size="5">
+    <h3>Contracturen</h3>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>Niet verplicht. Latere wijzigingen leg je vast bij het wijzigen van de gebruiker.</p>
+    </nldd-rich-text>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    {{ content.contract_hours_per_week.as_field_group() }}
+    {{ content.contract_start_date.as_field_group() }}
+  {% endif %}
   <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>
 </nldd-form>

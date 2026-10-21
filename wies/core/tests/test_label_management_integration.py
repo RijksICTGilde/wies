@@ -41,6 +41,8 @@ class LabelManagementIntegrationTest(TestCase):
 
     def test_complete_label_lifecycle(self):
         """Creating a category and label, assigning it, then deleting it all work."""
+        # Creating a user also sets contract hours, which only this role may keep.
+        self.admin_user.groups.add(Group.objects.get_or_create(name=ROLE_USER_ADMIN)[0])
         self.client.force_login(self.admin_user)
 
         # Categories are managed via a sheet, so create one directly as a fixture.
