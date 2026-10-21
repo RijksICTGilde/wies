@@ -127,6 +127,41 @@ rule(
     ],
 )
 
+# A Business Manager's notes are for planning, not for the consultants on the
+# opdracht; the beheer roles do not plan either. Reading and writing share this
+# audience, so whoever may write a value may also read it.
+_BUSINESS_MANAGER_NOTES = [Grant(Role(ROLE_BUSINESS_MANAGER))]
+
+rule(
+    READ,
+    AssignmentEditables.contact_person,
+    label="Contactpersoon van een opdracht zien",
+    grants=_BUSINESS_MANAGER_NOTES,
+)
+
+rule(
+    UPDATE,
+    AssignmentEditables.contact_person,
+    label="Contactpersoon van een opdracht wijzigen",
+    requires=WIES_SOURCED,
+    grants=_BUSINESS_MANAGER_NOTES,
+)
+
+rule(
+    READ,
+    AssignmentEditables.internal_note,
+    label="Opmerking bij een opdracht zien",
+    grants=_BUSINESS_MANAGER_NOTES,
+)
+
+rule(
+    UPDATE,
+    AssignmentEditables.internal_note,
+    label="Opmerking bij een opdracht wijzigen",
+    requires=WIES_SOURCED,
+    grants=_BUSINESS_MANAGER_NOTES,
+)
+
 rule(
     UPDATE,
     ServiceEditables.description,

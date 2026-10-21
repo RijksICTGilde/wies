@@ -43,12 +43,13 @@ from wies.core.inline_edit.forms import (
     build_form_class,
     resolve_editables,
 )
-from wies.core.permission_engine import Verb, has_permission
+from wies.core.permission_engine import Verb, can_read_field, has_own_read_rule, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.services import role_matrix as role_matrix_rules
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
+    PRIVACY_BM_OWNED,
     PRIVACY_OWN,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
@@ -257,6 +258,10 @@ def _build_assignment_panel_data(assignment, request):
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_delete": has_permission(Verb.DELETE, assignment, request.user),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
+        # Only a Wies opdracht can be filled in; elsewhere the rows would stay empty for good.
+        "can_view_bm_fields": assignment.source in ("wies", "")
+        and can_read_field(assignment, request.user, AssignmentEditables.internal_note),
+        "bm_fields_note": PRIVACY_BM_OWNED,
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
         # Read-only display context: per-field inline edit was replaced by the
@@ -683,7 +688,7 @@ def _assignment_create_panel(request):
         assignment_create_specs,
     )
 
-    form_cls, initial = build_combined_form_class(assignment_create_specs())
+    form_cls, initial = build_combined_form_class(assignment_create_specs(request.user))
     # Prefill: the creator is usually the BM themselves.
     if getattr(request.user, "colleague", None):
         initial["owner"] = request.user.colleague
@@ -3420,7 +3425,7 @@ def _attach_audit_sentence(event) -> None:
     elif new:
         event.sentence = f'{author} heeft {label} naar "{new}" gewijzigd.'
     elif old:
-        event.sentence = f"{author} heeft {label} leeggemaakt."
+        event.sentence = f"{author} heeft {label} verwijderd."
     else:
         event.sentence = f"{author} heeft {label} gewijzigd."
 
@@ -3467,7 +3472,17 @@ def _attach_audit_render_data(event, obj, request) -> bool:
         return True
     spec = editable_set._editables.get(event.context.get("field_name", ""))
     if spec is None:
+        # A field no longer declared has no read rule left to check: say that it
+        # changed, not what to.
+        event.formatted_old = event.formatted_new = None
         return True
+    # The event holds the old and new value, so it is a read path of its own.
+    if not can_read_field(obj, request.user, spec):
+        return False
+    # The same chip as on the panel row. Only the Business Manager notes have a
+    # READ rule of their own on an opdracht.
+    if has_own_read_rule(spec):
+        event.privacy_note = PRIVACY_BM_OWNED
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
@@ -4596,7 +4611,7 @@ def assignment_create_sheet(request):
     if not request.user.has_perm("core.add_assignment"):
         return HttpResponseForbidden()
 
-    specs = assignment_create_specs()
+    specs = assignment_create_specs(request.user)
     form_cls, _ = build_combined_form_class(specs)
     return_to = _safe_return_path(request.POST.get("terug_url"), reverse("assignment-list"))
 

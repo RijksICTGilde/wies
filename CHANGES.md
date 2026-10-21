@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 749: (migration) an opdracht from Wies has a contact person and a remark, entered, shown and edited only by Business Managers
 - 747: contract hours (hours per week and start date) can be filled in when adding a user, not only when editing one
 
 ## 2026-10-19

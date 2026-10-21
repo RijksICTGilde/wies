@@ -20,7 +20,7 @@ from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, 
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.urls import current_page_path
-from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
+from wies.core.visibility_rules import LABELS, PRIVACY_BM_OWNED, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
 
 
@@ -457,6 +457,10 @@ def _save_period(assignment, cleaned):
     assignment.save(update_fields=["start_date", "end_date"])
 
 
+# Django's default speaks of "deze waarde" and says nothing about what to do.
+TOO_LONG = {"max_length": "Gebruik maximaal %(limit_value)d tekens. Het zijn er nu %(show_value)d."}
+
+
 class AssignmentEditables(EditableSet):
     class Meta:
         model = Assignment
@@ -472,6 +476,21 @@ class AssignmentEditables(EditableSet):
         label="Opdrachtomschrijving",
         widget=forms.Textarea(attrs={"rows": 2}),
         display="forms/displays/textarea.html",
+        error_messages=TOO_LONG,
+    )
+
+    contact_person = Editable(
+        label="Contactpersoon",
+        help_text=f"Je aanspreekpunt bij de opdrachtgever. {PRIVACY_BM_OWNED}.",
+        error_messages=TOO_LONG,
+    )
+
+    internal_note = Editable(
+        label="Opmerking",
+        help_text=f"Voor je eigen planning. {PRIVACY_BM_OWNED}.",
+        widget=forms.Textarea(attrs={"rows": 2}),
+        display="forms/displays/textarea.html",
+        error_messages=TOO_LONG,
     )
 
     start_date = Editable(label="Startdatum")

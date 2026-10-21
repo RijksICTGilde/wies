@@ -8,6 +8,7 @@ from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.permission_engine import can_read_field
 
 if TYPE_CHECKING:
     from datetime import date
@@ -171,6 +172,8 @@ def create_assignment_from_form(
     start_date: date | None = None,
     end_date: date | None = None,
     owner: Colleague | None = None,
+    contact_person: str = "",
+    internal_note: str = "",
     primary_organization_id: int | None = None,
     involved_organization_ids: list[int] | None = None,
 ) -> Assignment:
@@ -185,6 +188,8 @@ def create_assignment_from_form(
         end_date=end_date,
         extra_info=extra_info,
         owner=owner,
+        contact_person=contact_person,
+        internal_note=internal_note,
         source="wies",
     )
 
@@ -205,10 +210,11 @@ def create_assignment_from_form(
     return assignment
 
 
-def assignment_create_specs():
+def assignment_create_specs(user):
     """Returns the create-form specs: the same fields as the edit sheet, but
     without an object and without a per-object permission check — creating is
-    gated on ``core.add_assignment``.
+    gated on ``core.add_assignment``. A field with its own READ rule is left out
+    for whoever fails it: they could fill it in but never see it again.
     """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
@@ -218,8 +224,10 @@ def assignment_create_specs():
         AssignmentEditables.organizations,
         AssignmentEditables.period,
         AssignmentEditables.owner,
+        AssignmentEditables.contact_person,
+        AssignmentEditables.internal_note,
     ]
-    return [(AssignmentEditables, spec, None) for spec in specs]
+    return [(AssignmentEditables, spec, None) for spec in specs if can_read_field(None, user, spec)]
 
 
 def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
@@ -237,6 +245,8 @@ def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
         start_date=cleaned_data.get("start_date"),
         end_date=cleaned_data.get("end_date"),
         owner=cleaned_data.get("owner"),
+        contact_person=cleaned_data.get("contact_person", ""),
+        internal_note=cleaned_data.get("internal_note", ""),
         primary_organization_id=primary_org.id if primary_org else None,
         involved_organization_ids=[o.id for o in involved_orgs],
     )
@@ -364,6 +374,8 @@ def assignment_edit_specs(assignment, user, only=None):
         AssignmentEditables.organizations,
         AssignmentEditables.period,
         AssignmentEditables.owner,
+        AssignmentEditables.contact_person,
+        AssignmentEditables.internal_note,
     ]
     if only is not None:
         candidates = [spec for spec in candidates if spec.name == only]

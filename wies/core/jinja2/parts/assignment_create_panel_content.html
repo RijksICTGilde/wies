@@ -25,6 +25,8 @@
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
+  {% if form.contact_person %}{{ form.contact_person.as_field_group() }}{% endif %}
+  {% if form.internal_note %}{{ form.internal_note.as_field_group() }}{% endif %}
   {% for error in form.non_field_errors() %}
     <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
   {% endfor %}

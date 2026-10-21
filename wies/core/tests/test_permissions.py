@@ -218,6 +218,8 @@ class ExternalOpdrachtIsReadOnlyDownTheChainTest(_Setup):
             ("Naam van een opdracht wijzigen", assignment, AssignmentEditables.name),
             ("Opdrachtomschrijving wijzigen", assignment, AssignmentEditables.extra_info),
             ("Taken wijzigen", service, ServiceEditables.description),
+            ("Contactpersoon van een opdracht wijzigen", assignment, AssignmentEditables.contact_person),
+            ("Opmerking bij een opdracht wijzigen", assignment, AssignmentEditables.internal_note),
         ]
 
     def test_an_externally_managed_opdracht_refuses_every_rule_under_it(self):
