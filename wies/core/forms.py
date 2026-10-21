@@ -272,6 +272,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     )
 
     # Init will create category_* fields for the different label categories
+    # Init will conditionally add contract period fields
 
     class Meta:
         model = User
