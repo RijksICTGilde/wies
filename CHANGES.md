@@ -6,7 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - placeholder
 - 748: upgrade NLDD design system from 0.8.92 to 0.10.0: renamed attributes migrated (`icon` on `nldd-icon`, `appearance` on buttons and lists, `accessible-label` on toolbars, `item-min-width` on collections, `nldd-step-bar` in onboarding) and the renamed surface border tokens; components now switch to their narrow layout when zooming in Safari
-- 748: the selected status card on Bezetting is highlighted again, the end date error on a contract period shows as a form error, and a failed task shows a red icon
+- 748: the end date error on a contract period shows as a form error, and a failed task shows a red icon
 - 748: keyboard focus no longer drops to the top of the page after closing the filters from the "Meer" menu or changing steps in the onboarding, and the Filter button no longer reports itself as expanded after closing
 
 ## 2026-10-19
