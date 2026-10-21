@@ -230,7 +230,7 @@
   top: 0;
   z-index: 3;
   background: var(--semantics-surfaces-base-background-color, #fff);
-  border-bottom: 1px solid var(--semantics-surfaces-base-border-color);
+  border-bottom: 1px solid var(--semantics-surfaces-base-highlight-border-color);
 }
 
 .bezetting-row__side--head {
@@ -243,7 +243,7 @@
   position: relative;
   height: 100%;
   min-height: var(--bezetting-row-height);
-  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
+  border-left: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
 }
 
 /* Tall enough for two stacked layers: the "vandaag" pill on top and the month
@@ -276,17 +276,17 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--semantics-surfaces-tinted-border-color, #eee);
+  background: var(--semantics-surfaces-tinted-highlight-border-color, #eee);
 }
 
 .bezetting-gridline--year {
-  background: var(--semantics-surfaces-base-border-color, #cfcfcf);
+  background: var(--semantics-surfaces-base-highlight-border-color, #cfcfcf);
 }
 
 .bezetting-tick {
   position: absolute;
   bottom: 0;
-  border-left: 1px solid var(--semantics-surfaces-tinted-border-color);
+  border-left: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
   height: 0.6rem;
 }
 
@@ -349,7 +349,7 @@
 
 /* ── Rijen ────────────────────────────────────────────────────────────────── */
 .bezetting-rows {
-  border-top: 1px solid var(--semantics-surfaces-tinted-border-color);
+  border-top: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
 }
 
 .bezetting-row {
@@ -358,7 +358,8 @@
      gridlines all use the same tinted rule. Mixing a darker divider with lighter
      gridlines made the grid itself the loudest thing on the page. Rows stay
      separable because each is at least a full lane tall. */
-  border-bottom: 1px solid var(--semantics-surfaces-tinted-border-color);
+  border-bottom: 1px solid
+    var(--semantics-surfaces-tinted-highlight-border-color);
 }
 
 .bezetting-row:hover {
@@ -372,7 +373,8 @@
   display: flex;
   align-items: center;
   padding: var(--primitives-space-6) var(--primitives-space-12);
-  border-right: 1px solid var(--semantics-surfaces-tinted-border-color);
+  border-right: 1px solid
+    var(--semantics-surfaces-tinted-highlight-border-color);
   color: inherit;
   text-decoration: none;
   cursor: pointer;
@@ -542,7 +544,7 @@
   right: 0;
   bottom: 0;
   width: 1px;
-  background: var(--semantics-surfaces-base-border-color);
+  background: var(--semantics-surfaces-base-highlight-border-color);
 }
 
 /* Sits on the hatched zone, so it carries a background of its own to stay

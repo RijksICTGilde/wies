@@ -427,10 +427,12 @@ a > nldd-icon:last-child {
    <details>/<summary> is styled with NLDD tokens, which also covers dark mode.
    Scoped to .wies-faq so other <details> stay untouched. */
 .wies-faq {
-  border-top: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+  border-top: 1px solid
+    var(--semantics-surfaces-base-highlight-border-color, #cbd5e1);
 }
 .wies-faq details {
-  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+  border-bottom: 1px solid
+    var(--semantics-surfaces-base-highlight-border-color, #cbd5e1);
 }
 .wies-faq summary {
   display: flex;
