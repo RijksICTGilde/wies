@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 import importlib
 import uuid
 
@@ -838,12 +838,12 @@ class TimelinePlacementPrivacyTests(TestCase):
         self.service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
 
         # Not started yet, so private to the placed colleague and the BM.
-        self.start = timezone.now().date() + datetime.timedelta(days=30)
+        self.start = timezone.now().date() + dt.timedelta(days=30)
         self.placement = Placement.objects.create(
             colleague=self.hidden_colleague,
             service=self.service,
             specific_start_date=self.start,
-            specific_end_date=self.start + datetime.timedelta(days=90),
+            specific_end_date=self.start + dt.timedelta(days=90),
             period_source=Placement.PLACEMENT,
             source="wies",
         )
@@ -860,7 +860,7 @@ class TimelinePlacementPrivacyTests(TestCase):
             "description": "",
             "has_custom_period": False,
             "start_date": self.start.isoformat(),
-            "end_date": (self.start + datetime.timedelta(days=90)).isoformat(),
+            "end_date": (self.start + dt.timedelta(days=90)).isoformat(),
         }
 
     def _team_event(self, changes):
@@ -920,8 +920,8 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_active_placement_name_stays_visible_to_everyone(self):
         """The rule hides planned/ended placements only; an active one is public."""
         Placement.objects.filter(pk=self.placement.pk).update(
-            specific_start_date=timezone.now().date() - datetime.timedelta(days=10),
-            specific_end_date=timezone.now().date() + datetime.timedelta(days=10),
+            specific_start_date=timezone.now().date() - dt.timedelta(days=10),
+            specific_end_date=timezone.now().date() + dt.timedelta(days=10),
         )
 
         response = self._get_timeline(self.unrelated_user)
@@ -1036,12 +1036,12 @@ class TimelineColleagueIdentityTests(TestCase):
         service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
 
         # Not started yet, so private to the placed colleague and the BM.
-        start = timezone.now().date() + datetime.timedelta(days=30)
+        start = timezone.now().date() + dt.timedelta(days=30)
         self.placement = Placement.objects.create(
             colleague=self.hidden_colleague,
             service=service,
             specific_start_date=start,
-            specific_end_date=start + datetime.timedelta(days=90),
+            specific_end_date=start + dt.timedelta(days=90),
             period_source=Placement.PLACEMENT,
             source="wies",
         )
@@ -1069,8 +1069,8 @@ class TimelineColleagueIdentityTests(TestCase):
     def _make_placement_active(self):
         today = timezone.now().date()
         Placement.objects.filter(pk=self.placement.pk).update(
-            specific_start_date=today - datetime.timedelta(days=10),
-            specific_end_date=today + datetime.timedelta(days=10),
+            specific_start_date=today - dt.timedelta(days=10),
+            specific_end_date=today + dt.timedelta(days=10),
         )
 
     def _namesake(self, email):
