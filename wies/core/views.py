@@ -136,7 +136,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.urls import current_page_url_on
+from .services.urls import current_page_url_on, is_local_path
 from .services.users import (
     close_contract_periods,
     close_placements,
@@ -3585,12 +3585,15 @@ def _page_url_behind_panel(request) -> str:
 
     The panel is an overlay on a real page, so after deleting we return there
     instead of jumping to the assignment list. Falls back to that list when the
-    HX-Current-URL header is absent.
+    HX-Current-URL header is absent, or (being client controlled) names a path
+    that would leave the site.
     """
     current = request.headers.get("HX-Current-URL")
     if not current:
         return reverse("assignment-list")
     parsed = urllib.parse.urlparse(current)
+    if not is_local_path(parsed.path):
+        return reverse("assignment-list")
     # Keep pagina/filters; collega goes too, or the colleague panel would open.
     return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "collega"))
 
@@ -4415,10 +4418,10 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
     """Returns ``raw`` only when it is a path on this site, else the fallback.
 
     The value comes from a hidden input, so the client controls it. It ends up in
-    HX-Push-Url — the address bar only, no navigation — but a protocol-relative
-    "//host" would still display a foreign origin there.
+    HX-Location/HX-Push-Url, where a protocol-relative "//host" — or "/\\host",
+    which browsers read the same way — would point at a foreign origin.
     """
-    if raw and raw.startswith("/") and not raw.startswith("//"):
+    if is_local_path(raw):
         return raw
     return fallback
 

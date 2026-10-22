@@ -6,10 +6,24 @@ independent of which backend endpoint a request hit.
 
 from urllib.parse import parse_qsl, urlencode, urlparse
 
+from django.utils.http import url_has_allowed_host_and_scheme
+
 # The page number in every list URL (the views' ``page_kwarg``). Dropped from
 # any URL that changes what the list shows, since page 2 of the old order or
 # selection means nothing in the new one.
 PAGE_PARAM = "pagina"
+
+
+def is_local_path(raw: str | None) -> bool:
+    """Return whether ``raw`` is a path on this site.
+
+    For client-controlled values that end up in a link or redirect. A plain
+    ``startswith("/")`` check is not enough: browsers read ``\\`` as ``/``, so
+    ``/\\evil.example`` lands on a foreign origin just like ``//evil.example``.
+    Django's check normalises that and rejects any host or scheme; requiring a
+    leading ``/`` keeps relative paths out as well.
+    """
+    return bool(raw) and raw.startswith("/") and url_has_allowed_host_and_scheme(raw, allowed_hosts=None)
 
 
 def current_page_path(request) -> str:
@@ -19,12 +33,14 @@ def current_page_path(request) -> str:
     component), falling back to ``request.path``. During an HTMX partial
     request the backend endpoint (e.g. ``/inline-edit/``) differs from the
     page in the browser, so ``request.path`` alone would be wrong; the
-    header carries the URL actually shown in the address bar.
+    header carries the URL actually shown in the address bar. The header is
+    client controlled, so a path that would leave the site
+    (``https://host//evil.example``) falls back too.
     """
     hx_url = request.headers.get("HX-Current-URL", "")
     if hx_url:
         path = urlparse(hx_url).path
-        if path:
+        if is_local_path(path):
             return path
     return request.path
 

@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ???: (security) return paths taken from the client (`terug_url`, `HX-Current-URL`) also reject the backslash form `/\host`, which browsers read as `//host`
+- ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment
 - ?
 
 ## 2026-10-22

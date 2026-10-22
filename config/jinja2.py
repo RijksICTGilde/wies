@@ -211,5 +211,7 @@ def environment(**options):
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
+    # No `|safe`: it switches off autoescaping for a whole string and is a big security footgun
+    del env.filters["safe"]
 
     return env

@@ -1060,7 +1060,7 @@ def get_org_levels_action(org: OrganizationUnit, base_url: str = "/") -> dict:
     """
     breadcrumb = get_org_breadcrumb(org, base_url)
     levels = [
-        {"text": level["label"], "icon": "stack", "attrs": f'data-href="{level["url"]}"'}
+        {"text": level["label"], "icon": "stack", "attrs": {"data-href": level["url"]}}
         for level in [breadcrumb, *reversed(breadcrumb["ancestors"])]
     ]
     return {"text": "Bekijk opdrachten", "icon": "stack", "submenu": levels}

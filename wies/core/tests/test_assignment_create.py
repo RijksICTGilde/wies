@@ -174,22 +174,26 @@ class AssignmentCreateTest(TestCase):
         assert "invalid" in picker.group(1)
 
     def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
-        # _safe_return_path rejects a protocol-relative terug_url, so the
-        # HX-Location falls back to the list.
+        # _safe_return_path rejects a protocol-relative terug_url, and its
+        # backslash form (browsers read "\\" as "/"), so the HX-Location falls
+        # back to the list.
         self.client.force_login(self.business_manager_user)
-        response = self.client.post(
-            reverse("assignment-create-sheet"),
-            {
-                "name": "Onveilige Terug",
-                "owner": self.business_manager_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                "terug_url": "//evil.example",
-            },
-        )
-        assert response.status_code == 204
-        assignment = Assignment.objects.get(name="Onveilige Terug")
-        location = json.loads(response["HX-Location"])
-        assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
+        for i, terug_url in enumerate(("//evil.example", "/\\evil.example")):
+            with self.subTest(terug_url=terug_url):
+                name = f"Onveilige Terug {i}"
+                response = self.client.post(
+                    reverse("assignment-create-sheet"),
+                    {
+                        "name": name,
+                        "owner": self.business_manager_colleague.public_id,
+                        **org_formset_data([(self.org, "PRIMARY")]),
+                        "terug_url": terug_url,
+                    },
+                )
+                assert response.status_code == 204
+                assignment = Assignment.objects.get(name=name)
+                location = json.loads(response["HX-Location"])
+                assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
 
     def test_sheet_success_banner_rides_along_on_panel_load(self):
         """The success banner rides along as an OOB swap on the panel response.
