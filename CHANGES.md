@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: dependency updates, including a security fix
+- 755: dependency updates, including a security fix
 
 ## 2026-10-22
 
