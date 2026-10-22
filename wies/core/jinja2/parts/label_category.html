@@ -1,7 +1,7 @@
 {# Opens the same sheet as the toolbar button, with this category preselected. A
    real button, not a list row, so the action does not read as another label. #}
 {% macro add_label_button(category) %}
-  <nldd-button variant="secondary" size="sm" start-icon="plus" text="Label toevoegen" accessible-label="Label aan {{ category.name }} toevoegen" hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  <nldd-button appearance="secondary" size="sm" start-icon="plus" text="Label toevoegen" accessible-label="Label aan {{ category.name }} toevoegen" hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
 {% endmacro %}
 {# The htmx re-render after a change reuses this partial, so this is the only

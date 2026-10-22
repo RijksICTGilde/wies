@@ -42,7 +42,7 @@
   OrgTree.prototype.render = function () {
     var list = cell("nldd-list", {
       type: "tree",
-      variant: "simple",
+      appearance: "simple",
       dividers: "never",
       "accessible-label": this.accessibleLabel,
     });
@@ -104,7 +104,7 @@
         "accessible-label": node.label + " in- of uitklappen",
       });
       var groupIconCell = cell("nldd-icon-cell", { size: CHEVRON_ICON });
-      groupIconCell.appendChild(cell("nldd-icon", { name: "chevron-right" }));
+      groupIconCell.appendChild(cell("nldd-icon", { icon: "chevron-right" }));
       groupChevron.appendChild(groupIconCell);
       row.appendChild(groupChevron);
       row.addEventListener("click", function (e) {
@@ -120,7 +120,7 @@
         "accessible-label": node.label + " in- of uitklappen",
       });
       var iconCell = cell("nldd-icon-cell", { size: CHEVRON_ICON });
-      iconCell.appendChild(cell("nldd-icon", { name: "chevron-right" }));
+      iconCell.appendChild(cell("nldd-icon", { icon: "chevron-right" }));
       chevron.appendChild(iconCell);
       chevron.addEventListener("click", toggleExpanded);
       row.appendChild(chevron);

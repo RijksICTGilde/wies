@@ -16,7 +16,7 @@
   {% for field in content.visible_fields() %}{{ field.as_field_group() }}{% endfor %}
   {% for field in content.hidden_fields() %}{{ field }}{% endfor %}
   <nldd-form-actions>
-  <nldd-button variant="primary" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
+  <nldd-button appearance="primary" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>

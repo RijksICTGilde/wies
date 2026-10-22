@@ -19,12 +19,12 @@
   <nldd-cell width="full">
   {# Adding a row posts the current state back with extra_row; the server renders
      an empty row alongside it. #}
-  <nldd-button variant="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
+  <nldd-button appearance="secondary" width="full" start-icon="plus" text="Voeg categorie toe" hx-post="{{ form_post_url }}" hx-vals='{"extra_row": "1"}' hx-include="closest form" hx-target="#categoryManageBody" hx-swap="innerHTML"></nldd-button>
   </nldd-cell>
   </nldd-list-item>
   </nldd-list>
   <nldd-form-actions>
-  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  <nldd-button appearance="primary" type="submit" width="full" text="Opslaan"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>

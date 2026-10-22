@@ -60,7 +60,7 @@ TODAY = date(2000, 1, 3)
 _ROW = re.compile(r'<tr>\s*<th scope="row">(?P<label>[^<]*)</th>(?P<cells>.*?)</tr>', re.S)
 _CELL = re.compile(r"<td>(.*?)</td>", re.S)
 _HIDDEN_WORD = re.compile(r'wies-visually-hidden">([^<]*)<')
-_ICON = re.compile(r'<nldd-icon name="([^"]+)" color="([^"]+)"')
+_ICON = re.compile(r'<nldd-icon icon="([^"]+)" color="([^"]+)"')
 
 
 def _icon(markup):
@@ -541,7 +541,7 @@ class RoleMatrixViewTest(TestCase):
         bundle = (Path(settings.BASE_DIR) / "wies/core/static/vendor/nldd/nldd.min.js").read_text(
             encoding="utf-8", errors="replace"
         )
-        names = set(re.findall(r'<nldd-icon name="([^"]+)"', template))
+        names = set(re.findall(r'<nldd-icon icon="([^"]+)"', template))
 
         assert names, "the page renders no icon at all"
         for name in names:

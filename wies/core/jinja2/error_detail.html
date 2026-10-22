@@ -20,7 +20,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# The button loads a confirmation modal into the host below; its destructive
      button posts and the server answers with an HX-Redirect. #}
-  <nldd-button variant="destructive" start-icon="delete" text="Verwijderen" hx-get="{{ url('delete-error', args=[error.public_id]) }}" hx-target="#errorDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
+  <nldd-button appearance="destructive" start-icon="delete" text="Verwijderen" hx-get="{{ url('delete-error', args=[error.public_id]) }}" hx-target="#errorDeleteModal" hx-swap="innerHTML" hx-push-url="false"></nldd-button>
   <div id="errorDeleteModal"></div>
   </nldd-simple-section>
 {% endblock content %}

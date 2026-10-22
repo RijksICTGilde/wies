@@ -37,6 +37,6 @@
   </nldd-form>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 {% endif %}
-<nldd-button slot="actions" variant="primary" text="Behoud gebruiker" data-dismiss-modal></nldd-button>
-<nldd-button slot="actions" variant="destructive" text="Verwijder gebruiker" hx-post="{{ form_post_url }}" hx-include="#userDeleteForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
+<nldd-button slot="actions" appearance="primary" text="Behoud gebruiker" data-dismiss-modal></nldd-button>
+<nldd-button slot="actions" appearance="destructive" text="Verwijder gebruiker" hx-post="{{ form_post_url }}" hx-include="#userDeleteForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
 </nldd-modal-dialog>

@@ -8,7 +8,7 @@
    accessibility tree on a narrow screen. size="5" keeps the visual size. #}
 {% macro chevron() %}
   <span class="assignment-card__chevron" aria-hidden="true">
-    <nldd-icon size="20" name="chevron-right"></nldd-icon>
+    <nldd-icon size="20" icon="chevron-right"></nldd-icon>
   </span>
 {% endmacro %}
 {% for card in cards %}
@@ -59,7 +59,7 @@
   {% endif %}
   </nldd-container>
   <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
-  <nldd-list variant="simple" dividers="never" accessible-label="Gegevens">
+  <nldd-list appearance="simple" dividers="never" accessible-label="Gegevens">
   {% if active_view == 'opdracht' %}
     {% if card.client %}
       <nldd-list-item size="sm">
@@ -110,6 +110,6 @@
      page footer out of reach forever. The button is a grid cell in the
      nldd-collection and replaces itself with the next cards. #}
   <div class="wies-load-more">
-    <nldd-button variant="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+    <nldd-button appearance="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>
 {% endif %}

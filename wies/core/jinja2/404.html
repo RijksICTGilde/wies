@@ -9,8 +9,8 @@
   De pagina die je zoekt is verplaatst of verwijderd.
 {% endblock error_supporting_text %}
 {% block error_actions %}
-  <nldd-button slot="actions" variant="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
+  <nldd-button slot="actions" appearance="secondary" start-icon="arrow-left" text="Terug naar de vorige pagina" data-action="history-back"></nldd-button>
   {# djlint:off J018 - url() doesn't work in error handler context #}
-  <nldd-button slot="actions" variant="secondary" start-icon="home" text="Ga naar de homepage" href="/"></nldd-button>
+  <nldd-button slot="actions" appearance="secondary" start-icon="home" text="Ga naar de homepage" href="/"></nldd-button>
   {# djlint:on #}
 {% endblock error_actions %}
