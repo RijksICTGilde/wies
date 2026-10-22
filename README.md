@@ -148,12 +148,12 @@ stored under a key. See `docs/roles.md`.
 
 1. Everything in `main` branch
 2. Make release branch
-3. Change "unreleased" in CHANGES to date
+3. Change "unreleased" in CHANGES to date, create new unreleased header with a placeholder list
 4. Merge release branch into main
 5. Tag with date: `git tag -a 2026-01-19 -m "2026-01-19"`
 6. Push tag: `git push --tags`
 7. CI produces image and deploys
-8. (optional) execute post-release actions
+8. (optional) execute post-release actions, check the PR bodies for the post-release actions
 
 ## Claude Code
 
