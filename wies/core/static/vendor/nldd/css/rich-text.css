@@ -1,18 +1,21 @@
 /* # Host */
 
 nldd-rich-text {
-	--_spacing: var(--components-rich-text-spacing-snug);
-	--_wide-max-width: var(--components-rich-text-wide-max-width);
-	--_wide-bleed-width: calc(
-		(var(--_wide-max-width) - var(--components-rich-text-main-max-width)) / 2
+	--_rich-text-grid-size: calc(var(--primitives-font-size-100) * var(--primitives-line-height-snug));
+	--_rich-text-spacing-snug: calc(var(--_rich-text-grid-size) / 2);
+	--_rich-text-spacing: var(--_rich-text-spacing-snug);
+	--_rich-text-main-max-width: var(--primitives-area-720);
+	--_rich-text-wide-max-width: var(--primitives-area-800);
+	--_rich-text-wide-bleed-width: calc(
+		(var(--_rich-text-wide-max-width) - var(--_rich-text-main-max-width)) / 2
 	);
-	--_main-shortfall: max(
+	--_rich-text-main-shortfall: max(
 		0px,
-		calc(100% - var(--components-rich-text-main-max-width))
+		calc(100% - var(--_rich-text-main-max-width))
 	);
-	--_dt-width: var(--primitives-area-200);
-	--_dl-column-gap: var(--primitives-space-16);
-	--_dl-gap: calc(var(--_spacing) / 2);
+	--_rich-text-dt-width: var(--primitives-area-200);
+	--_rich-text-dl-column-gap: var(--primitives-space-16);
+	--_rich-text-dl-gap: calc(var(--_rich-text-spacing) / 2);
 
 	container-type: inline-size;
 	box-sizing: border-box;
@@ -21,32 +24,30 @@ nldd-rich-text {
 	grid-template-columns:
 		[full-start]   0
 		[wide-start]   0
-		[main-start]   minmax(0, var(--components-rich-text-main-max-width))
-		[main-end]     min(calc(var(--_wide-bleed-width) * 2), var(--_main-shortfall))
+		[main-start]   minmax(0, var(--_rich-text-main-max-width))
+		[main-end]     min(calc(var(--_rich-text-wide-bleed-width) * 2), var(--_rich-text-main-shortfall))
 		[wide-end]     1fr
 		[full-end];
-	row-gap: var(--_spacing);
+	row-gap: var(--_rich-text-spacing);
 	color: var(--semantics-content-color);
 	font: var(--primitives-font-body-md-regular-snug);
-	-webkit-text-size-adjust: 100%;
-	text-size-adjust: 100%;
 }
 
 nldd-rich-text[centered] {
-	--_wide-max-width: var(--components-rich-text-centered-wide-max-width);
+	--_rich-text-wide-max-width: var(--primitives-area-960);
 
 	grid-template-columns:
 		[full-start]   1fr
-		[wide-start]   min(var(--_wide-bleed-width), calc(var(--_main-shortfall) / 2))
-		[main-start]   minmax(0, var(--components-rich-text-main-max-width))
-		[main-end]     min(var(--_wide-bleed-width), calc(var(--_main-shortfall) / 2))
+		[wide-start]   min(var(--_rich-text-wide-bleed-width), calc(var(--_rich-text-main-shortfall) / 2))
+		[main-start]   minmax(0, var(--_rich-text-main-max-width))
+		[main-end]     min(var(--_rich-text-wide-bleed-width), calc(var(--_rich-text-main-shortfall) / 2))
 		[wide-end]     1fr
 		[full-end];
 }
 
-nldd-rich-text[spacing="flat"]  { --_spacing: var(--components-rich-text-spacing-flat); }
-nldd-rich-text[spacing="tight"] { --_spacing: var(--components-rich-text-spacing-tight); }
-nldd-rich-text[spacing="loose"] { --_spacing: var(--components-rich-text-spacing-loose); }
+nldd-rich-text[spacing="flat"]  { --_rich-text-spacing: var(--primitives-space-0); }
+nldd-rich-text[spacing="tight"] { --_rich-text-spacing: calc(var(--_rich-text-grid-size) / 4); }
+nldd-rich-text[spacing="loose"] { --_rich-text-spacing: var(--_rich-text-grid-size); }
 
 nldd-rich-text[hidden] {
 	display: none;
@@ -86,24 +87,33 @@ nldd-rich-text[color="inherit"] figcaption {
 }
 
 /* # Child placement
-   Text reads at the main measure; everything else (components, tables,
-   code) gets the full span by default so new components automatically
-   receive room. justify-self: start makes that room available without
-   forcing it: width-100% children fill the span, the rest shrinkwraps.
+   A child belongs to the text unless it is listed: it reads at the main
+   measure, so a new component lands there too, and so does code. Media,
+   tables and a step bar get the wide accent, and what needs the room (a
+   collection, a container) gets the full span. justify-self: start makes room available without
+   forcing it: width-100% children fill their span, the rest shrinkwraps.
    In the left-aligned layout the full/wide start lines collapse onto
    main-start, so `full` and `wide` read as rightward bleed there and as
    symmetric spans in [centered]. */
 
-nldd-rich-text > * {
-	grid-column: full;
-	justify-self: start;
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) {
+	display: contents;
 }
 
-nldd-rich-text[centered] > * {
+nldd-rich-text > *,
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > * {
+	grid-column: main;
+	justify-self: start;
+	max-width: 100%;
+}
+
+nldd-rich-text[centered] > *,
+nldd-rich-text[centered] > div:only-child:not([class], [style], [role], [data-rich-text-width]) > * {
 	justify-self: center;
 }
 
-nldd-rich-text > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, div, section, blockquote) {
+nldd-rich-text > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, div, section, blockquote),
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, div, section, blockquote) {
 	grid-column: main;
 	/* Fill the main column so short text blocks keep a shared left edge —
 	   justify-self: center would otherwise float a shrinkwrapped heading
@@ -113,35 +123,45 @@ nldd-rich-text > :is(h1, h2, h3, h4, h5, h6, p, ul, ol, dl, div, section, blockq
 	width: 100%;
 }
 
-/* nldd-table stays on the generic full default; use data-width to
-   override per table. */
-nldd-rich-text > :is(img, figure, video, iframe, table) {
+nldd-rich-text > :is(img, figure, video, iframe, table, nldd-table, nldd-image, nldd-step-bar),
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :is(img, figure, video, iframe, table, nldd-table, nldd-image, nldd-step-bar) {
 	grid-column: wide;
 }
 
-nldd-rich-text > :is(pre, nldd-code-viewer) {
+nldd-rich-text > :is(hr, nldd-collection, nldd-container),
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :is(hr, nldd-collection, nldd-container) {
+	grid-column: full;
+}
+
+nldd-rich-text > :is(pre, nldd-code-viewer),
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :is(pre, nldd-code-viewer) {
 	width: 100%;
 }
 
 /* Per-item override for editors; wins on specificity from every default
    above. */
-nldd-rich-text > [data-width="main"] {
+nldd-rich-text > [data-rich-text-width="main"],
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > [data-rich-text-width="main"] {
 	grid-column: main;
 }
 
-nldd-rich-text > [data-width="wide"] {
+nldd-rich-text > [data-rich-text-width="wide"],
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > [data-rich-text-width="wide"] {
 	grid-column: wide;
 }
 
-nldd-rich-text > [data-width="full"] {
+nldd-rich-text > [data-rich-text-width="full"],
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > [data-rich-text-width="full"] {
 	grid-column: full;
 }
 
-nldd-rich-text > :first-child {
+nldd-rich-text > :first-child,
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :first-child {
 	margin-top: 0;
 }
 
-nldd-rich-text > :last-child {
+nldd-rich-text > :last-child,
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :last-child {
 	margin-bottom: 0;
 }
 
@@ -159,111 +179,52 @@ nldd-rich-text *:focus:not(:focus-visible) {
 /* # Headings */
 
 nldd-rich-text :is(h1, h2, h3, h4, h5, h6) {
-	margin-top: var(--_spacing);
+	margin-top: var(--_rich-text-spacing);
 	margin-bottom: 0;
-	text-wrap: pretty;
+	overflow-wrap: break-word;
+	text-wrap: balance;
 }
 
 
 /* # Heading 1 */
 
 nldd-rich-text h1 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-1-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-1-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-1-lg);
-	}
+	font: var(--primitives-font-display-1-sm);
 }
 
 
 /* # Heading 2 */
 
 nldd-rich-text h2 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-2-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-2-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-2-lg);
-	}
+	font: var(--primitives-font-display-2-sm);
 }
 
 
 /* # Heading 3 */
 
 nldd-rich-text h3 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-3-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-3-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-3-lg);
-	}
+	font: var(--primitives-font-display-3-sm);
 }
 
 
 /* # Heading 4 */
 
 nldd-rich-text h4 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-4-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-4-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-4-lg);
-	}
+	font: var(--primitives-font-display-4-sm);
 }
 
 
 /* # Heading 5 */
 
 nldd-rich-text h5 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-5-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-5-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-5-lg);
-	}
+	font: var(--primitives-font-display-5-sm);
 }
 
 
 /* # Heading 6 */
 
 nldd-rich-text h6 {
-	@container (max-width: 640px) {
-		font: var(--primitives-font-display-6-sm);
-	}
-
-	@container (min-width: 641px) and (max-width: 1007px) {
-		font: var(--primitives-font-display-6-md);
-	}
-
-	@container (min-width: 1008px) {
-		font: var(--primitives-font-display-6-lg);
-	}
+	font: var(--primitives-font-display-6-sm);
 }
 
 
@@ -276,6 +237,7 @@ nldd-rich-text p {
 	   at narrow (mobile) widths. break-word (not anywhere) leaves the grid
 	   min-content size alone, so the main column stays intact. */
 	overflow-wrap: break-word;
+	text-wrap: pretty;
 }
 
 
@@ -295,18 +257,19 @@ nldd-rich-text[hyphens] :is(p, li, dd) {
 
 nldd-rich-text ul {
 	margin: 0;
-	padding-left: var(--components-rich-text-grid-size);
+	padding-left: var(--_rich-text-grid-size);
 	list-style-type: disc;
 }
 
 nldd-rich-text ol {
 	margin: 0;
-	padding-left: var(--components-rich-text-grid-size);
+	padding-left: var(--_rich-text-grid-size);
 	list-style-type: decimal;
 }
 
-nldd-rich-text > :is(ul, ol) {
-	margin-block: calc(var(--_spacing) / -2);
+nldd-rich-text > :is(ul, ol),
+nldd-rich-text > div:only-child:not([class], [style], [role], [data-rich-text-width]) > :is(ul, ol) {
+	margin-block: calc(var(--_rich-text-spacing) / -2);
 }
 
 nldd-rich-text ol > li > ol {
@@ -317,14 +280,15 @@ nldd-rich-text ol > li > ol {
 /* # List Item */
 
 nldd-rich-text li {
-	margin: calc(var(--_spacing) / 2) 0;
+	margin: calc(var(--_rich-text-spacing) / 2) 0;
 	padding: 0;
-	/* Zelfde vangnet als p: lange strings breken i.p.v. overlopen. */
+	/* Same safety net as p: long strings break instead of overflowing. */
 	overflow-wrap: break-word;
+	text-wrap: pretty;
 }
 
 nldd-rich-text li > * + * {
-	margin-top: var(--_spacing);
+	margin-top: var(--_rich-text-spacing);
 }
 
 
@@ -333,29 +297,30 @@ nldd-rich-text li > * + * {
 nldd-rich-text dl {
 	margin: 0;
 	display: grid;
-	column-gap: var(--_dl-column-gap);
+	column-gap: var(--_rich-text-dl-column-gap);
 
-	@container (max-width: 640px) {
+	@container (max-width: 40rem) {
 		grid-template-columns: 1fr;
 	}
 
-	@container (min-width: 641px) {
-		grid-template-columns: var(--_dt-width) 1fr;
+	@container (min-width: 40.0625rem) {
+		grid-template-columns: var(--_rich-text-dt-width) 1fr;
 	}
 }
 
 nldd-rich-text dt {
 	font-weight: var(--primitives-font-weight-body-bold);
 
-	@container (min-width: 641px) {
+	@container (min-width: 40.0625rem) {
 		grid-column: 1;
 	}
 }
 
 nldd-rich-text dd {
 	margin-inline: 0;
+	text-wrap: pretty;
 
-	@container (min-width: 641px) {
+	@container (min-width: 40.0625rem) {
 		grid-column: 2;
 	}
 }
@@ -364,15 +329,15 @@ nldd-rich-text dd {
    first dt after the previous group's dd. (The old dt:not(:first-child) also
    gapped a second, synonym dt within the same group.) */
 nldd-rich-text dd + dt {
-	margin-top: var(--_dl-gap);
+	margin-top: var(--_rich-text-dl-gap);
 }
 
 /* Wide-viewport companion: in the two-column grid the new group's dd shares
    its row with that group-starting dt, so it needs the same top margin to
    stay aligned. */
 nldd-rich-text dd + dt + dd {
-	@container (min-width: 641px) {
-		margin-top: var(--_dl-gap);
+	@container (min-width: 40.0625rem) {
+		margin-top: var(--_rich-text-dl-gap);
 	}
 }
 
@@ -421,7 +386,7 @@ nldd-rich-text code {
 	border-radius: var(--semantics-controls-xs-corner-radius);
 	background-color: var(--semantics-surfaces-tinted-background-color);
 	font-family: var(--primitives-font-family-monospace);
-	font-size: 0.85em;
+	font-size: var(--semantics-code-inline-font-size);
 }
 
 /* Inside table cells, let long code tokens (e.g. type_spec.precision) break so
@@ -442,7 +407,7 @@ nldd-rich-text pre {
 	/* Inner box-shadow paints the ring inside the radius without taking layout
 	   space, same as nldd-box, nldd-banner and nldd-code-viewer. Without it the
 	   block is invisible on a tinted surface: identical background, no edge. */
-	box-shadow: inset 0 0 0 var(--semantics-surfaces-border-width) var(--semantics-surfaces-tinted-border-color);
+	box-shadow: inset 0 0 0 var(--semantics-surfaces-highlight-border-width) var(--semantics-surfaces-tinted-highlight-border-color);
 	background-color: var(--semantics-surfaces-tinted-background-color);
 	font: var(--primitives-font-monospace-sm-regular-snug);
 	overflow-x: auto;
@@ -452,7 +417,7 @@ nldd-rich-text pre {
 	/* forced-colors strips box-shadow, so restore the frame with a real border.
 	   Same fallback as nldd-box, nldd-banner and nldd-list. */
 	@media (forced-colors: active) {
-		border: var(--semantics-surfaces-border-width) solid CanvasText;
+		border: var(--semantics-surfaces-highlight-border-width) solid CanvasText;
 	}
 }
 
@@ -504,18 +469,19 @@ nldd-rich-text blockquote {
 	gap: calc(var(--semantics-blockquotes-md-spacing) / 2);
 	margin-block: max(
 		0px,
-		calc(var(--semantics-blockquotes-md-spacing) - var(--_spacing))
+		calc(var(--semantics-blockquotes-md-spacing) - var(--_rich-text-spacing))
 	);
 	margin-inline: 0;
 	padding-inline: var(--semantics-blockquotes-md-spacing);
 	border-left: var(--semantics-blockquotes-border);
 	font: var(--semantics-blockquotes-md-quote-font);
+	text-wrap: pretty;
 
-	@container (max-width: 640px) {
+	@container (max-width: 40rem) {
 		gap: calc(var(--semantics-blockquotes-sm-spacing) / 2);
 		margin-block: max(
 			0px,
-			calc(var(--semantics-blockquotes-sm-spacing) - var(--_spacing))
+			calc(var(--semantics-blockquotes-sm-spacing) - var(--_rich-text-spacing))
 		);
 		padding-inline: var(--semantics-blockquotes-sm-spacing);
 		font: var(--semantics-blockquotes-sm-quote-font);
@@ -575,7 +541,7 @@ nldd-rich-text table {
 	max-width: 100%;
 	margin-block: max(
 		0px,
-		calc(var(--components-rich-text-spacing-snug) - var(--_spacing))
+		calc(var(--_rich-text-spacing-snug) - var(--_rich-text-spacing))
 	);
 	border-collapse: separate;
 	border-spacing: 0;
@@ -587,7 +553,7 @@ nldd-rich-text table {
 	-webkit-overflow-scrolling: touch;
 	scrollbar-width: thin;
 
-	@container (min-width: 641px) {
+	@container (min-width: 40.0625rem) {
 		display: table;
 		width: 100%;
 		overflow-x: unset;
@@ -613,7 +579,7 @@ nldd-rich-text th {
 	font: var(--primitives-font-body-md-bold-tight);
 	text-align: start;
 
-	@container (min-width: 641px) {
+	@container (min-width: 40.0625rem) {
 		min-width: unset;
 	}
 }
@@ -628,7 +594,7 @@ nldd-rich-text td {
 	font: var(--primitives-font-body-md-regular-tight);
 	text-align: left;
 
-	@container (min-width: 641px) {
+	@container (min-width: 40.0625rem) {
 		min-width: unset;
 	}
 }

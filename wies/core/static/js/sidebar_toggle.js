@@ -17,15 +17,33 @@
     item.closest("nldd-sidebar-section")?.show();
   });
 
-  function reflectExpanded(open) {
-    return (e) =>
-      e.target
-        .querySelectorAll?.("#sidebar-toggle, #sidebar-toggle-menu-item")
-        .forEach((el) => el.setAttribute("aria-expanded", String(open)));
+  // Opened from the overflow menu, the sheet hands focus back to a menu item
+  // that leaves with the menu, so it drops to <body>. "Meer" is where it came
+  // from. Opened from the visible button, the sheet already gets this right.
+  function restoreFocus(section) {
+    if (section.querySelector("#sidebar-toggle")?.checkVisibility()) return;
+    section
+      .querySelector("nldd-toolbar")
+      ?.shadowRoot?.querySelector('nldd-icon-button[popup-type="menu"]')
+      ?.focus();
   }
 
-  document.addEventListener("open", reflectExpanded(true));
-  document.addEventListener("close", reflectExpanded(false));
+  // Only the section's own sheet: the toolbar's overflow menu inside it sends
+  // open and close too. Capture, because the sheet's close does not bubble.
+  function reflectExpanded(open) {
+    return (e) => {
+      if (e.composedPath()[0].localName !== "nldd-sheet") return;
+      const toggles = e.target.querySelectorAll?.(
+        "#sidebar-toggle, #sidebar-toggle-menu-item",
+      );
+      if (!toggles?.length) return;
+      toggles.forEach((el) => el.setAttribute("aria-expanded", String(open)));
+      if (!open) restoreFocus(e.target);
+    };
+  }
+
+  document.addEventListener("open", reflectExpanded(true), true);
+  document.addEventListener("close", reflectExpanded(false), true);
 
   // With the sidebar in view its filters are already there, so a "Filter" entry
   // in the overflow menu would open what is open. CSS cannot reach it: the
@@ -53,22 +71,29 @@
   // filters are still open -- the bar never empties out there, only sorting
   // moves, and it stays reachable.
   //
-  // _lgMin is a per-instance property, so this moves the threshold for this
-  // section only and leaves the component's behaviour everywhere else intact.
-  const COLLAPSE_AT = 1240;
+  // The DS threshold is not configurable since 0.10.0, so this section gets its
+  // own _applyCollapsed that hands the original a width on the right side of
+  // lg. In rem (1240px), like the DS's own breakpoints.
+  const COLLAPSE_AT_REM = 77.5;
 
   const sections = document.querySelectorAll("nldd-sidebar-section");
   if (sections.length) {
     const observer = new MutationObserver(syncOverflowItem);
     sections.forEach((section) => {
-      // whenDefined: this script runs before the DS upgrades the element, and
-      // _lgMin only exists once the constructor has run. Guarded so that a
-      // renamed field leaves the component's own default in place instead of
-      // silently doing nothing.
+      // whenDefined: this script runs before the DS upgrades the element.
+      // Guarded so that a renamed method leaves the component's own default in
+      // place instead of throwing.
       customElements.whenDefined("nldd-sidebar-section").then(() => {
-        if (typeof section._lgMin !== "number") return;
-        section._lgMin = COLLAPSE_AT;
-        section._applyCollapsed?.(section.clientWidth, false);
+        const applyCollapsed = section._applyCollapsed;
+        if (typeof applyCollapsed !== "function") return;
+        section._applyCollapsed = (width, emit) => {
+          const rem = parseFloat(
+            getComputedStyle(document.documentElement).fontSize,
+          );
+          const narrow = width < COLLAPSE_AT_REM * rem;
+          applyCollapsed.call(section, narrow ? 0 : Infinity, emit);
+        };
+        section._applyCollapsed(section.clientWidth, false);
       });
       observer.observe(section, {
         attributes: true,

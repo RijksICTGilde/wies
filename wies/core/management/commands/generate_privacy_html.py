@@ -25,7 +25,7 @@ POSTAMBLE = "  </nldd-rich-text>\n{% endblock footer_content %}\n"
 
 EXTERNAL_LINK_AFFORDANCE = (
     '<span class="wies-visually-hidden">, opent in nieuw tabblad</span>'
-    '<nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>'
+    '<nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon>'
 )
 
 

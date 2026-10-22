@@ -49,8 +49,8 @@
     {# In bare mode saving belongs to the surrounding flow, so no own buttons. #}
     {% if not bare %}
       <div class="field-actions">
-        <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
-        <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
+        <nldd-button type="submit" appearance="primary" text="Opslaan"></nldd-button>
+        <nldd-button type="button" appearance="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
       </div>
     {% endif %}
   </form>

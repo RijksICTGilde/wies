@@ -11,7 +11,7 @@
     {% for assignment in assignments %}
       {% set taken = assignment.taken %}
       <li class="wies-cv__item">
-        <nldd-list variant="box-tinted" accessible-label="{{ assignment.name }}">
+        <nldd-list appearance="box-tinted" accessible-label="{{ assignment.name }}">
         {# The rule hides the whole entry from others, not just its period, so it
          is stated once above the block rather than as a chip beside one value.
          A row of the list, not an nldd-banner: a banner is page-level and
@@ -19,7 +19,7 @@
         {% if assignment.privacy_warning_text %}
           <nldd-list-item class="wies-cv__privacy">
           <nldd-text-cell size="sm" color="secondary">
-          <span class="wies-cv__privacy-text"><nldd-icon name="eye-slash" size="16" aria-hidden="true"></nldd-icon>{{ assignment.privacy_warning_text }}</span>
+          <span class="wies-cv__privacy-text"><nldd-icon icon="eye-slash" size="16" aria-hidden="true"></nldd-icon>{{ assignment.privacy_warning_text }}</span>
           </nldd-text-cell>
           </nldd-list-item>
         {% endif %}
@@ -94,7 +94,7 @@
             </div>
             {# The toggle belongs under the text it unfolds, not in a row of its
                own: a lone button in an empty row reads as if it were a value. #}
-            <nldd-button class="wies-cv__toggle" size="sm" variant="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
+            <nldd-button class="wies-cv__toggle" size="sm" appearance="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
           {% endif %}
         {% else %}
           <span class="wies-text-secondary">Niet ingevuld</span>

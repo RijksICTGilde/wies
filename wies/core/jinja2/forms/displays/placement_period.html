@@ -3,7 +3,7 @@
    obj is the Placement instance — use .start_date/.end_date properties for effective dates. #}
 {% if obj.start_date or obj.end_date %}
   <span class="icon-text-inline">
-    <nldd-icon name="calendar-event" size="16"></nldd-icon>
+    <nldd-icon icon="calendar-event" size="16"></nldd-icon>
     {%- if obj.start_date and obj.end_date %}
       {{ obj.start_date|datum_nl }} t/m {{ obj.end_date|datum_nl }}
     {%- elif obj.start_date %}

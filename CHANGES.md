@@ -6,6 +6,16 @@ This files lists the changes during the lifetime of this project.
 
 - ???: (security) return paths taken from the client (`terug_url`, `HX-Current-URL`) also reject the backslash form `/\host`, which browsers read as `//host`
 - ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment
+- ?
+
+## 2026-10-22
+
+- 748: upgrade NLDD design system from 0.8.92 to 0.10.0
+- 754: dependency bump to address security advisory
+- 747: contract hours (hours per week and start date) can be filled in when adding a user, not only when editing one
+
+## 2026-10-19
+
 - 703: (migration)(post-release actions) roles are split by what they let you do: `Gebruikersbeheerder` (was `Beheerder`) keeps users, labels, merken and contract hours and grants the roles; `Business Manager` (was `Business Development Manager`) may change every opdracht from Wies, not only its own; the `Applicatiebeheerder` (`STAFF_EMAILS`) keeps only Statistieken and Database and gets both roles once on deploy. A new page Beheer > Rollen shows what each role may do. After the deploy, remove `INITIAL_USER_EMAIL` from production, or every restart gives that account every role again
 - 689: (post-release actions) new ODI start page (startpagina) at `/odi-startpagina/`
 - 689: (migration) the recent-tasks list names each task by what it does ("Organisaties synchroniseren") instead of by its status

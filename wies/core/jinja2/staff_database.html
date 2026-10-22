@@ -21,7 +21,7 @@
     (colleague_count, "collega's"),
     (organization_count, "organisaties"),
   ] %}
-  <nldd-collection layout="horizontal-scroll" gap="16" item-width="200px">
+  <nldd-collection layout="horizontal-scroll" gap="16" item-min-width="200px">
   {% for value, label in _tiles %}
     <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">
@@ -50,7 +50,7 @@
     <form novalidate method="post">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="load_base_data" />
-      <nldd-button variant="secondary" type="submit" text="Dummy data genereren"></nldd-button>
+      <nldd-button appearance="secondary" type="submit" text="Dummy data genereren"></nldd-button>
     </form>
     </nldd-container>
     </nldd-box>
@@ -73,7 +73,7 @@
         hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="sync_organizations" />
-    <nldd-button variant="secondary" type="submit" text="Organisaties synchroniseren"></nldd-button>
+    <nldd-button appearance="secondary" type="submit" text="Organisaties synchroniseren"></nldd-button>
   </form>
   </nldd-container>
   </nldd-box>
@@ -94,7 +94,7 @@
         hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="publish_startpage" />
-    <nldd-button variant="secondary" type="submit" text="ODI startpagina publiceren"></nldd-button>
+    <nldd-button appearance="secondary" type="submit" text="ODI startpagina publiceren"></nldd-button>
   </form>
   </nldd-container>
   </nldd-box>
@@ -121,7 +121,7 @@
         hx-swap="innerHTML">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="merge_duplicates_preview" />
-    <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
+    <nldd-button appearance="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
   </form>
   </nldd-container>
   </nldd-box>
@@ -142,7 +142,7 @@
   <form novalidate method="post">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="reset_onboarding" />
-    <nldd-button variant="secondary" type="submit" text="Onboarding resetten"></nldd-button>
+    <nldd-button appearance="secondary" type="submit" text="Onboarding resetten"></nldd-button>
   </form>
   </nldd-container>
   </nldd-box>
@@ -168,7 +168,7 @@
           data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="clear_data" />
-      <nldd-button variant="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
+      <nldd-button appearance="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
     </form>
     </nldd-container>
     </nldd-box>

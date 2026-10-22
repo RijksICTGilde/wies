@@ -21,7 +21,7 @@
 
 ### Icons
 
-Use the `<nldd-icon name="...">` web component from @nldd/design-system. Check the
+Use the `<nldd-icon icon="...">` web component from @nldd/design-system. Check the
 storybook (https://minbzk.github.io/storybook/) or existing templates in
 `wies/core/jinja2/` for valid icon names rather than guessing.
 

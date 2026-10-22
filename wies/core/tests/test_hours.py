@@ -360,7 +360,7 @@ class ProfileContractPeriodTest(TestCase):
             if group:
                 self.user.groups.add(Group.objects.get(name=group))
             body = self.client.get(reverse("user-profile")).content.decode()
-            assert "Contracturen" not in body, group
+            assert "Arbeidsuren" not in body, group
             assert "36 uur" not in body, group
 
     def test_consultant_may_not_keep_periods(self):
@@ -381,7 +381,7 @@ class ProfileContractPeriodTest(TestCase):
         ContractPeriod.objects.create(colleague=other, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("home"), {"collega": other.public_id}).content.decode()
         assert "36 uur" not in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
 
 class ColleagueContractPeriodPermissionTest(TestCase):
@@ -412,7 +412,7 @@ class ColleagueContractPeriodPermissionTest(TestCase):
         response = self.client.post(url, {"hours_per_week": "36", "start_date": self.today.isoformat(), "end_date": ""})
         assert response.status_code == 200
         body = response.content.decode()
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         assert self.colleague.contract_periods.count() == 1
 
@@ -512,7 +512,7 @@ class UserSheetContractPeriodTest(TestCase):
     def test_sheet_lists_periods_with_the_actions(self):
         period = ContractPeriod.objects.create(colleague=self.colleague, hours_per_week=36, start_date=self.today)
         body = self.client.get(reverse("user-edit", args=[self.user.public_id])).content.decode()
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         assert self.add_url in body
         assert reverse("contract-period-edit", args=[period.public_id]) in body
@@ -525,7 +525,7 @@ class UserSheetContractPeriodTest(TestCase):
         assert response.status_code == 200, response.content
         body = response.content.decode()
         assert 'id="contractPeriodMount" hx-swap-oob="innerHTML"' in body
-        assert "<h3>Contracturen</h3>" in body
+        assert "<h3>Arbeidsuren</h3>" in body
         assert "36 uur" in body
         [period] = self.colleague.contract_periods.all()
         assert (period.hours_per_week, period.start_date) == (36, self.today)
@@ -653,6 +653,19 @@ class UserSheetContractPeriodTest(TestCase):
         running.refresh_from_db()
         assert running.end_date is None
 
+    def test_an_end_date_error_is_wired_to_the_field(self):
+        response = self.client.post(
+            self.add_url,
+            {
+                "hours_per_week": "32",
+                "start_date": self.today.isoformat(),
+                "end_date": (self.today - timedelta(days=1)).isoformat(),
+            },
+        )
+        body = response.content.decode()
+        assert '<nldd-validation-item id="error-end_date-1">' in body
+        assert 'unmet="error-end_date-1"' in body
+
     def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
         running = ContractPeriod.objects.create(
             colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)
@@ -702,7 +715,7 @@ class UserSheetContractPeriodTest(TestCase):
     def test_user_without_colleague_gets_no_block(self):
         loose = User.objects.create(email="los@rijksoverheid.nl", onboarding_completed_at=timezone.now())
         body = self.client.get(reverse("user-edit", args=[loose.public_id])).content.decode()
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
     def test_deleting_the_user_ends_the_contract_on_the_chosen_day(self):
         """The colleague outlives the user, so the contract ends on the day the
@@ -896,6 +909,79 @@ class UserSheetContractPeriodTest(TestCase):
         assert self.client.get(reverse("contract-period-add", args=[uuid.uuid4()])).status_code == 404
 
 
+class UserCreateContractPeriodTest(TestCase):
+    """A Gebruikersbeheerder can fill in the first contract period when adding a user."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.today = timezone.now().date()
+        self.admin = User.objects.create(email="admin@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
+        self.client.force_login(self.admin)
+
+    def _post(self, **extra):
+        data = {"first_name": "Kees", "last_name": "Bos", "email": "kees@rijksoverheid.nl", **extra}
+        return self.client.post(reverse("user-create"), data, headers={"hx-request": "true"})
+
+    def test_create_sheet_offers_the_fields(self):
+        body = self.client.get(reverse("user-create")).content.decode()
+        assert '<nldd-form-section text="Arbeidsuren" supporting-text="Optioneel">' in body
+        assert 'name="contract_hours_per_week"' in body
+        assert 'name="contract_start_date"' in body
+
+    def test_create_with_hours_saves_a_running_period(self):
+        response = self._post(contract_hours_per_week="32", contract_start_date=self.today.isoformat())
+        assert response.status_code == 200, response.content
+        assert "HX-Redirect" in response
+        colleague = User.objects.get(email="kees@rijksoverheid.nl").colleague
+        [period] = colleague.contract_periods.all()
+        assert (period.hours_per_week, period.start_date, period.end_date) == (32, self.today, None)
+        event = Event.objects.filter(object_type="Colleague", object_id=colleague.id).get()
+        assert event.context["field_name"] == "contract_periods"
+        assert event.context["action"] == "create"
+
+    def test_create_without_hours_saves_no_period(self):
+        response = self._post(contract_hours_per_week="", contract_start_date="")
+        assert "HX-Redirect" in response
+        assert not ContractPeriod.objects.exists()
+
+    def test_hours_without_start_date_is_refused(self):
+        response = self._post(contract_hours_per_week="32", contract_start_date="")
+        assert "HX-Redirect" not in response
+        assert "Vul de startdatum van de contracturen in." in response.content.decode()
+        assert not User.objects.filter(email="kees@rijksoverheid.nl").exists()
+
+    def test_start_date_without_hours_is_refused(self):
+        response = self._post(contract_hours_per_week="", contract_start_date=self.today.isoformat())
+        assert "HX-Redirect" not in response
+        assert "Vul het aantal uren per week in." in response.content.decode()
+        assert not User.objects.filter(email="kees@rijksoverheid.nl").exists()
+
+    def test_overlap_with_a_reused_colleagues_period_leaves_no_user(self):
+        """An unlinked colleague on the same address is reused, periods and all."""
+        colleague = Colleague.objects.create(name="Kees Bos", email="kees@rijksoverheid.nl", source="wies")
+        ContractPeriod.objects.create(colleague=colleague, hours_per_week=36, start_date=self.today)
+        response = self._post(contract_hours_per_week="32", contract_start_date=self.today.isoformat())
+        assert "HX-Redirect" not in response
+        assert "overlapt met een andere contractperiode" in response.content.decode()
+        assert not User.objects.filter(email="kees@rijksoverheid.nl").exists()
+        assert colleague.contract_periods.count() == 1
+
+    def test_creator_who_may_not_keep_hours_cannot_create_at_all(self):
+        """Reading the hours is not keeping them. Creating is all or nothing, so
+        a creator without that right is refused instead of getting a sheet without
+        the fields."""
+        manager = User.objects.create(email="bm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        manager.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        manager.user_permissions.add(Permission.objects.get(codename="add_user"))
+        self.client.force_login(manager)
+        assert self.client.get(reverse("user-create")).status_code == 403
+        response = self._post(contract_hours_per_week="32", contract_start_date=self.today.isoformat())
+        assert response.status_code == 403
+        assert not User.objects.filter(email="kees@rijksoverheid.nl").exists()
+
+
 class ServiceHoursPermissionTest(TestCase):
     """The hours of a role follow the assignment's edit rights: the placed
     consultant reads them, and keeps only the description of their role."""
@@ -1064,7 +1150,7 @@ class ApplicationAdministrationHoursTest(TestCase):
         body = self.client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
 
         assert self.colleague.name in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
     def test_the_user_sheet_does_not_open_for_it_at_all(self):
         """``user_edit`` asks ``rijksauth.change_user``, which no address list carries,
@@ -1155,7 +1241,7 @@ class RoleHoursAreNarrowerThanContractHoursTest(TestCase):
         assert response.status_code == 200
         body = response.content.decode()
         assert "Rollen" in body
-        assert "Contracturen" not in body
+        assert "Arbeidsuren" not in body
 
 
 class ContractHoursAudienceTest(TestCase):

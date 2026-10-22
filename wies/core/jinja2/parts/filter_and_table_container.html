@@ -3,7 +3,7 @@ both stay in sync without a shared wrapper element. #}
 {% from "parts/filter_chips.html" import filter_chips %}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
-  <nldd-toolbar label="Zoeken en filteren">
+  <nldd-toolbar accessible-label="Zoeken en filteren">
   {# Before the search field: the view decides what you see, searching and
      filtering refine it after that. #}
   {% include "parts/view_control.html" %}
@@ -20,7 +20,7 @@ both stay in sync without a shared wrapper element. #}
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
-  <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
+  <nldd-button id="sidebar-toggle" appearance="secondary" start-icon="list-decreasing-lines" text="Filter" aria-haspopup="dialog" aria-expanded="false">
   </nldd-button>
   {# The overflow menu shows a CLONE but reports the choice back as select on this
      original, so sidebar_toggle.js listens for both events. #}

@@ -9,7 +9,7 @@
      there. Success variant, because finding nothing is the good answer here. #}
   <nldd-simple-section>
   <nldd-inline-dialog variant="success" text="Geen dubbele opdrachten gevonden" supporting-text="Er zijn geen opdrachten die dezelfde naam, eigenaar en opdrachtgever delen.">
-  <nldd-button slot="actions" variant="primary" text="Sluit" data-dismiss-modal></nldd-button>
+  <nldd-button slot="actions" appearance="primary" text="Sluit" data-dismiss-modal></nldd-button>
   </nldd-inline-dialog>
   </nldd-simple-section>
 {% else %}
@@ -53,7 +53,7 @@
     </p>
     </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    <nldd-list variant="simple" accessible-label="Regels van {{ group.name }}">
+    <nldd-list appearance="simple" accessible-label="Regels van {{ group.name }}">
     {% for row in group.rows %}
       <nldd-list-item>
       {# decorative: the name sits next to it as text, so the avatar must not
@@ -84,7 +84,7 @@
   <form novalidate method="post" action="{{ url('staff-database') }}">
     {{ get_csrf_hidden_input(request) }}
     <input type="hidden" name="action" value="merge_duplicates_apply" />
-    <nldd-button variant="primary" type="submit" text="Voeg projecten samen"></nldd-button>
+    <nldd-button appearance="primary" type="submit" text="Voeg projecten samen"></nldd-button>
   </form>
   </nldd-simple-section>
   </nldd-page>

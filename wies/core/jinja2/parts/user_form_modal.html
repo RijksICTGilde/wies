@@ -13,7 +13,7 @@
      that live outside the form. It posts the form from here with hx-include,
      like the destructive button of user_delete_modal.html. #}
   <nldd-container slot="footer" padding="16" padding-top="0">
-  <nldd-button variant="primary" width="full" text="{{ form_button_label }}" hx-post="{{ form_post_url }}" hx-include="#userForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#{{ modal_element_id }}Body" hx-swap="innerHTML"></nldd-button>
+  <nldd-button appearance="primary" width="full" text="{{ form_button_label }}" hx-post="{{ form_post_url }}" hx-include="#userForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#{{ modal_element_id }}Body" hx-swap="innerHTML"></nldd-button>
   </nldd-container>
   </nldd-page>
   </nldd-sheet>

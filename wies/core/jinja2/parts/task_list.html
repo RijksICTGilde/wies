@@ -20,13 +20,13 @@
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-icon-cell size="20">
     {% if task.status == 'completed' %}
-      <nldd-icon name="check-circle-filled" color="success"></nldd-icon>
+      <nldd-icon icon="check-circle-filled" color="success"></nldd-icon>
     {% elif task.status == 'failed' %}
-      <nldd-icon name="exclamation-triangle-filled" color="error"></nldd-icon>
+      <nldd-icon icon="exclamation-triangle-filled" color="critical"></nldd-icon>
     {% elif task.status == 'running' %}
-      <nldd-icon size="inherit" name="arrow-2-counter-clockwise"></nldd-icon>
+      <nldd-icon size="inherit" icon="arrow-2-counter-clockwise"></nldd-icon>
     {% else %}
-      <nldd-icon size="inherit" name="clock"></nldd-icon>
+      <nldd-icon size="inherit" icon="clock"></nldd-icon>
     {% endif %}
     </nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>

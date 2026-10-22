@@ -62,7 +62,7 @@
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
       {% if filter_group.top_options %}
-        <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-org-quick>
+        <nldd-list appearance="simple" accessible-label="{{ filter_group.label }}" data-org-quick>
         {% for option in filter_group.top_options %}
           {# id: the row is replaced with the whole sidebar on every filter change,
              and focus_restore.js finds it again by this id. #}
@@ -102,7 +102,7 @@
         <h2>{{ filter_group.label }}</h2>
         </nldd-title>
         <nldd-spacer size="4"></nldd-spacer>
-        <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-wies-fieldset data-name="{{ filter_group.name }}" data-group-id="{{ filter_group.group_id }}">
+        <nldd-list appearance="simple" accessible-label="{{ filter_group.label }}" data-wies-fieldset data-name="{{ filter_group.name }}" data-group-id="{{ filter_group.group_id }}">
         {% for option in top_options %}
           <nldd-list-item id="filter-{{ filter_group.group_id }}-{{ option.value }}" checkbox {% if option.value in filter_group.selected_values %}checked{% endif %} data-value="{{ option.value }}">
           <nldd-cell>

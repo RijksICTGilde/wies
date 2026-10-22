@@ -12,7 +12,7 @@
 <nldd-simple-section>
 {# The row is the checkbox; the nldd-checkbox inside is decorative. Nothing
    submits here — the CTA writes the selection back to the sidebar group. #}
-<nldd-list id="filter-options-list" variant="simple" dividers="never" accessible-label="{{ group.label if group else 'Filter' }}">
+<nldd-list id="filter-options-list" appearance="simple" dividers="never" accessible-label="{{ group.label if group else 'Filter' }}">
 {% if group %}
   {% for option in group.options if option.value %}
     <nldd-list-item checkbox {% if option.value in group.selected_values %}checked{% endif %} data-value="{{ option.value }}" data-option-label="{{ option.label | lower }}">
@@ -31,7 +31,7 @@
 </nldd-list>
 </nldd-simple-section>
 <nldd-container slot="footer" padding="16" padding-top="0">
-<nldd-button id="filter-options-apply-btn" variant="primary" width="full" text="Pas toe"></nldd-button>
+<nldd-button id="filter-options-apply-btn" appearance="primary" width="full" text="Pas toe"></nldd-button>
 </nldd-container>
 </nldd-page>
 </nldd-sheet>

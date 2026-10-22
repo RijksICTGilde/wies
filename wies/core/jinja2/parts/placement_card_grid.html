@@ -1,7 +1,7 @@
 {# The card grid for "Wie zit waar?". Both branches share one id so the OOB
    swap can replace either with the other.
 
-   item-width 260px, not 280px: with the sidebar open the content is 320px
+   item-min-width 260px, not 280px: with the sidebar open the content is 320px
    narrower than the section, and just above the DS's 1008px collapse point that
    leaves 546-576px. At 280px two columns need 584px including the 24px gap, so
    the grid fell back to a single 576px-wide card for that stretch -- and then
@@ -14,7 +14,7 @@
      has to be lifted -- the component can't know our pages accumulate. #}
   {# data-announce: live_region.js reads this out after a filter change. The count
      is the number of cards: colleagues or opdrachten, whichever the weergave shows. #}
-  <nldd-collection id="placement-list" layout="grid" item-width="260px" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdrachten' if active_view == 'opdracht' else "collega's" }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  <nldd-collection id="placement-list" layout="grid" item-min-width="260px" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdrachten' if active_view == 'opdracht' else "collega's" }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
 {% else %}

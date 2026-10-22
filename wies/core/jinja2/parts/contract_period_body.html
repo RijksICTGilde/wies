@@ -29,12 +29,16 @@
   {% set end_errors = wire_field_errors(content.end_date) %}
   <nldd-form-field label="{{ content.end_date.label }}"{% if not content.end_date.value() %} hidden{% endif %}>
   {{ content.end_date.as_widget(attrs={"width": "full"}) }}
-  {% for error in content.end_date.errors %}
-    <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
-  {% endfor %}
+  {% if content.end_date.errors %}
+    <nldd-validation-list>
+    {% for error in content.end_date.errors %}
+      <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
+    {% endfor %}
+    </nldd-validation-list>
+  {% endif %}
   </nldd-form-field>
   <nldd-form-actions>
-  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  <nldd-button appearance="primary" type="submit" width="full" text="Opslaan"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>
