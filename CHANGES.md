@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 748: upgrade NLDD design system from 0.8.92 to 0.10.0
+- 754: dependency bump to address security advisory
 - 747: contract hours (hours per week and start date) can be filled in when adding a user, not only when editing one
 
 ## 2026-10-19
