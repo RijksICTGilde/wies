@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from pathlib import Path
 
 import pytest
@@ -23,12 +23,12 @@ class ParseDateDmyTest(TestCase):
     def test_valid_date(self):
         """Test parsing a valid DD-MM-YYYY date"""
         result = parse_date_dmy("15-03-2025")
-        assert result == datetime.date(2025, 3, 15)
+        assert result == dt.date(2025, 3, 15)
 
     def test_single_digit_day_month(self):
         """Test parsing date with single digit day and month"""
         result = parse_date_dmy("1-2-2025")
-        assert result == datetime.date(2025, 2, 1)
+        assert result == dt.date(2025, 2, 1)
 
     def test_invalid_format_raises_error(self):
         """Test that invalid format raises ValueError"""

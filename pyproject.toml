@@ -5,12 +5,12 @@ requires-python = ">=3.14"
 dependencies = [
   "django==6.1.2",
   "whitenoise==6.12.0",
-  "gunicorn==26.1.0",
+  "gunicorn==26.2.0",
   "Authlib==1.7.2",
   "requests==2.34.2",
   "urllib3>=2.8.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
-  "psycopg[binary]>=3.3.4",
+  "psycopg[binary]>=3.3.6",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
   "boto3==1.43.100",
 ]
@@ -18,12 +18,12 @@ dependencies = [
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.1",
-  "ruff>=0.16.0",
-  "djlint>=1.42.3",
+  "ruff>=0.17.0",
+  "djlint>=1.46.4",
   "pytest>=9.1.1",
   "pytest-django>=4.14.0",
   "pytest-cov>=6.0",
-  "coverage[toml]>=7.15.4",
+  "coverage[toml]>=7.16.2",
   "markdown-it-py>=4.2.0",
 ]
 
