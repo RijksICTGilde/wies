@@ -1,5 +1,7 @@
 """Simple test for the labels endpoint"""
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models import Count
@@ -37,6 +39,20 @@ class LabelsViewTest(TestCase):
             pass
 
         assert response.status_code == 200
+
+    def test_add_label_button_name_starts_with_its_visible_text(self):
+        """The accessible name starts with the visible text (WCAG 2.5.3) and names
+        the category, so the buttons differ in a screen reader's list of controls."""
+        empty_category = LabelCategory.objects.create(name="Lege categorie", color="#FFFFFF")
+        content = self.client.get("/beheer/labels/").content.decode()
+
+        buttons = re.findall(r'<nldd-button[^>]*text="Label toevoegen"[^>]*>', content)
+        # One per category: below the labels, and alone in an empty category.
+        assert len(buttons) == 2
+        names = sorted(re.search(r'accessible-label="([^"]*)"', button).group(1) for button in buttons)
+        categories = sorted(LabelCategory.objects.values_list("name", flat=True))
+        assert names == [f"Label toevoegen aan {name}" for name in categories]
+        assert f"categorie={empty_category.pk}" in content
 
     def test_usage_count_annotation(self):
         """Test that labels have usage_count annotation"""
