@@ -1,5 +1,6 @@
 """Markup that the WCAG audit pinned down: heading levels in the sidebar and
-on the cards, and the input purpose of the profile name fields."""
+on the cards, the input purpose of the profile name fields, and the
+accessibility label on the Toegankelijkheid page."""
 
 from datetime import date
 
@@ -68,3 +69,11 @@ class A11yMarkupTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "<h2>Open Aanvraag</h2>")
         self.assertNotContains(response, "<h3>Open Aanvraag</h3>")
+
+    def test_accessibility_status_is_text(self):
+        """The status is text with a link to the register, not a label image (WCAG 1.1.1)."""
+        response = self.client.get(reverse("toegankelijkheid"))
+        assert response.status_code == 200
+        self.assertContains(response, "Status: A, voldoet volledig.")
+        self.assertContains(response, "Bekijk de verklaring in het register")
+        self.assertNotContains(response, "toegankelijkheidslabel.svg")
