@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- XXX: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
 
 ## 2026-10-22
