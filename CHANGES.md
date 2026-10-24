@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- XXX: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
+- 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
 - 755: dependency updates, including a security fix
 
 ## 2026-10-22
