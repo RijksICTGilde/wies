@@ -32,6 +32,13 @@ class A11yMarkupTest(TestCase):
         self.assertContains(response, "<h2>Opdrachtgever</h2>")
         self.assertNotContains(response, "<h3>Opdrachtgever</h3>")
 
+    def test_date_filter_has_an_id_to_return_focus_to(self):
+        # The sidebar is swapped on every filter change; focus_restore.js finds
+        # the field again only by id (WCAG 2.4.3).
+        response = self.client.get(reverse("assignment-list"))
+        assert response.status_code == 200
+        self.assertContains(response, '<nldd-date-field id="filter-beschikbaar_vanaf"')
+
     def test_profile_name_fields_carry_their_input_purpose(self):
         response = self.client.get(reverse("profile-name-edit"), headers={"hx-request": "true"})
         assert response.status_code == 200
