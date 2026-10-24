@@ -1,9 +1,12 @@
-"""Markup that the WCAG audit pinned down: heading levels in the sidebar and
-on the cards, and the input purpose of the profile name fields."""
+"""Markup that the WCAG audits pinned down: heading levels in the sidebar, on
+the cards and in the colleague panel, list roles on the card grids, the
+privacy chip's focus stop, and the input purpose of the profile name fields."""
 
 from datetime import date
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.template import engines
 from django.test import TestCase
 from django.urls import reverse
 
@@ -16,6 +19,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.views import PlacementListView
 
 User = get_user_model()
 
@@ -68,3 +72,57 @@ class A11yMarkupTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "<h2>Open Aanvraag</h2>")
         self.assertNotContains(response, "<h3>Open Aanvraag</h3>")
+
+    def test_card_grids_are_lists_of_cards(self):
+        """nldd-collection and nldd-card set no list roles themselves (loep 1.3.1)."""
+        org = OrganizationUnit.objects.create(name="Toets Org", label="Toets Org")
+        skill = Skill.objects.create(name="Python Developer")
+        assignment = Assignment.objects.create(name="Lopende Opdracht", source="wies", start_date=date(2025, 1, 1))
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+        service = Service.objects.create(assignment=assignment, description="Rol", skill=skill)
+        colleague = Colleague.objects.create(name="Fred Full", email="fred@rijksoverheid.nl")
+        Placement.objects.create(colleague=colleague, service=service, source="wies")
+        # Aanvragen lists only opdrachten with an open role.
+        Service.objects.create(assignment=assignment, description="Open rol", skill=skill, status="OPEN")
+
+        for url, grid_id in ((reverse("home"), "placement-list"), (reverse("assignment-list"), "assignment-card-grid")):
+            body = self.client.get(url).content.decode()
+            assert f'<nldd-collection id="{grid_id}" role="list"' in body
+            assert '<nldd-card role="listitem"' in body
+
+    def test_load_more_cell_is_a_list_item(self):
+        """A bare button inside role="list" breaks the list (axe aria-required-children)."""
+        assignment = Assignment.objects.create(name="Lopende Opdracht", source="wies", start_date=date(2025, 1, 1))
+        skill = Skill.objects.create(name="Python Developer")
+        service = Service.objects.create(assignment=assignment, description="Rol", skill=skill)
+        for name in ("Anna Een", "Bert Twee"):
+            colleague = Colleague.objects.create(name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl")
+            Placement.objects.create(colleague=colleague, service=service, source="wies")
+
+        with patch.object(PlacementListView, "paginate_by", 1):
+            body = self.client.get(reverse("home")).content.decode()
+
+        assert '<div class="wies-load-more" role="listitem">' in body
+
+    def test_colleague_panel_name_is_a_level_two_heading(self):
+        colleague = Colleague.objects.create(name="Pieter de Wit", email="pieter@rijksoverheid.nl")
+
+        response = self.client.get(reverse("home"), {"collega": colleague.public_id})
+
+        # A focusable h2 in the light DOM, where focus_restore.js lands.
+        self.assertContains(response, '<h2 id="panel-title" tabindex="-1">Pieter de Wit</h2>')
+
+    def test_privacy_chip_focus_stop_has_role_and_name(self):
+        """The focus lands on a named img, not on an nldd-tag host without a role (loep 4.1.2)."""
+        template = engines["jinja2"].from_string(
+            '{% from "parts/privacy_chip.html" import privacy_chip %}{{ privacy_chip("Alleen voor jou") }}'
+        )
+
+        html = template.render()
+
+        focus_stop = html[html.index('<span class="wies-privacy-chip"') :].split(">", 1)[0]
+        assert 'role="img"' in focus_stop
+        assert 'tabindex="0"' in focus_stop
+        assert 'aria-label="Beperkt zichtbaar. Alleen voor jou"' in focus_stop
+        assert html.count('tabindex="0"') == 1
+        assert 'aria-hidden="true"' in html
