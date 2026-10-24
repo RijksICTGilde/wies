@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
+- XXX: the Toegankelijkheid page states the current accessibility status (A, 19 October 2026) as text with a link to the register, replacing the outdated label image (status C)
 
 ## 2026-10-22
 
