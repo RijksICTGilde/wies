@@ -12,7 +12,7 @@ dependencies = [
   "jinja2==3.1.6",
   "psycopg[binary]>=3.3.6",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
-  "boto3==1.43.100",
+  "boto3==1.43.116",
 ]
 
 [dependency-groups]
