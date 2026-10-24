@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
-- XXX: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
+- 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
 
 ## 2026-10-22
 
