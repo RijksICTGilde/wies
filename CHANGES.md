@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
+- XXX: the date filter no longer refreshes the list on every keystroke and keeps focus in the field after the refresh; the client picker in the assignment form is a named group and says at least 1 client is required (accessibility)
 
 ## 2026-10-22
 
