@@ -80,7 +80,7 @@ class TimelineSegment:
     width_pct: float
     lane: int = 0  # vertical lane so overlapping (concurrent) placements don't stack
     # Too narrow to hold its own name: the label would render as a stray "I..."
-    # next to a wider bar. The name still lives in the title attribute.
+    # next to a wider bar. The bar's hidden sentence still carries the name.
     too_narrow: bool = False
     # Whether THIS placement is the one wrapping up. The row-level flag says only
     # that something of this colleague's ends soon; on someone with several
