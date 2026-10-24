@@ -9,6 +9,7 @@ from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
+from config.jinja2 import datum_nl
 from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
@@ -958,6 +959,11 @@ class BezettingPaginationTest(TestCase):
         assert 'text="Meer tonen"' in content
         assert "pagina=2" in content
 
+    def test_load_more_is_an_item_of_the_rows_list(self):
+        """Only an li may sit in the ul it is swapped into."""
+        content = self.client.get(self.url).content.decode()
+        assert '<li class="wies-load-more">' in content
+
     def test_next_page_is_just_the_rows_without_the_button(self):
         content = self.client.get(self.url, {"pagina": 2}, headers={"hx-request": "true"}).content.decode()
         assert content.count('class="bezetting-row ') == 1
@@ -1056,3 +1062,83 @@ class TickLabelFlipTest(TestCase):
 
         expected = sum(1 for t in month_ticks(timezone.now().date()) if t["flip"])
         assert content.count("bezetting-tick--flip") == expected
+
+
+class TimelineStructureTest(TestCase):
+    """The timeline as a screen reader meets it: rows and bars are lists, and
+    each bar and free stretch says in words what its position on the track
+    shows (WCAG 1.3.1). The status cards are named after their visible text
+    first (2.5.3)."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.client.force_login(bdm)
+        self.today = timezone.now().date()
+        self.start = self.today - timedelta(days=10)
+        self.end = self.today + timedelta(days=20)
+        self.placed = _consultant("Pim Plaats", "pim@x.nl")
+        placement = _placement(self.placed, "Loopt bijna af", self.start, self.end)
+        placement.service.hours_per_week = 24
+        placement.service.save()
+        self.bench = _consultant("Bea Bank", "bea@x.nl")
+        self.bench_since = self.today - timedelta(days=30)
+        _placement(self.bench, "Afgerond", self.today - timedelta(days=90), self.bench_since)
+
+    def _content(self, **params):
+        return self.client.get(self.url, params).content.decode().replace("&#39;", "'")
+
+    def test_rows_and_bars_are_lists(self):
+        content = self._content()
+        assert '<ul class="bezetting-rows"' in content
+        assert content.count('<li class="bezetting-row ') == 2
+        # role="list" because Safari drops it from a ul with list-style: none.
+        assert re.search(
+            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats">', content
+        )
+        assert re.search(r'<ul class="bezetting-rows"\s+role="list"', content)
+        assert '<li class="bezetting-seg ' in content
+
+    def test_a_bar_reads_its_name_hours_period_and_countdown(self):
+        content = self._content()
+        sentence = (
+            f"Loopt bijna af, 24 uur per week, van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, nog 20 dagen"
+        )
+        assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
+
+    def test_an_ending_bar_shows_its_days_left(self):
+        """The countdown on the bar keeps "ends soon" from resting on colour alone (1.4.1)."""
+        content = self._content()
+        assert '<span class="bezetting-seg__end" aria-hidden="true">nog 20 dagen</span>' in content
+
+    def test_an_open_ended_bar_reads_from_when(self):
+        """An opdracht without an end date, the most common case in real data."""
+        open_ended = _consultant("Olga Open", "olga@x.nl")
+        _placement(open_ended, "Zonder einde", self.start, None)
+        content = self._content()
+        assert f"Zonder einde, uren niet ingevuld, vanaf {datum_nl(self.start)}</span>" in content
+
+    def test_the_free_stretch_reads_since_when(self):
+        content = self._content()
+        assert f"30 dagen vrij sinds {datum_nl(self.bench_since)}" in content
+
+    def test_visible_bar_text_is_hidden_from_screen_readers(self):
+        """The sentence already says it; read twice it would be noise."""
+        content = self._content()
+        assert '<span class="bezetting-seg__label" aria-hidden="true">' in content
+        assert '<span class="bezetting-seg__end" aria-hidden="true">' in content
+
+    def test_status_card_name_starts_with_its_visible_text(self):
+        content = self._content()
+        assert 'accessible-label="0 deels vrij, deels beschikbaar"' in content
+        assert 'accessible-label="1 eindigt bijna, eindigt binnen 3 maanden"' in content
+        assert 'accessible-label="1 op de bank"' in content
+        assert 'accessible-label="0 deels beschikbaar"' not in content
+
+    def test_the_empty_state_is_not_in_a_list(self):
+        content = self._content(zoek="niemand")
+        assert "<nldd-inline-dialog" in content
+        assert '<ul class="bezetting-rows"' not in content

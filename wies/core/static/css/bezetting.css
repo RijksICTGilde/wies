@@ -155,6 +155,12 @@
   );
 }
 
+/* The secondary grey reached 3.9:1 on the pressed card in light mode; the
+   primary text colour clears 4.5:1 in both schemes (7.2 light, 8.4 dark). */
+.bezetting-stat[aria-pressed="true"] .bezetting-stat__label {
+  color: var(--semantics-content-color);
+}
+
 /* Phase colours for the timeline bars.
 
    Tinted, not saturated fills: a wall of solid colour across every row drowns
@@ -164,10 +170,16 @@
    how the design system's own tinted buttons and tags carry a status, and every
    token here is a light-dark() pair, so both themes stay legible.
 
-   The border does the identifying at a glance; the fill stays quiet. */
+   The border does the identifying at a glance; the fill stays quiet. Each
+   border is the lightest step that still reaches 3:1 against the page (WCAG
+   1.4.11), measured per scheme: the steps flip with the theme, so one step
+   is too light in one of the two. */
 .bezetting-seg--active {
   background: var(--primitives-color-success-75);
-  border-color: var(--primitives-color-success-300);
+  border-color: light-dark(
+    var(--primitives-color-success-400),
+    var(--primitives-color-success-500)
+  );
   color: var(--primitives-color-success-750);
 }
 
@@ -176,14 +188,20 @@
    which. A separate hue for it added a third colour that carried no decision. */
 .bezetting-seg--planned {
   background: var(--primitives-color-success-75);
-  border-color: var(--primitives-color-success-300);
+  border-color: light-dark(
+    var(--primitives-color-success-400),
+    var(--primitives-color-success-500)
+  );
   color: var(--primitives-color-success-750);
 }
 
 /* Completed work is history: neutral, and quieter still than the two live phases. */
 .bezetting-seg--completed {
   background: var(--primitives-color-neutral-75);
-  border-color: var(--primitives-color-neutral-250);
+  border-color: light-dark(
+    var(--primitives-color-neutral-400),
+    var(--primitives-color-neutral-500)
+  );
   color: var(--semantics-content-secondary-color);
 }
 
@@ -351,6 +369,13 @@
 }
 
 /* ── Rijen ────────────────────────────────────────────────────────────────── */
+.bezetting-rows,
+.bezetting-lanes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .bezetting-rows {
   border-top: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
 }
@@ -418,7 +443,10 @@
   position: absolute;
   height: var(--bezetting-lane-height);
   min-width: 3px;
-  border: 1px solid transparent;
+  /* No colour in this shorthand: this rule comes after the phase rules and
+     used to reset their border to transparent. */
+  border-width: 1px;
+  border-style: solid;
   border-radius: var(--primitives-corner-radius-xs, 4px);
   overflow: hidden;
   pointer-events: none;
@@ -436,15 +464,14 @@
    everyone else -- at which point the date was doing the work. The bar still
    carries that date.
 
-   The border matches the fill instead of taking the phase colours' -300 step.
-   The step numbers are not comparable across hues: at -300 warning is far
-   darker relative to its -75 fill than success is to its own, so the same
-   number that reads as a quiet edge on a green bar drew a hard outline around
-   an orange one. Matching the fill keeps the bar a shape, not an outline,
-   while the 1px border still holds the geometry the other bars have. */
+   The border follows the same 3:1 rule as the phase colours; at the fill's own
+   step the bar's extent was not perceivable against the page. */
 .bezetting-seg--ending-soon {
   background: var(--primitives-color-warning-75);
-  border-color: var(--primitives-color-warning-75);
+  border-color: light-dark(
+    var(--primitives-color-warning-400),
+    var(--primitives-color-warning-500)
+  );
   color: var(--primitives-color-warning-750);
 }
 
@@ -478,11 +505,10 @@
   padding-right: 6rem;
 }
 
-/* "uren niet ingevuld" reads as a note, not as part of the name. Opacity, so
-   it dims whatever colour the bar's phase gave the text, in both schemes. */
+/* "uren niet ingevuld" reads as a note, not as part of the name. Italic only:
+   dimming it with opacity fell to 3.8:1 on the green bar (WCAG 1.4.3). */
 .bezetting-seg__gap {
   font-style: italic;
-  opacity: 0.7;
 }
 
 .bezetting-seg__label {
