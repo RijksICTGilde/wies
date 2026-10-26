@@ -155,6 +155,31 @@ class ServicePanelTest(TestCase):
 
         assert "Aanvraag wijzigen" not in body
 
+    def test_an_otys_aanvraag_says_why_it_cannot_be_changed(self):
+        """Even a business manager gets no pencil on an OTYS opdracht; the
+        panel says where it is managed instead (review #712)."""
+        bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.source = "otys_iir"
+        self.assignment.save()
+        self.client.force_login(bdm)
+
+        body = self._panel()
+
+        assert "Aanvraag wijzigen" not in body
+        assert "Wordt beheerd in OTYS IIR. Wijzigen kan alleen daar." in body
+
+    def test_a_wies_aanvraag_has_no_managed_elsewhere_line(self):
+        assert "Wordt beheerd in" not in self._panel()
+
+    def test_the_edit_toolbar_has_an_accessible_name(self):
+        bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        self.client.force_login(bdm)
+
+        assert '<nldd-toolbar accessible-label="Aanvraag">' in self._panel()
+
     def test_a_team_editor_can_reach_the_edit_sheet_from_the_panel(self):
         bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague

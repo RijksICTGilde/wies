@@ -18,7 +18,7 @@ from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Lower, Trim
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -246,6 +246,11 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
         return None
 
 
+def _external_source(assignment) -> str:
+    """The system that manages ``assignment`` ("OTYS IIR"), or "" for Wies."""
+    return assignment.get_source_display() if assignment.source not in ("wies", "") else ""
+
+
 def _build_assignment_panel_data(assignment, request):
     """Builds the assignment panel context, shared by both views."""
     from wies.core.editables.assignment import (  # noqa: PLC0415
@@ -267,7 +272,7 @@ def _build_assignment_panel_data(assignment, request):
         "team_rows": team_rows,
         # Same human label as the "Externe bron" row, so the intro says "OTYS
         # IIR", not the raw key "OTYS_IIR".
-        "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
+        "team_external_source": _external_source(assignment),
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_delete": has_permission(Verb.DELETE, assignment, request.user),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
@@ -674,6 +679,7 @@ def _build_aanvraag_panel_data(service, request):
         "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
         "period_text": request_period_text(service) or "Geen periode opgegeven",
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
+        "external_source": _external_source(assignment),
         # Keeps ?aanvraag=, so saving or going back lands on this panel again.
         "edit_url": _build_panel_url(
             request, opdracht=assignment.public_id, aanvraag=service.public_id, teamlid=service.public_id
@@ -1941,10 +1947,35 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 )
         return qs.order_by(F("assignment__created_at").desc(nulls_last=True), "assignment_id", "id")
 
+    @cached_property
+    def _locations(self) -> dict[str, str]:
+        """Every standplaats on an open aanvraag, keyed case- and
+        space-insensitively, so "Den Haag" and "den haag " are one option. The
+        label is the most common spelling; on a tie, the capitalised one."""
+        open_services = Service.objects.filter(status="OPEN", placements__isnull=True).exclude(location="")
+        excluded_org_ids = get_excluded_org_ids()
+        if excluded_org_ids:
+            open_services = open_services.exclude(assignment__organizations__id__in=excluded_org_ids)
+        spellings = Counter(location.strip() for location in open_services.values_list("location", flat=True))
+        locations = {}
+        for spelling, _ in sorted(spellings.items(), key=lambda item: (-item[1], item[0])):
+            locations.setdefault(spelling.lower(), spelling)
+        return dict(sorted(locations.items()))
+
+    @cached_property
+    def _selected_locations(self) -> list[str]:
+        """The requested standplaatsen that exist; an unknown one is dropped
+        rather than emptying the list without a chip to undo it."""
+        requested = {value.strip().lower() for value in self.request.GET.getlist("standplaats")}
+        return sorted(requested & self._locations.keys())
+
     def _apply_filters(self, qs, *, exclude_filter=None):
         rol = self.facets("rol", Skill)
         if exclude_filter != "rol" and rol.requested:
             qs = qs.filter(skill_id__in=rol.ids)
+
+        if exclude_filter != "standplaats" and self._selected_locations:
+            qs = qs.annotate(location_key=Lower(Trim("location"))).filter(location_key__in=self._selected_locations)
 
         if exclude_filter != "org":
             # Through the opdracht, for the same reason as the search above.
@@ -2016,6 +2047,8 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         rol_filter = self.facets("rol", Skill).active_values
         if rol_filter:
             active_filters["rol"] = rol_filter
+        if self._selected_locations:
+            active_filters["standplaats"] = set(self._selected_locations)
 
         # Role counts: exclude the role filter for cross-filtering. They count
         # aanvragen, so two for the same role on one opdracht count 2.
@@ -2034,6 +2067,20 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 option["selected"] = True
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
+
+        # Standplaats counts: same cross-filter rule, without the standplaats filter.
+        location_counts = Counter(
+            location.strip().lower()
+            for location in self._apply_filters(base_qs, exclude_filter="standplaats").values_list(
+                "location", flat=True
+            )
+        )
+        location_options = [{"value": "", "label": ""}]
+        for key, label in self._locations.items():
+            option = {"value": key, "label": label, "count": location_counts.get(key, 0)}
+            if key in self._selected_locations:
+                option["selected"] = True
+            location_options.append(option)
 
         # Organization filter (multi-select via modal)
         self.add_org_filter_context(context, active_filters)
@@ -2070,6 +2117,13 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "label": "Rol",
                 "options": skill_options,
                 "selected_values": skill_selected_values,
+            },
+            {
+                "type": "select-multi",
+                "name": "standplaats",
+                "label": "Standplaats",
+                "options": location_options,
+                "selected_values": self._selected_locations,
             },
             {
                 "type": "date",

@@ -34,12 +34,18 @@
      only showed once the bar had collapsed. Each item pairs a visible button
      with a slot="overflow" item, which needs hx-trigger="select". #}
   {% if panel_data.user_can_edit_team %}
-    <nldd-toolbar label="Aanvraag">
+    <nldd-toolbar accessible-label="Aanvraag">
     <nldd-toolbar-item slot="end">
     <nldd-icon-button icon="edit" text="Aanvraag wijzigen" hx-get="{{ panel_data.edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
     <nldd-menu-item slot="overflow" text="Aanvraag wijzigen" icon="edit" hx-get="{{ panel_data.edit_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
     </nldd-toolbar-item>
     </nldd-toolbar>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% elif panel_data.external_source %}
+    {# Without this there is no telling why the pencil is missing. #}
+    <nldd-rich-text>
+    <p>Wordt beheerd in {{ panel_data.external_source }}. Wijzigen kan alleen daar.</p>
+    </nldd-rich-text>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}
   <nldd-list appearance="box-tinted" accessible-label="Aanvraaggegevens">

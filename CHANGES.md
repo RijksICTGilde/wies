@@ -5,8 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
-- 772: the aanvraag panel names who is placed on the opdracht; "Opdrachtomschrijving", "Wie we zoeken" and "Taken" each get a help line
-- 772: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag; it moved to /aanvragen/ (/opdrachten/ redirects)
+- 772: the aanvraag panel names who is placed on the opdracht; "Opdrachtomschrijving", "Wie we zoeken" and "Taken" each get a help line; an aanvraag from OTYS says it can only be changed there
+- 772: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects)
 - 772: the "Aanvraag toevoegen" item in the opdracht panel shows its icon again
 - 755: dependency updates, including a security fix
 

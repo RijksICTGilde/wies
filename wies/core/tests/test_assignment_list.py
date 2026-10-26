@@ -713,6 +713,52 @@ class AssignmentListViewTest(TestCase):
         assert self._rol_count(self._filter_groups(), self.skill) == 3
         assert self._rol_count(self._filter_groups({"org_self": str(self.org2.public_id)}), self.skill) == 2
 
+    def _standplaats_options(self, groups):
+        """The sidebar 'standplaats' options as {value: (label, count)}."""
+        (group,) = [g for g in groups if g["name"] == "standplaats"]
+        return {o["value"]: (o["label"], o["count"]) for o in group["options"] if o["value"]}
+
+    def test_standplaats_filter_shows_only_the_aanvragen_there(self):
+        assignment = Assignment.objects.create(name="Twee Plekken", source="wies")
+        utrecht = self._aanvraag(assignment, self.skill, location="Utrecht")
+        self._aanvraag(assignment, self.skill, location="Den Haag")
+
+        assert self._card_ids({"standplaats": "utrecht"}) == [str(utrecht.public_id)]
+
+    def test_standplaats_ignores_case_and_spaces(self):
+        """Free text: "Den Haag" and "den haag " are one option and one filter."""
+        assignment = Assignment.objects.create(name="Spelling", source="wies")
+        first = self._aanvraag(assignment, self.skill, location="Den Haag")
+        second = self._aanvraag(assignment, self.skill, location="den haag ")
+
+        options = self._standplaats_options(self._filter_groups())
+        assert options == {"den haag": ("Den Haag", 2)}
+        assert sorted(self._card_ids({"standplaats": "Den Haag"})) == sorted(
+            [str(first.public_id), str(second.public_id)]
+        )
+
+    def test_standplaats_count_follows_the_rol_filter(self):
+        assignment = Assignment.objects.create(name="Telling", source="wies")
+        self._aanvraag(assignment, self.skill, location="Utrecht")
+        self._aanvraag(assignment, self.skill2, location="Utrecht")
+
+        assert self._standplaats_options(self._filter_groups())["utrecht"][1] == 2
+        groups = self._filter_groups({"rol": str(self.skill2.public_id)})
+        assert self._standplaats_options(groups)["utrecht"][1] == 1
+
+    def test_unknown_standplaats_filters_nothing(self):
+        """No option means no chip to undo it, so it must not empty the list."""
+        self._aanvraag(self.vacancy, self.skill, location="Utrecht")
+
+        assert len(self._card_ids({"standplaats": "Atlantis"})) == len(self._card_ids())
+
+    def test_standplaats_chip_shows_the_spelling(self):
+        self._aanvraag(self.vacancy, self.skill, location="Den Haag")
+        self.client.force_login(self.auth_user)
+
+        content = self.client.get(self.list_url, {"standplaats": "den haag"}).content.decode()
+        assert re.search(r'<nldd-token[^>]*data-filter-name="standplaats"[^>]*>Den Haag</nldd-token>', content)
+
     # --- Paging, count and texts ---------------------------------------------
 
     def test_pagination_per_aanvraag(self):
