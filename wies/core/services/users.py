@@ -24,7 +24,7 @@ from wies.core.roles import (
 )
 from wies.core.services.assignments import member_audit_event
 from wies.core.services.events import create_event
-from wies.core.services.suborganizations import get_suborganization_by_name
+from wies.core.services.suborganizations import get_suborganization_by_name, renamed_column_errors
 
 User = get_user_model()
 
@@ -173,7 +173,7 @@ def update_user(
 
     :param updater: user that performs the update action. Can be None if done by system
     :param groups: the roles the user must end up with, or None to leave them alone
-    :param suborganization: the colleague's merk (a Suborganization), or None to clear it
+    :param suborganization: the colleague's ODI-onderdeel (a Suborganization), or None to clear it
     :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
@@ -233,7 +233,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     - first_name (required)
     - last_name (required)
     - email (required)
-    - brand (optional, merk name - assigned as the colleague's merk; must already exist)
+    - suborganization (optional, name of the colleague's Suborganization; must already exist)
     - one column per role in ``CSV_ROLE_COLUMNS``, each "y" or "n"
 
     A role the importer may not grant is not applied and is reported per row
@@ -279,6 +279,10 @@ def create_users_from_csv(creator, csv_content: str, request=None):
             "errors": [f"Verplichte kolommen ontbreken: {', '.join(sorted(missing_columns))}"],
         }
 
+    renamed_errors = renamed_column_errors(csv_reader.fieldnames)
+    if renamed_errors:
+        return {"success": False, "users_created": 0, "errors": renamed_errors}
+
     # Read all rows and validate
     rows = []
     errors = []
@@ -321,9 +325,9 @@ def create_users_from_csv(creator, csv_content: str, request=None):
             if value.lower() not in {"y", "n", ""}:
                 row_errors.append(f"Rij {row_num}: {column} moet 'y' of 'n' zijn, niet '{row[column]}'")
 
-        brand_name = row.get("brand", "").strip()
-        if brand_name and not Suborganization.objects.filter(name__iexact=brand_name).exists():
-            row_errors.append(f"Rij {row_num}: onbekend merk '{brand_name}'")
+        suborganization_name = row.get("suborganization", "").strip()
+        if suborganization_name and not Suborganization.objects.filter(name__iexact=suborganization_name).exists():
+            row_errors.append(f"Rij {row_num}: onbekend ODI-onderdeel '{suborganization_name}'")
 
         if email:
             email_key = email.lower()
@@ -356,15 +360,15 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                 first_name = row["first_name"].strip()
                 last_name = row["last_name"].strip()
                 email = row["email"].strip()
-                brand_name = row.get("brand", "").strip()
+                suborganization_name = row.get("suborganization", "").strip()
 
-                # Resolve the colleague's suborganization from the brand column.
-                # Brands are validated to exist above; look up case-insensitively, never create.
+                # Resolve the colleague's suborganization from the "suborganization" column.
+                # Names are validated to exist above; look up case-insensitively, never create.
                 suborganization = None
-                if brand_name:
-                    if brand_name not in suborg_mapping:
-                        suborg_mapping[brand_name] = get_suborganization_by_name(brand_name)
-                    suborganization = suborg_mapping[brand_name]
+                if suborganization_name:
+                    if suborganization_name not in suborg_mapping:
+                        suborg_mapping[suborganization_name] = get_suborganization_by_name(suborganization_name)
+                    suborganization = suborg_mapping[suborganization_name]
 
                 groups_to_assign = [
                     groups_dict[key]

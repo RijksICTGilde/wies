@@ -250,7 +250,7 @@ def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_
 def colleague_occupancy(
     today: date,
     *,
-    merk_ids: list[int] | None = None,
+    suborganization_ids: list[int] | None = None,
     labels_by_category: dict[int, list[int]] | None = None,
     search: str = "",
 ) -> list[OccupancyRow]:
@@ -261,8 +261,8 @@ def colleague_occupancy(
     ones with the most free hours first, then fully-placed colleagues by
     soonest-ending assignment.
 
-    ``merk_ids`` optionally restricts the rows to colleagues in those
-    suborganisations (merken); an empty/None value shows everyone.
+    ``suborganization_ids`` optionally restricts the rows to colleagues in those
+    suborganisations (ODI-onderdelen); an empty/None value shows everyone.
 
     ``labels_by_category`` maps a label-category id to the selected label ids in
     that category. Matching is OR within a category and AND between categories,
@@ -277,7 +277,7 @@ def colleague_occupancy(
 
     # Only consultants: colleagues whose linked user holds the Consultant role.
     # Colleagues without a user (e.g. imported without an account) are excluded.
-    # The labels and merk ride along: the row shows them as chips, and without
+    # The labels and ODI-onderdeel ride along: the row shows them as chips, and without
     # the prefetch that is a query per colleague.
     colleagues = (
         Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
@@ -285,8 +285,8 @@ def colleague_occupancy(
         .prefetch_related("labels__category", "contract_periods")
         .order_by("name")
     )
-    if merk_ids:
-        colleagues = colleagues.filter(suborganization_id__in=merk_ids)
+    if suborganization_ids:
+        colleagues = colleagues.filter(suborganization_id__in=suborganization_ids)
     if search:
         colleagues = colleagues.filter(Q(name__icontains=search) | Q(email__icontains=search))
     for label_ids in (labels_by_category or {}).values():
@@ -553,32 +553,32 @@ def consultant_colleagues():
     return Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
 
 
-def apply_colleague_filters(qs, merk, labels_by_cat, *, exclude_filter=None):
-    """Apply the merk + label filters to a consultant-colleague queryset.
+def apply_colleague_filters(qs, suborganization_facet, labels_by_cat, *, exclude_filter=None):
+    """Apply the ODI-onderdeel + label filters to a consultant-colleague queryset.
 
     ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
-    to its current selection: "merk" for the merk group, or a label ``category_id``
+    to its current selection: "onderdeel" for the ODI-onderdeel group, or a label ``category_id``
     (int) for that category's group. Labels are OR within a category, AND between.
     """
     for cat_id, cat_label_ids in labels_by_cat.items():
         if exclude_filter != cat_id:
             qs = qs.filter(labels__id__in=cat_label_ids)
-    if exclude_filter != "merk" and merk.ids:
-        qs = qs.filter(suborganization_id__in=merk.ids)
+    if exclude_filter != "onderdeel" and suborganization_facet.ids:
+        qs = qs.filter(suborganization_id__in=suborganization_facet.ids)
     return qs.distinct()
 
 
-def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
+def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> list[dict]:
     """Build the select-multi filter groups for the Bezetting sheet.
 
     One group per label category (only labels used by a consultant; empty
-    categories dropped) plus one merk group. Each option carries a cross-filtered
+    categories dropped) plus one ODI-onderdeel group. Each option carries a cross-filtered
     count — the number of consultants that would remain if only this value were
     added to the other active filters — like the "Gebruikers" filter sheet.
     """
     base_qs = consultant_colleagues()
     selected_label_ids = set(labels.public_ids)
-    selected_merk_ids = set(merk.public_ids)
+    selected_suborganization_ids = set(suborganization_facet.public_ids)
 
     groups = []
 
@@ -596,7 +596,7 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
         category_names[label.category_id] = label.category.name
 
     for cat_id, cat_labels in labels_by_cat_display.items():
-        cat_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter=cat_id)
+        cat_qs = apply_colleague_filters(base_qs, suborganization_facet, labels_by_cat, exclude_filter=cat_id)
         # Re-query by id to get proper filter numbers
         # cat_qs contains distinct and values_list re-uses the filter JOIN
         cat_colleagues = Colleague.objects.filter(id__in=cat_qs.values_list("id", flat=True))
@@ -620,29 +620,35 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
             }
         )
 
-    # Merk: only suborganisations that have at least one consultant.
-    merk_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter="merk")
+    # ODI-onderdeel: only suborganisations that have at least one consultant.
+    suborganization_qs = apply_colleague_filters(
+        base_qs, suborganization_facet, labels_by_cat, exclude_filter="onderdeel"
+    )
     # Same re-query as above: A fresh queryset by id counts one row per colleague.
-    merk_colleagues = Colleague.objects.filter(id__in=merk_qs.values_list("id", flat=True))
-    merk_ids = merk_colleagues.values_list("suborganization_id", flat=True)
-    merk_counts = Counter(mid for mid in merk_ids if mid is not None)
-    merk_options = [{"value": "", "label": ""}]
-    merk_selected = []
+    suborganization_colleagues = Colleague.objects.filter(id__in=suborganization_qs.values_list("id", flat=True))
+    suborganization_ids = suborganization_colleagues.values_list("suborganization_id", flat=True)
+    suborganization_counts = Counter(mid for mid in suborganization_ids if mid is not None)
+    suborganization_options = [{"value": "", "label": ""}]
+    suborganization_selected = []
     used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
     for suborganization in used_suborgs:
         value = str(suborganization.public_id)
-        option = {"value": value, "label": suborganization.name, "count": merk_counts.get(suborganization.id, 0)}
-        if value in selected_merk_ids:
+        option = {
+            "value": value,
+            "label": suborganization.name,
+            "count": suborganization_counts.get(suborganization.id, 0),
+        }
+        if value in selected_suborganization_ids:
             option["selected"] = True
-            merk_selected.append(value)
-        merk_options.append(option)
+            suborganization_selected.append(value)
+        suborganization_options.append(option)
     groups.append(
         {
             "type": "select-multi",
-            "name": "merk",
-            "label": "Merk",
-            "options": merk_options,
-            "selected_values": merk_selected,
+            "name": "onderdeel",
+            "label": "ODI-onderdeel",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected,
         }
     )
 

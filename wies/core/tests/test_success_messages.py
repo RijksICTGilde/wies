@@ -1,7 +1,7 @@
 """Every save and delete confirms itself with a notification.
 
 The message text is what the notification shows and what live_region.js reads
-out; the merk list partial has to carry the flash block itself because that
+out; the suborganization list partial has to carry the flash block itself because that
 save does not reload the page.
 """
 
@@ -99,14 +99,16 @@ class SuccessMessageTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'id="flash-messages"')
         self.assertContains(response, 'hx-swap-oob="outerHTML"')
-        self.assertContains(response, 'text="Merk &#34;Merk A&#34; is toegevoegd."')
+        self.assertContains(response, 'text="ODI-onderdeel &#34;Merk A&#34; is toegevoegd."')
 
     def test_suborganization_edit_and_delete(self):
-        merk = Suborganization.objects.create(name="Merk B")
-        response = self.client.post(reverse("suborganization-edit", args=[merk.public_id]), {"name": "Merk C"}, **HX)
-        self.assertContains(response, 'text="Merk &#34;Merk C&#34; is aangepast."')
-        response = self.client.post(reverse("suborganization-delete", args=[merk.public_id]), **HX)
-        assert last_message(response) == 'Merk "Merk C" is verwijderd.'
+        suborganization = Suborganization.objects.create(name="Merk B")
+        response = self.client.post(
+            reverse("suborganization-edit", args=[suborganization.public_id]), {"name": "Merk C"}, **HX
+        )
+        self.assertContains(response, 'text="ODI-onderdeel &#34;Merk C&#34; is aangepast."')
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.public_id]), **HX)
+        assert last_message(response) == 'ODI-onderdeel "Merk C" is verwijderd.'
 
     def test_placement_save_shows_the_banner_in_the_panel_it_returns_to(self):
         owner_user = grant_business_manager(

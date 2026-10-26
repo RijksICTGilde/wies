@@ -23,7 +23,7 @@ class Command(BaseCommand):
                     Label.objects.create(name=label_name, category=category)
                 logger.info("Successfully setup label categories and labels")
 
-        # setting up suborganizations (merken) if completely empty
+        # setting up suborganizations (ODI-onderdelen) if completely empty
         if Suborganization.objects.count() == 0:
             for suborganization_name in DEFAULT_SUBORGANIZATIONS:
                 Suborganization.objects.create(name=suborganization_name)

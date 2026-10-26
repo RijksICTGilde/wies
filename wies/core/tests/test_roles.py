@@ -73,7 +73,7 @@ class RBACSetupTest(TestCase):
             )
 
     def test_setup_roles_grants_suborganization_permissions(self):
-        """Test that the Gebruikersbeheerder group can manage suborganizations (merken)"""
+        """Test that the Gebruikersbeheerder group can manage suborganizations (suborganizations)"""
         setup_roles()
 
         admin_group = Group.objects.get(name=ROLE_USER_ADMIN)

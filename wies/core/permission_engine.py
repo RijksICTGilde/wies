@@ -45,12 +45,12 @@ class Scope:
 
     name: str
     label: str
-    # ``predicate(user, obj, grant)``. No scope reads the grant today; a merk
+    # ``predicate(user, obj, grant)``. No scope reads the grant today; an ODI-onderdeel
     # scope will (#526), and adding the argument then means visiting every scope.
     predicate: Callable[[object, object, object], bool]
     # The relations this one asks for at once. A grant covers a row when its parts
     # are a subset of the row's, which is how ANY covers every row and how "eigen"
-    # covers "eigen, binnen je merk".
+    # covers "eigen, binnen je ODI-onderdeel".
     parts: frozenset[str] | None = None
 
     def __post_init__(self):

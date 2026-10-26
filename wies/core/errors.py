@@ -11,11 +11,11 @@ class EmailNotAvailableError(Exception):
 
 
 class SuborganizationNotFoundError(ValueError):
-    """Raised when a brand name from imported/synced data has no matching Suborganization."""
+    """Raised when a suborganization name from imported/synced data has no matching Suborganization."""
 
     def __init__(self, name: str):
         self.name = name
-        super().__init__(f"Onbekend merk: '{name}'. Voeg het merk eerst toe voordat je importeert.")
+        super().__init__(f"Onbekend ODI-onderdeel: '{name}'. Voeg het ODI-onderdeel eerst toe voordat je importeert.")
 
 
 class InvalidEmailDomainError(ValidationError):

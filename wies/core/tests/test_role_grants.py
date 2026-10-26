@@ -455,7 +455,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_by_user_admin_grants_user_admin(self):
         """Every role column of the import is one the Gebruikersbeheerder may grant."""
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
+            f"first_name,last_name,email,suborganization,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,y,n\n"
         )
 
@@ -471,7 +471,7 @@ class RoleGrantTest(TestCase):
     def test_csv_import_skips_an_existing_user_and_grants_the_other_rows(self):
         # Row 4 is skipped as an existing user; the rows around it still land.
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
+            f"first_name,last_name,email,suborganization,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "Ann,Een,ann@rijksoverheid.nl,,y,n,n\n"
             "Bob,Twee,bob@rijksoverheid.nl,,n,y,n\n"
             f"Tom,Drie,{self.target.email},,y,n,n\n"
@@ -522,7 +522,7 @@ class RoleGrantTest(TestCase):
 
     def test_csv_import_by_staff_grants_user_admin(self):
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
+            f"first_name,last_name,email,suborganization,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john.doe@rijksoverheid.nl,,y,n,n\n"
         )
 
@@ -669,7 +669,7 @@ class StaffEmailChangeTest(TestCase):
             f"Rij 3: alleen een applicatiebeheerder mag een gebruiker toevoegen op '{FREE_STAFF_EMAIL}'"
         ]
         # Row 2 is fine and still does not land: a row error stops the whole file,
-        # as it does for an unknown merk or a bad domain.
+        # as it does for an unknown suborganization or a bad domain.
         assert result["users_created"] == 0
         assert not User.objects.filter(email__iexact="ann@rijksoverheid.nl").exists()
         assert not User.objects.filter(email__iexact=FREE_STAFF_EMAIL).exists()

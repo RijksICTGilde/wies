@@ -380,7 +380,7 @@ class RoleMatrixExtraRowTest(TestCase):
             "Uren per week van een geplaatste collega zien": lambda u: can_view_role_hours(
                 u, Placement(colleague_id=self.other.pk)
             ),
-            "Gebruikers, labels, merken en rollen openen": lambda u: all(
+            "Gebruikers, labels, ODI-onderdelen en rollen openen": lambda u: all(
                 self._page_opens(u, reverse(name))
                 for name in ("admin-users", "label-admin", "suborganization-admin", "role-matrix")
             ),

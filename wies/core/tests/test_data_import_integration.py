@@ -16,7 +16,7 @@ User = get_user_model()
 
 
 class DataImportIntegrationTest(TestCase):
-    """High-level integration tests for CSV imports and OTYS sync with merk assignment"""
+    """High-level integration tests for CSV imports and OTYS sync with suborganization assignment"""
 
     def setUp(self):
         """Create necessary groups for CSV import tests"""
@@ -24,13 +24,13 @@ class DataImportIntegrationTest(TestCase):
         Group.objects.get_or_create(name=ROLE_CONSULTANT)
         Group.objects.get_or_create(name=ROLE_BUSINESS_MANAGER)
 
-    def test_csv_user_import_with_brand_assigns_existing_merken(self):
-        """Test: CSV with brand column assigns each user's (pre-existing) merk"""
+    def test_csv_user_import_with_suborganization_assigns_existing_suborganizations(self):
+        """Test: CSV with suborganization column assigns each user's (pre-existing) suborganization"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
 
         csv_content = (
-            f"first_name,last_name,email,brand,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
+            f"first_name,last_name,email,suborganization,{role_label(ROLE_USER_ADMIN)},{role_label(ROLE_CONSULTANT)},Business Manager\n"
             "John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n\n"
             "Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n\n"
             "Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"
@@ -41,10 +41,10 @@ class DataImportIntegrationTest(TestCase):
         # Verify import success
         assert result["success"]
         assert result["users_created"] == 3
-        # No new merken created — brands are looked up, never created.
+        # No new suborganizations created — suborganizations are looked up, never created.
         assert Suborganization.objects.count() == 2
 
-        # Verify users' linked colleagues have correct merk
+        # Verify users' linked colleagues have correct suborganization
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.colleague.suborganization == rig_suborg
 
@@ -54,11 +54,11 @@ class DataImportIntegrationTest(TestCase):
         bob = User.objects.get(email="bob@rijksoverheid.nl")
         assert bob.colleague.suborganization == rig_suborg
 
-    def test_csv_user_import_unknown_brand_rejects_whole_import(self):
-        """Test: an unknown brand fails the entire import; nothing is written"""
+    def test_csv_user_import_unknown_suborganization_rejects_whole_import(self):
+        """Test: an unknown suborganization fails the entire import; nothing is written"""
         Suborganization.objects.create(name="Rijks ICT Gilde")
 
-        csv_content = """first_name,last_name,email,brand
+        csv_content = """first_name,last_name,email,suborganization
 John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde
 Jane,Smith,jane@rijksoverheid.nl,Onbekend Merk"""
 
@@ -69,13 +69,13 @@ Jane,Smith,jane@rijksoverheid.nl,Onbekend Merk"""
         assert any("Onbekend Merk" in error for error in result["errors"])
         # All-or-nothing: even the valid row's user is not created.
         assert not User.objects.filter(email="john@rijksoverheid.nl").exists()
-        assert Suborganization.objects.count() == 1  # no new merk created
+        assert Suborganization.objects.count() == 1  # no new suborganization created
 
-    def test_csv_user_import_brand_matches_case_insensitively(self):
-        """Test: a differently-cased brand resolves to the existing merk (no duplicate)"""
+    def test_csv_user_import_suborganization_matches_case_insensitively(self):
+        """Test: a differently-cased suborganization resolves to the existing suborganization (no duplicate)"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
 
-        csv_content = """first_name,last_name,email,brand
+        csv_content = """first_name,last_name,email,suborganization
 John,Doe,john@rijksoverheid.nl,rijks ict gilde"""
 
         result = create_users_from_csv(None, csv_content)
@@ -95,7 +95,7 @@ John,Doe,john@rijksoverheid.nl,rijks ict gilde"""
             REMOTE_ADDR="203.0.113.7",
         )
 
-        csv_content = """first_name,last_name,email,brand
+        csv_content = """first_name,last_name,email,suborganization
 Ivy,Import,ivy@rijksoverheid.nl,"""
 
         result = create_users_from_csv(None, csv_content, request=request)
@@ -110,7 +110,7 @@ Ivy,Import,ivy@rijksoverheid.nl,"""
 
     def test_csv_user_import_without_request_leaves_ip_and_user_agent_empty(self):
         """Without a request, the create event still records but has no IP/User-Agent."""
-        csv_content = """first_name,last_name,email,brand
+        csv_content = """first_name,last_name,email,suborganization
 Noreq,User,noreq@rijksoverheid.nl,"""
 
         result = create_users_from_csv(None, csv_content)
@@ -121,9 +121,9 @@ Noreq,User,noreq@rijksoverheid.nl,"""
         assert event.ip is None
         assert event.user_agent == ""
 
-    def test_csv_user_import_without_brand_creates_users_without_merk(self):
-        """Test: CSV without brand column or empty brand creates users with no merk"""
-        csv_content = """first_name,last_name,email,brand
+    def test_csv_user_import_without_suborganization_creates_users_without_suborganization(self):
+        """Test: CSV without suborganization column or empty suborganization creates users with no suborganization"""
+        csv_content = """first_name,last_name,email,suborganization
 Alice,Wonder,alice@rijksoverheid.nl,
 Charlie,Brown,charlie@rijksoverheid.nl,"""
 
@@ -132,19 +132,19 @@ Charlie,Brown,charlie@rijksoverheid.nl,"""
         assert result["success"]
         assert result["users_created"] == 2
 
-        # Verify colleagues have no merk assigned
+        # Verify colleagues have no suborganization assigned
         alice = User.objects.get(email="alice@rijksoverheid.nl")
         assert alice.colleague.suborganization is None
 
         charlie = User.objects.get(email="charlie@rijksoverheid.nl")
         assert charlie.colleague.suborganization is None
 
-    def test_csv_user_import_reuses_existing_merk(self):
-        """Test: Importing multiple users with same brand reuses existing merk"""
-        # Pre-create the merk
+    def test_csv_user_import_reuses_existing_suborganization(self):
+        """Test: Importing multiple users with same suborganization reuses existing suborganization"""
+        # Pre-create the suborganization
         existing_suborg = Suborganization.objects.create(name="Pre-existing Brand")
 
-        csv_content = """first_name,last_name,email,brand
+        csv_content = """first_name,last_name,email,suborganization
 User,One,user1@rijksoverheid.nl,Pre-existing Brand
 User,Two,user2@rijksoverheid.nl,Pre-existing Brand
 User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
@@ -154,10 +154,10 @@ User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
         assert result["success"]
         assert result["users_created"] == 3
 
-        # Verify only one merk exists with that name
+        # Verify only one suborganization exists with that name
         assert Suborganization.objects.filter(name="Pre-existing Brand").count() == 1
 
-        # Verify all users' linked colleagues have the same merk
+        # Verify all users' linked colleagues have the same suborganization
         user1 = User.objects.get(email="user1@rijksoverheid.nl")
         user2 = User.objects.get(email="user2@rijksoverheid.nl")
         user3 = User.objects.get(email="user3@rijksoverheid.nl")
@@ -172,7 +172,7 @@ User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
         Suborganization.objects.create(name="Brand B")
 
         # First import
-        csv_content1 = """first_name,last_name,email,brand
+        csv_content1 = """first_name,last_name,email,suborganization
 Original,Name,duplicate@rijksoverheid.nl,Brand A"""
 
         result1 = create_users_from_csv(None, csv_content1)
@@ -180,7 +180,7 @@ Original,Name,duplicate@rijksoverheid.nl,Brand A"""
         assert result1["users_created"] == 1
 
         # Second import with same email
-        csv_content2 = """first_name,last_name,email,brand
+        csv_content2 = """first_name,last_name,email,suborganization
 Different,Name,duplicate@rijksoverheid.nl,Brand B"""
 
         result2 = create_users_from_csv(None, csv_content2)
@@ -193,11 +193,11 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
         assert user.first_name == "Original"
         assert user.last_name == "Name"
 
-    def test_csv_assignment_import_with_brand_assigns_merk(self):
-        """Test: CSV placement import with brand columns assigns (pre-existing) merk to new colleagues"""
+    def test_csv_assignment_import_with_suborganization_assigns_suborganization(self):
+        """Test: CSV placement import with suborganization columns assigns (pre-existing) suborganization to new colleagues"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -205,30 +205,30 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,3
         assert result["success"]
         assert result["colleagues_created"] > 0
 
-        # Verify colleagues have the merk
+        # Verify colleagues have the suborganization
         john = Colleague.objects.get(email="john@rijksoverheid.nl")
         assert john.suborganization == rig_suborg
 
         owner = Colleague.objects.get(email="owner@rijksoverheid.nl")
         assert owner.suborganization == rig_suborg
 
-    def test_csv_assignment_import_unknown_brand_rejects_whole_import(self):
-        """Test: an unknown owner/colleague brand fails the import; nothing is written"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+    def test_csv_assignment_import_unknown_suborganization_rejects_whole_import(self):
+        """Test: an unknown owner/colleague suborganization fails the import; nothing is written"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Onbekend Merk,Onbekend Merk"""
 
         result = create_assignments_from_csv(None, csv_content)
 
         assert not result["success"]
         assert any("Onbekend Merk" in error for error in result["errors"])
-        # Atomic rollback: no colleagues, assignments, or merken created.
+        # Atomic rollback: no colleagues, assignments, or suborganizations created.
         assert not Colleague.objects.filter(email="john@rijksoverheid.nl").exists()
         assert not Assignment.objects.exists()
         assert Suborganization.objects.count() == 0
 
-    def test_csv_placement_import_without_brand_no_merk(self):
-        """Test: CSV placement import without brand columns or empty brands creates colleagues with no merk"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+    def test_csv_placement_import_without_suborganization_no_suborganization(self):
+        """Test: CSV placement import without suborganization columns or empty suborganizations creates colleagues with no suborganization"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Test Description,Owner Name,owner@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -236,20 +236,20 @@ Test Assignment,Test Description,Owner Name,owner@minbzk.nl,,01-01-2025,31-12-20
         assert result["success"]
         assert result["colleagues_created"] > 0
 
-        # Verify colleagues have no merk
+        # Verify colleagues have no suborganization
         john = Colleague.objects.get(email="john@minbzk.nl")
         assert john.suborganization is None
 
         owner = Colleague.objects.get(email="owner@minbzk.nl")
         assert owner.suborganization is None
 
-    def test_csv_placement_import_multiple_brands(self):
-        """Test: CSV placement import with different (pre-existing) brands for owners vs colleagues"""
+    def test_csv_placement_import_multiple_suborganization(self):
+        """Test: CSV placement import with different (pre-existing) suborganizations for owners vs colleagues"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
         rc_suborg = Suborganization.objects.create(name="Rijksconsultants")
         iir_suborg = Suborganization.objects.create(name="I-Interim Rijk")
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Assignment 1,Test,Owner A,ownera@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,Rijks ICT Gilde,Rijksconsultants
 Assignment 2,Test,Owner B,ownerb@minbzk.nl,,01-01-2025,31-12-2025,Java,Jane Smith,jane@minbzk.nl,I-Interim Rijk,Rijks ICT Gilde"""
 
@@ -272,15 +272,15 @@ Assignment 2,Test,Owner B,ownerb@minbzk.nl,,01-01-2025,31-12-2025,Java,Jane Smit
         owner_b = Colleague.objects.get(email="ownerb@minbzk.nl")
         assert owner_b.suborganization == iir_suborg
 
-    def test_csv_assignment_import_existing_colleague_keeps_merk(self):
-        """Test: Re-importing placement for an existing colleague leaves their merk untouched"""
+    def test_csv_assignment_import_existing_colleague_keeps_suborganization(self):
+        """Test: Re-importing placement for an existing colleague leaves their suborganization untouched"""
         rig_suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
 
         colleague = Colleague.objects.create(
             name="Existing Colleague", email="existing@rijksoverheid.nl", source="wies", suborganization=rig_suborg
         )
 
-        # Import placement with existing colleague (brand only applies to new colleagues)
+        # Import placement with existing colleague (suborganization only applies to new colleagues)
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
 
@@ -292,8 +292,8 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
         assert colleague.suborganization == rig_suborg
 
     @patch("wies.core.services.sync.OTYSAPI")
-    def test_otys_sync_assigns_i_interim_rijk_merk(self, mock_otys_api):
-        """Test: OTYS sync assigns the (pre-existing) I-Interim Rijk merk to synced colleagues"""
+    def test_otys_sync_assigns_i_interim_rijk_suborganization(self, mock_otys_api):
+        """Test: OTYS sync assigns the (pre-existing) I-Interim Rijk suborganization to synced colleagues"""
         Suborganization.objects.create(name="I-Interim Rijk")
 
         # Mock OTYS API responses
@@ -330,7 +330,7 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
 
         iir_suborg = Suborganization.objects.get(name="I-Interim Rijk")
 
-        # Verify both colleagues have the merk
+        # Verify both colleagues have the suborganization
         jane = Colleague.objects.get(source_id="12345", source="otys_iir")
         assert jane.suborganization == iir_suborg
         assert jane.name == "Jane Doe"
@@ -340,8 +340,8 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
         assert john.name == "John van Smith"
 
     @patch("wies.core.services.sync.OTYSAPI")
-    def test_otys_sync_idempotency_keeps_single_merk(self, mock_otys_api):
-        """Test: Re-syncing OTYS data keeps the I-Interim Rijk merk (no duplicate merken)"""
+    def test_otys_sync_idempotency_keeps_single_suborganization(self, mock_otys_api):
+        """Test: Re-syncing OTYS data keeps the I-Interim Rijk suborganization (no duplicate suborganizations)"""
         iir_suborg = Suborganization.objects.create(name="I-Interim Rijk")
 
         colleague = Colleague.objects.create(
@@ -380,14 +380,14 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
 
         assert result["candidates_synced"] == 1
 
-        # Verify colleague still has the same merk and only one merk row exists
+        # Verify colleague still has the same suborganization and only one suborganization row exists
         colleague.refresh_from_db()
         assert colleague.suborganization == iir_suborg
         assert Suborganization.objects.filter(name="I-Interim Rijk").count() == 1
 
     @patch("wies.core.services.sync.OTYSAPI")
     def test_otys_sync_missing_seed_raises(self, mock_otys_api):
-        """Test: OTYS sync fails clearly when the I-Interim Rijk merk is not seeded"""
+        """Test: OTYS sync fails clearly when the I-Interim Rijk suborganization is not seeded"""
         mock_api_instance = Mock()
         mock_otys_api.return_value.__enter__.return_value = mock_api_instance
         mock_api_instance.get_candidate_list.return_value = {"listOutput": []}
@@ -403,18 +403,18 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
         """Test: Complete workflow from CSV import to data visibility"""
         test_suborg = Suborganization.objects.create(name="Test Brand")
 
-        # Import users with a brand → merk
-        csv_content = """first_name,last_name,email,brand
+        # Import users with a suborganization → suborganization
+        csv_content = """first_name,last_name,email,suborganization
 Test,User,testuser@rijksoverheid.nl,Test Brand"""
 
         result = create_users_from_csv(None, csv_content)
         assert result["success"]
 
-        # Verify user's linked colleague has the merk
+        # Verify user's linked colleague has the suborganization
         user = User.objects.get(email="testuser@rijksoverheid.nl")
         assert user.colleague.suborganization == test_suborg
 
-        # Verify merk appears in queryset (simulating UI display via colleague)
+        # Verify suborganization appears in queryset (simulating UI display via colleague)
         users_with_suborg = User.objects.filter(colleague__suborganization=test_suborg)
         assert user in users_with_suborg
 

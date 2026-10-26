@@ -9,7 +9,7 @@
    own: the same status is a group in the filter sheet, and two checkboxes with
    one name submitted the value twice, which came back as two identical chips.
    filter_interactions.js ticks the sheet's copy and re-submits. Counts stay the full
-   population within the merk/label selection, so they don't change when toggled. #}
+   population within the ODI-onderdeel/label selection, so they don't change when toggled. #}
 {% macro status_card(status, count, label, short=none) %}
   {% set is_active = status in selected_statuses %}
   <button type="button"

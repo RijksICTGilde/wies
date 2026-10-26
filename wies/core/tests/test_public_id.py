@@ -360,7 +360,7 @@ class SuborganizationPublicIdTests(TestCase):
 
 
 class SuborganizationAdminRoutePublicIdTests(TestCase):
-    """The beheer/merken routes resolve by public_id."""
+    """The beheer/onderdelen routes resolve by public_id."""
 
     def setUp(self):
         self.client = Client()
@@ -396,12 +396,12 @@ class ChoiceFieldPublicIdTests(TestCase):
     """
 
     def test_option_values_are_public_ids_not_pks(self):
-        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
         field = ColleagueEditables.suborganization.form_field()
 
         values = {str(value) for value, _label in field.choices if value}
-        assert str(merk.public_id) in values
-        assert str(merk.pk) not in values
+        assert str(suborganization.public_id) in values
+        assert str(suborganization.pk) not in values
 
     def test_model_without_public_id_keeps_the_pk(self):
         field = forms.ModelChoiceField(queryset=Group.objects.all())
@@ -409,12 +409,12 @@ class ChoiceFieldPublicIdTests(TestCase):
         assert field.to_field_name is None
 
     def test_field_accepts_public_id_and_rejects_pk(self):
-        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
         field = ColleagueEditables.suborganization.form_field()
 
-        assert field.clean(str(merk.public_id)) == merk
+        assert field.clean(str(suborganization.public_id)) == suborganization
         with pytest.raises(ValidationError):
-            field.clean(str(merk.pk))
+            field.clean(str(suborganization.pk))
 
     def test_unparseable_value_is_a_validation_error_not_a_crash(self):
         """Junk is rejected as an invalid choice, never surfacing a 500 (#503)."""
@@ -435,19 +435,19 @@ class InlineEditChoicePublicIdTests(TestCase):
         self.colleague = Colleague.objects.create(
             user=self.user, name="Own", email="own@rijksoverheid.nl", source="wies"
         )
-        self.merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        self.suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
         self.client.force_login(self.user)
         self.url = reverse("inline-edit", args=["colleague", self.colleague.public_id, "suborganization"])
 
     def test_save_by_public_id(self):
-        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.merk.public_id)})
+        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.suborganization.public_id)})
 
         assert response.status_code == 200
         self.colleague.refresh_from_db()
-        assert self.colleague.suborganization == self.merk
+        assert self.colleague.suborganization == self.suborganization
 
     def test_pk_is_not_accepted(self):
-        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.merk.pk)})
+        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.suborganization.pk)})
 
         assert response.status_code == 200
         self.colleague.refresh_from_db()
@@ -465,7 +465,7 @@ class FilterFacetFailClosedTests(TestCase):
     """Every filter facet fails closed: a value resolving to no row filters
     everything away, so a stale id in a shared URL never widens the overview."""
 
-    FACETS = ("org", "org_self", "rol", "merk", "labels")
+    FACETS = ("org", "org_self", "rol", "onderdeel", "labels")
     PLACED_NAME = "Geplaatste Collega"
 
     def setUp(self):
@@ -553,7 +553,7 @@ class FilterFacetFailClosedTests(TestCase):
             "org": "Onbekende opdrachtgever",
             "org_self": "Onbekende opdrachtgever",
             "rol": "Onbekende rol",
-            "merk": "Onbekend merk",
+            "onderdeel": "Onbekend ODI-onderdeel",
             "labels": "Onbekend label",
         }
         stranger = str(uuid.uuid4())

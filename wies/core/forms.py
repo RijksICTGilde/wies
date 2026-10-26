@@ -263,7 +263,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(),
     )
     suborganization = forms.ModelChoiceField(
-        label="Merk",
+        label="ODI-onderdeel",
         queryset=Suborganization.objects.all(),
         to_field_name="public_id",
         required=False,
@@ -334,8 +334,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
-            current_merk = instance.colleague.suborganization
-            self.fields["suborganization"].initial = current_merk.public_id if current_merk else None
+            current_onderdeel = instance.colleague.suborganization
+            self.fields["suborganization"].initial = current_onderdeel.public_id if current_onderdeel else None
         self._configure_field("suborganization")
 
         # Map the labels m2m onto one dynamically built field per category.

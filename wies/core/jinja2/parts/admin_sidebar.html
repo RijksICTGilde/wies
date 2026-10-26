@@ -5,7 +5,7 @@
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 <nldd-list type="navigation" accessible-label="Beheer">
 {# Two authorities that do not nest: the Gebruikersbeheerder keeps users,
-   labels, merken and reads the roles; the Applicatiebeheerder keeps the
+   labels, ODI-onderdelen and reads the roles; the Applicatiebeheerder keeps the
    maintenance pages. #}
 {% if show_user_admin_pages(request) %}
   <nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
@@ -22,12 +22,12 @@
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell text="Labels"></nldd-text-cell>
   </nldd-list-item>
-  <nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
+  <nldd-list-item href="{{ url('suborganization-admin') }}" {% if request.path.startswith(url('suborganization-admin')) %}selected{% endif %}>
   <nldd-icon-cell size="20">
   <nldd-icon icon="brand"></nldd-icon>
   </nldd-icon-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Merken"></nldd-text-cell>
+  <nldd-text-cell text="ODI-onderdelen"></nldd-text-cell>
   </nldd-list-item>
   <nldd-list-item href="{{ url('role-matrix') }}" {% if request.path == url('role-matrix') %}selected{% endif %}>
   <nldd-icon-cell size="20">

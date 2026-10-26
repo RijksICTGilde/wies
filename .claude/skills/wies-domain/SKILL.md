@@ -15,7 +15,7 @@ description: Wies project domain knowledge including Dutch government terminolog
 
 ## User Roles
 
-- **Gebruikersbeheerder** - User administration (users, labels, merken, contract hours); may grant every role, including its own
+- **Gebruikersbeheerder** - User administration (users, labels, ODI-onderdelen, contract hours); may grant every role, including its own
 - **Consultant** - View-only, plus the text fields of an opdracht they are placed on
 - **Business Manager** - every wies-sourced opdracht, and reading both a colleague's contract hours and the hours on a role
 - **Applicatiebeheerder** (`STAFF_EMAILS`) is not a Django group; see `docs/roles.md`
@@ -31,4 +31,4 @@ Placements and Services can inherit dates from their parent Assignment:
 
 - Assignments have status: draft, active, completed
 - Placements track colleague availability
-- Labels categorize by Merk, Expertise, Thema
+- Labels categorize by Expertise, Thema; each colleague belongs to at most one ODI-onderdeel (`Suborganization`)
