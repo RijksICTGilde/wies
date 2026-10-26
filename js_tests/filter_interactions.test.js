@@ -4,11 +4,7 @@ const {
   forwardViewChange,
 } = require("../wies/core/static/js/filter_interactions.js");
 
-// ─── Fake DOM ────────────────────────────────────────────────
-//
-// The markup of parts/view_control.html: a segmented control inside
-// #view-control with one item per view. `value` is the control's property,
-// which the component sets before it dispatches change.
+// Fake of parts/view_control.html; the component sets `value` before change.
 
 function item(value) {
   return {

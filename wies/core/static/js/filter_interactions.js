@@ -606,8 +606,7 @@
     });
   }
 
-  // NLDD 0.10.0 fires item-change only on a click; arrow keys and Home/End
-  // change the control without it. The control's change covers both, once.
+  // NLDD 0.10.0 fires item-change only on click; change also on arrow keys.
   function forwardViewChange(event, htmx) {
     const control = event.target;
     if (

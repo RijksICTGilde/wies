@@ -5,10 +5,8 @@
    page, sorting refines it. It is the wider of the two (the counts are in the
    labels), so it still goes before the search field.
 
-   wies-view-change, not item-change: the arrow keys never fire item-change.
-   filter_interactions.js raises it from the control's change.
-
-   hx-sync: two quick arrow keys must not let the older response win the url. #}
+   wies-view-change: arrow keys never fire item-change (filter_interactions.js).
+   hx-sync: an older, slower response must not win the url. #}
 <nldd-toolbar-item id="view-control" slot="start" priority="-1" {% if view_control_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <nldd-segmented-control accessible-label="Weergave" variant="icon-and-text" size="md" value="{{ active_view }}">
 {% for option in view_options %}
