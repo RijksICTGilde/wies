@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
-- TBD: "merk" is renamed to "ODI-onderdeel" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel` (saved links with `?merk=` no longer filter); the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
+- 775: "merk" is renamed to "ODI-onderdeel" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
 
 ## 2026-10-22
 
