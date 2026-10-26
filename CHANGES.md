@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - 755: dependency updates, including a security fix
 - 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
+- 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
+- 770: the Toegankelijkheid page states the current accessibility status (A, 19 October 2026) as text with a link to the register, replacing the outdated label image (status C)
+- 769: the date filter no longer refreshes the list on every keystroke and keeps focus in the field after the refresh; the client picker in the assignment form is a named group and says at least 1 client is required (accessibility)
+- 771: in sheets, the field or option with keyboard focus no longer disappears behind the sticky button at the bottom or the title bar at the top; the current page in the Beheer menu is also shown in bold, not only by colour
 
 ## 2026-10-22
 

@@ -7,10 +7,10 @@
   const NDD_TEXT = "nldd-text-field, nldd-date-field";
   const NDD_SEARCH = "nldd-search-field[data-wies-search-input]";
 
-  function dispatchFormChange(form) {
+  function dispatchFormChange(form, type = "change") {
     if (!form) return;
     const sentinel = form.querySelector("[data-filter-input]");
-    (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
+    (sentinel || form).dispatchEvent(new Event(type, { bubbles: true }));
   }
 
   // The nldd-checkbox in a filter row is decorative; a hidden native checkbox
@@ -73,17 +73,33 @@
     });
   }
 
+  // Only when the value moved. A date being corrected is empty too, also on
+  // the change at blur; refreshing would wipe the half-typed text.
+  function shouldForward(lastValue, value, typed) {
+    if (value === lastValue) return false;
+    return Boolean(value) || !typed;
+  }
+
   // Form-associated: the value submits natively, only the re-filter needs a nudge.
+  // Passed on as its own type, so typing gets the form's 500 ms delay. Only when
+  // the value moved: nldd-date-field fires input per keystroke but keeps its
+  // value empty until the date is complete, and then fires change again on blur.
   function attachTextField(el) {
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
     if (!el.getAttribute("name")) return;
-    const onChange = () => {
+    // The attribute while the element is not upgraded yet.
+    let lastValue = el.value ?? el.getAttribute("value") ?? "";
+    const forward = (e) => {
+      const value = el.value ?? "";
+      const typed = el.shadowRoot?.querySelector("input")?.value;
+      if (!shouldForward(lastValue, value, typed)) return;
+      lastValue = value;
       const form = el.closest("form");
-      if (form) dispatchFormChange(form);
+      if (form) dispatchFormChange(form, e.type);
     };
-    el.addEventListener("change", onChange);
-    el.addEventListener("input", onChange);
+    el.addEventListener("change", forward);
+    el.addEventListener("input", forward);
   }
 
   function suggestionMenu() {
@@ -742,6 +758,11 @@
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
     setupFilterOptionsModal();
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { shouldForward };
+    return;
   }
 
   if (document.readyState === "loading") {
