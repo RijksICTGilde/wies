@@ -599,8 +599,8 @@ class BezettingFilterGroupCountTest(TestCase):
         # With a label filter active, the suborganization group excludes its own filter and
         # must count all three consultants in "Merk A".
         groups = self._groups(label_tokens=[str(self.senior.public_id)])
-        assert self._count(groups, "ODI-onderdeel", self.suborg_a.public_id) == 3
-        assert self._count(groups, "ODI-onderdeel", self.suborg_b.public_id) == 1
+        assert self._count(groups, "Onderdeel/programma", self.suborg_a.public_id) == 3
+        assert self._count(groups, "Onderdeel/programma", self.suborg_b.public_id) == 1
 
 
 class BezettingLabelFilterViewTest(TestCase):

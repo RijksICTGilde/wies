@@ -2,12 +2,12 @@
 
 Wies separates authority by what it lets you do, not by seniority.
 
-| Authority           | Where it lives           | In short                                                  |
-| ------------------- | ------------------------ | --------------------------------------------------------- |
-| Applicatiebeheerder | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional             |
-| Gebruikersbeheerder | role (Django group)      | users, labels, ODI-onderdelen, and keeping contract hours |
-| Business Manager    | role (Django group)      | any wies-sourced opdracht, and reading the hours          |
-| Consultant          | role (Django group)      | being counted in Bezetting                                |
+| Authority           | Where it lives           | In short                                                          |
+| ------------------- | ------------------------ | ----------------------------------------------------------------- |
+| Applicatiebeheerder | `STAFF_EMAILS` (env var) | the maintenance pages, and nothing functional                     |
+| Gebruikersbeheerder | role (Django group)      | users, labels, onderdelen/programma's, and keeping contract hours |
+| Business Manager    | role (Django group)      | any wies-sourced opdracht, and reading the hours                  |
+| Consultant          | role (Django group)      | being counted in Bezetting                                        |
 
 What each may do is on the page **Beheer > Rollen**, which reads the rules
 themselves.
@@ -205,26 +205,26 @@ and the way out is then `INITIAL_USER_EMAIL` again.
 ## A person is a `User`, a `Colleague`, or both
 
 `User` is the account Django requires, holding name, email and roles. `Colleague`
-is the person as Wies shows them: placements, ODI-onderdeel, labels, theme.
+is the person as Wies shows them: placements, onderdeel/programma, labels, theme.
 `Colleague.user` is a nullable one-to-one, so either half can stand alone: an
 imported colleague has no account until that person logs in.
 
-The user form writes name and email onto the `User` and ODI-onderdeel and labels onto the
+The user form writes name and email onto the `User` and onderdeel/programma and labels onto the
 `Colleague` without asking anything of `Colleague`, so the rule there may not be
 stricter than the one on `User`. Both therefore name `Role(ROLE_USER_ADMIN)`
 directly; neither goes through a Django model permission.
 
-## Scoping by ODI-onderdeel (#526)
+## Scoping by onderdeel/programma (#526)
 
-The roles are global; limiting them to an ODI-onderdeel is on the roadmap. An ODI-onderdeel limit fits
+The roles are global; limiting them to an onderdeel/programma is on the roadmap. An onderdeel/programma limit fits
 as a `Scope`, like `OWN` and `PLACED`: the scope predicate already takes the grant
 as a third argument, unused today, because this is the first one that needs it.
-The question becomes "is this object's ODI-onderdeel one you hold the role for".
+The question becomes "is this object's onderdeel/programma one you hold the role for".
 
 Two halves of that are already in place.
 
 `all_of(OWN, SUBORGANIZATIONS)` builds the relation that is both at once, so one grant reads
-"a Business Manager, for an opdracht of their own ODI-onderdeel, that they own":
+"a Business Manager, for an opdracht of their own onderdeel/programma, that they own":
 
 ```python
 Grant(Role(ROLE_BUSINESS_MANAGER), all_of(OWN, SUBORGANIZATIONS))
@@ -244,11 +244,11 @@ cannot rot.
 
 Two things are still missing:
 
-- **An assignment has no ODI-onderdeel.** It is derivable only via `owner.suborganization`,
-  and both links are `SET_NULL`, so an assignment without an owner has no ODI-onderdeel at
-  all. Scoping needs a decision on that case, and on whether the ODI-onderdeel follows the
+- **An assignment has no onderdeel/programma.** It is derivable only via `owner.suborganization`,
+  and both links are `SET_NULL`, so an assignment without an owner has no onderdeel/programma at
+  all. Scoping needs a decision on that case, and on whether the onderdeel/programma follows the
   owner or is stored on the assignment.
-- **A person has one ODI-onderdeel, and a role has none.** `Colleague.suborganization` is a
-  single FK and a `Group` is held or not, so "the ODI-onderdelen this Business Manager
+- **A person has one onderdeel/programma, and a role has none.** `Colleague.suborganization` is a
+  single FK and a `Group` is held or not, so "the onderdelen/programma's this Business Manager
   holds the role for" has nowhere to live. The grant would need a model of its
   own, which then reaches the user sheet and `_apply_groups`.

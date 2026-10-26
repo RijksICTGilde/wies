@@ -405,9 +405,9 @@ class SuborganizationAdminTest(TestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-create"))
         assert response.status_code == 200
-        # GET now opens the "ODI-onderdeel toevoegen" sheet instead of returning 405.
+        # GET now opens the "Onderdeel/programma toevoegen" sheet instead of returning 405.
         self.assertContains(response, "nldd-sheet")
-        self.assertContains(response, "ODI-onderdeel toevoegen")
+        self.assertContains(response, "Onderdeel/programma toevoegen")
 
     def test_delete_get_renders_centered_dialog_not_sheet(self):
         suborganization = Suborganization.objects.create(name="Weg")

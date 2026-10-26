@@ -126,7 +126,7 @@ just manage test wies.core.tests.test_roles
 
 | Role                    | Description         | Permissions                                                          |
 | ----------------------- | ------------------- | -------------------------------------------------------------------- |
-| **Gebruikersbeheerder** | User administration | Users, labels, ODI-onderdelen and contract hours                     |
+| **Gebruikersbeheerder** | User administration | Users, labels, onderdelen/programma's and contract hours             |
 | **Business Manager**    | Business management | Any wies-sourced opdracht, and reading contract hours and role hours |
 | **Consultant**          | Employee            | View-only, plus the text fields of an opdracht they are placed on    |
 

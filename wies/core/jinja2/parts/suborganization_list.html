@@ -7,7 +7,7 @@
   {% endwith %}
 {% endif %}
 {% if suborganizations %}
-  <nldd-list accessible-label="ODI-onderdelen">
+  <nldd-list accessible-label="Onderdelen/programma's">
   {% for suborganization in suborganizations %}
     <nldd-list-item>
     <nldd-text-cell>
@@ -28,5 +28,5 @@
   {% endfor %}
   </nldd-list>
 {% else %}
-  <p>Nog geen ODI-onderdelen. Maak een nieuw ODI-onderdeel aan om te beginnen.</p>
+  <p>Nog geen onderdelen/programma's. Maak een nieuw onderdeel/programma aan om te beginnen.</p>
 {% endif %}

@@ -15,7 +15,7 @@ def get_suborganization_by_name(name: str) -> Suborganization:
     return match
 
 
-# CSV headers renamed when "merk" became "ODI-onderdeel". A header the import
+# CSV headers renamed when "merk" became "onderdeel/programma". A header the import
 # does not know is skipped in silence, so an old file would import every row
 # without its suborganization and still report success; name the new header instead.
 RENAMED_CSV_COLUMNS = {

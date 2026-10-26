@@ -127,7 +127,7 @@ class Label(models.Model):
 
 
 class Suborganization(models.Model):
-    """A suborganisation ("ODI-onderdeel") a colleague belongs to. Exactly one per colleague."""
+    """A suborganisation ("onderdeel/programma") a colleague belongs to. Exactly one per colleague."""
 
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)

@@ -67,7 +67,7 @@ class ColleagueEditables(EditableSet):
         model = Colleague
 
     suborganization = Editable(
-        label="ODI-onderdeel",
+        label="Onderdeel/programma",
         choices=_suborganization_choices,
         required=False,
         empty_label=" ",

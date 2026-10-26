@@ -769,10 +769,10 @@ def bezetting(request):
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
-    # ODI-onderdeel (suborganisation) and label-category filters, resolved from the URL.
+    # Onderdeel/programma (suborganisation) and label-category filters, resolved from the URL.
     # Labels are OR within a category and AND between categories (like "Wie zit
     # waar?"); each label category becomes its own filter group under the shared
-    # ``labels`` param, and the ODI-onderdeel is its own group.
+    # ``labels`` param, and the onderdeel/programma is its own group.
     suborganization_facet = resolve_facet(Suborganization, request.GET.getlist("onderdeel"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_cat = labels_by_category(labels.ids)
@@ -784,7 +784,7 @@ def bezetting(request):
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
-    # Summary-card counts follow ODI-onderdeel, labels and the search term (they all
+    # Summary-card counts follow onderdeel/programma, labels and the search term (they all
     # narrowed the queryset above) but not the status filter, which is applied
     # after this: a card has to keep showing what it would select.
     summary = occupancy_summary(rows)
@@ -1089,7 +1089,7 @@ UNKNOWN_FACET_LABELS = {
     "org_type_in": "Onbekende opdrachtgever",
     "rol": "Onbekende rol",
     "labels": "Onbekend label",
-    "onderdeel": "Onbekend ODI-onderdeel",
+    "onderdeel": "Onbekend onderdeel/programma",
 }
 
 
@@ -1461,7 +1461,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
-        # ODI-onderdeel filter: OR within the group (one ODI-onderdeel per colleague)
+        # Onderdeel/programma filter: OR within the group (one onderdeel/programma per colleague)
         suborganization_facet = self.facets("onderdeel", Suborganization)
         if exclude_filter != "onderdeel" and suborganization_facet.requested:
             qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
@@ -1737,7 +1737,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 }
             )
 
-        # ODI-onderdeel filter group (one per colleague; counts exclude its own filter)
+        # Onderdeel/programma filter group (one per colleague; counts exclude its own filter)
         suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
         suborg_counts = _facet_counts(suborg_filtered_qs, "colleague__suborganization_id", group_field)
 
@@ -1758,7 +1758,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         suborganization_filter_group = {
             "type": "select-multi",
             "name": "onderdeel",
-            "label": "ODI-onderdeel",
+            "label": "Onderdeel/programma",
             "options": suborganization_options,
             "selected_values": suborganization_selected_values,
         }
@@ -2118,7 +2118,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
         "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
     }
-    # Label categories shown on the row next to the ODI-onderdeel, by name (see SUBGROEP_CATEGORY).
+    # Label categories shown on the row next to the onderdeel/programma, by name (see SUBGROEP_CATEGORY).
     ROW_LABEL_CATEGORIES = (SUBGROEP_CATEGORY,)
 
     @cached_property
@@ -2171,7 +2171,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
-        # ODI-onderdeel filter: OR within the group (one ODI-onderdeel per colleague)
+        # Onderdeel/programma filter: OR within the group (one onderdeel/programma per colleague)
         suborganization_facet = self.facets("onderdeel", Suborganization)
         if exclude_filter != "onderdeel" and suborganization_facet.requested:
             qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
@@ -2214,7 +2214,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         if label_filter:
             active_filters["labels"] = label_filter
 
-        # ODI-onderdeel filter supports multi-select (values are suborganization public_ids)
+        # Onderdeel/programma filter supports multi-select (values are suborganization public_ids)
         suborganization_filter = self.facets("onderdeel", Suborganization).active_values
         if suborganization_filter:
             active_filters["onderdeel"] = suborganization_filter
@@ -2262,7 +2262,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
                 }
             )
 
-        # ODI-onderdeel filter group (one per colleague; counts exclude its own filter)
+        # Onderdeel/programma filter group (one per colleague; counts exclude its own filter)
         suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
         suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
         suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
@@ -2285,7 +2285,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         suborganization_filter_group = {
             "type": "select-multi",
             "name": "onderdeel",
-            "label": "ODI-onderdeel",
+            "label": "Onderdeel/programma",
             "options": suborganization_options,
             "selected_values": suborganization_selected_values,
         }
@@ -3213,7 +3213,7 @@ def label_delete(request, public_id):
 
 @permission_required("core.view_suborganization", raise_exception=True)
 def suborganization_admin(request):
-    """Main ODI-onderdelen admin page."""
+    """Main onderdelen/programma's admin page."""
     suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
     return render(request, "suborganization_admin.html", {"suborganizations": suborganizations})
 
@@ -3222,13 +3222,13 @@ def suborganization_admin(request):
 def suborganization_create(request):
     """Creates a suborganization via the sheet (htmx).
 
-    GET opens the sheet, a valid POST saves and re-renders the ODI-onderdeel list while
+    GET opens the sheet, a valid POST saves and re-renders the onderdeel/programma list while
     closing it, an invalid POST re-renders only the body so the sheet keeps
     standing.
     """
     form_post_url = reverse("suborganization-create")
-    modal_title = "ODI-onderdeel toevoegen"
-    form_button_label = "Voeg ODI-onderdeel toe"
+    modal_title = "Onderdeel/programma toevoegen"
+    form_button_label = "Voeg onderdeel/programma toe"
     element_id = "suborganizationFormModal"
 
     if request.method == "POST":
@@ -3236,7 +3236,7 @@ def suborganization_create(request):
         if form.is_valid():
             suborganization = form.save()
             # The list partial carries the flash block out of band; see the template.
-            messages.success(request, f'ODI-onderdeel "{suborganization.name}" is toegevoegd.')
+            messages.success(request, f'Onderdeel/programma "{suborganization.name}" is toegevoegd.')
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#suborganization_list_container"
@@ -3267,7 +3267,7 @@ def suborganization_edit(request, public_id):
     """Edits a suborganization. Returns a partial for use with htmx."""
     suborganization = get_object_or_404(Suborganization, public_id=public_id)
     form_post_url = reverse("suborganization-edit", kwargs={"public_id": public_id})
-    modal_title = f"ODI-onderdeel wijzigen: {suborganization.name}"
+    modal_title = f"Onderdeel/programma wijzigen: {suborganization.name}"
     form_button_label = "Opslaan"
     element_id = "suborganizationFormModal"
 
@@ -3290,7 +3290,7 @@ def suborganization_edit(request, public_id):
         form = SuborganizationForm(request.POST, instance=suborganization)
         if form.is_valid():
             form.save()
-            messages.success(request, f'ODI-onderdeel "{suborganization.name}" is aangepast.')
+            messages.success(request, f'Onderdeel/programma "{suborganization.name}" is aangepast.')
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#suborganization_list_container"
@@ -3323,9 +3323,9 @@ def suborganization_delete(request, public_id):
             request,
             "parts/confirm_delete_modal.html",
             {
-                "dialog_text": f"ODI-onderdeel verwijderen: {suborganization.name}?",
+                "dialog_text": f"Onderdeel/programma verwijderen: {suborganization.name}?",
                 "dialog_supporting": (
-                    f"Weet je zeker dat je dit ODI-onderdeel wilt verwijderen? "
+                    f"Weet je zeker dat je dit onderdeel/programma wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
                 ),
                 "confirm_label": "Verwijderen",
@@ -3336,7 +3336,7 @@ def suborganization_delete(request, public_id):
     if request.method == "POST":
         name = suborganization.name  # Read before delete() clears the instance.
         suborganization.delete()
-        messages.success(request, f'ODI-onderdeel "{name}" is verwijderd.')
+        messages.success(request, f'Onderdeel/programma "{name}" is verwijderd.')
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("suborganization-admin")
         return response
@@ -3359,7 +3359,7 @@ def assignment_events_partial(request, public_id):
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-HET_FIELD_LABELS = {"team", "odi-onderdeel"}
+HET_FIELD_LABELS = {"team", "onderdeel/programma"}
 
 
 def _field_phrase(label: str) -> str:

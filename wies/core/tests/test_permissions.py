@@ -603,7 +603,7 @@ class ScopeVocabularyTest(_Setup):
 
 class AllOfScopeTest(_Setup):
     """``all_of`` builds the relation that is two relations at once, which is
-    what suborganization scoping (#526) needs: "eigen, en binnen je ODI-onderdeel"."""
+    what suborganization scoping (#526) needs: "eigen, en binnen je onderdeel/programma"."""
 
     def setUp(self):
         super().setUp()

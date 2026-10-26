@@ -1,27 +1,27 @@
 {% extends "base.html" %}
 {% block title %}
-  ODI-onderdelen · Wies
+  Onderdelen/programma's · Wies
 {% endblock title %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
   <nldd-title size="3">
-  <h1>ODI-onderdelen</h1>
+  <h1>Onderdelen/programma's</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-rich-text>
-  <p>Een ODI-onderdeel is een suborganisatie waaronder een collega werkt. Een collega behoort maximaal tot één ODI-onderdeel.</p>
+  <p>Een onderdeel/programma is een suborganisatie waaronder een collega werkt. Een collega behoort maximaal tot één onderdeel/programma.</p>
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# No search field on this page, so the button sits on the left. #}
-  <nldd-toolbar accessible-label="ODI-onderdelen">
+  <nldd-toolbar accessible-label="Onderdelen/programma's">
   <nldd-toolbar-item slot="start">
-  <nldd-button start-icon="plus" text="ODI-onderdeel toevoegen" hx-get="{{ url('suborganization-create') }}" hx-target="#suborganizationFormModal" hx-swap="innerHTML">
+  <nldd-button start-icon="plus" text="Onderdeel/programma toevoegen" hx-get="{{ url('suborganization-create') }}" hx-target="#suborganizationFormModal" hx-swap="innerHTML">
   </nldd-button>
   {# The overflow menu shows a CLONE and reports the choice back as a select on the
      original, so htmx triggers on that instead of a click. #}
-  <nldd-menu-item slot="overflow" text="ODI-onderdeel toevoegen" icon="plus" hx-get="{{ url('suborganization-create') }}" hx-trigger="select" hx-target="#suborganizationFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" text="Onderdeel/programma toevoegen" icon="plus" hx-get="{{ url('suborganization-create') }}" hx-trigger="select" hx-target="#suborganizationFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>

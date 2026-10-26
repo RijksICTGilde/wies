@@ -15,7 +15,9 @@ class SuborganizationNotFoundError(ValueError):
 
     def __init__(self, name: str):
         self.name = name
-        super().__init__(f"Onbekend ODI-onderdeel: '{name}'. Voeg het ODI-onderdeel eerst toe voordat je importeert.")
+        super().__init__(
+            f"Onbekend onderdeel/programma: '{name}'. Voeg het onderdeel/programma eerst toe voordat je importeert."
+        )
 
 
 class InvalidEmailDomainError(ValidationError):

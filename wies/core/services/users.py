@@ -173,7 +173,7 @@ def update_user(
 
     :param updater: user that performs the update action. Can be None if done by system
     :param groups: the roles the user must end up with, or None to leave them alone
-    :param suborganization: the colleague's ODI-onderdeel (a Suborganization), or None to clear it
+    :param suborganization: the colleague's onderdeel/programma (a Suborganization), or None to clear it
     :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
@@ -327,7 +327,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
 
         suborganization_name = row.get("suborganization", "").strip()
         if suborganization_name and not Suborganization.objects.filter(name__iexact=suborganization_name).exists():
-            row_errors.append(f"Rij {row_num}: onbekend ODI-onderdeel '{suborganization_name}'")
+            row_errors.append(f"Rij {row_num}: onbekend onderdeel/programma '{suborganization_name}'")
 
         if email:
             email_key = email.lower()

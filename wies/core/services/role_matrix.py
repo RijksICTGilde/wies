@@ -211,7 +211,7 @@ EXTRA_ROWS = [
     ),
     Row(
         "Gebruikers en collega's",
-        "Gebruikers, labels, ODI-onderdelen en rollen openen",
+        "Gebruikers, labels, onderdelen/programma's en rollen openen",
         lambda u: show_user_admin_pages(SimpleNamespace(user=u)),
     ),
     Row(

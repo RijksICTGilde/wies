@@ -6,6 +6,7 @@ and a relation is the answer the engine gives a saved user acting on a saved row
 
 import re
 from datetime import date
+from html import unescape
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -79,7 +80,9 @@ def _rendered_cells(html):
     for row in _ROW.finditer(html):
         for index, cell in enumerate(_CELL.findall(row.group("cells"))):
             word = _HIDDEN_WORD.search(cell)
-            cells[(row.group("label"), index)] = word.group(1) if word and "<nldd-icon" in cell else cell.strip()
+            cells[(unescape(row.group("label")), index)] = (
+                word.group(1) if word and "<nldd-icon" in cell else cell.strip()
+            )
     return cells
 
 
@@ -380,7 +383,7 @@ class RoleMatrixExtraRowTest(TestCase):
             "Uren per week van een geplaatste collega zien": lambda u: can_view_role_hours(
                 u, Placement(colleague_id=self.other.pk)
             ),
-            "Gebruikers, labels, ODI-onderdelen en rollen openen": lambda u: all(
+            "Gebruikers, labels, onderdelen/programma's en rollen openen": lambda u: all(
                 self._page_opens(u, reverse(name))
                 for name in ("admin-users", "label-admin", "suborganization-admin", "role-matrix")
             ),

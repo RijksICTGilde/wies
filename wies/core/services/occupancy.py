@@ -262,7 +262,7 @@ def colleague_occupancy(
     soonest-ending assignment.
 
     ``suborganization_ids`` optionally restricts the rows to colleagues in those
-    suborganisations (ODI-onderdelen); an empty/None value shows everyone.
+    suborganisations (onderdelen/programma's); an empty/None value shows everyone.
 
     ``labels_by_category`` maps a label-category id to the selected label ids in
     that category. Matching is OR within a category and AND between categories,
@@ -277,7 +277,7 @@ def colleague_occupancy(
 
     # Only consultants: colleagues whose linked user holds the Consultant role.
     # Colleagues without a user (e.g. imported without an account) are excluded.
-    # The labels and ODI-onderdeel ride along: the row shows them as chips, and without
+    # The labels and onderdeel/programma ride along: the row shows them as chips, and without
     # the prefetch that is a query per colleague.
     colleagues = (
         Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
@@ -554,10 +554,10 @@ def consultant_colleagues():
 
 
 def apply_colleague_filters(qs, suborganization_facet, labels_by_cat, *, exclude_filter=None):
-    """Apply the ODI-onderdeel + label filters to a consultant-colleague queryset.
+    """Apply the onderdeel/programma + label filters to a consultant-colleague queryset.
 
     ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
-    to its current selection: "onderdeel" for the ODI-onderdeel group, or a label ``category_id``
+    to its current selection: "onderdeel" for the onderdeel/programma group, or a label ``category_id``
     (int) for that category's group. Labels are OR within a category, AND between.
     """
     for cat_id, cat_label_ids in labels_by_cat.items():
@@ -572,7 +572,7 @@ def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> lis
     """Build the select-multi filter groups for the Bezetting sheet.
 
     One group per label category (only labels used by a consultant; empty
-    categories dropped) plus one ODI-onderdeel group. Each option carries a cross-filtered
+    categories dropped) plus one onderdeel/programma group. Each option carries a cross-filtered
     count — the number of consultants that would remain if only this value were
     added to the other active filters — like the "Gebruikers" filter sheet.
     """
@@ -620,7 +620,7 @@ def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> lis
             }
         )
 
-    # ODI-onderdeel: only suborganisations that have at least one consultant.
+    # Onderdeel/programma: only suborganisations that have at least one consultant.
     suborganization_qs = apply_colleague_filters(
         base_qs, suborganization_facet, labels_by_cat, exclude_filter="onderdeel"
     )
@@ -646,7 +646,7 @@ def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> lis
         {
             "type": "select-multi",
             "name": "onderdeel",
-            "label": "ODI-onderdeel",
+            "label": "Onderdeel/programma",
             "options": suborganization_options,
             "selected_values": suborganization_selected,
         }

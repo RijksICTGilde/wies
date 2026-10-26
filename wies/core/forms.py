@@ -263,7 +263,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(),
     )
     suborganization = forms.ModelChoiceField(
-        label="ODI-onderdeel",
+        label="Onderdeel/programma",
         queryset=Suborganization.objects.all(),
         to_field_name="public_id",
         required=False,
