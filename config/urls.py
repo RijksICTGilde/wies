@@ -95,7 +95,10 @@ urlpatterns = [
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),
     path("auth/", auth, name="auth"),
-    path("opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
+    path("aanvragen/", AssignmentListView.as_view(), name="assignment-list"),
+    # The list was at /opdrachten/ when it showed opdrachten; old links and
+    # bookmarks keep working, filters included.
+    path("opdrachten/", RedirectView.as_view(pattern_name="assignment-list", query_string=True)),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
     path("opdrachten/<uuid:public_id>/events/", assignment_events_partial, name="assignment-events-partial"),
