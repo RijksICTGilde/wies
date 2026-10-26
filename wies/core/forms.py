@@ -1,5 +1,7 @@
 import logging
+import secrets
 from datetime import timedelta
+from typing import NamedTuple
 
 from django import forms
 from django.contrib.auth import get_user_model
@@ -488,6 +490,12 @@ class ContractPeriodForm(NlddFormMixin, forms.ModelForm):
         return self.running
 
 
+class PeriodModes(NamedTuple):
+    start: str
+    end: str
+    placement_end: str
+
+
 class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
@@ -546,6 +554,11 @@ class ServiceForm(NlddFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         # `skill_choices` is always supplied by the caller in editables/assignment.py.
         self.fields["skill"].choices = skill_choices
+        # New ids on every render: with the same id in the old and the new form,
+        # htmx's settle strips the full width the date field set on itself.
+        suffix = secrets.token_hex(4)
+        self.start_date_id = f"member-start-date-{suffix}"
+        self.end_date_id = f"member-end-date-{suffix}"
         if not self.is_bound:
             initial = self.initial
             initial.setdefault("start_mode", "NOW" if initial.get("starts_immediately") else "DATE")
@@ -590,13 +603,23 @@ class ServiceForm(NlddFormMixin, forms.Form):
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 
-    def shown_period_modes(self) -> tuple[str, str]:
+    @property
+    def is_request(self) -> bool:
+        """Whether the sheet shows the aanvraag, not a placed consultant."""
+        return self["is_filled"].value() != "ingevuld"
+
+    def shown_period_modes(self) -> PeriodModes:
         """The start and end choice the sheet shows, by the same rule clean()
         applies on save."""
         names = ("start_mode", "end_mode", "is_filled", "placement_end_date", "duration_months")
         values = {name: self[name].value() for name in names}
         end_mode = self._apply_period_modes(values, inherit=False)
-        return ("NOW" if values["starts_immediately"] else "DATE"), end_mode
+        return PeriodModes(
+            start="NOW" if values["starts_immediately"] else "DATE",
+            end=end_mode,
+            # A placement has no duration to choose.
+            placement_end="DATE" if end_mode == "DATE" else "OPEN",
+        )
 
     @staticmethod
     def _apply_period_modes(cleaned_data: dict, *, inherit: bool) -> str:

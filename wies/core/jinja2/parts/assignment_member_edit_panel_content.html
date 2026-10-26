@@ -117,14 +117,14 @@
   {# One text per status: an aanvraag has "Wie we zoeken" (below the period,
      being long), a placement its taken, which the consultant fills in. Both
      post, so switching status loses neither. #}
-  {% set is_request = status_value != "ingevuld" %}
+  {% set is_request = svc_form.is_request %}
   <div data-tasks-field {% if is_request %}hidden{% endif %}>{{ svc_form.description.as_field_group() }}</div>
   {{ svc_form.hours_per_week.as_field_group() }}
   {# has_custom_period is inverted: checked means inherit the assignment period. The
      segmented controls do not post; the hidden inputs at the bottom carry the
      choices ("on" = inherit, start_mode, end_mode). #}
   {% set inherits = svc_form.has_custom_period.value() %}
-  {% set start_mode, end_mode = svc_form.shown_period_modes() %}
+  {% set period_modes = svc_form.shown_period_modes() %}
   <nldd-form-field label="Periode">
   <nldd-segmented-control width="full" accessible-label="Periode" value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}" data-period-choice>
   <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
@@ -152,29 +152,24 @@
      dates, so its end has a choice without "Duur" (an item cannot be hidden).
      Every `hidden` is server-rendered to match member_form.js's first paint. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
-  {# New ids on every render: with the same id in the old and the new form,
-     htmx's settle strips the full width the date field set on itself. #}
-  {% set date_id_suffix = range(1000000)|random %}
-  {% set start_date_id = "member-start-date-" ~ date_id_suffix %}
-  {% set end_date_id = "member-end-date-" ~ date_id_suffix %}
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
   {% set duration_errors = wire_field_errors(svc_form.duration_months) %}
   <nldd-box data-period-box{% if inherits %} hidden{% endif %}>
   <nldd-container padding="16" gap="16">
   <nldd-form-field label="Start">
   <div data-start-choice-field{% if not is_request %} hidden{% endif %}>
-    <nldd-segmented-control width="full" accessible-label="Start" value="{{ start_mode }}" data-start-choice>
+    <nldd-segmented-control width="full" accessible-label="Start" value="{{ period_modes.start }}" data-start-choice>
     <nldd-segmented-control-item value="NOW" text="Per direct"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
     </nldd-segmented-control>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   </div>
-  <div data-start-date{% if start_mode == "NOW" %} hidden{% endif %}>
-    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum", "field-id": start_date_id}) }}
+  <div data-start-date{% if period_modes.start == "NOW" %} hidden{% endif %}>
+    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum", "field-id": svc_form.start_date_id}) }}
   </div>
   {# `for`: the field's first control is the Start choice, not the date. #}
   {% if svc_form.placement_start_date.errors %}
-    <nldd-validation-list for="{{ start_date_id }}">
+    <nldd-validation-list for="{{ svc_form.start_date_id }}">
     {% for error in svc_form.placement_start_date.errors %}
       <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
@@ -184,7 +179,7 @@
   <nldd-form-field label="Einde">
   <div data-end-choice-field="request"
        {% if not is_request %} hidden{% endif %}>
-    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ end_mode }}" data-end-choice>
+    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ period_modes.end }}" data-end-choice>
     <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="DURATION" text="Duur"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="OPEN" text="Onbekend"></nldd-segmented-control-item>
@@ -192,21 +187,22 @@
   </div>
   <div data-end-choice-field="placement"
        {% if is_request %} hidden{% endif %}>
-    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ 'DATE' if end_mode == 'DATE' else 'OPEN' }}" data-end-choice>
+    <nldd-segmented-control width="full" accessible-label="Einde" value="{{ period_modes.placement_end }}" data-end-choice>
     <nldd-segmented-control-item value="DATE" text="Op datum"></nldd-segmented-control-item>
     <nldd-segmented-control-item value="OPEN" text="Onbekend"></nldd-segmented-control-item>
     </nldd-segmented-control>
   </div>
-  <div data-end-date{% if end_mode != "DATE" %} hidden{% endif %}>
+  <div data-end-date{% if period_modes.end != "DATE" %} hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum", "field-id": end_date_id}) }}
+    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum", "field-id": svc_form.end_date_id}) }}
   </div>
-  <div data-duration{% if end_mode != "DURATION" %} hidden{% endif %}>
+  <div data-duration{% if period_modes.end != "DURATION" %}
+       hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur", "id": "member-duration"}) }}
   </div>
   {% if svc_form.placement_end_date.errors %}
-    <nldd-validation-list for="{{ end_date_id }}">
+    <nldd-validation-list for="{{ svc_form.end_date_id }}">
     {% for error in svc_form.placement_end_date.errors %}
       <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
@@ -235,11 +231,11 @@
          data-inherit-input>
   <input type="hidden"
          name="{{ svc_form.start_mode.html_name }}"
-         value="{{ start_mode }}"
+         value="{{ period_modes.start }}"
          data-start-mode-input>
   <input type="hidden"
          name="{{ svc_form.end_mode.html_name }}"
-         value="{{ end_mode }}"
+         value="{{ period_modes.end }}"
          data-end-mode-input>
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <input type="hidden" name="member_heading" value="{{ panel_heading }}">

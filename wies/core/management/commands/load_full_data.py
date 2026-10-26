@@ -1024,8 +1024,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     shuffled_assignments = list(assignments)
     rng.shuffle(shuffled_assignments)
 
-    # Own generator for the vacancy texts, so adding them left the rest of the
-    # seeded data (and the occupancy the base profile is tuned to) as it was.
+    # Own generator for the vacancy texts, so the rest of the seeded data (and
+    # the occupancy the base profile is tuned to) does not depend on them.
     request_rng = random.Random(43)  # noqa: S311 (insecure PRNG) — dummy text, seeded on purpose for repeatable data
 
     for assignment in shuffled_assignments:

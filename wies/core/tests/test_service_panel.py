@@ -159,7 +159,7 @@ class ServicePanelTest(TestCase):
 
     def test_an_otys_aanvraag_says_why_it_cannot_be_changed(self):
         """Even a business manager gets no pencil on an OTYS opdracht; the
-        panel says where it is managed instead (review #712)."""
+        panel says where it is managed instead."""
         bdm = make_business_manager_user(email="bdm@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.source = "otys_iir"
@@ -543,7 +543,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
 
     def test_the_sheet_reopens_on_an_end_date(self):
         """The end-date choice must open on "Op datum" for a saved end date;
-        the old switch read its state too late and the date was wiped on save."""
+        otherwise the date is wiped on save."""
         service = Service.objects.create(
             assignment=self.assignment,
             skill=self.skill,

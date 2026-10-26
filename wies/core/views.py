@@ -684,7 +684,7 @@ def _build_aanvraag_panel_data(service, request):
         "team_text": _team_names_text(visible_service_rows(assignment, request)),
         "panel_content_template": "parts/aanvraag_panel_content.html",
         "panel_title": f"Aanvraag: {role}" if role else "Aanvraag",
-        "role": role,
+        "heading": role or "Rol niet ingevuld",
         "close_url": _build_close_url(request),
         "service": service,
         "assignment": assignment,
@@ -4710,8 +4710,7 @@ def assignment_create_sheet(request):
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
         # Aanvragen lists aanvragen only, so a new opdracht without one would be
-        # gone after the panel closes. Until entering an opdracht asks for its
-        # roles itself, the message says so.
+        # gone after the panel closes; the message says so.
         messages.success(
             request,
             f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe. '

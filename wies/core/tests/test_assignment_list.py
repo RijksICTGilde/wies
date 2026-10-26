@@ -537,7 +537,7 @@ class AssignmentListViewTest(TestCase):
         assert str(concept.public_id) not in ids
 
     def test_assignment_without_aanvraag_is_not_listed(self):
-        """An opdracht without any role has no card (it used to, as "no roles yet")."""
+        """An opdracht without any role has no card."""
         Assignment.objects.create(name="Lege Opdracht", source="wies")
         self.client.force_login(self.auth_user)
         content = self.client.get(self.list_url).content.decode()
@@ -708,8 +708,8 @@ class AssignmentListViewTest(TestCase):
             with self.subTest(vanaf=vanaf):
                 assert sorted(self._card_ids({"beschikbaar_vanaf": vanaf.isoformat()})) == expected
 
-        # An invalid date filters nothing and gets no chip (it used to 500 on
-        # the chip, which formats the value as a date).
+        # An invalid date filters nothing and gets no chip, which would format
+        # the value as a date.
         assert sorted(self._card_ids({"beschikbaar_vanaf": "geen-datum"})) == ids(*services)
 
     # --- Filters and counts on aanvraag level -------------------------------
