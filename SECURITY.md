@@ -1,3 +1,9 @@
+<!--
+  Source of truth for the security policy, also shown in Wies at /beveiliging/.
+  After editing this file, regenerate the in-product page:
+      uv run python manage.py generate_docs_html
+-->
+
 # Beveiligingsbeleid
 
 Wies is een interne applicatie van de Rijksoverheid en valt onder de

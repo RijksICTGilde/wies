@@ -1,0 +1,91 @@
+{# AUTO-GENERATED FROM SECURITY.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Beveiliging · Wies
+{% endblock title %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Beveiligingsbeleid</h1>
+  <p>
+    Wies is een interne applicatie van de Rijksoverheid en valt onder de
+    <a href="https://www.bio-overheid.nl/" target="_blank">Baseline Informatiebeveiliging Overheid (BIO2)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+  </p>
+  <h2>Een kwetsbaarheid melden</h2>
+  <p>
+    Heb je een (vermoedelijke) kwetsbaarheid of een ander beveiligingsprobleem
+    gevonden in Wies?
+  </p>
+  <ul>
+    <li>
+      Meld het vertrouwelijk via GitHub:
+      <a href="https://github.com/RijksICTGilde/wies/security/advisories/new"
+         target="_blank">Report a vulnerability<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+      (private vulnerability reporting — alleen het team ziet je melding).
+    </li>
+    <li>
+      Of mail het team: <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>
+    </li>
+    <li>
+      Of meld het via <a href="https://www.ncsc.nl/contact/kwetsbaarheid-melden"
+    target="_blank">Coordinated Vulnerability Disclosure van het NCSC<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+      als je het team niet kunt bereiken.
+    </li>
+  </ul>
+  <p>
+    Meld ook vermoedens, liever een loos alarm dan een gemiste kwetsbaarheid.
+    Maak een bevinding niet openbaar voordat het team heeft kunnen reageren.
+  </p>
+  <h2>Wat je van ons mag verwachten</h2>
+  <ul>
+    <li>Je krijgt een reactie van het team op iedere melding.</li>
+    <li>
+      Kwetsbaarheden waarbij de kans op misbruik en de verwachte schade beide hoog
+      zijn, mitigeren we zo snel mogelijk en uiterlijk binnen één week (BIO2 8.08).
+    </li>
+    <li>We houden je op de hoogte van de afhandeling van je melding.</li>
+  </ul>
+  <h2>Hoe we beveiliging geregeld hebben</h2>
+  <ul>
+    <li>
+      <strong>Toegang</strong> — inloggen kan uitsluitend via SSO-Rijk (OIDC); de applicatie kent
+      geen wachtwoorden en geen groepsaccounts.
+    </li>
+    <li>
+      <strong>Dependencies</strong> — Dependabot bewaakt wekelijks de Python-, npm- en GitHub
+      Actions-dependencies (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/dependabot.yml"
+   target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+    </li>
+    <li>
+      <strong>Kwetsbaarheidsscans</strong> — Trivy scant bij iedere pull request, bij iedere push
+      naar <code>main</code> en wekelijks de broncode (dependencies, geheimen, configuratie) en
+      de container-image (OS-pakketten). Bevindingen met ernst hoog of kritiek
+      waarvoor een fix beschikbaar is, komen in de Security-tab van de repository
+      (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/security-scan.yml"
+   target="_blank"><code>.github/workflows/security-scan.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+    </li>
+    <li>
+      <strong>Geheimen</strong> — GitHub secret scanning met push protection blokkeert het pushen
+      van credentials naar deze repository.
+    </li>
+    <li>
+      <strong>Wijzigingen</strong> — iedere wijziging gaat via een pull request en draait
+      automatisch de testsuite (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/test.yml"
+   target="_blank"><code>.github/workflows/test.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>);
+      getest wordt op lokale en previewomgevingen, nooit in productie.
+    </li>
+    <li>
+      <strong>Geen externe runtime-afhankelijkheden</strong> — JavaScript is gevendored in plaats
+      van via een CDN geladen, zodat de CSP geen externe bronnen hoeft toe te staan.
+    </li>
+  </ul>
+  <p>
+    De volledige BIO-verantwoording (per control en maatregel) is intern belegd bij
+    ODI en wordt hier niet herhaald.
+  </p>
+  <h2>Versies</h2>
+  <p>
+    Alleen de laatst uitgerolde versie (<code>main</code> → productie) wordt ondersteund met
+    beveiligingsfixes.
+  </p>
+  </nldd-rich-text>
+{% endblock footer_content %}
