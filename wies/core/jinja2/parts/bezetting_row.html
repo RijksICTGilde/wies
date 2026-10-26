@@ -64,14 +64,12 @@
              style="left: {{ row.bench_bar[0] }}%;
                     width: {{ row.bench_bar[1] }}%">
           {# djlint:on #}
-          {# The start date is only in the hidden sentence: the stretched row
-               link lies over the track, so a title here never showed. #}
+          {# Not a title: the stretched row link covers the track. #}
           <span class="bezetting-free__label" aria-hidden="true">{{ free_days }}</span>
           <span class="wies-visually-hidden">{{ free_days }} sinds {{ row.bench_since|datum_nl }}</span>
         </div>
       {% endif %}
-      {# Lane stack, vertically centred so a single bar sits mid-row. A list so a
-           screen reader hears how many opdrachten the row holds. #}
+      {# Lane stack, vertically centred so a single bar sits mid-row. #}
       {% if row.segments %}
         <ul class="bezetting-lanes"
             role="list"
@@ -89,7 +87,7 @@
               {% set seg_hours = "" %}
               {% set seg_gap = false %}
             {% endif %}
-            {# "tot en met" written out: this is read aloud, "t/m" is the eye's form. #}
+            {# Read aloud, so "tot en met" rather than "t/m". #}
             {% if seg.start and seg.end %}
               {% set seg_period = "van " ~ seg.start|datum_nl ~ " tot en met " ~ seg.end|datum_nl %}
             {% elif seg.start %}
@@ -101,24 +99,27 @@
             {% endif %}
             {% set days_left = "nog " ~ seg.days_left ~ (" dag" if seg.days_left == 1 else " dagen") %}
             {% set seg_said = [
-              seg.assignment_name,
+              ("Verlenging van " if seg.extends else "") ~ seg.assignment_name ~ (" bij " ~ seg.client if seg.client else ""),
+              seg.role,
               (seg.hours_per_week ~ " uur per week") if seg.hours_per_week else ("uren niet ingevuld" if seg_gap else none),
               seg_period,
+              "wordt verlengd" if seg.extended else none,
               days_left if seg.ending_level != "calm" else none,
             ]|select|join(", ") %}
             {# djlint:off T028 #}
-            <li class="bezetting-seg bezetting-seg--{{ seg.phase }} bezetting-seg--ending-{{ seg.ending_level }}"
+            <li class="bezetting-seg bezetting-seg--{{ seg.phase }} bezetting-seg--ending-{{ seg.ending_level }}{% if seg.extends %} bezetting-seg--extends{% endif %}{% if seg.extended %} bezetting-seg--extended{% endif %}"
                 style="left: {{ seg.left_pct }}%;
                        width: {{ seg.width_pct }}%;
                        top: calc({{ seg.lane }} * (var(--bezetting-lane-height) + var(--bezetting-lane-gap)))">
               {# djlint:on #}
-              {# The dates were only in a title, which the stretched row link
-                 covered; this sentence carries everything the bar shows. #}
+              {# Not a title: the stretched row link covers the bar. #}
               <span class="wies-visually-hidden">{{ seg_said }}</span>
               {# A bar too narrow for its name renders a stray "I..."; the hidden
                  sentence still carries it. #}
               {% if not seg.too_narrow %}
-                <span class="bezetting-seg__label" aria-hidden="true">{{ seg.assignment_name }}{% if seg_gap %}<span class="bezetting-seg__gap">{{ seg_hours }}</span>{% else %}{{ seg_hours }}{% endif %}</span>
+                {# The opdrachtgever first, what the eye scans for, but capped so a
+                   long name without abbreviation cannot push out the opdracht. #}
+                <span class="bezetting-seg__label" aria-hidden="true">{% if seg.extends %}Verlenging · {% endif %}{% if seg.client %}<span class="bezetting-seg__client">{{ seg.client }}</span> · {% endif %}<span class="bezetting-seg__name">{{ seg.assignment_name }}</span>{% if seg.role %} · {{ seg.role }}{% endif %}{% if seg_gap %}<span class="bezetting-seg__gap">{{ seg_hours }}</span>{% else %}{{ seg_hours }}{% endif %}</span>
               {% endif %}
               {% if seg.ending_level != "calm" %}
                 {# Days left rather than a date, on the bar that ends, so the

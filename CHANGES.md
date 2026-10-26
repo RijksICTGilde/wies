@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
+- 767: Bezetting month axis stays visible while scrolling and the months are in Dutch; bars show the client and role, and an extension of an opdracht reads as such and no longer counts as ending soon; the colleague panel lists opdrachten in the same order as the timeline (running, planned, finished)
 - 755: dependency updates, including a security fix
 
 ## 2026-10-22

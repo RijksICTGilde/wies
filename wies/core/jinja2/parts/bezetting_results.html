@@ -22,8 +22,7 @@
        weight and the caption reads as its label; they are plain elements sized
        from the token scale, since nldd-title would borrow heading typography for
        a number that is not a heading. #}
-    {# The name starts with the visible text, so a voice command that says what
-       is on screen still finds the card (WCAG 2.5.3); the long phrasing follows. #}
+    {# Visible text first, so voice control can match the name. #}
     {% set card_name = [count ~ " " ~ (short or label), label if short else none]|select|join(", ") %}
     <nldd-card background="tinted" accessible-label="{{ card_name }}">
     <nldd-container padding="8" layout="row" gap="8" vertical-alignment="center">
@@ -96,8 +95,9 @@
 {% endif %}
 {# Tijdlijn #}
 <div class="bezetting-timeline">
-  {# Koptekst: maandmarkeringen + 'vandaag' #}
-  <div class="bezetting-timeline-head">
+  {# Koptekst: maandmarkeringen + 'vandaag'. Hidden from screen readers: every
+     bar says its own dates, and the sentence before the list gives the range. #}
+  <div class="bezetting-timeline-head" aria-hidden="true">
     {# No column heading: the cell below it holds names, which need no label.
          The cell itself stays — it is what gives the name column its width. #}
     <div class="bezetting-row__side bezetting-row__side--head"></div>
@@ -108,7 +108,9 @@
              horizontal scrollbar. The threshold lives in occupancy.py. #}
         <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %} {% if tick.flip %}bezetting-tick--flip{% endif %}"
              style="left: {{ tick.left }}%">
-          <span class="bezetting-tick__label">{{ tick.label }}</span>
+          <span class="bezetting-tick__label">{{ tick.label }}
+            {%- if tick.year %}<span class="bezetting-tick__year"> {{ tick.year }}</span>{% endif -%}
+          </span>
         </div>
       {% endfor %}
       <div class="bezetting-today" style="left: {{ today_pct }}%">
@@ -129,7 +131,10 @@
        thing a list of names could not answer. No headings between the two: the
        hatched free stretch already says which rows are the empty ones, and the
        counts they carried are on the cards above. Paged by the view.
-       A list, not a table: the columns are months, and a bar has no cell of its own. #}
+       A list, not a table: a bar spans months and has no cell of its own. #}
+    <p class="wies-visually-hidden">
+      Tijdlijn van {{ horizon[0]|datum_nl }} tot en met {{ horizon[1]|datum_nl }}. Vandaag is {{ today|datum_nl }}.
+    </p>
     {# role="list": Safari drops the list role of a ul with list-style: none. #}
     <ul class="bezetting-rows"
         role="list"

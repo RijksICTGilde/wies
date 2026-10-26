@@ -18,13 +18,25 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from itertools import pairwise
 
 from django.db.models import Q
 from django.db.models.functions import Lower
+from django.utils.formats import date_format
 
-from wies.core.models import SUBGROEP_CATEGORY, Colleague, ContractPeriod, Label, Placement, Suborganization
+from wies.core.models import (
+    SUBGROEP_CATEGORY,
+    AssignmentOrganizationUnit,
+    Colleague,
+    ContractPeriod,
+    Label,
+    OrganizationUnitRole,
+    Placement,
+    Suborganization,
+)
 from wies.core.querysets import annotate_placement_dates
 from wies.core.roles import ROLE_CONSULTANT
+from wies.core.visibility_rules import period_timing
 
 # Timeline horizon and "pressing" threshold. Four months ahead, not six: the far
 # end of a six-month view was empty for almost every row, and the months that do
@@ -41,6 +53,10 @@ HORIZON_AHEAD_DAYS = 122
 ENDING_SOON_DAYS = 93
 ENDING_LEVEL_SOON = "soon"
 ENDING_LEVEL_CALM = "calm"  # further out, or no end date at all
+
+# A placement on the same opdracht that starts at most this many days after the
+# previous one ends continues it: a week covers a weekend or a holiday between.
+EXTENSION_GAP_DAYS = 7
 
 # Below this share of the horizon a bar cannot hold its own label legibly.
 NARROW_BAR_PCT = 8
@@ -96,6 +112,12 @@ class TimelineSegment:
     days_left: int | None = None
     # Hours per week of the role, None when the role has none recorded.
     hours_per_week: int | None = None
+    # Short name of the primary opdrachtgever, empty when there is none.
+    client: str = ""
+    # This placement continues the previous one on the same opdracht, or is
+    # continued by the next one (EXTENSION_GAP_DAYS).
+    extends: bool = False
+    extended: bool = False
 
 
 @dataclass
@@ -178,12 +200,48 @@ def row_has_status(row: OccupancyRow, status: str) -> bool:
     return False
 
 
+# The timeline's phase words for the timings of visibility_rules.
+PHASE_BY_TIMING = {"active": "active", "future": "planned", "ended": "completed"}
+_PHASE_RANK = {"active": 0, "planned": 1, "completed": 2}
+
+
 def _phase(start: date | None, end: date | None, today: date) -> str:
-    if start is not None and start > today:
-        return "planned"
-    if end is not None and end < today:
-        return "completed"
-    return "active"
+    return PHASE_BY_TIMING[period_timing(start, end, today)]
+
+
+def placement_order_key(phase: str, start: date | None) -> tuple[int, int]:
+    """Order of a colleague's placements, shared by the timeline and the panel.
+
+    Running first, then planned, then finished. Running and planned work go by
+    start, earliest first; finished work newest first, as on a cv.
+    """
+    day = (start or date.min).toordinal()
+    return (_PHASE_RANK[phase], -day if phase == "completed" else day)
+
+
+def timeline_horizon(today: date) -> tuple[date, date]:
+    """First and last day the timeline draws."""
+    return today - timedelta(days=HORIZON_BACK_DAYS), today + timedelta(days=HORIZON_AHEAD_DAYS)
+
+
+def _extension_links(placements: list[Placement]) -> tuple[dict[int, date], set[int]]:
+    """The placements that continue an earlier one on the same opdracht, each
+    with the end date of the one it continues, and the ids of those continued."""
+    by_assignment: dict[int, list[Placement]] = {}
+    for placement in placements:
+        if placement.actual_start_date is not None:
+            by_assignment.setdefault(placement.service.assignment_id, []).append(placement)
+    extends: dict[int, date] = {}
+    extended: set[int] = set()
+    for group in by_assignment.values():
+        group.sort(key=lambda p: p.actual_start_date)
+        for previous, current in pairwise(group):
+            if previous.actual_end_date is None:
+                continue
+            if 0 <= (current.actual_start_date - previous.actual_end_date).days <= EXTENSION_GAP_DAYS:
+                extends[current.id] = previous.actual_end_date
+                extended.add(previous.id)
+    return extends, extended
 
 
 def _position(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[float, float]:
@@ -227,24 +285,22 @@ def _days_left(end: date | None, phase: str, today: date) -> int | None:
 def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> int:
     """Greedily pack segments into vertical lanes so concurrent bars don't overlap.
 
-    Segments are sorted by start; each goes into the first lane whose last bar
-    ended before this one starts. Returns the number of lanes used.
+    Segments go in ``placement_order_key`` order, so where bars overlap the
+    running one takes the top lane; each goes into the first lane where it
+    overlaps no bar already placed. Returns the number of lanes used.
     """
-    lane_ends: list[date] = []  # effective end date of the last segment in each lane
-    for seg in sorted(segments, key=lambda s: s.start or horizon_start):
-        seg_start = seg.start or horizon_start
-        seg_end = seg.end or horizon_end
-        placed = False
-        for lane, last_end in enumerate(lane_ends):
-            if seg_start > last_end:
+    lanes: list[list[tuple[date, date]]] = []
+    for seg in sorted(segments, key=lambda s: placement_order_key(s.phase, s.start)):
+        span = (seg.start or horizon_start, seg.end or horizon_end)
+        for lane, taken in enumerate(lanes):
+            if all(span[1] < start or span[0] > end for start, end in taken):
                 seg.lane = lane
-                lane_ends[lane] = seg_end
-                placed = True
+                taken.append(span)
                 break
-        if not placed:
-            seg.lane = len(lane_ends)
-            lane_ends.append(seg_end)
-    return max(len(lane_ends), 1)
+        else:
+            seg.lane = len(lanes)
+            lanes.append([span])
+    return max(len(lanes), 1)
 
 
 def colleague_occupancy(
@@ -271,8 +327,7 @@ def colleague_occupancy(
     ``search`` narrows the rows to colleagues whose name or e-mail contains it,
     like the search box on the user list.
     """
-    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
-    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
+    horizon_start, horizon_end = timeline_horizon(today)
     far_future = date.max
 
     # Only consultants: colleagues whose linked user holds the Consultant role.
@@ -313,6 +368,14 @@ def colleague_occupancy(
     placements_by_colleague: dict[int, list[Placement]] = {}
     for placement in horizon_placements:
         placements_by_colleague.setdefault(placement.colleague_id, []).append(placement)
+    # One query for every bar's opdrachtgever, not one per bar.
+    client_by_assignment = {
+        relation.assignment_id: relation.organization.short_name
+        for relation in AssignmentOrganizationUnit.objects.filter(
+            assignment_id__in={p.service.assignment_id for ps in placements_by_colleague.values() for p in ps},
+            role=OrganizationUnitRole.PRIMARY,
+        ).select_related("organization")
+    }
 
     # How long each colleague has been free, which the horizon cannot answer: the
     # placement that ended is usually older than the window the timeline draws.
@@ -348,14 +411,18 @@ def colleague_occupancy(
         active_hours = 0
         has_role_without_hours = False
         segments: list[TimelineSegment] = []
+        extends_from, extended_ids = _extension_links(placements)
         for placement in placements:
             start = placement.actual_start_date
             end = placement.actual_end_date
             phase = _phase(start, end, today)
             hours = placement.service.hours_per_week
+            # Work that is extended does not stop at this end date, so it is not
+            # "ending soon" and does not count towards the card.
+            extended = placement.id in extended_ids
             if phase == "active":
                 active_count += 1
-                if end is not None:
+                if end is not None and not extended:
                     active_ends.append(end)
                 # A role without hours counts as 0 rather than voiding the sum
                 # (#687); the row says so, so the total reads as an upper bound.
@@ -363,7 +430,9 @@ def colleague_occupancy(
                     active_hours += hours
                 else:
                     has_role_without_hours = True
-            left, width = _position(start, end, horizon_start, horizon_end)
+            # A continuation is drawn from where the bar it continues stops, so
+            # the two read as one stretch of work with a seam between.
+            left, width = _position(extends_from.get(placement.id, start), end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
                     assignment_name=placement.service.assignment.name,
@@ -373,16 +442,19 @@ def colleague_occupancy(
                     phase=phase,
                     left_pct=left,
                     width_pct=width,
-                    ends_soon=(phase == "active" and end is not None and end <= soon_cutoff),
-                    ending_level=_ending_level(end, phase, today),
-                    days_left=_days_left(end, phase, today),
+                    ends_soon=(not extended and phase == "active" and end is not None and end <= soon_cutoff),
+                    ending_level=ENDING_LEVEL_CALM if extended else _ending_level(end, phase, today),
+                    days_left=None if extended else _days_left(end, phase, today),
                     hours_per_week=hours,
+                    client=client_by_assignment.get(placement.service.assignment_id, ""),
+                    extends=placement.id in extends_from,
+                    extended=extended,
                     # 8% of the horizon is roughly four weeks; below that the
                     # label is all ellipsis and no word.
                     too_narrow=width < NARROW_BAR_PCT,
                 )
             )
-        segments.sort(key=lambda s: s.start or horizon_start)
+        segments.sort(key=lambda s: placement_order_key(s.phase, s.start))
         lane_count = _assign_lanes(segments, horizon_start, horizon_end)
 
         periods = colleague.contract_periods.all()
@@ -506,11 +578,12 @@ def today_marker_pct() -> float:
 def month_ticks(today: date) -> list[dict]:
     """First-of-month gridline labels across the horizon.
 
-    Each tick is {label, month, left%, flip}; ``flip`` says the label would
-    overflow the track on the right and has to hang left of its line instead.
+    Each tick is {label, year, month, left%, flip}; ``flip`` says the label
+    would overflow the track on the right and has to hang left of its line
+    instead. ``year`` is set on January only, so the year does not rest on a
+    longer line alone.
     """
-    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
-    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
+    horizon_start, horizon_end = timeline_horizon(today)
     span = (horizon_end - horizon_start).days or 1
     ticks = []
     year, month = horizon_start.year, horizon_start.month
@@ -525,7 +598,8 @@ def month_ticks(today: date) -> list[dict]:
         left = (cursor - horizon_start).days / span * 100
         ticks.append(
             {
-                "label": cursor.strftime("%b"),
+                "label": date_format(cursor, "b"),
+                "year": cursor.year if cursor.month == 1 else None,
                 "month": cursor.month,
                 "left": round(left, 2),
                 "flip": left > FLIP_LABEL_PCT,

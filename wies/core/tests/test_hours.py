@@ -279,8 +279,7 @@ class BezettingPartialStatusViewTest(TestCase):
         gerda = body.split("Gerda Gat")[1].split("</nldd-identity>")[0]
         assert "20 uur vrij" in gerda
         assert "zonder uren" not in gerda
-        # The bar's sentence for screen readers; its visible label splits the
-        # note into a span of its own.
+        # The hidden sentence; the visible label puts the note in its own span.
         assert "Zonder uren, uren niet ingevuld" in body
         assert "Met uren, 16 uur per week" in body
         assert "Afgerond zonder, uren niet ingevuld" not in body
