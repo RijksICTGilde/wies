@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
-- XXX: the security policy (SECURITY.md) is now readable in Wies at /beveiliging/, linked from the footer and the FAQ; the privacy page generator is renamed to `manage.py generate_docs_html` and renders both pages
+- 773: the security policy (SECURITY.md) is now readable in Wies at /beveiliging/, linked from the footer and the FAQ; the privacy page generator is renamed to `manage.py generate_docs_html` and renders both pages
 
 ## 2026-10-22
 
