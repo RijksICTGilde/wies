@@ -1,5 +1,7 @@
+from pathlib import Path
 from unittest.mock import patch
 
+from django.conf import settings
 from django.test import Client, TestCase
 
 from config.jinja2 import nldd_asset
@@ -30,3 +32,15 @@ class NlddAssetTest(TestCase):
         response = Client().get("/geen-toegang/")
         assert b"nldd.min.js?v=" in response.content
         assert b"css/global.css?v=" in response.content
+
+
+class NlddInternalsTest(TestCase):
+    """sticky_bar_inset.js and side_panel.js style nldd-page from inside its
+    shadow root, so they lean on internal names. An upgrade that renames one
+    would switch the fix off silently; this fails instead."""
+
+    def test_bundle_still_has_the_names_the_scripts_use(self):
+        bundle = (Path(settings.BASE_DIR) / "wies/core/static/vendor/nldd/nldd.min.js").read_text()
+        for name in ("page__scroll", "--_page-header-height", "--_page-footer-height"):
+            with self.subTest(name=name):
+                assert name in bundle
