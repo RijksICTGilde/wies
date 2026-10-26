@@ -1,6 +1,4 @@
-"""Markup that the WCAG audit pinned down: heading levels in the sidebar and
-on the cards, the input purpose of the profile name fields, the current page
-in the Beheer menu and the sticky-bar inset of sheets."""
+"""Markup that the WCAG audits pinned down."""
 
 from datetime import date
 
@@ -99,3 +97,11 @@ class A11yMarkupTest(TestCase):
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "js/sticky_bar_inset.js")
+
+    def test_accessibility_status_is_text(self):
+        """The status is text with a link to the register, not a label image (WCAG 1.1.1)."""
+        response = self.client.get(reverse("toegankelijkheid"))
+        assert response.status_code == 200
+        self.assertContains(response, "Status: A, voldoet volledig.")
+        self.assertContains(response, "Bekijk de verklaring in het register")
+        self.assertNotContains(response, "toegankelijkheidslabel.svg")
