@@ -4,6 +4,7 @@ from datetime import date
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
 from django.template import engines
 from django.test import TestCase
 from django.urls import reverse
@@ -17,6 +18,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.views import PlacementListView
 
 User = get_user_model()
@@ -33,6 +35,13 @@ class A11yMarkupTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "<h2>Opdrachtgever</h2>")
         self.assertNotContains(response, "<h3>Opdrachtgever</h3>")
+
+    def test_date_filter_has_an_id_to_return_focus_to(self):
+        # The sidebar is swapped on every filter change; focus_restore.js finds
+        # the field again only by id (WCAG 2.4.3).
+        response = self.client.get(reverse("assignment-list"))
+        assert response.status_code == 200
+        self.assertContains(response, '<nldd-date-field id="filter-beschikbaar_vanaf"')
 
     def test_profile_name_fields_carry_their_input_purpose(self):
         response = self.client.get(reverse("profile-name-edit"), headers={"hx-request": "true"})
@@ -126,3 +135,32 @@ class A11yMarkupTest(TestCase):
         assert 'aria-label="Beperkt zichtbaar. Alleen voor jou"' in focus_stop
         assert html.count('tabindex="0"') == 1
         assert 'aria-hidden="true"' in html
+
+    def test_admin_sidebar_marks_the_current_page_beyond_colour(self):
+        """The DS shows `selected` by colour alone (1.4.1); the bold text is the second cue."""
+        setup_roles()
+        user_admin = User.objects.create_user(email="beheer@rijksoverheid.nl", first_name="Be", last_name="Heer")
+        user_admin.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
+        self.client.force_login(user_admin)
+
+        response = self.client.get(reverse("label-admin"))
+
+        assert response.status_code == 200
+        self.assertContains(response, f'<nldd-list-item href="{reverse("label-admin")}" selected>')
+        self.assertContains(response, 'text="**Labels**"')
+        self.assertContains(response, 'text="Gebruikers"')
+        self.assertNotContains(response, 'text="**Gebruikers**"')
+
+    def test_pages_load_the_sticky_bar_inset(self):
+        """Without it a sheet's sticky footer covers the focused option (2.4.11)."""
+        response = self.client.get(reverse("home"))
+        assert response.status_code == 200
+        self.assertContains(response, "js/sticky_bar_inset.js")
+
+    def test_accessibility_status_is_text(self):
+        """The status is text with a link to the register, not a label image (WCAG 1.1.1)."""
+        response = self.client.get(reverse("toegankelijkheid"))
+        assert response.status_code == 200
+        self.assertContains(response, "Status: A, voldoet volledig.")
+        self.assertContains(response, "Bekijk de verklaring in het register")
+        self.assertNotContains(response, "toegankelijkheidslabel.svg")

@@ -1,3 +1,14 @@
+{# The DS marks a selected item by colour alone (WCAG 1.4.1); the bold text is
+   the second cue, through the cell's own **bold** syntax. #}
+{% macro nav_item(href, icon, label, selected) -%}
+  <nldd-list-item href="{{ href }}" {% if selected %}selected{% endif %}>
+  <nldd-icon-cell size="20">
+  <nldd-icon icon="{{ icon }}"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ '**' ~ label ~ '**' if selected else label }}"></nldd-text-cell>
+  </nldd-list-item>
+{%- endmacro %}
 <nldd-container slot="sidebar" padding="16">
 <nldd-title size="5">
 <h2>Beheer</h2>
@@ -8,50 +19,14 @@
    labels, merken and reads the roles; the Applicatiebeheerder keeps the
    maintenance pages. #}
 {% if show_user_admin_pages(request) %}
-  <nldd-list-item href="{{ url('admin-users') }}" {% if '/beheer/gebruikers/' in request.path %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="users"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Gebruikers"></nldd-text-cell>
-  </nldd-list-item>
-  <nldd-list-item href="{{ url('label-admin') }}" {% if '/beheer/labels/' in request.path %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="labels"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Labels"></nldd-text-cell>
-  </nldd-list-item>
-  <nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="brand"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Merken"></nldd-text-cell>
-  </nldd-list-item>
-  <nldd-list-item href="{{ url('role-matrix') }}" {% if request.path == url('role-matrix') %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="user-admin"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Rollen"></nldd-text-cell>
-  </nldd-list-item>
+  {{ nav_item(url('admin-users'), 'users', 'Gebruikers', '/beheer/gebruikers/' in request.path) }}
+  {{ nav_item(url('label-admin'), 'labels', 'Labels', '/beheer/labels/' in request.path) }}
+  {{ nav_item(url('suborganization-admin'), 'brand', 'Merken', '/beheer/merken/' in request.path) }}
+  {{ nav_item(url('role-matrix'), 'user-admin', 'Rollen', request.path == url('role-matrix')) }}
 {% endif %}
 {% if show_staff_pages(request) %}
-  <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="chart-x-y-axis-line"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Statistieken"></nldd-text-cell>
-  </nldd-list-item>
-  <nldd-list-item href="{{ url('staff-database') }}" {% if '/database/' in request.path %}selected{% endif %}>
-  <nldd-icon-cell size="20">
-  <nldd-icon icon="database"></nldd-icon>
-  </nldd-icon-cell>
-  <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell text="Database"></nldd-text-cell>
-  </nldd-list-item>
+  {{ nav_item(url('staff-dashboard'), 'chart-x-y-axis-line', 'Statistieken', '/statistieken/' in request.path) }}
+  {{ nav_item(url('staff-database'), 'database', 'Database', '/database/' in request.path) }}
 {% endif %}
 </nldd-list>
 </nldd-container>
