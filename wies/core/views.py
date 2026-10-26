@@ -769,20 +769,22 @@ def bezetting(request):
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
-    # Merk (suborganisation) and label-category filters, resolved from the URL.
+    # Onderdeel/programma (suborganisation) and label-category filters, resolved from the URL.
     # Labels are OR within a category and AND between categories (like "Wie zit
     # waar?"); each label category becomes its own filter group under the shared
-    # ``labels`` param, and merk is its own group.
-    merk = resolve_facet(Suborganization, request.GET.getlist("merk"))
+    # ``labels`` param, and the onderdeel/programma is its own group.
+    suborganization_facet = resolve_facet(Suborganization, request.GET.getlist("onderdeel"))
     labels = resolve_facet(Label, request.GET.getlist("labels"))
     labels_by_cat = labels_by_category(labels.ids)
     search = request.GET.get("zoek", "").strip()
 
-    rows = colleague_occupancy(today, merk_ids=merk.ids, labels_by_category=labels_by_cat, search=search)
+    rows = colleague_occupancy(
+        today, suborganization_ids=suborganization_facet.ids, labels_by_category=labels_by_cat, search=search
+    )
     for row in rows:
         row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
 
-    # Summary-card counts follow merk, labels and the search term (they all
+    # Summary-card counts follow onderdeel/programma, labels and the search term (they all
     # narrowed the queryset above) but not the status filter, which is applied
     # after this: a card has to keep showing what it would select.
     summary = occupancy_summary(rows)
@@ -796,7 +798,7 @@ def bezetting(request):
     # Filter sheet: one select-multi group per facet, with cross-filtered counts,
     # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
     # everyone on this page is a consultant.
-    filter_groups = bezetting_filter_groups(merk, labels, labels_by_cat)
+    filter_groups = bezetting_filter_groups(suborganization_facet, labels, labels_by_cat)
     # Status also lives in the sheet, not only on the cards: on a narrow window
     # the cards are hidden, and a filter you cannot reach is a filter you cannot
     # switch off.
@@ -804,8 +806,8 @@ def bezetting(request):
     filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
 
     active_filters = {}
-    if merk.active_values:
-        active_filters["merk"] = merk.active_values
+    if suborganization_facet.active_values:
+        active_filters["onderdeel"] = suborganization_facet.active_values
     if labels.active_values:
         active_filters["labels"] = labels.active_values
     if selected_statuses:
@@ -1087,7 +1089,7 @@ UNKNOWN_FACET_LABELS = {
     "org_type_in": "Onbekende opdrachtgever",
     "rol": "Onbekende rol",
     "labels": "Onbekend label",
-    "merk": "Onbekend merk",
+    "onderdeel": "Onbekend onderdeel/programma",
 }
 
 
@@ -1444,7 +1446,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Applies all selection filters, optionally excluding one filter type.
 
-        ``exclude_filter`` is "rol", "org", "merk", "loopt_af", or a category_id
+        ``exclude_filter`` is "rol", "org", "onderdeel", "loopt_af", or a category_id
         (int) for labels.
         """
         rol = self.facets("rol", Skill)
@@ -1459,10 +1461,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
-        # Merk filter: OR within the merk group (one merk per colleague)
-        merk = self.facets("merk", Suborganization)
-        if exclude_filter != "merk" and merk.requested:
-            qs = qs.filter(colleague__suborganization_id__in=merk.ids)
+        # Onderdeel/programma filter: OR within the group (one onderdeel/programma per colleague)
+        suborganization_facet = self.facets("onderdeel", Suborganization)
+        if exclude_filter != "onderdeel" and suborganization_facet.requested:
+            qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
 
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
@@ -1692,13 +1694,13 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         if label_filter:
             active_filters["labels"] = label_filter
 
-        suborganization_filter = self.facets("merk", Suborganization).active_values
+        suborganization_filter = self.facets("onderdeel", Suborganization).active_values
         if suborganization_filter:
-            active_filters["merk"] = suborganization_filter
+            active_filters["onderdeel"] = suborganization_filter
 
         # Organization filter (multi-select via modal)
         self.add_org_filter_context(context, active_filters)
-        self.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "merk": Suborganization})
+        self.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "onderdeel": Suborganization})
 
         # For each filter category, count on a queryset excluding that category's filter
         base_qs = self._get_base_queryset()
@@ -1735,8 +1737,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 }
             )
 
-        # Merk filter group (one merk per colleague; counts exclude the merk filter)
-        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        # Onderdeel/programma filter group (one per colleague; counts exclude its own filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
         suborg_counts = _facet_counts(suborg_filtered_qs, "colleague__suborganization_id", group_field)
 
         suborganization_options = [{"value": "", "label": ""}]
@@ -1749,14 +1751,14 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "count": suborg_counts.get(suborganization.id, 0),
                 }
             )
-            if str(suborganization.public_id) in active_filters.get("merk", set()):
+            if str(suborganization.public_id) in active_filters.get("onderdeel", set()):
                 suborganization_options[-1]["selected"] = True
                 suborganization_selected_values.append(str(suborganization.public_id))
 
         suborganization_filter_group = {
             "type": "select-multi",
-            "name": "merk",
-            "label": "Merk",
+            "name": "onderdeel",
+            "label": "Onderdeel/programma",
             "options": suborganization_options,
             "selected_values": suborganization_selected_values,
         }
@@ -2116,7 +2118,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
         "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
     }
-    # Label categories shown on the row next to the merk, by name (see SUBGROEP_CATEGORY).
+    # Label categories shown on the row next to the onderdeel/programma, by name (see SUBGROEP_CATEGORY).
     ROW_LABEL_CATEGORIES = (SUBGROEP_CATEGORY,)
 
     @cached_property
@@ -2162,17 +2164,17 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Applies all selection filters, optionally excluding one filter type.
 
-        ``exclude_filter`` is "rol", "merk", or a category_id (int) for labels.
+        ``exclude_filter`` is "rol", "onderdeel", or a category_id (int) for labels.
         """
         # Label filter: OR within category, AND between categories
         for cat_id, cat_label_ids in self.labels_by_category.items():
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
-        # Merk filter: OR within the merk group (one merk per colleague)
-        merk = self.facets("merk", Suborganization)
-        if exclude_filter != "merk" and merk.requested:
-            qs = qs.filter(colleague__suborganization_id__in=merk.ids)
+        # Onderdeel/programma filter: OR within the group (one onderdeel/programma per colleague)
+        suborganization_facet = self.facets("onderdeel", Suborganization)
+        if exclude_filter != "onderdeel" and suborganization_facet.requested:
+            qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
 
         # Rol filter: an integer Group id, since Group has no public_id.
         if exclude_filter != "rol" and self.role_filter:
@@ -2212,10 +2214,10 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         if label_filter:
             active_filters["labels"] = label_filter
 
-        # merk filter supports multi-select (values are suborganization public_ids)
-        suborganization_filter = self.facets("merk", Suborganization).active_values
+        # Onderdeel/programma filter supports multi-select (values are suborganization public_ids)
+        suborganization_filter = self.facets("onderdeel", Suborganization).active_values
         if suborganization_filter:
-            active_filters["merk"] = suborganization_filter
+            active_filters["onderdeel"] = suborganization_filter
 
         if self.role_filter:
             # A list, not the bare string: the chips iterate every active_filters
@@ -2260,8 +2262,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
                 }
             )
 
-        # Merk filter group (one merk per colleague; counts exclude the merk filter)
-        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        # Onderdeel/programma filter group (one per colleague; counts exclude its own filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
         suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
         suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
         suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
@@ -2276,19 +2278,19 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
                     "count": suborg_counts.get(suborganization.id, 0),
                 }
             )
-            if str(suborganization.public_id) in active_filters.get("merk", set()):
+            if str(suborganization.public_id) in active_filters.get("onderdeel", set()):
                 suborganization_options[-1]["selected"] = True
                 suborganization_selected_values.append(str(suborganization.public_id))
 
         suborganization_filter_group = {
             "type": "select-multi",
-            "name": "merk",
-            "label": "Merk",
+            "name": "onderdeel",
+            "label": "Onderdeel/programma",
             "options": suborganization_options,
             "selected_values": suborganization_selected_values,
         }
 
-        # Rol group; counts exclude the rol filter itself, like merk.
+        # Rol group; counts exclude the rol filter itself, like the suborganization group.
         role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
         role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
         role_id_values = role_user_qs.values_list("groups__id", flat=True)
@@ -3211,7 +3213,7 @@ def label_delete(request, public_id):
 
 @permission_required("core.view_suborganization", raise_exception=True)
 def suborganization_admin(request):
-    """Main merken admin page."""
+    """Main onderdelen/programma's admin page."""
     suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
     return render(request, "suborganization_admin.html", {"suborganizations": suborganizations})
 
@@ -3220,13 +3222,13 @@ def suborganization_admin(request):
 def suborganization_create(request):
     """Creates a suborganization via the sheet (htmx).
 
-    GET opens the sheet, a valid POST saves and re-renders the merk list while
+    GET opens the sheet, a valid POST saves and re-renders the onderdeel/programma list while
     closing it, an invalid POST re-renders only the body so the sheet keeps
     standing.
     """
     form_post_url = reverse("suborganization-create")
-    modal_title = "Merk toevoegen"
-    form_button_label = "Voeg merk toe"
+    modal_title = "Onderdeel/programma toevoegen"
+    form_button_label = "Voeg onderdeel/programma toe"
     element_id = "suborganizationFormModal"
 
     if request.method == "POST":
@@ -3234,7 +3236,7 @@ def suborganization_create(request):
         if form.is_valid():
             suborganization = form.save()
             # The list partial carries the flash block out of band; see the template.
-            messages.success(request, f'Merk "{suborganization.name}" is toegevoegd.')
+            messages.success(request, f'Onderdeel/programma "{suborganization.name}" is toegevoegd.')
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#suborganization_list_container"
@@ -3265,7 +3267,7 @@ def suborganization_edit(request, public_id):
     """Edits a suborganization. Returns a partial for use with htmx."""
     suborganization = get_object_or_404(Suborganization, public_id=public_id)
     form_post_url = reverse("suborganization-edit", kwargs={"public_id": public_id})
-    modal_title = f"Merk wijzigen: {suborganization.name}"
+    modal_title = f"Onderdeel/programma wijzigen: {suborganization.name}"
     form_button_label = "Opslaan"
     element_id = "suborganizationFormModal"
 
@@ -3288,7 +3290,7 @@ def suborganization_edit(request, public_id):
         form = SuborganizationForm(request.POST, instance=suborganization)
         if form.is_valid():
             form.save()
-            messages.success(request, f'Merk "{suborganization.name}" is aangepast.')
+            messages.success(request, f'Onderdeel/programma "{suborganization.name}" is aangepast.')
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#suborganization_list_container"
@@ -3321,9 +3323,9 @@ def suborganization_delete(request, public_id):
             request,
             "parts/confirm_delete_modal.html",
             {
-                "dialog_text": f"Merk verwijderen: {suborganization.name}?",
+                "dialog_text": f"Onderdeel/programma verwijderen: {suborganization.name}?",
                 "dialog_supporting": (
-                    f"Weet je zeker dat je dit merk wilt verwijderen? "
+                    f"Weet je zeker dat je dit onderdeel/programma wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
                 ),
                 "confirm_label": "Verwijderen",
@@ -3334,7 +3336,7 @@ def suborganization_delete(request, public_id):
     if request.method == "POST":
         name = suborganization.name  # Read before delete() clears the instance.
         suborganization.delete()
-        messages.success(request, f'Merk "{name}" is verwijderd.')
+        messages.success(request, f'Onderdeel/programma "{name}" is verwijderd.')
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("suborganization-admin")
         return response
@@ -3357,7 +3359,7 @@ def assignment_events_partial(request, public_id):
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-HET_FIELD_LABELS = {"team", "merk"}
+HET_FIELD_LABELS = {"team", "onderdeel/programma"}
 
 
 def _field_phrase(label: str) -> str:

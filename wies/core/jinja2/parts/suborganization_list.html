@@ -1,4 +1,4 @@
-{# The brand list; also re-rendered by htmx after a change, so this is the only
+{# The suborganization list; also re-rendered by htmx after a change, so this is the only
    markup for it. That re-render does not reload base.html, so the confirmation
    banner rides along as an OOB swap, as the assignment panel does. #}
 {% if request.headers.get("HX-Request") %}
@@ -7,7 +7,7 @@
   {% endwith %}
 {% endif %}
 {% if suborganizations %}
-  <nldd-list accessible-label="Merken">
+  <nldd-list accessible-label="Onderdelen/programma's">
   {% for suborganization in suborganizations %}
     <nldd-list-item>
     <nldd-text-cell>
@@ -28,5 +28,5 @@
   {% endfor %}
   </nldd-list>
 {% else %}
-  <p>Nog geen merken. Maak een nieuw merk aan om te beginnen.</p>
+  <p>Nog geen onderdelen/programma's. Maak een nieuw onderdeel/programma aan om te beginnen.</p>
 {% endif %}

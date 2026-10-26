@@ -142,13 +142,13 @@ class SuborganizationPlacementFilterTest(TestCase):
         self.c_rc = Colleague.objects.create(
             name="Rc Person", email="rc@x.nl", source="wies", suborganization=self.suborg_rc
         )
-        # A colleague with no merk, to prove the filter excludes NULLs.
+        # A colleague with no suborganization, to prove the filter excludes NULLs.
         self.c_none = Colleague.objects.create(name="No Merk", email="none@x.nl", source="wies")
         Placement.objects.create(colleague=self.c_rig, service=self.service, source="wies")
         Placement.objects.create(colleague=self.c_rc, service=self.service, source="wies")
         Placement.objects.create(colleague=self.c_none, service=self.service, source="wies")
 
-    def _merk_group(self, params=None):
+    def _suborganization_group(self, params=None):
         request = RequestFactory().get("/", params or {})
         request.user = self.auth_user
         view = PlacementListView()
@@ -156,56 +156,58 @@ class SuborganizationPlacementFilterTest(TestCase):
         view.kwargs = {}
         view.object_list = view.get_queryset()
         context = view.get_context_data()
-        return next(g for g in context["filter_groups"] if g.get("name") == "merk")
+        return next(g for g in context["filter_groups"] if g.get("name") == "onderdeel")
 
     def _count_for(self, suborganization, params=None):
-        group = self._merk_group(params)
+        group = self._suborganization_group(params)
         option = next(o for o in group["options"] if o["value"] == str(suborganization.public_id))
         return option["count"]
 
     def test_filter_placements_by_suborganization(self):
         self.client.force_login(self.auth_user)
-        # The GET filter param stays "merk" (Dutch UI surface).
-        response = self.client.get(reverse("home"), {"merk": self.suborg_rig.public_id})
+        # The GET filter param is "onderdeel" (Dutch UI surface).
+        response = self.client.get(reverse("home"), {"onderdeel": self.suborg_rig.public_id})
         assert response.status_code == 200
         self.assertContains(response, "Rig Person")
         self.assertNotContains(response, "Rc Person")
         self.assertNotContains(response, "No Merk")
 
     def test_filter_placements_multiselect_is_or_within_group(self):
-        """Selecting two merken returns colleagues in either (OR within group)."""
+        """Selecting two suborganizations returns colleagues in either (OR within group)."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("home"), {"merk": [self.suborg_rig.public_id, self.suborg_rc.public_id]})
+        response = self.client.get(
+            reverse("home"), {"onderdeel": [self.suborg_rig.public_id, self.suborg_rc.public_id]}
+        )
         assert response.status_code == 200
         self.assertContains(response, "Rig Person")
         self.assertContains(response, "Rc Person")
         self.assertNotContains(response, "No Merk")
 
-    def test_placement_merk_filter_group_counts(self):
-        """The merk filter group reports the number of matching placements per option."""
+    def test_placement_suborganization_filter_group_counts(self):
+        """The suborganization filter group reports the number of matching placements per option."""
         assert self._count_for(self.suborg_rig) == 1
         assert self._count_for(self.suborg_rc) == 1
         assert self._count_for(self.suborg_radio) == 0
 
-    def test_placement_merk_counts_exclude_the_merk_filter_itself(self):
-        """Counts within the merk group ignore an active merk selection, so the
-        user can still see the size of the other (unselected) merken."""
-        # Even though only 'Rijks ICT Gilde' is selected, the other merk keeps its count.
-        assert self._count_for(self.suborg_rig, {"merk": self.suborg_rig.public_id}) == 1
-        assert self._count_for(self.suborg_rc, {"merk": self.suborg_rig.public_id}) == 1
+    def test_placement_suborganization_counts_exclude_the_suborganization_filter_itself(self):
+        """Counts within the suborganization group ignore an active suborganization selection, so the
+        user can still see the size of the other (unselected) suborganizations."""
+        # Even though only 'Rijks ICT Gilde' is selected, the other suborganization keeps its count.
+        assert self._count_for(self.suborg_rig, {"onderdeel": self.suborg_rig.public_id}) == 1
+        assert self._count_for(self.suborg_rc, {"onderdeel": self.suborg_rig.public_id}) == 1
 
-    def test_invalid_merk_param_matches_nothing(self):
+    def test_invalid_suborganization_param_matches_nothing(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("home"), {"merk": "not-a-uuid"})
+        response = self.client.get(reverse("home"), {"onderdeel": "not-a-uuid"})
         assert response.status_code == 200
-        # A merk was asked for that resolves to no row, so the filter matches
+        # A suborganization was asked for that resolves to no row, so the filter matches
         # nothing instead of being dropped and showing every colleague.
         self.assertNotContains(response, "Rig Person")
         self.assertNotContains(response, "Rc Person")
 
 
 class SuborganizationUserFilterTest(TestCase):
-    """The merk filter on the user list (admin-users)."""
+    """The suborganization filter on the user list (admin-users)."""
 
     def setUp(self):
         self.client = Client()
@@ -237,7 +239,7 @@ class SuborganizationUserFilterTest(TestCase):
             suborganization=self.suborg_rc,
         )
 
-    def _merk_group(self, params=None):
+    def _suborganization_group(self, params=None):
         request = RequestFactory().get("/", params or {})
         request.user = self.auth_user
         view = UserListView()
@@ -245,16 +247,16 @@ class SuborganizationUserFilterTest(TestCase):
         view.kwargs = {}
         view.object_list = view.get_queryset()
         context = view.get_context_data()
-        return next(g for g in context["filter_groups"] if g.get("name") == "merk")
+        return next(g for g in context["filter_groups"] if g.get("name") == "onderdeel")
 
     def _count_for(self, suborganization, params=None):
-        group = self._merk_group(params)
+        group = self._suborganization_group(params)
         option = next(o for o in group["options"] if o["value"] == str(suborganization.public_id))
         return option["count"]
 
     def test_filter_users_by_suborganization(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("admin-users"), {"merk": self.suborg_rig.public_id})
+        response = self.client.get(reverse("admin-users"), {"onderdeel": self.suborg_rig.public_id})
         assert response.status_code == 200
         self.assertContains(response, "Rigbertha")
         self.assertNotContains(response, "Consultina")
@@ -262,14 +264,14 @@ class SuborganizationUserFilterTest(TestCase):
     def test_filter_users_multiselect_is_or_within_group(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(
-            reverse("admin-users"), {"merk": [self.suborg_rig.public_id, self.suborg_rc.public_id]}
+            reverse("admin-users"), {"onderdeel": [self.suborg_rig.public_id, self.suborg_rc.public_id]}
         )
         assert response.status_code == 200
         self.assertContains(response, "Rigbertha")
         self.assertContains(response, "Consultina")
 
-    def test_user_merk_filter_group_present_with_counts(self):
-        group = self._merk_group()
+    def test_user_suborganization_filter_group_present_with_counts(self):
+        group = self._suborganization_group()
         assert group["type"] == "select-multi"
         # Every suborganization is offered as an option, with a usage count.
         option_labels = {o["label"] for o in group["options"]}
@@ -385,7 +387,7 @@ class SuborganizationAdminTest(TestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-delete", args=[suborganization.public_id]))
         assert response.status_code == 200
-        # The warning names how many colleagues still use the merk.
+        # The warning names how many colleagues still use the suborganization.
         self.assertContains(response, "1 collega")
 
     def test_delete_nulls_colleague_via_view(self):
@@ -403,9 +405,9 @@ class SuborganizationAdminTest(TestCase):
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("suborganization-create"))
         assert response.status_code == 200
-        # GET now opens the "Merk toevoegen" sheet instead of returning 405.
+        # GET now opens the "Onderdeel/programma toevoegen" sheet instead of returning 405.
         self.assertContains(response, "nldd-sheet")
-        self.assertContains(response, "Merk toevoegen")
+        self.assertContains(response, "Onderdeel/programma toevoegen")
 
     def test_delete_get_renders_centered_dialog_not_sheet(self):
         suborganization = Suborganization.objects.create(name="Weg")

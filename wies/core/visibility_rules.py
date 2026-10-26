@@ -39,7 +39,7 @@ def show_bm_page(request) -> bool:
 
 
 def show_user_admin_pages(request) -> bool:
-    """Whether to show the Gebruikersbeheerder's pages (Gebruikers, Labels, Merken, Rollen)."""
+    """Whether to show the Gebruikersbeheerder's pages (Gebruikers, Labels, onderdelen/programma's, Rollen)."""
     user = getattr(request, "user", None)
     return user is not None and is_user_admin(user)
 

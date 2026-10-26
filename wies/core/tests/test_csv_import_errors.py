@@ -8,7 +8,7 @@ from wies.core.services.users import create_users_from_csv
 HEADERS = (
     "assignment_name,assignment_description,assignment_owner,assignment_owner_email,"
     "client_1_url,assignment_start_date,assignment_end_date,service_skill,"
-    "placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand"
+    "placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization"
 )
 
 
@@ -73,3 +73,31 @@ class UserCsvImportGracefulErrorTests(TestCase):
 
         assert result["success"] is True
         assert result["users_created"] == 1
+
+
+class CsvImportRenamedColumnTests(TestCase):
+    """A file with a pre-rename "brand" header must fail with the new name, not
+    import every row without its suborganization and still report success."""
+
+    def test_user_import_rejects_old_brand_column(self):
+        csv_content = "first_name,last_name,email,Brand\nJohn,Doe,john@rijksoverheid.nl,Rijks ICT Gilde"
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"] is False
+        assert result["users_created"] == 0
+        assert result["errors"] == ["De kolom 'Brand' heet nu 'suborganization'. Pas de kopregel van je bestand aan."]
+
+    def test_assignment_import_rejects_old_brand_columns(self):
+        old_headers = HEADERS.replace("owner_suborganization", "owner_brand").replace(
+            "colleague_suborganization", "colleague_brand"
+        )
+        csv_content = old_headers + "\n" + _csv().split("\n")[1]
+
+        result = create_assignments_from_csv(None, csv_content)
+
+        assert result["success"] is False
+        assert result["errors"] == [
+            "De kolom 'owner_brand' heet nu 'owner_suborganization'. Pas de kopregel van je bestand aan.",
+            "De kolom 'colleague_brand' heet nu 'colleague_suborganization'. Pas de kopregel van je bestand aan.",
+        ]

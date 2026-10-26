@@ -586,7 +586,7 @@ class ScopeVocabularyTest(_Setup):
     """The relations a rule can name, asked directly.
 
     ``OWN`` is named by no rule today: a Business Manager carries every wies-sourced opdracht,
-    so nothing narrows to the one they own. It stays because merk scoping (#526)
+    so nothing narrows to the one they own. It stays because suborganization scoping (#526)
     combines with it, and it is measured here so it cannot rot unnoticed.
     """
 
@@ -603,7 +603,7 @@ class ScopeVocabularyTest(_Setup):
 
 class AllOfScopeTest(_Setup):
     """``all_of`` builds the relation that is two relations at once, which is
-    what merk scoping (#526) needs: "eigen, en binnen je merk"."""
+    what suborganization scoping (#526) needs: "eigen, en binnen je onderdeel/programma"."""
 
     def setUp(self):
         super().setUp()
