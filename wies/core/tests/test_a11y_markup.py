@@ -1,6 +1,4 @@
-"""Markup that the WCAG audits pinned down: heading levels in the sidebar, on
-the cards and in the colleague panel, list roles on the card grids, the
-privacy chip's focus stop, and the input purpose of the profile name fields."""
+"""Markup that the WCAG audits pinned down."""
 
 from datetime import date
 from unittest.mock import patch
@@ -74,7 +72,7 @@ class A11yMarkupTest(TestCase):
         self.assertNotContains(response, "<h3>Open Aanvraag</h3>")
 
     def test_card_grids_are_lists_of_cards(self):
-        """nldd-collection and nldd-card set no list roles themselves (loep 1.3.1)."""
+        """nldd-collection and nldd-card set no list roles themselves."""
         org = OrganizationUnit.objects.create(name="Toets Org", label="Toets Org")
         skill = Skill.objects.create(name="Python Developer")
         assignment = Assignment.objects.create(name="Lopende Opdracht", source="wies", start_date=date(2025, 1, 1))
@@ -111,9 +109,11 @@ class A11yMarkupTest(TestCase):
 
         # A focusable h2 in the light DOM, where focus_restore.js lands.
         self.assertContains(response, '<h2 id="panel-title" tabindex="-1">Pieter de Wit</h2>')
+        # Inside an nldd-list the row became a tab stop with its own focus ring.
+        self.assertNotContains(response, 'accessible-label="Collega"')
 
     def test_privacy_chip_focus_stop_has_role_and_name(self):
-        """The focus lands on a named img, not on an nldd-tag host without a role (loep 4.1.2)."""
+        """The focus lands on a named img, not on an nldd-tag host without a role."""
         template = engines["jinja2"].from_string(
             '{% from "parts/privacy_chip.html" import privacy_chip %}{{ privacy_chip("Alleen voor jou") }}'
         )

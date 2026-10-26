@@ -108,9 +108,8 @@
 {% if next_page_url %}
   {# A click instead of auto-loading (hx-trigger=revealed), which would push the
      page footer out of reach forever. The button is a grid cell in the
-     nldd-collection and replaces itself with the next cards. A listitem,
-     because a bare button inside role="list" breaks the list (axe);
-     role="presentation" would not help, axe still sees the button. #}
+     nldd-collection and replaces itself with the next cards.
+     A listitem: axe rejects a bare button inside role="list". #}
   <div class="wies-load-more" role="listitem">
     <nldd-button appearance="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>

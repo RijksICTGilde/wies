@@ -16,25 +16,20 @@
   {# collapse-anchor: the name appears in the bar only once it scrolls out of view. #}
   <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  <nldd-list dividers="never" accessible-label="Collega">
-  <nldd-list-item>
-  <nldd-cell>
+  {# No nldd-list: its roving tabindex makes the row a tab stop of its own, so
+     Shift+Tab from the e-mail lands on the row instead of the name. #}
+  <nldd-container layout="row" gap="12" vertical-alignment="center" padding-block="10">
   <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
-  </nldd-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-cell width="full">
-  {# A real h2 in the light DOM, as in the assignment panel: focus_restore.js
-     lands here, and a heading inside nldd-title-cell's shadow root cannot take
-     focus, so the host was read as name plus e-mail without "heading". #}
+  <nldd-container>
+  {# A light-DOM h2: focus_restore.js cannot focus one in nldd-title-cell's shadow root. #}
   <nldd-title size="3">
   <h2 id="panel-title" tabindex="-1">{{ colleague.name }}</h2>
   </nldd-title>
   {% if colleague.email %}
     <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>
   {% endif %}
-  </nldd-cell>
-  </nldd-list-item>
-  </nldd-list>
+  </nldd-container>
+  </nldd-container>
   {% if colleague.suborganization %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">

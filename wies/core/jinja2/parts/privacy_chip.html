@@ -1,9 +1,7 @@
 {# Chip marking limited visibility: short on screen, full sentence in a tooltip.
 
-   nldd-tag is not interactive and its host has no role or name, so the focus
-   stop is a span that carries both; without it the tooltip is mouse-only. The
-   name carries the sentence: the description nldd-tooltip links stays empty
-   in the accessibility tree (measured in Chromium, NLDD 0.10.0).
+   nldd-tag is not focusable and has no role or name, so the span carries them;
+   the name holds the sentence, as nldd-tooltip's description stays empty.
 
    .wies-privacy-chip lifts the chip above an nldd-card's overlay link, which
    covers the whole card and otherwise swallows the hover.

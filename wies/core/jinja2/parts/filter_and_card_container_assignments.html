@@ -49,8 +49,7 @@
      hides every card past that (and the "Meer tonen" cell with them). Wies
      paginates server-side and appends via its own button, so the built-in limit
      has to be lifted -- the component can't know our pages accumulate. #}
-  {# role=list: nldd-collection sets no role, so a screen reader neither
-     counts the cards nor can skip past them. The cards carry role=listitem. #}
+  {# role=list: nldd-collection sets no role of its own. #}
   {# data-announce: live_region.js reads this out after a filter change. #}
   <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdracht' if paginator.count == 1 else 'opdrachten' }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}
