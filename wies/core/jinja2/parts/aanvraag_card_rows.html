@@ -20,19 +20,21 @@
   {% endif %}
   </nldd-container>
   <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+  {# The icons carry no name, so a hidden label says what each row is:
+     "Den Haag" can be the opdrachtgever or the standplaats. #}
   <nldd-list appearance="simple" dividers="never" accessible-label="Aanvraaggegevens">
   {% if svc.org_label %}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-text-cell size="sm" text="{{ svc.org_label }}"></nldd-text-cell>
+    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Opdrachtgever: </span>{{ svc.org_label }}</nldd-text-cell>
     </nldd-list-item>
   {% endif %}
   {% if svc.location %}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="location"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-text-cell size="sm" text="{{ svc.location }}"></nldd-text-cell>
+    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Standplaats: </span>{{ svc.location }}</nldd-text-cell>
     </nldd-list-item>
   {% endif %}
   {# The period row is always there, also without a date: the card would
@@ -40,7 +42,7 @@
   <nldd-list-item size="sm">
   <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell size="sm" text="{{ svc.period_text }}"></nldd-text-cell>
+  <nldd-text-cell size="sm"><span class="wies-visually-hidden">Periode: </span>{{ svc.period_text }}</nldd-text-cell>
   </nldd-list-item>
   </nldd-list>
   </nldd-container>

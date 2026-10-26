@@ -152,6 +152,11 @@
      dates, so its end has a choice without "Duur" (an item cannot be hidden).
      Every `hidden` is server-rendered to match member_form.js's first paint. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
+  {# New ids on every render: with the same id in the old and the new form,
+     htmx's settle strips the full width the date field set on itself. #}
+  {% set date_id_suffix = range(1000000)|random %}
+  {% set start_date_id = "member-start-date-" ~ date_id_suffix %}
+  {% set end_date_id = "member-end-date-" ~ date_id_suffix %}
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
   {% set duration_errors = wire_field_errors(svc_form.duration_months) %}
   <nldd-box data-period-box{% if inherits %} hidden{% endif %}>
@@ -165,10 +170,11 @@
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   </div>
   <div data-start-date{% if start_mode == "NOW" %} hidden{% endif %}>
-    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum"}) }}
+    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum", "field-id": start_date_id}) }}
   </div>
+  {# `for`: the field's first control is the Start choice, not the date. #}
   {% if svc_form.placement_start_date.errors %}
-    <nldd-validation-list>
+    <nldd-validation-list for="{{ start_date_id }}">
     {% for error in svc_form.placement_start_date.errors %}
       <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
@@ -193,21 +199,19 @@
   </div>
   <div data-end-date{% if end_mode != "DATE" %} hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum"}) }}
+    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum", "field-id": end_date_id}) }}
   </div>
   <div data-duration{% if end_mode != "DURATION" %} hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur", "id": "member-duration"}) }}
   </div>
   {% if svc_form.placement_end_date.errors %}
-    <nldd-validation-list>
+    <nldd-validation-list for="{{ end_date_id }}">
     {% for error in svc_form.placement_end_date.errors %}
       <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
     </nldd-validation-list>
   {% endif %}
-  {# "Einde" wires its errors to its first control, the end date; `for`
-     points this list at the duration instead. #}
   {% if svc_form.duration_months.errors %}
     <nldd-validation-list for="member-duration">
     {% for error in svc_form.duration_months.errors %}

@@ -111,11 +111,13 @@ class ServicePanelTest(TestCase):
         )
         assert self._team_text() == "Nog niemand geplaatst"
 
-    def test_the_team_row_leads_to_the_opdracht(self):
+    def test_the_team_row_is_not_a_second_link(self):
+        """The Opdracht row above already leads to the team; a second link row
+        in an nldd-list is reachable by arrow key only, not by Tab."""
         body = self._panel()
         team_item = re.search(r'<nldd-list-item[^>]*>(?:(?!</nldd-list-item>).)*text="Team"', body, re.S)
         assert team_item
-        assert f'hx-get="/?opdracht={self.assignment.public_id}"' in team_item.group(0)
+        assert "href=" not in team_item.group(0)
 
     def test_the_panel_shows_the_hours_and_the_description(self):
         body = self._panel()
@@ -450,6 +452,27 @@ class AanvraagFlexiblePeriodTest(TestCase):
 
         assert response.status_code == 200
         assert not self.assignment.services.exists()
+
+    def test_period_errors_point_at_their_date_field(self):
+        """Start and Einde each open with a choice, which a validation list
+        without `for` would take as its control; the error then stays hidden."""
+        body = self._post(placement_start_date="2026-11-01", placement_end_date="2026-10-01").content.decode()
+
+        end_id = re.search(r'name="placement_end_date" id="([^"]+)" accessible-label="Einddatum"', body)[1]
+        assert f'<nldd-validation-list for="{end_id}">' in body
+
+        body = self._post().content.decode()
+        start_id = re.search(r'name="placement_start_date" id="([^"]+)" accessible-label="Startdatum"', body)[1]
+        assert f'<nldd-validation-list for="{start_id}">' in body
+
+    def test_date_field_ids_change_per_render(self):
+        """htmx settles an element whose id was already on the page, which
+        strips the style the date field set on itself: it shrinks after an
+        error. A fresh id keeps the swapped-in field new."""
+        pattern = r'name="placement_end_date" id="([^"]+)"'
+        first = re.search(pattern, self._post().content.decode())[1]
+        second = re.search(pattern, self._post().content.decode())[1]
+        assert first != second
 
     def test_duur_without_a_duration_asks_for_one(self):
         response = self._post(start_mode="NOW", end_mode="DURATION")

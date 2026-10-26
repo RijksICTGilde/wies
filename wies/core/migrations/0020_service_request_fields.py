@@ -9,10 +9,11 @@ def move_open_role_text(apps, schema_editor):
     """Moves each existing aanvraag's role text to "Wie we zoeken".
 
     Moved, not copied: "Taken" is what the placed consultant fills in later,
-    so an aanvraag starts without it.
+    so an aanvraag starts without it. OTYS roles keep theirs: the sync puts
+    the role name there, not a vacancy text.
     """
     Service = apps.get_model("core", "Service")
-    open_roles = Service.objects.filter(placements__isnull=True).exclude(description="")
+    open_roles = Service.objects.filter(placements__isnull=True).exclude(description="").exclude(source="otys_iir")
     open_roles.update(request_description=F("description"), description="")
 
 

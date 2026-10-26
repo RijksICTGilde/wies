@@ -35,6 +35,7 @@ class RequestDescriptionMigrationTest(TransactionTestCase):
         self.open = Service.objects.create(assignment=assignment, description="Bouwt de koppeling.", source="wies")
         self.empty = Service.objects.create(assignment=assignment, description="", source="wies")
         self.filled = Service.objects.create(assignment=assignment, description="Taken van Anke.", source="wies")
+        self.otys = Service.objects.create(assignment=assignment, description="Data-analist", source="otys_iir")
         anke = Colleague.objects.create(name="Anke", email="anke@rijksoverheid.nl", source="wies")
         Placement.objects.create(colleague=anke, service=self.filled, source="wies")
 
@@ -53,6 +54,13 @@ class RequestDescriptionMigrationTest(TransactionTestCase):
         assert migrated.request_description == "Bouwt de koppeling."
         # Moved: the consultant who fills the aanvraag writes the taken.
         assert migrated.description == ""
+
+    def test_an_otys_role_keeps_its_role_name(self):
+        """The OTYS sync puts the role name in description, not a vacancy text."""
+        migrated = self._migrated(self.otys)
+
+        assert migrated.description == "Data-analist"
+        assert migrated.request_description == ""
 
     def test_a_filled_role_keeps_its_taken(self):
         assert self._migrated(self.filled).description == "Taken van Anke."

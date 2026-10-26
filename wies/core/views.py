@@ -656,6 +656,16 @@ def _team_names_text(rows: list[dict]) -> str:
     return f"{', '.join(shown)} en {rest} {'ander' if rest == 1 else 'anderen'}"
 
 
+def _aanvraag_role(service) -> str | None:
+    """The role an aanvraag asks for. The OTYS sync sets no skill; it puts the
+    role from the vacancy title in ``description``."""
+    if service.skill_id:
+        return service.skill.name
+    if service.source == "otys_iir":
+        return service.description or None
+    return None
+
+
 def _build_aanvraag_panel_data(service, request):
     """Builds the aanvraag panel: the read view of one open role on an opdracht.
 
@@ -669,10 +679,12 @@ def _build_aanvraag_panel_data(service, request):
     from wies.core.editables.service import request_period_text  # noqa: PLC0415
 
     assignment = service.assignment
+    role = _aanvraag_role(service)
     return {
         "team_text": _team_names_text(visible_service_rows(assignment, request)),
         "panel_content_template": "parts/aanvraag_panel_content.html",
-        "panel_title": f"Aanvraag: {service.skill.name}" if service.skill else "Aanvraag",
+        "panel_title": f"Aanvraag: {role}" if role else "Aanvraag",
+        "role": role,
         "close_url": _build_close_url(request),
         "service": service,
         "assignment": assignment,
@@ -1938,12 +1950,14 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             else:
                 # An aanvraag that starts per direct, has no start or has
                 # already started can be filled any day, so it stays; one that
-                # starts later has to start on or after the chosen date.
+                # starts later has to start on or after the chosen date. Either
+                # way it must still run on that date.
                 qs = qs.filter(
                     Q(starts_immediately=True)
                     | Q(effective_start_date__isnull=True)
                     | Q(effective_start_date__lte=timezone.now().date())
-                    | Q(effective_start_date__gte=vanaf_date)
+                    | Q(effective_start_date__gte=vanaf_date),
+                    Q(effective_end_date__isnull=True) | Q(effective_end_date__gte=vanaf_date),
                 )
         return qs.order_by(F("assignment__created_at").desc(nulls_last=True), "assignment_id", "id")
 
@@ -2027,9 +2041,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             first_org = next(iter(service.assignment.organizations_by_pk), None)
             service.org_label = (first_org.label or first_org.name) if first_org else None
             service.period_text = request_period_text(service) or "Geen periode opgegeven"
-            service.card_title = service.skill.name if service.skill else "Rol niet ingevuld"
-            role = service.skill.name if service.skill else "Aanvraag zonder rol"
-            service.link_name = f"{role} bij {service.assignment.name}"
+            role = _aanvraag_role(service)
+            service.card_title = role or "Rol niet ingevuld"
+            service.link_name = f"{role or 'Aanvraag zonder rol'} bij {service.assignment.name}"
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"

@@ -584,9 +584,10 @@ class AssignmentListViewTest(TestCase):
         # "Wie we zoeken" stays in the panel: on the card it mostly repeated
         # the role.
         assert "Begin van de tekst." not in content
-        assert 'text="Kaartenministerie"' in content
-        assert 'text="Den Haag"' in content
-        assert 'text="Per direct, voor 1 jaar"' in content
+        # Each row names what it is: the icons alone say nothing to a screen reader.
+        assert "Opdrachtgever: </span>Kaartenministerie" in content
+        assert "Standplaats: </span>Den Haag" in content
+        assert "Periode: </span>Per direct, voor 1 jaar" in content
 
     def test_card_without_skill_hours_or_period(self):
         assignment = Assignment.objects.create(name="Kale Opdracht", source="wies")
@@ -596,14 +597,25 @@ class AssignmentListViewTest(TestCase):
         content = self.client.get(self.list_url, {"zoek": "Kale Opdracht"}).content.decode()
         assert "<h2>Rol niet ingevuld</h2>" in content
         assert 'accessible-label="Aanvraag zonder rol bij Kale Opdracht"' in content
-        assert 'text="Geen periode opgegeven"' in content
+        assert "Periode: </span>Geen periode opgegeven" in content
         assert "uur per week" not in content
+
+    def test_otys_aanvraag_is_titled_by_its_role(self):
+        """The OTYS sync sets no skill; the role from the vacancy title is in
+        its description."""
+        assignment = Assignment.objects.create(name="OTYS Opdracht", source="otys_iir")
+        Service.objects.create(assignment=assignment, description="Data-analist", status="OPEN", source="otys_iir")
+
+        self.client.force_login(self.auth_user)
+        content = self.client.get(self.list_url, {"zoek": "OTYS Opdracht"}).content.decode()
+        assert "<h2>Data-analist</h2>" in content
+        assert 'accessible-label="Data-analist bij OTYS Opdracht"' in content
 
     def test_card_period_follows_the_opdracht(self):
         """A role that follows the opdracht shows the opdracht's dates."""
         self.client.force_login(self.auth_user)
         content = self.client.get(self.list_url).content.decode()
-        assert 'text="1 jan 2025 t/m 31 dec 2025"' in content
+        assert "Periode: </span>1 jan 2025 t/m 31 dec 2025" in content
 
     def test_card_opens_the_aanvraag_panel(self):
         self.client.force_login(self.auth_user)
@@ -656,9 +668,10 @@ class AssignmentListViewTest(TestCase):
     # --- Beschikbaar vanaf ---------------------------------------------------
 
     def test_beschikbaar_vanaf(self):
-        """Per direct, undated and already started aanvragen always stay; one
-        that starts later only when its effective start is on or after the
-        date, whether it follows the opdracht or has its own period."""
+        """Per direct, undated and already started aanvragen stay; one that
+        starts later only when its effective start is on or after the date,
+        whether it follows the opdracht or has its own period. Any of them
+        drops out once it ends before the date."""
         today = timezone.now().date()
         soon, later = today + timedelta(days=30), today + timedelta(days=150)
         early = Assignment.objects.create(name="Vroeg", start_date=soon, source="wies")
@@ -674,17 +687,23 @@ class AssignmentListViewTest(TestCase):
             # Own period opposite to the opdracht's, so the wrong source fails.
             "own_late": self._aanvraag(early, period_source="SERVICE", specific_start_date=later),
             "own_early": self._aanvraag(late, period_source="SERVICE", specific_start_date=soon),
-            "setup_vacancy": self.vacancy_service,  # follows its opdracht, started in 2025
+            "ends_soon": self._aanvraag(
+                started,
+                period_source="SERVICE",
+                specific_start_date=today - timedelta(days=100),
+                specific_end_date=soon,
+            ),
+            "setup_vacancy": self.vacancy_service,  # follows its opdracht, which ended in 2025
         }
 
         def ids(*names):
             return sorted(str(services[name].public_id) for name in names)
 
-        always = ("per_direct", "no_date", "started", "setup_vacancy")
+        always = ("per_direct", "no_date", "started")
         for vanaf, expected in (
             (soon + timedelta(days=1), ids(*always, "follows_late", "own_late")),
             (later, ids(*always, "follows_late", "own_late")),
-            (soon, ids(*always, "follows_early", "follows_late", "own_late", "own_early")),
+            (soon, ids(*always, "follows_early", "follows_late", "own_late", "own_early", "ends_soon")),
         ):
             with self.subTest(vanaf=vanaf):
                 assert sorted(self._card_ids({"beschikbaar_vanaf": vanaf.isoformat()})) == expected

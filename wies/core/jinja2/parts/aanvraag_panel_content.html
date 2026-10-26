@@ -27,7 +27,7 @@
   <nldd-title size="3">
   {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
      in the new panel matches where they came from. #}
-  <h2 id="panel-title" tabindex="-1">{{ service.skill.name if service.skill else "Rol niet ingevuld" }}</h2>
+  <h2 id="panel-title" tabindex="-1">{{ panel_data.role or "Rol niet ingevuld" }}</h2>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {# Under the title, as on the opdracht panel: in the title bar the pencil
@@ -56,12 +56,12 @@
   <nldd-text-cell vertical-alignment="top" text="{{ assignment.name }}"></nldd-text-cell>
   <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
   </nldd-list-item>
-  {# The whole team, with roles and periods, is on the opdracht panel. #}
-  <nldd-list-item class="wies-cv__link" href="{{ panel_data.assignment_url }}" hx-get="{{ panel_data.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  {# No link of its own: the Opdracht row above leads to the whole team, and
+     a second link row in an nldd-list is reachable by arrow key only. #}
+  <nldd-list-item>
   <nldd-text-cell width="140px" text="Team" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell vertical-alignment="top" text="{{ panel_data.team_text }}"></nldd-text-cell>
-  <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
   </nldd-list-item>
   <nldd-list-item>
   <nldd-text-cell width="140px" text="Periode" vertical-alignment="top"></nldd-text-cell>
