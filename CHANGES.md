@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ???: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
+- 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
 - 755: dependency updates, including a security fix
 
 ## 2026-10-22
