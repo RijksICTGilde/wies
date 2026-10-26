@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 755: dependency updates, including a security fix
+- 769: the date filter no longer refreshes the list on every keystroke and keeps focus in the field after the refresh; the client picker in the assignment form is a named group and says at least 1 client is required (accessibility)
 - 771: in sheets, the field or option with keyboard focus no longer disappears behind the sticky button at the bottom or the title bar at the top; the current page in the Beheer menu is also shown in bold, not only by colour
 
 ## 2026-10-22
