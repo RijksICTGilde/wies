@@ -181,11 +181,21 @@ FocusRestore.prototype.focusFirst = function (elements, options) {
   return false;
 };
 
+// A fresh text field takes focus with the caret at the start, while a user who
+// typed there left it at the end.
+FocusRestore.prototype.caretToEnd = function (element) {
+  var root = element.shadowRoot;
+  var field = root && root.activeElement ? root.activeElement : element;
+  if (typeof field.selectionStart !== "number") return;
+  field.setSelectionRange(field.value.length, field.value.length);
+};
+
 FocusRestore.prototype.focusFromTrail = function () {
   for (var i = 0; i < this.trail.length; i++) {
     var element = this.resolve(this.trail[i]);
     if (!element || typeof element.focus !== "function") continue;
     if (!this.focusInto(element, { preventScroll: true })) continue;
+    this.caretToEnd(element);
     // Everything up to and including this step is dealt with; anything newer
     // belongs to a level we just came back from.
     this.trail = this.trail.slice(i + 1);

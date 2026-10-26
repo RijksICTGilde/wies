@@ -500,6 +500,41 @@ describe("handleSettle", () => {
     assert.equal(first.focusCalls.length, 0);
   });
 
+  it("returns to the date filter, not the first filter row", () => {
+    // Typing a date swaps the whole sidebar, field included, and htmx reports
+    // the form as the cause.
+    const dateField = shadowHost({ id: "filter-beschikbaar_vanaf" });
+    const firstRow = element({});
+    doc = makeDoc([dateField]);
+    const restore = new FocusRestore(doc);
+    restore.remember(element({ id: "filter-beschikbaar_vanaf" }));
+    restore.remember(element({ id: "filter-form" }));
+
+    restore.handleSettle(swapTarget({ focusable: [firstRow] }));
+
+    assert.equal(doc.activeElement, dateField);
+    assert.equal(firstRow.focusCalls.length, 0);
+  });
+
+  it("puts the caret back at the end of a text field", () => {
+    const input = element({});
+    input.value = "01-12-2026";
+    input.selectionStart = 0;
+    input.setSelectionRange = function (start, end) {
+      this.selectionStart = start;
+      this.selectionEnd = end;
+    };
+    const field = shadowHost({ id: "filter-beschikbaar_vanaf" });
+    field.shadowRoot.activeElement = input;
+    doc = makeDoc([field]);
+    const restore = new FocusRestore(doc);
+    restore.remember(element({ id: "filter-beschikbaar_vanaf" }));
+
+    assert.equal(restore.focusFromTrail(), true);
+    assert.equal(input.selectionStart, 10);
+    assert.equal(input.selectionEnd, 10);
+  });
+
   it("falls back to the first control when the cause is gone", () => {
     const first = element({});
     doc = makeDoc([]); // the button that caused the swap is no longer there

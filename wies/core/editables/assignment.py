@@ -516,6 +516,7 @@ class AssignmentEditables(EditableSet):
 
     organizations = Editable(
         label="Opdrachtgever(s)",
+        help_text="Minimaal 1 opdrachtgever.",
         form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,

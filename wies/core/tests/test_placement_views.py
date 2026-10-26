@@ -753,7 +753,7 @@ class PlacementPanelVisibilityTest(TestCase):
         assert 'text="Afgelopen"' in body
         assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
         assert 'variant="icon"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+        assert f'aria-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
 
     @patch("wies.core.editables.assignment.timezone")
     def test_active_panel_renders_no_period_chip(self, mock_tz):
@@ -2698,7 +2698,7 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
+        assert f'aria-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
