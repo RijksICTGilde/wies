@@ -110,10 +110,7 @@
     if (!menu || menu.__wiesObserved) return;
     menu.__wiesObserved = true;
     new MutationObserver(syncSuggestionMenu).observe(menu, { childList: true });
-    // Keep focus in the field while a suggestion is pressed (#728). A menu item
-    // is a <button> in a shadow root, so the press would blur the field first:
-    // the blur commit below then searched on the typed text and emptied the
-    // menu before the click landed, so the organization was never picked.
+    // Keep focus in the field while a suggestion is pressed (#728)
     menu.addEventListener("mousedown", (e) => {
       if (e.button === 0) e.preventDefault();
     });
