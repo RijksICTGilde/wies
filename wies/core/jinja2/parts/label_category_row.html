@@ -12,7 +12,8 @@
 {# Fixed column width fitting the longest color name plus chevron. #}
 <nldd-cell width="112px" vertical-alignment="top">{{ form.color.as_field_group() }}</nldd-cell>
 <nldd-spacer-cell size="12"></nldd-spacer-cell>
-<nldd-cell width="fit-content" vertical-alignment="top">
+{# Same width as the empty header cell in label_category_manage_body.html. #}
+<nldd-cell width="44px" vertical-alignment="top">
 {% if form.instance.pk %}
   <nldd-icon-button appearance="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'public_id': form.instance.public_id}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
 {% else %}

@@ -94,7 +94,8 @@ class AssignmentPanelRowsTest(TestCase):
         panel = reverse("home") + f"?collega={self.anke.public_id}"
 
         # A second opdracht, so the list does not fall under the single-entry
-        # rule below and this one starts collapsed.
+        # rule below and this one starts collapsed. It started later, so it
+        # lists second.
         other = Assignment.objects.create(name="Archief", source="wies")
         other_service = Service.objects.create(
             assignment=other, description="Eerder werk.", skill=self.skill, source="wies"
@@ -104,7 +105,7 @@ class AssignmentPanelRowsTest(TestCase):
             colleague=self.anke,
             service=other_service,
             period_source=Placement.PLACEMENT,
-            specific_start_date=today - timedelta(days=20),
+            specific_start_date=today - timedelta(days=5),
             specific_end_date=today + timedelta(days=80),
             source="wies",
         )
