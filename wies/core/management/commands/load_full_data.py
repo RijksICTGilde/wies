@@ -93,6 +93,9 @@ CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 ROLE_HOURS_WEIGHTS = {None: 15, 8: 5, 16: 10, 24: 20, 32: 25, 36: 20, 40: 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
+# Share of placements continued by a second placement on the same opdracht, so
+# Bezetting has extensions to show.
+EXTENSION_PROBABILITY = 0.1
 MULTI_LABEL_PROBABILITY = 0.3
 MAX_LABELS_PER_CATEGORY = 2
 # Roughly half the assignments also get a second (update) audit event.
@@ -1034,6 +1037,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
 
     placement_count = 0
     service_idx = 0
+    placements: list[Placement] = []
 
     shuffled_colleagues = list(colleagues)
     rng.shuffle(shuffled_colleagues)
@@ -1045,18 +1049,54 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             service = placeable_services[service_idx]
             service_idx += 1
 
-            Placement.objects.create(
-                colleague=colleague,
-                service=service,
-                period_source="SERVICE",
-                specific_start_date=None,
-                specific_end_date=None,
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
+            placements.append(
+                Placement.objects.create(
+                    colleague=colleague,
+                    service=service,
+                    period_source="SERVICE",
+                    specific_start_date=None,
+                    specific_end_date=None,
+                    source=weighted_choice(rng, SOURCE_WEIGHTS),
+                    source_id="",
+                )
             )
             placement_count += 1
 
     write(f"Placements: {placement_count}")
+
+    # ── 9. Extensions ────────────────────────────────────────────────
+    # The opdracht runs on and the placement keeps its old period; the
+    # continuation starts the day after.
+    extended_assignments: set[int] = set()
+    extension_count = 0
+    for placement in placements:
+        assignment = placement.service.assignment
+        if (
+            assignment.end_date is None
+            or assignment.id in extended_assignments
+            or rng.random() >= EXTENSION_PROBABILITY
+        ):
+            continue
+        extended_assignments.add(assignment.id)
+        old_end = assignment.end_date
+        placement.period_source = "PLACEMENT"
+        placement.specific_start_date = assignment.start_date
+        placement.specific_end_date = old_end
+        placement.save(update_fields=["period_source", "specific_start_date", "specific_end_date"])
+        assignment.end_date = old_end + timedelta(days=rng.randint(90, 365))
+        assignment.save(update_fields=["end_date"])
+        Placement.objects.create(
+            colleague=placement.colleague,
+            service=placement.service,
+            period_source="PLACEMENT",
+            specific_start_date=old_end + timedelta(days=1),
+            specific_end_date=assignment.end_date,
+            source=placement.source,
+            source_id="",
+        )
+        extension_count += 1
+
+    write(f"Extensions: {extension_count}")
 
 
 class Command(BaseCommand):

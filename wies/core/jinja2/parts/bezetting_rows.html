@@ -3,7 +3,8 @@
 {% from "parts/bezetting_row.html" import timeline_row with context %}
 {% for row in rows %}{{ timeline_row(row) }}{% endfor %}
 {% if next_page_url %}
-  <div class="wies-load-more">
+  {# An li: it lands in the rows ul, and axe rejects role="presentation". #}
+  <li class="wies-load-more">
     <nldd-button appearance="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
-  </div>
+  </li>
 {% endif %}

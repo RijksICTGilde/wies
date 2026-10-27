@@ -104,6 +104,7 @@ from .services.assignments import (
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
+    PHASE_BY_TIMING,
     STATUS_BENCH,
     STATUS_ENDS_SOON,
     STATUS_PARTIAL,
@@ -113,8 +114,10 @@ from .services.occupancy import (
     labels_by_category,
     month_ticks,
     occupancy_summary,
+    placement_order_key,
     row_has_status,
     rows_in_display_order,
+    timeline_horizon,
     today_marker_pct,
 )
 from .services.organizations import (
@@ -440,9 +443,13 @@ def _get_colleague_assignments(request, colleague):
                 period_label=LABELS.get(result.timing),
                 public_id=placement["service__assignment__public_id"],
                 colleague_public_id=colleague.public_id,
+                phase=PHASE_BY_TIMING[result.timing],
             )
         else:
             _merge_date_range(bucket[assignment_id], start, end)
+            # A planned and a finished placement share an entry; it sorts as planned.
+            if result.timing == "future":
+                bucket[assignment_id]["phase"] = PHASE_BY_TIMING["future"]
         # Per opdracht, not per panel: an externally sourced one is read-only
         # for everyone, so a pencil there would open nothing (#311).
         service = own_services.get(placement["service__public_id"])
@@ -501,6 +508,7 @@ def _get_colleague_assignments(request, colleague):
                 historical=True,
                 privacy_warning_text=result.privacy_note,
                 period_label=LABELS["ended"],
+                phase=PHASE_BY_TIMING[result.timing],
             )
         else:
             active_by_id[assignment_id] = _make_assignment_entry(
@@ -511,6 +519,7 @@ def _get_colleague_assignments(request, colleague):
                 start_date=start_date,
                 end_date=end_date,
                 tags={"Business Manager": None},
+                phase=PHASE_BY_TIMING[result.timing],
             )
 
     # Batch-fetch primary organization names for all assignments
@@ -530,10 +539,11 @@ def _get_colleague_assignments(request, colleague):
         )
         assignment["organization"] = primary_orgs.get(assignment["id"])
 
-    # Build final sorted list: active first, then historical; within each block by start_date desc
-    active_list = sorted(active_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
-    historical_list = sorted(historical_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
-    assignments = active_list + historical_list
+    # The order of the bars on Bezetting, so the panel and the timeline agree.
+    assignments = sorted(
+        (*active_by_id.values(), *historical_by_id.values()),
+        key=lambda a: placement_order_key(a["phase"], a["start_date"]),
+    )
 
     # ?uitgeklapt= (the way in from a team row) opens that opdracht's Taken, so
     # the role you came from is in view at once. A single opdracht is always
@@ -826,6 +836,7 @@ def bezetting(request):
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
         "today": today,
+        "horizon": timeline_horizon(today),
         "month_ticks": month_ticks(today),
         **summary,
         "selected_statuses": selected_statuses,
