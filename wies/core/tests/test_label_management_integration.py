@@ -1,10 +1,13 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Colleague, Label, LabelCategory
-from wies.core.roles import ROLE_USER_ADMIN
+from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, setup_roles
+from wies.core.tests.role_helpers import STAFF_EMAIL, make_staff_user
 
 User = get_user_model()
 
@@ -445,3 +448,114 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, 'value="3"')
         assert content.count("data-category-row") == 3
         assert 'name="form-1-name" value=""' not in content
+
+    def _name_field(self, content, index):
+        tag = re.search(rf'<nldd-text-field[^>]*name="form-{index}-name"[^>]*>', content, re.DOTALL)
+        assert tag is not None, f"no name field for row {index}"
+        return tag.group(0)
+
+    def _color_select(self, content, index):
+        tag = re.search(rf'<select[^>]*name="form-{index}-color"[^>]*>', content, re.DOTALL)
+        assert tag is not None, f"no color select for row {index}"
+        # attrs.html spreads each attribute over several lines.
+        return re.sub(r"\s*=\s*", "=", tag.group(0))
+
+    def test_saved_row_fields_are_named_after_their_category(self):
+        """The rows share one visible header, so a screen reader needs the
+        category in each field's name to tell the rows apart."""
+        LabelCategory.objects.create(name="Expertise", color=self.GREY)
+        content = self.client.get(self.url).content.decode()
+
+        assert 'accessible-label="Naam van categorie Expertise"' in self._name_field(content, 0)
+        assert 'aria-label="Kleur van categorie Expertise"' in self._color_select(content, 0)
+        assert 'accessible-label="Naam"' not in content
+        assert 'aria-label="Kleur"' not in content
+
+    def test_new_row_fields_are_named_as_new_category(self):
+        """A row added with extra_row has no name yet, so it is called a new category."""
+        existing = LabelCategory.objects.create(name="Expertise", color=self.GREY)
+        data = self._management(total=1, initial=1)
+        data.update(
+            {"extra_row": "1", "form-0-id": str(existing.pk), "form-0-name": "Expertise", "form-0-color": self.GREY}
+        )
+        content = self.client.post(self.url, data).content.decode()
+
+        assert 'accessible-label="Naam van categorie Expertise"' in self._name_field(content, 0)
+        new_name = self._name_field(content, 1)
+        assert 'accessible-label="Naam van nieuwe categorie"' in new_name
+        assert "autofocus" in new_name
+        assert 'aria-label="Kleur van nieuwe categorie"' in self._color_select(content, 1)
+
+    def test_blank_name_keeps_the_saved_category_in_the_field_name(self):
+        """After a rejected save the row is still named after the saved category,
+        not after what was typed, and the error stays visible."""
+        category = LabelCategory.objects.create(name="Expertise", color=self.GREY)
+        data = self._management(total=1, initial=1)
+        data.update({"form-0-id": str(category.pk), "form-0-name": "", "form-0-color": self.GREY})
+        response = self.client.post(self.url, data)
+        content = response.content.decode()
+
+        assert response.headers.get("HX-Redirect") is None
+        self.assertContains(response, "nldd-validation-item")
+        assert 'accessible-label="Naam van categorie Expertise"' in self._name_field(content, 0)
+        assert 'aria-label="Kleur van categorie Expertise"' in self._color_select(content, 0)
+
+    def test_duplicate_name_keeps_the_row_names(self):
+        """A new row that duplicates a saved name fails validation; both rows keep
+        their own field names."""
+        existing = LabelCategory.objects.create(name="Expertise", color=self.GREY)
+        data = self._management(total=2, initial=1)
+        data.update(
+            {
+                "form-0-id": str(existing.pk),
+                "form-0-name": "Expertise",
+                "form-0-color": self.GREY,
+                "form-1-name": "Expertise",
+                "form-1-color": self.GREY,
+            }
+        )
+        response = self.client.post(self.url, data)
+        content = response.content.decode()
+
+        assert response.headers.get("HX-Redirect") is None
+        self.assertContains(response, "nldd-validation-item")
+        assert 'accessible-label="Naam van categorie Expertise"' in self._name_field(content, 0)
+        assert 'accessible-label="Naam van nieuwe categorie"' in self._name_field(content, 1)
+        assert 'aria-label="Kleur van nieuwe categorie"' in self._color_select(content, 1)
+
+    def test_column_header_appears_once_above_the_rows(self):
+        """One "Naam"/"Kleur" header heads the columns, on open and on every
+        body re-render."""
+        LabelCategory.objects.create(name="Expertise", color=self.GREY)
+        LabelCategory.objects.create(name="Vaardigheden", color=self.GREY)
+        opened = self.client.get(self.url).content.decode()
+        data = self._management(total=0, initial=0)
+        data["extra_row"] = "1"
+        rerendered = self.client.post(self.url, data).content.decode()
+
+        for label, content in (("opened", opened), ("extra_row", rerendered)):
+            with self.subTest(response=label):
+                assert content.count("data-category-header") == 1
+                header = re.search(r"<nldd-list-item data-category-header>.*?</nldd-list-item>", content, re.DOTALL)
+                assert header is not None
+                assert '<nldd-text-cell width="full" text="Naam">' in header.group(0)
+                assert '<nldd-text-cell width="112px" text="Kleur">' in header.group(0)
+                assert content.index("data-category-header") < content.index("data-category-row")
+
+    def test_only_the_user_admin_role_opens_the_sheet(self):
+        """The sheet follows the label permissions, which only the
+        Gebruikersbeheerder role carries."""
+        setup_roles()
+        for role, expected in ((ROLE_USER_ADMIN, 200), (ROLE_CONSULTANT, 403), (ROLE_BUSINESS_MANAGER, 403)):
+            with self.subTest(role=role):
+                user = User.objects.create_user(email=f"{role}@rijksoverheid.nl", first_name="R", last_name="Ol")
+                user.groups.add(Group.objects.get(name=role))
+                self.client.force_login(user)
+                assert self.client.get(self.url).status_code == expected
+
+    @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+    def test_staff_without_user_admin_role_cannot_open_the_sheet(self):
+        """Being Applicatiebeheerder alone does not grant the label permissions."""
+        setup_roles()
+        self.client.force_login(make_staff_user())
+        assert self.client.get(self.url).status_code == 403
