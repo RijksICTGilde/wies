@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- PR#: new page Handleiding for consultants (/handleiding/), with screenshots, linked from the footer and the user menu
+- 780: new page Handleiding for consultants (/handleiding/), with screenshots, linked from the footer and the user menu
 - 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
 - 767: Bezetting month axis stays visible while scrolling and the months are in Dutch; bars show the client and role, and an extension of an opdracht reads as such and no longer counts as ending soon; the colleague panel lists opdrachten in the same order as the timeline (running, planned, finished)
 - 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
