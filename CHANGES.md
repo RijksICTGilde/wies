@@ -6,7 +6,14 @@ This files lists the changes during the lifetime of this project.
 
 - 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
 - 767: Bezetting month axis stays visible while scrolling and the months are in Dutch; bars show the client and role, and an extension of an opdracht reads as such and no longer counts as ending soon; the colleague panel lists opdrachten in the same order as the timeline (running, planned, finished)
+- 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
+- 766: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
+- 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
+- 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
+- 770: the Toegankelijkheid page states the current accessibility status (A, 19 October 2026) as text with a link to the register, replacing the outdated label image (status C)
+- 769: the date filter no longer refreshes the list on every keystroke and keeps focus in the field after the refresh; the client picker in the assignment form is a named group and says at least 1 client is required (accessibility)
+- 771: in sheets, the field or option with keyboard focus no longer disappears behind the sticky button at the bottom or the title bar at the top; the current page in the Beheer menu is also shown in bold, not only by colour
 
 ## 2026-10-22
 
