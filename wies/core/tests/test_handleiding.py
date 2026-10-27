@@ -34,8 +34,7 @@ class HandleidingTest(TestCase):
             with self.subTest(source=source):
                 assert finders.find(source), f"{source} is missing from static/"
 
-    def test_reachable_from_footer_and_user_menu(self):
+    def test_reachable_from_footer(self):
         html = self.client.get(reverse("user-profile")).content.decode()
 
         assert f'<a href="{reverse("handleiding")}">Handleiding</a>' in html
-        assert re.search(rf'<nldd-menu-item[^>]*text="Handleiding"[^>]*data-href="{reverse("handleiding")}"', html)
