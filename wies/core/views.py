@@ -3806,6 +3806,10 @@ def privacy(request):
     return render(request, "privacy.html")
 
 
+def beveiliging(request):
+    return render(request, "security.html")
+
+
 def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
 

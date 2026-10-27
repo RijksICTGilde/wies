@@ -57,13 +57,21 @@ class AccessControlTest(TestCase):
         assert response.url.startswith(reverse("login"))
 
     def test_faq_and_contact_require_authentication(self):
-        """FAQ and contact pages are only visible after login; anonymous users bounce to login"""
-        for path in ("/faq/", "/contact/"):
+        """FAQ, contact and security pages are only visible after login; anonymous users bounce to login"""
+        for path in ("/faq/", "/contact/", "/beveiliging/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 
                 assert response.status_code == 302
                 assert response.url.startswith(reverse("login"))
+
+    def test_security_page_renders_for_logged_in_user(self):
+        """The in-product copy of SECURITY.md tells a user how to report a vulnerability"""
+        self.client.force_login(self.test_user)
+        response = self.client.get(reverse("beveiliging"))
+
+        assert response.status_code == 200
+        assert "Een kwetsbaarheid melden" in response.content.decode()
 
     def test_audit_report_is_readable_without_login(self):
         """The one exception to the rule above: the DigiToegankelijk register links here.

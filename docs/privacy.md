@@ -1,7 +1,7 @@
 <!--
   Source of truth for the privacy declaration.
   After editing this file, regenerate the in-product page:
-      uv run python manage.py generate_privacy_html
+      uv run python manage.py generate_docs_html
 -->
 
 # Privacyverklaring

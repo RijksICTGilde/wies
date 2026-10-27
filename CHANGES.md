@@ -9,6 +9,7 @@ This files lists the changes during the lifetime of this project.
 - 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
 - 766: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
+- 773: the security policy (SECURITY.md) is now readable in Wies at /beveiliging/, linked from the footer and the FAQ; the privacy page generator is renamed to `manage.py generate_docs_html` and renders both pages
 - 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
 - 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
 - 770: the Toegankelijkheid page states the current accessibility status (A, 19 October 2026) as text with a link to the register, replacing the outdated label image (status C)
