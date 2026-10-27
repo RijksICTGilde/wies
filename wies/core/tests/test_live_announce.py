@@ -65,7 +65,17 @@ class LiveAnnounceTest(TestCase):
         self._open_assignment()
         response = self.client.get(reverse("assignment-list"), **HX)
         assert response.status_code == 200
-        self.assertContains(response, 'data-announce="1 opdracht"')
+        self.assertContains(response, 'data-announce="1 aanvraag"')
+
+    def test_assignment_list_announces_aanvragen_not_opdrachten(self):
+        service = self._open_assignment()
+        Service.objects.create(assignment=service.assignment, description="", status="OPEN", source="wies")
+        response = self.client.get(reverse("assignment-list"), **HX)
+        self.assertContains(response, 'data-announce="2 aanvragen"')
+
+    def test_empty_assignment_list_announces_the_empty_state(self):
+        response = self.client.get(reverse("assignment-list"), **HX)
+        self.assertContains(response, 'data-announce="Er zijn nu geen aanvragen"')
 
     def test_home_announces_colleagues_by_default(self):
         colleague = Colleague.objects.create(name="Collega", email="collega@rijksoverheid.nl", source="wies")

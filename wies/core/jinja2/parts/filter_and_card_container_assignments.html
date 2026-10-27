@@ -4,7 +4,7 @@
 {% if not is_htmx %}
   <nldd-toolbar accessible-label="Zoeken en filteren">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
-  <nldd-search-field id="search-input" placeholder="Opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
+  <nldd-search-field id="search-input" placeholder="Rol, opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
@@ -34,7 +34,7 @@
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
 {% if paginator.count %}
-  {% set count_label = "opdracht" if paginator.count == 1 else "opdrachten" %}
+  {% set count_label = "aanvraag" if paginator.count == 1 else "aanvragen" %}
   <nldd-rich-text spacing="flat">
   <p>{{ paginator.count }} {{ count_label }}</p>
   </nldd-rich-text>
@@ -51,11 +51,16 @@
      has to be lifted -- the component can't know our pages accumulate. #}
   {# role=list: nldd-collection sets no role of its own. #}
   {# data-announce: live_region.js reads this out after a filter change. #}
-  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdracht' if paginator.count == 1 else 'opdrachten' }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
-  {% include "parts/assignment_card_rows.html" %}
+  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ paginator.count }} {{ 'aanvraag' if paginator.count == 1 else 'aanvragen' }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/aanvraag_card_rows.html" %}
   </nldd-collection>
 {% else %}
-  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen opdrachten gevonden" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  {# Without a filter or search there is nothing to adjust: the list is empty. #}
+  {% if active_filter_count or search_filter %}
+    <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen aanvragen gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen aanvragen gevonden" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  {% else %}
+    <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Er zijn nu geen aanvragen" data-announce="Er zijn nu geen aanvragen" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  {% endif %}
 {% endif %}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the

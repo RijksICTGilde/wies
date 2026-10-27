@@ -52,7 +52,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(
             url,
-            {"owner": str(self.other.public_id), "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"},
+            {"owner": str(self.other.public_id), "terug_url": f"/aanvragen/?opdracht={self.assignment.public_id}"},
         )
         assert response.status_code == 204
         assert "HX-Location" in response
@@ -71,7 +71,7 @@ class AssignmentEditSingleFieldTest(TestCase):
         panel heading, not a row.
         """
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         body = response.content.decode()
@@ -118,7 +118,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
 
     def _edit_form(self):
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}&bewerken=1&veld=owner",
+            f"/aanvragen/?opdracht={self.assignment.public_id}&bewerken=1&veld=owner",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
@@ -135,7 +135,7 @@ class AssignmentOwnerOutsideBdmGroupTest(TestCase):
         url = reverse("assignment-edit", args=[self.assignment.public_id]) + "?veld=owner"
         response = self.client.post(
             url,
-            {"owner": str(self.owner.public_id), "terug_url": f"/opdrachten/?opdracht={self.assignment.public_id}"},
+            {"owner": str(self.owner.public_id), "terug_url": f"/aanvragen/?opdracht={self.assignment.public_id}"},
         )
         assert response.status_code == 204
         self.assignment.refresh_from_db()

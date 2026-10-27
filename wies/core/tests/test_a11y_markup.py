@@ -53,7 +53,7 @@ class A11yMarkupTest(TestCase):
         """The cards follow the page h1, so an h3 there skips a level.
 
         Both lists: Wie zit waar? renders placement_cards.html, Aanvragen
-        renders assignment_card_rows.html.
+        renders aanvraag_card_rows.html, whose heading is the role.
         """
         org = OrganizationUnit.objects.create(name="Toets Org", label="Toets Org")
         skill = Skill.objects.create(name="Python Developer")
@@ -77,8 +77,8 @@ class A11yMarkupTest(TestCase):
 
         response = self.client.get(reverse("assignment-list"))
         assert response.status_code == 200
-        self.assertContains(response, "<h2>Open Aanvraag</h2>")
-        self.assertNotContains(response, "<h3>Open Aanvraag</h3>")
+        self.assertContains(response, "<h2>Python Developer</h2>")
+        self.assertNotContains(response, "<h3>Python Developer</h3>")
 
     def test_card_grids_are_lists_of_cards(self):
         """nldd-collection and nldd-card set no list roles themselves."""
