@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
 - 766: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
 - 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
