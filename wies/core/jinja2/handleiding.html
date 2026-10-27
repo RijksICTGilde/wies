@@ -1,0 +1,216 @@
+{% extends "base_footer.html" %}
+{% block title %}
+  Handleiding voor consultants · Wies
+{% endblock title %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Handleiding voor consultants</h1>
+  <p>
+    Benieuwd waar collega's aan werken, of wie ervaring heeft met een vraagstuk
+    waar jij mee bezig bent? In Wies zie je bij welke opdrachtgever collega's zitten,
+    aan welke opdrachten ze werken en welke opdrachten nog openstaan. Dat werkt het
+    best als iedereen de eigen gegevens bijhoudt. Hier lees je wat je zelf kunt
+    aanpassen, en hoe.
+  </p>
+  <nav aria-labelledby="handleiding-inhoud">
+    <h2 id="handleiding-inhoud">Op deze pagina</h2>
+    <ul>
+      <li><a href="#waarom">Waarom je taken invullen?</a></li>
+      <li><a href="#profiel">Je profiel vinden</a></li>
+      <li><a href="#taken">Je taken invullen</a></li>
+      <li><a href="#zelf-aanpassen">Wat je verder zelf kunt aanpassen</a></li>
+      <li><a href="#niet-zelf">Wat je niet zelf kunt aanpassen</a></li>
+      <li><a href="#vragen">Vragen en antwoorden</a></li>
+    </ul>
+  </nav>
+  <h2 id="waarom">Waarom je taken invullen?</h2>
+  <p>
+    Bij een plaatsing toont Wies alleen je rol. Vul je bij <strong>Taken</strong>
+    in wat je doet, dan zien collega's welke kennis en ervaring je hebt en weten ze
+    waarover ze je iets kunnen vragen.
+  </p>
+  <h2 id="profiel">Je profiel vinden</h2>
+  <p>
+    Klik rechtsboven op je naam en kies <strong>Profiel</strong>. Je komt op de
+    pagina Mijn profiel. Daar staat alles wat je zelf kunt bijhouden.
+  </p>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/profiel.webp') }}" alt="De pagina Mijn profiel: links je naam, merk en labels, rechts je opdrachten met rol, periode en taken, met een potlood naast Taken" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <ul>
+    <li><strong>Links</strong>: je naam, je merk en je labels (Expertise, Subgroep, Thema).</li>
+    <li><strong>Rechts</strong>: je opdrachten, met je rol, de periode en je taken. Met het potlood naast Taken (<strong>Mijn taken wijzigen</strong>) pas je je taken aan.</li>
+    <li>
+      Bij een opdracht die is afgelopen of nog moet beginnen, staat
+      <em>Alleen zichtbaar voor jou en de Business Managers</em>.
+    </li>
+  </ul>
+  <p>
+    Log je voor het eerst in? Dan helpt een welkomstvenster je om je labels te
+    kiezen en je opdracht te controleren. Sla je dat over, dan kies je je labels
+    later op Mijn profiel. Je merk vraag je dan aan de Gebruikersbeheerder.
+  </p>
+  <h2 id="taken">Je taken invullen</h2>
+  <p>Per opdracht beschrijf je kort wat je daar doet.</p>
+  <ol>
+    <li>Ga naar <strong>Mijn profiel</strong>.</li>
+    <li>Zoek de opdracht op en klik op het <strong>potlood</strong> naast Taken.</li>
+    <li>Het venster <strong>Taken wijzigen</strong> gaat open. Je rol staat erboven. Die kun je hier niet aanpassen.</li>
+    <li>Typ je taken en klik op <strong>Opslaan</strong>.</li>
+  </ol>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/taken-wijzigen.webp') }}" alt="Het venster Taken wijzigen: bovenaan de rol (Interim) Manager, daaronder het veld Taken met drie zinnen over teamopbouw, werkprocessen en waarvoor collega's je mogen aanspreken, en de knop Opslaan" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <p>
+    Je kunt je taken ook vanuit de opdracht wijzigen. Open de opdracht en klik bij
+    <strong>Team</strong> op de drie puntjes achter je eigen naam. Kies daar
+    <strong>Mijn taken wijzigen</strong>.
+  </p>
+  <h3 id="goede-taken">Zo schrijf je goede taken</h3>
+  <p>
+    Schrijf zo dat een collega die je niet kent, in tien seconden begrijpt
+    waarvoor die bij je terechtkan.
+  </p>
+  <ul>
+    <li><strong>Schrijf in de ik-vorm en wees concreet</strong>: "Ik bouw een privacyteam op van vijf mensen", niet "Teamopbouw".</li>
+    <li><strong>Noem de onderwerpen waarover collega's je iets kunnen vragen</strong>: DPIA's, datalekken, aanbesteding, Kubernetes.</li>
+    <li><strong>Drie tot vijf zinnen is genoeg.</strong></li>
+    <li><strong>Laat vertrouwelijke details weg.</strong> Alle collega's in Wies kunnen de taken van je lopende opdrachten lezen.</li>
+  </ul>
+  <p>Een voorbeeld, voor en na:</p>
+  <p><strong>Zo niet</strong></p>
+  <blockquote>
+    <p>Opbouwen van een nieuw team en inrichten van de werkprocessen.</p>
+  </blockquote>
+  <p><strong>Zo wel</strong></p>
+  <blockquote>
+    <p>
+      Ik bouw voor DJI een nieuw privacyteam op van vijf mensen: werving,
+      rolverdeling en werkafspraken. Ik richt de werkprocessen in voor DPIA's en
+      datalekmeldingen, samen met de FG en de CISO. Vragen over DPIA's? Spreek me
+      gerust aan.
+    </p>
+  </blockquote>
+  <h3 id="wie-ziet-je-taken">Wie ziet je taken?</h3>
+  <p>
+    Alle collega's in Wies zien de taken van je <strong>lopende</strong>
+    opdrachten. Zo ziet een collega je profiel: rol, periode en taken. Je uren per
+    week en je afgelopen opdrachten ziet een collega niet. Die zien alleen jij en
+    de Business Managers.
+  </p>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/zo-zien-collegas-je.webp') }}" alt="Je profiel zoals een collega het ziet: je naam, merk en labels, en alleen de lopende opdracht met rol, periode en taken, zonder uren per week" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <h2 id="zelf-aanpassen">Wat je verder zelf kunt aanpassen</h2>
+  <h3>Je labels: waar je goed in bent</h3>
+  <p>
+    Labels zijn de trefwoorden onder je naam. Ze zijn verdeeld over Expertise,
+    Subgroep en Thema. Zoekt een collega iemand die iets weet van een
+    onderwerp, dan filtert die hierop bij Wie zit waar?. Heb je geen labels, dan val je weg zodra iemand op een label filtert.
+  </p>
+  <ol>
+    <li>Klik op Mijn profiel op de knop <strong>Profiel wijzigen</strong>.</li>
+    <li>Kies per categorie je labels uit de lijst. Met het kruisje achter een label haal je het weer weg.</li>
+    <li>Klik op <strong>Opslaan</strong>.</li>
+  </ol>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/profiel-wijzigen.webp') }}" alt="Het venster Profiel wijzigen: per categorie (Expertise, Subgroep, Thema) een lijst met de gekozen labels, elk met een kruisje, en de knop Opslaan" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <p>
+    Kies labels voor wat je nu doet of wilt doen, niet voor alles wat je ooit hebt
+    gedaan. Mis je een label? Vraag de Gebruikersbeheerder om het toe te voegen.
+  </p>
+  <h3>De naam en omschrijving van je opdracht</h3>
+  <p>
+    Is de naam van de opdracht verkeerd gespeld, of is de omschrijving leeg? Je
+    staat zelf op de opdracht, dus je mag dit verbeteren.
+  </p>
+  <ol>
+    <li>Klik op Mijn profiel op de kaart van de opdracht.</li>
+    <li>Klik rechtsboven in het paneel op het <strong>potlood</strong> (<strong>Gegevens wijzigen</strong>).</li>
+    <li>Pas <strong>Opdrachtnaam</strong> en <strong>Opdrachtomschrijving</strong> aan en klik op <strong>Opslaan</strong>.</li>
+  </ol>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/opdracht.webp') }}" alt="Het paneel van een opdracht: de rijen Opdrachtgever, Periode, Business Manager en Omschrijving, daaronder het Team; rechtsboven het potlood Gegevens wijzigen" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <nldd-image class="wies-shot" src="{{ static('handleiding/opdracht-wijzigen.webp') }}" alt="Het venster Opdracht wijzigen, met de velden Opdrachtnaam en Opdrachtomschrijving en de knop Opslaan" aspect-ratio="16/10" object-fit="contain"></nldd-image>
+  <p>
+    De omschrijving gaat over de <strong>opdracht</strong>: waar gaat die over,
+    en voor wie. Je taken gaan over <strong>jou</strong>. Alle collega's in Wies
+    zien de omschrijving.
+  </p>
+  <h3>Je naam en je weergave</h3>
+  <ul>
+    <li><strong>Naam</strong>: klik op Mijn profiel op <strong>Naam wijzigen</strong>, pas je voor- en achternaam aan en klik op <strong>Opslaan</strong>.</li>
+    <li><strong>Licht of donker</strong>: klik rechtsboven op je naam, kies <strong>Weergave</strong> en dan Systeem, Licht of Donker.</li>
+  </ul>
+  <h2 id="niet-zelf">Wat je niet zelf kunt aanpassen</h2>
+  <p>Zie je iets wat niet klopt, maar staat er geen potlood bij? Dan vraag je het aan de Business Manager of de Gebruikersbeheerder.</p>
+  {# Two columns do not fit at 320 px; Safari only reaches a scroll box by keyboard when it is focusable. #}
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-labelledby="niet-zelf-tabel">
+    <table>
+      <caption id="niet-zelf-tabel" class="wies-visually-hidden">Bij wie je terechtkunt</caption>
+      <thead>
+        <tr>
+          <th scope="col">Wat klopt er niet?</th>
+          <th scope="col">Vraag het aan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Je rol, periode of uren per week op een opdracht</td>
+          <td>De Business Manager van de opdracht (staat in het paneel van de opdracht)</td>
+        </tr>
+        <tr>
+          <td>De opdrachtgever of de Business Manager van een opdracht</td>
+          <td>De Business Manager van de opdracht</td>
+        </tr>
+        <tr>
+          <td>Een opdracht die ontbreekt, of een plaatsing die er niet hoort</td>
+          <td>Een Business Manager</td>
+        </tr>
+        <tr>
+          <td>Je merk of je e-mailadres</td>
+          <td>De Gebruikersbeheerder</td>
+        </tr>
+        <tr>
+          <td>Een label dat er niet tussen staat</td>
+          <td>De Gebruikersbeheerder</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Weet je niet wie de Gebruikersbeheerder is? <a href="{{ url('contact') }}">Neem contact met ons op</a>.
+  </p>
+  <p>
+    Staat er bij een opdracht <em>Wordt beheerd in OTYS IIR</em>? Dan komen de
+    gegevens uit een ander systeem en kun je ze in Wies niet aanpassen. Dat geldt
+    ook voor de taken bij die opdracht.
+  </p>
+  <h2 id="vragen">Vragen en antwoorden</h2>
+  <h3>Ik zie geen potlood bij Taken.</h3>
+  <p>
+    Dan komt de opdracht uit OTYS IIR, of je staat niet zelf op deze rol. Vraag
+    het na bij de Business Manager van de opdracht.
+  </p>
+  <h3>Moet ik ook mijn afgelopen opdrachten invullen?</h3>
+  <p>
+    Dat mag, maar het hoeft niet. Collega's zien je afgelopen opdrachten niet;
+    alleen jij en de Business Managers zien ze. Wel heb je zo zelf een compleet
+    overzicht van wat je hebt gedaan.
+  </p>
+  <h3>Kan ik iets terugdraaien?</h3>
+  <p>
+    Ja. Open het venster opnieuw, pas de tekst aan en klik op <strong>Opslaan</strong>.
+    Klik je op <strong>Annuleer</strong>, dan blijft alles zoals het was.
+  </p>
+  <h3>Waar kies ik mijn merk?</h3>
+  <p>
+    In het welkomstvenster, als je voor het eerst inlogt. Wil je het later
+    veranderen? Vraag dat aan de Gebruikersbeheerder.
+  </p>
+  <h3>Hoe vaak moet ik dit bijwerken?</h3>
+  <p>
+    Bij de start van een opdracht, en als je taken veranderen. Verder is een keer
+    per kwartaal nakijken genoeg.
+  </p>
+  <p>
+    Staat je vraag er niet bij? Kijk bij de <a href="{{ url('faq') }}">veelgestelde vragen</a>
+    of <a href="{{ url('contact') }}">neem contact met ons op</a>.
+  </p>
+  </nldd-rich-text>
+{% endblock footer_content %}

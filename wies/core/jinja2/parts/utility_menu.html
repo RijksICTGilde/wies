@@ -5,6 +5,7 @@
   <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text" {% if request.path == url('user-profile') %}current{% endif %}>
   <nldd-menu>
   <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+  <nldd-menu-item text="Handleiding" icon="book" data-href="{{ url('handleiding') }}"></nldd-menu-item>
   {# Display submenu: radio items stored per user (Colleague.theme) and rendered
      server-side as data-scheme on <html>. The hidden csrf input feeds the fetch
      in theme_menu.js; the cookie name differs per environment, so the token

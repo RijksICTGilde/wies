@@ -486,3 +486,12 @@ a > nldd-icon:last-child {
     min-width: 326px;
   }
 }
+
+/* Screenshots in the handleiding. nldd-image has no border option; the same light
+   line as the cards in Wies keeps a white screenshot edge from melting into the page. */
+nldd-image.wies-shot {
+  display: block;
+  margin-block: var(--primitives-space-16, 16px);
+  border: 1px solid
+    var(--semantics-surfaces-base-highlight-border-color, #cbd5e1);
+}

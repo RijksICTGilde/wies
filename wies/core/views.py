@@ -3802,6 +3802,10 @@ def faq(request):
     return render(request, "faq.html")
 
 
+def handleiding(request):
+    return render(request, "handleiding.html")
+
+
 def privacy(request):
     return render(request, "privacy.html")
 
