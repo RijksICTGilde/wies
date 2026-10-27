@@ -7,85 +7,93 @@
   <nldd-rich-text>
   <h1>Beveiligingsbeleid</h1>
   <p>
-    Wies is een interne applicatie van de Rijksoverheid en valt onder de
-    <a href="https://www.bio-overheid.nl/" target="_blank">Baseline Informatiebeveiliging Overheid (BIO2)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+    Wies is een intern hulpmiddel van ODI, onderdeel van de Rijksoverheid. Voor Wies gelden de
+    regels van de <a href="https://www.bio-overheid.nl/" target="_blank">Baseline Informatiebeveiliging Overheid (BIO2)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>,
+    de beveiligingsnorm voor de hele overheid.
   </p>
   <h2>Een kwetsbaarheid melden</h2>
   <p>
-    Heb je een (vermoedelijke) kwetsbaarheid of een ander beveiligingsprobleem
-    gevonden in Wies?
+    Zie je iets in Wies dat niet veilig lijkt? Bijvoorbeeld gegevens die je niet zou mogen zien,
+    of een manier om iets te doen dat niet mag? Dat noemen we een kwetsbaarheid. Meld het bij ons:
   </p>
   <ul>
     <li>
-      Meld het vertrouwelijk via GitHub:
+      Stuur een e-mail naar <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
+    </li>
+    <li>
+      Heb je een GitHub-account? Dan kun je het ook
       <a href="https://github.com/RijksICTGilde/wies/security/advisories/new"
-         target="_blank">Report a vulnerability<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
-      (private vulnerability reporting — alleen het team ziet je melding).
+         target="_blank">vertrouwelijk melden op GitHub<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+      (Engelstalig). Alleen het Wies-team ziet die melding.
     </li>
     <li>
-      Of mail het team: <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>
-    </li>
-    <li>
-      Of meld het via <a href="https://www.ncsc.nl/contact/kwetsbaarheid-melden"
-    target="_blank">Coordinated Vulnerability Disclosure van het NCSC<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
-      als je het team niet kunt bereiken.
+      Krijg je geen reactie van ons? Meld het dan bij het
+      <a href="https://www.ncsc.nl/contact/kwetsbaarheid-melden"
+         target="_blank">Nationaal Cyber Security Centrum (NCSC)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
     </li>
   </ul>
   <p>
-    Meld ook vermoedens, liever een loos alarm dan een gemiste kwetsbaarheid.
-    Maak een bevinding niet openbaar voordat het team heeft kunnen reageren.
+    Twijfel je? Meld het toch. Liever een loos alarm dan een gemiste kwetsbaarheid.
+    Deel wat je gevonden hebt niet met anderen voordat we hebben gereageerd.
   </p>
   <h2>Wat je van ons mag verwachten</h2>
   <ul>
-    <li>Je krijgt een reactie van het team op iedere melding.</li>
+    <li>Je krijgt altijd een reactie op je melding.</li>
     <li>
-      Kwetsbaarheden waarbij de kans op misbruik en de verwachte schade beide hoog
-      zijn, mitigeren we zo snel mogelijk en uiterlijk binnen één week (BIO2 8.08).
+      Is de kans op misbruik groot en de mogelijke schade ook? Dan nemen we zo snel mogelijk
+      maatregelen, uiterlijk binnen een week. Dat is de termijn uit BIO2 (maatregel 8.08).
     </li>
-    <li>We houden je op de hoogte van de afhandeling van je melding.</li>
+    <li>We laten je weten wat we met je melding doen.</li>
   </ul>
-  <h2>Hoe we beveiliging geregeld hebben</h2>
+  <h2>Hoe we Wies beveiligen</h2>
   <ul>
     <li>
-      <strong>Toegang</strong> — inloggen kan uitsluitend via SSO-Rijk (OIDC); de applicatie kent
-      geen wachtwoorden en geen groepsaccounts.
+      <strong>Toegang</strong> — Je logt alleen in via SSO Rijk, de centrale inlogdienst van de Rijksoverheid.
+      Wies bewaart geen wachtwoorden en heeft geen gedeelde accounts.
     </li>
     <li>
-      <strong>Dependencies</strong> — Dependabot bewaakt wekelijks de Python-, npm- en GitHub
-      Actions-dependencies (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/dependabot.yml"
+      <strong>Software van anderen</strong> — Wies gebruikt onderdelen die anderen hebben gemaakt. Elke week
+      controleren we automatisch of daar een nieuwe, veiligere versie van is.
+    </li>
+    <li>
+      <strong>Automatische controles</strong> — Bij elke wijziging en elke week controleren we de code en de
+      omgeving waarin Wies draait op bekende kwetsbaarheden. Ernstige bevindingen pakken we op.
+    </li>
+    <li>
+      <strong>Wachtwoorden en sleutels</strong> — Die horen niet in de code. GitHub controleert dat automatisch
+      en houdt ze tegen.
+    </li>
+    <li>
+      <strong>Wijzigingen</strong> — Elke wijziging wordt eerst nagekeken en automatisch getest voordat die in
+      Wies komt. We testen in aparte testomgevingen, nooit in de Wies die je gebruikt.
+    </li>
+    <li>
+      <strong>Geen code van buiten</strong> — Wies laadt alle code van de eigen server, niets van andere websites.
+    </li>
+  </ul>
+  <h2>Voor ontwikkelaars</h2>
+  <p>De technische invulling van de maatregelen hierboven:</p>
+  <ul>
+    <li>Inloggen via SSO-Rijk met OIDC; geen lokale wachtwoorden, geen groepsaccounts.</li>
+    <li>
+      Dependabot bewaakt wekelijks de Python-, npm- en GitHub Actions-dependencies
+      (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/dependabot.yml"
    target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
     <li>
-      <strong>Kwetsbaarheidsscans</strong> — Trivy scant bij iedere pull request, bij iedere push
-      naar <code>main</code> en wekelijks de broncode (dependencies, geheimen, configuratie) en
-      de container-image (OS-pakketten). Bevindingen met ernst hoog of kritiek
-      waarvoor een fix beschikbaar is, komen in de Security-tab van de repository
-      (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/security-scan.yml"
+      Trivy scant bij iedere pull request, bij iedere push naar <code>main</code> en wekelijks de broncode
+      (dependencies, geheimen, configuratie) en de container-image (OS-pakketten). Bevindingen met
+      ernst hoog of kritiek waarvoor een fix beschikbaar is, komen in de Security-tab van de
+      repository (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/security-scan.yml"
    target="_blank"><code>.github/workflows/security-scan.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
+    <li>GitHub secret scanning met push protection staat aan op de repository.</li>
     <li>
-      <strong>Geheimen</strong> — GitHub secret scanning met push protection blokkeert het pushen
-      van credentials naar deze repository.
+      Iedere wijziging gaat via een pull request en draait automatisch de testsuite
+      (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/test.yml"
+   target="_blank"><code>.github/workflows/test.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
-    <li>
-      <strong>Wijzigingen</strong> — iedere wijziging gaat via een pull request en draait
-      automatisch de testsuite (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/test.yml"
-   target="_blank"><code>.github/workflows/test.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>);
-      getest wordt op lokale en previewomgevingen, nooit in productie.
-    </li>
-    <li>
-      <strong>Geen externe runtime-afhankelijkheden</strong> — JavaScript is gevendored in plaats
-      van via een CDN geladen, zodat de CSP geen externe bronnen hoeft toe te staan.
-    </li>
+    <li>JavaScript is gevendored, niet via een CDN; de CSP staat geen externe bronnen toe.</li>
   </ul>
-  <p>
-    De volledige BIO-verantwoording (per control en maatregel) is intern belegd bij
-    ODI en wordt hier niet herhaald.
-  </p>
-  <h2>Versies</h2>
-  <p>
-    Alleen de laatst uitgerolde versie (<code>main</code> → productie) wordt ondersteund met
-    beveiligingsfixes.
-  </p>
   </nldd-rich-text>
 {% endblock footer_content %}
