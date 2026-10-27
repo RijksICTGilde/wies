@@ -517,6 +517,18 @@ class TestViewSwitch:
         # The default view leaves the parameter out, to keep the url clean.
         assert 'name="weergave"' not in self.client.get(reverse("home")).content.decode()
 
+    def test_view_items_load_on_the_bridged_event(self):
+        """item-change never fires for the arrow keys; filter_interactions.js raises this one."""
+        html = self.client.get(reverse("home")).content.decode()
+        assert html.count('hx-trigger="wies-view-change"') == 2
+        assert 'hx-trigger="item-change"' not in html
+
+    def test_view_requests_replace_each_other(self):
+        """Two quick arrow keys: the older response must not win the url."""
+        html = self.client.get(reverse("home")).content.decode()
+        # Two segmented items and two overflow menu items.
+        assert html.count('hx-sync="#results:replace"') == 4
+
 
 @pytest.mark.django_db
 class TestSortOptions:

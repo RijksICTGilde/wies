@@ -181,9 +181,9 @@ describe("resolve", () => {
     const wanted = element({ "hx-get": "/panel" });
     doc = makeDoc([element({ "hx-get": "/other" }), wanted]);
     const restore = new FocusRestore(doc);
-    assert.equal(
+    assert.deepEqual(
       restore.resolve({ attribute: "hx-get", value: "/panel" }),
-      wanted,
+      [wanted],
     );
   });
 
@@ -192,18 +192,29 @@ describe("resolve", () => {
     const shown = element({ "hx-get": "/panel" });
     doc = makeDoc([hidden, shown]);
     const restore = new FocusRestore(doc);
-    assert.equal(
+    assert.deepEqual(
       restore.resolve({ attribute: "hx-get", value: "/panel" }),
-      shown,
+      [shown],
     );
   });
 
-  it("returns null when the element is gone", () => {
+  it("returns every visible element sharing the value, in document order", () => {
+    const form = element({ "hx-get": "/" });
+    const item = element({ "hx-get": "/" });
+    doc = makeDoc([form, item]);
+    const restore = new FocusRestore(doc);
+    assert.deepEqual(restore.resolve({ attribute: "hx-get", value: "/" }), [
+      form,
+      item,
+    ]);
+  });
+
+  it("returns nothing when the element is gone", () => {
     doc = makeDoc([element({ "hx-get": "/other" })]);
     const restore = new FocusRestore(doc);
-    assert.equal(
+    assert.deepEqual(
       restore.resolve({ attribute: "hx-get", value: "/panel" }),
-      null,
+      [],
     );
   });
 });
@@ -350,6 +361,18 @@ describe("focusFromTrail", () => {
 
     assert.equal(restore.focusFromTrail(), true);
     assert.equal(doc.activeElement, accepts);
+  });
+
+  it("passes a form that shares the url for the control that does take focus", () => {
+    // The filter form and the Persoon view item both carry hx-get="/".
+    const form = element({ "hx-get": "/" }, { takesFocus: false });
+    const item = shadowHost({ "hx-get": "/" });
+    doc = makeDoc([form, item]);
+    const restore = new FocusRestore(doc);
+    restore.trail = [{ attribute: "hx-get", value: "/" }];
+
+    assert.equal(restore.focusFromTrail(), true);
+    assert.equal(doc.activeElement, item);
   });
 
   it("reports failure when the trail resolves to nothing", () => {

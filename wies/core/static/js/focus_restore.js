@@ -113,18 +113,20 @@ FocusRestore.prototype.isVisible = function (element) {
     : true;
 };
 
-// The visible candidate wins: an action is often in the DOM twice, as a button
-// and as a hidden item in the overflow menu beside it.
+// Every visible match, in document order. An action is often in the DOM twice,
+// as a button and as a hidden item in the overflow menu beside it. And a URL is
+// not unique: the filter form has the same hx-get as the Persoon view.
 FocusRestore.prototype.resolve = function (descriptor) {
   var matches = Array.prototype.slice.call(
     this.doc.querySelectorAll("[" + descriptor.attribute + "]"),
   );
-  for (var i = 0; i < matches.length; i++) {
-    if (matches[i].getAttribute(descriptor.attribute) !== descriptor.value)
-      continue;
-    if (this.isVisible(matches[i])) return matches[i];
-  }
-  return null;
+  var self = this;
+  return matches.filter(function (match) {
+    return (
+      match.getAttribute(descriptor.attribute) === descriptor.value &&
+      self.isVisible(match)
+    );
+  });
 };
 
 // focus() on a custom element without delegatesFocus does nothing and does not
@@ -192,14 +194,17 @@ FocusRestore.prototype.caretToEnd = function (element) {
 
 FocusRestore.prototype.focusFromTrail = function () {
   for (var i = 0; i < this.trail.length; i++) {
-    var element = this.resolve(this.trail[i]);
-    if (!element || typeof element.focus !== "function") continue;
-    if (!this.focusInto(element, { preventScroll: true })) continue;
-    this.caretToEnd(element);
-    // Everything up to and including this step is dealt with; anything newer
-    // belongs to a level we just came back from.
-    this.trail = this.trail.slice(i + 1);
-    return true;
+    var candidates = this.resolve(this.trail[i]);
+    for (var j = 0; j < candidates.length; j++) {
+      var element = candidates[j];
+      if (typeof element.focus !== "function") continue;
+      if (!this.focusInto(element, { preventScroll: true })) continue;
+      this.caretToEnd(element);
+      // Everything up to and including this step is dealt with; anything newer
+      // belongs to a level we just came back from.
+      this.trail = this.trail.slice(i + 1);
+      return true;
+    }
   }
   return false;
 };

@@ -4,6 +4,9 @@
 (function () {
   "use strict";
 
+  // Under Node (js_tests) there is no document: export the pure parts only.
+  const testing = typeof module !== "undefined" && module.exports;
+
   const NDD_TEXT = "nldd-text-field, nldd-date-field";
   const NDD_SEARCH = "nldd-search-field[data-wies-search-input]";
 
@@ -619,6 +622,28 @@
     });
   }
 
+  // NLDD 0.10.0 fires item-change only on click; change also on arrow keys.
+  function forwardViewChange(event, htmx) {
+    const control = event.target;
+    if (
+      control?.localName !== "nldd-segmented-control" ||
+      !control.closest("#view-control")
+    ) {
+      return;
+    }
+    // By value: the item's `selected` attribute is reflected a render later.
+    const item = Array.from(
+      control.querySelectorAll("nldd-segmented-control-item"),
+    ).find((el) => el.getAttribute("value") === control.value);
+    if (item && htmx) htmx.trigger(item, "wies-view-change");
+  }
+
+  function setupViewControl() {
+    document.addEventListener("change", (e) =>
+      forwardViewChange(e, window.htmx),
+    );
+  }
+
   function scan(root) {
     if (!root || !root.querySelectorAll) return;
     root.querySelectorAll(NDD_TEXT).forEach(attachTextField);
@@ -758,10 +783,11 @@
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
     setupFilterOptionsModal();
+    setupViewControl();
   }
 
-  if (typeof module !== "undefined" && module.exports) {
-    module.exports = { shouldForward };
+  if (testing) {
+    module.exports = { forwardViewChange, shouldForward };
     return;
   }
 
