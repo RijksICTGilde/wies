@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
 
 ## 2026-10-28
 

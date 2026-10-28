@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 def sync_all_otys_iir_records():
     """
-    Sync candidates and vacancies from OTYS IIR to WIES.
+    Sync candidates and vacancies from OTYS to Wies.
     - Candidates are synced as Colleagues
     - Vacancies are synced as Assignments + Services
 

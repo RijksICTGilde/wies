@@ -58,7 +58,7 @@ def _owner_display_context(assignment, request) -> dict:
         body_lines = [
             f"Beste {assignment.owner.name},",
             "",
-            f"Ik zag deze opdracht {opdracht_url} op WIES."
+            f"Ik zag deze opdracht {opdracht_url} op Wies."
             + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
             "",
             "Kun je me hier meer informatie over geven?",
