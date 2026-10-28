@@ -82,3 +82,15 @@ jobs:
               {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
               {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
             ]
+      - name: Deploy to ZAD staging
+        id: deploy-staging
+        uses: RijksICTGilde/zad-actions/deploy@428dc1e446dcf30db3b356f27c7c5073bae28f48 # v4.3.1
+        with:
+          api-key: ${{ secrets.ZAD_STAGING_API_KEY }}
+          project-id: wies-6z3
+          deployment-name: production
+          components: |
+            [
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
+            ]
