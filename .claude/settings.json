@@ -20,5 +20,17 @@
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "nldd": {
+      "source": {
+        "source": "github",
+        "repo": "NederlandseDigitaleDienst/ai-plugins"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "nldd-design-system@nldd": true,
+    "nldd-a11y@nldd": true
   }
 }
