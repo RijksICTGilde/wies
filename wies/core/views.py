@@ -254,8 +254,8 @@ def _build_assignment_panel_data(assignment, request):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_rows": team_rows,
-        # Same human label as the "Externe bron" row, so the intro says "OTYS
-        # IIR", not the raw key "OTYS_IIR".
+        # Same human label as the "Externe bron" row, so the intro says "OTYS",
+        # not the raw key "otys_iir".
         "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_delete": has_permission(Verb.DELETE, assignment, request.user),

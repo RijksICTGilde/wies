@@ -16,7 +16,7 @@ SERVICE_STATUS = {
 }
 
 SOURCE_CHOICES = {
-    "otys_iir": "OTYS IIR",
+    "otys_iir": "OTYS",
     "wies": "Wies",
 }
 
