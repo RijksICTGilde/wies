@@ -2,9 +2,9 @@
 
 De componenten van `@nldd/design-system` zijn Lit web components met een
 shadow root. Wies rendert HTML op de server en swapt fragmenten in met htmx.
-Op die grens gaat het mis op manieren die de officiële `nldd`-skill niet
-dekt: die is geschreven voor client-side apps en zet server-side rendering
-expliciet buiten scope.
+Op die grens gaat het mis op manieren die de officiële NLDD-skills
+(plugin `nldd-design-system`) niet dekken: die laten server-side rendering
+over aan de algemene web-componentenpraktijk.
 
 Vier valkuilen, met dezelfde oorzaak: **een swap trapt de levenscyclus van een
 component niet af zoals een paginalading dat doet.**
@@ -70,9 +70,9 @@ private `--_`-variabelen: 0.9.0 gaf ze een componentprefix
 klinkt is vaak net niet de echte (`edit` → `pencil`, `lock` → `lock-closed`,
 `tertiary` → `neutral-transparent`, `warning-subtle` → `critical-tinted`).
 
-Zoek op in `skills/nldd/reference.md` van de `nldd`-skill, of in de broncode
-van `MinBZK/storybook` (`src/components/<groep>/<naam>/`). Niet gissen in de
-geminificeerde bundle.
+Zoek op met de `nldd-design`-skill (`reference.md`), of in de broncode van
+`NederlandseDigitaleDienst/design-system` (`src/components/<groep>/<naam>/`).
+Niet gissen in de geminificeerde bundle.
 
 ## CSS-tokens: test in dark mode
 
