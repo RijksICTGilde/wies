@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- TBD: bump dependencies for security patches
+- 783: bump dependencies for security patches
 
 ## 2026-10-28
 
