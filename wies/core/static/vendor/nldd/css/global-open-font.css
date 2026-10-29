@@ -1,3 +1,5 @@
+@import "./inter-font.css";
+@import "./jetbrains-mono-font.css";
 @import "./variables.css";
 @import "./document-reset.css";
 @import "./rich-text.css";
