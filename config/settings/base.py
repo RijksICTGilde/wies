@@ -144,8 +144,15 @@ AUTH_NO_ACCESS_URL = "/geen-toegang/"
 OIDC_ID_TOKEN_SESSION_KEY = "oidc_id_token"  # noqa: S105 (hardcoded-password) — session key name, not a secret
 OIDC_POST_LOGOUT_COOKIE_NAME = "wies_post_logout"
 
-# Allowed email domains for ODI users
-ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
+# Allowed email domains for ODI users. Comma-separated override, e.g. to let in
+# pentesters on another ministry's domain. Each entry gets a leading "@", so
+# "minfin.nl" cannot match "x@notminfin.nl". Empty or unset gives the default:
+# an empty list would switch the check off.
+ALLOWED_EMAIL_DOMAINS = [
+    "@" + domain.strip().lower().lstrip("@")
+    for domain in os.environ.get("ALLOWED_EMAIL_DOMAINS", "").split(",")
+    if domain.strip().lstrip("@")
+] or ["@rijksoverheid.nl", "@minbzk.nl"]
 
 # Comma-separated emails of the Applicatiebeheerders, see docs/roles.md.
 STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS", "").split(",") if email.strip()]
