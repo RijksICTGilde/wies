@@ -25,8 +25,8 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Weekly re-scan: new CVEs get published against code you haven't touched.
-    - cron: "17 4 * * 1"
+    # Daily re-scan: new CVEs get published against code you haven't touched.
+    - cron: "17 4 * * *"
   workflow_dispatch:
 
 # Deny by default. Jobs grant themselves what they need.
