@@ -659,7 +659,15 @@ def _build_aanvraag_panel_data(service, request):
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
     is_allowed_domain = email and is_allowed_email_domain(email)
-    return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
+    return render(
+        request,
+        "no_access.html",
+        {
+            "email": email,
+            "is_allowed_domain": is_allowed_domain,
+            "allowed_domains": ", ".join(settings.ALLOWED_EMAIL_DOMAINS),
+        },
+    )
 
 
 def _assignment_create_button(request):
