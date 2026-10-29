@@ -32,8 +32,7 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     function (section) {
       const inner =
         section.shadowRoot && section.shadowRoot.querySelector("nldd-sheet");
-      if (isOpen(inner))
-        sidebarBar = inner.shadowRoot.querySelector("nldd-top-title-bar");
+      if (isOpen(inner)) sidebarBar = inner.querySelector("nldd-top-title-bar");
     },
   );
 
