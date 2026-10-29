@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- ???: upgrade NLDD design system from 0.10.0 to 0.13.1. A sheet no longer closes when you press outside it and release inside, focus stays visible above the sticky bars of a sheet, the arrow keys on Persoon/Opdracht load the chosen view, the search suggestions have a name, and the ribbon no longer stays in view in Safari. Saving a contract period or deleting a user with an invalid date no longer fails without a message. "Aanvraag toevoegen" in the opdracht panel shows its icon (accessibility)
 
 ## 2026-10-28
 

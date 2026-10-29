@@ -6,25 +6,10 @@ Op die grens gaat het mis op manieren die de officiële NLDD-skills
 (plugin `nldd-design-system`) niet dekken: die laten server-side rendering
 over aan de algemene web-componentenpraktijk.
 
-Vier valkuilen, met dezelfde oorzaak: **een swap trapt de levenscyclus van een
+Drie valkuilen, met dezelfde oorzaak: **een swap trapt de levenscyclus van een
 component niet af zoals een paginalading dat doet.**
 
-## 1. `show()` faalt stil na een swap
-
-Op een sheet, modal of dialog die net is ingeswapt doet `show()` niets: Lit
-heeft de shadow-`<dialog>` nog niet gerenderd. Er komt geen foutmelding — het
-venster gaat gewoon niet open.
-
-Wacht op `updateComplete`:
-
-```js
-await el.updateComplete;
-el.show();
-```
-
-Zie `wies/core/static/js/dialog.js`, dat sheets met `data-auto-show` na een swap opent.
-
-## 2. `href` én `hx-get` op hetzelfde element
+## 1. `href` én `hx-get` op hetzelfde element
 
 Componenten die intern een `<a>` renderen (`nldd-list-item`, `nldd-card`,
 `nldd-menu-item`) laten die anchor winnen: de browser navigeert weg en gooit
@@ -32,13 +17,13 @@ de htmx-respons weg. Kies er één, of onderschep de default click.
 
 `wies/core/static/js/hx_link_guard.js` doet dat laatste voor elementen die beide dragen.
 
-## 3. POST vanuit een component in een shadow root
+## 2. POST vanuit een component in een shadow root
 
 Uitloggen en verwijderen horen POST te zijn, maar een menu-item in een shadow
 root kun je niet in een `<form>` wikkelen. Doe de POST vanuit JS met het
 CSRF-token uit de markup — zie `wies/core/static/js/menu_nav.js`.
 
-## 4. Formuliervalidatie koppelt zichzelf niet
+## 3. Formuliervalidatie koppelt zichzelf niet
 
 De foutweergave is een `nldd-validation-list` met `nldd-validation-item`s in
 de `nldd-form-field`; een item zonder regel is pas zichtbaar als het veld
@@ -49,6 +34,13 @@ voor een screenreader. Elke custom widget rendert ze expliciet mee
 kiezer) geeft de lijst een `for` naar zijn knop. Elk `<form>` draagt
 `novalidate`: sinds 0.8.88 melden de velden `required` aan de browser, die de
 inzending dan zonder tekst tegenhoudt; in Wies oordeelt de server.
+
+## `show()` mag direct
+
+Een `show()` vóór de eerste render zet het component in de wachtrij; wachten op
+`updateComplete` is niet nodig. Een script dat vóór de bundel laadt
+(`extra_head` in `base.html`) wacht wel op `customElements.whenDefined()`:
+daar bestaat `show()` nog niet.
 
 ## Eigen CSS op een `nldd-*` element
 

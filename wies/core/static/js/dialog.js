@@ -1,17 +1,11 @@
 // Auto-show sheets/modals that arrive via a swap.
 document.addEventListener("htmx:afterSwap", function (e) {
-  // show() returns silently before Lit renders the shadow <dialog>.
   // data-auto-show is explicit: panel content also carries closed dialogs.
   const selector =
     "nldd-window, nldd-modal-dialog[data-auto-show], nldd-sheet[data-auto-show]";
   e.detail.target.querySelectorAll(selector).forEach(function (dialog) {
-    customElements
-      .whenDefined(dialog.localName)
-      .then(() => dialog.updateComplete)
-      .then(() => {
-        if (dialog.localName === "nldd-sheet") syncSheetBackButton(dialog);
-        dialog.show();
-      });
+    if (dialog.localName === "nldd-sheet") syncSheetBackButton(dialog);
+    dialog.show();
   });
 });
 

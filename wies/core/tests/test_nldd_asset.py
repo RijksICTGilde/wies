@@ -35,12 +35,10 @@ class NlddAssetTest(TestCase):
 
 
 class NlddInternalsTest(TestCase):
-    """sticky_bar_inset.js and side_panel.js style nldd-page from inside its
-    shadow root, so they lean on internal names. An upgrade that renames one
-    would switch the fix off silently; this fails instead."""
+    """side_panel.js styles nldd-page from inside its shadow root, so it leans
+    on an internal name. An upgrade that renames it would switch the fix off
+    silently; this fails instead."""
 
     def test_bundle_still_has_the_names_the_scripts_use(self):
         bundle = (Path(settings.BASE_DIR) / "wies/core/static/vendor/nldd/nldd.min.js").read_text()
-        for name in ("page__scroll", "--_page-header-height", "--_page-footer-height"):
-            with self.subTest(name=name):
-                assert name in bundle
+        assert "page__scroll" in bundle
