@@ -14,9 +14,12 @@ updates:
     labels:
       - "dependencies"
 
+  # package.json holds the vendored front-end packages; the dependabot-vendor
+  # workflow copies the new files onto the PR. Daily: NLDD often releases
+  # several times a week.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     labels:
       - "dependencies"

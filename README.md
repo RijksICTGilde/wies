@@ -85,9 +85,10 @@ This project vendors external JavaScript instead of using a CDN. This ensures th
 
 #### Update vendor dependencies
 
-To update vendor dependencies:
+Dependabot opens a PR for a new version, and the `dependabot-vendor` workflow
+adds the vendored files to it. By hand:
 
-1. Edit the version numbers at the top of `justfile` (e.g. `HTMX_VERSION`).
+1. Edit the version in `package.json` (it is never installed; `just update-vendor` reads it).
 
 2. Run the update command:
 

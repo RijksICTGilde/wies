@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 789: upgrade NLDD design system from 0.10.0 to 0.13.2; a GitHub Action opens a PR for each new NLDD release
+- 789: upgrade NLDD design system from 0.10.0 to 0.13.2; NLDD and htmx versions now live in package.json and Dependabot keeps them up to date
 
 ## 2026-10-28
 

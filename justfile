@@ -1,9 +1,5 @@
 export COMPOSE_FILE := "docker-compose.yml"
 
-# Vendor package versies
-HTMX_VERSION := "2.0.8"
-NLDD_VERSION := "0.13.2"
-
 # Default command to list all available commands.
 default:
   @just --list
@@ -111,10 +107,14 @@ update-vendor:
   #!/usr/bin/env bash
   set -euo pipefail
   echo "Downloading vendor packages..."
+  # Versions live in package.json, so Dependabot can raise them.
+  version() { node -p "require('./package.json').dependencies['$1']"; }
+  htmx_version="$(version htmx.org)"
+  nldd_version="$(version @nldd/design-system)"
 
   # htmx: single minified file from unpkg.
   mkdir -p wies/core/static/vendor/htmx
-  curl -sL "https://unpkg.com/htmx.org@{{HTMX_VERSION}}/dist/htmx.min.js" \
+  curl -sL "https://unpkg.com/htmx.org@${htmx_version}/dist/htmx.min.js" \
     -o wies/core/static/vendor/htmx/htmx.min.js
 
   # nldd: single JS bundle + css/ + fonts/ from the npm tarball (no install/build).
@@ -123,7 +123,7 @@ update-vendor:
   dest="$(pwd)/wies/core/static/vendor/nldd"
   rm -rf "$dest" && mkdir -p "$dest"
   tmp="$(mktemp -d)"
-  ( cd "$tmp" && npm pack "@nldd/design-system@{{NLDD_VERSION}}" >/dev/null && tar xzf nldd-design-system-*.tgz )
+  ( cd "$tmp" && npm pack "@nldd/design-system@${nldd_version}" >/dev/null && tar xzf nldd-design-system-*.tgz )
   cp "$tmp/package/dist/nldd.min.js" "$dest/"
   cp -R "$tmp/package/dist/css" "$dest/css"
   cp -R "$tmp/package/dist/fonts" "$dest/fonts"
@@ -133,9 +133,9 @@ update-vendor:
   rm -rf "$dest/css/themes" "$dest/css/themes.css" "$dest/css/tokens.css" \
     "$dest/css/global-open-font.css" "$dest/css/inter-font.css" \
     "$dest"/fonts/Inter-*
-  printf '@nldd/design-system {{NLDD_VERSION}}\nvendored via just update-vendor\n' > "$dest/VERSION.txt"
+  printf '@nldd/design-system %s\nvendored via just update-vendor\n' "$nldd_version" > "$dest/VERSION.txt"
   rm -rf "$tmp"
 
   echo "Done! Vendor packages updated:"
-  echo "  - htmx.min.js ({{HTMX_VERSION}})"
-  echo "  - nldd ({{NLDD_VERSION}}): nldd.min.js + css/ + fonts/"
+  echo "  - htmx.min.js ($htmx_version)"
+  echo "  - nldd ($nldd_version): nldd.min.js + css/ + fonts/"

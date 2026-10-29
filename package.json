@@ -1,0 +1,9 @@
+{
+  "name": "wies-vendor",
+  "private": true,
+  "description": "Front-end packages that `just update-vendor` copies into wies/core/static/vendor. Never installed: the versions here are the source for that recipe and for Dependabot.",
+  "dependencies": {
+    "@nldd/design-system": "0.13.2",
+    "htmx.org": "2.0.8"
+  }
+}
