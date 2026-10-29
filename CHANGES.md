@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 783: bump dependencies for security patches
+- 783: bump dependencies for security patches and change trivy interval to "daily"
 
 ## 2026-10-28
 

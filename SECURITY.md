@@ -53,7 +53,7 @@ De technische invulling van de maatregelen hierboven:
 - Inloggen via SSO-Rijk met OIDC; geen lokale wachtwoorden, geen groepsaccounts.
 - Dependabot bewaakt wekelijks de Python-, npm- en GitHub Actions-dependencies
   ([`.github/dependabot.yml`](.github/dependabot.yml)).
-- Trivy scant bij iedere pull request, bij iedere push naar `main` en wekelijks de broncode
+- Trivy scant bij iedere pull request, bij iedere push naar `main` en dagelijks de broncode
   (dependencies, geheimen, configuratie) en de container-image (OS-pakketten). Bevindingen met
   ernst hoog of kritiek waarvoor een fix beschikbaar is, komen in de Security-tab van de
   repository ([`.github/workflows/security-scan.yml`](.github/workflows/security-scan.yml)).
