@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 789: upgrade NLDD design system from 0.10.0 to 0.13.2. A sheet no longer closes when you press outside it and release inside, focus stays visible above the sticky bars of a sheet, the arrow keys on Persoon/Opdracht load the chosen view, the search suggestions have a name, and the ribbon no longer stays in view in Safari. Saving a contract period or deleting a user with an invalid date no longer fails without a message. On a narrow screen, a filter's option list opened from the filter sheet has a back button, and "Filter" works when clicked right after the page loads. "Aanvraag toevoegen" in the opdracht panel shows its icon. VoiceOver in Safari reads the error message of a form field, and a filter chip no longer looks like two buttons side by side (accessibility)
+- 789: upgrade NLDD design system from 0.10.0 to 0.13.2; a GitHub Action opens a PR for each new NLDD release
 
 ## 2026-10-28
 
