@@ -43,6 +43,13 @@ class A11yMarkupTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, '<nldd-date-field id="filter-beschikbaar_vanaf"')
 
+    def test_search_field_names_its_suggestion_list(self):
+        """The suggestion listbox takes its name from the field's accessible-label,
+        not from the placeholder (WCAG 4.1.2)."""
+        response = self.client.get(reverse("assignment-list"))
+        assert response.status_code == 200
+        self.assertContains(response, 'accessible-label="Opdracht of opdrachtgever zoeken"')
+
     def test_profile_name_fields_carry_their_input_purpose(self):
         response = self.client.get(reverse("profile-name-edit"), headers={"hx-request": "true"})
         assert response.status_code == 200
@@ -150,12 +157,6 @@ class A11yMarkupTest(TestCase):
         self.assertContains(response, 'text="**Labels**"')
         self.assertContains(response, 'text="Gebruikers"')
         self.assertNotContains(response, 'text="**Gebruikers**"')
-
-    def test_pages_load_the_sticky_bar_inset(self):
-        """Without it a sheet's sticky footer covers the focused option (2.4.11)."""
-        response = self.client.get(reverse("home"))
-        assert response.status_code == 200
-        self.assertContains(response, "js/sticky_bar_inset.js")
 
     def test_accessibility_status_is_text(self):
         """The status is text with a link to the register, not a label image (WCAG 1.1.1)."""

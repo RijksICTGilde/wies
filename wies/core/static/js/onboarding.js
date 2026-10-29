@@ -184,15 +184,7 @@
     document.documentElement.style.overflow = "";
   });
 
-  // show() fails silently before Lit has rendered the shadow root.
-  customElements
-    .whenDefined("nldd-window")
-    .then(function () {
-      return wizard.updateComplete;
-    })
-    .then(function () {
-      show(1);
-      if (wizard.show) wizard.show();
-      document.documentElement.style.overflow = "hidden";
-    });
+  show(1);
+  wizard.show();
+  document.documentElement.style.overflow = "hidden";
 })();

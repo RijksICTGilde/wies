@@ -2,7 +2,7 @@ export COMPOSE_FILE := "docker-compose.yml"
 
 # Vendor package versies
 HTMX_VERSION := "2.0.8"
-NLDD_VERSION := "0.10.0"
+NLDD_VERSION := "0.13.2"
 
 # Default command to list all available commands.
 default:
@@ -127,6 +127,12 @@ update-vendor:
   cp "$tmp/package/dist/nldd.min.js" "$dest/"
   cp -R "$tmp/package/dist/css" "$dest/css"
   cp -R "$tmp/package/dist/fonts" "$dest/fonts"
+  # Wies loads css/global.css (RijksSans) and css/rich-text.css only: drop the
+  # colour themes and the Inter variant. test_nldd_asset.py fails if a kept
+  # file still points at one of these.
+  rm -rf "$dest/css/themes" "$dest/css/themes.css" "$dest/css/tokens.css" \
+    "$dest/css/global-open-font.css" "$dest/css/inter-font.css" \
+    "$dest"/fonts/Inter-*
   printf '@nldd/design-system {{NLDD_VERSION}}\nvendored via just update-vendor\n' > "$dest/VERSION.txt"
   rm -rf "$tmp"
 

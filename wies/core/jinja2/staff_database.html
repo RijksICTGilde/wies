@@ -88,7 +88,8 @@
   <p>Publiceer de laatste versie van de ODI startpagina vanuit de content-repository.</p>
   </nldd-rich-text>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <form method="post"
+  <form novalidate
+        method="post"
         hx-post="{{ url('staff-database') }}"
         hx-target="#task-list"
         hx-swap="innerHTML">
