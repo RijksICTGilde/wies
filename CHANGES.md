@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 786: also release to zad staging on tag
 
 ## 2026-10-28
 
