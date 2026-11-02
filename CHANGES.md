@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
 
 ## 2026-10-28
 

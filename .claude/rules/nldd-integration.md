@@ -70,7 +70,9 @@ private `--_`-variabelen: 0.9.0 gaf ze een componentprefix
 klinkt is vaak net niet de echte (`edit` → `pencil`, `lock` → `lock-closed`,
 `tertiary` → `neutral-transparent`, `warning-subtle` → `critical-tinted`).
 
-Zoek op met de `nldd-design`-skill (`reference.md`), of in de broncode van
+Zoek op met de `nldd-design`-skill (`reference.md`), in
+`node_modules/@nldd/design-system/custom-elements.json` (na `npm ci`: precies
+de versie uit `package-lock.json`), of in de broncode van
 `NederlandseDigitaleDienst/design-system` (`src/components/<groep>/<naam>/`).
 Niet gissen in de geminificeerde bundle.
 

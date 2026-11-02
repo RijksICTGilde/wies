@@ -23,7 +23,7 @@ class NlddAssetTest(TestCase):
             assert nldd_asset("nldd.min.js").endswith("/vendor/nldd/nldd.min.js?v=1.2.3")
 
     def test_url_is_left_alone_without_a_version_file(self):
-        # A checkout where update-vendor has not run yet: no query rather than an
+        # A checkout where `just vendor` has not run yet: no query rather than an
         # empty one that would look like a real cache key.
         with patch("wies.core.services.version.Path.read_text", side_effect=OSError):
             assert nldd_asset("nldd.min.js").endswith("/vendor/nldd/nldd.min.js")
