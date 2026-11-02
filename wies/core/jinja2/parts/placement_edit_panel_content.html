@@ -88,7 +88,7 @@
        wrapper itself and cannot pass it. wire_field_errors links the error
        message here, which as_field_group() would otherwise do. #}
     {% set start_errors = wire_field_errors(form.specific_start_date) %}
-    <nldd-form-field label="{{ form.specific_start_date.label }}"{% if inherits %} hidden{% endif %}>
+    <nldd-form-field label="{{ form.specific_start_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits %} hidden{% endif %}>
     {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
     {% if form.specific_start_date.errors %}
       <nldd-validation-list>
@@ -104,7 +104,7 @@
     <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
     </nldd-form-field>
     {% set end_errors = wire_field_errors(form.specific_end_date) %}
-    <nldd-form-field label="{{ form.specific_end_date.label }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
+    <nldd-form-field label="{{ form.specific_end_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
     {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
     {% if form.specific_end_date.errors %}
       <nldd-validation-list>

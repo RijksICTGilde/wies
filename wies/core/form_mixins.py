@@ -7,11 +7,14 @@ creating a circular dependency.
 
 import logging
 
+from django.forms import DateInput
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
 logger = logging.getLogger(__name__)
+
+DATE_FORMAT_HINT = "Bijvoorbeeld 31-01-2026"
 
 
 class WiesJinja2Renderer(Jinja2):
@@ -116,6 +119,10 @@ class _BaseFormMixin:
         }.get(field.widget.__class__.__name__)
         if label_attr and field.label:
             field.widget.attrs.setdefault(label_attr, str(field.label))
+
+        # A fixed date, not today's, so screenshots and tests stay put.
+        if isinstance(field.widget, DateInput):
+            field.widget.attrs.setdefault("supporting-label", DATE_FORMAT_HINT)
 
         # Auto-assign widget template + any per-widget configuration.
         widget_class_name = field.widget.__class__.__name__

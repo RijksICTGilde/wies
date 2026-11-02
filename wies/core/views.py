@@ -111,6 +111,7 @@ from .services.occupancy import (
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
+    horizon_days,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -554,8 +555,9 @@ def _get_colleague_assignments(request, colleague):
     return assignments
 
 
-# Three clamped lines at roughly 90 characters. Nothing re-measures in the
-# browser, so the clamp is the only safeguard.
+# Three clamped lines at roughly 90 characters on a wide panel. Past this the
+# toggle is certain, also without JavaScript; below it cv_clamp.js shows the
+# toggle when a narrow screen clamps a shorter text.
 _CV_PREVIEW_CHARS = 240
 _CV_ROLE_NAMES = 3
 
@@ -843,6 +845,7 @@ def bezetting(request):
         "search_filter": search,
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
+        "horizon_days": horizon_days(),
         "today": today,
         "horizon": timeline_horizon(today),
         "month_ticks": month_ticks(today),

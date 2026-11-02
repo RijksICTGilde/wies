@@ -194,6 +194,11 @@
     // A branch can be built long after selections were restored.
     if (selectable) this._syncRow(node, row);
 
+    // Children are built on first expand, and a row without children and
+    // without `expanded` counts as disclosing nothing: no aria-expanded at all.
+    // The property, unlike the attribute, can say "closed" before that.
+    if (hasChildren) row.expanded = false;
+
     return row;
   };
 
@@ -359,5 +364,9 @@
     return this;
   };
 
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { OrgTree: OrgTree };
+    return;
+  }
   window.WiesOrgTree = OrgTree;
 })();

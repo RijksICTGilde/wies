@@ -144,7 +144,7 @@
      a visible-then-collapsed flash. as_field_group() renders the wrapper itself and
      cannot pass it through, so wire_field_errors links the error message here. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
-  <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits %} hidden{% endif %}>
+  <nldd-form-field label="{{ svc_form.placement_start_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits %} hidden{% endif %}>
   {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
   {% if svc_form.placement_start_date.errors %}
     <nldd-validation-list>
@@ -160,7 +160,7 @@
   <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if svc_form.placement_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
   </nldd-form-field>
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
-  <nldd-form-field label="{{ svc_form.placement_end_date.label }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
+  <nldd-form-field label="{{ svc_form.placement_end_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
   {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
   {% if svc_form.placement_end_date.errors %}
     <nldd-validation-list>

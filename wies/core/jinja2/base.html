@@ -44,6 +44,7 @@
        swaps. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
+    <script src="{{ app_asset('js/cv_clamp.js') }}" defer></script>
     {# Not deferred: member_form.js ships inside the teamlid sheet and runs
        during parse on a direct load, before deferred scripts. #}
     <script src="{{ app_asset('js/period_fields.js') }}"></script>
@@ -56,6 +57,7 @@
     <script src="{{ app_asset('js/focus_restore.js') }}" defer></script>
     <script src="{{ app_asset('js/live_region.js') }}" defer></script>
     <script src="{{ app_asset('js/field_error_description.js') }}" defer></script>
+    <script src="{{ app_asset('js/date_field.js') }}" defer></script>
   </head>
   <body>
     {# Announces what an htmx swap changed: the number of results after a
