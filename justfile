@@ -1,9 +1,5 @@
 export COMPOSE_FILE := "docker-compose.yml"
 
-# Vendor package versies
-HTMX_VERSION := "2.0.8"
-NLDD_VERSION := "0.10.0"
-
 # Default command to list all available commands.
 default:
   @just --list
@@ -15,6 +11,7 @@ setup:
   if [ ! -f .env ]; then cp .env.local.example .env; fi
   if [ ! -f .env.worker ]; then cp .env.worker.example .env.worker; fi
   docker compose down -v
+  just vendor
   docker compose build
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py setup
@@ -29,7 +26,8 @@ load-full-data:
 
 # Start up container. Exports APP_VERSION from local git (branch-shortsha)
 # so the running app shows a useful version in development.
-up:
+# The compose mount hides the image's vendor files, so refresh the checkout's.
+up: vendor
   APP_VERSION="$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)" docker compose up
 
 # Stop and remove containers
@@ -81,7 +79,7 @@ test target="all":
   fi
 
 # Run Django tests
-test-django:
+test-django: vendor
   docker compose run --rm django pytest
 
 # Run JavaScript tests
@@ -106,30 +104,8 @@ pre-commit:
 pre-commit-install:
   uv run pre-commit install
 
-# Download vendor packages (externe dependencies lokaal)
-update-vendor:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  echo "Downloading vendor packages..."
-
-  # htmx: single minified file from unpkg.
-  mkdir -p wies/core/static/vendor/htmx
-  curl -sL "https://unpkg.com/htmx.org@{{HTMX_VERSION}}/dist/htmx.min.js" \
-    -o wies/core/static/vendor/htmx/htmx.min.js
-
-  # nldd: single JS bundle + css/ + fonts/ from the npm tarball (no install/build).
-  # npm pack downloads the tarball only; we copy dist/ verbatim so the relative
-  # @import and url('../fonts/...') paths keep resolving.
-  dest="$(pwd)/wies/core/static/vendor/nldd"
-  rm -rf "$dest" && mkdir -p "$dest"
-  tmp="$(mktemp -d)"
-  ( cd "$tmp" && npm pack "@nldd/design-system@{{NLDD_VERSION}}" >/dev/null && tar xzf nldd-design-system-*.tgz )
-  cp "$tmp/package/dist/nldd.min.js" "$dest/"
-  cp -R "$tmp/package/dist/css" "$dest/css"
-  cp -R "$tmp/package/dist/fonts" "$dest/fonts"
-  printf '@nldd/design-system {{NLDD_VERSION}}\nvendored via just update-vendor\n' > "$dest/VERSION.txt"
-  rm -rf "$tmp"
-
-  echo "Done! Vendor packages updated:"
-  echo "  - htmx.min.js ({{HTMX_VERSION}})"
-  echo "  - nldd ({{NLDD_VERSION}}): nldd.min.js + css/ + fonts/"
+# Install the front-end packages from package-lock.json into wies/core/static/vendor
+# (via the Dockerfile's vendor stage, so Node on the host is optional)
+vendor:
+  rm -rf wies/core/static/vendor
+  docker build --quiet --target vendor-files --output type=local,dest=wies/core/static/vendor .

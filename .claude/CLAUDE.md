@@ -20,6 +20,7 @@ Language: Dutch UI, English code.
 - `just up` - Start containers
 - `just down` - Stop containers
 - `just test` - Run tests
+- `just vendor` - Copy NLDD and htmx from `package-lock.json` into `wies/core/static/vendor/` (untracked; `setup`/`up`/`test` run it)
 - `uv run ruff check --fix` - Lint and fix
 
 ## Code Style
@@ -44,6 +45,7 @@ Language: Dutch UI, English code.
 ### UI Changes
 
 - Use [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components
+- NLDD version lives in `package.json`/`package-lock.json`; Dependabot opens the upgrade PR. Check breaking changes with the `nldd-design-upgrade` skill before merging: an upgrade can break silently
 - Reference: https://minbzk.github.io/storybook/
 - Dutch labels and messages
 - Web components in a server-rendered app have their own pitfalls (swap

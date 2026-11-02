@@ -6,6 +6,8 @@
 **/tests
 **/__pycache__
 *.py[cod]
+# The image takes these from the vendor stage, never from the checkout
+wies/core/static/vendor
 
 # 2. Keep secrets and bulk out of the build context
 .env
