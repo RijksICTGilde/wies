@@ -1,21 +1,21 @@
-{% for svc in object_list %}
+{% for card in object_list %}
   {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
      hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
-  <nldd-card role="listitem" background="tinted" accessible-label="{{ svc.link_name }}" href="{{ svc.panel_url }}" hx-get="{{ svc.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-card role="listitem" background="tinted" accessible-label="{{ card.link_name }}" href="{{ card.panel_url }}" hx-get="{{ card.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
-  <h2>{{ svc.card_title }}</h2>
+  <h2>{{ card.title }}</h2>
   </nldd-title>
   <nldd-spacer size="4"></nldd-spacer>
   {# A paragraph of its own, so a screen reader pauses between the opdracht
      and the hours; it is what tells two cards for the same role apart. #}
   <nldd-rich-text spacing="flat">
-  <p class="wies-text-secondary">{{ svc.assignment.name }}</p>
+  <p class="wies-text-secondary">{{ card.opdracht }}</p>
   </nldd-rich-text>
-  {% if svc.hours_per_week %}
+  {% if card.hours_per_week %}
     <nldd-spacer size="8"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
-    <nldd-tag size="sm" text="{{ svc.hours_per_week }} uur per week"></nldd-tag>
+    <nldd-tag size="sm" text="{{ card.hours_per_week }} uur per week"></nldd-tag>
     </nldd-container>
   {% endif %}
   </nldd-container>
@@ -23,18 +23,18 @@
   {# The icons carry no name, so a hidden label says what each row is:
      "Den Haag" can be the opdrachtgever or the standplaats. #}
   <nldd-list appearance="simple" dividers="never" accessible-label="Aanvraaggegevens">
-  {% if svc.org_label %}
+  {% if card.org_label %}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="office"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Opdrachtgever: </span>{{ svc.org_label }}</nldd-text-cell>
+    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Opdrachtgever: </span>{{ card.org_label }}</nldd-text-cell>
     </nldd-list-item>
   {% endif %}
-  {% if svc.location %}
+  {% if card.location %}
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="location"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Standplaats: </span>{{ svc.location }}</nldd-text-cell>
+    <nldd-text-cell size="sm"><span class="wies-visually-hidden">Standplaats: </span>{{ card.location }}</nldd-text-cell>
     </nldd-list-item>
   {% endif %}
   {# The period row is always there, also without a date: the card would
@@ -42,7 +42,7 @@
   <nldd-list-item size="sm">
   <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell size="sm"><span class="wies-visually-hidden">Periode: </span>{{ svc.period_text }}</nldd-text-cell>
+  <nldd-text-cell size="sm"><span class="wies-visually-hidden">Periode: </span>{{ card.period_text }}</nldd-text-cell>
   </nldd-list-item>
   </nldd-list>
   </nldd-container>

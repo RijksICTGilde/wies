@@ -41,7 +41,7 @@ class ServicePanelTest(TestCase):
         self.client.force_login(self.viewer)
 
     def _panel(self):
-        url = reverse("home") + f"?opdracht={self.assignment.public_id}&aanvraag={self.service.public_id}"
+        url = reverse("home") + f"?aanvraag={self.service.public_id}"
         return self.client.get(url, headers=HX).content.decode()
 
     def test_the_panel_names_the_role_and_its_opdracht(self):
@@ -210,15 +210,13 @@ class ServicePanelTest(TestCase):
         assert edit_url.replace("&", "&amp;") in self._panel()
         assert "data-member-form" in body
         assert 'back-text="Aanvraag"' in body
-        assert (
-            f'name="terug_url" value="/?opdracht={self.assignment.public_id}&amp;aanvraag={self.service.public_id}"'
-            in body
-        )
+        # Back is the aanvraag panel alone: ?opdracht= was for the sheet.
+        assert f'name="terug_url" value="/?aanvraag={self.service.public_id}"' in body
 
     def test_an_unknown_aanvraag_is_a_404_for_the_panel_request(self):
         """As for every other panel object: the HTMX request 404s rather than
         rendering a panel with no data."""
-        url = reverse("home") + f"?opdracht={self.assignment.public_id}&aanvraag=00000000-0000-0000-0000-000000000000"
+        url = reverse("home") + "?aanvraag=00000000-0000-0000-0000-000000000000"
 
         assert self.client.get(url, headers=HX).status_code == 404
 
@@ -298,7 +296,7 @@ class ServicePanelOnlyVacanciesTest(TestCase):
         return service
 
     def _get(self, service):
-        url = reverse("home") + f"?opdracht={self.assignment.public_id}&aanvraag={service.public_id}"
+        url = reverse("home") + f"?aanvraag={service.public_id}"
         return self.client.get(url, headers=HX)
 
     def test_a_filled_role_is_not_an_aanvraag(self):
@@ -327,7 +325,7 @@ class ServicePanelOnlyVacanciesTest(TestCase):
     def test_a_full_page_load_renders_without_the_panel(self):
         """No HX-Request: a filled row gives the list page, not a 404 -- the
         same as an unknown id, so nothing distinguishes the two."""
-        url = reverse("home") + f"?opdracht={self.assignment.public_id}&aanvraag={self.filled.public_id}"
+        url = reverse("home") + f"?aanvraag={self.filled.public_id}"
         response = self.client.get(url)
 
         assert response.status_code == 200
@@ -411,7 +409,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
         )
 
     def _panel(self, service):
-        url = reverse("home") + f"?opdracht={self.assignment.public_id}&aanvraag={service.public_id}"
+        url = reverse("home") + f"?aanvraag={service.public_id}"
         return self.client.get(url, headers=HX).content.decode()
 
     def test_per_direct_for_a_year_is_saved_and_shown(self):
@@ -619,7 +617,7 @@ class LeavingAnAanvraagTest(TestCase):
         self.assignment = Assignment.objects.create(name="Zaaksysteem", source="wies", owner=self.bdm.colleague)
         self.skill = Skill.objects.create(name="Dev")
         self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
-        self.terug_url = f"/?opdracht={self.assignment.public_id}&aanvraag={self.service.public_id}"
+        self.terug_url = f"/?aanvraag={self.service.public_id}"
         self.client.force_login(self.bdm)
 
     def _follow(self, response):

@@ -210,7 +210,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
         row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
-            row["panel_url"] = _panel_query(opdracht=row["assignment_public_id"], aanvraag=row["service_public_id"])
+            row["panel_url"] = _panel_query(aanvraag=row["service_public_id"])
             row["shown_hours"] = row["hours_per_week"]
             row["period_text"] = request_period_text(row["service"])
             visible.append(row)

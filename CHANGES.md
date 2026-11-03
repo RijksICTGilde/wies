@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
-- 772: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects)
+- 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)

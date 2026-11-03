@@ -244,8 +244,7 @@ class AssignmentCreateTest(TestCase):
         assert 'text="Bekijk opdracht"' not in html
 
     def test_success_message_asks_for_an_aanvraag(self):
-        """Aanvragen lists aanvragen only, so the message tells a new opdracht
-        needs one to show up there."""
+        """A new opdracht has no aanvraag yet; the message asks for one."""
         self.client.force_login(self.business_manager_user)
         self.client.post(
             reverse("assignment-create-sheet"),
@@ -262,7 +261,7 @@ class AssignmentCreateTest(TestCase):
             {"opdracht": assignment.public_id},
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
-        self.assertContains(panel, "Voeg een aanvraag toe. Zonder aanvraag staat de opdracht niet bij Aanvragen.")
+        self.assertContains(panel, "is aangemaakt. Voeg een aanvraag toe.")
 
 
 class AssignmentListButtonTest(TestCase):

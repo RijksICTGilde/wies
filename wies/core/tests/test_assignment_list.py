@@ -28,6 +28,8 @@ User = get_user_model()
 
 # The aanvraag public_id in a card's href; the hx-get repeats it, so only href.
 CARD_AANVRAAG_RE = re.compile(r'<nldd-card[^>]*\shref="[^"]*aanvraag=([0-9a-f-]{36})')
+# The opdracht public_id in the href of an opdracht's "Nog geen aanvraag" card.
+CARD_OPDRACHT_RE = re.compile(r'<nldd-card[^>]*\shref="[^"]*opdracht=([0-9a-f-]{36})')
 
 
 class AssignmentListViewTest(TestCase):
@@ -536,13 +538,75 @@ class AssignmentListViewTest(TestCase):
         assert str(filled.public_id) not in ids
         assert str(concept.public_id) not in ids
 
-    def test_assignment_without_aanvraag_is_not_listed(self):
-        """An opdracht without any role has no card."""
-        Assignment.objects.create(name="Lege Opdracht", source="wies")
+    def _opdracht_card_ids(self, params=None):
+        """The opdracht public_ids of the "Nog geen aanvraag" cards, in order."""
+        self.client.force_login(self.auth_user)
+        response = self.client.get(self.list_url, params or {})
+        assert response.status_code == 200
+        return CARD_OPDRACHT_RE.findall(response.content.decode())
+
+    def test_assignment_without_aanvraag_gets_a_card(self):
+        """An opdracht without any role stays findable: one card that opens the
+        opdracht panel, in the count next to the aanvragen."""
+        empty = Assignment.objects.create(name="Lege Opdracht", source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=empty, organization=self.org)
+
         self.client.force_login(self.auth_user)
         content = self.client.get(self.list_url).content.decode()
-        assert "Lege Opdracht" not in content
         assert CARD_AANVRAAG_RE.findall(content) == [str(self.vacancy_service.public_id)]
+        assert CARD_OPDRACHT_RE.findall(content) == [str(empty.public_id)]
+        assert 'accessible-label="Lege Opdracht, nog geen aanvraag"' in content
+        assert "<h2>Nog geen aanvraag</h2>" in content
+        assert '<p class="wies-text-secondary">Lege Opdracht</p>' in content
+        assert "Opdrachtgever: </span>Test Org" in content
+        assert "<p>1 aanvraag en 1 opdracht zonder aanvraag</p>" in content
+        assert 'data-announce="1 aanvraag en 1 opdracht zonder aanvraag"' in content
+
+    def test_assignment_with_only_filled_roles_gets_no_card(self):
+        """Fully staffed is not "without aanvraag": that opdracht is on Bezetting."""
+        assert str(self.filled.public_id) not in self._opdracht_card_ids()
+
+    def test_assignment_without_aanvraag_sorts_with_the_aanvragen(self):
+        """Newest opdracht first, whichever kind of card it gives."""
+        older = Assignment.objects.create(name="Oud", source="wies")
+        newer = Assignment.objects.create(name="Nieuw", source="wies")
+        Assignment.objects.filter(pk=older.pk).update(created_at=timezone.now() - timedelta(days=30))
+        Assignment.objects.filter(pk=self.vacancy.pk).update(created_at=timezone.now() - timedelta(days=10))
+        Assignment.objects.filter(pk=newer.pk).update(created_at=timezone.now())
+
+        self.client.force_login(self.auth_user)
+        content = self.client.get(self.list_url).content.decode()
+        order = [content.index(f">{name}</p>") for name in ("Nieuw", "Open Aanvraag", "Oud")]
+        assert order == sorted(order)
+
+    def test_assignment_without_aanvraag_follows_search_and_opdrachtgever(self):
+        empty = Assignment.objects.create(name="Lege Zoekopdracht", source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=empty, organization=self.org2)
+
+        assert self._opdracht_card_ids({"zoek": "Zoekopdracht"}) == [str(empty.public_id)]
+        assert self._opdracht_card_ids({"zoek": "Other Org"}) == [str(empty.public_id)]
+        assert self._opdracht_card_ids({"zoek": "Iets anders"}) == []
+        assert self._opdracht_card_ids({"org_self": str(self.org2.public_id)}) == [str(empty.public_id)]
+        assert self._opdracht_card_ids({"org_self": str(self.org.public_id)}) == []
+
+    def test_role_standplaats_or_date_filter_leaves_out_assignments_without_aanvraag(self):
+        """Those filters ask about an aanvraag, which the opdracht does not have."""
+        Assignment.objects.create(name="Lege Opdracht", source="wies")
+        self._aanvraag(self.vacancy, self.skill2, location="Utrecht")
+
+        for params in (
+            {"rol": str(self.skill.public_id)},
+            {"standplaats": "utrecht"},
+            {"beschikbaar_vanaf": "2025-06-01"},
+        ):
+            with self.subTest(params=params):
+                assert self._opdracht_card_ids(params) == []
+
+    def test_assignment_without_aanvraag_counts_for_its_opdrachtgever(self):
+        """The sidebar and the opdrachtgever picker count the cards on the list."""
+        empty = Assignment.objects.create(name="Lege Opdracht", source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=empty, organization=self.org)
+        assert self._modal_org_count(self.org) == 2
 
     def test_two_matching_opdrachtgevers_give_one_card(self):
         """An opdracht with two opdrachtgevers that both match the search or the
@@ -574,7 +638,7 @@ class AssignmentListViewTest(TestCase):
 
         self.client.force_login(self.auth_user)
         content = self.client.get(self.list_url).content.decode()
-        panel_url = f"{self.list_url}?opdracht={assignment.public_id}&amp;aanvraag={service.public_id}"
+        panel_url = f"{self.list_url}?aanvraag={service.public_id}"
         assert f'href="{panel_url}"' in content
         assert f'hx-get="{panel_url}"' in content
         assert 'accessible-label="Kwartiermaker bij Kaartopdracht"' in content
@@ -817,7 +881,7 @@ class AssignmentListViewTest(TestCase):
 
     def test_empty_state_without_filters_says_there_are_none(self):
         """Nothing to adjust without a filter or search, so no advice to."""
-        Service.objects.all().delete()
+        Assignment.objects.all().delete()
         self.client.force_login(self.auth_user)
         content = self.client.get(self.list_url).content.decode()
         assert 'text="Er zijn nu geen aanvragen"' in content

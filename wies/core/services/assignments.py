@@ -381,3 +381,8 @@ def assignment_edit_specs(assignment, user, only=None):
         for spec in candidates
         if has_permission(Verb.UPDATE, assignment, user, spec)
     ]
+
+
+def external_source(assignment: Assignment) -> str:
+    """The system that manages ``assignment`` ("OTYS IIR"), or "" for Wies."""
+    return assignment.get_source_display() if assignment.source not in ("wies", "") else ""

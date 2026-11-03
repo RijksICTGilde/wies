@@ -34,9 +34,8 @@
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
 {% if paginator.count %}
-  {% set count_label = "aanvraag" if paginator.count == 1 else "aanvragen" %}
   <nldd-rich-text spacing="flat">
-  <p>{{ paginator.count }} {{ count_label }}</p>
+  <p>{{ results_text }}</p>
   </nldd-rich-text>
 {% endif %}
 </nldd-container>
@@ -51,7 +50,7 @@
      has to be lifted -- the component can't know our pages accumulate. #}
   {# role=list: nldd-collection sets no role of its own. #}
   {# data-announce: live_region.js reads this out after a filter change. #}
-  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ paginator.count }} {{ 'aanvraag' if paginator.count == 1 else 'aanvragen' }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ results_text }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/aanvraag_card_rows.html" %}
   </nldd-collection>
 {% else %}

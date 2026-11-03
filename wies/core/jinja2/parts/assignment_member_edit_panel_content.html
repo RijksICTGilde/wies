@@ -6,6 +6,11 @@
   {% endwith %}
 {% endif %}
 {% set svc_form = panel_data.member_form %}
+{# New ids on every render: with the same id in the old and the new form,
+   htmx's settle strips the full width the date field set on itself. #}
+{% set date_id_suffix = range(10 ** 8)|random %}
+{% set start_date_id = "member-start-date-" ~ date_id_suffix %}
+{% set end_date_id = "member-end-date-" ~ date_id_suffix %}
 {% set obj = panel_data.assignment %}
 {% set panel_heading = panel_data.member_heading %}
 <nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" {%- if panel_data.parent_url %} data-back-url="{{ panel_data.parent_url }}"{% endif %} dismiss-text="Annuleer"></nldd-top-title-bar>
@@ -165,11 +170,11 @@
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
   </div>
   <div data-start-date{% if period_modes.start == "NOW" %} hidden{% endif %}>
-    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum", "field-id": svc_form.start_date_id}) }}
+    {{ svc_form.placement_start_date.as_widget(attrs={"width": "full", "accessible-label": "Startdatum", "field-id": start_date_id}) }}
   </div>
   {# `for`: the field's first control is the Start choice, not the date. #}
   {% if svc_form.placement_start_date.errors %}
-    <nldd-validation-list for="{{ svc_form.start_date_id }}">
+    <nldd-validation-list for="{{ start_date_id }}">
     {% for error in svc_form.placement_start_date.errors %}
       <nldd-validation-item id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}
@@ -194,7 +199,7 @@
   </div>
   <div data-end-date{% if period_modes.end != "DATE" %} hidden{% endif %}>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum", "field-id": svc_form.end_date_id}) }}
+    {{ svc_form.placement_end_date.as_widget(attrs={"width": "full", "accessible-label": "Einddatum", "field-id": end_date_id}) }}
   </div>
   <div data-duration{% if period_modes.end != "DURATION" %}
        hidden{% endif %}>
@@ -202,7 +207,7 @@
     {{ svc_form.duration_months.as_widget(attrs={"accessible-label": "Duur", "id": "member-duration"}) }}
   </div>
   {% if svc_form.placement_end_date.errors %}
-    <nldd-validation-list for="{{ svc_form.end_date_id }}">
+    <nldd-validation-list for="{{ end_date_id }}">
     {% for error in svc_form.placement_end_date.errors %}
       <nldd-validation-item id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-validation-item>
     {% endfor %}

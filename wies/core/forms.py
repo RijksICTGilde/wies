@@ -1,5 +1,4 @@
 import logging
-import secrets
 from datetime import timedelta
 from typing import NamedTuple
 
@@ -558,11 +557,6 @@ class ServiceForm(NlddFormMixin, forms.Form):
         super().__init__(*args, **kwargs)
         # `skill_choices` is always supplied by the caller in editables/assignment.py.
         self.fields["skill"].choices = skill_choices
-        # New ids on every render: with the same id in the old and the new form,
-        # htmx's settle strips the full width the date field set on itself.
-        suffix = secrets.token_hex(4)
-        self.start_date_id = f"member-start-date-{suffix}"
-        self.end_date_id = f"member-end-date-{suffix}"
         if not self.is_bound:
             initial = self.initial
             initial.setdefault("start_mode", "NOW" if initial.get("starts_immediately") else "DATE")
