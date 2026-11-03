@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ???: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
+- 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
