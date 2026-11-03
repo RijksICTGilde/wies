@@ -121,7 +121,7 @@ known-first-party = ["wies", "config"]
 
 
 [tool.pytest.ini_options]
-addopts = "--cov=wies --cov-report=term-missing --no-cov-on-fail"
+addopts = "--ds=config.settings.test --cov=wies --cov-report=term-missing --no-cov-on-fail"
 DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
 

@@ -73,7 +73,7 @@ PR is opened, fill it in (or correct a placeholder) once the PR exists. The chan
 
 - Run `just test` before completing changes
 - Test files in `wies/core/tests/`
-- Use `DJANGO_SETTINGS_MODULE=config.settings.local`
+- pytest always runs on `config.settings.test` (forced with `--ds`); never point tests at `config.settings.local`, which reports errors to Mattermost
 
 ## Key Files
 

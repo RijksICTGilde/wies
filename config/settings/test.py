@@ -23,6 +23,13 @@ OIDC_DISCOVERY_URL = None
 # Tests rely on clear_data / load_base_data; keep them enabled by default.
 ENABLE_DESTRUCTIVE_STAFF_ACTIONS = True
 
+# MATTERMOST
+# ----------------------------------------------------------------------------------------------------------------------
+# Tests simulate failures; a token from a developer's .env would post them to
+# the real channel.
+MATTERMOST_TOKEN = ""
+MATTERMOST_WIES_OPS_CHANNEL_URL = ""
+
 # PASSWORDS
 # ----------------------------------------------------------------------------------------------------------------------
 # Use fast password hasher for tests
