@@ -15,9 +15,15 @@
   {# role=list: nldd-collection sets no role of its own. #}
   {# data-announce: live_region.js reads this out after a filter change. The count
      is the number of cards: colleagues or opdrachten, whichever the weergave shows. #}
-  <nldd-collection id="placement-list" role="list" layout="grid" item-min-width="260px" max-items="9999" data-announce="{{ paginator.count }} {{ 'opdrachten' if active_view == 'opdracht' else "collega's" }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
+  {% if active_view == 'opdracht' %}
+    {% set announce_noun = 'opdracht' if paginator.count == 1 else 'opdrachten' %}
+  {% else %}
+    {% set announce_noun = 'collega' if paginator.count == 1 else "collega's" %}
+  {% endif %}
+  <nldd-collection id="placement-list" role="list" layout="grid" item-min-width="260px" max-items="9999" data-announce="{{ paginator.count }} {{ announce_noun }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_cards.html" %}
   </nldd-collection>
 {% else %}
-  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen inzetten gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen inzetten gevonden" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
+  {% set empty_text = 'Geen opdrachten gevonden' if active_view == 'opdracht' else "Geen collega's gevonden" %}
+  <nldd-inline-dialog id="placement-list" icon="magnifier" text="{{ empty_text }}" supporting-text="Pas de filters of zoekopdracht aan." data-announce="{{ empty_text }}" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}

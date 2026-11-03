@@ -61,6 +61,12 @@ class BaseDummyDataFixtureTest(TestCase):
         share = placed / len(rows)
         assert 0.5 <= share <= 0.85, f"{placed}/{len(rows)} placed ({share:.0%})"
 
+    def test_some_colleagues_have_no_placement_at_all_including_a_business_manager(self):
+        """Wie zit waar? shows them as a "Geen opdracht" card; the demo has to have one."""
+        unplaced = Colleague.objects.filter(placements__isnull=True)
+        assert unplaced.filter(user__groups__name=ROLE_CONSULTANT).exists()
+        assert unplaced.filter(user__groups__name=ROLE_BUSINESS_MANAGER).exists()
+
     def test_the_timeline_shows_both_urgency_bands(self):
         """A demo that only ever renders one colour proves nothing about the other."""
         rows = colleague_occupancy(timezone.now().date())

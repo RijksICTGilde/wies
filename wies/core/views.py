@@ -17,7 +17,7 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models import Case, Count, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
@@ -1485,7 +1485,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
-            loopt_af_values = set(self.request.GET.getlist("loopt_af"))
+            loopt_af_values = self._loopt_af_values
             if loopt_af_values:
                 today = timezone.now().date()
                 preset_days = {"3m": 91, "6m": 182}
@@ -1507,6 +1507,65 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         return qs
 
+    @cached_property
+    def _loopt_af_values(self) -> set[str]:
+        """The ``?loopt_af=`` presets that filter; anything else is ignored, as before."""
+        return set(self.request.GET.getlist("loopt_af")) & {"3m", "6m", "6m+"}
+
+    def _assignment_facet_active(self, exclude_filter=None) -> bool:
+        """Whether a filter that only a placement can match is set (rol, opdrachtgever, loopt af)."""
+        org = self.facets("org", OrganizationUnit)
+        org_self = self.facets("org_self", OrganizationUnit)
+        org_active = org.requested or org_self.requested or self.org_type_filter or self.org_type_in_filter
+        return bool(
+            (exclude_filter != "rol" and self.facets("rol", Skill).requested)
+            or (exclude_filter != "org" and org_active)
+            or (exclude_filter != "loopt_af" and self._loopt_af_values)
+        )
+
+    def _unplaced_colleagues(self, *, exclude_filter=None):
+        """Colleagues with an account but no current placement, filtered like ``_apply_filters``.
+
+        They make up the tail of the person view, so a new account can find
+        itself. A placement at a hidden organization still counts as current:
+        a "Geen opdracht" card would otherwise give away that it exists.
+        """
+        if self._assignment_facet_active(exclude_filter):
+            return Colleague.objects.none()
+        today = timezone.now().date()
+        current = filter_visible_placements(annotate_placement_dates(Placement.objects.all()), today)
+        qs = Colleague.objects.filter(user__isnull=False, user__is_active=True).exclude(
+            id__in=current.values("colleague_id")
+        )
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.filter(name__icontains=search_filter)
+        for cat_id, cat_label_ids in self.labels_by_category.items():
+            if exclude_filter != cat_id:
+                qs = qs.filter(labels__id__in=cat_label_ids)
+        merk = self.facets("merk", Suborganization)
+        if exclude_filter != "merk" and merk.requested:
+            qs = qs.filter(suborganization_id__in=merk.ids)
+        return qs.distinct()
+
+    def _unplaced_facet_counts(self, facet_lookup: str, *, exclude_filter) -> Counter[int]:
+        """Colleagues without a current placement per facet value, to add to ``_facet_counts``.
+
+        Rol, opdrachtgever and loopt af need no such count: no unplaced
+        colleague can match them.
+        """
+        unplaced = self._unplaced_colleagues(exclude_filter=exclude_filter)
+        colleagues = Colleague.objects.filter(id__in=unplaced.values("id"))
+        pairs = colleagues.values_list(facet_lookup, "id").distinct()
+        return Counter(fid for fid, _ in pairs if fid is not None)
+
+    @cached_property
+    def unplaced_colleagues(self):
+        """The tail of the person view under every active filter."""
+        if self.labels_match_nothing:
+            return Colleague.objects.none()
+        return self._unplaced_colleagues()
+
     def get_queryset(self):
         """Applies the filters to the placements queryset."""
         if self.labels_match_nothing:
@@ -1527,6 +1586,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             for group_id in queryset.values_list(group_field, flat=True)
             if group_id not in seen and not seen.add(group_id)
         ]
+        if self.active_view == "persoon":
+            ordered_group_ids = self._with_unplaced_colleagues(ordered_group_ids)
 
         paginator = self.get_paginator(
             ordered_group_ids, page_size, orphans=self.get_paginate_orphans(), allow_empty_first_page=True
@@ -1535,6 +1596,21 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         page_group_ids = list(page.object_list)
         placements = list(queryset.filter(**{f"{group_field}__in": page_group_ids})) if page_group_ids else []
         return paginator, page, placements, page.has_other_pages()
+
+    def _with_unplaced_colleagues(self, placed_ids: list[int]) -> list[int]:
+        """Adds the colleagues without a current placement to the person view's order.
+
+        Sorted on name they fall in among the others; under any other sort they
+        have nothing to sort on, so they come last, by name. The merge happens in
+        the database so both halves share one collation.
+        """
+        unplaced = self.unplaced_colleagues
+        order = self.request.GET.get("order")
+        if order in ("name", "-name"):
+            ids = set(placed_ids) | set(unplaced.values_list("id", flat=True))
+            # Same order as the placement sort: name, then colleague id as tiebreaker.
+            return list(Colleague.objects.filter(id__in=ids).order_by(order, "id").values_list("id", flat=True))
+        return placed_ids + list(unplaced.order_by("name", "id").values_list("id", flat=True))
 
     def _validated_page_number(self, paginator) -> int:
         """The requested ?pagina=, clamped to an existing page (1 on nonsense input)."""
@@ -1579,18 +1655,26 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         query = params.urlencode()
         return f"{reverse('home')}?{query}" if query else reverse("home")
 
-    def _person_cards(self, placements) -> list[dict]:
-        """One card per colleague, with the assignments they are placed on.
+    def _person_cards(self, placements, page_ids: list[int]) -> list[dict]:
+        """One card per colleague on the page, in page order.
 
-        A person on exactly one assignment opens that placement's panel; on more
-        than one the card opens the colleague panel instead.
+        A placed colleague's card names the assignments they are placed on; an
+        unplaced one says "Geen opdracht", or how many current opdrachten they
+        manage as business manager.
         """
         grouped: dict[int, list] = {}
         for placement in placements:
             grouped.setdefault(placement.colleague_id, []).append(placement)
+        unplaced = self._unplaced_cards([cid for cid in page_ids if cid not in grouped])
 
         cards = []
-        for rows in grouped.values():
+        for colleague_id in page_ids:
+            if colleague_id in unplaced:
+                cards.append(unplaced[colleague_id])
+                continue
+            rows = grouped.get(colleague_id)
+            if not rows:
+                continue
             assignments = list(dict.fromkeys(row.service.assignment for row in rows))
             roles = list(dict.fromkeys(row.service.skill.name for row in rows if row.service.skill))
             single = assignments[0] if len(assignments) == 1 else None
@@ -1606,6 +1690,38 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 }
             )
         return cards
+
+    def _unplaced_cards(self, colleague_ids: list[int]) -> dict[int, dict]:
+        """Cards for colleagues without a current placement, keyed by colleague id.
+
+        The card names no earlier or planned placement: those are only for the
+        colleague and business managers to see, in the panel. The owned count
+        leaves ended opdrachten out for the same reason, so every viewer gets
+        the same card.
+        """
+        if not colleague_ids:
+            return {}
+        today = timezone.now().date()
+        current = Q(owned_assignments__end_date__isnull=True) | Q(owned_assignments__end_date__gte=today)
+        # Like the list itself, an opdracht at a hidden organization does not count.
+        excluded_org_ids = get_excluded_org_ids()
+        if excluded_org_ids:
+            current &= ~Q(owned_assignments__organizations__id__in=excluded_org_ids)
+        colleagues = Colleague.objects.filter(id__in=colleague_ids).annotate(
+            owned_count=Count("owned_assignments", filter=current, distinct=True)
+        )
+        return {
+            colleague.id: {
+                "name": colleague.name,
+                "assignment": None,
+                "assignments": [],
+                "roles": [],
+                "no_assignment": True,
+                "owned_count": colleague.owned_count,
+                "panel_url": _build_panel_url(self.request, collega=colleague.public_id),
+            }
+            for colleague in colleagues
+        }
 
     def _assignment_cards(self, placements) -> list[dict]:
         """One card per assignment, showing its FULL team.
@@ -1665,6 +1781,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         context["default_view"] = self.VIEW_DEFAULT
         counts = {active_view: context["paginator"].count}
         filtered = self.get_queryset()
+        if active_view != "persoon":
+            counts["persoon"] = (
+                filtered.values(self.GROUP_FIELD["persoon"]).distinct().count() + self.unplaced_colleagues.count()
+            )
         context["view_options"] = [
             {
                 **option,
@@ -1680,7 +1800,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         if active_view == "opdracht":
             context["cards"] = self._assignment_cards(placements)
         else:
-            context["cards"] = self._person_cards(placements)
+            context["cards"] = self._person_cards(placements, list(context["page_obj"].object_list))
 
         order_param = self.request.GET.get("order")
         active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
@@ -1728,6 +1848,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             # Count with all filters EXCEPT this label category
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
             cat_label_counts = _facet_counts(cat_filtered_qs, "colleague__labels__id", group_field)
+            if active_view == "persoon":
+                cat_label_counts += self._unplaced_facet_counts("labels__id", exclude_filter=category.id)
 
             options = [{"value": "", "label": ""}]
             selected_values = []
@@ -1757,6 +1879,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         # Merk filter group (one merk per colleague; counts exclude the merk filter)
         suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
         suborg_counts = _facet_counts(suborg_filtered_qs, "colleague__suborganization_id", group_field)
+        if active_view == "persoon":
+            suborg_counts += self._unplaced_facet_counts("suborganization_id", exclude_filter="merk")
 
         suborganization_options = [{"value": "", "label": ""}]
         suborganization_selected_values = []
