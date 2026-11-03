@@ -1,8 +1,14 @@
 """Date display for Wies, shared by templates and Python-built texts."""
 
+from __future__ import annotations
+
 from datetime import date
+from typing import TYPE_CHECKING
 
 from django.utils.formats import date_format
+
+if TYPE_CHECKING:
+    from wies.core.models import Service
 
 
 def datum_nl(datum, fmt="j b Y"):
@@ -32,3 +38,17 @@ def date_range_text(start: date | None, end: date | None) -> str:
     if end:
         return f"t/m {datum_nl(end)}"
     return ""
+
+
+def request_period_text(service: Service) -> str:
+    """The period of an aanvraag in words: dates where known, otherwise "Per
+    direct" for the start and the duration for the end. Empty without either."""
+    end = service.end_date
+    if service.starts_immediately:
+        period = f"Per direct t/m {datum_nl(end)}" if end else "Per direct"
+    else:
+        period = date_range_text(service.start_date, end)
+    if end or not service.duration_months:
+        return period
+    duration = service.get_duration_months_display()
+    return f"{period}, voor {duration}" if period else f"Voor {duration}"

@@ -4,7 +4,6 @@ import logging
 import urllib.parse
 from collections import Counter
 from contextlib import nullcontext
-from dataclasses import dataclass
 from datetime import date, timedelta
 from functools import cached_property
 
@@ -18,8 +17,8 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, IntegerField, Model, OuterRef, Prefetch, Q, Subquery, Value, When
-from django.db.models.functions import Concat, Lower, Trim
+from django.db.models import Case, F, IntegerField, Model, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -86,7 +85,6 @@ from .models import (
 )
 from .querysets import (
     annotate_placement_dates,
-    annotate_service_dates,
     annotate_sort_names,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
@@ -98,13 +96,26 @@ from .roles import (
     staff_required,
     user_admin_required,
 )
+from .services.aanvragen import (
+    AanvraagCard,
+    aanvraag_card,
+    aanvraag_role,
+    assignments_without_aanvraag,
+    filter_on_standplaatsen,
+    known_standplaatsen,
+    opdracht_without_aanvraag_card,
+    open_aanvragen,
+    standplaats_key,
+    standplaats_labels,
+    team_names_text,
+)
 from .services.assignments import (
     assignment_edit_specs,
     external_source,
     member_audit_event,
     save_service_from_form,
 )
-from .services.dates import date_range_text
+from .services.dates import request_period_text
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
@@ -143,7 +154,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.urls import current_page_url_on
+from .services.urls import current_page_url_on, url_replacing_param
 from .services.users import (
     close_contract_periods,
     close_placements,
@@ -187,12 +198,6 @@ def _url_drop_params(path, query, names, **overrides):
         params[key] = value
     encoded = params.urlencode()
     return f"{path}?{encoded}" if encoded else path
-
-
-def _url_replacing_param(url: str, name: str, **overrides) -> str:
-    """``url`` with the query param ``name`` dropped and ``overrides`` applied."""
-    parsed = urllib.parse.urlparse(url)
-    return _url_drop_params(parsed.path, QueryDict(parsed.query), (name,), **overrides)
 
 
 def _build_panel_url(request, **overrides):
@@ -641,32 +646,6 @@ def _resolve_aanvraag_panel(request, public_id):
     return None
 
 
-# How many placed colleagues the aanvraag panel names; the rest is a count.
-TEAM_NAMES_SHOWN = 2
-
-
-def _team_names_text(rows: list[dict]) -> str:
-    """Who is on the opdracht now, from ``visible_service_rows``: "Anke de
-    Vries, Bram Jansen en 3 anderen". A colleague in two roles counts once."""
-    names = list(dict.fromkeys(row["colleague"].name for row in rows if row["placement"] and not row.get("historical")))
-    if not names:
-        return "Nog niemand geplaatst"
-    shown, rest = names[:TEAM_NAMES_SHOWN], len(names) - TEAM_NAMES_SHOWN
-    if rest <= 0:
-        return " en ".join(shown)
-    return f"{', '.join(shown)} en {rest} {'ander' if rest == 1 else 'anderen'}"
-
-
-def _aanvraag_role(service) -> str | None:
-    """The role an aanvraag asks for. The OTYS sync sets no skill; it puts the
-    role from the vacancy title in ``description``."""
-    if service.skill_id:
-        return service.skill.name
-    if service.source == "otys_iir":
-        return service.description or None
-    return None
-
-
 def _build_aanvraag_panel_data(service, request):
     """Builds the aanvraag panel: the read view of one open role on an opdracht.
 
@@ -677,12 +656,11 @@ def _build_aanvraag_panel_data(service, request):
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
     from wies.core.editables.assignment import AssignmentEditables, visible_service_rows  # noqa: PLC0415
-    from wies.core.editables.service import request_period_text  # noqa: PLC0415
 
     assignment = service.assignment
-    role = _aanvraag_role(service)
+    role = aanvraag_role(service)
     return {
-        "team_text": _team_names_text(visible_service_rows(assignment, request)),
+        "team_text": team_names_text(visible_service_rows(assignment, request)),
         "panel_content_template": "parts/aanvraag_panel_content.html",
         "panel_title": f"Aanvraag: {role}" if role else "Aanvraag",
         "heading": role or "Rol niet ingevuld",
@@ -1917,37 +1895,6 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         return context
 
 
-@dataclass(frozen=True)
-class _AanvraagCard:
-    """One card on Aanvragen: an open aanvraag, or an opdracht without one."""
-
-    title: str
-    opdracht: str
-    link_name: str
-    panel_url: str
-    org_label: str | None
-    period_text: str
-    location: str = ""
-    hours_per_week: int | None = None
-
-
-def _first_org_label(assignment) -> str | None:
-    """The first opdrachtgever on pk, as organizations.first() would pick it;
-    needs the ``organizations_by_pk`` prefetch."""
-    first_org = next(iter(assignment.organizations_by_pk), None)
-    return (first_org.label or first_org.name) if first_org else None
-
-
-def _open_services():
-    """Every open, unfilled role. Hides intelligence-service orgs, as the
-    placement list does (see PlacementListView._get_base_queryset)."""
-    qs = annotate_service_dates(Service.objects.filter(status="OPEN", placements__isnull=True))
-    excluded_org_ids = get_excluded_org_ids()
-    if excluded_org_ids:
-        qs = qs.exclude(assignment__organizations__id__in=excluded_org_ids)
-    return qs
-
-
 class AssignmentListView(PublicIdFacetsMixin, ListView):
     """Aanvragen as cards: one per role nobody fills yet, and one per opdracht
     that has no role at all yet. Infinite scroll pagination."""
@@ -1981,7 +1928,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         )
 
     def _get_base_queryset(self):
-        qs = _open_services()
+        qs = open_aanvragen()
         if self._search:
             qs = qs.filter(
                 Q(skill__name__icontains=self._search)
@@ -2006,22 +1953,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
     @cached_property
     def _locations(self) -> dict[str, str]:
-        """Every standplaats on an open aanvraag, keyed case- and
-        space-insensitively, so "Den Haag" and "den haag " are one option. The
-        label is the most common spelling; on a tie, the capitalised one."""
-        open_services = _open_services().exclude(location="")
-        spellings = Counter(location.strip() for location in open_services.values_list("location", flat=True))
-        locations = {}
-        for spelling, _ in sorted(spellings.items(), key=lambda item: (-item[1], item[0])):
-            locations.setdefault(spelling.lower(), spelling)
-        return dict(sorted(locations.items()))
+        return standplaats_labels(open_aanvragen())
 
     @cached_property
     def _selected_locations(self) -> list[str]:
-        """The requested standplaatsen that exist; an unknown one is dropped
-        rather than emptying the list without a chip to undo it."""
-        requested = {value.strip().lower() for value in self.request.GET.getlist("standplaats")}
-        return sorted(requested & self._locations.keys())
+        return known_standplaatsen(self.request.GET.getlist("standplaats"), self._locations)
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         rol = self.facets("rol", Skill)
@@ -2029,7 +1965,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             qs = qs.filter(skill_id__in=rol.ids)
 
         if exclude_filter != "standplaats" and self._selected_locations:
-            qs = qs.annotate(location_key=Lower(Trim("location"))).filter(location_key__in=self._selected_locations)
+            qs = filter_on_standplaatsen(qs, self._selected_locations)
 
         if exclude_filter != "org":
             # Through the opdracht, for the same reason as the search above.
@@ -2043,12 +1979,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         aanvraag, which they do not have, so it leaves them out."""
         if self.facets("rol", Skill).requested or self._selected_locations or self._beschikbaar_vanaf:
             return Assignment.objects.none()
-        # `~Exists`, not `services__isnull=True`: that is a LEFT JOIN and gives
-        # duplicate rows as soon as a filter also joins the opdrachtgevers.
-        qs = Assignment.objects.filter(~Exists(Service.objects.filter(assignment=OuterRef("pk"))))
-        excluded_org_ids = get_excluded_org_ids()
-        if excluded_org_ids:
-            qs = qs.exclude(organizations__id__in=excluded_org_ids)
+        qs = assignments_without_aanvraag()
         if self._search:
             qs = qs.filter(pk__in=self._assignments_matching_search())
         if filter_on_org:
@@ -2089,9 +2020,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             F("card_created").desc(nulls_last=True), "card_assignment", "card_service"
         )
 
-    def _cards(self, rows) -> list[_AanvraagCard]:
-        from wies.core.editables.service import request_period_text  # noqa: PLC0415 — avoids import cycle
-
+    def _cards(self, rows) -> list[AanvraagCard]:
+        # The card shows the first opdrachtgever; ordered on pk, as
+        # organizations.first() would pick it.
         by_pk = OrganizationUnit.objects.order_by("pk")
         services = (
             Service.objects.select_related("assignment", "skill")
@@ -2105,28 +2036,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         for _, assignment_id, service_id in rows:
             # .get(): a card removed since the page was counted is skipped.
             if service_id and (service := services.get(service_id)):
-                role = _aanvraag_role(service)
-                card = _AanvraagCard(
-                    title=role or "Rol niet ingevuld",
-                    opdracht=service.assignment.name,
-                    link_name=f"{role or 'Aanvraag zonder rol'} bij {service.assignment.name}",
-                    panel_url=_build_panel_url(self.request, aanvraag=service.public_id),
-                    org_label=_first_org_label(service.assignment),
-                    period_text=request_period_text(service) or "Geen periode opgegeven",
-                    location=service.location,
-                    hours_per_week=service.hours_per_week,
-                )
-                cards.append(card)
+                url = _build_panel_url(self.request, aanvraag=service.public_id)
+                cards.append(aanvraag_card(service, url))
             elif not service_id and (assignment := assignments.get(assignment_id)):
-                card = _AanvraagCard(
-                    title="Nog geen aanvraag",
-                    opdracht=assignment.name,
-                    link_name=f"{assignment.name}, nog geen aanvraag",
-                    panel_url=_build_panel_url(self.request, opdracht=assignment.public_id),
-                    org_label=_first_org_label(assignment),
-                    period_text=date_range_text(assignment.start_date, assignment.end_date) or "Geen periode opgegeven",
-                )
-                cards.append(card)
+                url = _build_panel_url(self.request, opdracht=assignment.public_id)
+                cards.append(opdracht_without_aanvraag_card(assignment, url))
         return cards
 
     def _results_text(self, total: int) -> str:
@@ -2196,7 +2110,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Standplaats counts: same cross-filter rule, without the standplaats filter.
         location_counts = Counter(
-            location.strip().lower()
+            standplaats_key(location)
             for location in self._apply_filters(base_qs, exclude_filter="standplaats").values_list(
                 "location", flat=True
             )
@@ -4950,7 +4864,7 @@ def assignment_member_edit_view(request, public_id):
     if form.cleaned_data.get("is_filled") == "ingevuld":
         # A filled aanvraag has no panel: it would 404, and htmx swaps nothing
         # on an error, leaving the sheet open. Back to its opdracht instead.
-        return_path = _url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+        return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
@@ -4984,7 +4898,7 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
     )
-    return_path = _url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+    return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

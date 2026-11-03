@@ -14,8 +14,8 @@ from django.test import Client, SimpleTestCase, TestCase
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.editables.service import request_period_text
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
+from wies.core.services.dates import request_period_text
 from wies.core.tests.role_helpers import make_business_manager_user
 
 User = get_user_model()

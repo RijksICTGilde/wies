@@ -9,7 +9,6 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import HOURS_PER_WEEK_CHOICES, MAX_HOURS_PER_WEEK, REQUEST_DURATION_CHOICES, Service
-from wies.core.services.dates import date_range_text, datum_nl
 
 
 class ServiceEditables(EditableSet):
@@ -45,17 +44,3 @@ class ServiceEditables(EditableSet):
     specific_start_date = Editable(label="Specifieke startdatum")
     specific_end_date = Editable(label="Specifieke einddatum")
     status = Editable(label="Status", display=lambda s: s.get_status_display())
-
-
-def request_period_text(service: Service) -> str:
-    """The period of an aanvraag in words: dates where known, otherwise "Per
-    direct" for the start and the duration for the end. Empty without either."""
-    end = service.end_date
-    if service.starts_immediately:
-        period = f"Per direct t/m {datum_nl(end)}" if end else "Per direct"
-    else:
-        period = date_range_text(service.start_date, end)
-    if end or not service.duration_months:
-        return period
-    duration = service.get_duration_months_display()
-    return f"{period}, voor {duration}" if period else f"Voor {duration}"

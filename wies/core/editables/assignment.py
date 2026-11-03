@@ -13,12 +13,13 @@ from django.http import Http404
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.editables.service import ServiceEditables, request_period_text
+from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
+from wies.core.services.dates import request_period_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
