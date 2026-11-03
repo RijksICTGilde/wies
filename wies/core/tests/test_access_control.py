@@ -57,8 +57,8 @@ class AccessControlTest(TestCase):
         assert response.url.startswith(reverse("login"))
 
     def test_faq_and_contact_require_authentication(self):
-        """FAQ, contact and security pages are only visible after login; anonymous users bounce to login"""
-        for path in ("/faq/", "/contact/", "/beveiliging/"):
+        """FAQ, handleiding, contact and security pages are only visible after login; anonymous users bounce to login"""
+        for path in ("/faq/", "/handleiding/", "/contact/", "/beveiliging/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 

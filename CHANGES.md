@@ -6,6 +6,14 @@ This files lists the changes during the lifetime of this project.
 
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
 - 772: Aanvragen shows one card per open aanvraag, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects)
+- 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
+- 783: bump dependencies for security patches and change trivy interval to "daily"
+- 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
+
+## 2026-10-28
+
+- 780: new page Handleiding for consultants (/handleiding/), with screenshots, linked from the footer
 - 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
 - 767: Bezetting month axis stays visible while scrolling and the months are in Dutch; bars show the client and role, and an extension of an opdracht reads as such and no longer counts as ending soon; the colleague panel lists opdrachten in the same order as the timeline (running, planned, finished)
 - 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
