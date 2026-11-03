@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- tbd
+
+## 2026-11-03
+
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 806: more security patches
