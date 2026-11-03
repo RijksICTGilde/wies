@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - tbd
 
+## 2026-11-03_2
+
+- tbd: fix deployment name staging env
+
 ## 2026-11-03
 
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
