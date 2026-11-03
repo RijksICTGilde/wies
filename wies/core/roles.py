@@ -104,10 +104,11 @@ def is_staff_member(user) -> bool:
 def can_view_role_hours(user, placement) -> bool:
     """Whether the user may see the hours per week of a role.
 
-    Agreed with Patrick (mail of 13 July 2026): the hours of a placed consultant
-    are for who plans the work (the Business Manager) and for the consultant, not for
-    team mates. An open aanvraag has no one to protect, so its hours are visible
-    to everyone who sees the opdracht.
+    The hours of a placed consultant are for who plans the work, the Business
+    Manager. The consultant does not see their own either: the number raised
+    more questions about who else could see it than it answered (#736). An open
+    aanvraag has no one to protect, so its hours are visible to everyone who
+    sees the opdracht.
 
     Narrower than ``rule(READ, ContractPeriod)``, which the Gebruikersbeheerder also
     reads: a contract is beheer, the hours on an opdracht are planning. The role
@@ -119,9 +120,6 @@ def can_view_role_hours(user, placement) -> bool:
     # user, to see what an outsider sees; that outsider sees no hours.
     if user is None:
         return False
-    colleague = getattr(user, "colleague", None)
-    if colleague is not None and placement.colleague_id == colleague.id:
-        return True
     return is_business_manager(user)
 
 

@@ -1074,8 +1074,9 @@ class ServiceHoursPermissionTest(TestCase):
         assert Event.objects.count() == before
 
     def test_hours_of_a_placed_colleague_are_hidden_from_team_mates(self):
-        """Team mates see each other's role and description, not the hours; an
-        open aanvraag shows its hours to everyone; a Business Manager sees them all."""
+        """Team mates see each other's role and description, not the hours, and a
+        consultant not even their own; an open aanvraag shows its hours to
+        everyone; a Business Manager sees them all."""
         assignment = self.service.assignment
         mate = _consultant("Team Maat", "maat@x.nl")
         mate_service = Service.objects.create(
@@ -1094,7 +1095,7 @@ class ServiceHoursPermissionTest(TestCase):
 
         client.force_login(self.user)
         team = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
-        assert "24 uur" in team  # own
+        assert "24 uur" not in team  # own
         assert "16 uur" not in team  # the team mate's
         assert "8 uur" in team  # the aanvraag's
         mate_panel = client.get(
@@ -1122,7 +1123,7 @@ class ServiceHoursPermissionTest(TestCase):
         body = client.get(
             reverse("home"), {"opdracht": self.service.assignment.public_id, "collega": self.colleague.public_id}
         ).content.decode()
-        assert "24 uur" in body
+        assert "24 uur" not in body
 
 
 @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
