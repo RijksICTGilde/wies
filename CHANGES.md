@@ -8,7 +8,7 @@ This files lists the changes during the lifetime of this project.
 
 ## 2026-11-03_2
 
-- tbd: fix deployment name staging env
+- 808: fix deployment name staging env
 
 ## 2026-11-03
 
