@@ -139,6 +139,7 @@ from .services.placements import (
     placement_edit_specs,
     save_placement_edit,
 )
+from .services.sitemap import sitemap_sections
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.urls import current_page_url_on
 from .services.users import (
@@ -3827,6 +3828,10 @@ def beveiliging(request):
 
 def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
+
+
+def sitemap(request):
+    return render(request, "sitemap.html", {"sections": sitemap_sections(request)})
 
 
 # Public because the DigiToegankelijk register links straight at this URL, and
