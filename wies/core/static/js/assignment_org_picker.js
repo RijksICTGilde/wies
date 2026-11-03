@@ -217,7 +217,6 @@
     renderSelection(rows);
   });
 
-  // show() no-ops until the freshly swapped element has upgraded and rendered.
   function openSheet() {
     var sheet = document.getElementById(SHEET_ID);
     if (!sheet) return;
@@ -226,17 +225,7 @@
     if (sheet.closest("nldd-sheet") && sheet.parentElement !== document.body) {
       document.body.appendChild(sheet);
     }
-    var show = function () {
-      if (typeof sheet.show === "function") sheet.show();
-    };
-    if (
-      sheet.updateComplete &&
-      typeof sheet.updateComplete.then === "function"
-    ) {
-      sheet.updateComplete.then(show);
-    } else {
-      customElements.whenDefined("nldd-sheet").then(show);
-    }
+    sheet.show();
   }
 
   document.body.addEventListener("htmx:afterSettle", function (e) {

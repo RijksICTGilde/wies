@@ -505,31 +505,13 @@
       button.setAttribute("text", text);
     }
 
-    // show() no-ops while the shadow <dialog> is unrendered, as right after a swap.
-    function openWhenReady(sheet, attempt) {
+    function openSheet(sheet) {
       if (!sheet) return;
-      const tryShow = () => {
-        if (
-          typeof sheet.show === "function" &&
-          sheet.shadowRoot?.querySelector("dialog")
-        ) {
-          // Only a child sheet sometimes: the sidebar is a sheet when narrow.
-          if (typeof window.syncSheetBackButton === "function") {
-            window.syncSheetBackButton(sheet);
-          }
-          sheet.show();
-        } else if ((attempt || 0) < 20) {
-          requestAnimationFrame(() => openWhenReady(sheet, (attempt || 0) + 1));
-        }
-      };
-      if (
-        sheet.updateComplete &&
-        typeof sheet.updateComplete.then === "function"
-      ) {
-        sheet.updateComplete.then(tryShow);
-      } else {
-        tryShow();
+      // Only a child sheet sometimes: the sidebar is a sheet when narrow.
+      if (typeof window.syncSheetBackButton === "function") {
+        window.syncSheetBackButton(sheet);
       }
+      sheet.show();
     }
 
     document.body.addEventListener("htmx:afterSwap", (e) => {
@@ -540,7 +522,7 @@
           (t.closest && t.closest("#filter-options-modal-container")))
       ) {
         const sheet = currentSheet();
-        openWhenReady(sheet, 0);
+        openSheet(sheet);
         if (sheet) updateApplyLabel(sheet);
       }
     });
@@ -627,28 +609,6 @@
         row.hidden = Boolean(term) && !label.includes(term);
       });
     });
-  }
-
-  // NLDD 0.10.0 fires item-change only on click; change also on arrow keys.
-  function forwardViewChange(event, htmx) {
-    const control = event.target;
-    if (
-      control?.localName !== "nldd-segmented-control" ||
-      !control.closest("#view-control")
-    ) {
-      return;
-    }
-    // By value: the item's `selected` attribute is reflected a render later.
-    const item = Array.from(
-      control.querySelectorAll("nldd-segmented-control-item"),
-    ).find((el) => el.getAttribute("value") === control.value);
-    if (item && htmx) htmx.trigger(item, "wies-view-change");
-  }
-
-  function setupViewControl() {
-    document.addEventListener("change", (e) =>
-      forwardViewChange(e, window.htmx),
-    );
   }
 
   function scan(root) {
@@ -790,11 +750,10 @@
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
     setupFilterOptionsModal();
-    setupViewControl();
   }
 
   if (testing) {
-    module.exports = { forwardViewChange, shouldForward };
+    module.exports = { shouldForward };
     return;
   }
 
