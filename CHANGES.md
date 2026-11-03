@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 786: also release to zad staging on tag
 - 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
 
 ## 2026-10-28
