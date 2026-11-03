@@ -89,7 +89,7 @@ jobs:
           api-key: ${{ secrets.ZAD_STAGING_API_KEY }}
           api-base-url: https://zad.staging.rijksapp.dev/api
           project-id: wies-6z3
-          deployment-name: production
+          deployment-name: productie
           components: |
             [
               {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
