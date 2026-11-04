@@ -100,6 +100,25 @@ class AssignmentCreateTest(TestCase):
         assert b"Opdracht invoeren" in response.content
         assert b"Voer opdracht in" in response.content
 
+    def test_create_form_names_client_picker_and_says_it_is_required(self):
+        # nldd-form-field labels only an input; the picker is a group of buttons,
+        # so it names itself, and "required" is told as text (WCAG 1.3.1).
+        self.client.force_login(self.business_manager_user)
+        response = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": ""},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        html = response.content.decode()
+        picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)
+        assert picker is not None
+        assert 'role="group"' in picker.group(1)
+        assert 'aria-label="Opdrachtgever(s)"' in picker.group(1)
+        assert "<nldd-form-field-help-text>Minimaal 1 opdrachtgever.</nldd-form-field-help-text>" in html
+        # field_error_description.js hands the help text to the button, which
+        # nldd-form-field does not describe.
+        assert '<nldd-button id="assignment-org-trigger-btn" data-help-description' in html
+
     def test_list_sentinel_full_page_opens_create_panel(self):
         # Full-page GET (refresh/bookmark): the whole list plus the create panel.
         self.client.force_login(self.business_manager_user)

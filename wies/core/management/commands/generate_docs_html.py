@@ -1,6 +1,7 @@
 import shutil
 import subprocess
 import tempfile
+from dataclasses import dataclass
 from html import escape
 from pathlib import Path
 
@@ -8,16 +9,35 @@ from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
 from markdown_it import MarkdownIt
 
-MD_PATH = Path(settings.BASE_DIR) / "docs" / "privacy.md"
-HTML_PATH = Path(settings.BASE_DIR) / "wies" / "core" / "jinja2" / "privacy.html"
+
+@dataclass(frozen=True)
+class DocPage:
+    """A markdown document rendered to an in-product page behind the footer."""
+
+    source: str  # relative to BASE_DIR
+    target: str  # relative to BASE_DIR
+    title: str
+    # Prefix for repo-relative links (``.github/...``), which would 404 on the site.
+    link_base: str = ""
+
+
+PAGES = [
+    DocPage("docs/privacy.md", "wies/core/jinja2/privacy.html", "Privacy"),
+    DocPage(
+        "SECURITY.md",
+        "wies/core/jinja2/security.html",
+        "Beveiliging",
+        link_base="https://github.com/RijksICTGilde/wies/blob/main/",
+    ),
+]
 
 PREAMBLE = """\
-{# AUTO-GENERATED FROM docs/privacy.md by `manage.py generate_privacy_html`. DO NOT EDIT BY HAND. #}
-{% extends "base_footer.html" %}
-{% block title %}
-  Privacy · Wies
-{% endblock title %}
-{% block footer_content %}
+{{# AUTO-GENERATED FROM {source} by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}}
+{{% extends "base_footer.html" %}}
+{{% block title %}}
+  {title} · Wies
+{{% endblock title %}}
+{{% block footer_content %}}
   <nldd-rich-text>
 """
 
@@ -29,7 +49,13 @@ EXTERNAL_LINK_AFFORDANCE = (
 )
 
 
-def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
+def _resolve_href(href: str, link_base: str) -> str:
+    if not link_base or href.startswith(("/", "#", "mailto:")) or "://" in href:
+        return href
+    return link_base + href
+
+
+def _render_inline(children, link_base: str = "") -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
     out: list[str] = []
     external_depth = 0
     for tok in children:
@@ -48,7 +74,7 @@ def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markd
         elif tok.type == "hardbreak":
             out.append("<br>\n")
         elif tok.type == "link_open":
-            href = tok.attrGet("href") or ""
+            href = _resolve_href(tok.attrGet("href") or "", link_base)
             attrs = f' href="{escape(href, quote=True)}"'
             if href.startswith(("http://", "https://")):
                 attrs += ' target="_blank"'
@@ -66,7 +92,7 @@ def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markd
     return "".join(out)
 
 
-def _render_body(tokens) -> str:
+def _render_body(tokens, link_base: str = "") -> str:
     # nldd-rich-text styles semantic HTML directly, so no RVO layout wrappers.
     out: list[str] = []
 
@@ -75,12 +101,12 @@ def _render_body(tokens) -> str:
         tok = tokens[i]
         if tok.type == "heading_open" and tok.tag in ("h1", "h2"):
             inline = tokens[i + 1]
-            out.append(f"<{tok.tag}>{_render_inline(inline.children)}</{tok.tag}>")
+            out.append(f"<{tok.tag}>{_render_inline(inline.children, link_base)}</{tok.tag}>")
             i += 3
             continue
         if tok.type == "paragraph_open":
             inline = tokens[i + 1]
-            rendered_inline = _render_inline(inline.children)
+            rendered_inline = _render_inline(inline.children, link_base)
             if tok.hidden:
                 out.append(rendered_inline)
             else:
@@ -108,15 +134,15 @@ def _render_body(tokens) -> str:
     return "\n".join(out)
 
 
-def render_privacy_template(markdown_source: str) -> str:
-    """Render the privacy markdown source to the final Jinja2 template string.
+def render_doc_template(markdown_source: str, page: DocPage) -> str:
+    """Render a page's markdown source to the final Jinja2 template string.
 
     The output is djlint-formatted to keep pre-commit comparisons stable.
     """
     md = MarkdownIt("commonmark")
     tokens = md.parse(markdown_source)
-    body = _render_body(tokens)
-    raw = PREAMBLE + body + "\n" + POSTAMBLE
+    body = _render_body(tokens, page.link_base)
+    raw = PREAMBLE.format(source=page.source, title=page.title) + body + "\n" + POSTAMBLE
     return _djlint_format(raw)
 
 
@@ -128,7 +154,7 @@ def _djlint_format(content: str) -> str:
     ``.pre-commit-config.yaml``). djlint does not reliably read ``[tool.djlint]``
     from ``pyproject.toml`` here, so relying on that config instead of these flags
     yields a different indentation than the hook -- the hook then reformats the
-    generated file on commit and ``test_privacy_html_is_up_to_date`` fails.
+    generated file on commit and ``test_doc_pages_are_up_to_date`` fails.
 
     djlint exits non-zero when it makes changes (even with ``--reformat``), so
     we deliberately do not pass ``check=True``. The file is rewritten in place;
@@ -157,26 +183,32 @@ def _djlint_format(content: str) -> str:
 
 
 class Command(BaseCommand):
-    help = "Regenerate wies/core/jinja2/privacy.html from docs/privacy.md."
+    help = "Regenerate the in-product pages rendered from markdown (privacy, security)."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--check",
             action="store_true",
-            help="Exit non-zero if the rendered output differs from the file on disk. Does not write.",
+            help="Exit non-zero if the rendered output differs from the files on disk. Does not write.",
         )
 
     def handle(self, *args, **options):
-        rendered = render_privacy_template(MD_PATH.read_text(encoding="utf-8"))
+        base_dir = Path(settings.BASE_DIR)
+        stale: list[str] = []
+        for page in PAGES:
+            rendered = render_doc_template((base_dir / page.source).read_text(encoding="utf-8"), page)
+            target = base_dir / page.target
+            if options["check"]:
+                if not target.exists() or target.read_text(encoding="utf-8") != rendered:
+                    stale.append(page.target)
+                continue
+            target.write_text(rendered, encoding="utf-8")
+            self.stdout.write(self.style.SUCCESS(f"Wrote {page.target}"))
+        if stale:
+            msg = (
+                f"Out of date: {', '.join(stale)}. "
+                "Run `uv run python manage.py generate_docs_html` and commit the result."
+            )
+            raise CommandError(msg)
         if options["check"]:
-            current = HTML_PATH.read_text(encoding="utf-8")
-            if current != rendered:
-                msg = (
-                    "privacy.html is out of date. "
-                    "Run `uv run python manage.py generate_privacy_html` and commit the result."
-                )
-                raise CommandError(msg)
-            self.stdout.write(self.style.SUCCESS("privacy.html is up to date."))
-            return
-        HTML_PATH.write_text(rendered, encoding="utf-8")
-        self.stdout.write(self.style.SUCCESS(f"Wrote {HTML_PATH.relative_to(settings.BASE_DIR)}"))
+            self.stdout.write(self.style.SUCCESS("All generated pages are up to date."))

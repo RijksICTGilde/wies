@@ -588,6 +588,11 @@ class OrganizationUnit(models.Model):
             return self.abbreviations[0]
         return ""
 
+    @property
+    def short_name(self) -> str:
+        """The short form for tight spots: abbreviation, else label, else name."""
+        return self.abbreviation or self.label or self.name
+
 
 class OrganizationUnitRole(models.TextChoices):
     """Role of an organization unit in relation to an assignment."""

@@ -1,8 +1,7 @@
 {# Chip marking limited visibility: short on screen, full sentence in a tooltip.
 
-   tabindex + accessible-label are not optional: nldd-tag is not interactive and
-   therefore not focusable, so the tooltip would be mouse-only, and the label
-   carries the sentence for anyone who never sees the tooltip.
+   nldd-tag is not focusable and has no role or name, so the span carries them;
+   the name holds the sentence, as nldd-tooltip's description stays empty.
 
    .wies-privacy-chip lifts the chip above an nldd-card's overlay link, which
    covers the whole card and otherwise swallows the hover.
@@ -14,6 +13,11 @@
      ("Afgelopen", or the dates) stands beside it, and this chip says one
      thing, in the tooltip and in its accessible name. #}
   <nldd-tooltip text="{{ note }}" timing="instant">
-  <nldd-tag class="wies-privacy-chip" {% if size %}size="{{ size }}"{% endif %} tabindex="0" color="warning" icon="eye-slash" {% if label %}text="{{ label }}"{% else %}variant="icon"{% endif %} accessible-label="{{ label or 'Beperkt zichtbaar' }}. {{ note }}"></nldd-tag>
+  <span class="wies-privacy-chip"
+        role="img"
+        tabindex="0"
+        aria-label="{{ label or 'Beperkt zichtbaar' }}. {{ note }}">
+    <nldd-tag {% if size %}size="{{ size }}"{% endif %} color="warning" icon="eye-slash" {% if label %}text="{{ label }}"{% else %}variant="icon"{% endif %} aria-hidden="true"></nldd-tag>
+  </span>
   </nldd-tooltip>
 {% endmacro %}

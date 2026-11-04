@@ -1373,7 +1373,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
     """
 
     def setUp(self):
-        import datetime  # noqa: PLC0415 (import not at top level) — scoped to setUp to keep the regression test self-contained
+        import datetime as dt  # noqa: PLC0415 (import not at top level) — scoped to setUp to keep the regression test self-contained
 
         self.client = Client()
         self.user = User.objects.create_user(
@@ -1385,8 +1385,8 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
         # Assignment runs the full multi-year window seen in the screenshot.
-        self.assignment_start = datetime.date(2025, 1, 1)
-        self.assignment_end = datetime.date(2028, 12, 31)
+        self.assignment_start = dt.date(2025, 1, 1)
+        self.assignment_end = dt.date(2028, 12, 31)
         self.assignment = Assignment.objects.create(
             name="A",
             owner=self.colleague,
@@ -1395,8 +1395,8 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             end_date=self.assignment_end,
         )
         self.skill = Skill.objects.create(name="Software Engineer")
-        self.custom_start = datetime.date(2026, 3, 1)
-        self.custom_end = datetime.date(2027, 2, 28)
+        self.custom_start = dt.date(2026, 3, 1)
+        self.custom_end = dt.date(2027, 2, 28)
 
         # Row A: service + placement both inherit from assignment.
         self.service_inherit = Service.objects.create(

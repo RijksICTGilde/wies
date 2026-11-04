@@ -379,3 +379,48 @@ class ComboBoxSelectRenderingTest(TestCase):
         combo = re.search(r"<nldd-combo-box[^>]*>", rendered)
         assert combo is not None
         assert 'value=""' in combo.group(0)
+
+
+class NlddAccessibleLabelRenderingTest(TestCase):
+    """A field without a visible label gets its name from ``accessible-label``.
+
+    The widget renders it only when the form sets it: an empty attribute would
+    keep nldd-form-field from naming the field after its visible label.
+    """
+
+    COMPONENTS = {
+        "title": "nldd-text-field",
+        "email": "nldd-text-field",
+        "notes": "nldd-multi-line-text-field",
+        "start": "nldd-date-field",
+    }
+
+    def _form(self, accessible_label=None):
+        class AccessibleLabelForm(NlddFormMixin, forms.Form):
+            title = forms.CharField(label="Titel")
+            email = forms.EmailField(label="E-mailadres")
+            notes = forms.CharField(label="Notities", widget=forms.Textarea)
+            start = forms.DateField(label="Startdatum", widget=forms.DateInput)
+
+        form = AccessibleLabelForm()
+        if accessible_label:
+            for name, field in form.fields.items():
+                field.widget.attrs["accessible-label"] = f"{accessible_label} {name}"
+        return form
+
+    def _component(self, rendered, name):
+        tag = re.search(rf'<{self.COMPONENTS[name]}[^>]*name="{name}"[^>]*>', rendered, re.DOTALL)
+        assert tag is not None, f"no {self.COMPONENTS[name]} rendered for {name}"
+        return tag.group(0)
+
+    def test_set_accessible_label_reaches_the_component(self):
+        rendered = str(self._form(accessible_label="Naam van"))
+        for name in self.COMPONENTS:
+            with self.subTest(field=name):
+                assert f'accessible-label="Naam van {name}"' in self._component(rendered, name)
+
+    def test_no_accessible_label_when_not_set(self):
+        rendered = str(self._form())
+        for name in self.COMPONENTS:
+            with self.subTest(field=name):
+                assert "accessible-label" not in self._component(rendered, name)

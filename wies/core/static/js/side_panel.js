@@ -173,14 +173,9 @@
         .then(() => styleScroller(content));
     }
     if (content && content.innerHTML.trim()) {
-      // show() before the first render leaves the dialog closed.
-      const sheet = getSheet();
-      if (sheet) {
-        customElements
-          .whenDefined("nldd-sheet")
-          .then(() => sheet.updateComplete)
-          .then(() => openSheet());
-      }
+      // This script loads before the design system, so nldd-sheet may not be
+      // defined yet.
+      if (getSheet()) customElements.whenDefined("nldd-sheet").then(openSheet);
       syncPanelBackButton();
     }
 
@@ -247,28 +242,8 @@
 
     const sheet = getSheet();
     if (sheet) {
-      // WORKAROUND @nldd/design-system 0.8.70: nldd-sheet closes on any
-      // 'dismiss' carrying a foreign nldd-top-title-bar in its composed path,
-      // so "Annuleer" in a date picker also closed the panel. Bubble-phase, so
-      // the picker has handled it first. Remove once the DS fixes this.
-      const content = document.getElementById(CONTENT_ID);
-      if (content) {
-        content.addEventListener("dismiss", (e) => {
-          const ownBar = content.querySelector(":scope > nldd-top-title-bar");
-          const bar = e
-            .composedPath()
-            .find(
-              (el) =>
-                el instanceof Element &&
-                el.tagName.toLowerCase() === "nldd-top-title-bar",
-            );
-          if (bar && bar !== ownBar) e.stopPropagation();
-        });
-      }
-
       sheet.addEventListener("close", (e) => {
-        // Overlays inside the content (a date picker is a sheet itself) bubble
-        // a 'close' too.
+        // Only the sheet's own close counts.
         if (e.target !== sheet) return;
         const url = new URL(window.location);
         if (hasPanelParam(url)) {

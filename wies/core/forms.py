@@ -154,9 +154,13 @@ class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Table layout has no visible label, so move it to accessible-label.
+        # The rows share one visible column header, so each field gets a name of
+        # its own that says which category it belongs to.
+        category = f"categorie {self.instance.name}" if self.instance.pk else "nieuwe categorie"
+        self.fields["name"].widget.attrs["accessible-label"] = f"Naam van {category}"
+        # The <select> carries the name, see forms/widgets/select.html.
+        self.fields["color"].widget.attrs["aria-label"] = f"Kleur van {category}"
         for field in self.fields.values():
-            field.widget.attrs.setdefault("accessible-label", str(field.label))
             field.label = ""
 
     def has_changed(self):

@@ -1,7 +1,7 @@
 {% for assignment in object_list %}
   {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
      hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
-  <nldd-card background="tinted" accessible-label="{{ assignment.name }}" href="{{ assignment.panel_url }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-card role="listitem" background="tinted" accessible-label="{{ assignment.name }}" href="{{ assignment.panel_url }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
   <h2>{{ assignment.name }}</h2>
@@ -59,8 +59,9 @@
 {% endfor %}
 {% if next_page_url %}
   {# Click instead of auto-load, see placement_cards.html. The button is a grid
-     cell in the nldd-collection and replaces itself with the next cards. #}
-  <div class="wies-load-more">
+     cell in the nldd-collection and replaces itself with the next cards.
+     A listitem: axe rejects a bare button inside role="list". #}
+  <div class="wies-load-more" role="listitem">
     <nldd-button appearance="secondary" type="button" text="Meer tonen" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>
 {% endif %}

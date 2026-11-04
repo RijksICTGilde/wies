@@ -3,12 +3,12 @@ from django.core.management.base import CommandError
 from django.test import SimpleTestCase
 from markdown_it import MarkdownIt
 
-from wies.core.management.commands.generate_privacy_html import _render_body, _render_inline
+from wies.core.management.commands.generate_docs_html import _render_body, _render_inline
 
 
-def render(markdown_source: str) -> str:
+def render(markdown_source: str, link_base: str = "") -> str:
     md = MarkdownIt("commonmark")
-    return _render_body(md.parse(markdown_source))
+    return _render_body(md.parse(markdown_source), link_base)
 
 
 class RenderBodyTest(SimpleTestCase):
@@ -50,6 +50,27 @@ class RenderBodyTest(SimpleTestCase):
         assert "<em>italic</em>" in body
 
 
+class LinkBaseTest(SimpleTestCase):
+    """SECURITY.md links to repo files; on the site those must point at GitHub."""
+
+    BASE = "https://github.com/org/repo/blob/main/"
+
+    def test_relative_link_is_prefixed_and_opens_in_new_tab(self):
+        body = render("[cfg](.github/dependabot.yml)\n", link_base=self.BASE)
+        assert f'<a href="{self.BASE}.github/dependabot.yml" target="_blank">' in body
+        assert "opent in nieuw tabblad" in body
+
+    def test_absolute_anchor_mailto_and_external_links_are_untouched(self):
+        for href in ("/home", "#section", "mailto:a@b.nl", "https://example.com"):
+            with self.subTest(href=href):
+                body = render(f"[x]({href})\n", link_base=self.BASE)
+                assert f'href="{href}"' in body
+
+    def test_without_link_base_relative_links_are_untouched(self):
+        body = render("[cfg](.github/dependabot.yml)\n")
+        assert '<a href=".github/dependabot.yml">cfg</a>' in body
+
+
 class RenderInlineTest(SimpleTestCase):
     def _inline(self, source: str):
         md = MarkdownIt("commonmark")
@@ -70,10 +91,10 @@ class RenderInlineTest(SimpleTestCase):
 
 
 class StalenessTest(SimpleTestCase):
-    """Fails if docs/privacy.md was edited without regenerating privacy.html."""
+    """Fails if docs/privacy.md or SECURITY.md was edited without regenerating its page."""
 
-    def test_privacy_html_is_up_to_date(self):
+    def test_doc_pages_are_up_to_date(self):
         try:
-            call_command("generate_privacy_html", check=True)
+            call_command("generate_docs_html", check=True)
         except CommandError as exc:
             self.fail(str(exc))

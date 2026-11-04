@@ -4,18 +4,21 @@ from datetime import date, timedelta
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.db import connection
-from django.test import Client, TestCase, override_settings
+from django.test import Client, RequestFactory, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
+from config.jinja2 import datum_nl
 from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
+    AssignmentOrganizationUnit,
     Colleague,
     ContractPeriod,
     Label,
     LabelCategory,
+    OrganizationUnit,
     Placement,
     Service,
     Skill,
@@ -33,9 +36,11 @@ from wies.core.services.occupancy import (
     labels_by_category,
     month_ticks,
     occupancy_summary,
+    placement_order_key,
+    timeline_horizon,
     today_marker_pct,
 )
-from wies.core.views import BEZETTING_PAGE_SIZE
+from wies.core.views import BEZETTING_PAGE_SIZE, _get_colleague_assignments
 
 User = get_user_model()
 
@@ -61,6 +66,27 @@ def _placement(colleague, name, start, end, role=None):
         specific_end_date=end,
         source="wies",
     )
+
+
+def _extension(placement, start, end):
+    """A second placement of the same colleague on the same opdracht."""
+    return Placement.objects.create(
+        colleague=placement.colleague,
+        service=placement.service,
+        period_source="PLACEMENT",
+        specific_start_date=start,
+        specific_end_date=end,
+        source="wies",
+    )
+
+
+def _client(placement, **org_fields):
+    """Make a new organisation unit the primary opdrachtgever of the placement's opdracht."""
+    organization = OrganizationUnit.objects.create(**org_fields)
+    AssignmentOrganizationUnit.objects.create(
+        assignment=placement.service.assignment, organization=organization, role="PRIMARY"
+    )
+    return organization
 
 
 class BezettingAuthTest(TestCase):
@@ -393,6 +419,106 @@ class OccupancyServiceTest(TestCase):
         assert row.segments[0].assignment_name == "Met tijdlijn"
         assert row.segments[0].phase == "active"
 
+    def test_a_running_bar_takes_the_top_lane_over_a_finished_one_it_overlaps(self):
+        """The row is about the running work, even when a finished bar started earlier."""
+        _placement(self.full, "Afgerond", self.today - timedelta(days=50), self.today - timedelta(days=5))
+        _placement(self.full, "Lopend", self.today - timedelta(days=20), self.today + timedelta(days=100))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        lanes = {seg.assignment_name: seg.lane for seg in rows[self.full.id].segments}
+        assert lanes == {"Lopend": 0, "Afgerond": 1}
+
+    def test_segments_go_running_then_planned_then_finished(self):
+        _placement(self.full, "Afgerond oud", self.today - timedelta(days=60), self.today - timedelta(days=40))
+        _placement(self.full, "Afgerond recent", self.today - timedelta(days=30), self.today - timedelta(days=5))
+        _placement(self.full, "Gepland", self.today + timedelta(days=10), self.today + timedelta(days=50))
+        _placement(self.full, "Lopend nieuw", self.today - timedelta(days=3), self.today + timedelta(days=100))
+        _placement(self.full, "Lopend oud", self.today - timedelta(days=20), self.today + timedelta(days=100))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert [s.assignment_name for s in rows[self.full.id].segments] == [
+            "Lopend oud",
+            "Lopend nieuw",
+            "Gepland",
+            "Afgerond recent",
+            "Afgerond oud",
+        ]
+
+    def test_a_bar_carries_the_short_name_of_its_primary_client(self):
+        cases = (
+            ({"name": "Ministerie van BZK", "label": "BZK-label", "abbreviations": ["BZK", "MinBZK"]}, "BZK"),
+            ({"name": "Rijkswaterstaat", "label": "RWS Hoofdkantoor"}, "RWS Hoofdkantoor"),
+            ({"name": "Dienst Zonder Label"}, "Dienst Zonder Label"),
+        )
+        for i, (org_fields, expected) in enumerate(cases):
+            colleague = _consultant(f"Klant {i}", f"klant{i}@x.nl")
+            _client(
+                _placement(colleague, f"Opdracht {i}", self.today, self.today + timedelta(days=30)),
+                **org_fields,
+            )
+            rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+            assert rows[colleague.id].segments[0].client == expected
+
+    def test_only_the_primary_client_goes_on_the_bar(self):
+        placement = _placement(self.full, "Betrokken", self.today, self.today + timedelta(days=30))
+        AssignmentOrganizationUnit.objects.create(
+            assignment=placement.service.assignment,
+            organization=OrganizationUnit.objects.create(name="Betrokken partij", abbreviations=["BP"]),
+            role="INVOLVED",
+        )
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert rows[self.full.id].segments[0].client == ""
+
+    def test_the_clients_cost_one_query_however_many_bars(self):
+        def count_queries():
+            with CaptureQueriesContext(connection) as queries:
+                colleague_occupancy(self.today)
+            return len(queries)
+
+        _client(_placement(self.full, "Eerste", self.today, self.today + timedelta(days=30)), name="Eerste klant")
+        baseline = count_queries()
+        for i in range(10):
+            colleague = _consultant(f"Meer {i}", f"meer{i}@x.nl")
+            _client(_placement(colleague, f"Meer {i}", self.today, self.today + timedelta(days=30)), name=f"Klant {i}")
+        assert count_queries() == baseline
+
+    def test_a_placement_starting_within_a_week_of_the_last_continues_it(self):
+        end = self.today + timedelta(days=20)
+        first = _placement(self.full, "Doorlopend", self.today - timedelta(days=30), end)
+        _extension(first, end + timedelta(days=7), end + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        first_seg, second_seg = sorted(rows[self.full.id].segments, key=lambda s: s.start)
+        assert (first_seg.extended, first_seg.extends) == (True, False)
+        assert (second_seg.extended, second_seg.extends) == (False, True)
+        # Back to back, so the continuation stays in the same lane.
+        assert first_seg.lane == second_seg.lane == 0
+        # Drawn against the first bar despite the week between them.
+        assert abs(second_seg.left_pct - (first_seg.left_pct + first_seg.width_pct)) < 0.02
+
+    def test_a_gap_of_more_than_a_week_is_no_extension(self):
+        end = self.today + timedelta(days=20)
+        first = _placement(self.full, "Met gat", self.today - timedelta(days=30), end)
+        _extension(first, end + timedelta(days=8), end + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert not any(seg.extends or seg.extended for seg in rows[self.full.id].segments)
+
+    def test_a_placement_on_another_opdracht_is_no_extension(self):
+        end = self.today + timedelta(days=20)
+        _placement(self.full, "Eerste", self.today - timedelta(days=30), end)
+        _placement(self.full, "Andere", end + timedelta(days=1), end + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        assert not any(seg.extends or seg.extended for seg in rows[self.full.id].segments)
+
+    def test_extended_work_is_not_ending_soon(self):
+        """Nothing to do for a colleague whose opdracht runs on."""
+        end = self.today + timedelta(days=20)
+        first = _placement(self.full, "Verlengd", self.today - timedelta(days=30), end)
+        _extension(first, end + timedelta(days=1), end + timedelta(days=200))
+        rows = colleague_occupancy(self.today)
+        row = next(r for r in rows if r.colleague.id == self.full.id)
+        extended = next(seg for seg in row.segments if seg.extended)
+        assert (extended.ending_level, extended.ends_soon, extended.days_left) == ("calm", False, None)
+        assert row.ends_soon is False
+        assert occupancy_summary(rows)["ends_soon_count"] == 0
+
 
 class OccupancySummaryTest(TestCase):
     def setUp(self):
@@ -424,9 +550,9 @@ class TimelineGeometryTest(TestCase):
         ticks = month_ticks(date(2025, 11, 15))
         assert ticks, "expected at least one month gridline"
         # First tick is the first month boundary strictly after the horizon start.
-        assert ticks[0]["label"] == "Oct"  # horizon starts mid-Sep 2025
-        # January appears, so the December->January rollover is covered.
-        assert any(t["month"] == 1 for t in ticks)
+        assert ticks[0]["label"] == "okt"  # horizon starts mid-Sep 2025
+        # January carries its year, so the rollover does not rest on a longer line.
+        assert [(t["label"], t["year"]) for t in ticks if t["month"] in (12, 1)] == [("dec", None), ("jan", 2026)]
         lefts = [t["left"] for t in ticks]
         assert lefts == sorted(lefts)  # monotonic left to right
         assert all(0 <= left <= 100 for left in lefts)
@@ -958,9 +1084,15 @@ class BezettingPaginationTest(TestCase):
         assert 'text="Meer tonen"' in content
         assert "pagina=2" in content
 
+    def test_load_more_is_an_item_of_the_rows_list(self):
+        """Only an li may sit in the ul it is swapped into."""
+        content = self.client.get(self.url).content.decode()
+        assert '<li class="wies-load-more">' in content
+
     def test_next_page_is_just_the_rows_without_the_button(self):
         content = self.client.get(self.url, {"pagina": 2}, headers={"hx-request": "true"}).content.decode()
         assert content.count('class="bezetting-row ') == 1
+        assert "Tijdlijn van" not in content
         assert "Zoë Zet" in content
         assert "Meer tonen" not in content
         assert 'id="results"' not in content
@@ -1056,3 +1188,177 @@ class TickLabelFlipTest(TestCase):
 
         expected = sum(1 for t in month_ticks(timezone.now().date()) if t["flip"])
         assert content.count("bezetting-tick--flip") == expected
+
+
+class TimelineStructureTest(TestCase):
+    """Rows and bars are lists; each bar says in words what the track shows."""
+
+    def setUp(self):
+        setup_roles()
+        self.client = Client()
+        self.url = reverse("bezetting")
+        bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.client.force_login(bdm)
+        self.today = timezone.now().date()
+        self.start = self.today - timedelta(days=10)
+        self.end = self.today + timedelta(days=20)
+        self.placed = _consultant("Pim Plaats", "pim@x.nl")
+        placement = _placement(self.placed, "Loopt bijna af", self.start, self.end)
+        placement.service.hours_per_week = 24
+        placement.service.save()
+        self.bench = _consultant("Bea Bank", "bea@x.nl")
+        self.bench_since = self.today - timedelta(days=30)
+        _placement(self.bench, "Afgerond", self.today - timedelta(days=90), self.bench_since)
+
+    def _content(self, **params):
+        return self.client.get(self.url, params).content.decode().replace("&#39;", "'")
+
+    def test_rows_and_bars_are_lists(self):
+        content = self._content()
+        assert '<ul class="bezetting-rows"' in content
+        assert content.count('<li class="bezetting-row ') == 2
+        # role="list" because Safari drops it from a ul with list-style: none.
+        assert re.search(
+            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats">', content
+        )
+        assert re.search(r'<ul class="bezetting-rows"\s+role="list"', content)
+        assert '<li class="bezetting-seg ' in content
+
+    def test_a_bar_reads_its_name_hours_period_and_countdown(self):
+        content = self._content()
+        sentence = (
+            f"Loopt bijna af, 24 uur per week, van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, nog 20 dagen"
+        )
+        assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
+
+    def test_an_ending_bar_shows_its_days_left(self):
+        """The countdown keeps "ends soon" from resting on colour alone."""
+        content = self._content()
+        assert '<span class="bezetting-seg__end" aria-hidden="true">nog 20 dagen</span>' in content
+
+    def test_an_open_ended_bar_reads_from_when(self):
+        """An opdracht without an end date, the most common case in real data."""
+        open_ended = _consultant("Olga Open", "olga@x.nl")
+        _placement(open_ended, "Zonder einde", self.start, None)
+        content = self._content()
+        assert f"Zonder einde, uren niet ingevuld, vanaf {datum_nl(self.start)}</span>" in content
+
+    def test_the_free_stretch_reads_since_when(self):
+        content = self._content()
+        assert f"30 dagen vrij sinds {datum_nl(self.bench_since)}" in content
+
+    def test_visible_bar_text_is_hidden_from_screen_readers(self):
+        """The sentence already says it; read twice it would be noise."""
+        content = self._content()
+        assert '<span class="bezetting-seg__label" aria-hidden="true">' in content
+        assert '<span class="bezetting-seg__end" aria-hidden="true">' in content
+
+    def test_status_card_name_starts_with_its_visible_text(self):
+        content = self._content()
+        assert 'accessible-label="0 deels vrij, deels beschikbaar"' in content
+        assert 'accessible-label="1 eindigt bijna, eindigt binnen 3 maanden"' in content
+        assert 'accessible-label="1 op de bank"' in content
+        assert 'accessible-label="0 deels beschikbaar"' not in content
+
+    def test_the_empty_state_is_not_in_a_list(self):
+        content = self._content(zoek="niemand")
+        assert "<nldd-inline-dialog" in content
+        assert '<ul class="bezetting-rows"' not in content
+
+    def test_the_month_axis_is_hidden_and_one_sentence_gives_the_range(self):
+        """Every bar says its own dates; the axis read as loose words before the list."""
+        content = self._content()
+        assert '<div class="bezetting-timeline-head" aria-hidden="true">' in content
+        start, end = timeline_horizon(self.today)
+        sentence = f"Tijdlijn van {datum_nl(start)} tot en met {datum_nl(end)}. Vandaag is {datum_nl(self.today)}."
+        assert sentence in content
+        assert content.index(sentence) < content.index('<ul class="bezetting-rows"')
+
+    def test_a_bar_names_its_client_and_role(self):
+        placement = Placement.objects.get(colleague=self.placed)
+        placement.service.skill = Skill.objects.create(name="Developer")
+        placement.service.save()
+        _client(placement, name="Ministerie van BZK", abbreviations=["BZK"])
+        content = self._content()
+        sentence = (
+            f"Loopt bijna af bij BZK, Developer, 24 uur per week, "
+            f"van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, nog 20 dagen"
+        )
+        assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
+        assert (
+            '<span class="bezetting-seg__label" aria-hidden="true"><span class="bezetting-seg__client">BZK</span> · <span class="bezetting-seg__name">Loopt bijna af</span> · Developer · 24 uur'
+            in content
+        )
+
+    def test_without_a_client_the_bar_says_no_bij(self):
+        content = self._content()
+        assert " bij " not in content.split('aria-label="Opdrachten van Pim Plaats"')[1].split("</ul>")[0]
+
+    def test_an_extension_says_so_on_both_bars(self):
+        placement = Placement.objects.get(colleague=self.placed)
+        next_start, next_end = self.end + timedelta(days=1), self.end + timedelta(days=60)
+        _extension(placement, next_start, next_end)
+        content = self._content()
+        assert (
+            f"Loopt bijna af, 24 uur per week, van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, "
+            "wordt verlengd</span>"
+        ) in content
+        assert (
+            f"Verlenging van Loopt bijna af, 24 uur per week, "
+            f"van {datum_nl(next_start)} tot en met {datum_nl(next_end)}</span>"
+        ) in content
+        label = '<span class="bezetting-seg__label" aria-hidden="true">Verlenging · <span class="bezetting-seg__name">Loopt bijna af</span> · 24 uur'
+        assert label in content
+        assert content.count("bezetting-seg--extends") == 1
+        assert content.count("bezetting-seg--extended") == 1
+        # The extended bar no longer counts down.
+        assert "nog 20 dagen" not in content
+
+
+class PlacementOrderTest(TestCase):
+    """The colleague panel lists opdrachten in the order of the bars on Bezetting."""
+
+    def setUp(self):
+        setup_roles()
+        self.today = timezone.now().date()
+        self.bdm = User.objects.create(email="bdm@rijksoverheid.nl", onboarding_completed_at=timezone.now())
+        self.bdm.groups.add(Group.objects.get(name=ROLE_BUSINESS_MANAGER))
+        self.colleague = _consultant("Mia Meer", "mia@x.nl")
+        today = self.today
+        _placement(self.colleague, "Afgerond", today - timedelta(days=50), today - timedelta(days=5))
+        _placement(self.colleague, "Lopend nieuw", today - timedelta(days=3), today + timedelta(days=100))
+        _placement(self.colleague, "Gepland", today + timedelta(days=10), today + timedelta(days=50))
+        _placement(self.colleague, "Lopend oud", today - timedelta(days=20), today + timedelta(days=100))
+
+    def test_order_key_puts_running_then_planned_then_finished_newest_first(self):
+        day = self.today
+        keys = [
+            placement_order_key("completed", day - timedelta(days=50)),
+            placement_order_key("completed", day - timedelta(days=5)),
+            placement_order_key("planned", day + timedelta(days=10)),
+            placement_order_key("active", day - timedelta(days=3)),
+            placement_order_key("active", day - timedelta(days=20)),
+        ]
+        assert sorted(keys) == [keys[4], keys[3], keys[2], keys[1], keys[0]]
+
+    def test_panel_order(self):
+        request = RequestFactory().get("/")
+        request.user = self.bdm
+        names = [a["name"] for a in _get_colleague_assignments(request, self.colleague)]
+        assert names == ["Lopend oud", "Lopend nieuw", "Gepland", "Afgerond"]
+
+    def test_panel_and_timeline_agree(self):
+        client = Client()
+        client.force_login(self.bdm)
+        url = reverse("bezetting")
+        page = client.get(url).content.decode()
+        bars = page.split('aria-label="Opdrachten van Mia Meer"')[1].split("</ul>")[0]
+        timeline = re.findall(r'<span class="wies-visually-hidden">([^,<]+),', bars)
+        panel = client.get(
+            url,
+            {"collega": str(self.colleague.public_id)},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        ).content.decode()
+        assert timeline == ["Lopend oud", "Lopend nieuw", "Gepland", "Afgerond"]
+        assert sorted(timeline, key=panel.index) == timeline

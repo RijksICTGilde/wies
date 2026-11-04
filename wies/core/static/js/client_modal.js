@@ -11,14 +11,7 @@
   }
 
   function openModal(modal) {
-    if (!modal) return;
-    if (typeof modal.show === "function") {
-      modal.show();
-    } else {
-      customElements.whenDefined("nldd-sheet").then(() => {
-        if (typeof modal.show === "function") modal.show();
-      });
-    }
+    if (modal) modal.show();
   }
 
   function closeModal() {

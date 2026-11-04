@@ -1,5 +1,5 @@
 import csv
-import datetime
+import datetime as dt
 import logging
 from io import StringIO
 
@@ -25,10 +25,10 @@ from wies.core.services.users import validate_email_domain
 logger = logging.getLogger(__name__)
 
 
-def parse_date_dmy(date_str: str) -> datetime.date:
+def parse_date_dmy(date_str: str) -> dt.date:
     """Parses a DD-MM-YYYY date string into a ``datetime.date``."""
     day, month, year = date_str.split("-")
-    return datetime.date(int(year), int(month), int(day))
+    return dt.date(int(year), int(month), int(day))
 
 
 def filter_placements_by_period(queryset, period_from, period_to):

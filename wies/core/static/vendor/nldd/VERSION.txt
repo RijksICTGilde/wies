@@ -1,2 +1,0 @@
-@nldd/design-system 0.10.0
-vendored via just update-vendor

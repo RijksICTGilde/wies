@@ -279,9 +279,10 @@ class BezettingPartialStatusViewTest(TestCase):
         gerda = body.split("Gerda Gat")[1].split("</nldd-identity>")[0]
         assert "20 uur vrij" in gerda
         assert "zonder uren" not in gerda
-        assert "Zonder uren · uren niet ingevuld" in body
-        assert "Met uren · 16 uur" in body
-        assert "Afgerond zonder · uren niet ingevuld" not in body
+        # The hidden sentence; the visible label puts the note in its own span.
+        assert "Zonder uren, uren niet ingevuld" in body
+        assert "Met uren, 16 uur per week" in body
+        assert "Afgerond zonder, uren niet ingevuld" not in body
 
     def test_a_role_ending_today_still_counts_and_ended_yesterday_does_not(self):
         today = timezone.now().date()
