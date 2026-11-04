@@ -6,9 +6,19 @@ This files lists the changes during the lifetime of this project.
 
 - 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
 - 804: the Subgroep label category is only shown in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out. Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
+- 809: bump dependencies for security patches
+
+## 2026-11-03_2
+
+- 808: fix deployment name staging env
+
+## 2026-11-03
+
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 783: bump dependencies for security patches and change trivy interval to "daily"
+- 806: more security patches
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 786: also release to zad staging on tag
 - 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
 
 ## 2026-10-28
