@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - ???: (security) return paths taken from the client (`terug_url`, `HX-Current-URL`) also reject the backslash form `/\host`, which browsers read as `//host`
 - ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment
+- ???: (security)(migration) the background worker only runs the allowed task commands (`sync_organizations`, `startpage_publish`); `dropdb`, `load_dummy_data` and `load_full_data` refuse to run unless `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` is on; `sync_organizations --url` only accepts https URLs on organisaties.overheid.nl; the unused `Task.parameters` field is removed
 - ?
 
 ## 2026-10-22
