@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
@@ -2789,7 +2789,11 @@ def user_theme(request):
     theme = request.POST.get("theme", "")
     if theme not in Colleague.Theme.values:
         return HttpResponseBadRequest("Onbekende weergave")
-    colleague = request.user.colleague
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        # A user without a Colleague has nowhere to store it; the screen has
+        # already switched client-side, only persisting is refused.
+        return HttpResponse("Geen collega om de weergave op te slaan", status=409)
     colleague.theme = theme
     colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
@@ -3012,7 +3016,8 @@ def profile_labels_edit(request):
     )
 
 
-@permission_required("core.change_labelcategory", raise_exception=True)
+# The sheet both renames existing categories and adds new ones.
+@permission_required(["core.change_labelcategory", "core.add_labelcategory"], raise_exception=True)
 def label_category_manage(request):
     """All categories in one sheet: rename, pick a colour, add rows.
 
@@ -3114,9 +3119,13 @@ def _render_category_manage_body(request, formset, template="parts/label_categor
     )
 
 
-@permission_required("core.change_label", raise_exception=True)
+@login_required
 def label_form(request, public_id=None):
     """One sheet for both adding and editing a label (category + name)."""
+    # One view, two routes, so the permission depends on which one: checked
+    # before the lookup, so a missing label does not answer differently.
+    if not request.user.has_perm("core.change_label" if public_id else "core.add_label"):
+        raise PermissionDenied
     label = get_object_or_404(Label, public_id=public_id) if public_id else None
     is_edit = label is not None
 
@@ -3327,7 +3336,7 @@ def suborganization_edit(request, public_id):
                 "target_element_id": element_id,
             },
         )
-    return None
+    return HttpResponse(status=405)
 
 
 @permission_required("core.delete_suborganization", raise_exception=True)
@@ -3841,6 +3850,7 @@ def toegankelijkheid_onderzoek(request):
     return redirect(static(CURRENT_AUDIT_REPORT))
 
 
+@login_not_required
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)
 
