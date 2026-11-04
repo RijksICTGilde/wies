@@ -36,7 +36,9 @@
   }
 
   observeAll(document);
-  document.addEventListener("htmx:afterSettle", function (event) {
-    observeAll(event.detail.target || document);
+  // The whole document: an out-of-band swap brings cards outside the target,
+  // and observing an element twice is a no-op.
+  document.addEventListener("htmx:afterSettle", function () {
+    observeAll(document);
   });
 })();

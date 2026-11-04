@@ -182,11 +182,17 @@ class RequiredNoteTest(TestCase):
         self.client.force_login(user)
 
     def test_forms_without_optional_fields_say_so(self):
-        for name in ("profile-name-edit", "label-form-create", "label-category-manage", "suborganization-create"):
+        for name in ("profile-name-edit", "label-form-create", "label-category-manage"):
             with self.subTest(view=name):
                 response = self.client.get(reverse(name), headers={"hx-request": "true"})
                 assert response.status_code == 200
                 self.assertContains(response, self.NOTE, count=1)
+
+    def test_a_form_with_one_field_says_so_for_that_field(self):
+        response = self.client.get(reverse("suborganization-create"), headers={"hx-request": "true"})
+
+        self.assertContains(response, "Dit veld is verplicht.", count=1)
+        self.assertNotContains(response, self.NOTE)
 
     def test_a_generic_form_with_an_optional_field_leaves_it_out(self):
         class WithOptional(NlddFormMixin, forms.Form):

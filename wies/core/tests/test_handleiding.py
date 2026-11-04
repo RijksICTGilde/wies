@@ -44,6 +44,6 @@ class HandleidingTest(TestCase):
         text names both."""
         html = self.client.get(reverse("handleiding")).content.decode()
 
-        assert "<strong>Acties voor</strong> je naam (de drie puntjes)" in html
+        assert "de knop heet <strong>Acties voor</strong>, gevolgd door je naam" in html
         assert "<strong>Verwijder</strong> (het kruisje)" in html
         assert "<strong>Mijn rol wijzigen</strong>" in html

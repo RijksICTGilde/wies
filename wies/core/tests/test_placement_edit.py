@@ -116,6 +116,23 @@ class PlacementEditViewTest(TestCase):
         assert 'back-text="Test Opdracht"' in content
         assert f'name="terug_url" value="{terug}"' in content
 
+    def test_end_date_switched_on_but_left_empty_is_asked_for(self):
+        """Text that is no date posts as an empty date; with "Einddatum is
+        bekend" on that must not save as an open end."""
+        response = self.client.post(self.url, self._valid_payload(specific_end_date="", specific_end_date_known="on"))
+
+        assert response.status_code == 200
+        assert "Vul een einddatum in" in response.content.decode()
+        self.placement.refresh_from_db()
+        assert self.placement.period_source == Placement.SERVICE
+
+    def test_switch_off_saves_an_open_end(self):
+        response = self.client.post(self.url, self._valid_payload(specific_end_date=""))
+
+        assert response.status_code == 204
+        self.placement.refresh_from_db()
+        assert self.placement.specific_end_date is None
+
     def test_happy_path_records_team_event_on_parent_assignment(self):
         """The audit mirror records the change as a "Team" event on the assignment."""
         self.client.force_login(self.owner_user)

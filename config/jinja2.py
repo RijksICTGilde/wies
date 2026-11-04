@@ -20,7 +20,7 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
-from wies.core.form_mixins import DATE_FORMAT_HINT, wire_field_errors
+from wies.core.form_mixins import DATE_FORMAT_HINT, KNOWN_SUFFIX, end_date_known, wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.roles import role_label
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
@@ -195,6 +195,8 @@ def environment(**options):
             "inline_edit_form": inline_edit_form,
             "wire_field_errors": wire_field_errors,
             "date_format_hint": DATE_FORMAT_HINT,
+            "end_date_known": end_date_known,
+            "known_suffix": KNOWN_SUFFIX,
             "get_org_breadcrumb": get_org_breadcrumb,
             "get_org_levels_action": get_org_levels_action,
             "current_page_path": current_page_path,

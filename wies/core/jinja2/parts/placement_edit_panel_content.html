@@ -98,13 +98,14 @@
       </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
-    {# Off means no known end date, the placement runs on. The switch is not
-           posted; it only drives the end date field. #}
+    {# Off means no known end date, the placement runs on. The switch cannot post
+       from its shadow root; period_fields.js mirrors it into the hidden input
+       below, so the server asks for an end date when it is on. #}
     <nldd-form-field{% if inherits %} hidden{% endif %}>
-    <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+    <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if end_date_known(form.specific_end_date) or inherits %}checked{% endif %}></nldd-switch-field>
     </nldd-form-field>
     {% set end_errors = wire_field_errors(form.specific_end_date) %}
-    <nldd-form-field label="{{ form.specific_end_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits or not form.specific_end_date.value() %} hidden{% endif %}>
+    <nldd-form-field label="{{ form.specific_end_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits or not end_date_known(form.specific_end_date) %} hidden{% endif %}>
     {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
     {% if form.specific_end_date.errors %}
       <nldd-validation-list>
@@ -114,6 +115,10 @@
       </nldd-validation-list>
     {% endif %}
     </nldd-form-field>
+    <input type="hidden"
+           name="{{ form.specific_end_date.html_name ~ known_suffix }}"
+           value="{{ 'on' if end_date_known(form.specific_end_date) and not inherits else '' }}"
+           data-end-known-input>
   {% endif %}
   {% for error in form.non_field_errors() %}
     <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>

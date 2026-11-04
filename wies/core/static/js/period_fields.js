@@ -16,6 +16,10 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
   const startField = fieldOf(startInput);
   const endField = fieldOf(endInput);
   const endKnownField = fieldOf(endKnownSwitch);
+  // What the server reads for the switch, which cannot post itself.
+  const endKnownInput =
+    endKnownSwitch &&
+    endKnownSwitch.closest("form").querySelector("[data-end-known-input]");
 
   function inherits() {
     if (!group) return checkbox.checked;
@@ -38,6 +42,7 @@ window.WiesPeriodFields = function bindPeriodFields(options) {
     // knownOverride: during the change event the attribute is not updated yet.
     const known = knownOverride === undefined ? endDateKnown() : knownOverride;
     if (endField) endField.hidden = inherit || !known;
+    if (endKnownInput) endKnownInput.value = !inherit && known ? "on" : "";
     if (inherit) {
       if (startInput) startInput.value = inheritStart;
       if (endInput) endInput.value = inheritEnd;

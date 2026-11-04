@@ -4,12 +4,13 @@
  * Two gaps of nldd-date-field in a server-rendered form.
  *
  * Text that is no date: the field's value is then '', so the form posts an
- * empty date and the server stores "no end date" without a word. The field
- * knows (ownValidity), but every Wies form has `novalidate`, so nothing stops
- * the submit. This stops it for that one case and shows the field's own
- * message the way the server's errors are wired: an nldd-validation-item in
- * the nldd-form-field, named in the field's `unmet`. Everything else stays
- * with the server.
+ * empty date. The server catches that only for an end date behind the
+ * "Einddatum is bekend" switch, and cannot say what was wrong with the text.
+ * The field knows (ownValidity), but every Wies form has `novalidate`, so
+ * nothing stops the submit. This stops it for that one case and shows the
+ * field's own message the way the server's errors are wired: an
+ * nldd-validation-item in the nldd-form-field, named in the field's `unmet`.
+ * Everything else stays with the server.
  *
  * Tab past the last button of the open calendar closes it and drops focus on
  * <body>, so the next Tab starts at the top of the page. Focus goes back to
@@ -115,8 +116,26 @@
     if (result.isNew && liveRegion) liveRegion.announce(result.message);
   });
 
+  // Only after Tab: a click on an empty spot also drops focus on <body>, and
+  // there the user chose where focus goes.
+  var lastKeyWasTab = false;
+  document.addEventListener(
+    "keydown",
+    function (event) {
+      lastKeyWasTab = event.key === "Tab";
+    },
+    true,
+  );
+  document.addEventListener(
+    "pointerdown",
+    function () {
+      lastKeyWasTab = false;
+    },
+    true,
+  );
+
   document.addEventListener("focusout", function (event) {
-    if (event.relatedTarget) return;
+    if (event.relatedTarget || !lastKeyWasTab) return;
     var path = event.composedPath();
     var field = path.find(function (el) {
       return el.localName === DATE_FIELD;

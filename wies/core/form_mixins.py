@@ -16,6 +16,11 @@ logger = logging.getLogger(__name__)
 
 DATE_FORMAT_HINT = "Bijvoorbeeld 31-01-2026"
 
+# The "Einddatum is bekend" switch, mirrored into a hidden "<date field>_known"
+# input. Text that is no date posts as an empty date, so without it the server
+# would store "no end date" for it.
+KNOWN_SUFFIX = "_known"
+
 
 class WiesJinja2Renderer(Jinja2):
     """Custom renderer that uses Django's configured Jinja2 environment with all globals."""
@@ -49,6 +54,11 @@ def wire_field_errors(field) -> list[str]:
     if field.field.required:
         field.field.widget.attrs.setdefault("required", True)
     return error_ids
+
+
+def end_date_known(field) -> bool:
+    """Whether the "Einddatum is bekend" switch of a bound date field is on."""
+    return bool(field.value() or field.form.data.get(field.html_name + KNOWN_SUFFIX))
 
 
 class _BaseFormMixin:
@@ -145,6 +155,14 @@ class _BaseFormMixin:
 
         for field_name in self.fields:
             self._configure_field(field_name)
+
+    def _post_clean(self):
+        super()._post_clean()
+        for name, field in self.fields.items():
+            if not isinstance(field.widget, DateInput) or name in self.errors:
+                continue
+            if self.data.get(self.add_prefix(name) + KNOWN_SUFFIX) and not self.cleaned_data.get(name):
+                self.add_error(name, "Vul een einddatum in, of zet 'Einddatum is bekend' uit.")
 
 
 class NlddFormMixin(_BaseFormMixin):

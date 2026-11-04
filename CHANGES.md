@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
-- 797: accessibility fixes: "Voeg categorie toe" reachable by keyboard; "Toon meer" whenever the Taken text is cut off; long label tags and Bezetting bar labels wrap instead of being cut off; "Alle velden zijn verplicht" on forms without optional fields; date fields show an example date, refuse text that is no date and keep focus when the calendar closes with Tab; a bar marks the current page in the narrow menu; the organisation tree announces whether a branch is open or closed; sheets opened from Mijn profiel lose a back button that only closed them; Handleiding names buttons, keeps quote size at 200% zoom and has one tab stop on its table; a page "Alle pagina's" in the footer lists every page you can open (a11y)
+- 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and an "Alle pagina's" page in the footer
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
 - 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
