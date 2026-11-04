@@ -10,6 +10,7 @@ This files lists the changes during the lifetime of this project.
 - ???: (security) error notifications to Mattermost render the request path and exception headline as inline code, so a crafted URL can no longer inject links, formatting or `@channel` mentions
 - ???: (security) the web image sets `DJANGO_SETTINGS_MODULE=config.settings.production`, so `manage.py` commands run in a production container no longer fall back to local settings; local docker-compose now builds a separate `dev` target
 - ???: (security) htmx no longer runs `<script>` tags in swapped content or evaluates attribute code, and only sends requests to the Wies origin; the opdrachtgever tree sheets and the teamlid sheet now load their scripts from the base page
+- ???: (security) the Content-Security-Policy sets `base-uri 'none'`, so an injected `<base>` tag cannot retarget relative URLs
 
 ## 2026-10-22
 
