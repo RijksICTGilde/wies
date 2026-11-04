@@ -5,7 +5,7 @@ import urllib.parse
 from django.utils import timezone
 
 from wies.core.models import Placement
-from wies.core.querysets import annotate_placement_dates, public_label_categories
+from wies.core.querysets import annotate_placement_dates, label_categories_for_everyone
 
 
 def _onboarding_owner_mailto(assignment) -> str:
@@ -88,7 +88,7 @@ def onboarding(request):
     colleague = getattr(user, "colleague", None)
     return {
         "show_onboarding": True,
-        "onboarding_label_categories": list(public_label_categories()),
+        "onboarding_label_categories": list(label_categories_for_everyone()),
         "onboarding_colleague": colleague,
         "onboarding_assignments": _onboarding_assignments(colleague, user),
     }

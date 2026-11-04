@@ -46,7 +46,7 @@ DEFAULT_SUBORGANIZATIONS = {
 
 # The label category that tells the gilde a colleague belongs to ("ICT", "AI").
 # Bezetting and the user list pick it out by this name, and everywhere else it is
-# left out (public_label_categories); the base dummy data seeds it. A beheerder
+# left out (label_categories_for_everyone); the base dummy data seeds it. A beheerder
 # can rename the category in the label admin, and then this goes quiet, so the
 # name lives here once and the dummy-data test guards it.
 SUBGROEP_CATEGORY = "Subgroep"

@@ -102,18 +102,8 @@ def is_staff_member(user) -> bool:
 
 
 def can_view_role_hours(user, placement) -> bool:
-    """Whether the user may see the hours per week of a role.
-
-    The hours of a placed consultant are for who plans the work, the Business
-    Manager. The consultant does not see their own either: the number raised
-    more questions about who else could see it than it answered (#736). An open
-    aanvraag has no one to protect, so its hours are visible to everyone who
-    sees the opdracht.
-
-    Narrower than ``rule(READ, ContractPeriod)``, which the Gebruikersbeheerder also
-    reads: a contract is beheer, the hours on an opdracht are planning. The role
-    matrix prints this one as "Uren van de rol van een collega zien".
-    """
+    """Hours of a placed role: Business Manager only, also not the consultant's
+    own (#736). An open aanvraag shows them to everyone."""
     if placement is None:
         return True
     # restricted_change_ids builds the team rows with a request that has no
