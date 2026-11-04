@@ -10,12 +10,15 @@
     if (!endInput) return;
     // Hide the whole field, not just the input, or the label stays behind.
     const endField = endInput.closest("nldd-form-field") || endInput;
+    // What the server reads for the switch, which cannot post itself.
+    const knownInput = form.querySelector("[data-end-known-input]");
     let lastEndDate = endInput.value;
     toggle.addEventListener("change", (e) => {
       const known = e.detail
         ? e.detail.checked
         : toggle.hasAttribute("checked");
       endField.hidden = !known;
+      if (knownInput) knownInput.value = known ? "on" : "";
       if (!known) {
         if (endInput.value) lastEndDate = endInput.value;
         endInput.value = "";

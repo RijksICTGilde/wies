@@ -3,12 +3,14 @@
 from datetime import date
 from unittest.mock import patch
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.template import engines
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 from django.urls import reverse
 
+from wies.core.form_mixins import NlddFormMixin
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -165,3 +167,70 @@ class A11yMarkupTest(TestCase):
         self.assertContains(response, "Status: A, voldoet volledig.")
         self.assertContains(response, "Bekijk de verklaring in het register")
         self.assertNotContains(response, "toegankelijkheidslabel.svg")
+
+
+class RequiredNoteTest(TestCase):
+    """Forms mark their optional fields; a form without any says once that
+    every field is required, or nothing tells the user."""
+
+    NOTE = "Alle velden zijn verplicht."
+
+    def setUp(self):
+        setup_roles()
+        user = User.objects.create_user(email="beheer@rijksoverheid.nl", first_name="Be", last_name="Heer")
+        user.groups.add(Group.objects.get(name=ROLE_USER_ADMIN))
+        self.client.force_login(user)
+
+    def test_forms_without_optional_fields_say_so(self):
+        for name in ("profile-name-edit", "label-form-create", "label-category-manage"):
+            with self.subTest(view=name):
+                response = self.client.get(reverse(name), headers={"hx-request": "true"})
+                assert response.status_code == 200
+                self.assertContains(response, self.NOTE, count=1)
+
+    def test_a_form_with_one_field_says_so_for_that_field(self):
+        response = self.client.get(reverse("suborganization-create"), headers={"hx-request": "true"})
+
+        self.assertContains(response, "Dit veld is verplicht.", count=1)
+        self.assertNotContains(response, self.NOTE)
+
+    def test_a_generic_form_with_an_optional_field_leaves_it_out(self):
+        class WithOptional(NlddFormMixin, forms.Form):
+            name = forms.CharField(label="Naam")
+            note = forms.CharField(label="Notitie", required=False)
+
+        request = RequestFactory().get("/")
+        html = (
+            engines["jinja2"]
+            .get_template("parts/generic_form_body.html")
+            .render(
+                {
+                    "content": WithOptional(),
+                    "form_post_url": "/",
+                    "modal_element_id": "x",
+                    "form_button_label": "Opslaan",
+                },
+                request=request,
+            )
+        )
+
+        assert self.NOTE not in html
+        assert "optional" in html
+
+
+class DateFormatHintTest(TestCase):
+    def test_a_date_field_shows_an_example_date(self):
+        class WithDate(NlddFormMixin, forms.Form):
+            start = forms.DateField(label="Startdatum")
+
+        html = str(WithDate())
+
+        field = html[html.index("<nldd-form-field") :].split(">", 1)[0]
+        assert 'supporting-label="Bijvoorbeeld 31-01-2026"' in field
+
+    def test_the_date_filter_shows_the_example_date_too(self):
+        self.client.force_login(User.objects.create_user(email="f@rijksoverheid.nl", first_name="F", last_name="F"))
+        html = self.client.get(reverse("assignment-list")).content.decode()
+
+        wrapper = html[: html.index('<nldd-date-field id="filter-beschikbaar_vanaf"')].rsplit("<nldd-form-field", 1)[1]
+        assert wrapper.startswith(' supporting-label="Bijvoorbeeld 31-01-2026">')

@@ -144,7 +144,7 @@
      a visible-then-collapsed flash. as_field_group() renders the wrapper itself and
      cannot pass it through, so wire_field_errors links the error message here. #}
   {% set start_errors = wire_field_errors(svc_form.placement_start_date) %}
-  <nldd-form-field label="{{ svc_form.placement_start_date.label }}"{% if inherits %} hidden{% endif %}>
+  <nldd-form-field label="{{ svc_form.placement_start_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits %} hidden{% endif %}>
   {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
   {% if svc_form.placement_start_date.errors %}
     <nldd-validation-list>
@@ -154,13 +154,14 @@
     </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
-  {# Off means no known end date, the placement runs on. The switch does not post;
-     it only drives the end-date field. #}
+  {# Off means no known end date, the placement runs on. The switch cannot post
+     from its shadow root; period_fields.js mirrors it into the hidden input
+     below, so the server asks for an end date when it is on. #}
   <nldd-form-field{% if inherits %} hidden{% endif %}>
-  <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if svc_form.placement_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+  <nldd-switch-field label="Einddatum is bekend" data-end-date-known {% if end_date_known(svc_form.placement_end_date) or inherits %}checked{% endif %}></nldd-switch-field>
   </nldd-form-field>
   {% set end_errors = wire_field_errors(svc_form.placement_end_date) %}
-  <nldd-form-field label="{{ svc_form.placement_end_date.label }}"{% if inherits or not svc_form.placement_end_date.value() %} hidden{% endif %}>
+  <nldd-form-field label="{{ svc_form.placement_end_date.label }}" supporting-label="{{ date_format_hint }}"{% if inherits or not end_date_known(svc_form.placement_end_date) %} hidden{% endif %}>
   {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
   {% if svc_form.placement_end_date.errors %}
     <nldd-validation-list>
@@ -172,6 +173,10 @@
   </nldd-form-field>
   {# Hidden inputs last: nldd-form spaces all siblings, so one at the top pushes
      the first visible field down. #}
+  <input type="hidden"
+         name="{{ svc_form.placement_end_date.html_name ~ known_suffix }}"
+         value="{{ 'on' if end_date_known(svc_form.placement_end_date) and not inherits else '' }}"
+         data-end-known-input>
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <input type="hidden" name="member_heading" value="{{ panel_heading }}">
   <nldd-form-actions>

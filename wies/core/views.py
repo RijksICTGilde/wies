@@ -111,6 +111,7 @@ from .services.occupancy import (
     STATUS_VALUES,
     bezetting_filter_groups,
     colleague_occupancy,
+    horizon_days,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -138,6 +139,7 @@ from .services.placements import (
     placement_edit_specs,
     save_placement_edit,
 )
+from .services.sitemap import sitemap_sections
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.urls import current_page_url_on
 from .services.users import (
@@ -554,8 +556,9 @@ def _get_colleague_assignments(request, colleague):
     return assignments
 
 
-# Three clamped lines at roughly 90 characters. Nothing re-measures in the
-# browser, so the clamp is the only safeguard.
+# Three clamped lines at roughly 90 characters on a wide panel. Past this the
+# toggle is certain, also without JavaScript; below it cv_clamp.js shows the
+# toggle when a narrow screen clamps a shorter text.
 _CV_PREVIEW_CHARS = 240
 _CV_ROLE_NAMES = 3
 
@@ -843,6 +846,7 @@ def bezetting(request):
         "search_filter": search,
         "panel_data": panel_data,
         "today_pct": today_marker_pct(),
+        "horizon_days": horizon_days(),
         "today": today,
         "horizon": timeline_horizon(today),
         "month_ticks": month_ticks(today),
@@ -3824,6 +3828,10 @@ def beveiliging(request):
 
 def toegankelijkheid(request):
     return render(request, "toegankelijkheid.html")
+
+
+def sitemap(request):
+    return render(request, "sitemap.html", {"sections": sitemap_sections(request)})
 
 
 # Public because the DigiToegankelijk register links straight at this URL, and

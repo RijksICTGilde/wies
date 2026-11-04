@@ -147,6 +147,28 @@ a > nldd-icon:last-child {
   overflow-x: auto;
 }
 
+/* Under 40rem rich-text makes the table a block that scrolls itself, a second
+   tab stop whose focus ring the wrapper clips. Kept a table, as on a wide
+   screen: its text wraps, and the wrapper alone scrolls what still does not fit. */
+.wies-table-scroll > table {
+  display: table;
+  width: 100%;
+}
+
+/* rich-text switches quotes to the smaller sm font in a container query under
+   40rem, so at 200% zoom a quote grows less than the text around it. One size
+   at every width: the component offers no way to turn the switch off. */
+nldd-rich-text blockquote {
+  font: var(--semantics-blockquotes-md-quote-font);
+}
+
+/* nldd-tag sets nowrap in its shadow root, so a long label runs out of a
+   narrow panel. The slotted text is light DOM and can wrap on its own. */
+.wies-tag-text {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 /* Caption at the foot of the search suggestions. It has to be a [disabled] menu
    item: that is the one attribute the menu skips while navigating and counts
    while deciding it is empty. But disabled means "a choice you cannot make", and
@@ -485,4 +507,46 @@ nldd-image.wies-shot {
   margin-block: var(--primitives-space-16, 16px);
   border: 1px solid
     var(--semantics-surfaces-base-highlight-border-color, #cbd5e1);
+}
+
+/* The narrow menu marks the current page with a grey fill alone, and
+   nldd-list-item has no indicator to switch on. A bar like the wide menu's
+   says it without colour. The menu bar puts this sheet in <body>, so its rows
+   are light DOM; placement and list type are all that set it apart. The
+   z-index lifts the bar over the fill, which the row paints in its shadow
+   root. */
+body
+  > nldd-sheet[placement="left"]
+  > nldd-page
+  > nldd-simple-section
+  > nldd-list[type="navigation"]
+  > nldd-list-item[selected] {
+  position: relative;
+}
+
+body
+  > nldd-sheet[placement="left"]
+  > nldd-page
+  > nldd-simple-section
+  > nldd-list[type="navigation"]
+  > nldd-list-item[selected]::before {
+  content: "";
+  position: absolute;
+  inset-block: var(--primitives-space-8, 8px);
+  inset-inline-start: 0;
+  z-index: 1;
+  width: var(--primitives-space-4, 4px);
+  border-radius: var(--primitives-space-4, 4px);
+  background-color: var(--components-menu-bar-item-is-current-indicator-color);
+}
+
+@media (forced-colors: active) {
+  body
+    > nldd-sheet[placement="left"]
+    > nldd-page
+    > nldd-simple-section
+    > nldd-list[type="navigation"]
+    > nldd-list-item[selected]::before {
+    background-color: Highlight;
+  }
 }

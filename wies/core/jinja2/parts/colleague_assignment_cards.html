@@ -82,20 +82,22 @@
           {# Closed, every role's text runs together, clamped to three lines, so
              what is cut off is visibly cut off and "Toon meer" names what it
              reveals. Open, the per-role blocks below take over. #}
-          <p class="wies-cv__preview"{% if taken.open %} hidden{% endif %}>{{ taken.preview }}</p>
-          {% if taken.has_more %}
-            <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
-              {% for block in taken.blocks %}
-                <div class="wies-cv__role-block">
-                  {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
-                  <div class="wies-role-description"><span class="wies-role-description__text">{{ block.text }}</span></div>
-                </div>
-              {% endfor %}
-            </div>
-            {# The toggle belongs under the text it unfolds, not in a row of its
-               own: a lone button in an empty row reads as if it were a value. #}
-            <nldd-button class="wies-cv__toggle" size="sm" appearance="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-action="toggle-card"></nldd-button>
-          {% endif %}
+          <p class="wies-cv__preview"
+             data-cv-preview{% if taken.open %}
+             hidden{% endif %}>{{ taken.preview }}</p>
+          <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
+            {% for block in taken.blocks %}
+              <div class="wies-cv__role-block">
+                {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
+                <div class="wies-role-description"><span class="wies-role-description__text">{{ block.text }}</span></div>
+              </div>
+            {% endfor %}
+          </div>
+          {# The toggle belongs under the text it unfolds, not in a row of its
+             own: a lone button in an empty row reads as if it were a value.
+             A short text fits three lines on a wide panel, but not on a narrow
+             screen: cv_clamp.js shows the toggle once the clamp cuts. #}
+          <nldd-button class="wies-cv__toggle" size="sm" appearance="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-toggle-object="taken bij {{ assignment.name }}" data-action="toggle-card"{% if not taken.has_more %} data-reveal-when-clamped hidden{% endif %}></nldd-button>
         {% else %}
           <span class="wies-text-secondary">Niet ingevuld</span>
         {% endif %}

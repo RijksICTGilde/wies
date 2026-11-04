@@ -1,0 +1,20 @@
+{% extends "base_footer.html" %}
+{% block title %}
+  Alle pagina's · Wies
+{% endblock title %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Alle pagina's</h1>
+  <p>Dit zijn de pagina's van Wies die je kunt openen.</p>
+  {% for section in sections %}
+    <h2>{{ section.title }}</h2>
+    <ul>
+      {% for link in section.links %}
+        <li>
+          <a href="{{ link.url }}">{{ link.text }}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endfor %}
+  </nldd-rich-text>
+{% endblock footer_content %}
