@@ -17,7 +17,7 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Subquery, Value, When
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, QuerySet, Subquery, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
@@ -1186,7 +1186,11 @@ class PublicIdFacetsMixin:
 
     @cached_property
     def facets(self) -> FacetResolver:
-        return FacetResolver(self.request)
+        return FacetResolver(self.request, self.facet_scopes())
+
+    def facet_scopes(self) -> dict[type[Model], QuerySet]:
+        """Per model, the rows this view's facets may resolve to; see ``resolve_facet``."""
+        return {}
 
     @cached_property
     def org_type_filter(self) -> list[str]:
@@ -1508,6 +1512,11 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     qs = qs.filter(service__assignment__end_date__gt=half_year)
 
         return qs
+
+    def facet_scopes(self) -> dict[type[Model], QuerySet]:
+        # Subgroep has no filter here, so a Subgroep label from an old link gets
+        # the "Onbekend label" chip instead of filtering out of sight.
+        return {Label: Label.objects.filter(category__in=label_categories_for_everyone())}
 
     def get_queryset(self):
         """Applies the filters to the placements queryset."""

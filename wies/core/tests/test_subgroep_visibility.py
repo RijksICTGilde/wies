@@ -66,3 +66,26 @@ class SubgroepVisibilityTest(TestCase):
         ).content.decode()
         assert "Datawarehousing" in body
         assert "Kwartiergroep ICT" not in body
+
+    def test_a_subgroep_label_in_the_url_is_an_unknown_label(self):
+        """An old link must not filter on Subgroep out of sight: it gets a chip."""
+        body = self.client.get(reverse("home"), {"labels": str(self.ict.public_id)}).content.decode()
+        assert "Onbekend label" in body
+        assert "Kwartiergroep ICT" not in body
+
+    def test_the_subgroep_cannot_be_edited_inline(self):
+        def inline_edit(category):
+            return self.client.get(
+                reverse(
+                    "inline-edit",
+                    kwargs={
+                        "model_label": "colleague",
+                        "public_id": self.colleague.public_id,
+                        "name": f"labels_{category.id}",
+                    },
+                ),
+                headers={"HX-Request": "true"},
+            )
+
+        assert inline_edit(self.expertise).status_code == 200
+        assert inline_edit(self.subgroep).status_code == 404

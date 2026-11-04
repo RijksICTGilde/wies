@@ -5,7 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
-- 804: the Subgroep label category is only shown in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out. Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
+- 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label
+- 804: Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
 - 809: bump dependencies for security patches
 
 ## 2026-11-03_2
