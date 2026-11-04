@@ -517,11 +517,10 @@ class TestViewSwitch:
         # The default view leaves the parameter out, to keep the url clean.
         assert 'name="weergave"' not in self.client.get(reverse("home")).content.decode()
 
-    def test_view_items_load_on_the_bridged_event(self):
-        """item-change never fires for the arrow keys; filter_interactions.js raises this one."""
+    def test_view_items_load_on_item_change(self):
+        """item-change fires for a click and the arrow keys alike."""
         html = self.client.get(reverse("home")).content.decode()
-        assert html.count('hx-trigger="wies-view-change"') == 2
-        assert 'hx-trigger="item-change"' not in html
+        assert html.count('hx-trigger="item-change"') == 2
 
     def test_view_requests_replace_each_other(self):
         """Two quick arrow keys: the older response must not win the url."""

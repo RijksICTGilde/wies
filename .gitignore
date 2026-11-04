@@ -220,6 +220,8 @@ yarn-error.log*
 .npm-cache/
 
 staticfiles
+# Built by scripts/vendor.sh from package-lock.json
+wies/core/static/vendor/
 scripts/xml_cache/
 wies/core/fixtures/dummy_data.json
 .bash_history

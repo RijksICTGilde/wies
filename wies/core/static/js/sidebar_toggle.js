@@ -3,9 +3,20 @@
 (function () {
   "use strict";
 
+  // A click right after load can beat the DS upgrading and rendering the
+  // section; toggle() before the first render has no sheet to open.
+  function callSection(el, method) {
+    const section = el.closest("nldd-sidebar-section");
+    if (!section) return;
+    customElements
+      .whenDefined("nldd-sidebar-section")
+      .then(() => section.updateComplete)
+      .then(() => section[method]());
+  }
+
   document.addEventListener("click", (e) => {
     const btn = window.wiesClosestInPath(e, "#sidebar-toggle");
-    if (btn) btn.closest("nldd-sidebar-section")?.toggle();
+    if (btn) callSection(btn, "toggle");
   });
 
   // The toolbar's overflow menu shows a clone with the same id and reports
@@ -14,7 +25,7 @@
     const item = window.wiesClosestInPath(e, "#sidebar-toggle-menu-item");
     if (!item || !document.contains(item)) return;
     // show(), not toggle(): picking a menu item means "open".
-    item.closest("nldd-sidebar-section")?.show();
+    callSection(item, "show");
   });
 
   // Opened from the overflow menu, the sheet hands focus back to a menu item
