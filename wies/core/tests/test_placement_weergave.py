@@ -7,6 +7,7 @@ options.
 
 import html as html_module
 import json
+import re
 from datetime import timedelta
 
 import pytest
@@ -683,13 +684,13 @@ class TestClientModalCounts:
     def _org_count(self, params=None):
         """The org's count as the modal renders it.
 
-        Read back out of the json_script payload: these templates are Jinja2, so
+        Read back out of the tree container's data-tree: these templates are Jinja2, so
         there is no response.context to inspect.
         """
         response = self.client.get("/client-modal/", {"count_mode": "placements", "ndd": "1", **(params or {})})
         assert response.status_code == 200
         html = response.content.decode()
-        raw = html.split('<script id="client-data" type="application/json">')[1].split("</script>")[0]
+        raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', html).group(1)
 
         def walk(nodes):
             for node in nodes:

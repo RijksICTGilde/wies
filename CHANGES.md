@@ -9,6 +9,7 @@ This files lists the changes during the lifetime of this project.
 - ???: (security)(migration) the background worker only runs the allowed task commands (`sync_organizations`, `startpage_publish`); `dropdb`, `load_dummy_data` and `load_full_data` refuse to run unless `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` is on; `sync_organizations --url` only accepts https URLs on organisaties.overheid.nl; the unused `Task.parameters` field is removed
 - ???: (security) error notifications to Mattermost render the request path and exception headline as inline code, so a crafted URL can no longer inject links, formatting or `@channel` mentions
 - ???: (security) the web image sets `DJANGO_SETTINGS_MODULE=config.settings.production`, so `manage.py` commands run in a production container no longer fall back to local settings; local docker-compose now builds a separate `dev` target
+- ???: (security) htmx no longer runs `<script>` tags in swapped content or evaluates attribute code, and only sends requests to the Wies origin; the opdrachtgever tree sheets and the teamlid sheet now load their scripts from the base page
 
 ## 2026-10-22
 
