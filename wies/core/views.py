@@ -1035,6 +1035,8 @@ def staff_database(request):
             return render(request, "parts/merge_duplicates_sheet.html", context)
 
         elif action == "merge_duplicates_apply":
+            # Deliberately not behind ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+            # this merge is a cleanup meant for production data.
             from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
                 find_duplicate_groups,
                 merge_group,
