@@ -88,6 +88,7 @@ from .querysets import (
     annotate_sort_names,
     annotate_suborganization_usage_counts,
     annotate_usage_counts,
+    public_label_categories,
 )
 from .roles import (
     business_management_access_required,
@@ -602,6 +603,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "labels": list(colleague.labels.filter(category__in=public_label_categories())),
         "assignments": assignments,
     }
 
@@ -1724,7 +1726,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         group_field = self.GROUP_FIELD[active_view]
 
         label_filter_groups = []
-        for category in LabelCategory.objects.all():
+        for category in public_label_categories():
             # Count with all filters EXCEPT this label category
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
             cat_label_counts = _facet_counts(cat_filtered_qs, "colleague__labels__id", group_field)
@@ -2984,7 +2986,7 @@ def profile_labels_edit(request):
     """
     colleague = _own_colleague_or_404(request)
 
-    categories = list(LabelCategory.objects.order_by("name"))
+    categories = list(public_label_categories().order_by("name"))
 
     if request.method == "POST":
         form = ProfileLabelsForm(request.POST, colleague=colleague, categories=categories)
@@ -3662,7 +3664,7 @@ def user_profile(request):
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     label_categories = []
-    for category in LabelCategory.objects.order_by("name"):
+    for category in public_label_categories().order_by("name"):
         selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
         label_categories.append({"category": category, "labels": selected})
 

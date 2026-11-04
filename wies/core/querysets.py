@@ -8,7 +8,13 @@ that cascade from Assignment -> Service -> Placement hierarchy.
 from django.db.models import Case, Count, F, Func, Prefetch, Value, When
 from django.db.models.functions import Lower, Trim
 
-from wies.core.models import Label
+from wies.core.models import SUBGROEP_CATEGORY, Label, LabelCategory
+
+
+def public_label_categories():
+    """The label categories everyone sees. Subgroep is left out: only Business
+    management (Bezetting) and the user list in Beheer show it."""
+    return LabelCategory.objects.exclude(name=SUBGROEP_CATEGORY)
 
 
 def annotate_placement_dates(queryset):
