@@ -5,12 +5,19 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ???: (security) return paths taken from the client (`terug_url`, `HX-Current-URL`) also reject the backslash form `/\host`, which browsers read as `//host`
-- ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment
+- ???: (security) templates can no longer use the `|safe` filter, which is removed from the Jinja environment; `row_actions` renders its attrs from a dict, escaped per value; `.claude/rules/code-style.md` states the rule
 - ???: (security)(migration) the background worker only runs the allowed task commands (`sync_organizations`, `startpage_publish`); `dropdb`, `load_dummy_data` and `load_full_data` refuse to run unless `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` is on; `sync_organizations --url` only accepts https URLs on organisaties.overheid.nl; the unused `Task.parameters` field is removed
 - ???: (security) error notifications to Mattermost render the request path and exception headline as inline code, so a crafted URL can no longer inject links, formatting or `@channel` mentions
 - ???: (security) the web image sets `DJANGO_SETTINGS_MODULE=config.settings.production`, so `manage.py` commands run in a production container no longer fall back to local settings; local docker-compose now builds a separate `dev` target
-- ???: (security) htmx no longer runs `<script>` tags in swapped content or evaluates attribute code, and only sends requests to the Wies origin; the opdrachtgever tree sheets and the teamlid sheet now load their scripts from the base page
+- ???: (security) htmx no longer runs `<script>` tags in swapped content or evaluates attribute code, and only sends requests to the Wies origin; the opdrachtgever tree sheets and the teamlid sheet now load their scripts from the base page; their tree data moves from `json_script` blocks (stripped by htmx) to `data-*` attributes via the new `json_attr` filter, which replaces `json_script` in the Jinja environment
+- ???: (security) startpage trust boundary documented in `wies/startpage/publish.py` and `views.py`: the published site runs as Wies, mitigated by reviewing every content-repo PR (no behaviour change)
 - ???: (security) the Content-Security-Policy sets `base-uri 'none'`, so an injected `<base>` tag cannot retarget relative URLs
+- ???: (security) adding a label now requires `add_label` and editing one `change_label` (both routes of `label_form` used to ask `change_label` only); the label category sheet, which both renames and adds categories, requires `change_labelcategory` and `add_labelcategory`
+- ???: (security) `suborganization_edit` answers 405 instead of 500 on methods other than GET/POST
+- ???: (security) `user_theme` answers 409 instead of 500 for a user whose Colleague was removed mid-session
+- ???: (security) `error_400` carries `@login_not_required` like the other error handlers (no behaviour change: Django calls handlers directly)
+- ???: (security) comment in `staff_database` on why the duplicate-assignment merge is deliberately not behind `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` (no behaviour change)
+- ???: (security) `pentest-prep-action-list.md` added: the security review findings, with the decision per item (fixes, accepted risks, skipped items)
 - 809: bump dependencies for security patches
 
 ## 2026-11-03_2
