@@ -93,7 +93,7 @@ CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 ROLE_HOURS_WEIGHTS = {None: 15, 8: 5, 16: 10, 24: 20, 32: 25, 36: 20, 40: 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
-# Share of colleagues without any placement at all: 3 of 50 in base, about 5%
+# Share of colleagues without any placement at all: 3 of 50 in base, about 6%
 # in full. The "Geen opdracht" cards on Wie zit waar? are more than that, as
 # colleagues with only ended or planned placements show up there too.
 UNPLACED_SHARE = 0.06

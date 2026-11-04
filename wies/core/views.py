@@ -190,6 +190,11 @@ def _build_panel_url(request, **overrides):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
 
 
+def _count_label(count: int, singular: str, plural: str) -> str:
+    """The count with its noun in singular or plural: "1 collega", "3 collega's"."""
+    return f"{count} {singular if count == 1 else plural}"
+
+
 def _sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
     """The four keys parts/sort_control.html reads, built once for every list.
 
@@ -1313,6 +1318,8 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     template_name = "placements.html"
     paginate_by = 60
     page_kwarg = "pagina"
+    # Set by ui_handlers.js when the banner is dismissed.
+    MISSING_OPDRACHTEN_COOKIE = "wies_missing_opdrachten_dismissed"
 
     VIEW_DEFAULT = "persoon"
     VIEW_OPTIONS = [
@@ -1703,10 +1710,13 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             return {}
         today = timezone.now().date()
         current = Q(owned_assignments__end_date__isnull=True) | Q(owned_assignments__end_date__gte=today)
-        # Like the list itself, an opdracht at a hidden organization does not count.
+        # Like the list itself, an opdracht at a hidden organization does not count,
+        # also when it has a visible one too: a subquery, as a negated join would
+        # judge each organization row on its own.
         excluded_org_ids = get_excluded_org_ids()
         if excluded_org_ids:
-            current &= ~Q(owned_assignments__organizations__id__in=excluded_org_ids)
+            hidden = Assignment.objects.filter(organizations__id__in=excluded_org_ids)
+            current &= ~Q(owned_assignments__in=hidden)
         colleagues = Colleague.objects.filter(id__in=colleague_ids).annotate(
             owned_count=Count("owned_assignments", filter=current, distinct=True)
         )
@@ -1718,6 +1728,12 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 "roles": [],
                 "no_assignment": True,
                 "owned_count": colleague.owned_count,
+                # "Nu": a planned placement may be in the panel, not on the card.
+                "summary": (
+                    f"Business Manager van {_count_label(colleague.owned_count, 'opdracht', 'opdrachten')}"
+                    if colleague.owned_count
+                    else "Nu geen opdracht"
+                ),
                 "panel_url": _build_panel_url(self.request, collega=colleague.public_id),
             }
             for colleague in colleagues
@@ -1801,6 +1817,16 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             context["cards"] = self._assignment_cards(placements)
         else:
             context["cards"] = self._person_cards(placements, list(context["page_obj"].object_list))
+
+        count = context["paginator"].count
+        if active_view == "opdracht":
+            context["result_announcement"] = _count_label(count, "opdracht", "opdrachten")
+            context["empty_text"] = "Geen opdrachten gevonden"
+        else:
+            context["result_announcement"] = _count_label(count, "collega", "collega's")
+            context["empty_text"] = "Geen collega's gevonden"
+        context["missing_opdrachten_cookie"] = self.MISSING_OPDRACHTEN_COOKIE
+        context["show_missing_opdrachten_banner"] = self.MISSING_OPDRACHTEN_COOKIE not in self.request.COOKIES
 
         order_param = self.request.GET.get("order")
         active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""

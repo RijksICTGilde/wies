@@ -24,8 +24,8 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {# Gone for good once dismissed: ui_handlers.js sets the cookie, so the page
      never renders it again and it does not flash in before a script hides it. #}
-  {% if not request.COOKIES.get("wies_missing_opdrachten_dismissed") %}
-    <nldd-banner dismissible data-dismiss-cookie="wies_missing_opdrachten_dismissed" text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."></nldd-banner>
+  {% if show_missing_opdrachten_banner %}
+    <nldd-banner dismissible data-dismiss-cookie="{{ missing_opdrachten_cookie }}" text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan." translations='{"components.banner.dismiss-action": "Melding verbergen"}'></nldd-banner>
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% endif %}
   {% include "parts/filter_and_table_container.html" %}

@@ -84,9 +84,7 @@
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="business-suitcase"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    {# djlint:off T028 #}
-    <nldd-text-cell size="sm" text="{% if card.owned_count %}Business manager van {{ card.owned_count }} {{ 'opdracht' if card.owned_count == 1 else 'opdrachten' }}{% else %}Geen opdracht{% endif %}"></nldd-text-cell>
-    {# djlint:on #}
+    <nldd-text-cell size="sm" text="{{ card.summary }}"></nldd-text-cell>
     </nldd-list-item>
     {# Empty, but kept: dropping it shrank the card and broke the even heights in
        the grid. Hidden, so the list "Gegevens" counts only the row that says something. #}

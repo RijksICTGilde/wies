@@ -73,7 +73,7 @@ class OnboardingWizardRenderTest(TestCase):
         self.assertContains(response, "Aanvragen")
         self.assertNotContains(response, "Rijks ICT Gilde (RIG)")
         # A new account is on Wie zit waar? too, without an opdracht (#778).
-        self.assertContains(response, "Zoek op je naam om jezelf te vinden.")
+        self.assertContains(response, "Zoek op je naam.")
         # Profile step (labels) is present.
         self.assertContains(response, "Vul je profiel aan")
         # A non-placed user has welcome + profile = two steps, no third.

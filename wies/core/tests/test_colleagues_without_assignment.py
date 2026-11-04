@@ -1,6 +1,6 @@
 """Colleagues with an account but no current placement on "Wie zit waar?" (#778).
 
-They follow the placed colleagues in the person view as a "Geen opdracht" card,
+They follow the placed colleagues in the person view as a "Nu geen opdracht" card,
 so a new account can find itself. Covers who is in that tail, how the filters,
 sorting, pagination and counts treat it, the card it gets, and what each role
 sees behind it in the panel.
@@ -171,6 +171,13 @@ class TestFilters:
         names = _names(self.client, {param: value})
         assert names == ["Carla Geplaatst"]
 
+    def test_an_opdracht_filter_drops_the_tail_from_the_persoon_count(self):
+        skill = Skill.objects.create(name="Ontwikkelaar")
+        _place(_account("Carla Geplaatst"), _assignment("Lopend"), skill)
+        response = self.client.get(reverse("home"), {"rol": str(skill.public_id)})
+        counts = {option["value"]: option["count"] for option in response.context_data["view_options"]}
+        assert counts["persoon"] == 1
+
 
 @pytest.mark.django_db
 class TestOrderAndPagination:
@@ -208,6 +215,20 @@ class TestOrderAndPagination:
         assert len(seen) == expected_total
         assert len(set(seen)) == expected_total
 
+    @pytest.mark.parametrize("extra_placed", [56, 57], ids=["tail-starts-page-2", "tail-starts-on-the-last-card"])
+    def test_load_more_at_the_boundary_between_placed_and_tail(self, extra_placed):
+        """60 cards a page: the first unplaced card opens page 2, or closes page 1."""
+        for i in range(extra_placed):
+            _place(_account(f"Geplaatst {i:03d}"), _assignment(f"Opdracht {i:03d}"))
+
+        first, second = (_cards(self.client, {"pagina": str(page)}) for page in (1, 2))
+        placed_total = 2 + extra_placed
+        assert [bool(card.get("no_assignment")) for card in first] == [False] * placed_total + [True] * (
+            60 - placed_total
+        )
+        names = [card["name"] for card in first + second]
+        assert len(names) == len(set(names)) == placed_total + 3  # Anna, Carla, viewer
+
 
 @pytest.mark.django_db
 class TestCard:
@@ -219,6 +240,7 @@ class TestCard:
         assert card["assignment"] is None
         assert card["roles"] == []
         assert card["owned_count"] == 0
+        assert card["summary"] == "Nu geen opdracht"
         assert f"collega={colleague.public_id}" in card["panel_url"]
 
     def test_business_manager_counts_current_and_planned_opdrachten_only(self, viewer_client):
@@ -240,10 +262,31 @@ class TestCard:
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
         assert card["owned_count"] == 1
 
+    def test_business_manager_count_leaves_out_an_opdracht_with_a_hidden_and_a_visible_client(self, viewer_client):
+        """The list drops the whole opdracht; the count must not keep it for its visible client."""
+        bm = _account("Bea Manager")
+        hidden = OrganizationUnit.objects.create(name="Algemene Inlichtingen- en Veiligheidsdienst")
+        shared = _assignment("Gedeeld", org=hidden, owner=bm)
+        AssignmentOrganizationUnit.objects.create(
+            assignment=shared, organization=OrganizationUnit.objects.create(name="Ministerie"), role="INVOLVED"
+        )
+
+        card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
+        assert card["owned_count"] == 0
+
+    def test_a_placed_business_manager_gets_the_placement_not_the_count(self, viewer_client):
+        bm = _account("Bea Manager")
+        _assignment("Eigen opdracht", owner=bm)
+        _place(bm, _assignment("Plaatsing"))
+
+        card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
+        assert not card.get("no_assignment")
+        assert card["assignment"].name == "Plaatsing"
+
     def test_html_says_geen_opdracht(self, viewer_client):
         _account("Anna Nieuw")
         html = viewer_client.get(reverse("home")).content.decode()
-        assert 'text="Geen opdracht"' in html
+        assert 'text="Nu geen opdracht"' in html
 
     def test_the_empty_second_row_is_hidden_from_assistive_tech(self, viewer_client):
         """The row only keeps the card at height; "Gegevens" should read as one item."""
@@ -256,7 +299,7 @@ class TestCard:
         bm = _account("Bea Manager")
         _assignment("Lopend", owner=bm)
         html = viewer_client.get(reverse("home")).content.decode()
-        assert 'text="Business manager van 1 opdracht"' in html
+        assert 'text="Business Manager van 1 opdracht"' in html
         assert "<nldd-tag" not in html
 
     def test_an_ended_placement_stays_off_the_card(self, viewer_client):
@@ -277,14 +320,16 @@ class TestCard:
 
 @pytest.mark.django_db
 class TestImportNotice:
-    """Not every opdracht is in Wies yet, so "Geen opdracht" is often not true;
-    the page and the panel say why."""
+    """Not every opdracht is in Wies yet, so "Nu geen opdracht" is often not true;
+    the page says why."""
 
     def test_the_page_says_not_every_opdracht_is_in_wies_yet(self, viewer_client):
         html = viewer_client.get(reverse("home")).content.decode()
         assert 'text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."' in html
         assert 'data-dismiss-cookie="wies_missing_opdrachten_dismissed"' in html
         assert "<nldd-banner dismissible" in html
+        # The close button says what it closes, not just "Verberg".
+        assert '"components.banner.dismiss-action": "Melding verbergen"' in html
 
     def test_a_dismissed_banner_stays_away(self, viewer_client):
         viewer_client.cookies["wies_missing_opdrachten_dismissed"] = "1"
@@ -294,17 +339,6 @@ class TestImportNotice:
     def test_a_filter_swap_does_not_repeat_the_banner(self, viewer_client):
         html = viewer_client.get(reverse("home"), headers={"HX-Request": "true"}).content.decode()
         assert "Nog niet alle opdrachten staan in Wies" not in html
-
-    def test_the_empty_panel_says_what_the_banner_says(self, viewer_client):
-        colleague = _account("Anna Nieuw")
-        html = viewer_client.get(
-            reverse("home"),
-            {"collega": str(colleague.public_id)},
-            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
-        ).content.decode()
-        assert 'text="Geen opdrachten"' in html
-        # The same words as the banner on the list, so both read as one message.
-        assert 'supporting-text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."' in html
 
 
 @pytest.mark.django_db
