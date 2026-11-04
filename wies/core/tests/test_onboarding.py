@@ -67,10 +67,11 @@ class OnboardingWizardRenderTest(TestCase):
         # Header title; the body title is personalized so it doesn't duplicate.
         self.assertContains(response, "Welkom bij Wies")
         self.assertContains(response, "Hoi Tess!")
-        # Welcome step explains the tabs and carries the RIG-only disclaimer.
+        # Welcome step explains the tabs; which opdrachten are missing is the
+        # list's banner to say, not the onboarding's.
         self.assertContains(response, "Wie zit waar?")
         self.assertContains(response, "Aanvragen")
-        self.assertContains(response, "Rijks ICT Gilde (RIG)")
+        self.assertNotContains(response, "Rijks ICT Gilde (RIG)")
         # A new account is on Wie zit waar? too, without an opdracht (#778).
         self.assertContains(response, "Zoek op je naam om jezelf te vinden.")
         # Profile step (labels) is present.

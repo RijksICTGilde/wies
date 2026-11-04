@@ -95,9 +95,24 @@
   // any page, so a fixed href would send you somewhere you have not been.
   document.addEventListener("back-click", goBack);
 
-  // nldd-notification announces its dismissal but does not remove itself.
+  // nldd-notification and nldd-banner announce their dismissal but do not
+  // remove themselves. A banner with data-dismiss-cookie stays away: the
+  // server leaves it out while the cookie is set.
   document.addEventListener("dismiss", function (event) {
-    var el = window.wiesClosestInPath(event, "nldd-notification");
-    if (el) el.remove();
+    var el = window.wiesClosestInPath(event, "nldd-notification, nldd-banner");
+    if (!el) return;
+    var cookie = el.getAttribute("data-dismiss-cookie");
+    if (cookie) {
+      var secure = window.location.protocol === "https:" ? "; Secure" : "";
+      document.cookie =
+        cookie + "=1; max-age=31536000; path=/; SameSite=Lax" + secure;
+    }
+    // The close button had focus; without a new target it falls to <body>.
+    var heading = cookie && document.querySelector("h1");
+    el.remove();
+    if (heading) {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus();
+    }
   });
 })();

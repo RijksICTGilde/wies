@@ -278,9 +278,24 @@ class TestCard:
 @pytest.mark.django_db
 class TestImportNotice:
     """Not every opdracht is in Wies yet, so "Geen opdracht" is often not true;
-    the panel says why."""
+    the page and the panel say why."""
 
-    def test_the_empty_panel_says_the_opdrachten_are_on_their_way(self, viewer_client):
+    def test_the_page_says_not_every_opdracht_is_in_wies_yet(self, viewer_client):
+        html = viewer_client.get(reverse("home")).content.decode()
+        assert 'text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."' in html
+        assert 'data-dismiss-cookie="wies_missing_opdrachten_dismissed"' in html
+        assert "<nldd-banner dismissible" in html
+
+    def test_a_dismissed_banner_stays_away(self, viewer_client):
+        viewer_client.cookies["wies_missing_opdrachten_dismissed"] = "1"
+        html = viewer_client.get(reverse("home")).content.decode()
+        assert "Nog niet alle opdrachten staan in Wies" not in html
+
+    def test_a_filter_swap_does_not_repeat_the_banner(self, viewer_client):
+        html = viewer_client.get(reverse("home"), headers={"HX-Request": "true"}).content.decode()
+        assert "Nog niet alle opdrachten staan in Wies" not in html
+
+    def test_the_empty_panel_says_what_the_banner_says(self, viewer_client):
         colleague = _account("Anna Nieuw")
         html = viewer_client.get(
             reverse("home"),
@@ -288,7 +303,8 @@ class TestImportNotice:
             headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
         ).content.decode()
         assert 'text="Geen opdrachten"' in html
-        assert "Ontbrekende opdrachten worden nog toegevoegd." in html
+        # The same words as the banner on the list, so both read as one message.
+        assert 'supporting-text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."' in html
 
 
 @pytest.mark.django_db

@@ -22,6 +22,12 @@
   <h1>Wie zit waar?</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# Gone for good once dismissed: ui_handlers.js sets the cookie, so the page
+     never renders it again and it does not flash in before a script hides it. #}
+  {% if not request.COOKIES.get("wies_missing_opdrachten_dismissed") %}
+    <nldd-banner dismissible data-dismiss-cookie="wies_missing_opdrachten_dismissed" text="Nog niet alle opdrachten staan in Wies. We vullen de lijst aan."></nldd-banner>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% endif %}
   {% include "parts/filter_and_table_container.html" %}
 {% endblock content %}
 {% block panel %}
