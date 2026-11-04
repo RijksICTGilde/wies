@@ -276,6 +276,22 @@ class TestCard:
 
 
 @pytest.mark.django_db
+class TestImportNotice:
+    """Not every opdracht is in Wies yet, so "Geen opdracht" is often not true;
+    the panel says why."""
+
+    def test_the_empty_panel_says_the_opdrachten_are_on_their_way(self, viewer_client):
+        colleague = _account("Anna Nieuw")
+        html = viewer_client.get(
+            reverse("home"),
+            {"collega": str(colleague.public_id)},
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+        assert 'text="Geen opdrachten"' in html
+        assert "Ontbrekende opdrachten worden nog toegevoegd." in html
+
+
+@pytest.mark.django_db
 class TestCounts:
     @pytest.fixture(autouse=True)
     def setup(self, viewer_client):
