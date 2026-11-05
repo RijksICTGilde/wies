@@ -386,6 +386,19 @@ describe("focusFromTrail", () => {
 // ─── handleSettle ────────────────────────────────────────────
 
 describe("handleSettle", () => {
+  it("puts focus on a card that settled on its own, as after Meer tonen", () => {
+    const card = element({ href: "?opdracht=a&aanvraag=b" });
+    card.matches = (selector) => selector === "nldd-card[href]";
+    card.querySelector = () => null;
+    card.querySelectorAll = () => [];
+    card.closest = () => null;
+    const restore = new FocusRestore(doc);
+    restore.lastInput = "keyboard";
+
+    restore.handleSettle(card);
+    assert.equal(doc.activeElement, card);
+  });
+
   it("sends everyone to the rejected field, mouse included, and scrolls to it", () => {
     const field = element({ invalid: "" });
     const restore = new FocusRestore(doc);
