@@ -154,7 +154,8 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
-        assert response.context_data["paginator"].count == 5
+        # Plus the viewer, who has no placement and so ends the list.
+        assert response.context_data["paginator"].count == 6
         assert len(response.context_data["object_list"]) == 10
 
     def test_paginator_counts_assignments_in_opdracht_view(self):
@@ -231,7 +232,7 @@ class TestGroupPagination:
         assert response.context_data["page_obj"].number == 2
 
     def test_empty_result_set_renders_without_error(self):
-        response = self.client.get(reverse("home"))
+        response = self.client.get(reverse("home"), {"zoek": "niemand-heet-zo"})
         assert response.status_code == 200
         assert response.context_data["paginator"].count == 0
         assert response.context_data["cards"] == []
@@ -259,7 +260,7 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht B"), self.skill)
 
         cards = self._cards()
-        assert list(cards) == ["Jan de Vries"]
+        assert [name for name, card in cards.items() if not card.get("no_assignment")] == ["Jan de Vries"]
         assert len(cards["Jan de Vries"]["assignments"]) == 2
 
     def test_single_assignment_card_links_to_the_colleague(self):
@@ -491,7 +492,8 @@ class TestViewSwitch:
         _place(_make_colleague("Bob Smit"), shared, self.skill)
         _place(_make_colleague("Carla Jansen"), _make_assignment("Eigen opdracht"), self.skill)
 
-        assert self._counts() == {"persoon": 3, "opdracht": 2}
+        # Persoon also counts the viewer, who has no placement.
+        assert self._counts() == {"persoon": 4, "opdracht": 2}
 
     def test_counts_are_the_same_in_both_views(self):
         shared = _make_assignment("Gedeelde opdracht")
@@ -535,7 +537,11 @@ class TestSortOptions:
 
     @pytest.fixture(autouse=True)
     def setup(self):
-        self.user = User.objects.create_user(email="test@rijksoverheid.nl", password="testpass123")
+        # The viewer has no placement, so the list ends with them under the
+        # default sort and takes them in by name under the name sort.
+        self.user = User.objects.create_user(
+            email="test@rijksoverheid.nl", password="testpass123", first_name="Daan", last_name="Kijker"
+        )
         self.client = Client()
         self.client.force_login(self.user)
         self.skill = Skill.objects.create(name="Ontwikkelaar")
@@ -592,7 +598,7 @@ class TestSortOptions:
             assignment.save(update_fields=["start_date"])
             _place(_make_colleague(name), assignment, self.skill)
 
-        assert self._card_names() == ["Bob Smit", "Carla Jansen", "Anna Bakker"]
+        assert self._card_names() == ["Bob Smit", "Carla Jansen", "Anna Bakker", "Daan Kijker"]
 
     def test_person_without_a_start_date_sorts_last(self):
         dated = _make_assignment("Met startdatum")
@@ -604,7 +610,7 @@ class TestSortOptions:
         undated.save(update_fields=["start_date"])
         _place(_make_colleague("Bob Smit"), undated, self.skill)
 
-        assert self._card_names() == ["Anna Bakker", "Bob Smit"]
+        assert self._card_names() == ["Anna Bakker", "Bob Smit", "Daan Kijker"]
 
     def test_a_newer_placement_lifts_an_existing_person_to_the_top(self):
         """A card ranks on its most recent placement, not on its oldest."""
@@ -619,25 +625,25 @@ class TestSortOptions:
         bob_assignment.start_date = today - timedelta(days=30)
         bob_assignment.save(update_fields=["start_date"])
         _place(_make_colleague("Bob Smit"), bob_assignment, self.skill)
-        assert self._card_names() == ["Bob Smit", "Anna Bakker"]
+        assert self._card_names() == ["Bob Smit", "Anna Bakker", "Daan Kijker"]
 
         recent = _make_assignment("Tweede opdracht")
         recent.start_date = today - timedelta(days=2)
         recent.save(update_fields=["start_date"])
         _place(anna, recent, self.skill)
-        assert self._card_names() == ["Anna Bakker", "Bob Smit"]
+        assert self._card_names() == ["Anna Bakker", "Bob Smit", "Daan Kijker"]
 
     def test_person_view_name_ascending_sorts_on_name(self):
-        for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
+        for name in ("Carla Jansen", "Anna Bakker", "Edo Smit"):
             _place(_make_colleague(name), _make_assignment(f"Opdracht {name}"), self.skill)
 
-        assert self._card_names({"order": "name"}) == ["Anna Bakker", "Bob Smit", "Carla Jansen"]
+        assert self._card_names({"order": "name"}) == ["Anna Bakker", "Carla Jansen", "Daan Kijker", "Edo Smit"]
 
     def test_person_view_name_descending_reverses_the_order(self):
-        for name in ("Carla Jansen", "Anna Bakker", "Bob Smit"):
+        for name in ("Carla Jansen", "Anna Bakker", "Edo Smit"):
             _place(_make_colleague(name), _make_assignment(f"Opdracht {name}"), self.skill)
 
-        assert self._card_names({"order": "-name"}) == ["Carla Jansen", "Bob Smit", "Anna Bakker"]
+        assert self._card_names({"order": "-name"}) == ["Edo Smit", "Daan Kijker", "Carla Jansen", "Anna Bakker"]
 
     def test_assignment_view_defaults_to_last_changed(self):
         """An opdracht ranks on its last audited change, not on when it was created."""

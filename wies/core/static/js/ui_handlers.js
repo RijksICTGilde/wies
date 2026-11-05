@@ -2,8 +2,8 @@
 // defaultPrevented — htmx cancels the native event on everything it drives.
 
 (function () {
-  // Under Node (js_tests) there is no document to bind to: export the toggles,
-  // which are pure DOM manipulation, and skip the listeners. They are the part
+  // Under Node (js_tests) there is no document to bind to: export the toggles
+  // and dismiss, which are pure DOM manipulation, and skip the listeners. They are the part
   // that silently stopped matching its markup once (#693).
   var testing = typeof module !== "undefined" && module.exports;
 
@@ -52,6 +52,25 @@
     el.setAttribute("text", open ? "Toon minder" : "Toon meer");
   }
 
+  // nldd-notification and nldd-banner announce their dismissal but do not
+  // remove themselves. A banner with data-dismiss-cookie stays away: the
+  // server leaves it out while the cookie is set.
+  function dismiss(el, doc) {
+    var cookie = el.getAttribute("data-dismiss-cookie");
+    if (cookie) {
+      var secure = doc.location.protocol === "https:" ? "; Secure" : "";
+      doc.cookie =
+        cookie + "=1; max-age=31536000; path=/; SameSite=Lax" + secure;
+    }
+    // The close button had focus; without a new target it falls to <body>.
+    var heading = cookie && doc.querySelector("h1");
+    el.remove();
+    if (heading) {
+      heading.setAttribute("tabindex", "-1");
+      heading.focus();
+    }
+  }
+
   var CLICK_ACTIONS = {
     "history-back": goBack,
     "toggle-long-text": toggleLongText,
@@ -59,7 +78,11 @@
   };
 
   if (testing) {
-    module.exports = { toggleLongText: toggleLongText, toggleCard: toggleCard };
+    module.exports = {
+      toggleLongText: toggleLongText,
+      toggleCard: toggleCard,
+      dismiss: dismiss,
+    };
     return;
   }
 
@@ -95,9 +118,8 @@
   // any page, so a fixed href would send you somewhere you have not been.
   document.addEventListener("back-click", goBack);
 
-  // nldd-notification announces its dismissal but does not remove itself.
   document.addEventListener("dismiss", function (event) {
-    var el = window.wiesClosestInPath(event, "nldd-notification");
-    if (el) el.remove();
+    var el = window.wiesClosestInPath(event, "nldd-notification, nldd-banner");
+    if (el) dismiss(el, document);
   });
 })();

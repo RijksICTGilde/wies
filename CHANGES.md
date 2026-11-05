@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 805: Wie zit waar? lists every colleague with an account, also without a current opdracht (card "Nu geen opdracht"); a Business Manager shows up with the number of opdrachten they manage, so new accounts can find themselves (#778). The onboarding says so. The empty state now says "Geen collega's gevonden" / "Geen opdrachten gevonden". A banner on Wie zit waar? (which you can dismiss) says missing opdrachten are still being added; the onboarding no longer says Wies only holds RIG and Digi Gilde opdrachten
 - 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
 - 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
 - 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label

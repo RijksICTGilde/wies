@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const {
   toggleLongText,
   toggleCard,
+  dismiss,
 } = require("../wies/core/static/js/ui_handlers.js");
 
 // ─── Fake DOM ────────────────────────────────────────────────
@@ -159,5 +160,69 @@ describe("toggle-card (an opdracht entry in a colleague's cv list)", () => {
     assert.equal(preview.hidden, false);
     assert.equal(toggle.getAttribute("text"), "Toon meer");
     assert.ok(!toggle.hasAttribute("expanded"));
+  });
+});
+
+// The banner on Wie zit waar? (placements.html) and an nldd-notification.
+function dismissible(cookie) {
+  const el = element("nldd-banner");
+  if (cookie) el.setAttribute("data-dismiss-cookie", cookie);
+  el.removed = false;
+  el.remove = function () {
+    this.removed = true;
+  };
+  const heading = element("h1");
+  heading.focused = false;
+  heading.focus = function () {
+    this.focused = true;
+  };
+  const doc = {
+    cookie: "",
+    location: { protocol: "https:" },
+    querySelector: (selector) => (selector === "h1" ? heading : null),
+  };
+  return { el, heading, doc };
+}
+
+describe("dismiss (a banner or notification closed by its own button)", () => {
+  it("remembers a banner with a cookie, so the server leaves it out", () => {
+    const { el, doc } = dismissible("wies_missing_opdrachten_dismissed");
+
+    dismiss(el, doc);
+
+    assert.ok(el.removed);
+    assert.match(doc.cookie, /^wies_missing_opdrachten_dismissed=1; /);
+    assert.match(doc.cookie, /max-age=31536000/);
+    assert.match(doc.cookie, /; Secure$/);
+  });
+
+  it("sends the focus to the heading instead of letting it drop to <body>", () => {
+    const { el, heading, doc } = dismissible(
+      "wies_missing_opdrachten_dismissed",
+    );
+
+    dismiss(el, doc);
+
+    assert.ok(heading.focused);
+    assert.equal(heading.getAttribute("tabindex"), "-1");
+  });
+
+  it("sets the cookie without Secure over plain http, where the browser would refuse it", () => {
+    const { el, doc } = dismissible("wies_missing_opdrachten_dismissed");
+    doc.location.protocol = "http:";
+
+    dismiss(el, doc);
+
+    assert.doesNotMatch(doc.cookie, /Secure/);
+  });
+
+  it("only removes a notification without a cookie", () => {
+    const { el, heading, doc } = dismissible(null);
+
+    dismiss(el, doc);
+
+    assert.ok(el.removed);
+    assert.equal(doc.cookie, "");
+    assert.ok(!heading.focused);
   });
 });
