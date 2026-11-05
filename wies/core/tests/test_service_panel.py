@@ -169,7 +169,7 @@ class ServicePanelTest(TestCase):
         body = self._panel()
 
         assert "Aanvraag wijzigen" not in body
-        assert "Wordt beheerd in OTYS IIR. Wijzigen kan alleen daar." in body
+        assert "Wordt beheerd in OTYS. Wijzigen kan alleen daar." in body
 
     def test_a_wies_aanvraag_has_no_managed_elsewhere_line(self):
         assert "Wordt beheerd in" not in self._panel()

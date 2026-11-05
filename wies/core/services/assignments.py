@@ -384,5 +384,5 @@ def assignment_edit_specs(assignment, user, only=None):
 
 
 def external_source(assignment: Assignment) -> str:
-    """The system that manages ``assignment`` ("OTYS IIR"), or "" for Wies."""
+    """The system that manages ``assignment`` ("OTYS"), or "" for Wies."""
     return assignment.get_source_display() if assignment.source not in ("wies", "") else ""

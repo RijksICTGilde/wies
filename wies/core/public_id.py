@@ -17,7 +17,7 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from django.db.models import Model
+    from django.db.models import Model, QuerySet
     from django.http import HttpRequest
 
 
@@ -66,16 +66,20 @@ class ResolvedFacet:
         return [*self.public_ids, *self.unresolved]
 
 
-def resolve_facet(model: type[Model], tokens: list[str]) -> ResolvedFacet:
-    """Resolve one facet's raw query-param values against ``model``."""
+def resolve_facet(model: type[Model], tokens: list[str], queryset: QuerySet | None = None) -> ResolvedFacet:
+    """Resolve one facet's raw query-param values against ``model``.
+
+    A ``queryset`` narrows what resolves: a row outside it counts as unknown, so
+    a view can hide rows from its facet without a URL bringing them back.
+    """
     tokens = [str(token) for token in tokens if str(token).strip()]
     if not tokens:
         return ResolvedFacet(requested=False)
     id_by_public_id = {
         str(public_id): row_id
-        for public_id, row_id in model.objects.filter(public_id__in=parse_public_ids(tokens)).values_list(
-            "public_id", "id"
-        )
+        for public_id, row_id in (model.objects if queryset is None else queryset)
+        .filter(public_id__in=parse_public_ids(tokens))
+        .values_list("public_id", "id")
     }
     public_ids: list[str] = []
     ids: list[int] = []
@@ -99,12 +103,13 @@ class FacetResolver:
     counts, so resolving inline would repeat the same lookup on every call.
     """
 
-    def __init__(self, request: HttpRequest):
+    def __init__(self, request: HttpRequest, scopes: dict[type[Model], QuerySet] | None = None):
         self._request = request
+        self._scopes = scopes or {}
         self._cache: dict[tuple[str, type[Model]], ResolvedFacet] = {}
 
     def __call__(self, param: str, model: type[Model]) -> ResolvedFacet:
         key = (param, model)
         if key not in self._cache:
-            self._cache[key] = resolve_facet(model, self._request.GET.getlist(param))
+            self._cache[key] = resolve_facet(model, self._request.GET.getlist(param), self._scopes.get(model))
         return self._cache[key]

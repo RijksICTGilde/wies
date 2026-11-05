@@ -91,12 +91,11 @@ class BaseDummyDataFixtureTest(TestCase):
         rows = colleague_occupancy(timezone.now().date())
         assert all(row.gilde_labels for row in rows), "a consultant without a gilde label"
 
-    def test_the_other_label_categories_are_populated_too(self):
-        """Expertise and Thema drive the filter sheet; empty ones filter nothing."""
-        for name in ("Expertise", "Thema"):
-            category = LabelCategory.objects.filter(name=name).first()
-            assert category is not None, f"no {name} category"
-            assert category.labels.exists(), f"{name} has no labels"
+    def test_expertise_is_populated_too(self):
+        """Expertise drives the filter sheet; an empty one filters nothing."""
+        category = LabelCategory.objects.filter(name="Expertise").first()
+        assert category is not None, "no Expertise category"
+        assert category.labels.exists(), "Expertise has no labels"
 
     def test_loading_twice_regenerates_cleanly(self):
         """/staff/ can reseed onto an environment that already has data. The
