@@ -5,6 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 805: Wie zit waar? lists every colleague with an account, also without a current opdracht (card "Nu geen opdracht"); a Business Manager shows up with the number of opdrachten they manage, so new accounts can find themselves (#778). The onboarding says so. The empty state now says "Geen collega's gevonden" / "Geen opdrachten gevonden". A banner on Wie zit waar? (which you can dismiss) says missing opdrachten are still being added; the onboarding no longer says Wies only holds RIG and Digi Gilde opdrachten
+- 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
+- 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 809: bump dependencies for security patches
 
 ## 2026-11-03_2

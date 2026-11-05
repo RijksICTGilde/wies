@@ -443,14 +443,14 @@ class AssignmentEditAttributeTest(TestCase):
         """
         self.client.force_login(self.user_with_permission)
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         body = response.content.decode()
         assert 'text="Omschrijving"' in body
         # "Toon meer" is bound by a delegated listener in ui_handlers.js; loading
         # that script only behind show_onboarding left the button dead here.
-        page = self.client.get("/opdrachten/").content.decode()
+        page = self.client.get("/aanvragen/").content.decode()
         assert "js/ui_handlers.js" in page
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
         # Editing runs via "Gegevens wijzigen" at the top, not per row.
