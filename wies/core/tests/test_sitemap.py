@@ -81,4 +81,4 @@ class SitemapTest(TestCase):
 
         response = self.client.get(reverse("contact"))
 
-        assert f'<a href="{reverse("sitemap")}">Alle pagina\'s</a>' in response.content.decode()
+        assert f'<a href="{reverse("sitemap")}">Sitemap</a>' in response.content.decode()

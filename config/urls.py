@@ -148,7 +148,7 @@ urlpatterns = [
     path("beveiliging/", beveiliging, name="beveiliging"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
     path("toegankelijkheid/onderzoek/", toegankelijkheid_onderzoek, name="toegankelijkheid-onderzoek"),
-    path("overzicht/", sitemap, name="sitemap"),
+    path("sitemap/", sitemap, name="sitemap"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
     path(

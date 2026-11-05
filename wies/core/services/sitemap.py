@@ -1,4 +1,4 @@
-"""The pages on "Alle pagina's": the menus and the footer, flattened for one user.
+"""The pages on the sitemap: the menus and the footer, flattened for one user.
 
 The gates are the ones the menus ask (``show_*`` in ``visibility_rules``), so
 the list never offers a page the menu hides, and never misses one it shows.
