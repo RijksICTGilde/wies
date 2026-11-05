@@ -55,6 +55,23 @@ def annotate_placement_dates(queryset):
     )
 
 
+def annotate_service_dates(queryset):
+    """Annotate a Service queryset with ``effective_start_date`` and
+    ``effective_end_date``: the opdracht's dates for a role that follows the
+    opdracht, its own otherwise. The batch form of ``Service.start_date`` and
+    ``Service.end_date``, like ``annotate_placement_dates`` one level down."""
+    return queryset.annotate(
+        effective_start_date=Case(
+            When(period_source="ASSIGNMENT", then=F("assignment__start_date")),
+            default=F("specific_start_date"),
+        ),
+        effective_end_date=Case(
+            When(period_source="ASSIGNMENT", then=F("assignment__end_date")),
+            default=F("specific_end_date"),
+        ),
+    )
+
+
 def annotate_usage_counts(queryset):
     """
     Annotate LabelCategory queryset with usage counts on labels
