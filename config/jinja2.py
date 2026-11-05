@@ -1,14 +1,16 @@
+import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
 from django.contrib.staticfiles import finders
+from django.core.serializers.json import DjangoJSONEncoder
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.html import format_html, json_script
+from django.utils.html import format_html
 from jinja2 import Environment
 
 from wies.core.editables import (
@@ -41,6 +43,17 @@ def datetime_nl(dt, fmt="%Y-%m-%d %H:%M:%S"):
     if timezone.is_aware(dt):
         dt = dt.astimezone(NL_TIMEZONE)
     return dt.strftime(fmt)
+
+
+def json_attr(value) -> str:
+    """JSON text for an HTML attribute: ``data-x="{{ value|json_attr }}"``.
+
+    A plain str, so autoescaping escapes it like any other attribute value; the
+    page reads it back with ``JSON.parse(el.dataset.x)``. Replaces Django's
+    ``json_script``: htmx (allowScriptTags off) strips every <script> from
+    swapped content, data blocks included.
+    """
+    return json.dumps(value, cls=DjangoJSONEncoder)
 
 
 def tijdgeleden(dt):
@@ -191,6 +204,8 @@ def environment(**options):
     env.filters["bankduur"] = bankduur
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
-    env.filters["json_script"] = json_script
+    env.filters["json_attr"] = json_attr
+    # No `|safe`: it switches off autoescaping for a whole string and is a big security footgun
+    del env.filters["safe"]
 
     return env

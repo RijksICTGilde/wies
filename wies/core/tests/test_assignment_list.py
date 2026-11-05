@@ -424,16 +424,16 @@ class AssignmentListViewTest(TestCase):
     def _modal_org_count(self, org, query_params=None):
         """The count the opdrachtgever modal shows for ``org`` on Aanvragen.
 
-        Drives the real endpoint and reads the ``json_script`` payload back:
-        these templates are Jinja2, so there is no ``response.context``.
+        Drives the real endpoint and reads the tree container's ``data-tree``
+        back: these templates are Jinja2, so there is no ``response.context``.
         """
         self.client.force_login(self.auth_user)
         response = self.client.get(
             "/client-modal/", {"count_mode": "open_assignments", "ndd": "1", **(query_params or {})}
         )
         assert response.status_code == 200
-        raw = response.content.decode().split('<script id="client-data" type="application/json">')[1]
-        nodes = json.loads(html_module.unescape(raw.split("</script>")[0]))
+        raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', response.content.decode()).group(1)
+        nodes = json.loads(html_module.unescape(raw))
         while nodes:
             node = nodes.pop()
             if node["id"] == str(org.public_id):

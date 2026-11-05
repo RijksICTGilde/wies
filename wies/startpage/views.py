@@ -6,6 +6,9 @@ articles *and* assets) out of MinIO, behind the project-wide
 reaches here). The site owns its landing page, so the root path resolves to
 ``<prefix>/index.html``. It must go through Django precisely because these
 objects are private; WhiteNoise runs before auth and would serve them to anyone.
+
+Objects are served with their stored content type on the Wies origin, so their
+script runs as Wies. See the trust-boundary note in :mod:`wies.startpage.publish`.
 """
 
 from __future__ import annotations
