@@ -4,10 +4,26 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
+- 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
+- 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label
+- 804: Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
+- 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
+- 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
+- 809: bump dependencies for security patches
+
+## 2026-11-03_2
+
+- 808: fix deployment name staging env
+
+## 2026-11-03
+
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
 - 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and an "Alle pagina's" page in the footer
 - 783: bump dependencies for security patches and change trivy interval to "daily"
+- 806: more security patches
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 786: also release to zad staging on tag
 - 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
 
 ## 2026-10-28

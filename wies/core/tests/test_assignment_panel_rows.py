@@ -136,8 +136,12 @@ class AssignmentPanelRowsTest(TestCase):
         assert "uur per week" not in closed
         self.client.force_login(self.anke_user)
         own = self.client.get(panel, headers=headers).content.decode()
+        # Not for the consultant herself either; only the planner sees them.
+        assert "uur per week" not in own
+        self.client.force_login(make_business_manager_user(email="planner@rijksoverheid.nl", name="Planner"))
+        planner = self.client.get(panel, headers=headers).content.decode()
         # On the entry's own line, not behind the fold.
-        assert "24 uur per week" in own.split("wies-cv__more")[0]
+        assert "24 uur per week" in planner.split("wies-cv__more")[0]
         # A short description keeps the toggle hidden: only a narrow screen
         # that clamps it shows it, so the blocks it unfolds are there already.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")

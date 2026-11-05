@@ -73,3 +73,11 @@ def current_page_url_on(request, path: str) -> str:
     params = [(k, v) for k, v in parse_qsl(parsed.query) if k != PAGE_PARAM]
     query = urlencode(params)
     return f"{path}?{query}" if query else path
+
+
+def url_replacing_param(url: str, name: str, **params) -> str:
+    """Return ``url`` with the query parameter ``name`` dropped and ``params`` set."""
+    parsed = urlparse(url)
+    kept = [(k, v) for k, v in parse_qsl(parsed.query, keep_blank_values=True) if k != name and k not in params]
+    query = urlencode([*kept, *params.items()])
+    return f"{parsed.path}?{query}" if query else parsed.path

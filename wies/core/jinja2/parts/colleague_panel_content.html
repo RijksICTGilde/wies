@@ -36,7 +36,7 @@
     <nldd-tag color="neutral"><span class="wies-tag-text">{{ colleague.suborganization.name }}</span></nldd-tag>
     </nldd-container>
   {% endif %}
-  {% set labels = colleague.labels.all() %}
+  {% set labels = panel_data.labels %}
   {% if labels %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">

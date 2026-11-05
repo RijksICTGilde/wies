@@ -19,6 +19,7 @@ from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, E
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
+from wies.core.services.dates import request_period_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect
@@ -58,7 +59,7 @@ def _owner_display_context(assignment, request) -> dict:
         body_lines = [
             f"Beste {assignment.owner.name},",
             "",
-            f"Ik zag deze opdracht {opdracht_url} op WIES."
+            f"Ik zag deze opdracht {opdracht_url} op Wies."
             + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
             "",
             "Kun je me hier meer informatie over geven?",
@@ -142,7 +143,14 @@ def _services_initial(assignment):
         effective_end = placement.end_date if placement else service.end_date
         # Compared on the effective period rather than placement.period_source,
         # which lies for a placement inheriting from a service with pinned dates.
-        inherits_assignment_period = effective_start == assignment.start_date and effective_end == assignment.end_date
+        # "Per direct" or a duration is a period of its own, even when the
+        # dates it leaves empty happen to match an opdracht without dates.
+        inherits_assignment_period = (
+            effective_start == assignment.start_date
+            and effective_end == assignment.end_date
+            and not service.starts_immediately
+            and not service.duration_months
+        )
         rows.append(
             {
                 # public_id strings: these identify the row across the client
@@ -155,6 +163,10 @@ def _services_initial(assignment):
                 "skill": str(service.skill.public_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
+                "request_description": service.request_description,
+                "location": service.location,
+                "starts_immediately": service.starts_immediately,
+                "duration_months": service.duration_months,
                 "hours_per_week": service.hours_per_week,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
@@ -184,6 +196,7 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``show_hours`` gates the hours of a placed row (``can_view_role_hours``); an
     aanvraag row shows them to everyone. ``shown_hours`` is the outcome.
+    ``period_text`` is an aanvraag row's period in words.
 
     ``panel_url`` is where the row leads: a placed row to the colleague panel
     with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
@@ -198,8 +211,9 @@ def visible_service_rows(assignment, request) -> list[dict]:
         row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
-            row["panel_url"] = _panel_query(opdracht=row["assignment_public_id"], aanvraag=row["service_public_id"])
+            row["panel_url"] = _panel_query(aanvraag=row["service_public_id"])
             row["shown_hours"] = row["hours_per_week"]
+            row["period_text"] = request_period_text(row["service"])
             visible.append(row)
             continue
         row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])
@@ -280,6 +294,8 @@ def _service_audit_row(row: dict) -> dict:
         # name can change and two colleagues can share one (#551).
         "colleague_id": row["colleague"].id if row["colleague"] else None,
         "description": row["description"] or "",
+        # No request_description: a vacancy text is too long to quote in the
+        # timeline's running sentence, so like the hours it leaves no entry.
         # No hours_per_week: no history is kept of a role's hours (agreed with
         # Patrick, 13 July 2026), so an hours-only edit leaves no timeline entry.
         # Included so a period-only edit registers as a change (#393).
@@ -470,6 +486,7 @@ class AssignmentEditables(EditableSet):
 
     extra_info = Editable(
         label="Opdrachtomschrijving",
+        help_text="Waar gaat de opdracht over?",
         widget=forms.Textarea(attrs={"rows": 2}),
         display="forms/displays/textarea.html",
     )
