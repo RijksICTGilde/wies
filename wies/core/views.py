@@ -17,7 +17,19 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, QuerySet, Subquery, Value, When
+from django.db.models import (
+    Case,
+    F,
+    IntegerField,
+    Model,
+    OuterRef,
+    Prefetch,
+    Q,
+    QuerySet,
+    Subquery,
+    Value,
+    When,
+)
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorDict
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
@@ -97,11 +109,26 @@ from .roles import (
     staff_required,
     user_admin_required,
 )
+from .services.aanvragen import (
+    AanvraagCard,
+    aanvraag_card,
+    aanvraag_role,
+    assignments_without_aanvraag,
+    filter_on_standplaatsen,
+    known_standplaatsen,
+    opdracht_without_aanvraag_card,
+    open_aanvragen,
+    standplaats_key,
+    standplaats_labels,
+    team_names_text,
+)
 from .services.assignments import (
     assignment_edit_specs,
+    external_source,
     member_audit_event,
     save_service_from_form,
 )
+from .services.dates import request_period_text
 from .services.events import create_event
 from .services.inline_edit_save import save_edit_specs
 from .services.occupancy import (
@@ -140,7 +167,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.urls import current_page_url_on
+from .services.urls import current_page_url_on, url_replacing_param
 from .services.users import (
     close_contract_periods,
     close_placements,
@@ -257,7 +284,7 @@ def _build_assignment_panel_data(assignment, request):
         "team_rows": team_rows,
         # Same human label as the "Externe bron" row, so the intro says "OTYS
         # IIR", not the raw key "OTYS_IIR".
-        "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
+        "team_external_source": external_source(assignment),
         "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_delete": has_permission(Verb.DELETE, assignment, request.user),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
@@ -642,18 +669,26 @@ def _build_aanvraag_panel_data(service, request):
     """
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415
+    from wies.core.editables.assignment import AssignmentEditables, visible_service_rows  # noqa: PLC0415
 
     assignment = service.assignment
+    role = aanvraag_role(service)
     return {
+        "team_text": team_names_text(visible_service_rows(assignment, request)),
         "panel_content_template": "parts/aanvraag_panel_content.html",
-        "panel_title": f"Aanvraag: {service.skill.name}" if service.skill else "Aanvraag",
+        "panel_title": f"Aanvraag: {role}" if role else "Aanvraag",
+        "heading": role or "Rol niet ingevuld",
         "close_url": _build_close_url(request),
         "service": service,
         "assignment": assignment,
         "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
+        "period_text": request_period_text(service) or "Geen periode opgegeven",
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
-        "edit_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid=service.public_id),
+        "external_source": external_source(assignment),
+        # Keeps ?aanvraag=, so saving or going back lands on this panel again.
+        "edit_url": _build_panel_url(
+            request, opdracht=assignment.public_id, aanvraag=service.public_id, teamlid=service.public_id
+        ),
     }
 
 
@@ -769,8 +804,9 @@ def bezetting(request):
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
     panel_data = _assignment_create_panel(request)
-    if panel_data is None and service_id:
-        # Before ?opdracht=: an aanvraag URL carries both, the aanvraag wins.
+    if panel_data is None and service_id and not request.GET.get("teamlid"):
+        # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
+        # opdracht panel opens, and it returns to the aanvraag when done.
         service = _resolve_aanvraag_panel(request, service_id)
         if service is not None:
             panel_data = _build_aanvraag_panel_data(service, request)
@@ -1864,7 +1900,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         assignment_id = self.request.GET.get("opdracht")
         service_id = self.request.GET.get("aanvraag")
 
-        if service_id:
+        if service_id and not self.request.GET.get("teamlid"):
             service = _resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
@@ -1883,96 +1919,161 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
 
 class AssignmentListView(PublicIdFacetsMixin, ListView):
-    """Vacancy assignments as cards, with infinite scroll pagination."""
+    """Aanvragen as cards: one per role nobody fills yet, and one per opdracht
+    that has no role at all yet. Infinite scroll pagination."""
 
-    model = Assignment
+    model = Service
     template_name = "assignments.html"
     paginate_by = 60
     page_kwarg = "pagina"
 
+    @cached_property
+    def _search(self) -> str:
+        return self.request.GET.get("zoek", "")
+
+    @cached_property
+    def _beschikbaar_vanaf(self) -> date | None:
+        # An unparsable date filters nothing.
+        try:
+            return date.fromisoformat(self.request.GET.get("beschikbaar_vanaf", ""))
+        except ValueError:
+            return None
+
+    def _assignments_matching_search(self):
+        # A subquery: joined directly, an opdracht with two matching
+        # opdrachtgevers would give each card twice.
+        return Assignment.objects.filter(
+            Q(name__icontains=self._search)
+            | Q(extra_info__icontains=self._search)
+            | Q(organizations__name__icontains=self._search)
+            | Q(organizations__label__icontains=self._search)
+            | Q(organizations__abbreviations__icontains=self._search)
+        )
+
     def _get_base_queryset(self):
-        has_unfilled_open_service = Exists(
-            Service.objects.filter(
-                assignment=OuterRef("pk"),
-                status="OPEN",
-                placements__isnull=True,
-            )
-        )
-        # Een net ingevoerde opdracht heeft nog geen rollen en zou anders meteen
-        # uit de lijst verdwijnen: aangemaakt en nergens meer terug te vinden.
-        # `~Exists` en niet `services__isnull=True`, want dat laatste is een LEFT
-        # JOIN en levert dubbele rijen zodra er ook op organisaties gezocht wordt.
-        has_no_service_yet = ~Exists(Service.objects.filter(assignment=OuterRef("pk")))
-        qs = Assignment.objects.filter(has_unfilled_open_service | has_no_service_yet).order_by(
-            F("created_at").desc(nulls_last=True)
-        )
-        # Hide intelligence-service orgs from the list and its counts, as the
-        # placement list already does (see PlacementListView._get_base_queryset).
-        excluded_org_ids = get_excluded_org_ids()
-        if excluded_org_ids:
-            qs = qs.exclude(organizations__id__in=excluded_org_ids)
-        search_filter = self.request.GET.get("zoek")
-        if search_filter:
+        qs = open_aanvragen()
+        if self._search:
             qs = qs.filter(
-                Q(name__icontains=search_filter)
-                | Q(extra_info__icontains=search_filter)
-                | Q(organizations__name__icontains=search_filter)
-                | Q(organizations__label__icontains=search_filter)
-                | Q(organizations__abbreviations__icontains=search_filter)
+                Q(skill__name__icontains=self._search)
+                | Q(request_description__icontains=self._search)
+                | Q(location__icontains=self._search)
+                | Q(assignment__in=self._assignments_matching_search())
             )
-        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
-        if beschikbaar_vanaf:
-            try:
-                vanaf_date = date.fromisoformat(beschikbaar_vanaf)
-                qs = qs.filter(start_date__gte=vanaf_date)
-            except ValueError:
-                pass
+        if self._beschikbaar_vanaf:
+            # An aanvraag that starts per direct, has no start or has already
+            # started can be filled any day, so it stays; one that starts later
+            # has to start on or after the chosen date. Either way it must
+            # still run on that date.
+            vanaf = self._beschikbaar_vanaf
+            qs = qs.filter(
+                Q(starts_immediately=True)
+                | Q(effective_start_date__isnull=True)
+                | Q(effective_start_date__lte=timezone.now().date())
+                | Q(effective_start_date__gte=vanaf),
+                Q(effective_end_date__isnull=True) | Q(effective_end_date__gte=vanaf),
+            )
         return qs
+
+    @cached_property
+    def _locations(self) -> dict[str, str]:
+        return standplaats_labels(open_aanvragen())
+
+    @cached_property
+    def _selected_locations(self) -> list[str]:
+        return known_standplaatsen(self.request.GET.getlist("standplaats"), self._locations)
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         rol = self.facets("rol", Skill)
         if exclude_filter != "rol" and rol.requested:
-            qs = qs.filter(
-                services__skill_id__in=rol.ids,
-                services__status="OPEN",
-                services__placements__isnull=True,
-            )
+            qs = qs.filter(skill_id__in=rol.ids)
+
+        if exclude_filter != "standplaats" and self._selected_locations:
+            qs = filter_on_standplaatsen(qs, self._selected_locations)
 
         if exclude_filter != "org":
-            qs = self.apply_org_filter(qs, "organizations__id__in")
+            # Through the opdracht, for the same reason as the search above.
+            qs = qs.filter(assignment__in=self.apply_org_filter(Assignment.objects.all(), "organizations__id__in"))
 
         return qs
 
-    def get_queryset(self):
-        qs = self._get_base_queryset()
-        qs = self._apply_filters(qs)
-        # `has_no_roles` en niet "services_with_skills is leeg": die prefetch laadt
-        # alleen open, onbezette rollen mét skill, dus een opdracht met een
-        # skill-loze rol zou anders ook als "nog geen rollen" op het scherm komen.
-        # Een Exists-annotatie is een subquery: geen join, dus geen wisselwerking
-        # met de distinct() hierboven.
-        return (
-            qs.distinct()
-            .annotate(has_no_roles=~Exists(Service.objects.filter(assignment=OuterRef("pk"))))
-            .prefetch_related(
-                Prefetch(
-                    "services",
-                    queryset=Service.objects.filter(
-                        skill__isnull=False,
-                        status="OPEN",
-                        placements__isnull=True,
-                    ).select_related("skill"),
-                    to_attr="services_with_skills",
-                ),
-                # The card shows the first opdrachtgever; ordered on pk, as
-                # organizations.first() would pick it.
-                Prefetch(
-                    "organizations",
-                    queryset=OrganizationUnit.objects.order_by("pk"),
-                    to_attr="organizations_by_pk",
-                ),
-            )
+    def _assignments_without_aanvraag(self, *, filter_on_org=True):
+        """The opdrachten without a role, under the same search and
+        opdrachtgever filter. A role, standplaats or date asks about an
+        aanvraag, which they do not have, so it leaves them out."""
+        if self.facets("rol", Skill).requested or self._selected_locations or self._beschikbaar_vanaf:
+            return Assignment.objects.none()
+        qs = assignments_without_aanvraag()
+        if self._search:
+            qs = qs.filter(pk__in=self._assignments_matching_search())
+        if filter_on_org:
+            qs = qs.filter(pk__in=self.apply_org_filter(Assignment.objects.all(), "organizations__id__in"))
+        return qs
+
+    def org_counts(self) -> Counter[int]:
+        """Cards per opdrachtgever under every filter but the opdrachtgever's,
+        for the sidebar and the opdrachtgever picker alike."""
+        services = self._apply_filters(self._get_base_queryset(), exclude_filter="org")
+        assignments = self._assignments_without_aanvraag(filter_on_org=False)
+        return org_counts_from_filtered(services, Service, "assignment__organizations__id") + org_counts_from_filtered(
+            assignments, Assignment, "organizations__id"
         )
+
+    def get_queryset(self):
+        """(created, opdracht id, aanvraag id) per card, newest opdracht first;
+        the aanvraag id is None on an opdracht without one. A union, so paging
+        and counting stay in the database; get_context_data loads the cards."""
+        columns = ("card_created", "card_assignment", "card_service")
+        aanvragen = (
+            self._apply_filters(self._get_base_queryset())
+            .annotate(
+                card_created=F("assignment__created_at"), card_assignment=F("assignment_id"), card_service=F("id")
+            )
+            .values_list(*columns)
+        )
+        without_aanvraag = (
+            self._assignments_without_aanvraag()
+            .annotate(
+                card_created=F("created_at"),
+                card_assignment=F("id"),
+                card_service=Value(None, output_field=IntegerField()),
+            )
+            .values_list(*columns)
+        )
+        return aanvragen.union(without_aanvraag, all=True).order_by(
+            F("card_created").desc(nulls_last=True), "card_assignment", "card_service"
+        )
+
+    def _cards(self, rows) -> list[AanvraagCard]:
+        # The card shows the first opdrachtgever; ordered on pk, as
+        # organizations.first() would pick it.
+        by_pk = OrganizationUnit.objects.order_by("pk")
+        services = (
+            Service.objects.select_related("assignment", "skill")
+            .prefetch_related(Prefetch("assignment__organizations", queryset=by_pk, to_attr="organizations_by_pk"))
+            .in_bulk([service_id for _, _, service_id in rows if service_id])
+        )
+        assignments = Assignment.objects.prefetch_related(
+            Prefetch("organizations", queryset=by_pk, to_attr="organizations_by_pk")
+        ).in_bulk([assignment_id for _, assignment_id, service_id in rows if not service_id])
+        cards = []
+        for _, assignment_id, service_id in rows:
+            # .get(): a card removed since the page was counted is skipped.
+            if service_id and (service := services.get(service_id)):
+                url = _build_panel_url(self.request, aanvraag=service.public_id)
+                cards.append(aanvraag_card(service, url))
+            elif not service_id and (assignment := assignments.get(assignment_id)):
+                url = _build_panel_url(self.request, opdracht=assignment.public_id)
+                cards.append(opdracht_without_aanvraag_card(assignment, url))
+        return cards
+
+    def _results_text(self, total: int) -> str:
+        """ "12 aanvragen", or "12 aanvragen en 1 opdracht zonder aanvraag"."""
+        without = self._assignments_without_aanvraag().count() if total else 0
+        aanvragen = total - without
+        text = f"{aanvragen} {'aanvraag' if aanvragen == 1 else 'aanvragen'}"
+        if without:
+            text += f" en {without} {'opdracht' if without == 1 else 'opdrachten'} zonder aanvraag"
+        return text
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
@@ -1986,7 +2087,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                     return [panel_data["panel_content_template"]]
                 return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/assignment_card_rows.html"]
+                return ["parts/aanvraag_card_rows.html"]
             return ["parts/filter_and_card_container_assignments.html"]
         return ["assignments.html"]
 
@@ -1994,44 +2095,32 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        for assignment in context["object_list"]:
-            assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.public_id)
-            first_org = next(iter(assignment.organizations_by_pk), None)
-            assignment.org_label = (first_org.label or first_org.name) if first_org else None
+        context["object_list"] = self._cards(context["object_list"])
+        context["results_text"] = self._results_text(context["paginator"].count)
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}
-        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
-        if beschikbaar_vanaf:
-            try:
-                active_filters["beschikbaar_vanaf"] = date.fromisoformat(beschikbaar_vanaf)
-            except ValueError:
-                active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
+        if self._beschikbaar_vanaf:
+            active_filters["beschikbaar_vanaf"] = self._beschikbaar_vanaf
 
         # rol filter supports multi-select (values are skill public_ids)
         rol_filter = self.facets("rol", Skill).active_values
         if rol_filter:
             active_filters["rol"] = rol_filter
+        if self._selected_locations:
+            active_filters["standplaats"] = set(self._selected_locations)
 
-        # Skill/role counts: exclude role filter for cross-filtering.
+        # Role counts: exclude the role filter for cross-filtering. They count
+        # aanvragen, so two for the same role on one opdracht count 2.
         base_qs = self._get_base_queryset()
-        skill_assignment_ids = (
-            self._apply_filters(base_qs, exclude_filter="rol").values_list("id", flat=True).distinct()
+        skill_counts = Counter(
+            skill_id
+            for skill_id in self._apply_filters(base_qs, exclude_filter="rol").values_list("skill_id", flat=True)
+            if skill_id is not None
         )
-        skill_pairs = (
-            Service.objects.filter(
-                assignment_id__in=skill_assignment_ids,
-                status="OPEN",
-                placements__isnull=True,
-            )
-            .values_list("assignment_id", "skill_id")
-            .distinct()
-        )
-        skill_counts = Counter(skill_id for _, skill_id in skill_pairs if skill_id is not None)
 
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
@@ -2042,17 +2131,27 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
+        # Standplaats counts: same cross-filter rule, without the standplaats filter.
+        location_counts = Counter(
+            standplaats_key(location)
+            for location in self._apply_filters(base_qs, exclude_filter="standplaats").values_list(
+                "location", flat=True
+            )
+        )
+        location_options = [{"value": "", "label": ""}]
+        for key, label in self._locations.items():
+            option = {"value": key, "label": label, "count": location_counts.get(key, 0)}
+            if key in self._selected_locations:
+                option["selected"] = True
+            location_options.append(option)
+
         # Organization filter (multi-select via modal)
         self.add_org_filter_context(context, active_filters)
         self.add_unknown_filter_chips(context, {"rol": Skill})
 
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
-        org_counts = org_counts_from_filtered(
-            self._apply_filters(base_qs, exclude_filter="org").distinct(),
-            Assignment,
-            "organizations__id",
-        )
+        org_counts = self.org_counts()
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -2077,6 +2176,13 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "label": "Rol",
                 "options": skill_options,
                 "selected_values": skill_selected_values,
+            },
+            {
+                "type": "select-multi",
+                "name": "standplaats",
+                "label": "Standplaats",
+                "options": location_options,
+                "selected_values": self._selected_locations,
             },
             {
                 "type": "date",
@@ -2110,7 +2216,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         create_panel = _assignment_create_panel(self.request)
         if create_panel is not None:
             context["panel_data"] = create_panel
-        elif self.request.GET.get("aanvraag"):
+        elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
             service = _resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
             if service is not None:
                 context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
@@ -3653,7 +3759,7 @@ def user_profile(request):
     assignment_id = request.GET.get("opdracht")
     panel_data = None
 
-    if request.GET.get("aanvraag"):
+    if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
         service = _resolve_aanvraag_panel(request, request.GET["aanvraag"])
         if service is not None:
             panel_data = _build_aanvraag_panel_data(service, request)
@@ -4026,24 +4132,25 @@ def client_modal(request):
     # them here, which would drift.
     if count_mode == "none":
         org_self_counts = Counter()
-    else:
-        group_field = None
-        if count_mode == "open_assignments":
-            view = AssignmentListView()
-            model, org_lookup = Assignment, "organizations__id"
-        elif count_mode == "placements":
-            view = PlacementListView()
-            model, org_lookup = Placement, "service__assignment__organizations__id"
-        else:
-            return HttpResponseBadRequest("Onbekende count_mode")
+    elif count_mode == "open_assignments":
+        view = AssignmentListView()
+        view.request = request
+        org_self_counts = view.org_counts()
+    elif count_mode == "placements":
+        view = PlacementListView()
         view.request = request
         # The tree counts the same groups the sidebar does, and the sidebar
         # follows ?weergave=. Without this the modal counted placements whatever
         # the view, so its numbers sat next to sidebar numbers that disagreed.
-        if count_mode == "placements":
-            group_field = view.GROUP_FIELD[view.active_view]
         filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-        org_self_counts = org_counts_from_filtered(filtered_qs, model, org_lookup, group_field=group_field)
+        org_self_counts = org_counts_from_filtered(
+            filtered_qs,
+            Placement,
+            "service__assignment__organizations__id",
+            group_field=view.GROUP_FIELD[view.active_view],
+        )
+    else:
+        return HttpResponseBadRequest("Onbekende count_mode")
     hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
@@ -4656,7 +4763,7 @@ def assignment_create_sheet(request):
         # base.html does not reload on the panel swap that follows HX-Location,
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
-        messages.success(request, f'Opdracht "{assignment.name}" is aangemaakt.')
+        messages.success(request, f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe.')
         response = HttpResponse(status=204)
         response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
         return response
@@ -4705,14 +4812,21 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
             member_heading = "Teamlid wijzigen"
         member_form = ServiceForm(initial=initial_row, skill_choices=skill_choices())
 
+    if parent_url is None:
+        # Opened from the aanvraag panel, back is that panel alone; the sheet
+        # itself needed ?opdracht=.
+        dropped = ("teamlid", "opdracht") if request.GET.get("aanvraag") else ("teamlid",)
+        parent_url = _url_drop_params(request.path, request.GET, dropped)
+    from_aanvraag = QueryDict(urllib.parse.urlparse(parent_url).query).get("aanvraag")
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",
         "assignment": assignment,
         "member_form": member_form,
         "member_heading": member_heading,
-        "parent_url": parent_url
-        if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "parent_url": parent_url,
+        # Opened from the aanvraag panel, the sheet returns there, so the back
+        # button names it.
+        "back_text": "Aanvraag" if from_aanvraag else assignment.name,
         "member_edit_url": reverse("assignment-member-edit", args=[assignment.public_id]),
     }
 
@@ -4770,6 +4884,10 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
+    if form.cleaned_data.get("is_filled") == "ingevuld":
+        # A filled aanvraag has no panel: it would 404, and htmx swaps nothing
+        # on an error, leaving the sheet open. Back to its opdracht instead.
+        return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
@@ -4803,6 +4921,7 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = _safe_return_path(
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
     )
+    return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

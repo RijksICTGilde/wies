@@ -74,7 +74,7 @@ class PatternTest(TestCase):
         '<form data-confirm="Weet je het zeker?">',
         '<div data-keyboard-activate hx-get="{{ url }}">',
         '<span class="icon-text-inline">Toon meer</span>',
-        '<a href="/opdrachten/">Opdrachten</a>',
+        '<a href="/aanvragen/">Opdrachten</a>',
     )
 
     def test_violations_are_caught(self):

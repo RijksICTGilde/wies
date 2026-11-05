@@ -243,6 +243,26 @@ class AssignmentCreateTest(TestCase):
         # The panel that opens is the opdracht, so the banner carries no link to it.
         assert 'text="Bekijk opdracht"' not in html
 
+    def test_success_message_asks_for_an_aanvraag(self):
+        """A new opdracht has no aanvraag yet; the message asks for one."""
+        self.client.force_login(self.business_manager_user)
+        self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Opdracht Zonder Rol",
+                "owner": self.business_manager_colleague.public_id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assignment = Assignment.objects.get(name="Opdracht Zonder Rol")
+        panel = self.client.get(
+            reverse("assignment-list"),
+            {"opdracht": assignment.public_id},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        self.assertContains(panel, "is aangemaakt. Voeg een aanvraag toe.")
+
 
 class AssignmentListButtonTest(TestCase):
     def setUp(self):
