@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
+- 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label
+- 804: Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
 - 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 809: bump dependencies for security patches

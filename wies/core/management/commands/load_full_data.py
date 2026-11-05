@@ -816,7 +816,7 @@ def classify_orgs_from_db() -> tuple[list[int], list[int]]:
 def _seed_all_label_categories() -> None:
     """Ensure every label category + its labels exist, self-contained.
 
-    Production seeds Expertise/Thema from ``setup``; the offline base profile
+    Production seeds Expertise from ``setup``; the offline base profile
     seeds them here too so it does not depend on ``setup`` having run. Subgroep
     is the demo-only "gilde" category the Bezetting page filters on.
     """

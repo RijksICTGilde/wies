@@ -201,9 +201,7 @@ EXTRA_ROWS = [
         lambda u: evaluate_assignment_visibility(_PAST_START, _PAST_END, SimpleNamespace(user=u), _TODAY).visible,
     ),
     Row("Zichtbaarheid", "Business management openen", lambda u: show_bm_page(SimpleNamespace(user=u))),
-    # The hours on someone else's role; the own row is not a question, the
-    # consultant always sees their own. Why this is narrower than the
-    # ContractPeriod rows: ``can_view_role_hours``.
+    # Why this is narrower than the ContractPeriod rows: ``can_view_role_hours``.
     Row(
         "Zichtbaarheid",
         "Uren per week van een geplaatste collega zien",

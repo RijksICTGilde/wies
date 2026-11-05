@@ -53,9 +53,10 @@ DEFAULT_SUBORGANIZATIONS = {
 
 
 # The label category that tells the gilde a colleague belongs to ("ICT", "AI").
-# Bezetting and the user list pick it out by this name; the base dummy data seeds
-# it. A beheerder can rename the category in the label admin, and then both
-# places go quiet, so the name lives here once and the dummy-data test guards it.
+# Bezetting and the user list pick it out by this name, and everywhere else it is
+# left out (label_categories_for_everyone); the base dummy data seeds it. A beheerder
+# can rename the category in the label admin, and then this goes quiet, so the
+# name lives here once and the dummy-data test guards it.
 SUBGROEP_CATEGORY = "Subgroep"
 
 DEFAULT_LABELS = {
@@ -75,16 +76,6 @@ DEFAULT_LABELS = {
             "Security en privacy",
             "Opleiding, training en ontwikkeling",
             "Kennis- en innovatiemanagement",
-        },
-    },
-    "Thema": {
-        "color": "#FFE9B8",
-        "labels": {
-            "Digitale weerbaarheid",
-            "Artificiële intelligentie",
-            "Netwerksamenwerking",
-            "Ambtelijk en digitaal vakmanschap",
-            "Innovatieve en lerende overheid",
         },
     },
 }
