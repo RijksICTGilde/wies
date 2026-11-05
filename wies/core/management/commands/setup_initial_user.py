@@ -18,10 +18,9 @@ User = get_user_model()
 
 
 def _assign_dev_labels(colleague):
-    """Give the dev colleague a handful of labels across categories."""
+    """Give the dev colleague a handful of labels."""
     label_names = {
         "Expertise": ["AI", "Architectuur en technologie", "Cloud en platform technologie"],
-        "Thema": ["Artificiële intelligentie", "Digitale weerbaarheid"],
     }
     for category_name, names in label_names.items():
         labels = Label.objects.filter(category__name=category_name, name__in=names)

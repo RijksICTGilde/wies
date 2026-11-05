@@ -5,7 +5,7 @@ from django.db import migrations
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0019_event_source_system"),
+        ("core", "0021_otys_source_label"),
     ]
 
     operations = [

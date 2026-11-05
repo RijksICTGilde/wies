@@ -2683,7 +2683,7 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def _panel(self) -> str:
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
