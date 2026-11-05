@@ -1,0 +1,532 @@
+{# AUTO-GENERATED FROM docs/handboek/samenwerken.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Samenwerken · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [["zo-werken-we", "Zo werken we"], ["testen", "Testen"], ["valkuilen", "Valkuilen"], ["oefenopdrachten", "Oefenopdrachten"], ["verder-lezen", "Verder lezen"]] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Samenwerken</h1>
+  {% with handboek_sections = [["zo-werken-we", "Zo werken we"], ["testen", "Testen"], ["valkuilen", "Valkuilen"], ["oefenopdrachten", "Oefenopdrachten"], ["verder-lezen", "Verder lezen"]] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <h2 id="zo-werken-we">Zo werken we</h2>
+  <p>We werken in korte iteraties en valideren continu met gebruikers: liever een kleine stap die we laten zien en bijsturen, dan lang bouwen in het donker.</p>
+  <p>Elke wijziging gaat via een branch en een PR naar <code>main</code>, en we werken met het vier-ogenprincipe: niets komt in <code>main</code> zonder dat een tweede ontwikkelaar het heeft nagekeken en goedgekeurd. Elke merge op <code>main</code> wordt automatisch gebouwd en uitgerold naar de main-omgeving (main-deploy.yml); productie krijgt een release met een datum-tag.</p>
+  <h3>Van idee tot merge</h3>
+  <ol>
+    <li>
+      Maak een branch vanaf een actuele <code>main</code>. Pre-commit weigert een commit direct op <code>main</code>.
+    </li>
+    <li>Bouw de wijziging met tests. Commitberichten zijn Engels en noemen het issuenummer waar dat kan.</li>
+    <li>
+      Is de wijziging zichtbaar voor gebruikers? Voeg een regel toe in <code>CHANGES.md</code> onder <code>## unreleased</code>, in het Engels: <code>- &lt;PR#&gt;: &lt;beschrijving&gt;</code>. Het PR-nummer weet je pas na het openen; vul het dan in.
+    </li>
+    <li>
+      Draai <code>just test</code> en <code>just pre-commit</code> tot ze groen zijn.
+    </li>
+    <li>
+      Open de PR. CI draait de Django- en JS-tests en een Trivy-scan, en zet een preview-omgeving op (<code>pr-preview.yml</code>) waar de reviewer de wijziging in het echt kan bekijken.
+    </li>
+    <li>Een tweede ontwikkelaar reviewt en keurt goed. Pas dan merge je; de preview wordt opgeruimd.</li>
+  </ol>
+  <h3>Zo reviewen we</h3>
+  <p>Dit is het vier-ogenprincipe in de praktijk: elke PR wordt nagekeken door een tweede ontwikkelaar. Een goede review:</p>
+  <ul>
+    <li>
+      Groepeert opmerkingen per thema (bijvoorbeeld UX, datamodel, performance, tests) en maakt onderscheid tussen een open vraag en een concrete suggestie.
+    </li>
+    <li>
+      Houdt het relevant: wat de feature tegenhoudt, staat voorop. Een goed idee dat buiten de scope valt, wordt een nieuw issue in plaats van een extra ronde.
+    </li>
+    <li>
+      Legt per punt de conclusie vast, zodat later terug te lezen is waarom iets zo is gebouwd. Grotere keuzes horen in een PDR in <code>PDR/</code>.
+    </li>
+  </ul>
+  <h3>Een modelwijziging</h3>
+  <ol>
+    <li>
+      Pas het model aan in <code>wies/core/models.py</code>. Nederlandse veldlabels via <code>verbose_name</code>; een ForeignKey krijgt een <code>related_name</code>.
+    </li>
+    <li>
+      Komt het model ooit in een URL? Geef het een <code>public_id</code> (zie <a href="{{ url('handboek-page', args=['de-code']) }}#modellen">Modellen</a>).
+    </li>
+    <li>
+      Werk de dummydata bij in <code>wies/core/management/commands/load_full_data.py</code>. Beide profielen (<code>base</code> en <code>full</code>) lopen door dezelfde <code>generate()</code>.
+    </li>
+    <li>
+      Genereer de migratie: <code>just manage makemigrations</code>. Een migratie importeert niets uit de app.
+    </li>
+    <li>Werk formulieren, Editables en views bij.</li>
+    <li>
+      Draai de tests; <code>test_migrations.py</code> vangt een vergeten migratie.
+    </li>
+  </ol>
+  <h3>Een NLDD-upgrade</h3>
+  <p>Dependabot opent de PR. Lees de changelog van het designsysteem op breaking changes vóór je merget: hernoemde attributen en tokens vallen stil terug op een standaard. Klik daarna de belangrijkste schermen door, in licht én donker.</p>
+  <h3>Een release</h3>
+  <ol>
+    <li>
+      Maak een releasebranch vanaf <code>main</code>.
+    </li>
+    <li>
+      Zet in <code>CHANGES.md</code> de datum op de plaats van <code>unreleased</code> en open een nieuwe <code>## unreleased</code>.
+    </li>
+    <li>
+      Merge de releasebranch in <code>main</code>.
+    </li>
+    <li>
+      Tag met de datum, bv. <code>git tag -a 2026-01-19 -m &quot;2026-01-19&quot;</code>, en push de tag. CI bouwt het image en rolt uit naar productie.
+    </li>
+    <li>Voer eventuele post-release-acties uit; die staan in de PR-beschrijvingen.</li>
+  </ol>
+  <h3>Taal</h3>
+  <p>Code, commits, changelog en PR-titels zijn Engels. Alles wat de gebruiker ziet is Nederlands, in de je-vorm en op B1-niveau, met dezelfde woorden als in de woordenlijst in <a href="{{ url('handboek-page', args=['aan-de-slag']) }}#wies-in-het-kort">Wies in het kort</a>.</p>
+  <h2 id="testen">Testen</h2>
+  <p>Een PR is pas klaar als <code>just test</code> en <code>just pre-commit</code> groen zijn, lokaal én in CI. Zelf groen krijgen kost minuten; een rode CI kost de reviewer een ronde.</p>
+  <h3>Tests schrijven</h3>
+  <ul>
+    <li>
+      Tests staan in <code>wies/core/tests/</code>, één bestand per feature (<code>test_&lt;feature&gt;.py</code>), plus <code>wies/rijksauth/tests/</code> en <code>wies/startpage/tests/</code>.
+    </li>
+    <li>
+      Gebruik Django's <code>TestCase</code>. Maak testdata inline met ORM-aanroepen; er zijn geen factories en geen fixtures, op één XML-bestand met organisaties na.
+    </li>
+    <li>
+      Log in met <code>self.client.force_login(user)</code>. Rollen geef je met de helpers in <code>tests/role_helpers.py</code>: <code>grant_business_manager()</code>, <code>grant_consultant()</code>, <code>make_staff_user()</code>, samen met <code>@override_settings(STAFF_EMAILS=...)</code>.
+    </li>
+    <li>
+      Test een view voor <strong>elke rol</strong>: mag het voor de ene rol, en wordt het geweigerd voor de andere?
+    </li>
+    <li>
+      Inline edits test je met <code>post_inline_edit()</code> uit <code>tests/inline_edit_helpers.py</code>.
+    </li>
+    <li>
+      Een enkel bestand draaien: <code>just manage test wies.core.tests.test_roles</code>.
+    </li>
+  </ul>
+  <h3>Wat de bewakers vangen</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat de bewakers vangen">
+    <table>
+      <caption class="wies-visually-hidden">Wat de bewakers vangen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Bewaker</th>
+          <th scope="col">Vangt</th>
+          <th scope="col">Waar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>test_migrations.py</code>
+          </td>
+          <td>Een modelwijziging zonder migratie</td>
+          <td>Tests</td>
+        </tr>
+        <tr>
+          <td>
+            <code>test_templates_no_inline_js.py</code>
+          </td>
+          <td>Inline JavaScript in templates</td>
+          <td>Tests</td>
+        </tr>
+        <tr>
+          <td>
+            <code>test_role_matrix.py</code>
+          </td>
+          <td>Een rollenmatrix die afwijkt van de regels</td>
+          <td>Tests</td>
+        </tr>
+        <tr>
+          <td>Ruff (lint + format)</td>
+          <td>Stijl, bugs, beveiliging (bandit), Django-regels; regellengte 120</td>
+          <td>Pre-commit, CI</td>
+        </tr>
+        <tr>
+          <td>djLint, prettier</td>
+          <td>Opmaak van templates, JS, CSS en YAML</td>
+          <td>Pre-commit</td>
+        </tr>
+        <tr>
+          <td>
+            <code>no-commit-to-branch</code>
+          </td>
+          <td>
+            Een commit direct op <code>main</code>
+          </td>
+          <td>Pre-commit</td>
+        </tr>
+        <tr>
+          <td>
+            <code>detect-private-key</code>
+          </td>
+          <td>Een sleutel die per ongeluk mee wil</td>
+          <td>Pre-commit</td>
+        </tr>
+        <tr>
+          <td>Trivy</td>
+          <td>Kwetsbaarheden in afhankelijkheden en het image</td>
+          <td>
+            CI (<code>security-scan.yml</code>)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Datamigraties testen</h3>
+  <p>Tests voor een datamigratie (zoals <code>test_public_id_migration.py</code>) gebruiken <code>MigrationExecutor</code>: migreer naar het punt vóór je migratie, zet data klaar via de historische modellen, migreer verder en controleer. Zet de database in <code>tearDown</code> terug naar het <strong>laatste blad</strong> van de migratiegrafiek, nooit naar een vaste naam. Een vaste naam draait stil alle latere migraties terug, en de rest van de testsuite draait dan op een oud schema.</p>
+  <h3>Een <code># noqa</code> is een uitzondering</h3>
+  <p>Ruff staat breed aan. Moet een regel echt worden onderdrukt, schrijf er dan bij welke regel het is en waarom het hier terecht is, bijvoorbeeld: <code># noqa: PLC0415 (import not at top level) — Django signal registration must happen inside ready()</code>.</p>
+  <h2 id="valkuilen">Valkuilen</h2>
+  <p>De meeste fouten in Wies falen <strong>stil</strong>: geen foutmelding, alleen iets wat niet werkt.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Valkuilen">
+    <table>
+      <caption class="wies-visually-hidden">Valkuilen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Valkuil</th>
+          <th scope="col">Hoe je het merkt</th>
+          <th scope="col">Wat je doet</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Inline JavaScript in een template</td>
+          <td>Knop doet niets; alleen een CSP-waarschuwing in de console</td>
+          <td>
+            <code>data-action</code> + <code>ui_handlers.js</code> (zie <a href="{{ url('handboek-page', args=['de-code']) }}#templates">Templates</a>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>show()</code> op een sheet of modal die net is ingeswapt
+          </td>
+          <td>Venster gaat niet open, geen fout</td>
+          <td>
+            Eerst <code>await el.updateComplete</code>, of <code>data-auto-show</code> gebruiken (<code>dialog.js</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>href</code> én <code>hx-get</code> op een <code>nldd-list-item</code>, <code>nldd-card</code> of <code>nldd-menu-item</code>
+          </td>
+          <td>Browser navigeert weg, de htmx-respons verdwijnt</td>
+          <td>
+            Kies één van de twee, of laat <code>hx_link_guard.js</code> het afvangen
+          </td>
+        </tr>
+        <tr>
+          <td>POST vanuit een menu-item in een shadow root</td>
+          <td>
+            Je kunt er geen <code>&lt;form&gt;</code> omheen zetten
+          </td>
+          <td>
+            POST vanuit JS met het CSRF-token uit de markup (<code>menu_nav.js</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Eigen widget zonder <code>wire_field_errors</code>
+          </td>
+          <td>Validatiefout is onzichtbaar, ook voor screenreaders</td>
+          <td>
+            <code>wire_field_errors(field)</code> in het widget-template
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>&lt;form&gt;</code> zonder <code>novalidate</code>
+          </td>
+          <td>Browser houdt de inzending tegen zonder melding</td>
+          <td>
+            Elk formulier draagt <code>novalidate</code>; de server oordeelt
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Geraden icoonnaam of <code>appearance</code>
+          </td>
+          <td>Icoon rendert niet, of standaardstijl</td>
+          <td>
+            Opzoeken in <code>custom-elements.json</code> of de storybook (<code>edit</code> heet <code>pencil</code>, <code>lock</code> heet <code>lock-closed</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>Niet-bestaand CSS-token</td>
+          <td>Ziet er goed uit in licht, kapot in donker</td>
+          <td>Altijd in beide modi testen</td>
+        </tr>
+        <tr>
+          <td>Integer-pk in een URL</td>
+          <td>Iedereen kan records aftellen</td>
+          <td>
+            <code>public_id</code> en <code>&lt;uuid:public_id&gt;</code> (zie <a href="{{ url('handboek-page', args=['de-code']) }}#modellen">Modellen</a>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Eén <code>AddField</code> met <code>default=uuid.uuid4</code>
+          </td>
+          <td>Alle bestaande rijen krijgen dezelfde UUID, unique-constraint faalt</td>
+          <td>
+            Migratie in drie stappen (zie <a href="{{ url('handboek-page', args=['de-code']) }}#modellen">Modellen</a>)
+          </td>
+        </tr>
+        <tr>
+          <td>App-code importeren in een migratie</td>
+          <td>Migratie breekt zodra de app-code verandert</td>
+          <td>Alles uitschrijven in de migratie; stdlib-defaults</td>
+        </tr>
+        <tr>
+          <td>
+            <code>specific_start_date</code> direct lezen
+          </td>
+          <td>Verkeerde datum als de periode van de opdracht komt</td>
+          <td>
+            <code>start_date</code>, of <code>annotate_placement_dates()</code> in lijsten
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>period_source</code> vergelijken
+          </td>
+          <td>
+            Plaatsing kent <code>SERVICE</code>/<code>PLACEMENT</code>, rol kent <code>ASSIGNMENT</code>/<code>SERVICE</code>
+          </td>
+          <td>Controleer per model welke waarden het kent</td>
+        </tr>
+        <tr>
+          <td>Matchen op een rol-label</td>
+          <td>Breekt bij een hernoeming</td>
+          <td>
+            Match op de sleutel (<code>business_manager</code>), toon met <code>role_label()</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            Een regel buiten <code>permissions.py</code>
+          </td>
+          <td>Wordt nooit geregistreerd</td>
+          <td>
+            Regels alleen in <code>permissions.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>&quot;Dienst&quot; of &quot;service&quot; in UI-tekst</td>
+          <td>Inconsistente app</td>
+          <td>
+            De app zegt <strong>rol</strong>; zie de woordenlijst in <a href="{{ url('handboek-page', args=['aan-de-slag']) }}#wies-in-het-kort">Wies in het kort</a>
+          </td>
+        </tr>
+        <tr>
+          <td>OTYS-opdracht bewerken</td>
+          <td>Geen potlood, ook niet als BM</td>
+          <td>
+            Klopt: <code>WIES_SOURCED</code> maakt geïmporteerde data alleen-lezen
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/static/vendor/</code> ontbreekt
+          </td>
+          <td>
+            Pagina zonder opmaak, 404 op <code>nldd.min.js</code>
+          </td>
+          <td>
+            <code>just vendor</code> (of <code>just up</code>, dat het ook doet)
+          </td>
+        </tr>
+        <tr>
+          <td>Testen in een git worktree</td>
+          <td>
+            Tests zijn groen, maar draaiden op de verkeerde code: een extra -v op docker compose run verliest van de mount .:/app
+          </td>
+          <td>Draai pytest buiten Docker in de worktree, en controleer het aantal tests</td>
+        </tr>
+        <tr>
+          <td>
+            <code>features/inline-editing.md</code> letterlijk volgen
+          </td>
+          <td>Klassen bestaan niet meer</td>
+          <td>
+            De code wint; zie de noot bij <a href="{{ url('handboek-page', args=['de-code']) }}#editables">Editables</a>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>services/urls.py</code> en <code>errors.py</code>
+          </td>
+          <td>Geen URLconf en geen error-views</td>
+          <td>
+            URL-helpers en exceptieklassen; routes staan in <code>config/urls.py</code>, error-views in <code>views.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>pytest met config.settings.local</td>
+          <td>
+            Gesimuleerde fouten uit de tests komen in het Mattermost-kanaal; met SKIP_OIDC aan falen tientallen redirect-tests
+          </td>
+          <td>Altijd config.settings.test (dat doet pytest standaard); MATTERMOST_*-variabelen en SKIP_OIDC niet meegeven</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h2 id="oefenopdrachten">Oefenopdrachten</h2>
+  <p>Lezen is leuk, doen blijft beter hangen. Pak een eigen branch die je na afloop weggooit, en ga je gang.</p>
+  <h3>Rondkijken</h3>
+  <ul>
+    <li>
+      Open http://localhost:8080 en klik een opdracht aan. Zoek in <code>config/urls.py</code> en <code>views.py</code> welke view het zijpaneel bouwt, en welk template in <code>parts/</code> erin komt.
+    </li>
+    <li>
+      Open hetzelfde paneel door de URL met <code>?opdracht=&lt;uuid&gt;</code> direct in een nieuw tabblad te plakken. Waarom gaat het paneel nu ook open, zonder htmx?
+    </li>
+    <li>
+      Open de Network-tab van je browser en klik op een kaart. Welke headers stuurt htmx mee, en welke daarvan leest de view?
+    </li>
+    <li>
+      Bekijk <code>/beheer/rollen/</code>. Zoek in <code>permissions.py</code> de regel achter één vinkje in die matrix.
+    </li>
+  </ul>
+  <h3>Rechten</h3>
+  <ul>
+    <li>
+      Log in als consultant (haal je eigen rollen weg in Beheer › Gebruikers en zet ze daarna terug met just manage ensure_initial_user, dat leest <code>INITIAL_USER_EMAIL</code>). Wat zie je niet meer?
+    </li>
+    <li>
+      Schrijf een test die bewijst dat een consultant een opdracht niet mag verwijderen en een business manager wel. Gebruik <code>role_helpers.py</code>.
+    </li>
+  </ul>
+  <h3>Bouwen</h3>
+  <ul>
+    <li>
+      Voeg aan <code>Assignment</code> een tekstveld toe (bijvoorbeeld een interne notitie). Doorloop de hele modelchecklist: migratie, dummydata, <code>Editable</code>, het bewerk-sheet, een test.
+    </li>
+    <li>
+      Bekijk hoe de bestaande actie toggle-long-text werkt. Voeg dan een eigen knop toe, bijvoorbeeld een die een tekst naar het klembord kopieert, met <code>data-action</code> en een nieuwe entry in <code>CLICK_ACTIONS</code>. Controleer dat <code>test_templates_no_inline_js.py</code> groen blijft. Zet daarna expres een <code>onclick=</code> in je template en kijk wat er in de browser gebeurt.
+    </li>
+    <li>
+      Gebruik een icoon dat niet bestaat (<code>icon=&quot;potlood&quot;</code>). Wat zie je? Zoek de juiste naam op in <code>custom-elements.json</code>.
+    </li>
+  </ul>
+  <h3>Afronden</h3>
+  <ul>
+    <li>
+      Draai <code>just test</code> en <code>just pre-commit</code> tot alles groen is.
+    </li>
+    <li>
+      Schrijf een changelogregel voor je notitieveld, zoals hij in <code>CHANGES.md</code> zou staan.
+    </li>
+    <li>Bespreek je branch met een collega alsof het een echte PR is.</li>
+  </ul>
+  <h2 id="verder-lezen">Verder lezen</h2>
+  <p>In de repo, in deze volgorde:</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Verder lezen">
+    <table>
+      <caption class="wies-visually-hidden">Verder lezen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Document</th>
+          <th scope="col">Waarover</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>README.md</code>
+          </td>
+          <td>Installatie, commando's, releaseproces</td>
+        </tr>
+        <tr>
+          <td>
+            <code>docs/roles.md</code>
+          </td>
+          <td>Rollen en rechten in detail, met herstel na een lockout</td>
+        </tr>
+        <tr>
+          <td>
+            <code>features/public_id.md</code>
+          </td>
+          <td>UUID's in URL's en de migratie in drie stappen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>features/inline-editing.md</code>
+          </td>
+          <td>
+            Het Editables-systeem (let op de noot bij <a href="{{ url('handboek-page', args=['de-code']) }}#editables">Editables</a>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/rijksauth/README.md</code>
+          </td>
+          <td>
+            Inloggen via OIDC en het <code>User</code>-model
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>.claude/rules/nldd-integration.md</code>
+          </td>
+          <td>De valkuilen van webcomponenten in een server-gerenderde app</td>
+        </tr>
+        <tr>
+          <td>
+            <code>.claude/rules/code-style.md</code>, <code>models.md</code>, <code>testing.md</code>
+          </td>
+          <td>Conventies voor code, modellen en tests</td>
+        </tr>
+        <tr>
+          <td>
+            <code>docs/privacy.md</code>, <code>SECURITY.md</code>
+          </td>
+          <td>Privacyverklaring en beveiligingsbeleid; ook in de app zichtbaar</td>
+        </tr>
+        <tr>
+          <td>
+            <code>PDR/</code>
+          </td>
+          <td>Productbesluiten en hun onderbouwing</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Buiten de repo:</p>
+  <ul>
+    <li>
+      <a href="https://design.digitaledienst.overheid.nl/" target="_blank">NLDD-designsysteem<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>: richtlijnen en componenten
+    </li>
+    <li>
+      <a href="https://minbzk.github.io/storybook/" target="_blank">NLDD storybook<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>: alle componenten met voorbeelden
+    </li>
+    <li>
+      <a href="https://www.npmjs.com/package/@nldd/design-system"
+         target="_blank">@nldd/design-system op npm<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+    </li>
+    <li>
+      <a href="https://htmx.org/docs/" target="_blank">htmx-documentatie<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+    </li>
+    <li>
+      <a href="https://docs.djangoproject.com/" target="_blank">Django-documentatie<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+    </li>
+    <li>
+      <a href="https://jinja.palletsprojects.com/" target="_blank">Jinja2-documentatie<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+    </li>
+  </ul>
+  </nldd-rich-text>
+{% endblock footer_content %}

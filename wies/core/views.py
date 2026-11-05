@@ -43,6 +43,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
+from wies.core.handboek import HANDBOEK_BY_SLUG, HANDBOEK_PAGES
 from wies.core.inline_edit.base import (
     Editable,
     EditableCollection,
@@ -3933,6 +3934,17 @@ def handleiding(request):
 
 def privacy(request):
     return render(request, "privacy.html")
+
+
+def handboek(request, slug=HANDBOEK_PAGES[0].slug):
+    page = HANDBOEK_BY_SLUG.get(slug)
+    if page is None:
+        raise Http404
+    return render(
+        request,
+        page.template,
+        {"handboek_pages": HANDBOEK_PAGES, "handboek_current": page},
+    )
 
 
 def beveiliging(request):

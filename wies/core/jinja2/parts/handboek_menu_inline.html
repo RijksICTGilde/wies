@@ -1,0 +1,24 @@
+{# The handbook menu for narrow screens: there the sidebar becomes a sheet with
+   no button to open it, so app.css shows this copy instead (.wies-handboek-menu). #}
+<nav class="wies-handboek-menu" aria-label="Handboek">
+  <ul>
+    {% for page in handboek_pages %}
+      <li>
+        {% if page.slug == handboek_current.slug %}
+          <strong aria-current="page">{{ page.title }}</strong>
+          {% if handboek_sections %}
+            <ul>
+              {% for anchor, title in handboek_sections %}
+                <li>
+                  <a href="#{{ anchor }}">{{ title }}</a>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          <a href="{{ page.path }}">{{ page.title }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</nav>

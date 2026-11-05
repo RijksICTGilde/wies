@@ -1,0 +1,1299 @@
+{# AUTO-GENERATED FROM docs/handboek/de-code.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  De code · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [["opbouw", "Opbouw"], ["plattegrond", "Plattegrond"], ["waar-staat-wat", "Waar staat wat"], ["modellen", "Modellen"], ["views", "Views"], ["templates", "Templates"], ["editables", "Editables"], ["rollen-en-rechten", "Rollen en rechten"], ["een-request", "Een request"]] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>De code</h1>
+  {% with handboek_sections = [["opbouw", "Opbouw"], ["plattegrond", "Plattegrond"], ["waar-staat-wat", "Waar staat wat"], ["modellen", "Modellen"], ["views", "Views"], ["templates", "Templates"], ["editables", "Editables"], ["rollen-en-rechten", "Rollen en rechten"], ["een-request", "Een request"]] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <h2 id="opbouw">Opbouw</h2>
+  <p>Wies is een standaard Django-project. Een request loopt van middleware via <code>config/urls.py</code> naar een view, die modellen ophaalt, rechten controleert en een template rendert. Opslaan gaat via een formulier.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Opbouw">
+    <table>
+      <caption class="wies-visually-hidden">Opbouw</caption>
+      <thead>
+        <tr>
+          <th scope="col">Onderdeel</th>
+          <th scope="col">Wat het doet</th>
+          <th scope="col">In Wies</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <a href="#waar-staat-wat">Settings</a>
+          </td>
+          <td>Instellingen per omgeving</td>
+          <td>
+            <code>config/settings/</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#views">URL-configuratie</a>
+          </td>
+          <td>URL naar view</td>
+          <td>
+            <code>config/urls.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#views">Middleware</a>
+          </td>
+          <td>Login en headers bij elk request</td>
+          <td>
+            <code>wies/core/middleware.py</code>, <code>config/settings/base.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#modellen">Models</a>
+          </td>
+          <td>Datamodel</td>
+          <td>
+            <code>wies/core/models.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#modellen">Migraties</a>
+          </td>
+          <td>Schemawijzigingen</td>
+          <td>
+            <code>wies/core/migrations/</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#views">Views</a>
+          </td>
+          <td>Logica per pagina</td>
+          <td>
+            <code>wies/core/views.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#templates">Templates</a>
+          </td>
+          <td>HTML, in Jinja2</td>
+          <td>
+            <code>wies/core/jinja2/</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#editables">Forms</a>
+          </td>
+          <td>Invoer en validatie</td>
+          <td>
+            <code>wies/core/forms.py</code>, <code>wies/core/editables/</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#rollen-en-rechten">Auth en permissies</a>
+          </td>
+          <td>Inloggen en rechten</td>
+          <td>
+            <code>wies/rijksauth/</code>, <code>wies/core/permissions.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="#waar-staat-wat">Management commands</a>
+          </td>
+          <td>Taken voor de command line, zoals dummydata</td>
+          <td>
+            <code>wies/core/management/commands/</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Afwijkend: templates zijn Jinja2, en htmx vraagt vaak alleen een fragment op in plaats van de hele pagina.</p>
+  <h2 id="plattegrond">Plattegrond</h2>
+  <p>Wies is een server-gerenderde Django-app. De browser vraagt een pagina of een fragment op, Django bouwt de HTML, en htmx zet een fragment op zijn plek zonder de pagina te herladen.</p>
+  <p>{% include "handboek/img/architectuur.svg" %}</p>
+  <p><strong>Browser.</strong> htmx vraagt fragmenten op en zet ze op hun plek, zonder de pagina te herladen. De NLDD-webcomponenten (<code>nldd-*</code>) bepalen het uiterlijk. Eigen JavaScript staat in <code>static/js/</code> en hangt aan <code>data-action</code>-attributen, omdat de Content-Security-Policy inline scripts blokkeert.</p>
+  <p><strong>Django-app.</strong> Middleware dwingt inloggen en beveiligingsheaders af. <code>config/urls.py</code> stuurt elke URL naar een view in <code>views.py</code>. De view controleert met <code>has_permission</code> de rechten, haalt gegevens op en rendert een Jinja2-template.</p>
+  <p><strong>Onder de views.</strong> <code>models.py</code> beschrijft de gegevens, <code>permissions.py</code> wie wat mag en <code>editables/</code> welke velden bewerkbaar zijn. <code>services/</code> bevat logica die niet aan een request hangt, zoals de OTYS-sync en de audit-log.</p>
+  <p><strong>Buiten de app.</strong> PostgreSQL bewaart alle data, ook de takenlijst van de worker. Keycloak regelt het inloggen via SSO Rijk. De objectopslag bewaart de startpagina. De <code>db_worker</code> draait achtergrondtaken, zoals de sync met OTYS en organisaties.overheid.nl.</p>
+  <h2 id="waar-staat-wat">Waar staat wat</h2>
+  <p>Bijna alles zit in <code>wies/core/</code>. De meeste wijzigingen raken <code>views.py</code> en <code>models.py</code>.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Waar staat wat">
+    <table>
+      <caption class="wies-visually-hidden">Waar staat wat</caption>
+      <thead>
+        <tr>
+          <th scope="col">Pad</th>
+          <th scope="col">Wat er staat</th>
+          <th scope="col">Wanneer je er komt</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>wies/core/models.py</code>
+          </td>
+          <td>Alle domeinmodellen</td>
+          <td>Elke modelwijziging</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/views.py</code>
+          </td>
+          <td>Alle views, pagina's én htmx-fragmenten</td>
+          <td>Bijna elke feature</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/forms.py</code>, <code>form_mixins.py</code>, <code>widgets.py</code>, <code>fields.py</code>
+          </td>
+          <td>
+            Formulieren, <code>NlddFormMixin</code>, eigen widgets
+          </td>
+          <td>Formulieren bouwen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/editables/</code>
+          </td>
+          <td>
+            Bewerkbare velden per model (<code>assignment.py</code>, <code>colleague.py</code>, <code>placement.py</code>, <code>service.py</code>, <code>user.py</code>)
+          </td>
+          <td>Een veld bewerkbaar maken</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/inline_edit/</code>
+          </td>
+          <td>Het mechaniek achter inline bewerken</td>
+          <td>Zelden; alleen als het systeem zelf moet veranderen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/permissions.py</code>, <code>permission_engine.py</code>, <code>roles.py</code>, <code>visibility_rules.py</code>
+          </td>
+          <td>Rechten, rollen, zichtbaarheid</td>
+          <td>Wie mag wat</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/querysets.py</code>
+          </td>
+          <td>Herbruikbare annotaties (datums, sorteernamen, tellingen)</td>
+          <td>Lijsten en filters</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/public_id.py</code>
+          </td>
+          <td>
+            UUID's in URL's, <code>FacetResolver</code> voor filters
+          </td>
+          <td>Nieuwe URL of filter</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/services/</code>
+          </td>
+          <td>Domeinlogica buiten de views: OTYS-sync, events, bezetting, rollenmatrix, gebruikers</td>
+          <td>Logica die niet in een view hoort</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/jinja2/</code>
+          </td>
+          <td>
+            Pagina's (bovenste niveau), fragmenten (<code>parts/</code>), formulierweergave (<code>forms/</code>)
+          </td>
+          <td>Elke UI-wijziging</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/static/js/</code>, <code>static/css/</code>
+          </td>
+          <td>Eigen JavaScript en CSS</td>
+          <td>Gedrag of styling</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/management/commands/</code>
+          </td>
+          <td>
+            <code>setup</code>, <code>load_dummy_data</code>, <code>sync_organizations</code>, <code>db_worker</code> en meer
+          </td>
+          <td>Dummydata, taken</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/tests/</code>
+          </td>
+          <td>74 testbestanden, één per feature</td>
+          <td>Altijd</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/core/monitoring/</code>
+          </td>
+          <td>
+            <code>ErrorReportingHandler</code>: 500's naar <code>ErrorEvent</code> en Mattermost
+          </td>
+          <td>Foutmeldingen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/rijksauth/</code>
+          </td>
+          <td>
+            Eigen <code>User</code>-model, OIDC-login via Keycloak, eigen README
+          </td>
+          <td>Inloggen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>wies/startpage/</code>
+          </td>
+          <td>De ODI-startpagina: een Hugo-site uit de objectopslag</td>
+          <td>Startpagina</td>
+        </tr>
+        <tr>
+          <td>
+            <code>config/settings/</code>
+          </td>
+          <td>
+            <code>base</code>, <code>local</code>, <code>test</code>, <code>production</code>, <code>worker</code>
+          </td>
+          <td>Instellingen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>config/jinja2.py</code>
+          </td>
+          <td>
+            Globals en filters voor templates (<code>datum_nl</code>, <code>url</code>, <code>inline_edit</code>, ...)
+          </td>
+          <td>Een template-helper zoeken</td>
+        </tr>
+        <tr>
+          <td>
+            <code>features/</code>
+          </td>
+          <td>
+            Ontwerpdocumenten: <code>inline-editing.md</code>, <code>public_id.md</code>
+          </td>
+          <td>Vóór je aan die systemen komt</td>
+        </tr>
+        <tr>
+          <td>
+            <code>docs/</code>
+          </td>
+          <td>
+            <code>roles.md</code>, <code>privacy.md</code>, <code>beheer.md</code>
+          </td>
+          <td>Achtergrond</td>
+        </tr>
+        <tr>
+          <td>
+            <code>PDR/</code>
+          </td>
+          <td>Besluitvorming (product decision records)</td>
+          <td>Waarom iets zo is</td>
+        </tr>
+        <tr>
+          <td>
+            <code>CHANGES.md</code>
+          </td>
+          <td>Changelog</td>
+          <td>Elke PR</td>
+        </tr>
+        <tr>
+          <td>
+            <code>.claude/</code>
+          </td>
+          <td>
+            Projectregels voor Claude Code; de <code>rules/</code> zijn ook voor mensen goed leesvoer
+          </td>
+          <td>Bij twijfel over een conventie</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p><code>config/urls.py</code> koppelt elke URL aan een view in <code>views.py</code>.</p>
+  <h2 id="modellen">Modellen</h2>
+  <p>Alle domeinmodellen staan in <code>wies/core/models.py</code>, het account in <code>wies/rijksauth/models.py</code>. De kern is de keten uit <a href="{{ url('handboek-page', args=['aan-de-slag']) }}#wies-in-het-kort">Wies in het kort</a>; de rest hangt aan een collega of een opdracht.</p>
+  <p>{% include "handboek/img/datamodel.svg" %}</p>
+  <p>Zo hangen de modellen aan elkaar; een ForeignKey is steeds een verwijzing naar precies één ander record:</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Modellen">
+    <table>
+      <caption class="wies-visually-hidden">Modellen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Relatie</th>
+          <th scope="col">In de code</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Een rol hoort bij één opdracht</td>
+          <td>
+            <code>Service.assignment</code> (ForeignKey)
+          </td>
+        </tr>
+        <tr>
+          <td>Een plaatsing zet één collega op één rol</td>
+          <td>
+            <code>Placement.service</code>, <code>Placement.colleague</code> (ForeignKeys)
+          </td>
+        </tr>
+        <tr>
+          <td>Een opdracht heeft één of meer opdrachtgevers, waarvan één primair</td>
+          <td>
+            <code>Assignment.organizations</code> (many-to-many via <code>AssignmentOrganizationUnit</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>Een opdracht heeft één business manager</td>
+          <td>
+            <code>Assignment.owner</code> (ForeignKey naar <code>Colleague</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>Een rol vraagt één vaardigheid</td>
+          <td>
+            <code>Service.skill</code> (ForeignKey)
+          </td>
+        </tr>
+        <tr>
+          <td>Een collega kan een account hebben</td>
+          <td>
+            <code>Colleague.user</code> (one-to-one)
+          </td>
+        </tr>
+        <tr>
+          <td>Een collega heeft labels en vaardigheden</td>
+          <td>
+            <code>Colleague.labels</code>, <code>Colleague.skills</code> (many-to-many)
+          </td>
+        </tr>
+        <tr>
+          <td>Een collega werkt onder één merk</td>
+          <td>
+            <code>Colleague.suborganization</code> (ForeignKey)
+          </td>
+        </tr>
+        <tr>
+          <td>Een collega heeft contractperiodes</td>
+          <td>
+            <code>ContractPeriod.colleague</code> (ForeignKey)
+          </td>
+        </tr>
+        <tr>
+          <td>Een label hoort bij één categorie</td>
+          <td>
+            <code>Label.category</code> (ForeignKey)
+          </td>
+        </tr>
+        <tr>
+          <td>Een organisatie valt onder een bovenliggende organisatie</td>
+          <td>
+            <code>OrganizationUnit.parent</code> (ForeignKey)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Niet in de tabel, maar wel goed om te weten:</p>
+  <ul>
+    <li>
+      <code>AssignmentOrganizationUnit</code> is de koppeltabel tussen opdracht en opdrachtgever, met een <code>role</code> (primair of betrokken). Elke opdracht heeft precies één primaire opdrachtgever.
+    </li>
+    <li>
+      <code>Event</code> is de audit-log. <code>object_id</code> is een gewoon getal, geen ForeignKey, zodat de geschiedenis een verwijdering overleeft. Schrijf events met <code>create_event()</code> uit <code>services/events.py</code>.
+    </li>
+    <li>
+      <code>ErrorEvent</code> bewaart 500-fouten, <code>Task</code> de achtergrondtaken voor de worker.
+    </li>
+    <li>
+      Verwijderen is echt verwijderen; er zijn geen soft deletes. Een collega verwijderen neemt zijn plaatsingen mee (<code>CASCADE</code>); een opdrachtgever die nog gebruikt wordt kun je niet verwijderen (<code>PROTECT</code>).
+    </li>
+  </ul>
+  <h3>Opdrachtgevers komen uit organisaties.overheid.nl</h3>
+  <p>
+    Wies maakt geen eigen lijst van overheidsorganisaties. Een periodieke sync haalt de structuur op van <a href="https://organisaties.overheid.nl" target="_blank">organisaties.overheid.nl<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a> en slaat die op als boom (<code>OrganizationUnit.parent</code>). Een organisatie die daar verdwijnt, krijgt een einddatum. Is er nooit een opdracht aan gekoppeld geweest, dan wordt ze verwijderd. Ontbreekt een organisatie? Die vraag je aan bij organisaties.overheid.nl, niet in Wies.
+  </p>
+  <p>Een opdracht heeft precies één primaire opdrachtgever en kan daarnaast betrokken opdrachtgevers hebben. Een voorbeeld: een ministerie is opdrachtgever en een uitvoeringsorganisatie is betrokken.</p>
+  <h3>Periodes erven van boven</h3>
+  <p>Een rol heeft standaard de periode van zijn opdracht, en een plaatsing de periode van zijn rol. Pas als <code>period_source</code> op de eigen waarde staat, gelden de eigen datums (<code>specific_start_date</code>, <code>specific_end_date</code>). Lees die velden dus nooit direct: gebruik de properties <code>start_date</code> en <code>end_date</code>, of in lijsten <code>annotate_placement_dates()</code> uit <code>querysets.py</code>.</p>
+  <h3>public_id: nooit het id in een URL</h3>
+  <p>Het integer-id is opeenvolgend: wie het in een URL ziet, kan alle records aftellen. Elk model dat ooit in een URL, filter of verborgen formulierveld komt, krijgt daarom een <code>public_id</code>:</p>
+  <pre><code>public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)</code></pre>
+  <ul>
+    <li>
+      Route op <code>&lt;uuid:public_id&gt;</code> en zoek het object op met <code>public_id</code>. Een ongeldige waarde geeft dan al een 404 voordat de database wordt geraakt.
+    </li>
+    <li>
+      Filters in lijsten (<code>?org=...</code>) lopen via <code>FacetResolver</code> uit <code>wies/core/public_id.py</code>. Die <strong>faalt dicht</strong>: een filterwaarde die niets oplevert, geeft een lege lijst, nooit een ongefilterde.
+    </li>
+    <li>
+      Een <code>public_id</code> is geen autorisatie. Rechten controleer je altijd apart.
+    </li>
+  </ul>
+  <p>De migratie gaat in <strong>drie stappen</strong>: veld nullable toevoegen, elke rij een eigen UUID geven, dan unique en verplicht maken. Eén <code>AddField</code> met een default geeft alle bestaande rijen dezelfde waarde. Voorbeeld: <code>wies/core/migrations/0012_public_ids.py</code>. Volledige uitleg in <code>features/public_id.md</code>.</p>
+  <h2 id="views">Views</h2>
+  <p><code>wies/core/views.py</code> is met bijna 5.000 regels veruit het grootste bestand van Wies. Het is één platte module met vooral functies. Alleen de drie lijstpagina's zijn klassen: <code>ListView</code>s met <code>PublicIdFacetsMixin</code> voor de filters. Domeinlogica die niet aan een request hangt, hoort in <code>wies/core/services/</code>, niet in de view.</p>
+  <h3>Wat er staat, van boven naar beneden</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat er staat, van boven naar beneden">
+    <table>
+      <caption class="wies-visually-hidden">Wat er staat, van boven naar beneden</caption>
+      <thead>
+        <tr>
+          <th scope="col">Deel</th>
+          <th scope="col">Waarvoor</th>
+          <th scope="col">Namen om op te zoeken</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Paneel-helpers</td>
+          <td>URL's en data voor de zijpanelen</td>
+          <td>
+            <code>PANEL_PARAMS</code>, <code>_build_panel_url</code>, <code>_resolve_panel_object</code>, <code>_build_assignment_panel_data</code> en de andere <code>_build_*_panel_data</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Business management en beheer</td>
+          <td>Bezetting, rollenmatrix, statistieken, foutmeldingen</td>
+          <td>
+            <code>bezetting</code>, <code>role_matrix</code>, <code>staff_dashboard</code>, <code>error_table</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Lijstpagina's</td>
+          <td>Wie zit waar?, opdrachten, gebruikers</td>
+          <td>
+            <code>PlacementListView</code>, <code>AssignmentListView</code>, <code>UserListView</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Beheerpagina's</td>
+          <td>Gebruikers, CSV-import, labels, merken, contracturen</td>
+          <td>
+            <code>user_create</code>, <code>user_import_csv</code>, <code>label_admin</code>, <code>suborganization_admin</code>, <code>contract_period_add</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Opdrachthistorie</td>
+          <td>De tijdlijn met wijzigingen, en verwijderen</td>
+          <td>
+            <code>assignment_events_partial</code>, <code>assignment_delete</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Profiel en onboarding</td>
+          <td>Je eigen profiel en de wizard bij de eerste keer inloggen</td>
+          <td>
+            <code>user_profile</code>, <code>onboarding_assignment_edit</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Footerpagina's en fouten</td>
+          <td>FAQ, handleiding, dit handboek, 404 en 500</td>
+          <td>
+            <code>handleiding</code>, <code>handboek</code>, <code>error_404</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Zoeken en filters</td>
+          <td>Zoeksuggesties, opdrachtgever-kiezer</td>
+          <td>
+            <code>search_suggestions</code>, <code>client_modal</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Inline-edit-engine</td>
+          <td>Het potlood</td>
+          <td>
+            <code>inline_edit_view</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Bewerk-sheets</td>
+          <td>Opslaan vanuit een zijpaneel</td>
+          <td>
+            <code>assignment_edit_view</code>, <code>placement_edit_view</code>, <code>assignment_member_edit_view</code>, <code>assignment_create_sheet</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Patronen die je overal tegenkomt</h3>
+  <ul>
+    <li>
+      <strong>Inloggen is standaard verplicht.</strong> <code>LoginRequiredMiddleware</code> beschermt elke view. Een openbare view krijgt bewust <code>@login_not_required</code>.
+    </li>
+    <li>
+      <strong>Rechten zitten op twee niveaus.</strong> Hele pagina's met <code>@permission_required(..., raise_exception=True)</code> of de decorators uit <code>roles.py</code>; objecten en velden met <code>has_permission()</code> in de view zelf. Zie <a href="#rollen-en-rechten">Rollen en rechten</a>.
+    </li>
+    <li>
+      <strong>Een object zoek je op <code>public_id</code></strong>, nooit op het integer-id. De inline-edit-engine geeft bovendien hetzelfde antwoord op een object dat niet bestaat als op een object dat je niet mag zien, zodat je niet kunt raden welke id's bestaan.
+    </li>
+    <li>
+      <strong>Eén view, twee soorten antwoord.</strong> Zonder htmx rendert een view de hele pagina; met de header <code>HX-Request</code> alleen het fragment. In de lijstviews beslist <code>get_template_names()</code> dat, op basis van <code>HX-Target</code> en de queryparameters.
+    </li>
+    <li>
+      <strong>Het zijpaneel hangt aan de URL.</strong> Parameters als <code>?opdracht=&lt;uuid&gt;</code>, <code>&amp;bewerken=1</code> en <code>&amp;teamlid=…</code> (<code>PANEL_PARAMS</code>) bepalen welk paneel openstaat. Daarom werken een gedeelde link en de terugknop gewoon.
+    </li>
+    <li>
+      <strong>Schrijven gaat alleen via POST</strong> (<code>@require_POST</code>), in een <code>transaction.atomic()</code>. Na opslaan stuurt de view htmx verder met een header als <code>HX-Location</code>, <code>HX-Redirect</code> of <code>HX-Trigger</code>, in plaats van zelf HTML terug te geven.
+    </li>
+    <li>
+      <strong>Een terug-URL uit het formulier vertrouw je niet zomaar.</strong> <code>_safe_return_path()</code> laat alleen paden binnen Wies door.
+    </li>
+    <li>
+      <strong>Lokale imports binnen een functie</strong> voorkomen circulaire imports met de Editables. Zie je er een met <code># noqa: PLC0415</code>, dan is dat de reden.
+    </li>
+  </ul>
+  <h3>Een view toevoegen</h3>
+  <ol>
+    <li>
+      Schrijf de functie in <code>views.py</code>, bij de views die erop lijken.
+    </li>
+    <li>
+      Voeg een route toe in <code>config/urls.py</code>. Gaat het over één object, gebruik dan <code>&lt;uuid:public_id&gt;</code>.
+    </li>
+    <li>
+      Bepaal wie erbij mag: een decorator voor de hele pagina, <code>has_permission()</code> voor het object.
+    </li>
+    <li>
+      Maak een pagina-template in <code>wies/core/jinja2/</code> en, als htmx alleen een stuk vervangt, een fragment in <code>parts/</code>.
+    </li>
+    <li>
+      Zet de logica die niet over het request gaat in <code>wies/core/services/</code>.
+    </li>
+    <li>Test de view voor elke rol: één die mag en één die niet mag.</li>
+  </ol>
+  <h2 id="templates">Templates</h2>
+  <p>De server rendert alle HTML. htmx haalt fragmenten op en zet ze op hun plek, en de NLDD-webcomponenten zorgen voor het uiterlijk. Er is geen frontend-framework en geen build-stap voor eigen code.</p>
+  <h3>Templates</h3>
+  <ul>
+    <li>
+      <strong>Pagina's</strong> staan bovenaan in <code>wies/core/jinja2/</code> (<code>placements.html</code>, <code>assignments.html</code>, <code>bezetting.html</code>, ...) en erven van <code>base.html</code>. Die heeft de blokken <code>title</code>, <code>extra_head</code>, <code>header</code>, <code>sidebar</code>, <code>content</code> en <code>panel</code>.
+    </li>
+    <li>
+      <strong>Fragmenten</strong> voor htmx staan in <code>parts/</code>: zijpanelen (<code>*_panel_content.html</code>), sheets en modals (<code>*_sheet.html</code>, <code>*_modal.html</code>), rijen, filterchips.
+    </li>
+    <li>
+      <strong>Formulieren</strong> worden gerenderd via <code>forms/</code> (<code>field.html</code>, <code>widgets/</code>, <code>displays/</code> voor de alleen-lezenweergave van inline velden).
+    </li>
+    <li>
+      Het is <strong>Jinja2, niet Django-templates</strong>. Je hebt dus geen <code>{% raw %}{% load %}{% endraw %}</code> en geen Django-tags. Wat beschikbaar is, staat in <code>config/jinja2.py</code>: onder meer <code>url()</code>, <code>static()</code>, <code>nldd_asset()</code>, <code>app_asset()</code>, <code>inline_edit()</code>, <code>wire_field_errors()</code> en filters als <code>datum_nl</code> (&quot;11 nov 2024&quot;) en <code>tijdgeleden</code>.
+    </li>
+  </ul>
+  <h3>NLDD-webcomponenten</h3>
+  <p>
+    Alle UI bouw je met <code>nldd-*</code>-elementen uit het <a href="https://design.digitaledienst.overheid.nl/" target="_blank">NLDD-designsysteem<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>, het npm-pakket <a href="https://www.npmjs.com/package/@nldd/design-system"
+    target="_blank">@nldd/design-system<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>. Componenten, attributen en icoonnamen zoek je op in de <a href="https://minbzk.github.io/storybook/" target="_blank">storybook<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a> of in <code>node_modules/@nldd/design-system/custom-elements.json</code>. Raad geen namen: een onbekend icoon rendert stil niets, een onbekende <code>appearance</code> valt stil terug op de standaard.
+  </p>
+  <p>NLDD en htmx worden niet ingecheckt. <code>just vendor</code> kopieert ze uit <code>package-lock.json</code> naar <code>wies/core/static/vendor/</code>. Dependabot stelt upgrades voor; lees bij een NLDD-upgrade altijd de breaking changes, want die breken vaak stil.</p>
+  <h3>Geen inline JavaScript</h3>
+  <p>De Content-Security-Policy is <code>script-src 'self'</code> (ingesteld in <code>wies/core/middleware.py</code>). Elk <code>&lt;script&gt;</code>-blok, elke <code>onclick=</code> en elke <code>hx-on</code> in een template wordt door de browser <strong>stil</strong> geblokkeerd: de knop doet gewoon niets.</p>
+  <p>Zo bind je wel gedrag:</p>
+  <ol>
+    <li>
+      Zet een data-attribuut op het element: <code>data-action=&quot;&lt;naam&gt;&quot;</code>, <code>data-confirm=&quot;&lt;vraag&gt;&quot;</code> of <code>data-keyboard-activate</code>.
+    </li>
+    <li>
+      Handel het af in <code>wies/core/static/js/ui_handlers.js</code>; voor een klik voeg je een entry toe aan <code>CLICK_ACTIONS</code>.
+    </li>
+    <li>
+      Nieuw gedrag dat niet in <code>ui_handlers.js</code> past, krijgt een eigen bestand in <code>static/js/</code>, geladen via <code>app_asset()</code> in <code>base.html</code>.
+    </li>
+  </ol>
+  <p>Gebruik nooit een styling-class als haakje voor gedrag; een CSS-hernoeming sloopt dan stil de binding. <code>test_templates_no_inline_js.py</code> bewaakt dit en laat de build falen.</p>
+  <h3>JavaScript-bestanden die je gaat tegenkomen</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="JavaScript-bestanden die je gaat tegenkomen">
+    <table>
+      <caption class="wies-visually-hidden">JavaScript-bestanden die je gaat tegenkomen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Bestand</th>
+          <th scope="col">Waarvoor</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>ui_handlers.js</code>
+          </td>
+          <td>
+            Centrale afhandeling van <code>data-action</code>, <code>data-confirm</code> en toetsenbordactivatie
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>dialog.js</code>
+          </td>
+          <td>
+            Opent sheets en modals met <code>data-auto-show</code> na een htmx-swap
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>side_panel.js</code>
+          </td>
+          <td>De stapel zijpanelen, met URL-synchronisatie en de terugknop van de browser</td>
+        </tr>
+        <tr>
+          <td>
+            <code>hx_link_guard.js</code>
+          </td>
+          <td>
+            Voorkomt dat een <code>nldd-*</code>-element met <code>href</code> én <code>hx-get</code> wegnavigeert
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>menu_nav.js</code>
+          </td>
+          <td>Uitloggen als POST vanuit een menu in een shadow root</td>
+        </tr>
+        <tr>
+          <td>
+            <code>focus_restore.js</code>, <code>live_region.js</code>
+          </td>
+          <td>Toegankelijkheid na een swap: focus op een logische plek, wijziging voorlezen</td>
+        </tr>
+        <tr>
+          <td>
+            <code>htmx_config.js</code>
+          </td>
+          <td>Globale htmx-instellingen</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Pure functies in deze bestanden hebben tests in <code>js_tests/</code> (<code>node --test</code>).</p>
+  <h3>Eigen CSS</h3>
+  <p><code>static/css/app.css</code> bevat de weinige eigen regels. Een regel die een <code>nldd-*</code>-element stylt, krijgt een comment erboven dat uitlegt waarom het component het zelf niet kan. Lukt die zin niet, dan hoort de regel er niet. Test elke stylingwijziging in licht én donker: een niet-bestaand token valt terug op zijn fallback en dat zie je pas in dark mode.</p>
+  <h2 id="editables">Editables</h2>
+  <p>Een bewerkbaar veld beschrijf je één keer, als <code>Editable</code>. Elk formulier in Wies gebruikt die beschrijving, dus label, invoerveld, validatie en rechten zijn overal gelijk. In de code heet het mechaniek nog <em>inline editing</em> (<code>wies/core/inline_edit/</code>), naar het potloodje waarmee het begon.</p>
+  <h3>Een veld beschrijven</h3>
+  <p>Uit <code>wies/core/editables/assignment.py</code>:</p>
+  <pre><code>{% raw %}class AssignmentEditables(EditableSet):
+    class Meta:
+        model = Assignment
+
+    name = Editable(label=&quot;Opdrachtnaam&quot;)
+    extra_info = Editable(
+        label=&quot;Opdrachtomschrijving&quot;,
+        widget=forms.Textarea(attrs={&quot;rows&quot;: 2}),
+    ){% endraw %}</code></pre>
+  <p>Van een opdracht zijn de naam en de omschrijving bewerkbaar, met dit label en dit invoerveld. Of een veld verplicht is en hoe lang het mag zijn, komt uit het model. Wie het mag bewerken, staat apart in <code>permissions.py</code>.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Een veld beschrijven">
+    <table>
+      <caption class="wies-visually-hidden">Een veld beschrijven</caption>
+      <thead>
+        <tr>
+          <th scope="col">Begrip</th>
+          <th scope="col">Wat het is</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>Editable</code>
+          </td>
+          <td>Eén bewerkbaar veld</td>
+        </tr>
+        <tr>
+          <td>
+            <code>EditableGroup</code>
+          </td>
+          <td>Velden die je samen bewerkt, zoals een periode met start- en einddatum</td>
+        </tr>
+        <tr>
+          <td>
+            <code>EditableSet</code>
+          </td>
+          <td>
+            Alle bewerkbare velden van één model, zoals <code>AssignmentEditables</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Sets bestaan voor Assignment, Colleague, Placement, Service en User. Een nieuw veld op zo'n model hoort hier, niet als los formulierveld.</p>
+  <h3>Waar de beschrijving gebruikt wordt</h3>
+  <ul>
+    <li>
+      <strong>Gegevens wijzigen in het zijpaneel.</strong> <code>assignment_edit_specs()</code> in <code>services/assignments.py</code> pakt de velden die jij mag bewerken; <code>build_combined_form_class()</code> maakt er één formulier van.
+    </li>
+    <li>
+      <strong>Een nieuwe opdracht.</strong> Zelfde aanpak, via <code>assignment_create_specs()</code>.
+    </li>
+    <li>
+      <strong>Het potloodje.</strong> <code>{% raw %}{{ inline_edit(obj, &quot;name&quot;) }}{% endraw %}</code> toont een waarde met een potlood; klikken wisselt naar een klein formulier. In de zijpanelen is dit vervangen door het bewerk-sheet; je ziet het nog in de onboarding.
+    </li>
+  </ul>
+  <h3>Wat er bij opslaan gebeurt</h3>
+  <ul>
+    <li>
+      Het object wordt opgezocht op <code>public_id</code>. Een object dat niet bestaat en een object waar je niet bij mag, krijgen precies hetzelfde antwoord. Zo kun je niet raden welke id's bestaan.
+    </li>
+    <li>
+      Een verborgen <code>_concurrency_token</code> en <code>select_for_update()</code> voorkomen dat twee mensen elkaars wijziging overschrijven. Bij een conflict krijg je het formulier terug met een waarschuwing.
+    </li>
+    <li>
+      <code>save_edit_specs()</code> in <code>services/inline_edit_save.py</code> slaat op en schrijft een audit-event. Dat gebeurt alleen voor sets met <code>audit_events = True</code> (Assignment en User); een plaatsingswijziging komt via <code>audit_mirror</code> als &quot;Team&quot;-event op de opdracht.
+    </li>
+  </ul>
+  <h3>Zo voeg je een bewerkbaar veld toe</h3>
+  <ol>
+    <li>
+      Voeg het veld toe aan het model, met migratie (zie <a href="{{ url('handboek-page', args=['samenwerken']) }}#zo-werken-we">Zo werken we</a>).
+    </li>
+    <li>
+      Declareer <code>foo = Editable(label=&quot;...&quot;)</code> op de <code>EditableSet</code> in <code>wies/core/editables/&lt;model&gt;.py</code>. Querysets voor keuzes geef je als callable mee, niet als queryset.
+    </li>
+    <li>
+      Moet een andere groep dit veld mogen bewerken dan het hele object? Voeg een regel toe in <code>permissions.py</code>: <code>rule(UPDATE, XEditables.foo, label=..., grants=[Grant(...)])</code>. Zonder regel geldt de regel van het model.
+    </li>
+    <li>
+      Heeft het veld een bijzondere weergave nodig? Maak een partial in <code>jinja2/forms/displays/</code>.
+    </li>
+    <li>
+      Toon het: <code>{% raw %}{{ inline_edit(obj, &quot;foo&quot;) }}{% endraw %}</code>, of voeg het toe aan <code>assignment_edit_specs()</code> en het sheet-template.
+    </li>
+    <li>
+      Test het met <code>post_inline_edit()</code> uit <code>tests/inline_edit_helpers.py</code>. Die doet eerst een GET om het concurrency-token op te halen; een kale POST faalt.
+    </li>
+  </ol>
+  <p>Achtergrond: <code>features/inline-editing.md</code>. Let op: dat document loopt op een paar punten achter. <code>AssignmentCreateForm</code> en <code>RvoFormMixin</code> bestaan niet meer, en de weergaves staan in <code>jinja2/forms/displays/</code>, niet in <code>rvo/</code>.</p>
+  <h2 id="rollen-en-rechten">Rollen en rechten</h2>
+  <p>Rechten worden gecontroleerd op drie niveaus: de pagina, het object en het veld. De regels staan op één plek, <code>wies/core/permissions.py</code>, en de rollenmatrix op <code>/beheer/rollen/</code> wordt daar direct uit opgebouwd. Achtergrond: <code>docs/roles.md</code>.</p>
+  <h3>De rollen</h3>
+  <p>Een rol wordt opgeslagen onder een <strong>sleutel</strong> (<code>Group.name</code>); wat je op het scherm ziet is een label (<code>role_label()</code> in <code>roles.py</code>). Match in code altijd op de sleutel. De Applicatiebeheerder is geen groep: wie die rol heeft, staat in de omgevingsvariabele <code>STAFF_EMAILS</code>. Wat elke rol mag, staat in de matrix hieronder.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="De rollen">
+    <table>
+      <caption class="wies-visually-hidden">De rollen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Rol</th>
+          <th scope="col">Sleutel</th>
+          <th scope="col">Staat in</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gebruikersbeheerder</td>
+          <td>
+            <code>user_admin</code>
+          </td>
+          <td>Django-groep</td>
+        </tr>
+        <tr>
+          <td>Business Manager</td>
+          <td>
+            <code>business_manager</code>
+          </td>
+          <td>Django-groep</td>
+        </tr>
+        <tr>
+          <td>Consultant</td>
+          <td>
+            <code>consultant</code>
+          </td>
+          <td>Django-groep</td>
+        </tr>
+        <tr>
+          <td>Applicatiebeheerder</td>
+          <td>
+            <code>staff</code>
+          </td>
+          <td>
+            <code>STAFF_EMAILS</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Daarnaast zijn er rechten die je krijgt door je <strong>relatie</strong> met een object, niet door een rol. Iedereen mag zijn eigen profiel bewerken (<code>SELF</code>). Wie op een opdracht geplaatst is, mag de naam en de extra informatie ervan bewerken (<code>PLACED</code>), en de taken van de eigen rol (<code>PLACED_ON_SERVICE</code>).</p>
+  <h3>Wat elke rol mag</h3>
+  <p>Dit is dezelfde matrix als op <code>/beheer/rollen/</code> in de app, gegenereerd met <code>build_matrix()</code> uit <code>wies/core/services/role_matrix.py</code>. Heb je meer rollen, dan mag je alles wat in die kolommen staat. &quot;Ongeacht je rol&quot; betekent dat het over jezelf gaat, over je eigen gegevens of over een opdracht waarop je geplaatst bent. De pagina in de app wordt live uit de regels gebouwd en wint als deze tabel achterloopt.</p>
+  <h3>Wat elke rol mag: opdrachten</h3>
+  <p>Bewerken kan alleen bij opdrachten uit Wies, niet bij opdrachten uit OTYS.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat elke rol mag: opdrachten">
+    <table>
+      <caption class="wies-visually-hidden">Wat elke rol mag: opdrachten</caption>
+      <thead>
+        <tr>
+          <th scope="col">Handeling</th>
+          <th scope="col">Consultant</th>
+          <th scope="col">Business Manager</th>
+          <th scope="col">Gebruikersbeheerder</th>
+          <th scope="col">Applicatiebeheerder</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Opdracht wijzigen</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Teamlid wijzigen</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Plaatsing wijzigen</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Opdracht verwijderen</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Naam van een opdracht wijzigen (waarop je geplaatst bent, ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Naam van een opdracht wijzigen (van een ander)</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Opdrachtomschrijving wijzigen (waarop je geplaatst bent, ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Opdrachtomschrijving wijzigen (van een ander)</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Taken wijzigen (je eigen plaatsing, ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Taken wijzigen (van een ander)</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Wat elke rol mag: zichtbaarheid</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat elke rol mag: zichtbaarheid">
+    <table>
+      <caption class="wies-visually-hidden">Wat elke rol mag: zichtbaarheid</caption>
+      <thead>
+        <tr>
+          <th scope="col">Handeling</th>
+          <th scope="col">Consultant</th>
+          <th scope="col">Business Manager</th>
+          <th scope="col">Gebruikersbeheerder</th>
+          <th scope="col">Applicatiebeheerder</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Eigen afgelopen plaatsing zien (ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Afgelopen plaatsing van een collega zien</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Afgelopen opdracht op het profiel van een Business Manager zien</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Business management openen</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Uren per week van een geplaatste collega zien</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Wat elke rol mag: gebruikers en collega's</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat elke rol mag: gebruikers en collega's">
+    <table>
+      <caption class="wies-visually-hidden">Wat elke rol mag: gebruikers en collega's</caption>
+      <thead>
+        <tr>
+          <th scope="col">Handeling</th>
+          <th scope="col">Consultant</th>
+          <th scope="col">Business Manager</th>
+          <th scope="col">Gebruikersbeheerder</th>
+          <th scope="col">Applicatiebeheerder</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Collega wijzigen (je eigen, ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Collega wijzigen (van een ander)</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Gebruiker wijzigen (je eigen, ongeacht je rol)</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>Ja</td>
+        </tr>
+        <tr>
+          <td>Gebruiker wijzigen (van een ander)</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Contracturen van een collega zien</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Contracturen van een collega bijhouden</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>E-mailadres wijzigen met het potlood</td>
+          <td>–</td>
+          <td>–</td>
+          <td>–</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Gebruikers, labels, merken en rollen openen</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Gebruiker toevoegen en verwijderen</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>E-mailadres wijzigen in het gebruikersformulier</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+        <tr>
+          <td>Rollen toekennen</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+          <td>–</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Wat elke rol mag: applicatie</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat elke rol mag: applicatie">
+    <table>
+      <caption class="wies-visually-hidden">Wat elke rol mag: applicatie</caption>
+      <thead>
+        <tr>
+          <th scope="col">Handeling</th>
+          <th scope="col">Consultant</th>
+          <th scope="col">Business Manager</th>
+          <th scope="col">Gebruikersbeheerder</th>
+          <th scope="col">Applicatiebeheerder</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Statistieken en database zien</td>
+          <td>–</td>
+          <td>–</td>
+          <td>–</td>
+          <td>Ja</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Twee rijen vallen op. &quot;E-mailadres wijzigen met het potlood&quot; mag niemand: die regel heeft bewust geen grants, het e-mailadres verandert alleen via het gebruikersformulier. En de Applicatiebeheerder heeft geen functionele rechten; wie ook opdrachten moet bewerken, heeft daarnaast de rol Business Manager nodig.</p>
+  <p>Voeg je een regel toe in <code>permissions.py</code>, dan verschijnt hij vanzelf als rij in de matrix in de app. <code>test_role_matrix.py</code> bewaakt dat de pagina en de regels gelijk blijven. Deze tabel in de cursus moet je wel zelf bijwerken.</p>
+  <h3>Waar je het in de code tegenkomt</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Waar je het in de code tegenkomt">
+    <table>
+      <caption class="wies-visually-hidden">Waar je het in de code tegenkomt</caption>
+      <thead>
+        <tr>
+          <th scope="col">Niveau</th>
+          <th scope="col">Hoe</th>
+          <th scope="col">Waar</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Hele sectie</td>
+          <td>
+            Decorators <code>staff_required</code>, <code>business_management_access_required</code>, <code>user_admin_required</code>; sturen door naar <code>/geen-toegang/</code>
+          </td>
+          <td>
+            <code>roles.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Lijst- en aanmaakpagina</td>
+          <td>
+            Django-permissies: <code>@permission_required(&quot;core.change_label&quot;, raise_exception=True)</code> of <code>PermissionRequiredMixin</code>
+          </td>
+          <td>
+            <code>views.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Object en veld</td>
+          <td>
+            <code>has_permission(verb, obj, user, field=None)</code>
+          </td>
+          <td>
+            <code>permission_engine.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Regels zelf</td>
+          <td>
+            <code>rule(verb, target, grants=[Grant(holder, scope)], requires=...)</code>, met holders <code>Role(...)</code> en <code>Anyone()</code>, scopes <code>OWN</code>, <code>SELF</code>, <code>PLACED</code>, <code>PLACED_ON_SERVICE</code>, <code>ANY</code> en de voorwaarde <code>WIES_SOURCED</code>
+          </td>
+          <td>
+            <code>permissions.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Wat iemand mag zien</td>
+          <td>
+            <code>evaluate_placement_visibility()</code>, <code>evaluate_assignment_visibility()</code>; in lijsten <code>filter_visible_placements()</code>
+          </td>
+          <td>
+            <code>visibility_rules.py</code>, <code>services/placements.py</code>
+          </td>
+        </tr>
+        <tr>
+          <td>Menu en navigatie</td>
+          <td>
+            Template-vlaggen <code>show_bm_page</code>, <code>show_user_admin_pages</code>, <code>show_staff_pages</code>
+          </td>
+          <td>
+            <code>visibility_rules.py</code>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p><code>has_permission</code> zoekt eerst een regel voor het specifieke veld, daarna voor het model. Een anonieme gebruiker krijgt altijd <code>False</code>.</p>
+  <h3>Zichtbaarheid is iets anders dan bewerken</h3>
+  <p>Een lopende plaatsing is voor iedereen zichtbaar. Een beëindigde of toekomstige plaatsing ziet alleen de collega zelf of een business manager. Die controle gebeurt grotendeels per rij in Python, niet in de queryset. Bouw je een nieuwe lijst, gebruik dan de bestaande functies in plaats van zelf te filteren.</p>
+  <h3>Drie dingen die je anders op de harde manier leert</h3>
+  <ul>
+    <li>
+      <code>permissions.py</code> wordt nergens geïmporteerd om iets te gebruiken. Het vult een register zodra <code>CoreConfig.ready()</code> in <code>apps.py</code> het importeert. Een regel die je elders definieert, bestaat dus niet.
+    </li>
+    <li>
+      Op <code>STAFF_EMAILS</code> staan geeft geen functionele rechten. Een applicatiebeheerder die ook opdrachten moet bewerken, heeft daarnaast de rol Business Manager nodig.
+    </li>
+    <li>
+      Heeft de laatste gebruikersbeheerder zijn eigen rol afgepakt? Zet <code>INITIAL_USER_EMAIL</code>: <code>ensure_initial_user</code> geeft dat account bij elke start alle rollen. Haal de variabele daarna weer weg.
+    </li>
+  </ul>
+  <h2 id="een-request">Een request</h2>
+  <p>Dezelfde view levert een hele pagina of alleen een fragment, afhankelijk van de htmx-headers. Volg één voorbeeld: je opent een opdracht in het zijpaneel en wijzigt de gegevens.</p>
+  <h3>Openen</h3>
+  <ol>
+    <li>
+      Een kaart in <code>parts/assignment_card_rows.html</code> heeft <code>{% raw %}hx-get=&quot;{{ assignment.panel_url }}&quot;{% endraw %}</code> en <code>hx-target=&quot;#side-panel-content&quot;</code>. De kaart heeft ook een href, zodat ctrl-klik een nieuw tabblad opent; hx_link_guard.js voorkomt dat een gewone klik wegnavigeert. De URL is de lijst-URL met <code>?opdracht=&lt;uuid&gt;</code>.
+    </li>
+    <li>
+      <code>LoginRequiredMiddleware</code> controleert of je bent ingelogd; elke view is standaard afgeschermd. Opt-out kan alleen met <code>@login_not_required</code>.
+    </li>
+    <li>
+      <code>config/urls.py</code> stuurt <code>/opdrachten/</code> naar <code>AssignmentListView</code> in <code>views.py</code>.
+    </li>
+    <li>
+      <code>get_context_data</code> leest de paneel-parameters (<code>PANEL_PARAMS</code>: <code>collega</code>, <code>opdracht</code>, <code>aanvraag</code>, <code>bewerken</code>, <code>teamlid</code>, ...) en zoekt het object op met <code>_resolve_panel_object()</code>, op <code>public_id</code>.
+    </li>
+    <li>
+      <code>_build_assignment_panel_data()</code> bepaalt onder meer <code>user_can_edit</code>, via <code>has_permission</code>.
+    </li>
+    <li>
+      <code>get_template_names</code> ziet de header <code>HX-Target: side-panel-content</code> en rendert alleen <code>parts/assignment_panel_content.html</code>. htmx zet dat in het paneel.
+    </li>
+  </ol>
+  <p>Zonder htmx, bijvoorbeeld als je de URL met <code>?opdracht=</code> direct opent, rendert dezelfde view de hele pagina met het paneel al open. Zo werken links en de terugknop gewoon.</p>
+  <h3>Wijzigen</h3>
+  <ol start="7">
+    <li>
+      De knop &quot;Gegevens wijzigen&quot; doet een <code>hx-get</code> naar dezelfde URL met <code>&amp;bewerken=1</code>. Nu wordt <code>parts/assignment_edit_panel_content.html</code> gerenderd, met een formulier uit <code>build_combined_form_class()</code>: alleen de velden die jij mag bewerken.
+    </li>
+    <li>
+      Opslaan doet een <code>hx-post</code> naar <code>/opdracht/&lt;uuid&gt;/bewerken/</code> (<code>assignment_edit_view</code>, <code>@require_POST</code>). Mag je geen enkel veld bewerken, dan volgt <code>403</code>.
+    </li>
+    <li>
+      Ongeldig? Het sheet komt terug met de fouten erin, gekoppeld via <code>wire_field_errors</code>.
+    </li>
+    <li>
+      Geldig? In <code>transaction.atomic()</code> slaat <code>save_edit_specs()</code> op en schrijft het audit-event. Het antwoord is een <code>204</code> met de header <code>HX-Location</code>; htmx haalt dan het gewone paneel opnieuw op, met een succesmelding.
+    </li>
+  </ol>
+  <h3>Welke response bij welke request</h3>
+  <p>Er is geen <code>django-htmx</code>; views lezen de headers zelf.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Welke response bij welke request">
+    <table>
+      <caption class="wies-visually-hidden">Welke response bij welke request</caption>
+      <thead>
+        <tr>
+          <th scope="col">Request</th>
+          <th scope="col">Response</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Gewone browser-request</td>
+          <td>
+            Hele pagina (<code>placements.html</code>, <code>assignments.html</code>, ...)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>HX-Request</code> met <code>HX-Target: side-panel-content</code>
+          </td>
+          <td>Alleen de paneelinhoud</td>
+        </tr>
+        <tr>
+          <td>
+            <code>HX-Request</code> met <code>?pagina=</code>
+          </td>
+          <td>Alleen de volgende kaarten</td>
+        </tr>
+        <tr>
+          <td>
+            <code>HX-Request</code> zonder bijzonder doel
+          </td>
+          <td>
+            Filters en tabel (<code>parts/filter_and_table_container.html</code>)
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Responses sturen htmx bij met <code>HX-Redirect</code>, <code>HX-Location</code>, <code>HX-Retarget</code> en <code>HX-Trigger</code>. Een voorbeeld van dat laatste: na een inline edit start <code>HX-Trigger-After-Swap: inline-edit-saved</code> de bevestigingsmelding.</p>
+  </nldd-rich-text>
+{% endblock footer_content %}

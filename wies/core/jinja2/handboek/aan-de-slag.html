@@ -1,0 +1,271 @@
+{# AUTO-GENERATED FROM docs/handboek/aan-de-slag.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Aan de slag · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Aan de slag</h1>
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <p>Nieuw in het team, of gewoon benieuwd hoe Wies onder de motorkap werkt? Dan zit je hier goed. Lees de drie techniekpagina's op volgorde: elke pagina bouwt voort op de vorige.</p>
+  <ul>
+    <li>
+      Deze pagina, <strong>Aan de slag</strong>: wat Wies is en hoe je het lokaal draait.
+    </li>
+    <li>
+      <a href="{{ url('handboek-page', args=['de-code']) }}">De code</a>: hoe de code in elkaar zit.
+    </li>
+    <li>
+      <a href="{{ url('handboek-page', args=['samenwerken']) }}">Samenwerken</a> bevat de spelregels: testen, valkuilen en hoe we werken.
+    </li>
+    <li>
+      Sluit af met de <a href="{{ url('handboek-page', args=['samenwerken']) }}#oefenopdrachten">oefenopdrachten</a>: doe ze echt; alleen lezen blijft niet hangen.
+    </li>
+  </ul>
+  <p>Na afloop kun je zelf een bewerkbaar veld toevoegen, een modelwijziging met migratie doorvoeren en een PR openen die in één keer door de review komt.</p>
+  <p>Klopt er iets niet meer? De code is de bron van waarheid. Pas dit handboek aan in dezelfde PR als de code.</p>
+  <h2 id="wies-in-het-kort">Wies in het kort</h2>
+  <p>Wies laat zien welke collega op welke opdracht zit, in welke rol en wanneer. Het is een interne tool van ODI (Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie): collega's zoeken elkaar op, business managers beheren hun opdrachten en de bezetting, en gebruikersbeheerders beheren accounts en labels.</p>
+  <p>Een deel van de opdrachten wordt in Wies zelf aangemaakt (<code>source=&quot;wies&quot;</code>). Een ander deel komt via een synchronisatie uit OTYS, het systeem van de business managers voor het matchen consultants aan opdrachten(<code>wies/core/services/otys.py</code>, <code>sync.py</code>). Geïmporteerde opdrachten zijn in Wies alleen-lezen, ook voor business managers.</p>
+  <p>Wies kent vier rollen: Consultant, Business Manager, Gebruikersbeheerder en Applicatiebeheerder. Wat elke rol mag, staat in <a href="{{ url('handboek-page', args=['de-code']) }}#rollen-en-rechten">Rollen en rechten</a>.</p>
+  <h3>Begrippen</h3>
+  <p>De code is Engels, de app Nederlands, en de vertaling is niet altijd letterlijk.</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Begrippen">
+    <table>
+      <caption class="wies-visually-hidden">Begrippen</caption>
+      <thead>
+        <tr>
+          <th scope="col">In de app</th>
+          <th scope="col">In de code</th>
+          <th scope="col">Wat het is</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>opdracht</td>
+          <td>
+            <code>Assignment</code>
+          </td>
+          <td>
+            De klus voor een opdrachtgever, met een periode en een business manager (<code>owner</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>rol</td>
+          <td>
+            <code>Service</code>
+          </td>
+          <td>
+            Het werk dat een opdracht nodig heeft, met uren per week en status <code>CONCEPT</code>, <code>OPEN</code> of <code>GESLOTEN</code>
+          </td>
+        </tr>
+        <tr>
+          <td>aanvraag</td>
+          <td>
+            <code>Service</code> met status <code>OPEN</code> zonder plaatsing
+          </td>
+          <td>Een rol waar nog niemand op staat</td>
+        </tr>
+        <tr>
+          <td>plaatsing (in een team: teamlid)</td>
+          <td>
+            <code>Placement</code>
+          </td>
+          <td>Een collega op een rol</td>
+        </tr>
+        <tr>
+          <td>collega</td>
+          <td>
+            <code>Colleague</code>
+          </td>
+          <td>
+            De persoon; kan gekoppeld zijn aan een <code>User</code>
+          </td>
+        </tr>
+        <tr>
+          <td>gebruiker</td>
+          <td>
+            <code>rijksauth.User</code>
+          </td>
+          <td>Het account, inlog via e-mail en OIDC; alleen zo genoemd onder Beheer</td>
+        </tr>
+        <tr>
+          <td>opdrachtgever</td>
+          <td>
+            <code>OrganizationUnit</code>
+          </td>
+          <td>
+            Een overheidsorganisatie, in een boomstructuur (<code>parent</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>merk</td>
+          <td>
+            <code>Suborganization</code>
+          </td>
+          <td>De suborganisatie waaronder een collega werkt</td>
+        </tr>
+        <tr>
+          <td>label in een categorie</td>
+          <td>
+            <code>Label</code>, <code>LabelCategory</code>
+          </td>
+          <td>Kenmerken op een collega, zoals Expertise</td>
+        </tr>
+        <tr>
+          <td>contractperiode</td>
+          <td>
+            <code>ContractPeriod</code>
+          </td>
+          <td>Uren per week van een collega over een periode</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>De ruggengraat van het domein is één keten: <strong>opdracht → rol → plaatsing → collega</strong>. Bijna elk scherm is een andere blik op die keten.</p>
+  <h2 id="wies-op-je-eigen-laptop">Wies op je eigen laptop</h2>
+  <p>Alles draait in Docker, dus op je laptop heb je alleen wat gereedschap nodig. Na deze stappen draait Wies op http://localhost:8080, gevuld met nepdata.</p>
+  <p>
+    <strong>Installeer eerst:</strong> <a href="https://www.docker.com/" target="_blank">Docker<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>, <a href="https://github.com/casey/just" target="_blank">just<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>, <a href="https://docs.astral.sh/uv/" target="_blank">uv<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>, <a href="https://pre-commit.com/" target="_blank">pre-commit<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a> en Node.js 22 of hoger (alleen voor de JavaScript-tests).
+  </p>
+  <ol>
+    <li>
+      Clone de repo en draai <code>just setup</code>. Dat installeert de Python-pakketten, maakt <code>.env</code> aan uit <code>.env.local.example</code>, bouwt de containers, migreert de database en laadt een kleine set dummydata (<code>load_dummy_data --profile base</code>, werkt offline).
+    </li>
+    <li>
+      Open <code>.env</code> en zet jezelf erin: <code>INITIAL_USER_FIRSTNAME</code>, <code>INITIAL_USER_LASTNAME</code>, <code>INITIAL_USER_EMAIL</code> en je e-mailadres in <code>STAFF_EMAILS</code>.
+    </li>
+    <li>
+      Geen Keycloak-gegevens of geen VPN? Zet <code>SKIP_OIDC=true</code>. Dan logt de <code>AutoLoginMiddleware</code> je automatisch in, zonder SSO.
+    </li>
+    <li>
+      Draai <code>just setup</code> opnieuw zodat je eerste gebruiker wordt aangemaakt, en start daarna met <code>just up</code>.
+    </li>
+    <li>
+      Installeer de git-hooks met <code>just pre-commit-install</code>.
+    </li>
+  </ol>
+  <p>Wil je de app voelen met realistische aantallen? <code>just load-full-data</code> synchroniseert de echte organisatiestructuur en genereert een grote dataset. Daar heb je netwerk voor nodig.</p>
+  <h3>Handige commando's</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Handige commando's">
+    <table>
+      <caption class="wies-visually-hidden">Handige commando's</caption>
+      <thead>
+        <tr>
+          <th scope="col">Commando</th>
+          <th scope="col">Wat het doet</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>just up</code> / <code>just down</code>
+          </td>
+          <td>Containers starten en stoppen (postgres, minio, django, db_worker)</td>
+        </tr>
+        <tr>
+          <td>
+            <code>just test</code>
+          </td>
+          <td>
+            Alle tests: Django (pytest in Docker) en JavaScript (<code>node --test</code>)
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>just test django</code>
+          </td>
+          <td>Alleen de Django-tests</td>
+        </tr>
+        <tr>
+          <td>
+            <code>just manage &lt;cmd&gt;</code>
+          </td>
+          <td>
+            Elk <code>manage.py</code>-commando in de container, bv. <code>just manage makemigrations</code>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <code>just lint</code> / <code>just format</code>
+          </td>
+          <td>Ruff controleren / automatisch repareren en formatteren</td>
+        </tr>
+        <tr>
+          <td>
+            <code>just pre-commit</code>
+          </td>
+          <td>Alle pre-commit-hooks over de hele repo</td>
+        </tr>
+        <tr>
+          <td>
+            <code>just vendor</code>
+          </td>
+          <td>
+            NLDD en htmx uit <code>package-lock.json</code> naar <code>wies/core/static/vendor/</code> kopiëren
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>Wat er allemaal draait</h3>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Wat er allemaal draait">
+    <table>
+      <caption class="wies-visually-hidden">Wat er allemaal draait</caption>
+      <thead>
+        <tr>
+          <th scope="col">Service</th>
+          <th scope="col">Poort</th>
+          <th scope="col">Rol</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <code>django</code>
+          </td>
+          <td>8080</td>
+          <td>De app zelf, met je checkout als volume gemount: wijzigingen zijn direct live</td>
+        </tr>
+        <tr>
+          <td>
+            <code>postgres</code>
+          </td>
+          <td>5432</td>
+          <td>De database</td>
+        </tr>
+        <tr>
+          <td>
+            <code>minio</code>
+          </td>
+          <td>9000 (API), 9001 (console)</td>
+          <td>S3-compatibele objectopslag voor lokaal ontwikkelen; in productie levert ZAD de objectopslag</td>
+        </tr>
+        <tr>
+          <td>
+            <code>db_worker</code>
+          </td>
+          <td>geen</td>
+          <td>Achtergrondtaken (organisatiesync, startpagina publiceren); leest de tabel Task en gebruikt .env.worker</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  </nldd-rich-text>
+{% endblock footer_content %}

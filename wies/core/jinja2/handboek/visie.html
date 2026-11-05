@@ -1,0 +1,49 @@
+{# AUTO-GENERATED FROM docs/handboek/visie.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Visie · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Visie</h1>
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <h2 id="wat-wies-wil-zijn">Wat Wies wil zijn</h2>
+  <ul>
+    <li>
+      <strong>Kennis delen begint bij weten wie waar zit.</strong> Wies maakt zichtbaar wie aan welke opdracht werkt, zodat collega's elkaar sneller vinden.
+    </li>
+    <li>
+      <strong>Zo min mogelijk gegevens.</strong> We bewaren alleen wat nodig is, en tonen collega's alleen lopende opdrachten.
+    </li>
+    <li>
+      <strong>Voor iedereen bruikbaar.</strong> Wies voldoet aan WCAG 2.2 niveau AA. Toegankelijkheid is geen bijzaak maar onderdeel van het werk.
+    </li>
+  </ul>
+  <h2 id="hoe-we-bouwen">Hoe we bouwen</h2>
+  <ul>
+    <li>
+      <strong>Kort cyclisch werken.</strong> We bouwen in korte iteraties en valideren continu met gebruikers. Zo weten we snel of iets echt helpt, en sturen we bij voordat het groot wordt.
+    </li>
+    <li>
+      <strong>Open, tenzij.</strong> De broncode is openbaar onder de EUPL 1.2-licentie. Iedereen kan meekijken, meedenken en hergebruiken.
+    </li>
+    <li>
+      <strong>Bouwen op wat er al is.</strong> We gebruiken open standaarden, het <a href="https://design.digitaledienst.overheid.nl/" target="_blank">designsysteem van de Nederlandse Digitale Dienst (NLDD)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a> en de inlogdienst van het Rijk, en draaien in een overheidsdatacenter.
+    </li>
+    <li>
+      <strong>Klein en eenvoudig.</strong> Liever weinig functies die goed werken.
+    </li>
+  </ul>
+  <h2 id="open-source">Open source</h2>
+  <p>
+    De code staat op <a href="https://github.com/RijksICTGilde/wies" target="_blank">GitHub<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a> onder de EUPL 1.2. Vragen, fouten en ideeën kun je melden als issue. Wil je zelf iets bijdragen? Begin dan bij <a href="{{ url('handboek-page', args=['aan-de-slag']) }}">Aan de slag</a>: daar en op de pagina's erna staat hoe de code in elkaar zit en hoe we werken.
+  </p>
+  </nldd-rich-text>
+{% endblock footer_content %}
