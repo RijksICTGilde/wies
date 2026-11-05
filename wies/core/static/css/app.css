@@ -71,6 +71,13 @@ body {
   margin-top: var(--primitives-space-16, 16px);
 }
 
+/* The handbook menu sits in the sidebar, which below lg becomes a sheet with no
+   button to open it: that button lives in the filter toolbar. The same menu then
+   shows inline above the text; on lg it would repeat the sidebar. */
+nldd-sidebar-section:not([collapsed]) .wies-handboek-menu {
+  display: none;
+}
+
 /* The "Filter" button only makes sense while the sidebar is a sheet. On lg the
    sidebar is an always-visible aside, so hide the whole toolbar item — hiding
    only the button would leave the item's slot taking space in the toolbar. */

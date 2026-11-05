@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 412" width="100%" role="img" aria-labelledby="hb-er-title hb-er-desc" style="max-width:760px;height:auto">
+<title id="hb-er-title">Het datamodel van Wies</title>
+<desc id="hb-er-desc">De kern is de keten Assignment (opdracht), Service (rol), Placement (plaatsing) en Colleague (collega). Een opdracht hangt aan opdrachtgevers (OrganizationUnit), een rol aan een Skill, een collega aan een User, labels, een merk en contractperiodes.</desc>
+<style>
+.hb-t{fill:var(--semantics-content-color,#1f2937);font:600 13px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-q{fill:var(--semantics-content-secondary-color,#4b5563);font:11.5px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-g{fill:var(--semantics-content-color,#1f2937);font:600 13px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-box{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-ext{fill:var(--semantics-surfaces-tinted-background-color,#f1f3f5);stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-core{fill:var(--semantics-surfaces-accent-tinted-background-color,#e5eefa);stroke:var(--semantics-content-accent-color,#154273);stroke-width:2}
+.hb-grp{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1;stroke-dasharray:4 4}
+.hb-line{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-arrow{fill:var(--semantics-content-secondary-color,#4b5563)}
+</style>
+<defs><marker id="hb-er-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="hb-arrow" d="M0 0L10 5L0 10z"/></marker></defs>
+<path class="hb-line" d="M104 160V104"/>
+<path class="hb-line" d="M288 160V104" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M656 160V104" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M208 196H184" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M392 196H368" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M552 196H576" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M472 288V260H616V232" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M288 288V260H472"/>
+<path class="hb-line" d="M656 288V232" marker-end="url(#hb-er-arrow)"/>
+<path class="hb-line" d="M208 324H184" marker-end="url(#hb-er-arrow)"/>
+<text class="hb-q" x="112" y="136">M2M (primair/betrokken)</text>
+<text class="hb-q" x="296" y="136">skill</text>
+<text class="hb-q" x="664" y="136">1:1</text>
+<text class="hb-q" x="480" y="280">contract_periods</text>
+<text class="hb-q" x="296" y="280">labels (M2M)</text>
+<text class="hb-q" x="664" y="264">merk</text>
+<rect class="hb-box" x="24" y="32" width="160" height="72" rx="8"/>
+<text class="hb-t" x="104.0" y="56" text-anchor="middle">OrganizationUnit</text>
+<text class="hb-q" x="104.0" y="72" text-anchor="middle">opdrachtgever; boom</text>
+<text class="hb-q" x="104.0" y="88" text-anchor="middle">via parent</text>
+<rect class="hb-box" x="208" y="32" width="160" height="72" rx="8"/>
+<text class="hb-t" x="288.0" y="56" text-anchor="middle">Skill</text>
+<text class="hb-q" x="288.0" y="72" text-anchor="middle">vaardigheid; ook</text>
+<text class="hb-q" x="288.0" y="88" text-anchor="middle">M2M met Colleague</text>
+<rect class="hb-box" x="576" y="32" width="160" height="72" rx="8"/>
+<text class="hb-t" x="656.0" y="56" text-anchor="middle">User</text>
+<text class="hb-q" x="656.0" y="72" text-anchor="middle">rijksauth: account,</text>
+<text class="hb-q" x="656.0" y="88" text-anchor="middle">inlog op e-mail</text>
+<rect class="hb-core" x="24" y="160" width="160" height="72" rx="8"/>
+<text class="hb-t" x="104.0" y="184" text-anchor="middle">Assignment</text>
+<text class="hb-q" x="104.0" y="200" text-anchor="middle">opdracht; owner =</text>
+<text class="hb-q" x="104.0" y="216" text-anchor="middle">BM (een Colleague)</text>
+<rect class="hb-core" x="208" y="160" width="160" height="72" rx="8"/>
+<text class="hb-t" x="288.0" y="184" text-anchor="middle">Service</text>
+<text class="hb-q" x="288.0" y="200" text-anchor="middle">rol; uren per week,</text>
+<text class="hb-q" x="288.0" y="216" text-anchor="middle">status</text>
+<rect class="hb-core" x="392" y="160" width="160" height="72" rx="8"/>
+<text class="hb-t" x="472.0" y="184" text-anchor="middle">Placement</text>
+<text class="hb-q" x="472.0" y="200" text-anchor="middle">plaatsing: een</text>
+<text class="hb-q" x="472.0" y="216" text-anchor="middle">collega op een rol</text>
+<rect class="hb-core" x="576" y="160" width="160" height="72" rx="8"/>
+<text class="hb-t" x="656.0" y="184" text-anchor="middle">Colleague</text>
+<text class="hb-q" x="656.0" y="200" text-anchor="middle">collega: de persoon</text>
+<text class="hb-q" x="656.0" y="216" text-anchor="middle">met labels, skills</text>
+<rect class="hb-box" x="24" y="288" width="160" height="72" rx="8"/>
+<text class="hb-t" x="104.0" y="312" text-anchor="middle">LabelCategory</text>
+<text class="hb-q" x="104.0" y="328" text-anchor="middle">bv. Expertise</text>
+<rect class="hb-box" x="208" y="288" width="160" height="72" rx="8"/>
+<text class="hb-t" x="288.0" y="312" text-anchor="middle">Label</text>
+<text class="hb-q" x="288.0" y="328" text-anchor="middle">kenmerk op een</text>
+<text class="hb-q" x="288.0" y="344" text-anchor="middle">collega</text>
+<rect class="hb-box" x="392" y="288" width="160" height="72" rx="8"/>
+<text class="hb-t" x="472.0" y="312" text-anchor="middle">ContractPeriod</text>
+<text class="hb-q" x="472.0" y="328" text-anchor="middle">uren per week</text>
+<text class="hb-q" x="472.0" y="344" text-anchor="middle">per periode</text>
+<rect class="hb-box" x="576" y="288" width="160" height="72" rx="8"/>
+<text class="hb-t" x="656.0" y="312" text-anchor="middle">Suborganization</text>
+<text class="hb-q" x="656.0" y="328" text-anchor="middle">merk waaronder een</text>
+<text class="hb-q" x="656.0" y="344" text-anchor="middle">collega werkt</text>
+<text class="hb-q" x="24" y="392">Een pijl wijst naar het model waar de ForeignKey naar verwijst; een lijn zonder pijl is many-to-many.</text>
+</svg>

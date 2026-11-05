@@ -1,0 +1,223 @@
+{# AUTO-GENERATED FROM docs/handboek/privacy-en-beveiliging.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Data, privacy en beveiliging · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [["gegevens", "Gegevens"], ["privacy", "Privacy"], ["bewaartermijnen", "Bewaartermijnen"], ["hosting", "Hosting"], ["inloggen", "Inloggen"], ["beveiliging", "Beveiliging"], ["toegankelijkheid", "Toegankelijkheid"]] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Data, privacy en beveiliging</h1>
+  {% with handboek_sections = [["gegevens", "Gegevens"], ["privacy", "Privacy"], ["bewaartermijnen", "Bewaartermijnen"], ["hosting", "Hosting"], ["inloggen", "Inloggen"], ["beveiliging", "Beveiliging"], ["toegankelijkheid", "Toegankelijkheid"]] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <p>Wies verwerkt persoonsgegevens van collega's. Daar gaan we zuinig mee om: we bewaren weinig, tonen nog minder, en laten onszelf regelmatig controleren.</p>
+  <h2 id="gegevens">Gegevens</h2>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Gegevens">
+    <table>
+      <caption class="wies-visually-hidden">Gegevens</caption>
+      <thead>
+        <tr>
+          <th scope="col">Gegeven</th>
+          <th scope="col">Waar het vandaan komt</th>
+          <th scope="col">Wie het ziet</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Naam en zakelijk e-mailadres</td>
+          <td>Gebruikersbeheer in Wies</td>
+          <td>Alle gebruikers</td>
+        </tr>
+        <tr>
+          <td>Inlog-id (OIDC-subject)</td>
+          <td>SSO Rijk, bij de eerste keer inloggen</td>
+          <td>Niemand in de app; alleen voor het inloggen</td>
+        </tr>
+        <tr>
+          <td>Labels en merk (bv. expertise)</td>
+          <td>De collega zelf of gebruikersbeheer</td>
+          <td>Alle gebruikers</td>
+        </tr>
+        <tr>
+          <td>Lopende plaatsingen en opdrachten</td>
+          <td>Wies zelf en OTYS</td>
+          <td>Alle gebruikers</td>
+        </tr>
+        <tr>
+          <td>Afgelopen en toekomstige plaatsingen</td>
+          <td>Wies zelf en OTYS</td>
+          <td>De collega zelf en business managers</td>
+        </tr>
+        <tr>
+          <td>Contracturen per periode, en daarmee de datum uit dienst</td>
+          <td>Gebruikersbeheer</td>
+          <td>Business managers en gebruikersbeheerders</td>
+        </tr>
+        <tr>
+          <td>Uren per week op een rol</td>
+          <td>Business managers</td>
+          <td>Business managers; bij een open aanvraag iedereen</td>
+        </tr>
+        <tr>
+          <td>Opdrachtgevers (overheidsorganisaties)</td>
+          <td>organisaties.overheid.nl</td>
+          <td>Alle gebruikers</td>
+        </tr>
+        <tr>
+          <td>Audit-log: wie wat wijzigde, inlogpogingen, rolwijzigingen, IP-adres, browser</td>
+          <td>Automatisch</td>
+          <td>Niemand in de app; alleen voor incidentonderzoek</td>
+        </tr>
+        <tr>
+          <td>Foutmeldingen: de fout met stacktrace, pagina en gebruiker</td>
+          <td>Automatisch, bij een fout in de app</td>
+          <td>Applicatiebeheerders; het teamkanaal op Mattermost krijgt alleen het soort fout en een link</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h2 id="privacy">Privacy</h2>
+  <p>Voor privacy, beveiligingsbeleid en regelgeving werken we samen met Patrick Keizer, CISO en privacy officer van ODI, die ons adviseert over beleid en de AVG.</p>
+  <ul>
+    <li>
+      De grondslag is gerechtvaardigd belang (AVG artikel 6, lid 1, sub f). Een pre-scan DPIA liet zien dat een volledige DPIA niet nodig is; we werken de pre-scan bij als nieuwe functies daarom vragen.
+    </li>
+    <li>
+      Collega's zien van elkaar alleen lopende opdrachten. Wat voorbij is of nog komt, ziet alleen de collega zelf en een business manager.
+    </li>
+    <li>De audit-log staat nooit in de app. Ook het e-mailadres in een logregel wordt nergens getoond.</li>
+    <li>Geen cookies of andere middelen om gedrag te volgen.</li>
+    <li>
+      Alle gegevens blijven in Nederland, in het Overheidsdatacenter Noord (ODC-Noord). We maken dagelijks een back-up en bewaren er maximaal zeven.
+    </li>
+    <li>
+      Opdrachten die uit OTYS komen, controleren business managers op vertrouwelijke informatie in de omschrijving, zodat die niet via Wies voor iedereen leesbaar wordt. Opdrachten die ze zelf invoeren, schrijven ze in het besef dat alle collega's ze kunnen lezen.
+    </li>
+    <li>
+      Wies hoeft niet gearchiveerd te worden als website: het is een applicatie achter een inlog. Dat is afgestemd met de CIO van BZK.
+    </li>
+    <li>
+      Je rechten als gebruiker staan in de <a href="{{ url('privacy') }}">privacyverklaring</a>.
+    </li>
+  </ul>
+  <h2 id="bewaartermijnen">Bewaartermijnen</h2>
+  <p>Hoe lang we wat bewaren, stemmen we af met de privacy officer en de business managers. Ons voorstel:</p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Bewaartermijnen">
+    <table>
+      <caption class="wies-visually-hidden">Bewaartermijnen</caption>
+      <thead>
+        <tr>
+          <th scope="col">Gegeven</th>
+          <th scope="col">Voorstel</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Naam en zakelijk e-mailadres</td>
+          <td>
+            Verwijderen bij uitdiensttreding; het profiel blijft daarna nog 3 maanden zichtbaar voor business managers, gelijk aan de termijn in de Active Directory van SSC-ICT
+          </td>
+        </tr>
+        <tr>
+          <td>Plaatsingen</td>
+          <td>
+            Niet verwijderen maar anonimiseren: de koppeling tussen persoon en opdracht wordt losgeknipt, zodat te zien blijft welke opdrachten voor welke opdrachtgevers zijn gedaan, zonder dat dat naar een persoon herleidbaar is
+          </td>
+        </tr>
+        <tr>
+          <td>Audit-log</td>
+          <td>
+            Niet anonimiseren of verwijderen bij uitdiensttreding, want dan verdwijnen de sporen die je bij een incident nodig hebt; bewaren voor een termijn van 12 tot 24 maanden, op basis van een risicoafweging zoals de BIO vraagt
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Anonimiseren heeft een tweede voordeel boven direct verwijderen: een vergissing is terug te draaien.</p>
+  <h2 id="hosting">Hosting</h2>
+  <p>
+    Wies draait in het Overheidsdatacenter Noord (ODC-Noord), op <a href="https://zad.rijksapp.nl/introductie" target="_blank">ZAD<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>: Zelfservice Applicatie Deployment, een deploymentplatform op Kubernetes dat het Digi Gilde zelf ontwikkelt. Ook ZAD is open source: <a href="https://github.com/RijksICTGilde/RIG-Cluster" target="_blank">RIG-Cluster op GitHub<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+  </p>
+  <ul>
+    <li>Uitrol gaat via GitOps met ArgoCD: wat in Git staat, wordt uitgerold.</li>
+    <li>Ontwikkelaars beheren deployments, back-ups en testomgevingen per branch zelf, via een portaal en een API.</li>
+    <li>Geheimen zoals wachtwoorden en sleutels staan versleuteld in Git, met SOPS en AGE.</li>
+    <li>
+      Per project levert ZAD een eigen PostgreSQL-database (CloudNativePG) en Keycloak, dat de inlog doorgeeft aan SSO Rijk.
+    </li>
+    <li>
+      Bestanden, zoals de startpagina, staan in S3-compatibele objectopslag van ZAD. Op productie is dat nog MinIO. ZAD vervangt MinIO door SeaweedFS, omdat MinIO niet meer wordt onderhouden; voor Wies verandert daarbij niets, want de app ziet dezelfde <code>OBJECT_STORE_*</code>-instellingen en dezelfde S3-koppeling.
+    </li>
+    <li>Er zijn gescheiden omgevingen voor test en productie, met TLS op alle verkeer van buiten.</li>
+  </ul>
+  <h2 id="inloggen">Inloggen</h2>
+  <p>
+    Collega's loggen in met hun rijksaccount via SSO Rijk, de inlogdienst voor rijksmedewerkers. Wies praat niet rechtstreeks met SSO Rijk: Keycloak zit ertussen als makelaar en is aan SSO Rijk gekoppeld. Wies spreekt met Keycloak via OpenID Connect (OIDC). Hoe SSO Rijk en Keycloak samenwerken, staat in het <a href="https://digihandboek.rijks.app/kennis/sso-rijk-keycloak/"
+    target="_blank">Digi Handboek<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+  </p>
+  <ol>
+    <li>Je klikt op inloggen. Wies stuurt je door naar Keycloak, en Keycloak naar SSO Rijk.</li>
+    <li>Je logt in met je rijksaccount. SSO Rijk geeft via Keycloak onder meer je naam en e-mailadres terug.</li>
+    <li>
+      Wies zoekt je account op. Bij de eerste keer koppelt Wies je vaste inlog-id (het OIDC-subject) aan het account dat een gebruikersbeheerder voor jouw e-mailadres heeft klaargezet. Daarna herkent Wies je aan dat inlog-id.
+    </li>
+    <li>
+      Heeft niemand een account voor je klaargezet, of is je e-mailadres niet bevestigd door SSO Rijk? Dan kom je niet binnen.
+    </li>
+  </ol>
+  <p>Een account dat al aan een inlog-id hangt, wordt nooit aan een ander inlog-id gekoppeld, ook niet bij hetzelfde e-mailadres. Zo kan niemand een account overnemen met een nagemaakt e-mailadres. Accounts aanmaken kan alleen voor e-mailadressen op een toegestaan domein (standaard <code>@rijksoverheid.nl</code> en <code>@minbzk.nl</code>, in te stellen met <code>ALLOWED_EMAIL_DOMAINS</code>). De code zit in <code>wies/rijksauth/</code>.</p>
+  <h2 id="beveiliging">Beveiliging</h2>
+  <ul>
+    <li>
+      Wies volgt de <a href="https://www.bio-overheid.nl/" target="_blank">Baseline Informatiebeveiliging Overheid (BIO2)<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>. Controles, zoals wie speciale rollen heeft op productie, leggen we vast in <a href="https://github.com/RijksICTGilde/wies/blob/main/docs/handboek/../bio/"
+    target="_blank">docs/bio<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+    </li>
+    <li>
+      Binnenkort laten we Wies testen met een penetratietest. De nadruk ligt op:
+      <ol>
+        <li>Autorisatie: kan iemand objecten of pagina's zien of wijzigen waar die geen recht op heeft?</li>
+        <li>Privacy van plaatsingen: zijn afgelopen en toekomstige plaatsingen echt afgeschermd?</li>
+        <li>Authenticatie: is de keten SSO Rijk, Keycloak, Wies als geheel veilig?</li>
+        <li>Lekken van persoonsgegevens via foutmeldingen of logging.</li>
+        <li>Het ZAD-platform: de API, de geheimen, de GitOps-uitrol en de scheiding tussen omgevingen.</li>
+      </ol>
+    </li>
+    <li>Inloggen gaat alleen via SSO Rijk. Wies bewaart geen wachtwoorden en heeft geen gedeelde accounts.</li>
+    <li>
+      Accounts zijn alleen op uitnodiging: een gebruikersbeheerder zet je e-mailadres klaar, en pas dan kun je inloggen.
+    </li>
+    <li>
+      Rechten worden per object en per veld gecontroleerd, niet alleen per pagina (zie <a href="{{ url('handboek-page', args=['de-code']) }}#rollen-en-rechten">Rollen en rechten</a>).
+    </li>
+    <li>Elke wijziging wordt door een tweede ontwikkelaar nagekeken (vier-ogenprincipe) en automatisch getest.</li>
+    <li>
+      Afhankelijkheden en de container worden bij elke wijziging en dagelijks gescand op bekende kwetsbaarheden (Trivy); Dependabot stelt updates voor.
+    </li>
+    <li>Wies laadt geen code van andere websites; de Content-Security-Policy staat het niet toe.</li>
+    <li>
+      Een kwetsbaarheid melden kan via ons <a href="{{ url('beveiliging') }}">beveiligingsbeleid</a>.
+    </li>
+  </ul>
+  <h2 id="toegankelijkheid">Toegankelijkheid</h2>
+  <ul>
+    <li>
+      Wies is onderzocht volgens WCAG 2.2, niveau AA, en heeft status A: voldoet volledig. De verklaring staat in het <a href="https://www.toegankelijkheidsverklaring.nl/register/29132"
+    target="_blank">register van toegankelijkheidsverklaringen<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+    </li>
+    <li>We draaien regelmatig loep, het toegankelijkheidsonderzoek van NLDD, over de hele app.</li>
+    <li>
+      Bij wijzigingen aan de interface toetsen we met het toetsenbord, een schermlezer en een automatische scan (axe), in licht en donker thema.
+    </li>
+  </ul>
+  </nldd-rich-text>
+{% endblock footer_content %}

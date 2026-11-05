@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 600" width="100%" role="img" aria-labelledby="hb-arch-title hb-arch-desc" style="max-width:760px;height:auto">
+<title id="hb-arch-title">Plattegrond van Wies</title>
+<desc id="hb-arch-desc">De browser draait htmx, de NLDD-webcomponenten en eigen JavaScript, en stuurt requests naar de Django-app. Daarin gaat een request via middleware en config/urls.py naar views.py, dat een Jinja2-template rendert. Onder de views liggen services, editables, permissions en models. Buiten de app staan de db_worker, Keycloak, de objectopslag en PostgreSQL.</desc>
+<style>
+.hb-t{fill:var(--semantics-content-color,#1f2937);font:600 13px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-q{fill:var(--semantics-content-secondary-color,#4b5563);font:11.5px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-g{fill:var(--semantics-content-color,#1f2937);font:600 13px var(--primitives-font-family-body,system-ui,sans-serif)}
+.hb-box{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-ext{fill:var(--semantics-surfaces-tinted-background-color,#f1f3f5);stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-core{fill:var(--semantics-surfaces-accent-tinted-background-color,#e5eefa);stroke:var(--semantics-content-accent-color,#154273);stroke-width:2}
+.hb-grp{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1;stroke-dasharray:4 4}
+.hb-line{fill:none;stroke:var(--semantics-content-secondary-color,#4b5563);stroke-width:1.25}
+.hb-arrow{fill:var(--semantics-content-secondary-color,#4b5563)}
+</style>
+<defs><marker id="hb-arch-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path class="hb-arrow" d="M0 0L10 5L0 10z"/></marker></defs>
+<rect class="hb-grp" x="24" y="16" width="712" height="124" rx="8"/><text class="hb-g" x="40" y="38">Browser</text>
+<rect class="hb-box" x="40" y="52" width="216" height="72" rx="8"/>
+<text class="hb-t" x="148.0" y="76" text-anchor="middle">htmx</text>
+<text class="hb-q" x="148.0" y="92" text-anchor="middle">haalt HTML-fragmenten op</text>
+<text class="hb-q" x="148.0" y="108" text-anchor="middle">en wisselt ze in (swap)</text>
+<rect class="hb-box" x="272" y="52" width="216" height="72" rx="8"/>
+<text class="hb-t" x="380.0" y="76" text-anchor="middle">NLDD-webcomponenten</text>
+<text class="hb-q" x="380.0" y="92" text-anchor="middle">nldd-*-elementen met</text>
+<text class="hb-q" x="380.0" y="108" text-anchor="middle">shadow DOM: het uiterlijk</text>
+<rect class="hb-box" x="504" y="52" width="216" height="72" rx="8"/>
+<text class="hb-t" x="612.0" y="76" text-anchor="middle">Eigen JS (static/js)</text>
+<text class="hb-q" x="612.0" y="92" text-anchor="middle">gedrag via data-action;</text>
+<text class="hb-q" x="612.0" y="108" text-anchor="middle">geen inline scripts (CSP)</text>
+<path class="hb-line" d="M300 140V196" marker-end="url(#hb-arch-arrow)"/><path class="hb-line" d="M460 196V140" marker-end="url(#hb-arch-arrow)"/>
+<text class="hb-q" x="308" y="172">request met HX-headers</text><text class="hb-q" x="468" y="172">HTML: pagina of fragment</text>
+<rect class="hb-grp" x="24" y="196" width="712" height="228" rx="8"/><text class="hb-g" x="40" y="218">Django-app (wies/core)</text>
+<path class="hb-line" d="M192 268H216" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M368 268H392" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M544 268H568" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M468 304V320M116 320H644"/>
+<path class="hb-line" d="M116 320V336" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M292 320V336" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M468 320V336" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M644 320V336" marker-end="url(#hb-arch-arrow)"/>
+<rect class="hb-box" x="40" y="232" width="152" height="72" rx="8"/>
+<text class="hb-t" x="116.0" y="256" text-anchor="middle">Middleware</text>
+<text class="hb-q" x="116.0" y="272" text-anchor="middle">login verplicht,</text>
+<text class="hb-q" x="116.0" y="288" text-anchor="middle">CSP-headers</text>
+<rect class="hb-box" x="216" y="232" width="152" height="72" rx="8"/>
+<text class="hb-t" x="292.0" y="256" text-anchor="middle">config/urls.py</text>
+<text class="hb-q" x="292.0" y="272" text-anchor="middle">URL naar view,</text>
+<text class="hb-q" x="292.0" y="288" text-anchor="middle">op public_id (UUID)</text>
+<rect class="hb-box" x="392" y="232" width="152" height="72" rx="8"/>
+<text class="hb-t" x="468.0" y="256" text-anchor="middle">views.py</text>
+<text class="hb-q" x="468.0" y="272" text-anchor="middle">rechten checken,</text>
+<text class="hb-q" x="468.0" y="288" text-anchor="middle">queryset, context</text>
+<rect class="hb-box" x="568" y="232" width="152" height="72" rx="8"/>
+<text class="hb-t" x="644.0" y="256" text-anchor="middle">Jinja2-templates</text>
+<text class="hb-q" x="644.0" y="272" text-anchor="middle">jinja2/ en parts/,</text>
+<text class="hb-q" x="644.0" y="288" text-anchor="middle">met nldd-* tags</text>
+<rect class="hb-box" x="40" y="336" width="152" height="72" rx="8"/>
+<text class="hb-t" x="116.0" y="360" text-anchor="middle">services/</text>
+<text class="hb-q" x="116.0" y="376" text-anchor="middle">OTYS-sync, events,</text>
+<text class="hb-q" x="116.0" y="392" text-anchor="middle">bezetting</text>
+<rect class="hb-box" x="216" y="336" width="152" height="72" rx="8"/>
+<text class="hb-t" x="292.0" y="360" text-anchor="middle">editables/</text>
+<text class="hb-q" x="292.0" y="376" text-anchor="middle">bewerkbare velden</text>
+<text class="hb-q" x="292.0" y="392" text-anchor="middle">per model</text>
+<rect class="hb-box" x="392" y="336" width="152" height="72" rx="8"/>
+<text class="hb-t" x="468.0" y="360" text-anchor="middle">permissions.py</text>
+<text class="hb-q" x="468.0" y="376" text-anchor="middle">has_permission():</text>
+<text class="hb-q" x="468.0" y="392" text-anchor="middle">wie mag wat</text>
+<rect class="hb-box" x="568" y="336" width="152" height="72" rx="8"/>
+<text class="hb-t" x="644.0" y="360" text-anchor="middle">models.py</text>
+<text class="hb-q" x="644.0" y="376" text-anchor="middle">domeinmodellen,</text>
+<text class="hb-q" x="644.0" y="392" text-anchor="middle">via de ORM</text>
+<path class="hb-line" d="M116 424V480" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M292 424V480" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M468 424V480" marker-end="url(#hb-arch-arrow)"/>
+<path class="hb-line" d="M644 408V480" marker-end="url(#hb-arch-arrow)"/>
+<rect class="hb-ext" x="40" y="480" width="152" height="72" rx="8"/>
+<text class="hb-t" x="116.0" y="504" text-anchor="middle">db_worker</text>
+<text class="hb-q" x="116.0" y="520" text-anchor="middle">OTYS en organisaties</text>
+<text class="hb-q" x="116.0" y="536" text-anchor="middle">synchroniseren</text>
+<rect class="hb-ext" x="216" y="480" width="152" height="72" rx="8"/>
+<text class="hb-t" x="292.0" y="504" text-anchor="middle">Keycloak</text>
+<text class="hb-q" x="292.0" y="520" text-anchor="middle">inloggen via</text>
+<text class="hb-q" x="292.0" y="536" text-anchor="middle">SSO Rijk</text>
+<rect class="hb-ext" x="392" y="480" width="152" height="72" rx="8"/>
+<text class="hb-t" x="468.0" y="504" text-anchor="middle">Objectopslag (S3)</text>
+<text class="hb-q" x="468.0" y="520" text-anchor="middle">startpagina</text>
+<text class="hb-q" x="468.0" y="536" text-anchor="middle">en bestanden</text>
+<rect class="hb-ext" x="568" y="480" width="152" height="72" rx="8"/>
+<text class="hb-t" x="644.0" y="504" text-anchor="middle">PostgreSQL</text>
+<text class="hb-q" x="644.0" y="520" text-anchor="middle">alle data, ook de</text>
+<text class="hb-q" x="644.0" y="536" text-anchor="middle">takenlijst (Task)</text>
+<text class="hb-q" x="24" y="580">Grijs: aparte containers of diensten buiten de Django-app.</text>
+</svg>

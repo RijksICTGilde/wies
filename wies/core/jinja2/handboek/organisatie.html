@@ -1,0 +1,77 @@
+{# AUTO-GENERATED FROM docs/handboek/organisatie.md by `manage.py generate_docs_html`. DO NOT EDIT BY HAND. #}
+{% extends "base_footer.html" %}
+{% block title %}
+  Organisatie · Handboek · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_sidebar.html" %}
+  {% endwith %}
+{% endblock sidebar %}
+{% block footer_content %}
+  <nldd-rich-text>
+  <h1>Handboek: hoe we Wies bouwen</h1>
+  {% with handboek_sections = [] %}
+    {% include "parts/handboek_menu_inline.html" %}
+  {% endwith %}
+  <p>
+    Dit handboek vertelt wie Wies maakt, waarom, hoe we met data omgaan en hoe de code in elkaar zit. Het is geschreven voor collega's die willen weten hoe Wies werkt, en voor ontwikkelaars die eraan gaan bijdragen. Wies is open source: dit handboek staat ook in de <a href="https://github.com/RijksICTGilde/wies" target="_blank">broncode op GitHub<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+  </p>
+  <h2 id="over-wies">Over Wies</h2>
+  <p>Wies laat zien welke collega op welke opdracht zit, in welke rol en wanneer. Het is een intern hulpmiddel van de Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI). Collega's vinden elkaar en elkaars kennis, business managers houden overzicht over opdrachten en bezetting.</p>
+  <h2 id="het-team">Het team</h2>
+  <p>
+    Wies wordt ontwikkeld door het <a href="https://digihandboek.rijks.app/" target="_blank">Digi Gilde<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>, in opdracht van ODI. Het team:
+  </p>
+  <div class="wies-table-scroll"
+       tabindex="0"
+       role="region"
+       aria-label="Het team">
+    <table>
+      <caption class="wies-visually-hidden">Het team</caption>
+      <thead>
+        <tr>
+          <th scope="col">Wie</th>
+          <th scope="col">Rollen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <a href="https://wies.rijksorganisatieodi.nl/?collega=99cf1d77-5a5c-4e7a-947a-ac9e1bbb0ee1"
+               target="_blank">Matthijs Beekman<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+          </td>
+          <td>Product owner, ontwikkelaar, technisch en functioneel beheer</td>
+        </tr>
+        <tr>
+          <td>
+            <a href="https://wies.rijksorganisatieodi.nl/?collega=97edba2b-a6e8-4738-8a0a-4e738b4cd6ad"
+               target="_blank">Robbert Uittenbroek<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+          </td>
+          <td>
+            Beheerder en ontwikkelaar van <a href="https://zad.rijksapp.nl/introductie" target="_blank">ZAD<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>; ondersteunt het ontwikkelteam van Wies
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <a href="https://wies.rijksorganisatieodi.nl/?collega=185083a1-9794-4ab1-b605-d6b386f07d5d"
+               target="_blank">Ruben Rouwhof<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+          </td>
+          <td>Ontwikkelaar, UX-design, functioneel beheer</td>
+        </tr>
+        <tr>
+          <td>
+            <a href="https://wies.rijksorganisatieodi.nl/?collega=c4da397a-a2b6-46e4-b43b-1d6b05343075"
+               target="_blank">Robbert Bos<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+          </td>
+          <td>Adviseur: prioriteiten, productrichting en afstemming met belanghebbenden</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Je bereikt ons via <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a> of het kanaal wies op Mattermost. Meer over beheer, hosting en continuïteit staat in het <a href="https://github.com/RijksICTGilde/wies/blob/main/docs/handboek/../beheer.md"
+    target="_blank">beheerplan<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>.
+  </p>
+  </nldd-rich-text>
+{% endblock footer_content %}
