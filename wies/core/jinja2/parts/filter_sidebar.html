@@ -153,7 +153,8 @@
       <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
-      <nldd-date-field width="full" data-wies-input name="{{ filter_group.name }}" accessible-label="{{ filter_group.label }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
+      {# id: focus_restore.js finds the field again after the sidebar swap. #}
+      <nldd-date-field id="filter-{{ filter_group.name }}" width="full" data-wies-input name="{{ filter_group.name }}" accessible-label="{{ filter_group.label }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
       </nldd-date-field>
     {% endif %}
   {% endfor %}

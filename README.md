@@ -71,33 +71,36 @@ just manage [...]   # Django manage.py commands
 just lint           # Run ruff check + format check
 just format         # Auto-fix lint issues and format code
 just pre-commit     # Run all pre-commit hooks
-just update-vendor  # Update vendor assets (like htmx)
+just vendor         # Install front-end packages into wies/core/static/vendor
 ```
 
 ### Vendor Assets
 
-This project vendors external JavaScript instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
+This project serves its external JavaScript and CSS itself instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
 
-**Vendored packages:**
+**Packages** (`package.json`, locked in `package-lock.json`):
 
 - [htmx](https://htmx.org/) - JavaScript library for AJAX/HTML
-- [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components + styles (single `nldd.min.js` bundle + `css/` + `fonts/`, fetched from the npm tarball via `npm pack`)
+- [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components + styles (single `nldd.min.js` bundle + `css/` + `fonts/`)
+
+`scripts/vendor.sh` runs `npm ci` and copies the files Wies loads from
+`node_modules` into `wies/core/static/vendor/`. That directory is not in git:
+the image build runs the script in its `vendor` stage, and locally `just vendor`
+runs the same stage and writes the result to your checkout (Docker only, no
+Node on the host needed). `just setup`, `just up` and `just test django` do this
+for you, because docker compose mounts the checkout over the image.
 
 #### Update vendor dependencies
 
-To update vendor dependencies:
+Dependabot opens a PR that updates `package.json` and `package-lock.json`. By
+hand (needs Node):
 
-1. Edit the version numbers at the top of `justfile` (e.g. `HTMX_VERSION`).
+```bash
+npm install --package-lock-only --ignore-scripts --save-exact @nldd/design-system@<version>
+just vendor
+```
 
-2. Run the update command:
-
-   ```bash
-   just update-vendor
-   ```
-
-3. Test the application to verify everything works with the new versions.
-
-4. Commit the updated files in `wies/core/static/vendor/`.
+Then test the application and commit `package.json` and `package-lock.json`.
 
 ### Testing
 

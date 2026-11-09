@@ -9,6 +9,13 @@ infra — we pull.
 The content repo is trusted to write articles, not to be free of mistakes: the
 archive is size-capped, extracted with the ``data`` filter, and only files of a
 known web type are published.
+
+Trust boundary: the published site is served on the Wies origin, so any script in
+it (``.js``/``.mjs``, inline ``<script>``, ``.svg``) runs with the privileges
+of the logged-in user. The risk is mitigated by process: Wies developers review
+every content-repo PR for script, and only approved PRs are merged.
+A separate origin or a ``sandbox`` CSP were considered but not adopted
+because of the very small scale of the startpage project (1 other collaborator).
 """
 
 from __future__ import annotations

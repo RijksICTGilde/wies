@@ -6,7 +6,9 @@
  * description, but the client picker's control is a button the field does not
  * recognise, so its list points at the button with `for` and nobody describes
  * the button. This does, with "Fout:" in front because a button, unlike a
- * field, does not say "ongeldig" itself.
+ * field, does not say "ongeldig" itself. A control marked
+ * data-help-description gets the field's help text the same way, since
+ * nldd-form-field links that only to an input too.
  *
  * TODO: delete this file once nldd-form-field describes the control that an
  * nldd-validation-list names in `for`. Reported to NLDD; not in 0.8.92. Check:
@@ -15,34 +17,62 @@
  */
 
 var BORROWED = "nldd-validation-list[for]";
+var HELPED = "[data-help-description]";
 
-function describe(list) {
-  var control = document.getElementById(list.getAttribute("for"));
-  if (!control || !control.hasAttribute("invalid")) return;
+// Messages end in a full stop already; join them without doubling it.
+function sentences(parts) {
+  return (
+    parts
+      .map(function (part) {
+        return part.replace(/\.$/, "");
+      })
+      .join(". ") + "."
+  );
+}
+
+function errorText(control) {
+  if (!control.hasAttribute("invalid")) return "";
   var ids = (control.getAttribute("unmet") || "").split(/\s+/);
   var words = [];
   for (var i = 0; i < ids.length; i++) {
     var item = ids[i] && document.getElementById(ids[i]);
     if (item) words.push(item.textContent.trim());
   }
-  if (!words.length) return;
+  return words.length ? "Fout: " + sentences(words) : "";
+}
+
+function helpText(control) {
+  if (!control.hasAttribute("data-help-description")) return "";
+  var field = control.closest("nldd-form-field");
+  var help = field && field.querySelector("nldd-form-field-help-text");
+  return help ? help.textContent.trim() : "";
+}
+
+function describe(control) {
+  if (!control) return;
+  var parts = [errorText(control), helpText(control)].filter(Boolean);
+  if (!parts.length) return;
+  var text = sentences(parts);
   // Lit renders the shadow root a frame after the element connects.
   var ready = control.updateComplete || Promise.resolve();
   ready.then(function () {
     var target = control.shadowRoot
       ? control.shadowRoot.querySelector("button, a, input")
       : null;
-    (target || control).setAttribute(
-      "aria-description",
-      "Fout: " + words.join(". "),
-    );
+    (target || control).setAttribute("aria-description", text);
   });
 }
 
 function describeAll(root) {
   if (!root || typeof root.querySelectorAll !== "function") return;
   var lists = root.querySelectorAll(BORROWED);
-  for (var i = 0; i < lists.length; i++) describe(lists[i]);
+  for (var i = 0; i < lists.length; i++) {
+    var control = document.getElementById(lists[i].getAttribute("for"));
+    if (control && !control.hasAttribute("data-help-description"))
+      describe(control);
+  }
+  var helped = root.querySelectorAll(HELPED);
+  for (var j = 0; j < helped.length; j++) describe(helped[j]);
 }
 
 document.addEventListener("htmx:afterSettle", function (event) {

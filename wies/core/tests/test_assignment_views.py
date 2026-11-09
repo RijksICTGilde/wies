@@ -443,14 +443,14 @@ class AssignmentEditAttributeTest(TestCase):
         """
         self.client.force_login(self.user_with_permission)
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         body = response.content.decode()
         assert 'text="Omschrijving"' in body
         # "Toon meer" is bound by a delegated listener in ui_handlers.js; loading
         # that script only behind show_onboarding left the button dead here.
-        page = self.client.get("/opdrachten/").content.decode()
+        page = self.client.get("/aanvragen/").content.decode()
         assert "js/ui_handlers.js" in page
         assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
         # Editing runs via "Gegevens wijzigen" at the top, not per row.
@@ -1233,6 +1233,20 @@ class AssignmentDeleteViewTests(TestCase):
         )
         assert response.status_code == 200
         assert response["HX-Redirect"] == "/medewerkers/?zoek=a"
+
+    def test_delete_redirect_falls_back_to_list_for_off_site_path(self):
+        """HX-Current-URL is client controlled: a path a browser would resolve
+        to another origin ("//host", "/\\host") must not become the redirect."""
+        self.client.force_login(self.owner_user)
+        for current in ("https://testserver//evil.example/", "https://testserver/\\evil.example/"):
+            with self.subTest(current=current):
+                assignment = Assignment.objects.create(name="Weg", source="wies", owner=self.owner_colleague)
+                response = self.client.post(
+                    reverse("assignment-delete", args=[assignment.public_id]),
+                    headers={"HX-Current-URL": current},
+                )
+                assert response.status_code == 200
+                assert response["HX-Redirect"] == reverse("assignment-list")
 
     def test_delete_redirect_falls_back_to_list_without_header(self):
         """Without HX-Current-URL the redirect falls back to the opdrachten-lijst."""

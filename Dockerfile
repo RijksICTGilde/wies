@@ -15,6 +15,22 @@ RUN python -m pip uninstall --yes pip \
   && rm -rf /usr/local/lib/python3*/ensurepip
 
 #-----------------------------------------------------------------------------------------------------------------------
+# Vendor stage — front-end packages from package-lock.json into wies/core/static/vendor
+#-----------------------------------------------------------------------------------------------------------------------
+FROM docker.io/node:22-trixie-slim AS vendor
+
+WORKDIR /build
+COPY package.json package-lock.json ./
+COPY scripts/vendor.sh ./scripts/
+RUN --mount=type=cache,target=/root/.npm \
+  ./scripts/vendor.sh
+
+# Target of `just vendor`: only the vendored files, exported to the checkout.
+FROM scratch AS vendor-files
+COPY --from=vendor /build/wies/core/static/vendor /
+
+
+#-----------------------------------------------------------------------------------------------------------------------
 # Python build stage
 #-----------------------------------------------------------------------------------------------------------------------
 FROM python AS python-build
@@ -53,6 +69,7 @@ COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 COPY --chown=app:app manage.py docker-entrypoint.sh ./
 COPY --chown=app:app config ./config
 COPY --chown=app:app wies ./wies
+COPY --from=vendor --chown=app:app /build/wies/core/static/vendor ./wies/core/static/vendor
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so
@@ -75,9 +92,20 @@ USER app
 
 
 #-----------------------------------------------------------------------------------------------------------------------
+# Dev target — local development via docker-compose (runserver, local/test settings)
+#-----------------------------------------------------------------------------------------------------------------------
+FROM django-run AS dev
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]
+
+
+#-----------------------------------------------------------------------------------------------------------------------
 # Web target — serves the Django application via Gunicorn
 #-----------------------------------------------------------------------------------------------------------------------
 FROM django-run AS web
+# Baked in so `manage.py shell` etc. in a running container get production
+# settings instead of manage.py's local default. Not on django-run: an ENV
+# can't be unset downstream, and the dev target must fall back to local/test.
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
 CMD ["./docker-entrypoint.sh"]
 
 

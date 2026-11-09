@@ -49,6 +49,8 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
         assert "default-src 'self'" in csp
         # Clickjacking protection: the app must not be embeddable in a frame.
         assert "frame-ancestors 'none'" in csp
+        # An injected <base href> must not be able to retarget relative URLs.
+        assert "base-uri 'none'" in csp
         # No external origins are whitelisted for any resource type.
         assert "https://" not in csp
         assert "http://" not in csp

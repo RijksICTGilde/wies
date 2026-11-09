@@ -4,13 +4,16 @@
 (function () {
   "use strict";
 
+  // Under Node (js_tests) there is no document: export the pure parts only.
+  const testing = typeof module !== "undefined" && module.exports;
+
   const NDD_TEXT = "nldd-text-field, nldd-date-field";
   const NDD_SEARCH = "nldd-search-field[data-wies-search-input]";
 
-  function dispatchFormChange(form) {
+  function dispatchFormChange(form, type = "change") {
     if (!form) return;
     const sentinel = form.querySelector("[data-filter-input]");
-    (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
+    (sentinel || form).dispatchEvent(new Event(type, { bubbles: true }));
   }
 
   // The nldd-checkbox in a filter row is decorative; a hidden native checkbox
@@ -73,17 +76,33 @@
     });
   }
 
+  // Only when the value moved. A date being corrected is empty too, also on
+  // the change at blur; refreshing would wipe the half-typed text.
+  function shouldForward(lastValue, value, typed) {
+    if (value === lastValue) return false;
+    return Boolean(value) || !typed;
+  }
+
   // Form-associated: the value submits natively, only the re-filter needs a nudge.
+  // Passed on as its own type, so typing gets the form's 500 ms delay. Only when
+  // the value moved: nldd-date-field fires input per keystroke but keeps its
+  // value empty until the date is complete, and then fires change again on blur.
   function attachTextField(el) {
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
     if (!el.getAttribute("name")) return;
-    const onChange = () => {
+    // The attribute while the element is not upgraded yet.
+    let lastValue = el.value ?? el.getAttribute("value") ?? "";
+    const forward = (e) => {
+      const value = el.value ?? "";
+      const typed = el.shadowRoot?.querySelector("input")?.value;
+      if (!shouldForward(lastValue, value, typed)) return;
+      lastValue = value;
       const form = el.closest("form");
-      if (form) dispatchFormChange(form);
+      if (form) dispatchFormChange(form, e.type);
     };
-    el.addEventListener("change", onChange);
-    el.addEventListener("input", onChange);
+    el.addEventListener("change", forward);
+    el.addEventListener("input", forward);
   }
 
   function suggestionMenu() {
@@ -110,6 +129,10 @@
     if (!menu || menu.__wiesObserved) return;
     menu.__wiesObserved = true;
     new MutationObserver(syncSuggestionMenu).observe(menu, { childList: true });
+    // Keep focus in the field while a suggestion is pressed (#728)
+    menu.addEventListener("mousedown", (e) => {
+      if (e.button === 0) e.preventDefault();
+    });
   }
 
   // anchorElement, not the `anchor` attribute: that also makes the field a
@@ -228,7 +251,10 @@
     // commitSearch does itself -- which would otherwise re-enter here.
     el.addEventListener(
       "blur",
-      () => {
+      (e) => {
+        // Focus moving into the suggestions is not clicking away (#728).
+        const menu = suggestionMenu();
+        if (menu && e.relatedTarget && menu.contains(e.relatedTarget)) return;
         const typed = (el.value ?? "").trim();
         if (typed === appliedSearchTerm()) return;
         commitSearch(el, typed);
@@ -479,31 +505,13 @@
       button.setAttribute("text", text);
     }
 
-    // show() no-ops while the shadow <dialog> is unrendered, as right after a swap.
-    function openWhenReady(sheet, attempt) {
+    function openSheet(sheet) {
       if (!sheet) return;
-      const tryShow = () => {
-        if (
-          typeof sheet.show === "function" &&
-          sheet.shadowRoot?.querySelector("dialog")
-        ) {
-          // Only a child sheet sometimes: the sidebar is a sheet when narrow.
-          if (typeof window.syncSheetBackButton === "function") {
-            window.syncSheetBackButton(sheet);
-          }
-          sheet.show();
-        } else if ((attempt || 0) < 20) {
-          requestAnimationFrame(() => openWhenReady(sheet, (attempt || 0) + 1));
-        }
-      };
-      if (
-        sheet.updateComplete &&
-        typeof sheet.updateComplete.then === "function"
-      ) {
-        sheet.updateComplete.then(tryShow);
-      } else {
-        tryShow();
+      // Only a child sheet sometimes: the sidebar is a sheet when narrow.
+      if (typeof window.syncSheetBackButton === "function") {
+        window.syncSheetBackButton(sheet);
       }
+      sheet.show();
     }
 
     document.body.addEventListener("htmx:afterSwap", (e) => {
@@ -514,7 +522,7 @@
           (t.closest && t.closest("#filter-options-modal-container")))
       ) {
         const sheet = currentSheet();
-        openWhenReady(sheet, 0);
+        openSheet(sheet);
         if (sheet) updateApplyLabel(sheet);
       }
     });
@@ -742,6 +750,11 @@
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
     setupFilterOptionsModal();
+  }
+
+  if (testing) {
+    module.exports = { shouldForward };
+    return;
   }
 
   if (document.readyState === "loading") {

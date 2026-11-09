@@ -22,7 +22,9 @@
        weight and the caption reads as its label; they are plain elements sized
        from the token scale, since nldd-title would borrow heading typography for
        a number that is not a heading. #}
-    <nldd-card background="tinted" accessible-label="{{ count }} {{ label }}">
+    {# Visible text first, so voice control can match the name. #}
+    {% set card_name = [count ~ " " ~ (short or label), label if short else none]|select|join(", ") %}
+    <nldd-card background="tinted" accessible-label="{{ card_name }}">
     <nldd-container padding="8" layout="row" gap="8" vertical-alignment="center">
     <span class="bezetting-stat__count">{{ count }}</span>
     <span class="bezetting-stat__label">{{ short or label }}</span>
@@ -49,7 +51,9 @@
    twin and reports back as `select` on the original, so user_filter.js listens
    for that too. #}
 <div class="bezetting-toolbar-row">
-  <ul class="bezetting-toolbar__stats" aria-label="Statusfilters">
+  <ul class="bezetting-toolbar__stats"
+      role="list"
+      aria-label="Statusfilters">
     {# Short captions: the row shrinks these before anything else, and the longer
        phrasing ("volledig ingezet", "eindigt binnen 3 maanden") truncated to an
        unreadable stub well before a laptop's width ran out. The card's accessible
@@ -91,8 +95,9 @@
 {% endif %}
 {# Tijdlijn #}
 <div class="bezetting-timeline">
-  {# Koptekst: maandmarkeringen + 'vandaag' #}
-  <div class="bezetting-timeline-head">
+  {# Koptekst: maandmarkeringen + 'vandaag'. Hidden from screen readers: every
+     bar says its own dates, and the sentence before the list gives the range. #}
+  <div class="bezetting-timeline-head" aria-hidden="true">
     {# No column heading: the cell below it holds names, which need no label.
          The cell itself stays — it is what gives the name column its width. #}
     <div class="bezetting-row__side bezetting-row__side--head"></div>
@@ -103,7 +108,9 @@
              horizontal scrollbar. The threshold lives in occupancy.py. #}
         <div class="bezetting-tick {% if tick.month == 1 %}bezetting-tick--year{% endif %} {% if tick.flip %}bezetting-tick--flip{% endif %}"
              style="left: {{ tick.left }}%">
-          <span class="bezetting-tick__label">{{ tick.label }}</span>
+          <span class="bezetting-tick__label">{{ tick.label }}
+            {%- if tick.year %}<span class="bezetting-tick__year"> {{ tick.year }}</span>{% endif -%}
+          </span>
         </div>
       {% endfor %}
       <div class="bezetting-today" style="left: {{ today_pct }}%">
@@ -118,20 +125,30 @@
      count is the whole result set, not the rendered rows: the page shows at
      most one page of them. Only when there are rows -- at nought the empty
      state below carries the announcement, as on the other lists. #}
-  <div class="bezetting-rows"
-       {% if row_count %}data-announce="{{ row_count }} {{ 'collega' if row_count == 1 else "collega's" }}"{% endif %}>
+  {% if row_count %}
     {# One list, bench rows first: an unstaffed colleague is what this page is
        scanned for, and their row shows whether anything is already booked — the
        thing a list of names could not answer. No headings between the two: the
        hatched free stretch already says which rows are the empty ones, and the
-       counts they carried are on the cards above. Paged by the view. #}
-    {% include "parts/bezetting_rows.html" %}
-    {% if not row_count %}
+       counts they carried are on the cards above. Paged by the view.
+       A list, not a table: a bar spans months and has no cell of its own. #}
+    <p class="wies-visually-hidden">
+      Tijdlijn van {{ horizon[0]|datum_nl }} tot en met {{ horizon[1]|datum_nl }}. Vandaag is {{ today|datum_nl }}.
+    </p>
+    {# role="list": Safari drops the list role of a ul with list-style: none. #}
+    <ul class="bezetting-rows"
+        role="list"
+        aria-label="Collega's"
+        data-announce="{{ row_count }} {{ 'collega' if row_count == 1 else "collega's" }}">
+      {% include "parts/bezetting_rows.html" %}
+    </ul>
+  {% else %}
+    <div class="bezetting-rows">
       {# nldd-inline-dialog is the empty state across the app (see
          parts/placement_card_grid.html); a bare paragraph reads as body copy. #}
       <nldd-inline-dialog icon="magnifier" text="Geen collega's gevonden" supporting-text="Pas de filters of zoekopdracht aan." data-announce="Geen collega's gevonden"></nldd-inline-dialog>
-    {% endif %}
-  </div>
+    </div>
+  {% endif %}
 </div>
 </nldd-container>
 {% if request.headers.get("HX-Request") %}

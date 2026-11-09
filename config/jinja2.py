@@ -1,16 +1,16 @@
-from datetime import date
+import json
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
 from django.contrib.staticfiles import finders
+from django.core.serializers.json import DjangoJSONEncoder
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.formats import date_format
-from django.utils.html import format_html, json_script
+from django.utils.html import format_html
 from jinja2 import Environment
 
 from wies.core.editables import (
@@ -23,28 +23,11 @@ from wies.core.editables import (
 from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.roles import role_label
+from wies.core.services.dates import datum_nl
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
 from wies.core.services.version import get_app_version, get_nldd_version
 from wies.core.visibility_rules import show_bm_page, show_staff_pages, show_user_admin_pages
-
-
-def datum_nl(datum, fmt="j b Y"):
-    """THE date display for Wies, via Django's nl-nl localization.
-
-    House style: months are always three letters, lowercase ('b' → "11 nov
-    2024"). Callers only choose which parts to show (e.g. "b Y" for month +
-    year on cards); they don't restyle the month.
-    """
-    if datum is None:
-        return "?"
-    if isinstance(datum, str):
-        try:
-            datum = date.fromisoformat(datum)
-        except ValueError:
-            return datum
-    return date_format(datum, fmt)
-
 
 NL_TIMEZONE = ZoneInfo("Europe/Amsterdam")
 
@@ -60,6 +43,17 @@ def datetime_nl(dt, fmt="%Y-%m-%d %H:%M:%S"):
     if timezone.is_aware(dt):
         dt = dt.astimezone(NL_TIMEZONE)
     return dt.strftime(fmt)
+
+
+def json_attr(value) -> str:
+    """JSON text for an HTML attribute: ``data-x="{{ value|json_attr }}"``.
+
+    A plain str, so autoescaping escapes it like any other attribute value; the
+    page reads it back with ``JSON.parse(el.dataset.x)``. Replaces Django's
+    ``json_script``: htmx (allowScriptTags off) strips every <script> from
+    swapped content, data blocks included.
+    """
+    return json.dumps(value, cls=DjangoJSONEncoder)
 
 
 def tijdgeleden(dt):
@@ -210,6 +204,8 @@ def environment(**options):
     env.filters["bankduur"] = bankduur
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
-    env.filters["json_script"] = json_script
+    env.filters["json_attr"] = json_attr
+    # No `|safe`: it switches off autoescaping for a whole string and is a big security footgun
+    del env.filters["safe"]
 
     return env

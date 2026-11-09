@@ -94,7 +94,8 @@ class AssignmentPanelRowsTest(TestCase):
         panel = reverse("home") + f"?collega={self.anke.public_id}"
 
         # A second opdracht, so the list does not fall under the single-entry
-        # rule below and this one starts collapsed.
+        # rule below and this one starts collapsed. It started later, so it
+        # lists second.
         other = Assignment.objects.create(name="Archief", source="wies")
         other_service = Service.objects.create(
             assignment=other, description="Eerder werk.", skill=self.skill, source="wies"
@@ -104,7 +105,7 @@ class AssignmentPanelRowsTest(TestCase):
             colleague=self.anke,
             service=other_service,
             period_source=Placement.PLACEMENT,
-            specific_start_date=today - timedelta(days=20),
+            specific_start_date=today - timedelta(days=5),
             specific_end_date=today + timedelta(days=80),
             source="wies",
         )
@@ -135,8 +136,12 @@ class AssignmentPanelRowsTest(TestCase):
         assert "uur per week" not in closed
         self.client.force_login(self.anke_user)
         own = self.client.get(panel, headers=headers).content.decode()
+        # Not for the consultant herself either; only the planner sees them.
+        assert "uur per week" not in own
+        self.client.force_login(make_business_manager_user(email="planner@rijksoverheid.nl", name="Planner"))
+        planner = self.client.get(panel, headers=headers).content.decode()
         # On the entry's own line, not behind the fold.
-        assert "24 uur per week" in own.split("wies-cv__more")[0]
+        assert "24 uur per week" in planner.split("wies-cv__more")[0]
         # A description that fits the preview line has nothing behind the fold.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")
         bram = self.client.get(reverse("home") + f"?collega={self.bram.public_id}", headers=headers).content.decode()

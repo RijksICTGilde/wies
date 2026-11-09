@@ -155,6 +155,11 @@
   );
 }
 
+/* The secondary grey is only 3.9:1 on the pressed card. */
+.bezetting-stat[aria-pressed="true"] .bezetting-stat__label {
+  color: var(--semantics-content-color);
+}
+
 /* Phase colours for the timeline bars.
 
    Tinted, not saturated fills: a wall of solid colour across every row drowns
@@ -164,10 +169,14 @@
    how the design system's own tinted buttons and tags carry a status, and every
    token here is a light-dark() pair, so both themes stay legible.
 
-   The border does the identifying at a glance; the fill stays quiet. */
+   The border does the identifying at a glance; the fill stays quiet. Its
+   step is the lightest at 3:1, per scheme because the scale flips in dark. */
 .bezetting-seg--active {
   background: var(--primitives-color-success-75);
-  border-color: var(--primitives-color-success-300);
+  border-color: light-dark(
+    var(--primitives-color-success-400),
+    var(--primitives-color-success-500)
+  );
   color: var(--primitives-color-success-750);
 }
 
@@ -176,14 +185,20 @@
    which. A separate hue for it added a third colour that carried no decision. */
 .bezetting-seg--planned {
   background: var(--primitives-color-success-75);
-  border-color: var(--primitives-color-success-300);
+  border-color: light-dark(
+    var(--primitives-color-success-400),
+    var(--primitives-color-success-500)
+  );
   color: var(--primitives-color-success-750);
 }
 
 /* Completed work is history: neutral, and quieter still than the two live phases. */
 .bezetting-seg--completed {
   background: var(--primitives-color-neutral-75);
-  border-color: var(--primitives-color-neutral-250);
+  border-color: light-dark(
+    var(--primitives-color-neutral-400),
+    var(--primitives-color-neutral-500)
+  );
   color: var(--semantics-content-secondary-color);
 }
 
@@ -202,15 +217,19 @@
   --bezetting-lane-gap: 4px;
   /* Vertical breathing room above and below the lane stack within a row. */
   --bezetting-row-padding: 8px;
-  overflow-x: auto;
+  /* Tall enough for two stacked layers: the "vandaag" pill on top and the month
+     labels below it. */
+  --bezetting-head-height: 3.25rem;
 }
 
+/* No overflow on the timeline or a min-width on its rows: a scroll box of its
+   own would hold the sticky head, which then never sticks. The track is 1fr and
+   the bars are percentages, so the timeline shrinks with the page instead. */
 .bezetting-timeline-head,
 .bezetting-row {
   display: grid;
   grid-template-columns: var(--bezetting-side-width) 1fr;
   align-items: stretch;
-  min-width: 720px;
 }
 
 /* A row is as tall as its lane stack needs (never shorter than the base height),
@@ -231,7 +250,9 @@
 .bezetting-timeline-head {
   position: sticky;
   top: 0;
-  z-index: 3;
+  /* Above the stretched row link (z-index 4), which would otherwise lie over
+     the head once a row scrolls under it and take its clicks. */
+  z-index: 5;
   background: var(--semantics-surfaces-base-background-color, #fff);
   border-bottom: 1px solid var(--semantics-surfaces-base-highlight-border-color);
 }
@@ -249,11 +270,8 @@
   border-left: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
 }
 
-/* Tall enough for two stacked layers: the "vandaag" pill on top and the month
-   labels below it. At 2rem they shared one band and overlapped wherever today
-   fell near a month boundary. */
 .bezetting-track--head {
-  min-height: 3.25rem;
+  min-height: var(--bezetting-head-height);
 }
 
 /* Lane stack: vertically centred in the track, so a single bar sits level with
@@ -339,7 +357,7 @@
    happens to overlap. */
 .bezetting-today__label {
   position: absolute;
-  top: 0;
+  top: var(--primitives-space-4);
   left: var(--primitives-space-4);
   padding: 0 var(--primitives-space-4);
   border-radius: var(--primitives-corner-radius-xs, 4px);
@@ -351,6 +369,13 @@
 }
 
 /* ── Rijen ────────────────────────────────────────────────────────────────── */
+.bezetting-rows,
+.bezetting-lanes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .bezetting-rows {
   border-top: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
 }
@@ -381,6 +406,8 @@
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  /* Keeps a focused row out from under the sticky head (WCAG 2.4.11). */
+  scroll-margin-top: calc(var(--bezetting-head-height) + 1px);
 }
 
 .bezetting-row__side::after {
@@ -418,7 +445,9 @@
   position: absolute;
   height: var(--bezetting-lane-height);
   min-width: 3px;
-  border: 1px solid transparent;
+  /* Not the shorthand: it would reset the phase colours set above. */
+  border-width: 1px;
+  border-style: solid;
   border-radius: var(--primitives-corner-radius-xs, 4px);
   overflow: hidden;
   pointer-events: none;
@@ -436,20 +465,34 @@
    everyone else -- at which point the date was doing the work. The bar still
    carries that date.
 
-   The border matches the fill instead of taking the phase colours' -300 step.
-   The step numbers are not comparable across hues: at -300 warning is far
-   darker relative to its -75 fill than success is to its own, so the same
-   number that reads as a quiet edge on a green bar drew a hard outline around
-   an orange one. Matching the fill keeps the bar a shape, not an outline,
-   while the 1px border still holds the geometry the other bars have. */
+   The border follows the same 3:1 rule as the phase colours. */
 .bezetting-seg--ending-soon {
   background: var(--primitives-color-warning-75);
-  border-color: var(--primitives-color-warning-75);
+  border-color: light-dark(
+    var(--primitives-color-warning-400),
+    var(--primitives-color-warning-500)
+  );
   color: var(--primitives-color-warning-750);
 }
 
 /* calm keeps whatever its phase gave it: active and planned stay green,
    completed neutral. */
+
+/* A dashed seam reads as "runs on" where a solid one reads as stop and start.
+   Only the style changes, so the border keeps its 3:1 colour. */
+/* A continuation lies against the bar it continues: the dashed edge is the
+   seam, so the bar before it gives up its right edge and both their corners. */
+.bezetting-seg--extends {
+  border-left-style: dashed;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.bezetting-seg--extended {
+  border-right-width: 0;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
 
 /* The end date, right-aligned in the bar so the name still starts at the left
    edge. Hidden on bars too narrow to hold both (a container query would be
@@ -478,11 +521,10 @@
   padding-right: 6rem;
 }
 
-/* "uren niet ingevuld" reads as a note, not as part of the name. Opacity, so
-   it dims whatever colour the bar's phase gave the text, in both schemes. */
+/* "uren niet ingevuld" reads as a note, not as part of the name. Italic only:
+   opacity drops it below 4.5:1 on the green bar. */
 .bezetting-seg__gap {
   font-style: italic;
-  opacity: 0.7;
 }
 
 .bezetting-seg__label {
@@ -498,9 +540,42 @@
   text-overflow: ellipsis;
 }
 
+/* Weight, not a lighter colour, sets the opdracht apart from client, role and
+   hours: a secondary text colour drops below 4.5:1 on the tinted bars. */
+.bezetting-seg__name {
+  font-weight: var(--primitives-font-weight-body-semi-bold, 550);
+}
+
+.bezetting-seg__client {
+  display: inline-block;
+  max-width: 16ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
 @media (max-width: 800px) {
   .bezetting-timeline {
     --bezetting-side-width: 200px;
+  }
+}
+
+/* A phone: the track keeps most of the width. A role word longer than the
+   cell is cut at its edge instead of running under the bars, and the free days
+   go, being wider than their stretch; the hidden sentences keep both. The year
+   goes too, or "jan 2027" runs into "feb". */
+@media (max-width: 480px) {
+  .bezetting-timeline {
+    --bezetting-side-width: 160px;
+  }
+
+  .bezetting-row__side {
+    overflow: hidden;
+  }
+
+  .bezetting-free__label,
+  .bezetting-tick__year {
+    display: none;
   }
 }
 

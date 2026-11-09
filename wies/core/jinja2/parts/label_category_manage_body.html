@@ -11,6 +11,15 @@
   {{ get_csrf_hidden_input(request) }}
   {{ formset.management_form }}
   <nldd-list accessible-label="Categorieën">
+  {# Column headers instead of a label per row; the widths mirror
+     label_category_row.html so the headers line up with the fields. #}
+  <nldd-list-item data-category-header>
+  <nldd-text-cell width="full" text="Naam"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell width="112px" text="Kleur"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-cell width="44px"></nldd-cell>
+  </nldd-list-item>
   {% for form in formset %}
     {% set row_index = loop.index0 %}
     {% include "parts/label_category_row.html" %}

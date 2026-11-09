@@ -3,7 +3,8 @@
 from django.db import transaction
 
 from wies.core.inline_edit import Editable, EditableSet
-from wies.core.models import Colleague, LabelCategory, Suborganization
+from wies.core.models import Colleague, Suborganization
+from wies.core.querysets import label_categories_for_everyone
 from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 
 LABELS_PREFIX = "labels_"
@@ -78,13 +79,14 @@ class ColleagueEditables(EditableSet):
     @classmethod
     def resolve_dynamic(cls, name):
         # None when the name doesn't match or the category isn't found → view 404s.
+        # Subgroep is not found either: it is set in the user list in Beheer (#736).
         if not name.startswith(LABELS_PREFIX):
             return None
         try:
             category_id = int(name[len(LABELS_PREFIX) :])
         except ValueError:
             return None
-        category = LabelCategory.objects.filter(pk=category_id).first()
+        category = label_categories_for_everyone().filter(pk=category_id).first()
         if category is None:
             return None
         return _build_label_editable(category)

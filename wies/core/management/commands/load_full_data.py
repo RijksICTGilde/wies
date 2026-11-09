@@ -33,6 +33,7 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from wies.core.management.task import require_destructive_actions_enabled
 from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
@@ -93,6 +94,9 @@ CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 ROLE_HOURS_WEIGHTS = {None: 15, 8: 5, 16: 10, 24: 20, 32: 25, 36: 20, 40: 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
+# Share of placements continued by a second placement on the same opdracht, so
+# Bezetting has extensions to show.
+EXTENSION_PROBABILITY = 0.1
 MULTI_LABEL_PROBABILITY = 0.3
 MAX_LABELS_PER_CATEGORY = 2
 # Roughly half the assignments also get a second (update) audit event.
@@ -573,6 +577,33 @@ SERVICE_DESCRIPTIONS: dict[str, list[str]] = {
     ],
 }
 
+REQUEST_INTROS = [
+    "Voor deze opdracht zoeken we een {role} die snel kan schakelen tussen beleid en uitvoering.",
+    "Het team groeit en zoekt een ervaren {role} die zelfstandig werkt en anderen meeneemt.",
+    "We zoeken een {role} die houdt van complexe vraagstukken in een politiek-bestuurlijke omgeving.",
+]
+
+# Share of open roles that say "per direct, for <duration>" instead of dates.
+FLEXIBLE_REQUEST_SHARE = 0.5
+
+REQUEST_LOCATIONS = [
+    "Den Haag",
+    "Den Haag, 2 dagen op kantoor",
+    "Utrecht",
+    "Utrecht of Den Haag, hybride",
+    "Zwolle",
+    "Amsterdam",
+]
+
+REQUEST_REQUIREMENTS = [
+    "Minimaal drie jaar ervaring in een vergelijkbare rol",
+    "Ervaring binnen de Rijksoverheid of een andere grote publieke organisatie",
+    "Je kunt technische keuzes helder uitleggen aan niet-technische collega's",
+    "Je werkt graag in een multidisciplinair team volgens Scrum",
+    "Kennis van de Baseline Informatiebeveiliging Overheid (BIO)",
+    "Je bent in het bezit van een VOG of bereid die aan te vragen",
+]
+
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -600,6 +631,17 @@ def generate_assignment_name(rng: random.Random) -> str:
         lambda: f"{rng.choice(PROJECT_TOPICS)} {rng.choice(PROJECT_DOMAINS)}",
     ]
     return rng.choice(patterns)()
+
+
+def generate_request_description(rng: random.Random, skill_name: str) -> str:
+    """Builds a vacancy text in the shape of a real posting: intro, tasks, asks."""
+    tasks = SERVICE_DESCRIPTIONS.get(skill_name, [])
+    requirements = rng.sample(REQUEST_REQUIREMENTS, 3)
+    parts = [rng.choice(REQUEST_INTROS).format(role=skill_name)]
+    if tasks:
+        parts.append("Wat ga je doen?\n" + "\n".join(f"- {task}" for task in tasks))
+    parts.append("Wat vragen we?\n" + "\n".join(f"- {req}" for req in requirements))
+    return "\n\n".join(parts)
 
 
 def active_dates(rng: random.Random, ref: date) -> tuple[date, date]:
@@ -775,7 +817,7 @@ def classify_orgs_from_db() -> tuple[list[int], list[int]]:
 def _seed_all_label_categories() -> None:
     """Ensure every label category + its labels exist, self-contained.
 
-    Production seeds Expertise/Thema from ``setup``; the offline base profile
+    Production seeds Expertise from ``setup``; the offline base profile
     seeds them here too so it does not depend on ``setup`` having run. Subgroep
     is the demo-only "gilde" category the Bezetting page filters on.
     """
@@ -986,11 +1028,17 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     shuffled_assignments = list(assignments)
     rng.shuffle(shuffled_assignments)
 
+    # Own generator for the vacancy texts, so the rest of the seeded data (and
+    # the occupancy the base profile is tuned to) does not depend on them.
+    request_rng = random.Random(43)  # noqa: S311 (insecure PRNG) — dummy text, seeded on purpose for repeatable data
+
     for assignment in shuffled_assignments:
         skill = rng.choice(skills)
         service = Service.objects.create(
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            request_description=generate_request_description(request_rng, skill.name),
+            location=request_rng.choice(REQUEST_LOCATIONS),
             skill=skill,
             hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
@@ -1007,6 +1055,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         service = Service.objects.create(
             assignment=assignment,
             description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
+            request_description=generate_request_description(request_rng, skill.name),
+            location=request_rng.choice(REQUEST_LOCATIONS),
             skill=skill,
             hours_per_week=weighted_choice(rng, ROLE_HOURS_WEIGHTS),
             period_source="ASSIGNMENT",
@@ -1034,6 +1084,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
 
     placement_count = 0
     service_idx = 0
+    placements: list[Placement] = []
 
     shuffled_colleagues = list(colleagues)
     rng.shuffle(shuffled_colleagues)
@@ -1045,23 +1096,80 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             service = placeable_services[service_idx]
             service_idx += 1
 
-            Placement.objects.create(
-                colleague=colleague,
-                service=service,
-                period_source="SERVICE",
-                specific_start_date=None,
-                specific_end_date=None,
-                source=weighted_choice(rng, SOURCE_WEIGHTS),
-                source_id="",
+            placements.append(
+                Placement.objects.create(
+                    colleague=colleague,
+                    service=service,
+                    period_source="SERVICE",
+                    specific_start_date=None,
+                    specific_end_date=None,
+                    source=weighted_choice(rng, SOURCE_WEIGHTS),
+                    source_id="",
+                )
             )
             placement_count += 1
 
     write(f"Placements: {placement_count}")
+
+    # ── 9. Extensions ────────────────────────────────────────────────
+    # The opdracht runs on and the placement keeps its old period; the
+    # continuation starts the day after.
+    extended_assignments: set[int] = set()
+    extension_count = 0
+    for placement in placements:
+        assignment = placement.service.assignment
+        if (
+            assignment.end_date is None
+            or assignment.id in extended_assignments
+            or rng.random() >= EXTENSION_PROBABILITY
+        ):
+            continue
+        extended_assignments.add(assignment.id)
+        old_end = assignment.end_date
+        placement.period_source = "PLACEMENT"
+        placement.specific_start_date = assignment.start_date
+        placement.specific_end_date = old_end
+        placement.save(update_fields=["period_source", "specific_start_date", "specific_end_date"])
+        assignment.end_date = old_end + timedelta(days=rng.randint(90, 365))
+        assignment.save(update_fields=["end_date"])
+        Placement.objects.create(
+            colleague=placement.colleague,
+            service=placement.service,
+            period_source="PLACEMENT",
+            specific_start_date=old_end + timedelta(days=1),
+            specific_end_date=assignment.end_date,
+            source=placement.source,
+            source_id="",
+        )
+        extension_count += 1
+
+    write(f"Extensions: {extension_count}")
+
+    # ── 10. Aanvraag periods ─────────────────────────────────────────
+    # Some open roles say "per direct" and how long, as real postings do. Only
+    # after the placements, since a filled role runs on dates.
+    for service in Service.objects.filter(assignment__in=assignments, placements__isnull=True):
+        if request_rng.random() < FLEXIBLE_REQUEST_SHARE:
+            service.period_source = Service.SERVICE
+            service.starts_immediately = True
+            service.specific_start_date = None
+            service.specific_end_date = None
+            service.duration_months = request_rng.choice([6, 12, 12, 24])
+            service.save(
+                update_fields=[
+                    "period_source",
+                    "starts_immediately",
+                    "specific_start_date",
+                    "specific_end_date",
+                    "duration_months",
+                ]
+            )
 
 
 class Command(BaseCommand):
     help = "Generate the full dummy dataset (network sync). Alias for load_dummy_data --profile full."
 
     def handle(self, *args, **options):
+        require_destructive_actions_enabled()
         generate(PROFILES["full"], write=self.stdout.write)
         self.stdout.write(self.style.SUCCESS("Done!"))

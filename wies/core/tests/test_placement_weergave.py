@@ -7,6 +7,7 @@ options.
 
 import html as html_module
 import json
+import re
 from datetime import timedelta
 
 import pytest
@@ -517,6 +518,17 @@ class TestViewSwitch:
         # The default view leaves the parameter out, to keep the url clean.
         assert 'name="weergave"' not in self.client.get(reverse("home")).content.decode()
 
+    def test_view_items_load_on_item_change(self):
+        """item-change fires for a click and the arrow keys alike."""
+        html = self.client.get(reverse("home")).content.decode()
+        assert html.count('hx-trigger="item-change"') == 2
+
+    def test_view_requests_replace_each_other(self):
+        """Two quick arrow keys: the older response must not win the url."""
+        html = self.client.get(reverse("home")).content.decode()
+        # Two segmented items and two overflow menu items.
+        assert html.count('hx-sync="#results:replace"') == 4
+
 
 @pytest.mark.django_db
 class TestSortOptions:
@@ -683,13 +695,13 @@ class TestClientModalCounts:
     def _org_count(self, params=None):
         """The org's count as the modal renders it.
 
-        Read back out of the json_script payload: these templates are Jinja2, so
+        Read back out of the tree container's data-tree: these templates are Jinja2, so
         there is no response.context to inspect.
         """
         response = self.client.get("/client-modal/", {"count_mode": "placements", "ndd": "1", **(params or {})})
         assert response.status_code == 200
         html = response.content.decode()
-        raw = html.split('<script id="client-data" type="application/json">')[1].split("</script>")[0]
+        raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', html).group(1)
 
         def walk(nodes):
             for node in nodes:

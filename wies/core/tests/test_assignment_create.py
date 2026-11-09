@@ -100,6 +100,25 @@ class AssignmentCreateTest(TestCase):
         assert b"Opdracht invoeren" in response.content
         assert b"Voer opdracht in" in response.content
 
+    def test_create_form_names_client_picker_and_says_it_is_required(self):
+        # nldd-form-field labels only an input; the picker is a group of buttons,
+        # so it names itself, and "required" is told as text (WCAG 1.3.1).
+        self.client.force_login(self.business_manager_user)
+        response = self.client.get(
+            reverse("assignment-list"),
+            {"nieuwe-opdracht": ""},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        html = response.content.decode()
+        picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)
+        assert picker is not None
+        assert 'role="group"' in picker.group(1)
+        assert 'aria-label="Opdrachtgever(s)"' in picker.group(1)
+        assert "<nldd-form-field-help-text>Minimaal 1 opdrachtgever.</nldd-form-field-help-text>" in html
+        # field_error_description.js hands the help text to the button, which
+        # nldd-form-field does not describe.
+        assert '<nldd-button id="assignment-org-trigger-btn" data-help-description' in html
+
     def test_list_sentinel_full_page_opens_create_panel(self):
         # Full-page GET (refresh/bookmark): the whole list plus the create panel.
         self.client.force_login(self.business_manager_user)
@@ -174,22 +193,26 @@ class AssignmentCreateTest(TestCase):
         assert "invalid" in picker.group(1)
 
     def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
-        # _safe_return_path rejects a protocol-relative terug_url, so the
-        # HX-Location falls back to the list.
+        # _safe_return_path rejects a protocol-relative terug_url, and its
+        # backslash form (browsers read "\\" as "/"), so the HX-Location falls
+        # back to the list.
         self.client.force_login(self.business_manager_user)
-        response = self.client.post(
-            reverse("assignment-create-sheet"),
-            {
-                "name": "Onveilige Terug",
-                "owner": self.business_manager_colleague.public_id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                "terug_url": "//evil.example",
-            },
-        )
-        assert response.status_code == 204
-        assignment = Assignment.objects.get(name="Onveilige Terug")
-        location = json.loads(response["HX-Location"])
-        assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
+        for i, terug_url in enumerate(("//evil.example", "/\\evil.example")):
+            with self.subTest(terug_url=terug_url):
+                name = f"Onveilige Terug {i}"
+                response = self.client.post(
+                    reverse("assignment-create-sheet"),
+                    {
+                        "name": name,
+                        "owner": self.business_manager_colleague.public_id,
+                        **org_formset_data([(self.org, "PRIMARY")]),
+                        "terug_url": terug_url,
+                    },
+                )
+                assert response.status_code == 204
+                assignment = Assignment.objects.get(name=name)
+                location = json.loads(response["HX-Location"])
+                assert location["path"] == f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
 
     def test_sheet_success_banner_rides_along_on_panel_load(self):
         """The success banner rides along as an OOB swap on the panel response.
@@ -223,6 +246,26 @@ class AssignmentCreateTest(TestCase):
         assert "is aangemaakt" in html
         # The panel that opens is the opdracht, so the banner carries no link to it.
         assert 'text="Bekijk opdracht"' not in html
+
+    def test_success_message_asks_for_an_aanvraag(self):
+        """A new opdracht has no aanvraag yet; the message asks for one."""
+        self.client.force_login(self.business_manager_user)
+        self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Opdracht Zonder Rol",
+                "owner": self.business_manager_colleague.public_id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assignment = Assignment.objects.get(name="Opdracht Zonder Rol")
+        panel = self.client.get(
+            reverse("assignment-list"),
+            {"opdracht": assignment.public_id},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        self.assertContains(panel, "is aangemaakt. Voeg een aanvraag toe.")
 
 
 class AssignmentListButtonTest(TestCase):

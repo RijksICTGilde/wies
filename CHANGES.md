@@ -4,8 +4,43 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 744: security hardening
+- 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
+- 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
+- 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label
+- 804: Thema is no longer a default label category (setup and dummy data); the handleiding speaks of Expertise only
+- 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
+- 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
+- 809: bump dependencies for security patches
+
+## 2026-11-03_2
+
+- 808: fix deployment name staging env
+
+## 2026-11-03
+
+- 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
+- 783: bump dependencies for security patches and change trivy interval to "daily"
+- 806: more security patches
+- 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)
+- 786: also release to zad staging on tag
+- 798: NLDD and htmx are now npm packages (package.json + package-lock.json, kept up to date by Dependabot), copied into static/vendor at build time instead of committed
+
+## 2026-10-28
+
+- 780: new page Handleiding for consultants (/handleiding/), with screenshots, linked from the footer
+- 767: Bezetting timeline is a list for screen readers, with each bar's period and free days as text; bar borders and the pressed status card meet WCAG contrast; status card names start with their visible text
+- 767: Bezetting month axis stays visible while scrolling and the months are in Dutch; bars show the client and role, and an extension of an opdracht reads as such and no longer counts as ending soon; the colleague panel lists opdrachten in the same order as the timeline (running, planned, finished)
+- 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
+- 766: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
 - 775: "merk" is renamed to "onderdeel/programma" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
+- 773: the security policy (SECURITY.md) is now readable in Wies at /beveiliging/, linked from the footer and the FAQ; the privacy page generator is renamed to `manage.py generate_docs_html` and renders both pages
+- 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
+- 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
+- 770: the Toegankelijkheid page states the current accessibility status (A, 19 October 2026) as text with a link to the register, replacing the outdated label image (status C)
+- 769: the date filter no longer refreshes the list on every keystroke and keeps focus in the field after the refresh; the client picker in the assignment form is a named group and says at least 1 client is required (accessibility)
+- 771: in sheets, the field or option with keyboard focus no longer disappears behind the sticky button at the bottom or the title bar at the top; the current page in the Beheer menu is also shown in bold, not only by colour
 
 ## 2026-10-22
 

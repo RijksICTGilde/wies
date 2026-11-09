@@ -33,6 +33,13 @@ class UserThemeViewTest(TestCase):
         self.colleague.refresh_from_db()
         assert self.colleague.theme == Colleague.Theme.SYSTEM
 
+    def test_user_without_colleague_gets_409_not_500(self):
+        # Login links a Colleague, so this only arises when it is removed mid-session.
+        self.client.force_login(self.user)
+        Colleague.objects.filter(user=self.user).delete()
+        response = self.client.post(self.url, {"theme": "dark"})
+        assert response.status_code == 409
+
     def test_get_is_not_allowed(self):
         self.client.force_login(self.user)
         assert self.client.get(self.url).status_code == 405

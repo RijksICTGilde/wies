@@ -356,6 +356,12 @@ class SuborganizationAdminTest(TestCase):
         suborganization.refresh_from_db()
         assert suborganization.name == "Nieuw"
 
+    def test_edit_rejects_other_methods_with_405(self):
+        suborganization = Suborganization.objects.create(name="Oud")
+        self.client.force_login(self.admin_user)
+        response = self.client.put(reverse("suborganization-edit", args=[suborganization.public_id]))
+        assert response.status_code == 405
+
     def test_edit_to_existing_name_rejected(self):
         Suborganization.objects.create(name="Bestaand")
         target = Suborganization.objects.create(name="Anders")

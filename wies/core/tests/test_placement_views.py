@@ -1,3 +1,4 @@
+import html as html_module
 import json
 import re
 from collections import Counter
@@ -753,7 +754,7 @@ class PlacementPanelVisibilityTest(TestCase):
         assert 'text="Afgelopen"' in body
         assert f'<nldd-tooltip text="{PRIVACY_OWN}" timing="instant">' in body
         assert 'variant="icon"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
+        assert f'aria-label="Beperkt zichtbaar. {PRIVACY_OWN}"' in body
 
     @patch("wies.core.editables.assignment.timezone")
     def test_active_panel_renders_no_period_chip(self, mock_tz):
@@ -2560,14 +2561,14 @@ class AssignmentPanelBreadcrumbMinistryTest(TestCase):
 
 
 def _modal_org_self_counts(response) -> dict[int, int]:
-    """Extract {org_id: self placement count} from the client-modal json_script blob.
+    """Extract {org_id: self placement count} from the client-modal tree data.
 
     Each org renders as a node carrying ``nr_of_placements``; a node that also has
     children emits a ``self: True`` sub-node holding its own (self) count, which is
     the precise value to compare against."""
     html = response.content.decode()
-    match = re.search(r'<script id="client-data"[^>]*>(.*?)</script>', html, re.S)
-    assert match, "client-data json_script not found in modal response"
+    match = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', html)
+    assert match, "client-tree-container data-tree not found in modal response"
     counts: dict[int, int] = {}
 
     def walk(nodes):
@@ -2577,7 +2578,7 @@ def _modal_org_self_counts(response) -> dict[int, int]:
                 counts[oid] = node["nr_of_placements"]
             walk(node.get("children", []))
 
-    walk(json.loads(match.group(1)))
+    walk(json.loads(html_module.unescape(match.group(1))))
     return counts
 
 
@@ -2682,7 +2683,7 @@ class PrivacyNoteSurfacesTest(TestCase):
 
     def _panel(self) -> str:
         response = self.client.get(
-            f"/opdrachten/?opdracht={self.assignment.public_id}",
+            f"/aanvragen/?opdracht={self.assignment.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
@@ -2698,7 +2699,7 @@ class PrivacyNoteSurfacesTest(TestCase):
         assert 'variant="icon"' in body
         # Focusable, or the tooltip is mouse-only.
         assert 'tabindex="0"' in body
-        assert f'accessible-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
+        assert f'aria-label="Beperkt zichtbaar. {PRIVACY_BM}"' in body
 
     def test_panel_no_longer_wraps_the_note_in_a_sentence(self):
         body = self._panel()
