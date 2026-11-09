@@ -128,10 +128,12 @@
              that name unreachable. Only non-editing actions remain here. #}
           {% set _actions = [] %}
           {% if panel_data.owner_display.owner_url %}
-            {% set _ = _actions.append({"text": "Profiel bekijken", "icon": "user", "attrs": 'hx-get="' ~ panel_data.owner_display.owner_url ~ '" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"'}) %}
+            {% set _profile_attrs = {"hx-get": panel_data.owner_display.owner_url, "hx-target": "#side-panel-content", "hx-swap": "innerHTML", "hx-push-url": "false"} %}
+            {% set _ = _actions.append({"text": "Profiel bekijken", "icon": "user", "attrs": _profile_attrs}) %}
           {% endif %}
           {% if panel_data.assignment.owner.email %}
-            {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": 'data-href="' ~ (panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email)) ~ '"'}) %}
+            {% set _email_attrs = {"data-href": panel_data.owner_display.owner_mailto or ("mailto:" ~ panel_data.assignment.owner.email)} %}
+            {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": _email_attrs}) %}
           {% endif %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>

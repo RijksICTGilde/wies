@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import (
@@ -167,7 +167,7 @@ from .services.placements import (
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
-from .services.urls import current_page_url_on, url_replacing_param
+from .services.urls import current_page_url_on, is_local_path, url_replacing_param
 from .services.users import (
     close_contract_periods,
     close_placements,
@@ -1092,6 +1092,8 @@ def staff_database(request):
             return render(request, "parts/merge_duplicates_sheet.html", context)
 
         elif action == "merge_duplicates_apply":
+            # Deliberately not behind ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+            # this merge is a cleanup meant for production data.
             from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
                 find_duplicate_groups,
                 merge_group,
@@ -2904,7 +2906,11 @@ def user_theme(request):
     theme = request.POST.get("theme", "")
     if theme not in Colleague.Theme.values:
         return HttpResponseBadRequest("Onbekende weergave")
-    colleague = request.user.colleague
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        # A user without a Colleague has nowhere to store it; the screen has
+        # already switched client-side, only persisting is refused.
+        return HttpResponse("Geen collega om de weergave op te slaan", status=409)
     colleague.theme = theme
     colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
@@ -3127,7 +3133,8 @@ def profile_labels_edit(request):
     )
 
 
-@permission_required("core.change_labelcategory", raise_exception=True)
+# The sheet both renames existing categories and adds new ones.
+@permission_required(["core.change_labelcategory", "core.add_labelcategory"], raise_exception=True)
 def label_category_manage(request):
     """All categories in one sheet: rename, pick a colour, add rows.
 
@@ -3229,9 +3236,13 @@ def _render_category_manage_body(request, formset, template="parts/label_categor
     )
 
 
-@permission_required("core.change_label", raise_exception=True)
+@login_required
 def label_form(request, public_id=None):
     """One sheet for both adding and editing a label (category + name)."""
+    # One view, two routes, so the permission depends on which one: checked
+    # before the lookup, so a missing label does not answer differently.
+    if not request.user.has_perm("core.change_label" if public_id else "core.add_label"):
+        raise PermissionDenied
     label = get_object_or_404(Label, public_id=public_id) if public_id else None
     is_edit = label is not None
 
@@ -3442,7 +3453,7 @@ def suborganization_edit(request, public_id):
                 "target_element_id": element_id,
             },
         )
-    return None
+    return HttpResponse(status=405)
 
 
 @permission_required("core.delete_suborganization", raise_exception=True)
@@ -3721,12 +3732,15 @@ def _page_url_behind_panel(request) -> str:
 
     The panel is an overlay on a real page, so after deleting we return there
     instead of jumping to the assignment list. Falls back to that list when the
-    HX-Current-URL header is absent.
+    HX-Current-URL header is absent, or (being client controlled) names a path
+    that would leave the site.
     """
     current = request.headers.get("HX-Current-URL")
     if not current:
         return reverse("assignment-list")
     parsed = urllib.parse.urlparse(current)
+    if not is_local_path(parsed.path):
+        return reverse("assignment-list")
     # Keep pagina/filters; collega goes too, or the colleague panel would open.
     return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "collega"))
 
@@ -3953,6 +3967,7 @@ def toegankelijkheid_onderzoek(request):
     return redirect(static(CURRENT_AUDIT_REPORT))
 
 
+@login_not_required
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)
 
@@ -4560,10 +4575,10 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
     """Returns ``raw`` only when it is a path on this site, else the fallback.
 
     The value comes from a hidden input, so the client controls it. It ends up in
-    HX-Push-Url — the address bar only, no navigation — but a protocol-relative
-    "//host" would still display a foreign origin there.
+    HX-Location/HX-Push-Url, where a protocol-relative "//host" — or "/\\host",
+    which browsers read the same way — would point at a foreign origin.
     """
-    if raw and raw.startswith("/") and not raw.startswith("//"):
+    if is_local_path(raw):
         return raw
     return fallback
 

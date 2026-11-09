@@ -92,9 +92,20 @@ USER app
 
 
 #-----------------------------------------------------------------------------------------------------------------------
+# Dev target — local development via docker-compose (runserver, local/test settings)
+#-----------------------------------------------------------------------------------------------------------------------
+FROM django-run AS dev
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]
+
+
+#-----------------------------------------------------------------------------------------------------------------------
 # Web target — serves the Django application via Gunicorn
 #-----------------------------------------------------------------------------------------------------------------------
 FROM django-run AS web
+# Baked in so `manage.py shell` etc. in a running container get production
+# settings instead of manage.py's local default. Not on django-run: an ENV
+# can't be unset downstream, and the dev target must fall back to local/test.
+ENV DJANGO_SETTINGS_MODULE=config.settings.production
 CMD ["./docker-entrypoint.sh"]
 
 

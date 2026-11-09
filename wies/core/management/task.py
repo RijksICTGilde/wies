@@ -1,11 +1,25 @@
-"""Base class for management commands that run as background Tasks.
+"""Shared pieces for management commands: the background-Task base class and
+the destructive-actions guard.
 
 Lives outside ``commands/`` (so Django does not treat it as a runnable command).
 """
 
 import logging
 
-from django.core.management.base import BaseCommand
+from django.conf import settings
+from django.core.management.base import BaseCommand, CommandError
+
+
+def require_destructive_actions_enabled() -> None:
+    """Refuse to run unless ``ENABLE_DESTRUCTIVE_STAFF_ACTIONS`` is on.
+
+    The /staff/ view already checks the flag before calling a destructive
+    command; checking again in the command itself means no other route (the
+    db_worker, a manual ``manage.py`` run) can wipe data where the flag is off.
+    """
+    if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+        msg = "Destructive actions are disabled (set ENABLE_DESTRUCTIVE_STAFF_ACTIONS=true to allow)"
+        raise CommandError(msg)
 
 
 class TaskCommand(BaseCommand):

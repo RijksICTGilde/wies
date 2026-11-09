@@ -9,7 +9,9 @@
 </nldd-search-field>
 </nldd-container>
 <nldd-simple-section>
-<div id="client-tree-container"></div>
+<div id="client-tree-container"
+     data-tree="{{ hierarchy|json_attr }}"
+     data-selections="{{ current_selections|json_attr }}"></div>
 </nldd-simple-section>
 <nldd-container slot="footer" padding="16" padding-top="0">
 <nldd-container id="client-selection-tokens" layout="wrap" gap="8" hidden></nldd-container>
@@ -18,9 +20,3 @@
 </nldd-container>
 </nldd-page>
 </nldd-sheet>
-{{ hierarchy|json_script("client-data") }}
-{{ current_selections|json_script("client-current-selections") }}
-{# Order matters: client_tree.js needs both TreeState and WiesOrgTree. #}
-<script src="{{ app_asset('js/tree_state.js') }}"></script>
-<script src="{{ app_asset('js/org_tree.js') }}"></script>
-<script src="{{ app_asset('js/client_tree.js') }}"></script>
