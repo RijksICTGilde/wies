@@ -5,7 +5,7 @@ don't toggle layout classes on the target. #}
     {% if alert %}
       {% set _variant = 'critical' if alert.kind == 'error' else
         'warning' if alert.kind == 'warning' else 'success' if alert.kind ==
-      'success' else 'neutral' %}
+        'success' else 'neutral' %}
       <nldd-banner variant="{{ _variant }}" text="{{ alert.message }}"></nldd-banner>
     {% endif %}
     <div class="editable-field-display__value">
