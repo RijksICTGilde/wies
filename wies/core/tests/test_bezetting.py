@@ -33,6 +33,7 @@ from wies.core.services.occupancy import (
     NARROW_BAR_PCT,
     bezetting_filter_groups,
     colleague_occupancy,
+    horizon_days,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -388,6 +389,33 @@ class OccupancyServiceTest(TestCase):
         assert segment.width_pct < NARROW_BAR_PCT
         assert segment.too_narrow is True
 
+    def test_a_bar_has_its_day_columns(self):
+        """The grid places a bar by day: column 1 is the horizon start."""
+        start = self.today - timedelta(days=10)
+        _placement(self.full, "Per Dag", start, self.today + timedelta(days=30))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segment = next(s for s in rows[self.full.id].segments if s.assignment_name == "Per Dag")
+        assert segment.start_day == HORIZON_BACK_DAYS - 10 + 1
+        assert segment.span_days == 40
+
+    def test_a_bar_beyond_the_horizon_stays_inside_the_grid(self):
+        """A column past the last would add one and rescale the whole row."""
+        _placement(self.full, "Heel Lang", self.today - timedelta(days=400), self.today + timedelta(days=400))
+        _placement(self.full, "Begint Op De Rand", self.today + timedelta(days=HORIZON_AHEAD_DAYS), None)
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segments = {s.assignment_name: s for s in rows[self.full.id].segments}
+        assert (segments["Heel Lang"].start_day, segments["Heel Lang"].span_days) == (1, horizon_days())
+        edge = segments["Begint Op De Rand"]
+        assert edge.start_day + edge.span_days - 1 == horizon_days()
+
+    def test_an_extension_starts_in_the_column_after_the_bar_it_continues(self):
+        end = self.today + timedelta(days=20)
+        first = _placement(self.full, "Doorlopend", self.today - timedelta(days=30), end)
+        _extension(first, end + timedelta(days=7), end + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        first_seg, second_seg = sorted(rows[self.full.id].segments, key=lambda s: s.start)
+        assert second_seg.start_day == first_seg.start_day + first_seg.span_days
+
     def test_a_wide_bar_keeps_its_label(self):
         _placement(self.full, "Lang Genoeg", self.today - timedelta(days=30), self.today + timedelta(days=90))
         rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
@@ -572,7 +600,7 @@ class TimelineGeometryTest(TestCase):
                 )
 
 
-class OccupancyMerkFilterTest(TestCase):
+class OccupancySuborganizationFilterTest(TestCase):
     def setUp(self):
         setup_roles()
         self.today = timezone.now().date()
@@ -582,26 +610,26 @@ class OccupancyMerkFilterTest(TestCase):
         self.b = _consultant("Bram Mindful", "b@x.nl", suborganization=self.mindful)
         self.c = _consultant("Cora Zonder", "c@x.nl")
 
-    def _ids(self, merk_ids):
-        return {r.colleague.id for r in colleague_occupancy(self.today, merk_ids=merk_ids)}
+    def _ids(self, suborganization_ids):
+        return {r.colleague.id for r in colleague_occupancy(self.today, suborganization_ids=suborganization_ids)}
 
     def test_no_filter_shows_everyone(self):
         assert self._ids(None) == {self.a.id, self.b.id, self.c.id}
 
-    def test_single_merk_filters(self):
+    def test_single_suborganization_filters(self):
         assert self._ids([self.digi.id]) == {self.a.id}
 
-    def test_multiple_merken_or(self):
+    def test_multiple_suborganizations_or(self):
         assert self._ids([self.digi.id, self.mindful.id]) == {self.a.id, self.b.id}
 
 
-class BezettingMerkFilterViewTest(TestCase):
+class BezettingSuborganizationFilterViewTest(TestCase):
     def setUp(self):
         setup_roles()
         self.client = Client()
         self.url = reverse("bezetting")
         # onboarding_completed_at set so the onboarding wizard (which lists every
-        # merk) does not render and mask the filter-bar assertions.
+        # suborganization) does not render and mask the filter-bar assertions.
         self.business_manager_user = User.objects.create(
             email="business_manager@rijksoverheid.nl", onboarding_completed_at=timezone.now()
         )
@@ -613,31 +641,31 @@ class BezettingMerkFilterViewTest(TestCase):
         self.a = _consultant("Aisha Digi", "a@x.nl", suborganization=self.digi)
         self.b = _consultant("Bram Mindful", "b@x.nl", suborganization=self.mindful)
 
-    def test_filter_bar_lists_merken(self):
+    def test_filter_bar_lists_suborganizations(self):
         response = self.client.get(self.url)
-        # The merk facet renders as a select-multi group in the shared filter sheet.
-        assert b'data-name="merk"' in response.content
+        # The suborganization facet renders as a select-multi group in the shared filter sheet.
+        assert b'data-name="onderdeel"' in response.content
         assert b"Digi Gilde" in response.content
         assert b"Mindful Rijk" in response.content
 
-    def test_unused_merk_not_offered(self):
-        # A merk with no colleagues is not a useful filter and must not appear
+    def test_unused_suborganization_not_offered(self):
+        # A suborganization with no colleagues is not a useful filter and must not appear
         # as a checkbox option. (Assert on its public_id so the onboarding wizard,
-        # which lists every merk by name, cannot mask the check.)
+        # which lists every suborganization by name, cannot mask the check.)
         unused = Suborganization.objects.create(name="Ongebruikt Merk")
         response = self.client.get(self.url)
         assert str(unused.public_id).encode() not in response.content
-        # The used merken are still offered.
+        # The used suborganizations are still offered.
         assert str(self.digi.public_id).encode() in response.content
 
-    def test_filtering_hides_other_merk(self):
-        response = self.client.get(self.url, {"merk": str(self.digi.public_id)})
+    def test_filtering_hides_other_suborganization(self):
+        response = self.client.get(self.url, {"onderdeel": str(self.digi.public_id)})
         assert b"Aisha Digi" in response.content
         assert b"Bram Mindful" not in response.content
 
-    def test_unknown_merk_token_ignored(self):
+    def test_unknown_suborganization_token_ignored(self):
         # A bogus public_id resolves to no ids: an empty filter shows everyone.
-        response = self.client.get(self.url, {"merk": "not-a-real-uuid"})
+        response = self.client.get(self.url, {"onderdeel": "not-a-real-uuid"})
         assert response.status_code == 200
         assert b"Aisha Digi" in response.content
         assert b"Bram Mindful" in response.content
@@ -692,22 +720,22 @@ class BezettingFilterGroupCountTest(TestCase):
         self.data = Label.objects.create(name="Data", category=self.thema)
         self.senior = Label.objects.create(name="Senior", category=self.niveau)
 
-        self.merk_a = Suborganization.objects.create(name="Merk A")
-        self.merk_b = Suborganization.objects.create(name="Merk B")
+        self.suborg_a = Suborganization.objects.create(name="Merk A")
+        self.suborg_b = Suborganization.objects.create(name="Merk B")
 
         # Three AI-labelled consultants, all Senior, so an AND filter on Niveau is
         # active while we count the Thema group.
         for i in range(3):
-            c = _consultant(f"AI-{i}", f"ai{i}@x.nl", suborganization=self.merk_a)
+            c = _consultant(f"AI-{i}", f"ai{i}@x.nl", suborganization=self.suborg_a)
             c.labels.add(self.ai, self.senior)
-        # One Data consultant, also Senior, in the other merk.
-        d = _consultant("Data-0", "data0@x.nl", suborganization=self.merk_b)
+        # One Data consultant, also Senior, in the other suborganization.
+        d = _consultant("Data-0", "data0@x.nl", suborganization=self.suborg_b)
         d.labels.add(self.data, self.senior)
 
-    def _groups(self, merk_tokens=None, label_tokens=None):
-        merk = resolve_facet(Suborganization, merk_tokens or [])
+    def _groups(self, suborganization_tokens=None, label_tokens=None):
+        suborganization = resolve_facet(Suborganization, suborganization_tokens or [])
         labels = resolve_facet(Label, label_tokens or [])
-        return bezetting_filter_groups(merk, labels, labels_by_category(labels.ids))
+        return bezetting_filter_groups(suborganization, labels, labels_by_category(labels.ids))
 
     def _count(self, groups, group_label, public_id):
         group = next(g for g in groups if g["label"] == group_label)
@@ -721,12 +749,12 @@ class BezettingFilterGroupCountTest(TestCase):
         assert self._count(groups, "Thema", self.ai.public_id) == 3
         assert self._count(groups, "Thema", self.data.public_id) == 1
 
-    def test_merk_counts_reflect_all_matching_consultants(self):
-        # With a label filter active, the merk group excludes its own filter and
-        # must count all three consultants in Merk A.
+    def test_suborganization_counts_reflect_all_matching_consultants(self):
+        # With a label filter active, the suborganization group excludes its own filter and
+        # must count all three consultants in "Merk A".
         groups = self._groups(label_tokens=[str(self.senior.public_id)])
-        assert self._count(groups, "Merk", self.merk_a.public_id) == 3
-        assert self._count(groups, "Merk", self.merk_b.public_id) == 1
+        assert self._count(groups, "Onderdeel", self.suborg_a.public_id) == 3
+        assert self._count(groups, "Onderdeel", self.suborg_b.public_id) == 1
 
 
 class BezettingLabelFilterViewTest(TestCase):
@@ -775,7 +803,7 @@ class BezettingLabelFilterViewTest(TestCase):
 
 
 class BezettingFilterChipTest(TestCase):
-    """Active merk/label filters show as dismissible chips below the toolbar,
+    """Active suborganization/label filters show as dismissible chips below the toolbar,
     with a "Wis alle filters" button, like the Gebruikers list."""
 
     def setUp(self):
@@ -808,9 +836,9 @@ class BezettingFilterChipTest(TestCase):
         assert re.search(r"data-filter-value=[^>]*>AI</nldd-token>", content)
         assert "Wis alle filters" in content
 
-    def test_merk_filter_renders_a_chip(self):
-        content = self.client.get(self.url, {"merk": str(self.digi.public_id)}).content.decode()
-        assert 'data-filter-name="merk"' in content
+    def test_suborganization_filter_renders_a_chip(self):
+        content = self.client.get(self.url, {"onderdeel": str(self.digi.public_id)}).content.decode()
+        assert 'data-filter-name="onderdeel"' in content
         assert f'data-filter-value="{self.digi.public_id}"' in content
         assert "Digi Gilde" in content
 
@@ -988,17 +1016,17 @@ class BezettingStatusFilterViewTest(TestCase):
         assert self.client.get(self.url).status_code == 200
 
     def test_chips_do_not_cost_a_query_per_colleague(self):
-        """Labels and merk are prefetched; without that this is an N+1.
+        """Labels and suborganization are prefetched; without that this is an N+1.
 
         Enough colleagues that a per-row query would clearly exceed the fixed
         set: with only a handful the N+1 hides under any round threshold.
         """
         category = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
         label = Label.objects.create(name="AI", category=category)
-        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
         for i in range(25):
             colleague = _consultant(f"Chip {i}", f"chip{i}@x.nl")
-            colleague.suborganization = merk
+            colleague.suborganization = suborganization
             colleague.save()
             colleague.labels.add(label)
 
@@ -1055,7 +1083,7 @@ class BezettingSearchTest(TestCase):
         assert content.count('value="appel"') == 2
 
     def test_no_match_shows_the_empty_state_and_zeroes_the_counts(self):
-        """Search narrows the cards too, like merk and labels (unlike status)."""
+        """Search narrows the cards too, like suborganization and labels (unlike status)."""
         content = self.client.get(self.url, {"zoek": "niemand"}).content.decode()
         assert "Geen collega&#39;s gevonden" in content or "Geen collega's gevonden" in content
         assert re.search(r">0</span>.*?op de bank", content, re.DOTALL)
@@ -1220,7 +1248,7 @@ class TimelineStructureTest(TestCase):
         assert content.count('<li class="bezetting-row ') == 2
         # role="list" because Safari drops it from a ul with list-style: none.
         assert re.search(
-            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats">', content
+            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats"\s', content
         )
         assert re.search(r'<ul class="bezetting-rows"\s+role="list"', content)
         assert '<li class="bezetting-seg ' in content
@@ -1231,6 +1259,14 @@ class TimelineStructureTest(TestCase):
             f"Loopt bijna af, 24 uur per week, van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, nog 20 dagen"
         )
         assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
+
+    def test_a_bar_is_placed_on_the_day_grid(self):
+        """Grid placement, not absolute offsets, so a wrapping label makes its
+        lane taller instead of running out of the bar."""
+        content = self._content()
+        assert f'style="--bezetting-days: {horizon_days()}"' in content
+        start_day = HORIZON_BACK_DAYS - 10 + 1
+        assert re.search(rf"grid-column: {start_day} / span 30;\s+grid-row: 1", content)
 
     def test_an_ending_bar_shows_its_days_left(self):
         """The countdown keeps "ends soon" from resting on colour alone."""
@@ -1287,7 +1323,7 @@ class TimelineStructureTest(TestCase):
         )
         assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
         assert (
-            '<span class="bezetting-seg__label" aria-hidden="true"><span class="bezetting-seg__client">BZK</span> · <span class="bezetting-seg__name">Loopt bijna af</span> · Developer · 24 uur'
+            '<span class="bezetting-seg__label" aria-hidden="true">BZK · <span class="bezetting-seg__name">Loopt bijna af</span> · Developer · 24 uur'
             in content
         )
 

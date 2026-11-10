@@ -479,6 +479,15 @@ class AanvraagFlexiblePeriodTest(TestCase):
         assert "Kies een duur." in response.content.decode()
         assert not self.assignment.services.exists()
 
+    def test_op_datum_without_a_date_asks_for_one(self):
+        """Text that is no date posts as an empty date; "Op datum" must not
+        save that as an open end."""
+        response = self._post(start_mode="NOW", end_mode="DATE", placement_end_date="")
+
+        assert response.status_code == 200
+        assert "Vul een einddatum in, of kies &#39;Onbekend&#39;." in response.content.decode()
+        assert not self.assignment.services.exists()
+
     def test_filling_an_aanvraag_drops_per_direct_and_the_duration(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
         service = Service.objects.create(

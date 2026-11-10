@@ -8,6 +8,7 @@
       hx-target="#labelFormBody"
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
+  {% include "parts/form_required_note.html" %}
   {{ content.name.as_field_group() }}
   {{ content.category.as_field_group() }}
   <nldd-form-actions>

@@ -233,18 +233,10 @@
 }
 
 /* A row is as tall as its lane stack needs (never shorter than the base height),
-   so rows with several concurrent opdrachten grow instead of bleeding into the
-   neighbouring row. */
+   so rows with several concurrent opdrachten, or a label that wraps, grow
+   instead of bleeding into the neighbouring row. */
 .bezetting-row {
-  --bezetting-lanes: 1;
-  min-height: max(
-    var(--bezetting-row-height),
-    calc(
-      var(--bezetting-lanes) * var(--bezetting-lane-height) +
-        (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap) + 2 *
-        var(--bezetting-row-padding)
-    )
-  );
+  min-height: var(--bezetting-row-height);
 }
 
 .bezetting-timeline-head {
@@ -263,8 +255,13 @@
   padding: 0 0 var(--primitives-space-8) var(--primitives-space-12);
 }
 
+/* A column so the lane stack, the only child in flow, sits vertically
+   centred; gridlines, today and the free stretch are positioned over it. */
 .bezetting-track {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100%;
   min-height: var(--bezetting-row-height);
   border-left: 1px solid var(--semantics-surfaces-tinted-highlight-border-color);
@@ -274,21 +271,18 @@
   min-height: var(--bezetting-head-height);
 }
 
-/* Lane stack: vertically centred in the track, so a single bar sits level with
-   the name beside it. It used to hang from a fixed 8px top offset, which centres
-   nothing: a row is as tall as its content (at least 52px for the avatar), so a
-   24px bar sat high with all the slack below it. Centring keeps a stack of
-   several lanes balanced in the row too, since the row grows with the stack. */
+/* Lane stack: one column per day and one row per lane, in flow, so a bar
+   keeps its place on the time axis and its lane grows when the label wraps
+   (wider text spacing, a long name on a narrow screen). Centred in the track,
+   so a single bar sits level with the name beside it. Positioned, so the bars
+   paint over the gridlines, which come first in the track. */
 .bezetting-lanes {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  left: 0;
-  right: 0;
-  height: calc(
-    var(--bezetting-lanes) * var(--bezetting-lane-height) +
-      (var(--bezetting-lanes) - 1) * var(--bezetting-lane-gap)
-  );
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--bezetting-days), minmax(0, 1fr));
+  grid-auto-rows: minmax(var(--bezetting-lane-height), auto);
+  row-gap: var(--bezetting-lane-gap);
+  padding-block: var(--bezetting-row-padding);
 }
 
 /* Month gridlines + labels */
@@ -440,10 +434,15 @@
    row link so the whole row opens the colleague panel. */
 /* Radius from the token scale rather than a loose 4px, so the bars round like
    the cards and tags around them. Each phase sets its own colours above; the
-   1px border keeps a bar's extent readable now that the fill is pale. */
+   1px border keeps a bar's extent readable now that the fill is pale. A
+   container, so a bar too narrow for a wrapped label can cut it instead
+   (below); its width comes from the grid, never from its text. */
 .bezetting-seg {
-  position: absolute;
-  height: var(--bezetting-lane-height);
+  container-type: inline-size;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  align-content: center;
   min-width: 3px;
   /* Not the shorthand: it would reset the phase colours set above. */
   border-width: 1px;
@@ -494,31 +493,15 @@
   border-bottom-right-radius: 0;
 }
 
-/* The end date, right-aligned in the bar so the name still starts at the left
-   edge. Hidden on bars too narrow to hold both (a container query would be
-   nicer, but each bar is absolutely positioned with an inline width). */
-/* Sits on top of the label's line. The label reserves room via padding-right,
-   but a bar can be narrower than that reserved space, so the date also paints
-   its own background: without it a truncated name still slid under the date on
-   the narrowest bars. */
+/* The countdown, right-aligned in the bar so the name still starts at the left
+   edge. In flow beside the label: where the bar has no room for both, it
+   moves under the label instead of over it. */
 .bezetting-seg__end {
-  position: absolute;
-  top: 0;
-  right: 0;
+  margin-inline-start: auto;
   padding: 0 var(--primitives-space-6);
-  background: inherit;
-  line-height: calc(var(--bezetting-lane-height) - 2px);
   font-size: var(--primitives-font-size-70);
   font-weight: var(--primitives-font-weight-body-semi-bold, 550);
   white-space: nowrap;
-}
-
-/* Room for the countdown so a long assignment name truncates before it reaches
-   it instead of running underneath. 6rem: "nog 93 dagen", the widest this gets
-   at ENDING_SOON_DAYS, is about 5.5rem including its padding, and the countdown
-   is absolutely positioned so it cannot reserve the space itself. */
-.bezetting-seg--ending-soon .bezetting-seg__label {
-  padding-right: 6rem;
 }
 
 /* "uren niet ingevuld" reads as a note, not as part of the name. Italic only:
@@ -527,17 +510,18 @@
   font-style: italic;
 }
 
+/* Wraps rather than cuts: with wider text spacing a one-line label lost its
+   end. */
 .bezetting-seg__label {
   display: block;
-  padding: 0 var(--primitives-space-6);
-  /* Minus the bar's 1px border top and bottom, or the label sits low in the bar
-     (height and line-height are both the lane height, but border-box takes the
-     border out of the content area). */
-  line-height: calc(var(--bezetting-lane-height) - 2px);
+  flex: 1 1 8rem;
+  min-width: 0;
+  padding: var(--primitives-space-4) var(--primitives-space-6);
   font-size: var(--primitives-font-size-70);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* A narrow bar on a phone splits long Dutch compounds; hyphens split them
+     where a reader expects it. */
+  hyphens: auto;
+  overflow-wrap: anywhere;
 }
 
 /* Weight, not a lighter colour, sets the opdracht apart from client, role and
@@ -546,12 +530,15 @@
   font-weight: var(--primitives-font-weight-body-semi-bold, 550);
 }
 
-.bezetting-seg__client {
-  display: inline-block;
-  max-width: 16ch;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  vertical-align: top;
+/* A few characters per line is no label: on a bar this narrow (a phone, or a
+   short placement) one cut line reads better, and the bar's hidden sentence
+   and the colleague panel carry the rest. */
+@container (max-width: 10rem) {
+  .bezetting-seg__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 800px) {

@@ -36,11 +36,11 @@ empty sidebar #}
     <nldd-spacer size="24" direction="vertical"></nldd-spacer>
     {% if colleague and colleague.suborganization %}
       <nldd-title size="5">
-      <h2>Merk</h2>
+      <h2>Onderdeel</h2>
       </nldd-title>
       <nldd-spacer size="4" direction="vertical"></nldd-spacer>
       <nldd-container layout="wrap" gap="6">
-      <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+      <nldd-tag color="neutral"><span class="wies-tag-text">{{ colleague.suborganization.name }}</span></nldd-tag>
       </nldd-container>
       <nldd-spacer size="16" direction="vertical"></nldd-spacer>
     {% endif %}
@@ -53,7 +53,7 @@ empty sidebar #}
         <nldd-container layout="wrap" gap="6">
         {% for label in item.labels %}
           {# TEMPORARY: colourless (#565), see parts/colleague_panel_content.html. #}
-          <nldd-tag>{{ label.name }}</nldd-tag>
+          <nldd-tag><span class="wies-tag-text">{{ label.name }}</span></nldd-tag>
         {% endfor %}
         </nldd-container>
       {% else %}

@@ -160,4 +160,22 @@ describe("toggle-card (an opdracht entry in a colleague's cv list)", () => {
     assert.equal(toggle.getAttribute("text"), "Toon meer");
     assert.ok(!toggle.hasAttribute("expanded"));
   });
+
+  it("keeps the accessible name starting with the visible text", () => {
+    const { toggle } = cvEntry();
+    toggle.setAttribute("data-toggle-object", "taken bij Zaaksysteem");
+    toggle.setAttribute("accessible-label", "Toon meer taken bij Zaaksysteem");
+
+    toggleCard(toggle);
+    assert.equal(
+      toggle.getAttribute("accessible-label"),
+      "Toon minder taken bij Zaaksysteem",
+    );
+
+    toggleCard(toggle);
+    assert.equal(
+      toggle.getAttribute("accessible-label"),
+      "Toon meer taken bij Zaaksysteem",
+    );
+  });
 });

@@ -9,6 +9,11 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 WORKDIR /app
 
+# Pull in Debian security fixes the upstream image hasn't been rebuilt with yet
+RUN apt-get update \
+  && apt-get upgrade --yes --no-install-recommends \
+  && rm -rf /var/lib/apt/lists/*
+
 # pip is unused (uv installs into /opt/venv); ensurepip carries a bundled
 # wheel that would put it back
 RUN python -m pip uninstall --yes pip \

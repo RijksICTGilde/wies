@@ -95,6 +95,10 @@ class TimelineSegment:
     left_pct: float
     width_pct: float
     lane: int = 0  # vertical lane so overlapping (concurrent) placements don't stack
+    # The same position in whole days, for the grid that lets a bar grow with
+    # its label: first day column (1-based) and the number of days it spans.
+    start_day: int = 1
+    span_days: int = 1
     # Too narrow to hold its own name: the label would render as a stray "I..."
     # next to a wider bar. The bar's hidden sentence still carries the name.
     too_narrow: bool = False
@@ -127,7 +131,6 @@ class OccupancyRow:
     ends_soon: bool
     earliest_active_end: date | None
     segments: list[TimelineSegment] = field(default_factory=list)
-    lane_count: int = 1  # number of vertical lanes needed (row height scales with this)
     # The colleague's labels in the gilde category, as (name, nldd colour) pairs.
     # Only that category: the row has room for a chip or two, and the full
     # expertise list would fill it, while the gilde is the subdivision this page
@@ -244,17 +247,31 @@ def _extension_links(placements: list[Placement]) -> tuple[dict[int, date], set[
     return extends, extended
 
 
-def _position(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[float, float]:
-    """Clamp a placement to the horizon and return (left%, width%).
-
-    Open-ended placements (no end) run to the horizon end.
-    """
-    span = (horizon_end - horizon_start).days or 1
+def _day_span(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[int, int]:
+    """Clamp a placement to the horizon and return (first day, days) from the
+    horizon start. Open-ended placements (no end) run to the horizon end."""
     seg_start = max(start or horizon_start, horizon_start)
     seg_end = min(end or horizon_end, horizon_end)
-    left = (seg_start - horizon_start).days / span * 100
-    width = max((seg_end - seg_start).days, 1) / span * 100
-    return round(left, 2), round(width, 2)
+    return (seg_start - horizon_start).days, max((seg_end - seg_start).days, 1)
+
+
+def _position(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[float, float]:
+    """Clamp a placement to the horizon and return (left%, width%)."""
+    span = (horizon_end - horizon_start).days or 1
+    offset, days = _day_span(start, end, horizon_start, horizon_end)
+    return round(offset / span * 100, 2), round(days / span * 100, 2)
+
+
+def _grid_days(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[int, int]:
+    """(first day column, days spanned) on a grid of one column per horizon day.
+
+    Kept inside the grid: a column past the last would add a column of its own
+    and shift the scale of every bar in the row.
+    """
+    columns = (horizon_end - horizon_start).days or 1
+    offset, days = _day_span(start, end, horizon_start, horizon_end)
+    offset = min(offset, columns - 1)
+    return offset + 1, min(days, columns - offset)
 
 
 def _ending_level(end: date | None, phase: str, today: date) -> str:
@@ -282,12 +299,12 @@ def _days_left(end: date | None, phase: str, today: date) -> int | None:
     return (end - today).days
 
 
-def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> int:
+def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> None:
     """Greedily pack segments into vertical lanes so concurrent bars don't overlap.
 
     Segments go in ``placement_order_key`` order, so where bars overlap the
     running one takes the top lane; each goes into the first lane where it
-    overlaps no bar already placed. Returns the number of lanes used.
+    overlaps no bar already placed.
     """
     lanes: list[list[tuple[date, date]]] = []
     for seg in sorted(segments, key=lambda s: placement_order_key(s.phase, s.start)):
@@ -300,13 +317,12 @@ def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_
         else:
             seg.lane = len(lanes)
             lanes.append([span])
-    return max(len(lanes), 1)
 
 
 def colleague_occupancy(
     today: date,
     *,
-    merk_ids: list[int] | None = None,
+    suborganization_ids: list[int] | None = None,
     labels_by_category: dict[int, list[int]] | None = None,
     search: str = "",
 ) -> list[OccupancyRow]:
@@ -317,8 +333,8 @@ def colleague_occupancy(
     ones with the most free hours first, then fully-placed colleagues by
     soonest-ending assignment.
 
-    ``merk_ids`` optionally restricts the rows to colleagues in those
-    suborganisations (merken); an empty/None value shows everyone.
+    ``suborganization_ids`` optionally restricts the rows to colleagues in those
+    suborganisations (onderdelen); an empty/None value shows everyone.
 
     ``labels_by_category`` maps a label-category id to the selected label ids in
     that category. Matching is OR within a category and AND between categories,
@@ -332,7 +348,7 @@ def colleague_occupancy(
 
     # Only consultants: colleagues whose linked user holds the Consultant role.
     # Colleagues without a user (e.g. imported without an account) are excluded.
-    # The labels and merk ride along: the row shows them as chips, and without
+    # The labels and onderdeel ride along: the row shows them as chips, and without
     # the prefetch that is a query per colleague.
     colleagues = (
         Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
@@ -340,8 +356,8 @@ def colleague_occupancy(
         .prefetch_related("labels__category", "contract_periods")
         .order_by("name")
     )
-    if merk_ids:
-        colleagues = colleagues.filter(suborganization_id__in=merk_ids)
+    if suborganization_ids:
+        colleagues = colleagues.filter(suborganization_id__in=suborganization_ids)
     if search:
         colleagues = colleagues.filter(Q(name__icontains=search) | Q(email__icontains=search))
     for label_ids in (labels_by_category or {}).values():
@@ -432,7 +448,9 @@ def colleague_occupancy(
                     has_role_without_hours = True
             # A continuation is drawn from where the bar it continues stops, so
             # the two read as one stretch of work with a seam between.
-            left, width = _position(extends_from.get(placement.id, start), end, horizon_start, horizon_end)
+            drawn_from = extends_from.get(placement.id, start)
+            left, width = _position(drawn_from, end, horizon_start, horizon_end)
+            start_day, span_days = _grid_days(drawn_from, end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
                     assignment_name=placement.service.assignment.name,
@@ -442,6 +460,8 @@ def colleague_occupancy(
                     phase=phase,
                     left_pct=left,
                     width_pct=width,
+                    start_day=start_day,
+                    span_days=span_days,
                     ends_soon=(not extended and phase == "active" and end is not None and end <= soon_cutoff),
                     ending_level=ENDING_LEVEL_CALM if extended else _ending_level(end, phase, today),
                     days_left=None if extended else _days_left(end, phase, today),
@@ -455,7 +475,7 @@ def colleague_occupancy(
                 )
             )
         segments.sort(key=lambda s: placement_order_key(s.phase, s.start))
-        lane_count = _assign_lanes(segments, horizon_start, horizon_end)
+        _assign_lanes(segments, horizon_start, horizon_end)
 
         periods = colleague.contract_periods.all()
         contract_hours = contract_hours_on(periods, today)
@@ -517,7 +537,6 @@ def colleague_occupancy(
                 bench_bar=bench_bar,
                 bench_bar_clipped=bench_bar_clipped,
                 segments=segments,
-                lane_count=lane_count,
                 contract_hours=contract_hours,
                 next_contract=next_contract,
                 contract_ended=contract_ended,
@@ -568,6 +587,11 @@ def rows_in_display_order(rows) -> list:
         key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
     )
     return bench_rows + [r for r in rows if r.bucket != BUCKET_BENCH]
+
+
+def horizon_days() -> int:
+    """Number of days the timeline draws: one grid column each."""
+    return HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS
 
 
 def today_marker_pct() -> float:
@@ -627,32 +651,32 @@ def consultant_colleagues():
     return Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
 
 
-def apply_colleague_filters(qs, merk, labels_by_cat, *, exclude_filter=None):
-    """Apply the merk + label filters to a consultant-colleague queryset.
+def apply_colleague_filters(qs, suborganization_facet, labels_by_cat, *, exclude_filter=None):
+    """Apply the onderdeel + label filters to a consultant-colleague queryset.
 
     ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
-    to its current selection: "merk" for the merk group, or a label ``category_id``
+    to its current selection: "onderdeel" for the onderdeel group, or a label ``category_id``
     (int) for that category's group. Labels are OR within a category, AND between.
     """
     for cat_id, cat_label_ids in labels_by_cat.items():
         if exclude_filter != cat_id:
             qs = qs.filter(labels__id__in=cat_label_ids)
-    if exclude_filter != "merk" and merk.ids:
-        qs = qs.filter(suborganization_id__in=merk.ids)
+    if exclude_filter != "onderdeel" and suborganization_facet.ids:
+        qs = qs.filter(suborganization_id__in=suborganization_facet.ids)
     return qs.distinct()
 
 
-def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
+def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> list[dict]:
     """Build the select-multi filter groups for the Bezetting sheet.
 
     One group per label category (only labels used by a consultant; empty
-    categories dropped) plus one merk group. Each option carries a cross-filtered
+    categories dropped) plus one onderdeel group. Each option carries a cross-filtered
     count — the number of consultants that would remain if only this value were
     added to the other active filters — like the "Gebruikers" filter sheet.
     """
     base_qs = consultant_colleagues()
     selected_label_ids = set(labels.public_ids)
-    selected_merk_ids = set(merk.public_ids)
+    selected_suborganization_ids = set(suborganization_facet.public_ids)
 
     groups = []
 
@@ -670,7 +694,7 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
         category_names[label.category_id] = label.category.name
 
     for cat_id, cat_labels in labels_by_cat_display.items():
-        cat_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter=cat_id)
+        cat_qs = apply_colleague_filters(base_qs, suborganization_facet, labels_by_cat, exclude_filter=cat_id)
         # Re-query by id to get proper filter numbers
         # cat_qs contains distinct and values_list re-uses the filter JOIN
         cat_colleagues = Colleague.objects.filter(id__in=cat_qs.values_list("id", flat=True))
@@ -694,29 +718,35 @@ def bezetting_filter_groups(merk, labels, labels_by_cat) -> list[dict]:
             }
         )
 
-    # Merk: only suborganisations that have at least one consultant.
-    merk_qs = apply_colleague_filters(base_qs, merk, labels_by_cat, exclude_filter="merk")
+    # Onderdeel: only suborganisations that have at least one consultant.
+    suborganization_qs = apply_colleague_filters(
+        base_qs, suborganization_facet, labels_by_cat, exclude_filter="onderdeel"
+    )
     # Same re-query as above: A fresh queryset by id counts one row per colleague.
-    merk_colleagues = Colleague.objects.filter(id__in=merk_qs.values_list("id", flat=True))
-    merk_ids = merk_colleagues.values_list("suborganization_id", flat=True)
-    merk_counts = Counter(mid for mid in merk_ids if mid is not None)
-    merk_options = [{"value": "", "label": ""}]
-    merk_selected = []
+    suborganization_colleagues = Colleague.objects.filter(id__in=suborganization_qs.values_list("id", flat=True))
+    suborganization_ids = suborganization_colleagues.values_list("suborganization_id", flat=True)
+    suborganization_counts = Counter(mid for mid in suborganization_ids if mid is not None)
+    suborganization_options = [{"value": "", "label": ""}]
+    suborganization_selected = []
     used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
     for suborganization in used_suborgs:
         value = str(suborganization.public_id)
-        option = {"value": value, "label": suborganization.name, "count": merk_counts.get(suborganization.id, 0)}
-        if value in selected_merk_ids:
+        option = {
+            "value": value,
+            "label": suborganization.name,
+            "count": suborganization_counts.get(suborganization.id, 0),
+        }
+        if value in selected_suborganization_ids:
             option["selected"] = True
-            merk_selected.append(value)
-        merk_options.append(option)
+            suborganization_selected.append(value)
+        suborganization_options.append(option)
     groups.append(
         {
             "type": "select-multi",
-            "name": "merk",
-            "label": "Merk",
-            "options": merk_options,
-            "selected_values": merk_selected,
+            "name": "onderdeel",
+            "label": "Onderdeel",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected,
         }
     )
 
