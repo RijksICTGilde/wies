@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 817: upgrade NLDD design system from 0.13.2 to 0.21.1
 - 744: security hardening
 - 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
 - 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
