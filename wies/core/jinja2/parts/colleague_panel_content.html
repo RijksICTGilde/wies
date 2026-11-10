@@ -33,7 +33,7 @@
   {% if colleague.suborganization %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
-    <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+    <nldd-tag color="neutral"><span class="wies-tag-text">{{ colleague.suborganization.name }}</span></nldd-tag>
     </nldd-container>
   {% endif %}
   {% set labels = panel_data.labels %}
@@ -43,7 +43,7 @@
     {% for label in labels %}
       {# TEMPORARILY colourless (#565): the same labels are uncoloured as filters.
          To restore, set color back to label.category.nldd_color. #}
-      <nldd-tag>{{ label.name }}</nldd-tag>
+      <nldd-tag><span class="wies-tag-text">{{ label.name }}</span></nldd-tag>
     {% endfor %}
     </nldd-container>
   {% endif %}

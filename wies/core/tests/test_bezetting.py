@@ -33,6 +33,7 @@ from wies.core.services.occupancy import (
     NARROW_BAR_PCT,
     bezetting_filter_groups,
     colleague_occupancy,
+    horizon_days,
     labels_by_category,
     month_ticks,
     occupancy_summary,
@@ -387,6 +388,33 @@ class OccupancyServiceTest(TestCase):
         segment = next(s for s in rows[self.full.id].segments if s.assignment_name == "Heel Kort")
         assert segment.width_pct < NARROW_BAR_PCT
         assert segment.too_narrow is True
+
+    def test_a_bar_has_its_day_columns(self):
+        """The grid places a bar by day: column 1 is the horizon start."""
+        start = self.today - timedelta(days=10)
+        _placement(self.full, "Per Dag", start, self.today + timedelta(days=30))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segment = next(s for s in rows[self.full.id].segments if s.assignment_name == "Per Dag")
+        assert segment.start_day == HORIZON_BACK_DAYS - 10 + 1
+        assert segment.span_days == 40
+
+    def test_a_bar_beyond_the_horizon_stays_inside_the_grid(self):
+        """A column past the last would add one and rescale the whole row."""
+        _placement(self.full, "Heel Lang", self.today - timedelta(days=400), self.today + timedelta(days=400))
+        _placement(self.full, "Begint Op De Rand", self.today + timedelta(days=HORIZON_AHEAD_DAYS), None)
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        segments = {s.assignment_name: s for s in rows[self.full.id].segments}
+        assert (segments["Heel Lang"].start_day, segments["Heel Lang"].span_days) == (1, horizon_days())
+        edge = segments["Begint Op De Rand"]
+        assert edge.start_day + edge.span_days - 1 == horizon_days()
+
+    def test_an_extension_starts_in_the_column_after_the_bar_it_continues(self):
+        end = self.today + timedelta(days=20)
+        first = _placement(self.full, "Doorlopend", self.today - timedelta(days=30), end)
+        _extension(first, end + timedelta(days=7), end + timedelta(days=90))
+        rows = {r.colleague.id: r for r in colleague_occupancy(self.today)}
+        first_seg, second_seg = sorted(rows[self.full.id].segments, key=lambda s: s.start)
+        assert second_seg.start_day == first_seg.start_day + first_seg.span_days
 
     def test_a_wide_bar_keeps_its_label(self):
         _placement(self.full, "Lang Genoeg", self.today - timedelta(days=30), self.today + timedelta(days=90))
@@ -1220,7 +1248,7 @@ class TimelineStructureTest(TestCase):
         assert content.count('<li class="bezetting-row ') == 2
         # role="list" because Safari drops it from a ul with list-style: none.
         assert re.search(
-            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats">', content
+            r'<ul class="bezetting-lanes"\s+role="list"\s+aria-label="Opdrachten van Pim Plaats"\s', content
         )
         assert re.search(r'<ul class="bezetting-rows"\s+role="list"', content)
         assert '<li class="bezetting-seg ' in content
@@ -1231,6 +1259,14 @@ class TimelineStructureTest(TestCase):
             f"Loopt bijna af, 24 uur per week, van {datum_nl(self.start)} tot en met {datum_nl(self.end)}, nog 20 dagen"
         )
         assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
+
+    def test_a_bar_is_placed_on_the_day_grid(self):
+        """Grid placement, not absolute offsets, so a wrapping label makes its
+        lane taller instead of running out of the bar."""
+        content = self._content()
+        assert f'style="--bezetting-days: {horizon_days()}"' in content
+        start_day = HORIZON_BACK_DAYS - 10 + 1
+        assert re.search(rf"grid-column: {start_day} / span 30;\s+grid-row: 1", content)
 
     def test_an_ending_bar_shows_its_days_left(self):
         """The countdown keeps "ends soon" from resting on colour alone."""
@@ -1287,7 +1323,7 @@ class TimelineStructureTest(TestCase):
         )
         assert f'<span class="wies-visually-hidden">{sentence}</span>' in content
         assert (
-            '<span class="bezetting-seg__label" aria-hidden="true"><span class="bezetting-seg__client">BZK</span> · <span class="bezetting-seg__name">Loopt bijna af</span> · Developer · 24 uur'
+            '<span class="bezetting-seg__label" aria-hidden="true">BZK · <span class="bezetting-seg__name">Loopt bijna af</span> · Developer · 24 uur'
             in content
         )
 

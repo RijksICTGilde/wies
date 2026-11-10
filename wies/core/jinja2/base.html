@@ -43,6 +43,7 @@
        swaps. #}
     <script src="{{ app_asset('js/inline_edit.js') }}" defer></script>
     <script src="{{ app_asset('js/ui_handlers.js') }}" defer></script>
+    <script src="{{ app_asset('js/cv_clamp.js') }}" defer></script>
     {# Global: these sheets arrive in htmx swaps on several pages, and scripts
        in swapped content don't run (allowScriptTags is off in htmx_config.js),
        so each binds to new content on htmx.onLoad. Order matters: the tree
@@ -63,6 +64,7 @@
     <script src="{{ app_asset('js/focus_restore.js') }}" defer></script>
     <script src="{{ app_asset('js/live_region.js') }}" defer></script>
     <script src="{{ app_asset('js/field_error_description.js') }}" defer></script>
+    <script src="{{ app_asset('js/date_field.js') }}" defer></script>
   </head>
   <body>
     {# Announces what an htmx swap changed: the number of results after a
@@ -133,6 +135,7 @@
       · <a href="{{ url('handleiding') }}">Handleiding</a>
       · <a href="{{ url('faq') }}">Veelgestelde vragen</a>
       · <a href="{{ url('contact') }}">Contact</a>
+      · <a href="{{ url('sitemap') }}">Sitemap</a>
     </p>
     <p class="wies-footer-version">Versie: {{ APP_VERSION }}</p>
     </nldd-rich-text>

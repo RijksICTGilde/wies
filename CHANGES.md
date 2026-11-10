@@ -22,6 +22,7 @@ This files lists the changes during the lifetime of this project.
 ## 2026-11-03
 
 - 802: upgrade NLDD design system from 0.10.0 to 0.13.2 and drop the workarounds it makes obsolete; every form keeps novalidate
+- 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and a "Sitemap" page in the footer
 - 783: bump dependencies for security patches and change trivy interval to "daily"
 - 806: more security patches
 - 787: (post-release actions) `ALLOWED_EMAIL_DOMAINS` overrides which email domains may log in (comma-separated, default `@rijksoverheid.nl,@minbzk.nl`)

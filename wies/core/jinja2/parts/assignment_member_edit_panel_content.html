@@ -161,7 +161,7 @@
   {% set duration_errors = wire_field_errors(svc_form.duration_months) %}
   <nldd-box data-period-box{% if inherits %} hidden{% endif %}>
   <nldd-container padding="16" gap="16">
-  <nldd-form-field label="Start">
+  <nldd-form-field label="Start" supporting-label="{{ date_format_hint }}">
   <div data-start-choice-field{% if not is_request %} hidden{% endif %}>
     <nldd-segmented-control width="full" accessible-label="Start" value="{{ period_modes.start }}" data-start-choice>
     <nldd-segmented-control-item value="NOW" text="Per direct"></nldd-segmented-control-item>
@@ -181,7 +181,7 @@
     </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
-  <nldd-form-field label="Einde">
+  <nldd-form-field label="Einde" supporting-label="{{ date_format_hint }}">
   <div data-end-choice-field="request"
        {% if not is_request %} hidden{% endif %}>
     <nldd-segmented-control width="full" accessible-label="Einde" value="{{ period_modes.end }}" data-end-choice>

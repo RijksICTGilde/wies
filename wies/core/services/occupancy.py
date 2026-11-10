@@ -95,6 +95,10 @@ class TimelineSegment:
     left_pct: float
     width_pct: float
     lane: int = 0  # vertical lane so overlapping (concurrent) placements don't stack
+    # The same position in whole days, for the grid that lets a bar grow with
+    # its label: first day column (1-based) and the number of days it spans.
+    start_day: int = 1
+    span_days: int = 1
     # Too narrow to hold its own name: the label would render as a stray "I..."
     # next to a wider bar. The bar's hidden sentence still carries the name.
     too_narrow: bool = False
@@ -127,7 +131,6 @@ class OccupancyRow:
     ends_soon: bool
     earliest_active_end: date | None
     segments: list[TimelineSegment] = field(default_factory=list)
-    lane_count: int = 1  # number of vertical lanes needed (row height scales with this)
     # The colleague's labels in the gilde category, as (name, nldd colour) pairs.
     # Only that category: the row has room for a chip or two, and the full
     # expertise list would fill it, while the gilde is the subdivision this page
@@ -244,17 +247,31 @@ def _extension_links(placements: list[Placement]) -> tuple[dict[int, date], set[
     return extends, extended
 
 
-def _position(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[float, float]:
-    """Clamp a placement to the horizon and return (left%, width%).
-
-    Open-ended placements (no end) run to the horizon end.
-    """
-    span = (horizon_end - horizon_start).days or 1
+def _day_span(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[int, int]:
+    """Clamp a placement to the horizon and return (first day, days) from the
+    horizon start. Open-ended placements (no end) run to the horizon end."""
     seg_start = max(start or horizon_start, horizon_start)
     seg_end = min(end or horizon_end, horizon_end)
-    left = (seg_start - horizon_start).days / span * 100
-    width = max((seg_end - seg_start).days, 1) / span * 100
-    return round(left, 2), round(width, 2)
+    return (seg_start - horizon_start).days, max((seg_end - seg_start).days, 1)
+
+
+def _position(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[float, float]:
+    """Clamp a placement to the horizon and return (left%, width%)."""
+    span = (horizon_end - horizon_start).days or 1
+    offset, days = _day_span(start, end, horizon_start, horizon_end)
+    return round(offset / span * 100, 2), round(days / span * 100, 2)
+
+
+def _grid_days(start: date | None, end: date | None, horizon_start: date, horizon_end: date) -> tuple[int, int]:
+    """(first day column, days spanned) on a grid of one column per horizon day.
+
+    Kept inside the grid: a column past the last would add a column of its own
+    and shift the scale of every bar in the row.
+    """
+    columns = (horizon_end - horizon_start).days or 1
+    offset, days = _day_span(start, end, horizon_start, horizon_end)
+    offset = min(offset, columns - 1)
+    return offset + 1, min(days, columns - offset)
 
 
 def _ending_level(end: date | None, phase: str, today: date) -> str:
@@ -282,12 +299,12 @@ def _days_left(end: date | None, phase: str, today: date) -> int | None:
     return (end - today).days
 
 
-def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> int:
+def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_end: date) -> None:
     """Greedily pack segments into vertical lanes so concurrent bars don't overlap.
 
     Segments go in ``placement_order_key`` order, so where bars overlap the
     running one takes the top lane; each goes into the first lane where it
-    overlaps no bar already placed. Returns the number of lanes used.
+    overlaps no bar already placed.
     """
     lanes: list[list[tuple[date, date]]] = []
     for seg in sorted(segments, key=lambda s: placement_order_key(s.phase, s.start)):
@@ -300,7 +317,6 @@ def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_
         else:
             seg.lane = len(lanes)
             lanes.append([span])
-    return max(len(lanes), 1)
 
 
 def colleague_occupancy(
@@ -432,7 +448,9 @@ def colleague_occupancy(
                     has_role_without_hours = True
             # A continuation is drawn from where the bar it continues stops, so
             # the two read as one stretch of work with a seam between.
-            left, width = _position(extends_from.get(placement.id, start), end, horizon_start, horizon_end)
+            drawn_from = extends_from.get(placement.id, start)
+            left, width = _position(drawn_from, end, horizon_start, horizon_end)
+            start_day, span_days = _grid_days(drawn_from, end, horizon_start, horizon_end)
             segments.append(
                 TimelineSegment(
                     assignment_name=placement.service.assignment.name,
@@ -442,6 +460,8 @@ def colleague_occupancy(
                     phase=phase,
                     left_pct=left,
                     width_pct=width,
+                    start_day=start_day,
+                    span_days=span_days,
                     ends_soon=(not extended and phase == "active" and end is not None and end <= soon_cutoff),
                     ending_level=ENDING_LEVEL_CALM if extended else _ending_level(end, phase, today),
                     days_left=None if extended else _days_left(end, phase, today),
@@ -455,7 +475,7 @@ def colleague_occupancy(
                 )
             )
         segments.sort(key=lambda s: placement_order_key(s.phase, s.start))
-        lane_count = _assign_lanes(segments, horizon_start, horizon_end)
+        _assign_lanes(segments, horizon_start, horizon_end)
 
         periods = colleague.contract_periods.all()
         contract_hours = contract_hours_on(periods, today)
@@ -517,7 +537,6 @@ def colleague_occupancy(
                 bench_bar=bench_bar,
                 bench_bar_clipped=bench_bar_clipped,
                 segments=segments,
-                lane_count=lane_count,
                 contract_hours=contract_hours,
                 next_contract=next_contract,
                 contract_ended=contract_ended,
@@ -568,6 +587,11 @@ def rows_in_display_order(rows) -> list:
         key=lambda r: (r.bench_days is None, -(r.bench_days or 0)),
     )
     return bench_rows + [r for r in rows if r.bucket != BUCKET_BENCH]
+
+
+def horizon_days() -> int:
+    """Number of days the timeline draws: one grid column each."""
+    return HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS
 
 
 def today_marker_pct() -> float:
