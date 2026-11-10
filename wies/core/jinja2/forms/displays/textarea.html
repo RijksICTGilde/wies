@@ -1,7 +1,4 @@
-{# Markdown source rendered on the server (services/markdown.py). Past 300
-   characters or 5 lines the block starts collapsed; "Toon meer" lifts the
-   max-height (toggle-long-text in ui_handlers.js), and inline_edit.js opens a
-   block that turns out to fit. The wrapper is ours, so the CSS is too. #}
+{# Show-more toggle: toggle-long-text in ui_handlers.js. #}
 {% if value %}
   {% set collapsed = value|length > 300 or value.splitlines()|length > 5 %}
   <div class="wies-long-text{% if collapsed %} wies-long-text--collapsed{% endif %}">

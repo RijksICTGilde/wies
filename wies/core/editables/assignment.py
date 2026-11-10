@@ -488,7 +488,6 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Opdrachtomschrijving",
         help_text="Waar gaat de opdracht over?",
-        # Markdown source; rendered by the display partial (services/markdown.py).
         widget=MarkdownEditorWidget(attrs={"rows": 4}),
         display="forms/displays/textarea.html",
     )
