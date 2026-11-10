@@ -34,6 +34,7 @@ function uncollapseWhatFits(root) {
     var body = block.querySelector(".wies-long-text__body");
     if (!body || body.scrollHeight > body.clientHeight + 1) return;
     block.classList.remove("wies-long-text--collapsed");
+    body.querySelector("nldd-rich-text")?.setAttribute("spacing", "tight");
     var toggle = block.querySelector(".inline-edit-show-more");
     if (toggle) toggle.remove();
   });

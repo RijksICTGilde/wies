@@ -18,13 +18,14 @@ class ServiceEditables(EditableSet):
 
     description = Editable(
         label="Taken",
-        # Markdown source; the team row renders it (services/markdown.py).
+        # Markdown source; the cv rows on the colleague panel render it (services/markdown.py).
         widget=MarkdownEditorWidget(attrs={"rows": 3}),
     )
     request_description = Editable(
         label="Wie we zoeken",
         help_text="Welke kennis en ervaring vraagt de opdrachtgever?",
-        widget=forms.Textarea(attrs={"rows": 8}),
+        # Markdown source; the aanvraag panel renders it (services/markdown.py).
+        widget=MarkdownEditorWidget(attrs={"rows": 8}),
         display="forms/displays/textarea.html",
     )
     location = Editable(label="Standplaats")

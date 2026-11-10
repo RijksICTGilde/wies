@@ -635,11 +635,19 @@ class AssignmentPanelRenderTest(TestCase):
             f"/?opdracht={self.assignment.public_id}&bewerken=1",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         ).content.decode()
-        assert '<nldd-text-editor variant="input-field" name="extra_info"' in body
+        editor = body.split("<nldd-text-editor ")[1].split(">")[0]
+        assert 'name="extra_info"' in editor
+        assert 'appearance="input-field"' in editor
+        assert 'syntax="hidden"' in editor
+        # The error list points at the editor: the toolbar's wrapper hides it
+        # from nldd-form-field.
+        assert 'id="id_extra_info"' in editor
         assert 'data-editor-group="inline"' in body
         assert 'data-editor-group="list"' in body
         assert 'data-editor-toggle="link"' in body
         assert "data-editor-heading" in body
+        # A narrow sheet moves the bar's items into its overflow menu.
+        assert 'slot="overflow" type="checkbox" text="Vet"' in body
         assert "<nldd-multi-line-text-field" not in body
 
     def test_edit_post_with_too_long_description_marks_the_editor_invalid(self):
@@ -662,7 +670,8 @@ class AssignmentPanelRenderTest(TestCase):
         ).content.decode()
         editor = body.split("<nldd-text-editor")[1].split(">")[0]
         assert "invalid" in editor
-        assert 'error-message="' in editor
+        assert 'unmet="error-extra_info-1"' in editor
+        assert '<nldd-validation-list for="id_extra_info">' in body
 
     def test_markdown_is_stored_as_source_and_shown_rendered(self):
         response = self.client.post(
@@ -1666,6 +1675,15 @@ class ServicesRenderChangeUnitTests(TestCase):
         }
         assert _services_render_change(change) == {
             "text": 'de toelichting voor Python (Jan) van "oud" naar "nieuw" gewijzigd',
+        }
+
+    def test_description_quote_leaves_the_markdown_marks_out(self):
+        change = {
+            "old": self._row(1, "Python", "Jan", description="oud"),
+            "new": self._row(1, "Python", "Jan", description="**Bouwt** de koppeling"),
+        }
+        assert _services_render_change(change) == {
+            "text": 'de toelichting voor Python (Jan) van "oud" naar "Bouwt de koppeling" gewijzigd',
         }
 
     def test_description_added_from_empty(self):

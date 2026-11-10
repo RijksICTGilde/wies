@@ -1,11 +1,12 @@
 {# Markdown source rendered on the server (services/markdown.py). Past 300
    characters or 5 lines the block starts collapsed; "Toon meer" lifts the
-   max-height (inline_edit.js). The wrapper is ours, so the CSS is too. #}
+   max-height (toggle-long-text in ui_handlers.js), and inline_edit.js opens a
+   block that turns out to fit. The wrapper is ours, so the CSS is too. #}
 {% if value %}
   {% set collapsed = value|length > 300 or value.splitlines()|length > 5 %}
   <div class="wies-long-text{% if collapsed %} wies-long-text--collapsed{% endif %}">
     <div class="wies-long-text__body">
-      <nldd-rich-text spacing="tight">{{ value|markdown }}</nldd-rich-text>
+      <nldd-rich-text spacing="{{ 'flat' if collapsed else 'tight' }}">{{ value|markdown }}</nldd-rich-text>
     </div>
     {% if collapsed %}
       <nldd-button class="inline-edit-show-more" size="sm" appearance="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text"></nldd-button>

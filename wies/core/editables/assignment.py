@@ -19,6 +19,7 @@ from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, 
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.dates import request_period_text
+from wies.core.services.markdown import markdown_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import ComboBoxSelect, MarkdownEditorWidget
@@ -446,8 +447,9 @@ def _services_render_change(change: dict) -> dict:
     new_period = _period_label(new)
     if old_period != new_period:
         return {"text": f"de periode van {new_label} van {old_period} naar {new_period} gewijzigd"}
-    old_desc = old.get("description") or ""
-    new_desc = new.get("description") or ""
+    # The quote runs inside a sentence, so the Markdown markers stay out of it.
+    old_desc = markdown_text(old.get("description"))
+    new_desc = markdown_text(new.get("description"))
     if not old_desc:
         return {"text": f'de toelichting "{new_desc}" voor {new_label} toegevoegd'}
     if not new_desc:

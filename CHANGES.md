@@ -20,6 +20,8 @@ This files lists the changes during the lifetime of this project.
 - 815: containers pull latest debian patches
 - 775: "merk" is renamed to "onderdeel" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
 - 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and a "Sitemap" page in the footer
+- 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
+- 694: (migration) a role's "Taken" may be 2000 characters instead of 500
 
 ## 2026-11-03_2
 
@@ -95,16 +97,6 @@ This files lists the changes during the lifetime of this project.
 - 673: NLDD design system 0.8.82 → 0.8.92: field errors are `nldd-validation-list` items that the field itself hands to the screen reader, notifications show above an open panel and can be dismissed there, a radio group and the view switch are announced with the right count instead of "1 of 1", and the side panel tabs use `current`; forms carry `novalidate` so the server keeps judging them
 - 699: the production image no longer ships pip, uv, git, vim, sudo, the docs and the tests
 - 699: bump dependencies because of cve's
-- ?: the opdracht description and the role description are a text editor with Markdown formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; they are shown formatted on the panel, the team row, in onboarding and on the timeline
-- ?: (migration) a role description may be 2000 characters instead of 500, and may be left empty
-- 694: the opdracht description and the role description are a text editor with Markdown formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; they are shown formatted on the panel, the team row, in onboarding and on the timeline
-- 694: (migration) a role description may be 2000 characters instead of 500, and may be left empty
-- 693: the placement panel is gone: a person card opens the colleague panel; an opdracht card on a colleague's profile and an old `?plaatsing=` link open the opdracht panel, scrolled to that colleague's team row
-- 693: the opdracht cards on the colleague panel and the profile are compact and open on a click (name, role, the placement's dates and hours, the client and one line of the role description as "Taken:"; open: the description in full; the name links to the opdracht), one card per row; the team row opens the colleague panel with that opdracht's card open: for a viewer without actions on the row it is one link with a chevron, like the cards on a profile, and for a team editor the name is a quiet link and the row menu offers "Bekijk profiel" (was "Bekijk teamlid") next to the actions; a placed consultant edits their own description via "Omschrijving wijzigen"
-- 693: the side panel is 800px wide instead of 640px, on every page that opens it
-- 693: the contract hours in the colleague panel are one line under the labels instead of a section with a heading
-- 693: the "Rol wijzigen" and "Periode wijzigen" shortcuts for a business manager are gone; "Teamlid wijzigen" covers them
-- 693: a placement that has not started yet no longer carries a "Gepland" chip on the team row or the colleague's opdracht card; its dates say so, and the limited-visibility chip stays
 
 ## 2026-09-24
 

@@ -1,6 +1,6 @@
 // The formatting bar above nldd-text-editor (forms/widgets/text_editor.html).
 // The editor is headless: the controls run its commands, and its state event
-// sets which controls read as active. Same shape as the design system's story.
+// sets which controls read as active.
 (function () {
   "use strict";
 
@@ -15,26 +15,14 @@
     });
   }
 
-  // The editor wraps exactly the selection, spaces included, and Markdown
-  // does not read "** woord**" as emphasis: the marker may not touch a space
-  // on the inside. So the selection loses its outer whitespace first. Only
-  // for the buttons; a shortcut (Cmd+B) runs inside the component.
-  function trimSelection(editor) {
-    var view = editor.view;
-    if (!view) return;
-    var sel = view.state.selection.main;
-    if (sel.empty) return;
-    var text = view.state.sliceDoc(sel.from, sel.to);
-    var lead = text.length - text.trimStart().length;
-    var trail = text.length - text.trimEnd().length;
-    if (!lead && !trail) return;
-    var from = sel.from + lead;
-    var to = sel.to - trail;
-    if (from < to) view.dispatch({ selection: { anchor: from, head: to } });
-  }
-
   var INLINE = ["bold", "italic", "strikethrough"];
   var HEADING_TEXT = ["Paragraaf", "Kop 1", "Kop 2", "Kop 3"];
+
+  function listOf(active) {
+    if (active.orderedList) return "ordered";
+    if (active.bulletList) return "bullet";
+    return "none";
+  }
 
   // A checkbox group (emphasis): run the command for every key whose desired
   // state differs from the editor's. A radio group (list): the value says
@@ -44,75 +32,80 @@
     if (!control) return;
     var editor = editorOf(control);
     if (!editor || typeof editor.runCommand !== "function") return;
-    var active = editor.getState().active || {};
+    var active = editor.getState().active;
     var group = control.dataset.editorGroup;
     if (group === "inline") {
-      var wanted = new Set(
-        (event.detail && event.detail.values) || control.values || [],
-      );
-      trimSelection(editor);
+      var wanted = new Set(event.detail.values);
       INLINE.forEach(function (key) {
-        if (wanted.has(key) !== Boolean(active[key])) editor.runCommand(key);
+        if (wanted.has(key) !== active[key]) editor.runCommand(key);
       });
     } else if (group === "list") {
-      editor.setList(
-        (event.detail && event.detail.value) || control.value || "none",
-      );
+      editor.setList(event.detail.value);
     } else {
       editor.runCommand(control.dataset.editorToggle);
     }
     editor.focus();
   });
 
-  // The text-style menu: a menu item reports `select`; its value is the
-  // heading level, 0 for a paragraph.
+  // A menu item reports `select`: one in the text-style menu carries the
+  // heading level as its value, one in a toolbar item's overflow carries what
+  // its twin in the bar does.
   document.addEventListener("select", function (event) {
     var item = controlIn(event, "nldd-menu-item");
-    var button = item && item.closest("[data-editor-heading]");
-    if (!button) return;
-    var editor = editorOf(button);
-    if (!editor || typeof editor.setHeading !== "function") return;
-    editor.setHeading(Number(item.getAttribute("value")) || 0);
+    if (!item) return;
+    var editor = editorOf(item);
+    if (!editor || typeof editor.runCommand !== "function") return;
+    var data = item.dataset;
+    if (data.editorCommand) editor.runCommand(data.editorCommand);
+    else if (data.editorList) editor.setList(data.editorList);
+    else if (data.editorHeadingLevel)
+      editor.setHeading(Number(data.editorHeadingLevel));
+    else if (item.closest("[data-editor-heading]"))
+      editor.setHeading(Number(item.getAttribute("value")));
+    else return;
     editor.focus();
   });
 
+  function setSelected(wrap, selector, isOn) {
+    wrap.querySelectorAll(selector).forEach(function (el) {
+      el.toggleAttribute("selected", isOn(el));
+    });
+  }
+
   // The other direction: a shortcut (Cmd+B) or a cursor move changes the
-  // state, and the controls follow.
+  // state, and the controls and their overflow twins follow.
   document.addEventListener("nldd-text-editor-state", function (event) {
     var wrap =
       event.target.closest && event.target.closest("[data-text-editor]");
     if (!wrap) return;
-    var active = (event.detail && event.detail.active) || {};
+    var active = event.detail.active;
+    var list = listOf(active);
+    var level = Math.min(active.heading, HEADING_TEXT.length - 1);
+
     var inline = wrap.querySelector("[data-editor-group='inline']");
     if (inline)
       inline.values = INLINE.filter(function (key) {
         return active[key];
       });
-    var list = wrap.querySelector("[data-editor-group='list']");
-    if (list)
-      list.value = active.orderedList
-        ? "ordered"
-        : active.bulletList
-          ? "bullet"
-          : "none";
-    wrap.querySelectorAll("[data-editor-toggle]").forEach(function (toggle) {
-      toggle.toggleAttribute(
-        "selected",
-        Boolean(active[toggle.dataset.editorToggle]),
-      );
+    var listControl = wrap.querySelector("[data-editor-group='list']");
+    if (listControl) listControl.value = list;
+    setSelected(wrap, "[data-editor-toggle]", function (el) {
+      return active[el.dataset.editorToggle];
+    });
+    setSelected(wrap, "[data-editor-command]", function (el) {
+      return active[el.dataset.editorCommand];
+    });
+    setSelected(wrap, "[data-editor-list]", function (el) {
+      return el.dataset.editorList === list;
+    });
+    setSelected(wrap, "[data-editor-heading-level]", function (el) {
+      return Number(el.dataset.editorHeadingLevel) === level;
     });
     var heading = wrap.querySelector("[data-editor-heading]");
     if (heading) {
-      var level = Math.min(
-        Number(active.heading) || 0,
-        HEADING_TEXT.length - 1,
-      );
       heading.setAttribute("text", HEADING_TEXT[level]);
-      heading.querySelectorAll("nldd-menu-item").forEach(function (item) {
-        item.toggleAttribute(
-          "selected",
-          Number(item.getAttribute("value")) === level,
-        );
+      setSelected(heading, "nldd-menu-item", function (el) {
+        return Number(el.getAttribute("value")) === level;
       });
     }
   });

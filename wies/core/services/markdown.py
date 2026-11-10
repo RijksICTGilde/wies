@@ -62,7 +62,6 @@ def render_markdown(source: str | None) -> Markup:
 # A block's end is a word boundary; an inline tag (<strong>) is not.
 _BLOCK_END = re.compile(r"</(?:p|li|h[1-6]|blockquote|ul|ol)>|<br\s*/?>", re.IGNORECASE)
 _TAGS = re.compile(r"<[^>]+>")
-_SENTENCE_END = re.compile(r"(?<=[.!?])\s")
 
 
 def markdown_text(source: str | None) -> str:
@@ -71,12 +70,3 @@ def markdown_text(source: str | None) -> str:
         return ""
     stripped = _TAGS.sub("", _BLOCK_END.sub(" ", _md.render(source)))
     return " ".join(html.unescape(stripped).split())
-
-
-def markdown_excerpt(source: str | None, limit: int = 200) -> str:
-    """The first sentence, as plain text, for a one-line summary of a description."""
-    text = markdown_text(source)
-    first = _SENTENCE_END.split(text, maxsplit=1)[0]
-    if len(first) > limit:
-        first = first[: limit - 1].rstrip() + "…"
-    return first

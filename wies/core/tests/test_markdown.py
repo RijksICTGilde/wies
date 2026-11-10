@@ -3,7 +3,7 @@
 from django.test import SimpleTestCase
 from markupsafe import Markup
 
-from wies.core.services.markdown import markdown_excerpt, markdown_text, render_markdown
+from wies.core.services.markdown import markdown_text, render_markdown
 
 
 class RenderMarkdownTest(SimpleTestCase):
@@ -74,14 +74,6 @@ class RenderMarkdownTest(SimpleTestCase):
         assert isinstance(render_markdown("x"), Markup)
 
 
-class MarkdownExcerptTest(SimpleTestCase):
+class MarkdownTextTest(SimpleTestCase):
     def test_plain_text_drops_the_formatting(self):
         assert markdown_text("# Kop\n\n**vet** en [link](https://x.nl)\n\n- een\n- twee") == "Kop vet en link een twee"
-
-    def test_excerpt_is_the_first_sentence(self):
-        assert markdown_excerpt("Eerste zin. Tweede zin!") == "Eerste zin."
-        assert markdown_excerpt("Alleen dit") == "Alleen dit"
-        assert markdown_excerpt("") == ""
-
-    def test_a_long_first_sentence_is_cut(self):
-        assert markdown_excerpt("x" * 300, limit=20) == "x" * 19 + "…"

@@ -54,6 +54,15 @@ class ServicePanelTest(TestCase):
         assert "Zaaksysteem" in body
         assert 'icon="chevron-right"' in body
 
+    def test_the_vacancy_text_is_shown_formatted(self):
+        self.service.request_description = "Je werkt aan:\n\n- **koppelingen**\n- <script>x</script>"
+        self.service.save()
+
+        body = self._panel()
+
+        assert "<li><strong>koppelingen</strong></li>" in body
+        assert "<script>x</script>" not in body
+
     def _place(self, name, **placement):
         colleague = Colleague.objects.create(
             name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl", source="wies"
@@ -382,6 +391,14 @@ class AanvraagFormRequestDescriptionTest(TestCase):
         assert re.search(r"<div data-tasks-field\s*hidden>", body)
         assert 'text="Per direct"' in body
 
+    def test_both_texts_are_written_in_the_markdown_editor(self):
+        body = self.client.get(
+            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": "nieuw-aanvraag"}
+        ).content.decode()
+
+        assert re.search(r'<nldd-text-editor [^>]*name="request_description"', body)
+        assert re.search(r'<nldd-text-editor [^>]*name="description"', body)
+
     def test_a_new_placement_shows_the_taken_and_hides_the_description(self):
         body = self.client.get(
             reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": "nieuw-ingevuld"}
@@ -690,7 +707,7 @@ class FillingAanvraagTakenTest(TestCase):
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
 
-    def test_taken_take_up_to_500_characters(self):
+    def test_taken_take_up_to_2000_characters(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
         url = reverse("assignment-member-edit", args=[self.assignment.public_id])
         fields = {
@@ -700,6 +717,6 @@ class FillingAanvraagTakenTest(TestCase):
             "has_custom_period": "on",
         }
 
-        assert self.client.post(url, {**fields, "description": "x" * 501}).status_code == 200
-        assert self.client.post(url, {**fields, "description": "x" * 500}).status_code == 204
-        assert self.assignment.services.get().description == "x" * 500
+        assert self.client.post(url, {**fields, "description": "x" * 2001}).status_code == 200
+        assert self.client.post(url, {**fields, "description": "x" * 2000}).status_code == 204
+        assert self.assignment.services.get().description == "x" * 2000

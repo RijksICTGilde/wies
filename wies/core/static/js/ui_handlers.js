@@ -28,6 +28,9 @@
     if (!wrapper) return;
     var expanded = !wrapper.classList.contains("wies-long-text--collapsed");
     wrapper.classList.toggle("wies-long-text--collapsed", expanded);
+    // Collapsed, no gap between blocks, so the cut falls between two lines.
+    var body = wrapper.querySelector("nldd-rich-text");
+    if (body) body.setAttribute("spacing", expanded ? "flat" : "tight");
     toggle.setAttribute("text", expanded ? "Toon meer" : "Toon minder");
     toggle.setAttribute("start-icon", expanded ? "chevron-down" : "chevron-up");
     // nldd-button forwards `expanded` as aria-expanded on its inner button.

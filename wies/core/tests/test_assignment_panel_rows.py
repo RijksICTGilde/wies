@@ -12,6 +12,7 @@ from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.role_helpers import make_business_manager_user
+from wies.core.views import _cv_taken
 
 User = get_user_model()
 
@@ -122,7 +123,7 @@ class AssignmentPanelRowsTest(TestCase):
         # indentation is the formatter's to change, so match on the sequence.
         role_block = opened.split('<div class="wies-role-description">')[1]
         assert 'text="Taken"' in opened
-        assert '<span class="wies-role-description__text">Begeleidt de overgang.' in role_block
+        assert '<nldd-rich-text spacing="tight"><p>Begeleidt de overgang.' in role_block
         assert "En stemt af met de directie." in opened
         placement = Placement.objects.get(colleague=self.anke, service__assignment=self.assignment)
         # The placement's own dates, not the opdracht's period. The line shows
@@ -421,3 +422,22 @@ class SidePanelSheetTest(TestCase):
             sheets = re.findall(r'<nldd-sheet id="side-panel"[^>]*>', body)
             assert len(sheets) == 1, name
             assert 'width="800px"' in sheets[0], name
+
+
+class CvTakenTest(SimpleTestCase):
+    """The closed Taken row is plain words; the formatting only shows open."""
+
+    def _role(self, description):
+        return {"skill": "Dev", "description": description, "edit_url": None, "edit_label": None}
+
+    def test_the_preview_drops_the_markdown_marks(self):
+        taken = _cv_taken([self._role("**Bouwt** de koppeling.")], open_requested=False)
+
+        assert taken["preview"] == "Bouwt de koppeling."
+        assert not taken["has_more"]
+
+    def test_a_short_list_still_unfolds(self):
+        taken = _cv_taken([self._role("- koppelingen\n- tests")], open_requested=False)
+
+        assert taken["preview"] == "koppelingen tests"
+        assert taken["has_more"]

@@ -1,34 +1,44 @@
 {# Markdown editor for a description. nldd-text-editor is headless, so the
-   formatting bar is ours, built the way the design system's own story builds
-   it: a toolbar of segmented controls, toggles and a text-style menu, wired
-   both ways by text_editor.js (the controls run the editor's commands, its
-   state event sets what reads as active). Form-associated: the value reaches
-   the form natively. nldd-form-field sets input-id/accessible-label; the
-   inline-edit field brings its own label. #}
+   formatting bar is ours: a toolbar of segmented controls, toggles and a
+   text-style menu, wired both ways by text_editor.js (the controls run the
+   editor's commands, its state event sets what reads as active). Every item
+   has a twin in its overflow slot, for when the bar runs out of width in a
+   narrow sheet. syntax="hidden": the marks only show where the caret is, so
+   the text reads as formatted while the value stays Markdown.
+   Form-associated: the value reaches the form natively. nldd-form-field sets
+   input-id/accessible-label; the inline-edit field brings its own label. #}
 <div class="wies-text-editor" data-text-editor>
-  <nldd-toolbar label="Opmaak" size="sm">
+  <nldd-toolbar accessible-label="Opmaak" size="sm">
   <nldd-toolbar-item slot="start" label="Nadruk">
-  <nldd-segmented-control type="checkbox" variant="icon" size="sm" accessible-label="Nadruk" data-editor-group="inline">
-  <nldd-segmented-control-item value="bold" text="Vet" icon="bold"></nldd-segmented-control-item>
-  <nldd-segmented-control-item value="italic" text="Cursief" icon="italic"></nldd-segmented-control-item>
+  <nldd-segmented-control type="checkbox" variant="icon" accessible-label="Nadruk" data-editor-group="inline">
+  <nldd-segmented-control-item value="bold" text="Vet" icon="bold" shortcut="Ctrl+B" shortcut-mac="Cmd+B"></nldd-segmented-control-item>
+  <nldd-segmented-control-item value="italic" text="Cursief" icon="italic" shortcut="Ctrl+I" shortcut-mac="Cmd+I"></nldd-segmented-control-item>
   <nldd-segmented-control-item value="strikethrough" text="Doorhalen" icon="strikethrough"></nldd-segmented-control-item>
   </nldd-segmented-control>
+  <nldd-menu-item slot="overflow" type="checkbox" text="Vet" icon="bold" data-editor-command="bold"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="checkbox" text="Cursief" icon="italic" data-editor-command="italic"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="checkbox" text="Doorhalen" icon="strikethrough" data-editor-command="strikethrough"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start" label="Link">
-  <nldd-toggle-button size="sm" variant="icon" icon="link" accessible-label="Link" data-editor-toggle="link"></nldd-toggle-button>
+  <nldd-toggle-button variant="icon" icon="link" accessible-label="Link" shortcut="Ctrl+K" shortcut-mac="Cmd+K" data-editor-toggle="link"></nldd-toggle-button>
+  <nldd-menu-item slot="overflow" type="checkbox" text="Link" icon="link" data-editor-command="link"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start" label="Citaat">
-  <nldd-toggle-button size="sm" variant="icon" icon="text-quote" accessible-label="Citaat" data-editor-toggle="quote"></nldd-toggle-button>
+  <nldd-toggle-button variant="icon" icon="text-quote" accessible-label="Citaat" data-editor-toggle="quote"></nldd-toggle-button>
+  <nldd-menu-item slot="overflow" type="checkbox" text="Citaat" icon="text-quote" data-editor-command="quote"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start" label="Lijst">
-  <nldd-segmented-control type="radio" variant="icon" size="sm" value="none" accessible-label="Lijst" data-editor-group="list">
+  <nldd-segmented-control type="radio" variant="icon" value="none" accessible-label="Lijst" data-editor-group="list">
   <nldd-segmented-control-item value="none" text="Geen lijst" icon="minus"></nldd-segmented-control-item>
   <nldd-segmented-control-item value="bullet" text="Opsomming" icon="bullet-list"></nldd-segmented-control-item>
   <nldd-segmented-control-item value="ordered" text="Genummerd" icon="numbered-list"></nldd-segmented-control-item>
   </nldd-segmented-control>
+  <nldd-menu-item slot="overflow" type="radio" text="Geen lijst" icon="minus" data-editor-list="none" selected></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="radio" text="Opsomming" icon="bullet-list" data-editor-list="bullet"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="radio" text="Genummerd" icon="numbered-list" data-editor-list="ordered"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start" label="Tekststijl">
-  <nldd-button size="sm" variant="secondary" expandable text="Paragraaf" accessible-label="Tekststijl" data-editor-heading>
+  <nldd-button appearance="secondary" expandable text="Paragraaf" accessible-label="Tekststijl" data-editor-heading>
   <nldd-menu slot="popup" placement="bottom-start">
   <nldd-menu-item type="radio" value="0" text="Paragraaf" selected></nldd-menu-item>
   <nldd-menu-item type="radio" value="1" text="Kop 1"></nldd-menu-item>
@@ -36,7 +46,11 @@
   <nldd-menu-item type="radio" value="3" text="Kop 3"></nldd-menu-item>
   </nldd-menu>
   </nldd-button>
+  <nldd-menu-item slot="overflow" type="radio" text="Paragraaf" data-editor-heading-level="0" selected></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="radio" text="Kop 1" data-editor-heading-level="1"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="radio" text="Kop 2" data-editor-heading-level="2"></nldd-menu-item>
+  <nldd-menu-item slot="overflow" type="radio" text="Kop 3" data-editor-heading-level="3"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
-  <nldd-text-editor variant="input-field" name="{{ widget.name }}" {% if widget.value %}value="{{ widget.value }}"{% endif %} rows="{{ widget.attrs.rows or 4 }}" resize="auto" {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.autofocus %}autofocus{% endif %} {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}></nldd-text-editor>
+  <nldd-text-editor id="{{ widget.attrs.id }}" appearance="input-field" syntax="hidden" name="{{ widget.name }}" {% if widget.value %}value="{{ widget.value }}"{% endif %} rows="{{ widget.attrs.rows or 4 }}" resize="auto" {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.autofocus %}autofocus{% endif %} {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.invalid %}invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %}></nldd-text-editor>
 </div>
