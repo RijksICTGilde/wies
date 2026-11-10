@@ -566,3 +566,40 @@ class LabelCategoryManageFormsetTest(TestCase):
         setup_roles()
         self.client.force_login(make_staff_user())
         assert self.client.get(self.url).status_code == 403
+
+
+class LabelPermissionPerActionTest(TestCase):
+    """Adding asks the add permission, editing the change permission."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="labels@rijksoverheid.nl")
+        self.category = LabelCategory.objects.create(name="Expertise", color="#DBEAFE")
+        self.label = Label.objects.create(name="Python", category=self.category)
+
+    def _grant(self, *codenames):
+        self.user.user_permissions.add(*Permission.objects.filter(codename__in=codenames))
+        self.client.force_login(self.user)
+
+    def test_change_without_add_cannot_create_a_label(self):
+        self._grant("change_label")
+        response = self.client.post(reverse("label-form-create"), {"category": self.category.id, "name": "Go"})
+        assert response.status_code == 403
+        assert not Label.objects.filter(name="Go").exists()
+
+    def test_change_without_add_can_still_edit_a_label(self):
+        self._grant("change_label")
+        response = self.client.get(reverse("label-form-edit", kwargs={"public_id": self.label.public_id}))
+        assert response.status_code == 200
+
+    def test_add_without_change_can_create_but_not_edit(self):
+        self._grant("add_label")
+        assert self.client.get(reverse("label-form-create")).status_code == 200
+        edit = self.client.get(reverse("label-form-edit", kwargs={"public_id": self.label.public_id}))
+        assert edit.status_code == 403
+
+    def test_category_sheet_needs_add_as_well_as_change(self):
+        self._grant("change_labelcategory")
+        assert self.client.get(reverse("label-category-manage")).status_code == 403
+        self._grant("change_labelcategory", "add_labelcategory")
+        assert self.client.get(reverse("label-category-manage")).status_code == 200

@@ -33,6 +33,7 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
+from wies.core.management.task import require_destructive_actions_enabled
 from wies.core.models import (
     SUBGROEP_CATEGORY,
     Assignment,
@@ -1169,5 +1170,6 @@ class Command(BaseCommand):
     help = "Generate the full dummy dataset (network sync). Alias for load_dummy_data --profile full."
 
     def handle(self, *args, **options):
+        require_destructive_actions_enabled()
         generate(PROFILES["full"], write=self.stdout.write)
         self.stdout.write(self.style.SUCCESS("Done!"))
