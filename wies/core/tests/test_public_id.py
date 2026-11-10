@@ -553,7 +553,7 @@ class FilterFacetFailClosedTests(TestCase):
             "org": "Onbekende opdrachtgever",
             "org_self": "Onbekende opdrachtgever",
             "rol": "Onbekende rol",
-            "onderdeel": "Onbekend onderdeel/programma",
+            "onderdeel": "Onbekend onderdeel",
             "labels": "Onbekend label",
         }
         stranger = str(uuid.uuid4())

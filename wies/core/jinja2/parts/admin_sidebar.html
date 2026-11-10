@@ -16,12 +16,12 @@
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 <nldd-list type="navigation" accessible-label="Beheer">
 {# Two authorities that do not nest: the Gebruikersbeheerder keeps users,
-   labels, onderdelen/programma's and reads the roles; the Applicatiebeheerder keeps the
+   labels, onderdelen and reads the roles; the Applicatiebeheerder keeps the
    maintenance pages. #}
 {% if show_user_admin_pages(request) %}
   {{ nav_item(url('admin-users'), 'users', 'Gebruikers', '/beheer/gebruikers/' in request.path) }}
   {{ nav_item(url('label-admin'), 'labels', 'Labels', '/beheer/labels/' in request.path) }}
-  {{ nav_item(url('suborganization-admin'), 'brand', "Onderdelen/programma's", request.path.startswith(url('suborganization-admin'))) }}
+  {{ nav_item(url('suborganization-admin'), 'brand', "Onderdelen", request.path.startswith(url('suborganization-admin'))) }}
   {{ nav_item(url('role-matrix'), 'user-admin', 'Rollen', request.path == url('role-matrix')) }}
 {% endif %}
 {% if show_staff_pages(request) %}
