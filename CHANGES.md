@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
 - 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 809: bump dependencies for security patches
+- 815: containers pull latest debian patches
 
 ## 2026-11-03_2
 
