@@ -43,9 +43,9 @@ class ParseDateDmyTest(TestCase):
 
 class CreateFromCSVTest(TestCase):
     def test_sample_csv_success(self):
-        # Brands referenced in the example CSV must already exist (imports never create merken).
-        for brand in ("I-Interim Rijk", "Rijks ICT Gilde", "Rijksconsultants"):
-            Suborganization.objects.create(name=brand)
+        # Suborganizations referenced in the example CSV must already exist (imports never create suborganizations).
+        for suborganization in ("I-Interim Rijk", "Rijks ICT Gilde", "Rijksconsultants"):
+            Suborganization.objects.create(name=suborganization)
 
         sample_csv_path = Path(__file__).parent.parent / "static" / "example_assignment_import.csv"
         with sample_csv_path.open() as f:
@@ -57,7 +57,7 @@ class CreateFromCSVTest(TestCase):
     # Critical Bug Exposure Tests
     def test_invalid_date_format(self):
         """Test that invalid date format causes ValueError"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,2025-01-01,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -86,7 +86,7 @@ Test,Description,John Doe"""
 
     def test_empty_csv_no_data_rows(self):
         """Test that CSV with only headers succeeds with zero creates"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
@@ -96,7 +96,7 @@ Test,Description,John Doe"""
 
     def test_invalid_email_format(self):
         """Test that invalid email format fails on model validation"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,invalid-email-no-at,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -105,7 +105,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
 
     def test_empty_organization_url(self):
         """Test that empty organization_url is handled correctly"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -115,7 +115,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
     # Business Logic Tests
     def test_multiple_services_per_assignment(self):
         """Test that multiple rows with same assignment name create multiple services"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
@@ -127,7 +127,7 @@ Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
 
     def test_colleague_email_reuse(self):
         """Test that same colleague email across rows reuses the Colleague object"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Assignment 1,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,John Doe,john@rijksoverheid.nl,,"""
 
@@ -139,7 +139,7 @@ Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Jav
 
     def test_assignment_name_reuse(self):
         """Test that same assignment name reuses assignment but creates new services"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Shared Assignment,First description,Owner A,ownerA@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Shared Assignment,Different description,Owner B,ownerB@rijksoverheid.nl,,01-03-2025,30-04-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
@@ -153,7 +153,7 @@ Shared Assignment,Different description,Owner B,ownerB@rijksoverheid.nl,,01-03-2
 
     def test_owner_equals_placement_colleague(self):
         """Test that same email for owner and colleague creates one Colleague for both roles"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,John Doe,john@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -169,7 +169,7 @@ Test Assignment,Description,John Doe,john@rijksoverheid.nl,,01-01-2025,28-02-202
     # Edge Case Tests
     def test_empty_optional_fields(self):
         """Test that empty optional fields (owner email, organization_url, dates, skill) are handled as None"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner Name,,,,,,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -181,7 +181,7 @@ Test Assignment,Description,Owner Name,,,,,,John Doe,john@rijksoverheid.nl,,"""
 
     def test_skill_case_and_whitespace_sensitivity(self):
         """Test that skills with different case/whitespace create different Skill objects"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Assignment 1,Description,Owner,owner@rijksoverheid.nl,,,,Python,John,john@rijksoverheid.nl,,
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,,, Python ,Jane,jane@rijksoverheid.nl,,
 Assignment 3,Description,Owner,owner@rijksoverheid.nl,,,,python,Bob,bob@rijksoverheid.nl,,"""
@@ -194,7 +194,7 @@ Assignment 3,Description,Owner,owner@rijksoverheid.nl,,,,python,Bob,bob@rijksove
 
     def test_date_validation_start_after_end(self):
         """Test that dates where start is after end are not validated (business logic issue)"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,31-12-2025,01-01-2025,Python,John,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -207,7 +207,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,31-12-2025,01-01-2025,
     # Data Integrity Tests
     def test_verify_return_counts_match_database(self):
         """Test that returned counts match actual objects created in database"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Assignment 1,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
@@ -225,7 +225,7 @@ Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Jav
 
     def test_verify_relationships_established(self):
         """Test that all relationships between objects are correctly established"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python Developer,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -254,7 +254,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
 
     def test_service_status_defaults_to_open(self):
         """Test that services created from CSV have status OPEN by default"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -265,7 +265,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
 
     def test_placement_created_regardless_of_service_status(self):
         """Test that placements are always created when colleague email is provided"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -282,7 +282,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
             tooi_identifier="https://identifier.overheid.nl/tooi/id/test/12345",
         )
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1017/Ministerie_van_Binnenlandse_Zaken_en_Koninkrijksrelaties/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -295,7 +295,7 @@ Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.
     def test_organization_url_no_match(self):
         """Test that a non-matching URL results in no organization linked"""
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/9999/Nonexistent/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -323,7 +323,7 @@ Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.
             tooi_identifier="https://identifier.overheid.nl/tooi/id/test/1003",
         )
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1001/A/,https://organisaties.overheid.nl/1002/B/,https://organisaties.overheid.nl/1003/C/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -351,7 +351,7 @@ Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.
             tooi_identifier="https://identifier.overheid.nl/tooi/id/test/1001",
         )
 
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1001/A/,,,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
@@ -364,7 +364,7 @@ Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.
 
     def test_no_client_columns(self):
         """Test that CSV without any client columns still works"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization
 Test Assignment,Description,Owner,owner@minbzk.nl,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
