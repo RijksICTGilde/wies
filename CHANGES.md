@@ -13,6 +13,7 @@ This files lists the changes during the lifetime of this project.
 - 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 809: bump dependencies for security patches
 - 815: containers pull latest debian patches
+- 775: "merk" is renamed to "onderdeel/programma" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
 
 ## 2026-11-03_2
 
@@ -35,7 +36,6 @@ This files lists the changes during the lifetime of this project.
 - 774: picking an organization from the search suggestions applies it as a filter again, instead of searching on the typed text (#728)
 - 766: switching between the Persoon and Opdracht views now works with the arrow keys (a11y)
 - 755: dependency updates, including a security fix
-- 775: "merk" is renamed to "onderdeel/programma" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
 - 773: the security policy (SECURITY.md) is now readable in Wies at /beveiliging/, linked from the footer and the FAQ; the privacy page generator is renamed to `manage.py generate_docs_html` and renders both pages
 - 757: Beheer › Labels: fields in "Categorieën beheren" get a name per category and visible column headers, and each "Label toevoegen" button's accessible name now starts with its visible text ("Label toevoegen aan <categorie>") (accessibility)
 - 768: accessibility: the colleague panel's name is a heading, card grids are announced as lists, and the privacy chip's focus stop has a role and name
