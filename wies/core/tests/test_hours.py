@@ -668,6 +668,19 @@ class UserSheetContractPeriodTest(TestCase):
         assert '<nldd-validation-item id="error-end_date-1">' in body
         assert 'unmet="error-end_date-1"' in body
 
+    def test_an_end_date_switched_on_but_left_empty_is_asked_for(self):
+        """Text that is no date posts as an empty date; with the switch on that
+        must not save as "runs on"."""
+        response = self.client.post(
+            self.add_url,
+            {"hours_per_week": "32", "start_date": self.today.isoformat(), "end_date": "", "end_date_known": "on"},
+        )
+        body = response.content.decode()
+        assert "Vul een einddatum in" in body
+        assert "data-contract-end-known checked" in body
+        assert '<nldd-form-field label="Einddatum" hidden>' not in body
+        assert not self.colleague.contract_periods.exists()
+
     def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
         running = ContractPeriod.objects.create(
             colleague=self.colleague, hours_per_week=36, start_date=self.today - timedelta(days=100)

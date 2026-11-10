@@ -63,6 +63,7 @@ from wies.core.views import (
     robots_txt,
     role_matrix,
     search_suggestions,
+    sitemap,
     staff_dashboard,
     staff_database,
     suborganization_admin,
@@ -147,6 +148,7 @@ urlpatterns = [
     path("beveiliging/", beveiliging, name="beveiliging"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
     path("toegankelijkheid/onderzoek/", toegankelijkheid_onderzoek, name="toegankelijkheid-onderzoek"),
+    path("sitemap/", sitemap, name="sitemap"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
     path(

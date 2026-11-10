@@ -285,7 +285,7 @@ class LabelCategoryManageFormsetTest(TestCase):
         self.assertContains(response, "form-TOTAL_FORMS")
         self.assertContains(response, 'value="2"')
         self.assertContains(response, 'name="form-1-name"')
-        self.assertNotContains(response, "verplicht")  # No premature "required".
+        self.assertNotContains(response, "nldd-validation-item")  # No premature "required".
 
     def test_delete_new_row_index_removes_row_and_renumbers(self):
         """Removing a new row renumbers the rest, so no blank gap row reappears."""
@@ -541,6 +541,13 @@ class LabelCategoryManageFormsetTest(TestCase):
                 assert '<nldd-text-cell width="full" text="Naam">' in header.group(0)
                 assert '<nldd-text-cell width="112px" text="Kleur">' in header.group(0)
                 assert content.index("data-category-header") < content.index("data-category-row")
+
+    def test_category_list_is_a_form_list(self):
+        """A list of the default type parks the buttons in its rows, so Tab
+        never reaches "Voeg categorie toe"; a form list keeps every control
+        tabbable."""
+        content = self.client.get(self.url).content.decode()
+        assert '<nldd-list type="form" accessible-label="Categorieën">' in content
 
     def test_only_the_user_admin_role_opens_the_sheet(self):
         """The sheet follows the label permissions, which only the

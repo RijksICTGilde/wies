@@ -47,9 +47,14 @@
     more.hidden = !open;
     var preview = entry.querySelector(".wies-cv__preview");
     if (preview) preview.hidden = open;
+    var text = open ? "Toon minder" : "Toon meer";
     el.toggleAttribute("expanded", open);
     el.setAttribute("start-icon", open ? "chevron-up" : "chevron-down");
-    el.setAttribute("text", open ? "Toon minder" : "Toon meer");
+    el.setAttribute("text", text);
+    // The accessible name has to start with the visible text, or a voice
+    // command saying what is on screen does not reach the button.
+    var object = el.getAttribute("data-toggle-object");
+    if (object) el.setAttribute("accessible-label", text + " " + object);
   }
 
   var CLICK_ACTIONS = {
