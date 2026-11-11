@@ -24,18 +24,31 @@ class RenderMarkdownTest(SimpleTestCase):
         assert "ingesprongen vervolg" in html
 
     def test_formatting_renders(self):
-        html = render_markdown("**vet** en *cursief*\n\n- een\n- twee")
+        html = render_markdown("**vet** en *cursief*\n- een\n- twee")
         assert "<strong>vet</strong>" in html
         assert "<em>cursief</em>" in html
         assert "<ul>" in html
         assert "<li>een</li>" in html
 
     def test_headings_render_two_levels_down(self):
-        html = render_markdown("# Kop\n\n## Subkop\n\n##### Diep")
+        html = render_markdown("# Kop\n## Subkop\n##### Diep")
         assert '<h3 data-level="1">Kop</h3>' in html
         assert '<h4 data-level="2">Subkop</h4>' in html
         assert '<h6 data-level="5">Diep</h6>' in html
         assert "<h1" not in html
+
+    def test_empty_lines_above_a_block_are_kept_as_its_gap(self):
+        html = render_markdown("Intro\n**Vet**\n\nTwee\n- een\n- twee\n\n\nDrie\n\n\n\n\nVer")
+
+        assert html.startswith("<p>Intro<br>")
+        assert "<ul>" in html
+        assert '<p data-gap="2">Drie</p>' in html
+        assert '<p data-gap="3">Ver</p>' in html
+
+    def test_a_block_right_under_another_has_no_gap(self):
+        html = render_markdown("## Kop\nTekst")
+
+        assert "data-gap" not in html
 
     def test_a_dashed_line_is_not_a_heading(self):
         html = render_markdown("Zin\n---")

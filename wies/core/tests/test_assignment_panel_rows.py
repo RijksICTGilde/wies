@@ -126,7 +126,7 @@ class AssignmentPanelRowsTest(TestCase):
         # indentation is the formatter's to change, so match on the sequence.
         role_block = opened.split('<div class="wies-role-description">')[1]
         assert 'text="Taken"' in opened
-        assert '<nldd-rich-text spacing="tight"><p>Begeleidt de overgang.' in role_block
+        assert '<nldd-rich-text spacing="flat"><p>Begeleidt de overgang.' in role_block
         assert "En stemt af met de directie." in opened
         placement = Placement.objects.get(colleague=self.anke, service__assignment=self.assignment)
         # The placement's own dates, not the opdracht's period. The line shows

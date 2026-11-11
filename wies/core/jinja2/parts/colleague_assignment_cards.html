@@ -95,7 +95,7 @@
               <div class="wies-cv__role-block">
                 {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
                 <div class="wies-role-description">
-                  <nldd-rich-text spacing="tight">{{ block.text|markdown }}</nldd-rich-text>
+                  <nldd-rich-text spacing="flat">{{ block.text|markdown }}</nldd-rich-text>
                 </div>
               </div>
             {% endfor %}

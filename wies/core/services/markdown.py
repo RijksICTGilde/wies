@@ -53,13 +53,39 @@ _md.add_render_rule("heading_open", _heading)
 _md.add_render_rule("heading_close", _heading)
 
 
+# More empty lines than this read as a mistake, not as a wider gap.
+_MAX_GAP = 3
+
+
+def _mark_gaps(tokens, lines: list[str]) -> None:
+    """Give each top-level block the number of empty lines above it.
+
+    Markdown folds any run of empty lines into one block break, and the editor
+    shows them as typed; data-gap lets the stylesheet put the space back. A
+    list's range runs on over the empty lines after it, hence the trim.
+    """
+    previous_end = None
+    for token in tokens:
+        if token.level != 0 or token.nesting == -1 or token.map is None:
+            continue
+        start, end = token.map
+        if previous_end is not None and start > previous_end:
+            token.attrSet("data-gap", str(min(start - previous_end, _MAX_GAP)))
+        while end > start + 1 and not lines[end - 1].strip():
+            end -= 1
+        previous_end = end
+
+
 def render_markdown(source: str | None) -> Markup:
     """Markdown source to safe HTML; empty in, empty out."""
     if not source or not source.strip():
         return Markup("")
+    env: dict = {}
+    tokens = _md.parse(source, env)
+    _mark_gaps(tokens, source.splitlines())
     # S704 (unsafe Markup) is suppressed: the renderer escapes raw HTML and
     # refuses javascript: links (js-default preset), so the output is safe.
-    return Markup(_md.render(source))  # noqa: S704
+    return Markup(_md.renderer.render(tokens, _md.options, env))  # noqa: S704
 
 
 # A block's end is a word boundary; an inline tag (<strong>) is not.

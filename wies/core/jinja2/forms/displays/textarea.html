@@ -3,7 +3,7 @@
   {% set collapsed = value|length > 300 or value.splitlines()|length > 5 %}
   <div class="wies-long-text{% if collapsed %} wies-long-text--collapsed{% endif %}">
     <div class="wies-long-text__body">
-      <nldd-rich-text spacing="{{ 'flat' if collapsed else 'tight' }}">{{ value|markdown }}</nldd-rich-text>
+      <nldd-rich-text spacing="flat">{{ value|markdown }}</nldd-rich-text>
     </div>
     {% if collapsed %}
       <nldd-button class="inline-edit-show-more" size="sm" appearance="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text"></nldd-button>

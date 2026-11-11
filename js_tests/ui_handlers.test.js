@@ -107,23 +107,22 @@ function cvEntry() {
 }
 
 describe("toggle-long-text (a description folded to its first lines)", () => {
-  it("lifts the collapse and gives the blocks their spacing back", () => {
+  it("lifts the collapse and keeps the layout the text was written with", () => {
     const { wrapper, richText, toggle } = longText();
 
     toggleLongText(toggle);
 
     assert.ok(!wrapper.classList.contains("wies-long-text--collapsed"));
-    assert.equal(richText.getAttribute("spacing"), "tight");
+    assert.equal(richText.getAttribute("spacing"), "flat");
   });
 
   it("folds it back on a second click", () => {
-    const { wrapper, richText, toggle } = longText();
+    const { wrapper, toggle } = longText();
 
     toggleLongText(toggle);
     toggleLongText(toggle);
 
     assert.ok(wrapper.classList.contains("wies-long-text--collapsed"));
-    assert.equal(richText.getAttribute("spacing"), "flat");
   });
 
   it("says what it will do and what it did", () => {

@@ -89,7 +89,7 @@
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell vertical-alignment="top">
   {% if service.request_description %}
-    <nldd-rich-text spacing="tight">{{ service.request_description|markdown }}</nldd-rich-text>
+    <nldd-rich-text spacing="flat">{{ service.request_description|markdown }}</nldd-rich-text>
   {% else %}
     <span class="wies-text-secondary">Niet ingevuld</span>
   {% endif %}

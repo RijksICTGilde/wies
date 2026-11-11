@@ -340,15 +340,30 @@ nldd-rich-text [data-level="3"] {
   font: var(--primitives-font-display-3-sm);
 }
 
-/* Collapsed, nothing has a margin, so the clamp counts text rather than gaps
-   (the toggle sets spacing="flat" for the gap). Open, the block spacing
-   returns. */
-.wies-long-text--collapsed
-  .wies-long-text__body
-  :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote),
-.wies-cv__preview--formatted
-  :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote) {
-  margin: 0;
+/* The empty lines typed in the editor (data-gap, services/markdown.py), one
+   line of space each, so the text keeps the layout it was written with; the
+   rich text itself is spacing="flat". --wies-text-line resolves 1lh once, on
+   nldd-rich-text, so a heading's taller line does not widen its own gap. */
+@property --wies-text-line {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+nldd-rich-text {
+  --wies-text-line: 1lh;
+}
+
+nldd-rich-text > [data-gap="1"] {
+  margin-top: var(--wies-text-line);
+}
+
+nldd-rich-text > [data-gap="2"] {
+  margin-top: calc(2 * var(--wies-text-line));
+}
+
+nldd-rich-text > [data-gap="3"] {
+  margin-top: calc(3 * var(--wies-text-line));
 }
 
 /* A name that opens the colleague panel, on a row that already has a menu:
