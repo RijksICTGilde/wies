@@ -22,6 +22,7 @@ This files lists the changes during the lifetime of this project.
 - 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and a "Sitemap" page in the footer
 - 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
 - 694: (migration) a role's "Taken" may be 2000 characters instead of 500
+- 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
 
 ## 2026-11-03_2
 

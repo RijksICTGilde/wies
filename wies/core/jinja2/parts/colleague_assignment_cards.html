@@ -79,17 +79,24 @@
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell vertical-alignment="top">
         {% if taken.preview %}
-          {# Closed, every role's text runs together, clamped to three lines, so
+          {# Closed, the text is clamped: one role keeps its formatting over
+             five lines, several run together as plain words over three, so
              what is cut off is visibly cut off and "Toon meer" names what it
              reveals. Open, the per-role blocks below take over. #}
-          <p class="wies-cv__preview"
-             data-cv-preview{% if taken.open %}
-             hidden{% endif %}>{{ taken.preview }}</p>
+          {% if taken.formatted %}
+            <nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted" spacing="flat" data-cv-preview{% if taken.open %} hidden{% endif %}>{{ taken.blocks[0].text|markdown }}</nldd-rich-text>
+          {% else %}
+            <p class="wies-cv__preview"
+               data-cv-preview{% if taken.open %}
+               hidden{% endif %}>{{ taken.preview }}</p>
+          {% endif %}
           <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
             {% for block in taken.blocks %}
               <div class="wies-cv__role-block">
                 {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
-                <div class="wies-role-description"><nldd-rich-text spacing="tight">{{ block.text|markdown }}</nldd-rich-text></div>
+                <div class="wies-role-description">
+                  <nldd-rich-text spacing="tight">{{ block.text|markdown }}</nldd-rich-text>
+                </div>
               </div>
             {% endfor %}
           </div>

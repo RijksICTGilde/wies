@@ -18,13 +18,16 @@ from markupsafe import Markup
 _md = MarkdownIt("js-default", {"breaks": True}).disable(["image", "code", "lheading"])
 
 # A description sits under the panel's own h2 headings, so its "# Kop" comes
-# out two levels down (h3), never above the page's structure.
+# out two levels down (h3), never above the page's structure. data-level keeps
+# the level that was written, so it can look as it does in the editor.
 _HEADING_SHIFT = 2
 
 
 def _heading(renderer, tokens, idx, options, env):
-    level = min(int(tokens[idx].tag[1]) + _HEADING_SHIFT, 6)
-    tokens[idx].tag = f"h{level}"
+    written = int(tokens[idx].tag[1])
+    tokens[idx].tag = f"h{min(written + _HEADING_SHIFT, 6)}"
+    if tokens[idx].nesting == 1:
+        tokens[idx].attrSet("data-level", str(written))
     return renderer.renderToken(tokens, idx, options, env)
 
 

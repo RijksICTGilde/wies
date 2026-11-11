@@ -77,9 +77,21 @@ empty sidebar #}
     <h2>Opdrachten</h2>
     </nldd-title>
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-    {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
-      {% include "parts/colleague_assignment_cards.html" %}
-    {% endwith %}
+    {# A save in the side panel re-renders only the panel; this list sits
+       behind it and is fetched again on the trigger that save sends. A
+       sibling, not the list's own attributes: htmx would pass hx-select and
+       hx-swap on to the pencils inside. #}
+    <div hidden
+         hx-get="{{ url('user-profile') }}"
+         hx-trigger="panelSaved from:body"
+         hx-select="#profile-assignments"
+         hx-target="#profile-assignments"
+         hx-swap="outerHTML"></div>
+    <div id="profile-assignments">
+      {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
+        {% include "parts/colleague_assignment_cards.html" %}
+      {% endwith %}
+    </div>
   </div>
   </nldd-one-third-two-thirds-section>
   {# Sheet mounts outside the section, so an empty div takes no column or footer

@@ -32,10 +32,10 @@ class RenderMarkdownTest(SimpleTestCase):
 
     def test_headings_render_two_levels_down(self):
         html = render_markdown("# Kop\n\n## Subkop\n\n##### Diep")
-        assert "<h3>Kop</h3>" in html
-        assert "<h4>Subkop</h4>" in html
-        assert "<h6>Diep</h6>" in html
-        assert "<h1>" not in html
+        assert '<h3 data-level="1">Kop</h3>' in html
+        assert '<h4 data-level="2">Subkop</h4>' in html
+        assert '<h6 data-level="5">Diep</h6>' in html
+        assert "<h1" not in html
 
     def test_a_dashed_line_is_not_a_heading(self):
         html = render_markdown("Zin\n---")

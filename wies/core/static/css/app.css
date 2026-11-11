@@ -311,34 +311,44 @@ nldd-rich-text blockquote {
   gap: var(--primitives-space-8, 8px);
 }
 
-/* A rendered description, collapsed to five lines until "Toon meer". A hard
-   edge, not a fade: a gradient over a tinted list is not colour-fast in dark
-   mode. lh: five lines whatever the rich-text line height is. */
-.wies-long-text--collapsed .wies-long-text__body {
-  max-height: calc(5 * 1lh);
+/* A rendered description, collapsed to five lines until "Toon meer". A
+   line count, not a height: a heading is taller than a line of text, so a
+   height would cut through one. Not a fade: a gradient over a tinted list is
+   not colour-fast in dark mode. On nldd-rich-text itself, because its grid
+   display stops the clamp from counting the lines of its blocks. */
+.wies-long-text--collapsed nldd-rich-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
   overflow: hidden;
 }
 
-/* A heading inside a description is bold text at the text's own size, open
-   or collapsed: a description sits in a data row, and full-size headings made
-   the block leap in scale on "Toon meer". The selectors reach into
-   nldd-rich-text's light DOM: it has no attribute for this. */
-.wies-long-text nldd-rich-text :is(h1, h2, h3, h4, h5, h6),
-.wies-role-description nldd-rich-text :is(h1, h2, h3, h4, h5, h6) {
-  font-size: inherit;
-  line-height: inherit;
-  font-weight: 600;
+/* A heading in a description looks as it did in the editor: "# Kop" is an h3
+   for the page's structure (services/markdown.py) but has the size of a
+   first-level heading. nldd-rich-text sizes by tag and has no attribute for
+   this, so the rule reaches into its light DOM. */
+nldd-rich-text [data-level="1"] {
+  font: var(--primitives-font-display-1-sm);
 }
 
-/* Collapsed, every line is one lh high and nothing has a margin, so the cut
-   falls between lines and not through one (the toggle sets spacing="flat" for
-   the gap). Open, the block spacing returns. */
+nldd-rich-text [data-level="2"] {
+  font: var(--primitives-font-display-2-sm);
+}
+
+nldd-rich-text [data-level="3"] {
+  font: var(--primitives-font-display-3-sm);
+}
+
+/* Collapsed, nothing has a margin, so the clamp counts text rather than gaps
+   (the toggle sets spacing="flat" for the gap). Open, the block spacing
+   returns. */
 .wies-long-text--collapsed
   .wies-long-text__body
+  :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote),
+.wies-cv__preview--formatted
   :is(h1, h2, h3, h4, h5, h6, p, ul, ol, li, blockquote) {
   margin: 0;
-  font-size: inherit;
-  line-height: inherit;
 }
 
 /* A name that opens the colleague panel, on a row that already has a menu:
@@ -397,6 +407,12 @@ nldd-rich-text blockquote {
   line-clamp: 3;
   margin: 0;
   overflow: hidden;
+}
+
+/* Five lines, as _CV_FORMATTED_LINES in views.py. */
+.wies-cv__preview--formatted:not([hidden]) {
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
 }
 
 /* The pencil floats over the first lines of the text (it is a cell of the same
