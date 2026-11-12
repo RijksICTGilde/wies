@@ -3,7 +3,7 @@
 from django.test import SimpleTestCase
 from markupsafe import Markup
 
-from wies.core.services.markdown import markdown_text, render_markdown
+from wies.core.services.markdown import is_long_text, markdown_text, render_markdown
 
 
 class RenderMarkdownTest(SimpleTestCase):
@@ -88,10 +88,43 @@ class RenderMarkdownTest(SimpleTestCase):
         html = render_markdown("2 * 3 = 6")
         assert "2 * 3 = 6" in html
 
+    def test_a_link_without_target_stays_text(self):
+        html = render_markdown("[leeg]() en **[vet]()**")
+        assert "<a" not in html
+        assert "leeg en <strong>vet</strong>" in html
+
+    def test_a_gap_above_a_code_fence_lands_on_pre(self):
+        # The stylesheet spaces the children of nldd-rich-text; <code> is not one.
+        html = render_markdown("Tekst\n\n```\ncode\n```")
+        assert '<pre data-gap="1"><code>' in html
+
     def test_output_is_markup(self):
         assert isinstance(render_markdown("x"), Markup)
 
 
 class MarkdownTextTest(SimpleTestCase):
     def test_plain_text_drops_the_formatting(self):
-        assert markdown_text("# Kop\n\n**vet** en [link](https://x.nl)\n\n- een\n- twee") == "Kop vet en link een twee"
+        assert (
+            markdown_text("# Kop\n\n**vet** en [link](https://x.nl)\n\n- een\n- twee") == "Kop; vet en link; een; twee"
+        )
+
+    def test_a_block_with_its_own_stop_needs_no_separator(self):
+        assert markdown_text("Eerste zin.\n\nTaken:\n- analyse") == "Eerste zin. Taken: analyse"
+
+    def test_empty_gives_empty(self):
+        assert markdown_text(None) == ""
+        assert markdown_text("") == ""
+
+
+class IsLongTextTest(SimpleTestCase):
+    def test_short_text_is_not_long(self):
+        assert not is_long_text(None)
+        assert not is_long_text("Een\n\nvijf\nregels\nlang")
+
+    def test_six_lines_including_empty_ones_are_long(self):
+        # The panel keeps an empty line as space, so it takes a line too.
+        assert is_long_text("Een\n\ntwee\n\ndrie\nvier")
+
+    def test_characters_count_without_the_marks(self):
+        assert not is_long_text("**" + "x" * 300 + "**")
+        assert is_long_text("x" * 301)

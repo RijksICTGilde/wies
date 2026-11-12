@@ -6,9 +6,13 @@ text); this renders it for the panel, the onboarding box and the timeline.
 
 import html
 import re
+from typing import TYPE_CHECKING
 
 from markdown_it import MarkdownIt
 from markupsafe import Markup
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 # js-default: raw HTML is escaped and javascript: links are refused. Off:
 # images (nothing to host them), indented code (four leading spaces in an
@@ -51,9 +55,35 @@ def _link_open(renderer, tokens, idx, options, env):
     return renderer.renderToken(tokens, idx, options, env)
 
 
+def _fence(renderer, tokens, idx, options, env):
+    # The fence renderer puts a token's attributes on <code>; data-gap has to
+    # sit on <pre>, the block the stylesheet spaces.
+    gap = tokens[idx].attrs.pop("data-gap", None)
+    rendered = renderer.fence(tokens, idx, options, env)
+    return rendered.replace("<pre>", f'<pre data-gap="{gap}">', 1) if gap else rendered
+
+
+def _drop_empty_links(state) -> None:
+    """[tekst]() leads nowhere: keep the words, drop the link around them."""
+    for block in state.tokens:
+        if not block.children:
+            continue
+        kept, unlinking = [], False
+        for token in block.children:
+            if token.type == "link_open" and not token.attrGet("href"):
+                unlinking = True
+            elif token.type == "link_close" and unlinking:
+                unlinking = False
+            else:
+                kept.append(token)
+        block.children = kept
+
+
+_md.core.ruler.push("drop_empty_links", _drop_empty_links)
 _md.add_render_rule("link_open", _link_open)
 _md.add_render_rule("heading_open", _heading)
 _md.add_render_rule("heading_close", _heading)
+_md.add_render_rule("fence", _fence)
 
 
 # More empty lines than this read as a mistake, not as a wider gap.
@@ -91,14 +121,41 @@ def render_markdown(source: str | None) -> Markup:
     return Markup(_md.renderer.render(tokens, _md.options, env))  # noqa: S704
 
 
-# A block's end is a word boundary; an inline tag (<strong>) is not.
-_BLOCK_END = re.compile(r"</(?:p|li|h[1-6]|blockquote|ul|ol)>|<br\s*/?>", re.IGNORECASE)
+# A block's end separates; an inline tag (<strong>) does not.
+_BLOCK_END = re.compile(r"</(?:p|li|h[1-6]|blockquote|pre)>|<br\s*/?>", re.IGNORECASE)
 _TAGS = re.compile(r"<[^>]+>")
+_STOPS = ".!?:;,"
+
+
+def join_plain(parts: Iterable[str]) -> str:
+    """Plain-text blocks on one line. A block that ends without a stop gets
+    "; ", so "- Analyse\n- Advies" does not read as one phrase."""
+    text = ""
+    for part in filter(None, parts):
+        if text:
+            text += " " if text[-1] in _STOPS else "; "
+        text += part
+    return text
 
 
 def markdown_text(source: str | None) -> str:
-    """The plain words of a Markdown source, one space between them."""
+    """The plain words of a Markdown source, its blocks on one line."""
     if not source:
         return ""
-    stripped = _TAGS.sub("", _BLOCK_END.sub(" ", _md.render(source)))
-    return " ".join(html.unescape(stripped).split())
+    blocks = _BLOCK_END.split(_md.render(source))
+    return join_plain(" ".join(html.unescape(_TAGS.sub("", block)).split()) for block in blocks)
+
+
+# Past five lines or this many characters a description is cut to five lines
+# with "Toon meer". Without JavaScript that is the final word; with it,
+# cv_clamp.js hides the button when the clamp cuts nothing.
+_LONG_CHARS = 300
+_LONG_LINES = 5
+
+
+def is_long_text(source: str | None) -> bool:
+    """Whether a description needs "Toon meer". Empty lines count: the panel
+    keeps them as space."""
+    if not source:
+        return False
+    return len(markdown_text(source)) > _LONG_CHARS or len(source.strip().splitlines()) > _LONG_LINES

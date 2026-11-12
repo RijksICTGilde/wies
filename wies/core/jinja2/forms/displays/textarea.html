@@ -1,6 +1,6 @@
 {# Show-more toggle: toggle-long-text in ui_handlers.js, shown by cv_clamp.js. #}
 {% if value %}
-  {% set collapsed = value|length > 300 or value.splitlines()|length > 5 %}
+  {% set collapsed = is_long_text(value) %}
   <div class="wies-long-text{% if collapsed %} wies-long-text--collapsed{% endif %}">
     <nldd-rich-text spacing="flat" data-clamp-preview>{{ value|markdown }}</nldd-rich-text>
     {% if collapsed %}

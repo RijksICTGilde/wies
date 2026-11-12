@@ -672,6 +672,15 @@ class AssignmentPanelRenderTest(TestCase):
         assert "invalid" in editor
         assert 'unmet="error-extra_info-1"' in editor
         assert '<nldd-validation-list for="id_extra_info">' in body
+        # The editor hides the marks, so the message says they count.
+        assert "Opmaak telt mee" in body
+
+    def test_inline_edit_points_the_error_list_at_the_editor(self):
+        # The editor shares a wrapper with its formatting bar, so the list
+        # needs its `for` on the generic inline-edit route too.
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "extra_info"])
+        body = post_inline_edit(self.client, url, {"extra_info": "x" * 5001}).content.decode()
+        assert '<nldd-validation-list for="id_extra_info">' in body
 
     def test_markdown_is_stored_as_source_and_shown_rendered(self):
         response = self.client.post(

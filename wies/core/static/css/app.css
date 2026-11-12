@@ -424,7 +424,7 @@ nldd-rich-text > [data-gap="3"] {
   overflow: hidden;
 }
 
-/* Five lines, as _CV_FORMATTED_LINES in views.py. */
+/* Five lines, as _LONG_LINES in services/markdown.py. */
 .wies-cv__preview--formatted:not([hidden]) {
   -webkit-line-clamp: 5;
   line-clamp: 5;

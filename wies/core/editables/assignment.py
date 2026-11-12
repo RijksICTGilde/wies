@@ -22,7 +22,7 @@ from wies.core.services.dates import request_period_text
 from wies.core.services.markdown import markdown_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
-from wies.core.widgets import ComboBoxSelect, MarkdownEditorWidget
+from wies.core.widgets import MARKDOWN_ERROR_MESSAGES, ComboBoxSelect, MarkdownEditorWidget
 
 
 def _business_manager_queryset(assignment=None):
@@ -489,6 +489,7 @@ class AssignmentEditables(EditableSet):
         label="Opdrachtomschrijving",
         help_text="Waar gaat de opdracht over?",
         widget=MarkdownEditorWidget(attrs={"rows": 4}),
+        error_messages=MARKDOWN_ERROR_MESSAGES,
         display="forms/displays/textarea.html",
     )
 

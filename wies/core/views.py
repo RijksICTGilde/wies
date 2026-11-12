@@ -58,7 +58,7 @@ from wies.core.inline_edit.forms import (
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.services import role_matrix as role_matrix_rules
-from wies.core.services.markdown import markdown_text
+from wies.core.services.markdown import is_long_text, join_plain, markdown_text
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
@@ -589,10 +589,6 @@ def _get_colleague_assignments(request, colleague):
 # toggle is certain, also without JavaScript; below it cv_clamp.js shows the
 # toggle when a narrow screen clamps a shorter text.
 _CV_PREVIEW_CHARS = 240
-# One role's formatted text gets five lines, as the opdracht panel gives a
-# description: a bold line or a heading takes a full line of its own.
-_CV_FORMATTED_LINES = 5
-_CV_FORMATTED_CHARS = 400
 _CV_ROLE_NAMES = 3
 
 
@@ -619,11 +615,10 @@ def _cv_taken(roles: list[dict], *, open_requested: bool) -> dict:
     shows in their blocks and needs "Toon meer" even when short.
     """
     described = [role for role in roles if role["description"]]
-    preview = " ".join(markdown_text(role["description"]) for role in described)
+    preview = join_plain(markdown_text(role["description"]) for role in described)
     formatted = len(described) == 1
     if formatted:
-        lines = [line for line in described[0]["description"].splitlines() if line.strip()]
-        has_more = len(preview) > _CV_FORMATTED_CHARS or len(lines) > _CV_FORMATTED_LINES
+        has_more = is_long_text(described[0]["description"])
     else:
         multiline = any("\n" in role["description"].strip() for role in described)
         has_more = len(preview) > _CV_PREVIEW_CHARS or multiline

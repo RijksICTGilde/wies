@@ -112,3 +112,11 @@ class MarkdownEditorWidget(forms.Textarea):
     """
 
     template_name = "forms/widgets/text_editor.html"
+
+
+# The limit counts the Markdown source, whose marks the editor hides
+# (syntax="hidden"), so the count can be past what the eye sees.
+MARKDOWN_ERROR_MESSAGES = {
+    "max_length": "Deze tekst is te lang. Er passen %(limit_value)d tekens in, nu zijn het er %(show_value)d. "
+    "Opmaak telt mee, zoals ** voor vet.",
+}

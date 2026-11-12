@@ -247,6 +247,15 @@ class OnboardingAssignmentStepTest(TestCase):
         # Welcome + profile + opdracht = three steps.
         self.assertContains(response, 'data-step="3"')
 
+    def test_role_row_shows_long_taken_shortened_as_plain_text(self):
+        self._place_on(description="- Analyse\n- " + "woord " * 100)
+        self.client.force_login(self.user)
+        body = self.client.get(reverse("home")).content.decode()
+        row = body.split('supporting-text="')[1].split('"')[0]
+        assert row.startswith("Analyse; woord")
+        assert row.endswith("…")
+        assert len(row) <= 300
+
     def test_assignment_edit_screen_renders_and_saves(self):
         assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
         self.client.force_login(self.user)

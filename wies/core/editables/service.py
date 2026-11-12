@@ -9,7 +9,7 @@ from django.core.validators import MaxValueValidator, MinValueValidator
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import HOURS_PER_WEEK_CHOICES, MAX_HOURS_PER_WEEK, REQUEST_DURATION_CHOICES, Service
-from wies.core.widgets import MarkdownEditorWidget
+from wies.core.widgets import MARKDOWN_ERROR_MESSAGES, MarkdownEditorWidget
 
 
 class ServiceEditables(EditableSet):
@@ -19,11 +19,13 @@ class ServiceEditables(EditableSet):
     description = Editable(
         label="Taken",
         widget=MarkdownEditorWidget(attrs={"rows": 3}),
+        error_messages=MARKDOWN_ERROR_MESSAGES,
     )
     request_description = Editable(
         label="Wie we zoeken",
         help_text="Welke kennis en ervaring vraagt de opdrachtgever?",
         widget=MarkdownEditorWidget(attrs={"rows": 8}),
+        error_messages=MARKDOWN_ERROR_MESSAGES,
         display="forms/displays/textarea.html",
     )
     location = Editable(label="Standplaats")

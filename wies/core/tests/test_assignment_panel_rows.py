@@ -494,5 +494,5 @@ class CvTakenTest(SimpleTestCase):
         taken = _cv_taken(roles, open_requested=False)
 
         assert not taken["formatted"]
-        assert taken["preview"] == "koppelingen tests Reviewt."
+        assert taken["preview"] == "koppelingen; tests; Reviewt."
         assert taken["has_more"]
