@@ -54,6 +54,15 @@ class ServicePanelTest(TestCase):
         assert "Zaaksysteem" in body
         assert 'icon="chevron-right"' in body
 
+    def test_the_vacancy_text_is_shown_formatted(self):
+        self.service.request_description = "Je werkt aan:\n\n- **koppelingen**\n- <script>x</script>"
+        self.service.save()
+
+        body = self._panel()
+
+        assert "<li><strong>koppelingen</strong></li>" in body
+        assert "<script>x</script>" not in body
+
     def _place(self, name, **placement):
         colleague = Colleague.objects.create(
             name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl", source="wies"
@@ -381,6 +390,14 @@ class AanvraagFormRequestDescriptionTest(TestCase):
         assert re.search(r"<div data-request-field\s*>", body)
         assert re.search(r"<div data-tasks-field\s*hidden>", body)
         assert 'text="Per direct"' in body
+
+    def test_both_texts_are_written_in_the_markdown_editor(self):
+        body = self.client.get(
+            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": "nieuw-aanvraag"}
+        ).content.decode()
+
+        assert re.search(r'<nldd-text-editor [^>]*name="request_description"', body)
+        assert re.search(r'<nldd-text-editor [^>]*name="description"', body)
 
     def test_a_new_placement_shows_the_taken_and_hides_the_description(self):
         body = self.client.get(

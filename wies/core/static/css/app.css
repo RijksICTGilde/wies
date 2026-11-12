@@ -303,14 +303,73 @@ nldd-rich-text blockquote {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
-/* Long free text with a "Toon meer" toggle (#576). pre-wrap, not pre-line: the
-   double spaces and indentation of a pasted description should survive.
-   `:not([hidden])` is needed because toggle-long-text swaps the two spans via
-   the hidden attribute, and a display from the document beats [hidden]. */
-.inline-edit-long-text__truncated:not([hidden]),
-.inline-edit-long-text__full:not([hidden]) {
-  display: block;
-  white-space: pre-wrap;
+/* The formatting bar and its editor read as one control: a little air between
+   them, no more than the gap between a label and its field. */
+.wies-text-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-8, 8px);
+}
+
+/* Above the editor it follows in the markup (see text_editor.html): the form
+   field binds to the first form input, so the editor has to come first. */
+.wies-text-editor > nldd-toolbar {
+  order: -1;
+}
+
+/* A rendered description, collapsed to five lines until "Toon meer". A
+   line count, not a height: a heading is taller than a line of text, so a
+   height would cut through one. Not a fade: a gradient over a tinted list is
+   not colour-fast in dark mode. On nldd-rich-text itself, because its grid
+   display stops the clamp from counting the lines of its blocks. */
+.wies-long-text--collapsed nldd-rich-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+  overflow: hidden;
+}
+
+/* A heading in a description looks as it did in the editor: "# Kop" is an h3
+   for the page's structure (services/markdown.py) but has the size of a
+   first-level heading. nldd-rich-text sizes by tag and has no attribute for
+   this, so the rule reaches into its light DOM. */
+nldd-rich-text [data-level="1"] {
+  font: var(--primitives-font-display-1-sm);
+}
+
+nldd-rich-text [data-level="2"] {
+  font: var(--primitives-font-display-2-sm);
+}
+
+nldd-rich-text [data-level="3"] {
+  font: var(--primitives-font-display-3-sm);
+}
+
+/* The empty lines typed in the editor (data-gap, services/markdown.py), one
+   line of space each, so the text keeps the layout it was written with; the
+   rich text itself is spacing="flat". --wies-text-line resolves 1lh once, on
+   nldd-rich-text, so a heading's taller line does not widen its own gap. */
+@property --wies-text-line {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+nldd-rich-text {
+  --wies-text-line: 1lh;
+}
+
+nldd-rich-text > [data-gap="1"] {
+  margin-top: var(--wies-text-line);
+}
+
+nldd-rich-text > [data-gap="2"] {
+  margin-top: calc(2 * var(--wies-text-line));
+}
+
+nldd-rich-text > [data-gap="3"] {
+  margin-top: calc(3 * var(--wies-text-line));
 }
 
 /* A name that opens the colleague panel, on a row that already has a menu:
@@ -371,6 +430,12 @@ nldd-rich-text blockquote {
   overflow: hidden;
 }
 
+/* Five lines, as _LONG_LINES in services/markdown.py. */
+.wies-cv__preview--formatted:not([hidden]) {
+  -webkit-line-clamp: 5;
+  line-clamp: 5;
+}
+
 /* The pencil floats over the first lines of the text (it is a cell of the same
    row), so the clamped preview keeps its width clear. The open text runs the
    full width again: the button is level with the first line only. */
@@ -400,11 +465,6 @@ nldd-rich-text blockquote {
 .wies-role-description {
   display: block;
   margin: 0;
-}
-
-/* The description is plain text here; pre-wrap keeps its line breaks. */
-.wies-role-description__text {
-  white-space: pre-wrap;
 }
 
 /* Aligned with the text above it: nldd-button carries its own side padding. */

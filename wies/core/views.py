@@ -58,6 +58,7 @@ from wies.core.inline_edit.forms import (
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids, resolve_facet
 from wies.core.services import role_matrix as role_matrix_rules
+from wies.core.services.markdown import is_long_text, join_plain, markdown_text
 from wies.core.visibility_rules import (
     LABELS,
     PRIVACY_BM,
@@ -606,15 +607,26 @@ def _add_cv_rows(entry: dict, *, open_requested: bool) -> None:
 
 
 def _cv_taken(roles: list[dict], *, open_requested: bool) -> dict:
-    """The Taken row: every role's text run together as the preview, one block
-    per role behind "Toon meer", and the viewer's own pencil."""
+    """The Taken row: a preview, one block per role behind "Toon meer", and
+    the viewer's own pencil.
+
+    One role's preview is its formatted text, cut at five lines. Several
+    roles run together as plain words, so a list or a second paragraph only
+    shows in their blocks and needs "Toon meer" even when short.
+    """
     described = [role for role in roles if role["description"]]
-    preview = " ".join(role["description"] for role in described)
-    has_more = len(preview) > _CV_PREVIEW_CHARS
+    preview = join_plain(markdown_text(role["description"]) for role in described)
+    formatted = len(described) == 1
+    if formatted:
+        has_more = is_long_text(described[0]["description"])
+    else:
+        multiline = any("\n" in role["description"].strip() for role in described)
+        has_more = len(preview) > _CV_PREVIEW_CHARS or multiline
     # The sheet is per role, so with several roles the pencil could not say which.
     own = roles[0] if len(roles) == 1 and roles[0]["edit_url"] else None
     return {
         "preview": preview,
+        "formatted": formatted,
         "has_more": has_more,
         "open": has_more and open_requested,
         "blocks": [
@@ -3797,6 +3809,11 @@ def user_profile(request):
         hx_target = request.headers.get("HX-Target")
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+        # The refresh after a save in the panel: the list alone, as the whole
+        # page's flash block would take the panel's success message first.
+        if hx_target == "profile-assignments":
+            assignment_list = _get_colleague_assignments(request, colleague) if colleague else []
+            return render(request, "parts/profile_assignments.html", {"assignment_list": assignment_list})
 
     label_categories = []
     for category in label_categories_for_everyone().order_by("name"):
@@ -4593,6 +4610,16 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
     return fallback
 
 
+def _back_to_panel(path: str) -> HttpResponse:
+    """The answer to a save in a panel sheet: htmx loads ``path`` into the
+    panel, and ``panelSaved`` tells a page that shows the same data behind the
+    panel (the profile) to fetch it again."""
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "panelSaved"
+    response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
 @require_POST
 def placement_edit_view(request, public_id):
     """Saves the combined edit form of the placement child sheet.
@@ -4643,9 +4670,7 @@ def placement_edit_view(request, public_id):
     # The panel that HX-Location fetches swaps the banner in out of band.
     messages.success(request, f"Plaatsing van {placement.colleague.name} is aangepast.")
 
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _back_to_panel(return_path)
 
 
 def _build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None):
@@ -4747,9 +4772,7 @@ def assignment_edit_view(request, public_id):
     # The panel that HX-Location fetches swaps the banner in out of band.
     assignment.refresh_from_db(fields=["name"])
     messages.success(request, f'Opdracht "{assignment.name}" is aangepast.')
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _back_to_panel(return_path)
 
 
 @require_POST
@@ -4789,9 +4812,7 @@ def assignment_create_sheet(request):
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
         messages.success(request, f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe.')
-        response = HttpResponse(status=204)
-        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
-        return response
+        return _back_to_panel(path)
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised
     # return address, so terug_url survives a failed submit.
@@ -4915,9 +4936,7 @@ def assignment_member_edit_view(request, public_id):
         return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _back_to_panel(return_path)
 
 
 @require_POST
@@ -4947,6 +4966,4 @@ def assignment_member_delete_view(request, public_id, service_public_id):
         request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
     )
     return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return _back_to_panel(return_path)

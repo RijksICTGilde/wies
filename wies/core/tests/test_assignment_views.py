@@ -416,7 +416,7 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== Extra Info Client-Side Toggle Tests ==========
 
     def test_assignment_extra_info_long_text_has_toggle(self):
-        """A long description renders truncated and full text plus a toggle."""
+        """A long description renders as Markdown, collapsed, with a toggle."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
@@ -424,16 +424,13 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-
         self.assertContains(response, "Toon meer")
-
-        # Visibility is toggled via the HTML `hidden` attribute.
-        self.assertContains(response, 'class="inline-edit-long-text__truncated"')
-        self.assertContains(response, 'class="inline-edit-long-text__full"')
-
+        # Collapsed by a class on our wrapper; ui_handlers.js lifts it, and
+        # cv_clamp.js hides the toggle when the clamp cuts nothing.
+        self.assertContains(response, 'class="wies-long-text wies-long-text--collapsed"')
+        self.assertContains(response, "data-clamp-preview")
+        self.assertContains(response, "data-reveal-when-clamped")
         self.assertContains(response, "Lorem ipsum dolor sit amet")
-
-        self.assertContains(response, "hidden>", count=1)
 
     def test_panel_shows_the_description_inside_the_data_tab(self):
         """The description renders inside the Gegevens tab.
@@ -452,7 +449,7 @@ class AssignmentEditAttributeTest(TestCase):
         # that script only behind show_onboarding left the button dead here.
         page = self.client.get("/aanvragen/").content.decode()
         assert "js/ui_handlers.js" in page
-        assert body.index("inline-edit-long-text") > body.index('id="tab-panel-gegevens"')
+        assert body.index("wies-long-text") > body.index('id="tab-panel-gegevens"')
         # Editing runs via "Gegevens wijzigen" at the top, not per row.
         assert "&veld=extra_info" not in body
 
@@ -471,8 +468,8 @@ class AssignmentEditAttributeTest(TestCase):
 
         self.assertNotContains(response, "Toon meer")
 
-        # No hidden second span and no toggle: the short text stands in full.
-        self.assertNotContains(response, "inline-edit-long-text__full")
+        # Not collapsed and no toggle: the short text stands in full.
+        self.assertNotContains(response, "wies-long-text--collapsed")
         self.assertNotContains(response, "inline-edit-show-more")
 
         self.assertContains(response, "Short description")
@@ -573,7 +570,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "heeft de opdrachtomschrijving gewijzigd.")
-        self.assertContains(response, "inline-edit-long-text__truncated")
+        self.assertContains(response, "wies-long-text--collapsed")
         self.assertContains(response, "inline-edit-show-more")
         self.assertContains(response, "Toon meer")
         self.assertNotContains(response, f'van "{long_old}"')

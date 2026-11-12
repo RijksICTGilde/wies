@@ -12,10 +12,14 @@ from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.role_helpers import make_business_manager_user
+from wies.core.views import _cv_taken
 
 User = get_user_model()
 
 HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
+# One role's preview: its formatted text, collapsed. Attribute order is the
+# template formatter's, so only the class and the hook are pinned.
+PREVIEW = r'<nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted"[^>]*data-clamp-preview'
 
 
 def _row_of(body: str, name: str) -> str:
@@ -88,7 +92,7 @@ class AssignmentPanelRowsTest(TestCase):
 
     def test_the_cv_entry_holds_the_placement_and_opens_for_uitgeklapt(self):
         Service.objects.filter(placements__colleague=self.anke).update(
-            description="Begeleidt de overgang. " * 12 + "\n\nEn stemt af met de directie.", hours_per_week=24
+            description="Begeleidt de overgang. " * 20 + "\n\nEn stemt af met de directie.", hours_per_week=24
         )
         headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
         panel = reverse("home") + f"?collega={self.anke.public_id}"
@@ -115,14 +119,14 @@ class AssignmentPanelRowsTest(TestCase):
 
         assert "Begeleidt de overgang." in closed
         assert 'text="Taken"' in closed
-        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview>Begeleidt de overgang. Begeleidt', closed)
+        assert re.search(PREVIEW + r">\s*<p>Begeleidt de overgang. Begeleidt", closed)
         assert '<div class="wies-cv__more" hidden>' in closed
-        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>', opened)
+        assert re.search(PREVIEW + r"\s+hidden>", opened)
         # Open, the description is rendered from Markdown. The template's
         # indentation is the formatter's to change, so match on the sequence.
         role_block = opened.split('<div class="wies-role-description">')[1]
         assert 'text="Taken"' in opened
-        assert '<span class="wies-role-description__text">Begeleidt de overgang.' in role_block
+        assert '<nldd-rich-text spacing="flat"><p>Begeleidt de overgang.' in role_block
         assert "En stemt af met de directie." in opened
         placement = Placement.objects.get(colleague=self.anke, service__assignment=self.assignment)
         # The placement's own dates, not the opdracht's period. The line shows
@@ -146,7 +150,7 @@ class AssignmentPanelRowsTest(TestCase):
         # that clamps it shows it, so the blocks it unfolds are there already.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")
         bram = self.client.get(reverse("home") + f"?collega={self.bram.public_id}", headers=headers).content.decode()
-        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview>Kort.</p>', bram)
+        assert re.search(PREVIEW + r">\s*<p>Kort.</p>", bram)
         toggle = bram.split('<nldd-button class="wies-cv__toggle"')[1].split(">")[0]
         assert toggle.endswith('data-action="toggle-card" data-reveal-when-clamped hidden')
         assert '<div class="wies-cv__more" hidden>' in bram
@@ -202,7 +206,7 @@ class AssignmentPanelRowsTest(TestCase):
         )
         # The preview carries hidden, so it does not stand above the block that
         # repeats it; each role's text is visible exactly once.
-        preview = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview([^>]*)>', entry)
+        preview = re.search(r'<p class="wies-cv__preview"\s+data-clamp-preview([^>]*)>', entry)
         assert preview is not None
         assert "hidden" in preview.group(1)
         # Each role's text appears in its own block; the one the preview
@@ -211,7 +215,9 @@ class AssignmentPanelRowsTest(TestCase):
         assert '<p class="wies-cv__role-label">Dev</p>' in entry
         # The preview runs both texts together; the blocks below carry them
         # once each, under their own role heading.
-        preview_text = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>([^<]*)</p>', entry).group(1)
+        preview_text = re.search(r'<p class="wies-cv__preview"\s+data-clamp-preview\s+hidden>([^<]*)</p>', entry).group(
+            1
+        )
         assert "Tekst van de eerste rol." in preview_text
         assert "Tekst van de tweede rol." in preview_text
         assert entry.count('<div class="wies-cv__role-block">') == 2
@@ -282,14 +288,14 @@ class AssignmentPanelRowsTest(TestCase):
         """One entry fills the panel on its own, and a collapsed description
         there reads as if the list itself were cut off."""
         Service.objects.filter(placements__colleague=self.anke).update(
-            description="Begeleidt de overgang. " * 12 + "\n\nEn stemt af met de directie."
+            description="Begeleidt de overgang. " * 20 + "\n\nEn stemt af met de directie."
         )
         headers = {"HX-Request": "true", "HX-Target": "side-panel-content"}
         body = self.client.get(reverse("home") + f"?collega={self.anke.public_id}", headers=headers).content.decode()
 
         assert body.count('<li class="wies-cv__item">') == 1
         assert '<div class="wies-cv__more">' in body
-        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>', body)
+        assert re.search(PREVIEW + r"\s+hidden>", body)
         assert "Toon minder" in body
 
 
@@ -309,12 +315,12 @@ class CvControlsTest(TestCase):
         skill = Skill.objects.create(name="Dev")
         service = Service.objects.create(
             assignment=assignment,
-            description="Begeleidt de overgang. " * 12,
+            description="Begeleidt de overgang. " * 20,
             skill=skill,
             source="wies",
         )
         today = timezone.now().date()
-        Placement.objects.create(
+        self.placement = Placement.objects.create(
             colleague=self.colleague,
             service=service,
             period_source=Placement.PLACEMENT,
@@ -348,6 +354,39 @@ class CvControlsTest(TestCase):
         ).content.decode()
 
         assert 'accessible-label="Toon minder taken bij Zaaksysteem"' in body
+
+    def test_the_profile_list_follows_a_save_in_the_panel(self):
+        """The save re-renders only the panel; the profile's own list of
+        opdrachten sits behind it and has to fetch itself again."""
+        response = self.client.post(
+            reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
+            {"description": "**Nieuw**", "terug_url": reverse("user-profile")},
+        )
+        profile = self.client.get(reverse("user-profile")).content.decode()
+
+        assert response.status_code == 204, response.content
+        assert response["HX-Trigger"] == "panelSaved"
+        refresher = re.search(r"<div hidden[^>]*>", profile).group(0)
+        assert 'hx-trigger="panelSaved from:body"' in refresher
+        assert 'hx-target="#profile-assignments"' in refresher
+        assert '<div id="profile-assignments">' in profile
+
+    def test_the_profile_refresh_leaves_the_success_message_to_the_panel(self):
+        """htmx fetches the list before the panel; a whole page would render
+        the flash block and take the message the panel is about to show."""
+        self.client.post(
+            reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
+            {"description": "**Nieuw**", "terug_url": reverse("user-profile")},
+        )
+        refresh = self.client.get(
+            reverse("user-profile"), headers={"HX-Request": "true", "HX-Target": "profile-assignments"}
+        ).content.decode()
+        later = self.client.get(reverse("user-profile")).content.decode()
+
+        assert refresh.lstrip().startswith('<div id="profile-assignments">')
+        assert "<strong>Nieuw</strong>" in refresh
+        assert "flash-messages" not in refresh
+        assert "is aangepast" in later
 
 
 class OwnRolePencilTest(TestCase):
@@ -402,11 +441,14 @@ class CvPreviewStylesheetTest(SimpleTestCase):
     entry showed its first role's text twice, and no template test catches
     that: the markup is right, the stylesheet overrides it."""
 
-    def test_the_preview_rule_does_not_override_hidden(self):
+    def test_the_preview_rules_do_not_override_hidden(self):
         css = (settings.BASE_DIR / "wies" / "core" / "static" / "css" / "app.css").read_text()
-        rule = next(line for line in css.splitlines() if line.startswith(".wies-cv__preview"))
+        rules = re.findall(r"([^{}]*wies-cv__preview[^{}]*)\{([^}]*)\}", css)
+        selectors = [selector.strip() for selector, body in rules if "display" in body]
 
-        assert rule.startswith(".wies-cv__preview:not([hidden])"), rule
+        assert selectors, "the clamp rule moved; point this test at it"
+        for selector in selectors:
+            assert selector.endswith(":not([hidden])"), selector
 
 
 class SidePanelSheetTest(TestCase):
@@ -421,3 +463,36 @@ class SidePanelSheetTest(TestCase):
             sheets = re.findall(r'<nldd-sheet id="side-panel"[^>]*>', body)
             assert len(sheets) == 1, name
             assert 'width="800px"' in sheets[0], name
+
+
+class CvTakenTest(SimpleTestCase):
+    """One role keeps its formatting closed; several run together as plain
+    words, so their formatting only shows open."""
+
+    def _role(self, description):
+        return {"skill": "Dev", "description": description, "edit_url": None, "edit_label": None}
+
+    def test_the_preview_drops_the_markdown_marks(self):
+        taken = _cv_taken([self._role("**Bouwt** de koppeling.")], open_requested=False)
+
+        assert taken["preview"] == "Bouwt de koppeling."
+        assert not taken["has_more"]
+
+    def test_one_role_keeps_a_short_list_without_a_toggle(self):
+        taken = _cv_taken([self._role("- koppelingen\n- tests")], open_requested=False)
+
+        assert taken["formatted"]
+        assert not taken["has_more"]
+
+    def test_one_role_unfolds_past_five_lines(self):
+        taken = _cv_taken([self._role("\n".join(f"- punt {n}" for n in range(6)))], open_requested=False)
+
+        assert taken["has_more"]
+
+    def test_several_roles_unfold_a_short_list(self):
+        roles = [self._role("- koppelingen\n- tests"), self._role("Reviewt.")]
+        taken = _cv_taken(roles, open_requested=False)
+
+        assert not taken["formatted"]
+        assert taken["preview"] == "koppelingen; tests; Reviewt."
+        assert taken["has_more"]

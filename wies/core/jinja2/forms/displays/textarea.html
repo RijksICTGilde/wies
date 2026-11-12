@@ -1,18 +1,14 @@
-{# Show-more toggle: toggle-long-text in ui_handlers.js. #}
+{# Show-more toggle: toggle-long-text in ui_handlers.js, shown by cv_clamp.js. #}
 {% if value %}
-  {% set lines = value.splitlines() %}
-  {% set too_many_chars = value|length > 300 %}
-  {% set too_many_lines = lines|length > 5 %}
-  {% if too_many_chars or too_many_lines %}
-    {% set truncated = lines[:5]|join('\n') if too_many_lines else value[:300] %}
-    <span class="inline-edit-long-text">
-      <span class="inline-edit-long-text__truncated">{{ truncated }}…</span>
-      <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
-      <nldd-button class="inline-edit-show-more" size="sm" appearance="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text"></nldd-button>
-    </span>
-  {% else %}
-    <span class="inline-edit-long-text__truncated">{{ value }}</span>
-  {% endif %}
+  {% set collapsed = is_long_text(value) %}
+  <div class="wies-long-text{% if collapsed %} wies-long-text--collapsed{% endif %}">
+    <nldd-rich-text spacing="flat" data-clamp-preview>{{ value|markdown }}</nldd-rich-text>
+    {% if collapsed %}
+      {# A long text can still fit in five lines of a wide panel: cv_clamp.js
+         hides the toggle when the clamp cuts nothing. #}
+      <nldd-button class="inline-edit-show-more" size="sm" appearance="accent-transparent" start-icon="chevron-down" text="Toon meer" data-action="toggle-long-text" data-reveal-when-clamped></nldd-button>
+    {% endif %}
+  </div>
 {% else %}
   <span class="wies-text-secondary">Niet ingevuld</span>
 {% endif %}

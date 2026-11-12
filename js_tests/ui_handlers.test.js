@@ -12,10 +12,23 @@ const {
 // for a wrapper class no template produced, so the button did nothing at all
 // and no test noticed (#693).
 
+// `className` holds one or more classes; a tag name (nldd-rich-text) stands
+// in as a class, since the fake matches selectors on classes only.
 function element(className, options) {
   const opts = options || {};
   return {
     className: className,
+    classList: {
+      owner: null,
+      contains(name) {
+        return this.owner.className.split(" ").includes(name);
+      },
+      toggle(name, force) {
+        const names = this.owner.className.split(" ").filter((n) => n !== name);
+        if (force) names.push(name);
+        this.owner.className = names.join(" ");
+      },
+    },
     hidden: opts.hidden === true,
     attributes: {},
     parent: null,
@@ -37,16 +50,20 @@ function element(className, options) {
       const wanted = selector.replace(".", "");
       let node = this;
       while (node) {
-        if (node.className === wanted) return node;
+        if (hasClass(node, wanted)) return node;
         node = node.parent;
       }
       return null;
     },
     querySelector(selector) {
       const wanted = selector.replace(".", "");
-      return descendants(this).find((n) => n.className === wanted) || null;
+      return descendants(this).find((n) => hasClass(n, wanted)) || null;
     },
   };
+}
+
+function hasClass(node, name) {
+  return node.className.split(" ").includes(name);
 }
 
 function descendants(node) {
@@ -54,6 +71,7 @@ function descendants(node) {
 }
 
 function tree(root) {
+  root.classList.owner = root;
   for (const child of root.children) {
     child.parent = root;
     tree(child);
@@ -61,16 +79,19 @@ function tree(root) {
   return root;
 }
 
-// The markup of forms/displays/textarea.html: a truncated and a full copy,
-// one of them hidden, with the toggle beside them.
+// The markup of forms/displays/textarea.html: the rendered text in a body
+// that a class on the wrapper collapses, with the toggle beside it.
 function longText() {
-  const truncated = element("inline-edit-long-text__truncated");
-  const full = element("inline-edit-long-text__full", { hidden: true });
+  const richText = element("nldd-rich-text");
+  const body = element("wies-long-text__body", { children: [richText] });
   const toggle = element("inline-edit-show-more");
   const wrapper = tree(
-    element("inline-edit-long-text", { children: [truncated, full, toggle] }),
+    element("wies-long-text wies-long-text--collapsed", {
+      children: [body, toggle],
+    }),
   );
-  return { wrapper, truncated, full, toggle };
+  richText.setAttribute("spacing", "flat");
+  return { wrapper, richText, toggle };
 }
 
 // The markup of parts/colleague_assignment_cards.html: a preview and a
@@ -86,23 +107,22 @@ function cvEntry() {
 }
 
 describe("toggle-long-text (a description folded to its first lines)", () => {
-  it("swaps the truncated copy for the full one", () => {
-    const { truncated, full, toggle } = longText();
+  it("lifts the collapse and keeps the layout the text was written with", () => {
+    const { wrapper, richText, toggle } = longText();
 
     toggleLongText(toggle);
 
-    assert.equal(full.hidden, false, "the full text should be shown");
-    assert.equal(truncated.hidden, true, "the truncated copy should be hidden");
+    assert.ok(!wrapper.classList.contains("wies-long-text--collapsed"));
+    assert.equal(richText.getAttribute("spacing"), "flat");
   });
 
   it("folds it back on a second click", () => {
-    const { truncated, full, toggle } = longText();
+    const { wrapper, toggle } = longText();
 
     toggleLongText(toggle);
     toggleLongText(toggle);
 
-    assert.equal(full.hidden, true);
-    assert.equal(truncated.hidden, false);
+    assert.ok(wrapper.classList.contains("wies-long-text--collapsed"));
   });
 
   it("says what it will do and what it did", () => {

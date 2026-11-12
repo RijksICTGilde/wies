@@ -102,3 +102,21 @@ class OrgPickerWidget(forms.Widget):
         ctx["widget"]["prefix"] = self.prefix
         ctx["widget"]["selections"] = selections
         return ctx
+
+
+class MarkdownEditorWidget(forms.Textarea):
+    """nldd-text-editor for a Markdown description.
+
+    A Textarea subclass on purpose: the audit text treats a Textarea field as
+    long text and shows a Van/Naar block for it (the audit renderer in views.py).
+    """
+
+    template_name = "forms/widgets/text_editor.html"
+
+
+# The limit counts the Markdown source, whose marks the editor hides
+# (syntax="hidden"), so the count can be past what the eye sees.
+MARKDOWN_ERROR_MESSAGES = {
+    "max_length": "Deze tekst is te lang. Er passen %(limit_value)d tekens in, nu zijn het er %(show_value)d. "
+    "Opmaak telt mee, zoals ** voor vet.",
+}

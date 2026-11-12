@@ -27,7 +27,8 @@
         <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
         {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
         {% if bound.errors %}
-          <nldd-validation-list>
+          {# `for`: a widget that is no form input names the control the list is about. #}
+          <nldd-validation-list{% if bound.field.widget.attrs.get("validation-for") %} for="{{ bound.field.widget.attrs["validation-for"] }}"{% endif %}>
           {% for error in bound.errors %}
             <nldd-validation-item id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-validation-item>
           {% endfor %}
