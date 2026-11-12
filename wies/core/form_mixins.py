@@ -130,10 +130,6 @@ class _BaseFormMixin:
         }.get(field.widget.__class__.__name__)
         if label_attr and field.label:
             field.widget.attrs.setdefault(label_attr, str(field.label))
-        # The editor shares a wrapper with its formatting bar, so nldd-form-field
-        # does not find it and the error list needs pointing at it.
-        if field.widget.__class__.__name__ == "MarkdownEditorWidget":
-            field.widget.attrs.setdefault("validation-for", self[field_name].auto_id)
 
         # A fixed date, not today's, so screenshots and tests stay put.
         if isinstance(field.widget, DateInput):

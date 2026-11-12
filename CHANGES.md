@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
+- 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
 
 ## 2026-11-11
 
@@ -20,8 +21,6 @@ This files lists the changes during the lifetime of this project.
 - 815: containers pull latest debian patches
 - 775: "merk" is renamed to "onderdeel" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
 - 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and a "Sitemap" page in the footer
-- 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
-- 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
 
 ## 2026-11-03_2
 

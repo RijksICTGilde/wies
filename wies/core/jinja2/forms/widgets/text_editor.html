@@ -6,8 +6,12 @@
    narrow sheet. syntax="hidden": the marks only show where the caret is, so
    the text reads as formatted while the value stays Markdown.
    Form-associated: the value reaches the form natively. nldd-form-field sets
-   input-id/accessible-label; the inline-edit field brings its own label. #}
+   input-id/accessible-label; the inline-edit field brings its own label.
+   The editor comes before the bar: nldd-form-field binds its label, help text
+   and errors to the first form input it finds, and the bar's controls are
+   form inputs too. The stylesheet puts the bar back on top. #}
 <div class="wies-text-editor" data-text-editor>
+  <nldd-text-editor id="{{ widget.attrs.id }}" appearance="input-field" syntax="hidden" name="{{ widget.name }}" {% if widget.value %}value="{{ widget.value }}"{% endif %} rows="{{ widget.attrs.rows or 4 }}" resize="auto" {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.autofocus %}autofocus{% endif %} {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.invalid %}invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %}></nldd-text-editor>
   <nldd-toolbar accessible-label="Opmaak" size="sm">
   <nldd-toolbar-item slot="start" label="Nadruk">
   <nldd-segmented-control type="checkbox" variant="icon" accessible-label="Nadruk" data-editor-group="inline">
@@ -52,5 +56,4 @@
   <nldd-menu-item slot="overflow" type="radio" text="Kop 3" data-editor-heading-level="3"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
-  <nldd-text-editor id="{{ widget.attrs.id }}" appearance="input-field" syntax="hidden" name="{{ widget.name }}" {% if widget.value %}value="{{ widget.value }}"{% endif %} rows="{{ widget.attrs.rows or 4 }}" resize="auto" {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.autofocus %}autofocus{% endif %} {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.invalid %}invalid unmet="{{ widget.attrs['unmet'] }}"{% endif %}></nldd-text-editor>
 </div>
