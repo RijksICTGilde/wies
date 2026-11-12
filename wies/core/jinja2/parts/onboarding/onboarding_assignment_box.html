@@ -37,8 +37,20 @@
     <nldd-list-item>
     <nldd-text-cell width="120px" text="{{ 'Jouw rol' if entry.services|length == 1 else 'Rol' }}"></nldd-text-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
-    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description|markdown_text }}"></nldd-text-cell>
+    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}"></nldd-text-cell>
     </nldd-list-item>
+    {% if service.description %}
+      {# A row of its own, formatted as in the editor, like the Omschrijving. #}
+      <nldd-list-item>
+      <nldd-text-cell width="120px" text="{{ 'Jouw taken' if entry.services|length == 1 else 'Taken' }}"></nldd-text-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell>
+      {% with value = service.description %}
+        {% include "forms/displays/textarea.html" %}
+      {% endwith %}
+      </nldd-text-cell>
+      </nldd-list-item>
+    {% endif %}
   {% endfor %}
   </nldd-list>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>

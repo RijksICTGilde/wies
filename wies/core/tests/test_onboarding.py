@@ -247,11 +247,12 @@ class OnboardingAssignmentStepTest(TestCase):
         # Welcome + profile + opdracht = three steps.
         self.assertContains(response, 'data-step="3"')
 
-    def test_role_row_shows_taken_as_plain_text(self):
+    def test_taken_have_a_formatted_row_of_their_own(self):
         self._place_on(description="- **Analyse**\n- Advies")
         self.client.force_login(self.user)
         body = self.client.get(reverse("home")).content.decode()
-        assert 'supporting-text="Analyse; Advies"' in body
+        assert 'text="Jouw taken"' in body
+        assert "<li><strong>Analyse</strong></li>" in body
 
     def test_assignment_edit_screen_renders_and_saves(self):
         assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
