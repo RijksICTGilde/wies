@@ -19,7 +19,7 @@ User = get_user_model()
 HX = {"HX-Request": "true", "HX-Target": "side-panel-content"}
 # One role's preview: its formatted text, collapsed. Attribute order is the
 # template formatter's, so only the class and the hook are pinned.
-PREVIEW = r'<nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted"[^>]*data-cv-preview'
+PREVIEW = r'<nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted"[^>]*data-clamp-preview'
 
 
 def _row_of(body: str, name: str) -> str:
@@ -206,7 +206,7 @@ class AssignmentPanelRowsTest(TestCase):
         )
         # The preview carries hidden, so it does not stand above the block that
         # repeats it; each role's text is visible exactly once.
-        preview = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview([^>]*)>', entry)
+        preview = re.search(r'<p class="wies-cv__preview"\s+data-clamp-preview([^>]*)>', entry)
         assert preview is not None
         assert "hidden" in preview.group(1)
         # Each role's text appears in its own block; the one the preview
@@ -215,7 +215,9 @@ class AssignmentPanelRowsTest(TestCase):
         assert '<p class="wies-cv__role-label">Dev</p>' in entry
         # The preview runs both texts together; the blocks below carry them
         # once each, under their own role heading.
-        preview_text = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>([^<]*)</p>', entry).group(1)
+        preview_text = re.search(r'<p class="wies-cv__preview"\s+data-clamp-preview\s+hidden>([^<]*)</p>', entry).group(
+            1
+        )
         assert "Tekst van de eerste rol." in preview_text
         assert "Tekst van de tweede rol." in preview_text
         assert entry.count('<div class="wies-cv__role-block">') == 2
@@ -368,6 +370,23 @@ class CvControlsTest(TestCase):
         assert 'hx-trigger="panelSaved from:body"' in refresher
         assert 'hx-target="#profile-assignments"' in refresher
         assert '<div id="profile-assignments">' in profile
+
+    def test_the_profile_refresh_leaves_the_success_message_to_the_panel(self):
+        """htmx fetches the list before the panel; a whole page would render
+        the flash block and take the message the panel is about to show."""
+        self.client.post(
+            reverse("placement-edit", args=[self.placement.public_id]) + "?veld=skill",
+            {"description": "**Nieuw**", "terug_url": reverse("user-profile")},
+        )
+        refresh = self.client.get(
+            reverse("user-profile"), headers={"HX-Request": "true", "HX-Target": "profile-assignments"}
+        ).content.decode()
+        later = self.client.get(reverse("user-profile")).content.decode()
+
+        assert refresh.lstrip().startswith('<div id="profile-assignments">')
+        assert "<strong>Nieuw</strong>" in refresh
+        assert "flash-messages" not in refresh
+        assert "is aangepast" in later
 
 
 class OwnRolePencilTest(TestCase):

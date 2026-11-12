@@ -16,12 +16,33 @@
   }
 
   var INLINE = ["bold", "italic", "strikethrough"];
-  var HEADING_TEXT = ["Paragraaf", "Kop 1", "Kop 2", "Kop 3"];
 
   function listOf(active) {
     if (active.orderedList) return "ordered";
     if (active.bulletList) return "bullet";
     return "none";
+  }
+
+  // The menu offers Kop 1-3, but a typed "####" is a level-4 heading and has
+  // to read as such, not as the nearest item in the menu.
+  function headingText(level) {
+    return level ? "Kop " + level : "Paragraaf";
+  }
+
+  // The emphasis keys whose command flips them to what the group now wants.
+  function inlineToRun(wanted, active) {
+    return INLINE.filter(function (key) {
+      return wanted.has(key) !== Boolean(active[key]);
+    });
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = {
+      listOf: listOf,
+      headingText: headingText,
+      inlineToRun: inlineToRun,
+    };
+    return;
   }
 
   // A checkbox group (emphasis): run the command for every key whose desired
@@ -35,9 +56,8 @@
     var active = editor.getState().active;
     var group = control.dataset.editorGroup;
     if (group === "inline") {
-      var wanted = new Set(event.detail.values);
-      INLINE.forEach(function (key) {
-        if (wanted.has(key) !== active[key]) editor.runCommand(key);
+      inlineToRun(new Set(event.detail.values), active).forEach(function (key) {
+        editor.runCommand(key);
       });
     } else if (group === "list") {
       editor.setList(event.detail.value);
@@ -80,7 +100,7 @@
     if (!wrap) return;
     var active = event.detail.active;
     var list = listOf(active);
-    var level = Math.min(active.heading, HEADING_TEXT.length - 1);
+    var level = active.heading || 0;
 
     var inline = wrap.querySelector("[data-editor-group='inline']");
     if (inline)
@@ -103,7 +123,12 @@
     });
     var heading = wrap.querySelector("[data-editor-heading]");
     if (heading) {
-      heading.setAttribute("text", HEADING_TEXT[level]);
+      heading.setAttribute("text", headingText(level));
+      // The visible text first, so a voice command can say what it sees.
+      heading.setAttribute(
+        "accessible-label",
+        headingText(level) + ", tekststijl",
+      );
       setSelected(heading, "nldd-menu-item", function (el) {
         return Number(el.getAttribute("value")) === level;
       });

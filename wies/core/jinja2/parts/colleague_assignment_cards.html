@@ -84,10 +84,10 @@
              what is cut off is visibly cut off and "Toon meer" names what it
              reveals. Open, the per-role blocks below take over. #}
           {% if taken.formatted %}
-            <nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted" spacing="flat" data-cv-preview{% if taken.open %} hidden{% endif %}>{{ taken.blocks[0].text|markdown }}</nldd-rich-text>
+            <nldd-rich-text class="wies-cv__preview wies-cv__preview--formatted" spacing="flat" data-clamp-preview{% if taken.open %} hidden{% endif %}>{{ taken.blocks[0].text|markdown }}</nldd-rich-text>
           {% else %}
             <p class="wies-cv__preview"
-               data-cv-preview{% if taken.open %}
+               data-clamp-preview{% if taken.open %}
                hidden{% endif %}>{{ taken.preview }}</p>
           {% endif %}
           <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>

@@ -33,6 +33,7 @@ def _heading(renderer, tokens, idx, options, env):
 
 # Anything with a scheme, or a path on this site.
 _ABSOLUTE = re.compile(r"^([a-z][a-z0-9+.-]*:|/|#)", re.IGNORECASE)
+_WEB = re.compile(r"^(https?:)?//", re.IGNORECASE)
 
 
 def _link_open(renderer, tokens, idx, options, env):
@@ -42,9 +43,11 @@ def _link_open(renderer, tokens, idx, options, env):
     # current URL; without a scheme the browser would resolve it relative.
     if href and not _ABSOLUTE.match(href):
         token.attrSet("href", "https://" + href)
-    # A description's link leaves the panel; open it beside Wies.
-    token.attrSet("target", "_blank")
-    token.attrSet("rel", "noopener")
+    # A link to another site opens beside Wies; mailto:, tel: and #anchor
+    # would only leave an empty tab behind.
+    if _WEB.match(token.attrGet("href")):
+        token.attrSet("target", "_blank")
+        token.attrSet("rel", "noopener")
     return renderer.renderToken(tokens, idx, options, env)
 
 

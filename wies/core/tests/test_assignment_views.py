@@ -425,9 +425,11 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "Toon meer")
-        # Collapsed by a class on our wrapper; inline_edit.js lifts it.
+        # Collapsed by a class on our wrapper; ui_handlers.js lifts it, and
+        # cv_clamp.js hides the toggle when the clamp cuts nothing.
         self.assertContains(response, 'class="wies-long-text wies-long-text--collapsed"')
-        self.assertContains(response, "<nldd-rich-text")
+        self.assertContains(response, "data-clamp-preview")
+        self.assertContains(response, "data-reveal-when-clamped")
         self.assertContains(response, "Lorem ipsum dolor sit amet")
 
     def test_panel_shows_the_description_inside_the_data_tab(self):

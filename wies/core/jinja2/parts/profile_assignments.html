@@ -1,0 +1,5 @@
+<div id="profile-assignments">
+  {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
+    {% include "parts/colleague_assignment_cards.html" %}
+  {% endwith %}
+</div>

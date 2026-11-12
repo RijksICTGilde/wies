@@ -72,6 +72,11 @@ class RenderMarkdownTest(SimpleTestCase):
         html = render_markdown("[Wies](https://example.org/)")
         assert '<a href="https://example.org/" target="_blank" rel="noopener">Wies</a>' in html
 
+    def test_mail_phone_anchor_and_own_links_stay_in_place(self):
+        # A new tab there would stay empty, or show Wies a second time.
+        html = render_markdown("[m](mailto:a@b.nl) [t](tel:0612345678) [a](#kop) [o](/opdrachten/)")
+        assert "target=" not in html
+
     def test_a_link_without_scheme_gets_https(self):
         # Otherwise the browser resolves "google.com" under the current page.
         html = render_markdown("[zoek](google.com) en [hier](/opdrachten/) en [mail](mailto:a@b.nl)")

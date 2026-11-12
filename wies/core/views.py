@@ -3814,6 +3814,11 @@ def user_profile(request):
         hx_target = request.headers.get("HX-Target")
         if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+        # The refresh after a save in the panel: the list alone, as the whole
+        # page's flash block would take the panel's success message first.
+        if hx_target == "profile-assignments":
+            assignment_list = _get_colleague_assignments(request, colleague) if colleague else []
+            return render(request, "parts/profile_assignments.html", {"assignment_list": assignment_list})
 
     label_categories = []
     for category in label_categories_for_everyone().order_by("name"):
