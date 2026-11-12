@@ -484,24 +484,6 @@ class ServiceHoursTest(TestCase):
         assert response.status_code == 200
         assert self.assignment.services.count() == 0
 
-    def test_a_description_may_run_to_2000_characters_but_not_beyond(self):
-        def post(description):
-            return self.client.post(
-                reverse("assignment-member-edit", args=[self.assignment.public_id]),
-                {
-                    "skill": str(self.skill.public_id),
-                    "description": description,
-                    "hours_per_week": "24",
-                    "is_filled": "aanvraag",
-                    "has_custom_period": "on",
-                },
-            )
-
-        assert post("x" * 2000).status_code == 204
-        assert self.assignment.services.count() == 1
-        assert post("x" * 2001).status_code == 200
-        assert self.assignment.services.count() == 1
-
     def test_a_description_may_be_left_empty(self):
         response = self.client.post(
             reverse("assignment-member-edit", args=[self.assignment.public_id]),

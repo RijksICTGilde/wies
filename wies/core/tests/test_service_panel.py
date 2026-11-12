@@ -707,7 +707,7 @@ class FillingAanvraagTakenTest(TestCase):
         self.skill = Skill.objects.create(name="Dev")
         self.client.force_login(self.bdm)
 
-    def test_taken_take_up_to_2000_characters(self):
+    def test_taken_take_up_to_500_characters(self):
         consultant = Colleague.objects.create(name="Anke Jacobs", email="anke@rijksoverheid.nl", source="wies")
         url = reverse("assignment-member-edit", args=[self.assignment.public_id])
         fields = {
@@ -717,6 +717,6 @@ class FillingAanvraagTakenTest(TestCase):
             "has_custom_period": "on",
         }
 
-        assert self.client.post(url, {**fields, "description": "x" * 2001}).status_code == 200
-        assert self.client.post(url, {**fields, "description": "x" * 2000}).status_code == 204
-        assert self.assignment.services.get().description == "x" * 2000
+        assert self.client.post(url, {**fields, "description": "x" * 501}).status_code == 200
+        assert self.client.post(url, {**fields, "description": "x" * 500}).status_code == 204
+        assert self.assignment.services.get().description == "x" * 500
