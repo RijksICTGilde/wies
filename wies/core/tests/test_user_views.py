@@ -469,6 +469,15 @@ class UserViewsTest(TestCase):
         assert created_event.object_id == user_id
         assert created_event.context["email"] == self.user1.email
 
+    def test_user_delete_modal_puts_the_actions_before_the_form(self):
+        # The NLDD button group hides every child of the dialog past the third.
+        self.client.force_login(self.auth_user)
+
+        response = self.client.get(reverse("user-delete", args=[self.user1.public_id]))
+
+        html = response.content.decode()
+        assert html.index("Verwijder gebruiker") < html.index('id="userDeleteForm"')
+
     def test_user_delete_records_the_roles_by_label(self):
         """The deleted user is gone, so the event is all that is left of their
         roles: it keeps the name they were called by, not the key."""
