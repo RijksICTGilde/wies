@@ -1,12 +1,14 @@
 """Access requests: someone without an account asks for one, a Gebruikersbeheerder decides."""
 
 import logging
+import smtplib
 from dataclasses import dataclass
 from datetime import timedelta
 
 import requests
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.mail import EmailMessage
 from django.db import IntegrityError, transaction
 from django.urls import reverse
 from django.utils import timezone
@@ -89,14 +91,57 @@ def submit_access_request(claims: dict, cleaned_data: dict, request=None) -> Acc
     return access_request
 
 
+def site_url(path: str, request=None) -> str:
+    """An absolute link for outside Wies (chat, mail)."""
+    if settings.SITE_BASE_URL or request is None:
+        return f"{settings.SITE_BASE_URL}{path}"
+    return request.build_absolute_uri(path)
+
+
+def approval_mail(access_request: AccessRequest, request=None) -> tuple[str, str]:
+    """Subject and body of the mail that says the account is there."""
+    body = (
+        f"Hoi {access_request.first_name},\n\n"
+        f"Je hebt nu toegang tot Wies. Log in via {site_url(reverse('login'), request)}\n\n"
+        "Heb je een vraag? Antwoord dan op deze e-mail.\n\n"
+        "Groet,\nTeam Wies"
+    )
+    return "Je hebt toegang tot Wies", body
+
+
+def _rejection_mail(access_request: AccessRequest) -> tuple[str, str]:
+    reason = f"De reden: {access_request.decision_note}\n\n" if access_request.decision_note else ""
+    body = (
+        f"Hoi {access_request.first_name},\n\n"
+        "Een gebruikersbeheerder heeft je toegangsaanvraag voor Wies afgewezen.\n\n"
+        f"{reason}"
+        f"Over {REJECTION_COOLDOWN.days} dagen kun je opnieuw toegang aanvragen. "
+        "Heb je een vraag? Antwoord dan op deze e-mail.\n\n"
+        "Groet,\nTeam Wies"
+    )
+    return "Je toegangsaanvraag voor Wies is afgewezen", body
+
+
+def _mail_after_commit(access_request: AccessRequest, subject: str, body: str) -> None:
+    """Sent once the decision is stored; a relay that fails costs a warning, not the decision."""
+    if not settings.EMAIL_ENABLED:
+        return
+    message = EmailMessage(subject, body, to=[access_request.email], reply_to=[settings.EMAIL_REPLY_TO])
+
+    def send() -> None:
+        try:
+            message.send()
+        except smtplib.SMTPException, OSError:
+            logger.warning("Could not mail the access request decision", exc_info=True)
+
+    transaction.on_commit(send)
+
+
 def _notify_ops(request) -> None:
     """Tells the ops channel there is something to decide. No name or address: the
     channel is wider than the Gebruikersbeheerders."""
-    path = reverse("access-request-admin")
-    base_url = getattr(settings, "SITE_BASE_URL", "")
-    link = f"{base_url}{path}" if base_url or request is None else request.build_absolute_uri(path)
     try:
-        send_ops_message(f"Nieuwe toegangsaanvraag voor Wies: {link}")
+        send_ops_message(f"Nieuwe toegangsaanvraag voor Wies: {site_url(reverse('access-request-admin'), request)}")
     except requests.RequestException, ValueError:
         # The request is stored; the counter in the app still shows it. ValueError:
         # a malformed channel URL, which must not cost the requester a 500.
@@ -123,10 +168,12 @@ def _decide(access_request: AccessRequest, status: str, decided_by, request, **f
 
 def approve(access_request: AccessRequest, created_user, decided_by, request=None) -> None:
     _decide(access_request, AccessRequest.Status.APPROVED, decided_by, request, created_user=created_user)
+    _mail_after_commit(access_request, *approval_mail(access_request, request))
 
 
 def reject(access_request: AccessRequest, decided_by, note: str = "", request=None) -> None:
     _decide(access_request, AccessRequest.Status.REJECTED, decided_by, request, decision_note=note)
+    _mail_after_commit(access_request, *_rejection_mail(access_request))
 
 
 def close_pending_for(user, decided_by, request=None) -> None:

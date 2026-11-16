@@ -71,7 +71,7 @@
         <nldd-tag size="sm" color="{{ 'success' if approved else 'critical' }}" text="{{ access_request.get_status_display() }}"></nldd-tag>
       </p>
       </nldd-text-cell>
-      {% if approved %}
+      {% if approved and not email_enabled %}
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-cell>
         {% set email = {"text": "E-mailen dat er toegang is", "icon": "envelope", "attrs": {"href": access_request.mailto}} %}

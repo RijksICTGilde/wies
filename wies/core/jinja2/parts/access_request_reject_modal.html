@@ -1,6 +1,6 @@
 {# Like user_delete_modal.html: the form and the destructive button both post
    through htmx, and a validation error brings the modal back into its mount. #}
-<nldd-modal-dialog data-auto-show text="Toegangsaanvraag afwijzen?" supporting-text="Weet je zeker dat je de toegangsaanvraag van {{ access_request.full_name }} wilt afwijzen? {{ access_request.first_name }} ziet de afwijzing en de reden bij de volgende keer inloggen.">
+<nldd-modal-dialog data-auto-show text="Toegangsaanvraag afwijzen?" supporting-text="Weet je zeker dat je de toegangsaanvraag van {{ access_request.full_name }} wilt afwijzen? {{ access_request.first_name }} {{ 'krijgt een e-mail met' if email_enabled else 'ziet' }} de afwijzing en de reden{{ '' if email_enabled else ' bij de volgende keer inloggen' }}.">
 {# The actions come first: the button group hides every child past the third
    with :nth-child, which counts the host's children, form and spacers included. #}
 <nldd-button slot="actions" appearance="primary" text="Behoud toegangsaanvraag" data-dismiss-modal></nldd-button>

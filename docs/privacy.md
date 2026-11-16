@@ -31,7 +31,7 @@ opdrachten. Het gaat om de volgende gegevens:
 - Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en gebruikersbeheerders
 - Uren per week van je rol op een opdracht; zichtbaar voor business managers
 - De datum waarop je uit dienst bent gegaan, als einde van je laatste contractperiode
-- Als je toegang aanvraagt: je naam, zakelijk e-mailadres, onderdeel en toelichting; zichtbaar voor gebruikersbeheerders
+- Als je toegang aanvraagt: je naam, zakelijk e-mailadres, onderdeel en toelichting; zichtbaar voor gebruikersbeheerders. Het besluit krijg je per e-mail
 
 ## Waarvoor gebruiken wij jouw gegevens?
 

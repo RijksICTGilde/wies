@@ -8,6 +8,7 @@ from unittest.mock import patch
 import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
@@ -554,6 +555,62 @@ class RejectTest(TestCase):
 
 
 @override_settings(ALLOWED_EMAIL_DOMAINS=ALLOWED_DOMAINS, STAFF_EMAILS=[])
+@override_settings(EMAIL_ENABLED=True, SITE_BASE_URL="https://wies.example")
+class DecisionMailTest(TestCase):
+    """With the ZAD mail relay configured, the person hears the decision by mail."""
+
+    def setUp(self):
+        setup_roles()
+        self.client.force_login(make_user_admin())
+        self.access_request = make_pending()
+
+    def _approve(self):
+        url = reverse("access-request-approve", args=[self.access_request.public_id])
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(url, {"first_name": "Nora", "last_name": "Nieuw"})
+
+    def _reject(self, note=""):
+        url = reverse("access-request-reject", args=[self.access_request.public_id])
+        with self.captureOnCommitCallbacks(execute=True):
+            return self.client.post(url, {"decision_note": note})
+
+    def test_approving_mails_the_login_link(self):
+        self._approve()
+
+        [message] = mail.outbox
+        assert message.to == [REQUESTER_EMAIL]
+        assert message.reply_to == ["wies-odi@rijksoverheid.nl"]
+        assert message.subject == "Je hebt toegang tot Wies"
+        assert "https://wies.example/inloggen/" in message.body
+
+    def test_rejecting_mails_the_reason(self):
+        self._reject("Geen ODI-collega")
+
+        [message] = mail.outbox
+        assert message.subject == "Je toegangsaanvraag voor Wies is afgewezen"
+        assert "Geen ODI-collega" in message.body
+        assert f"{REJECTION_COOLDOWN.days} dagen" in message.body
+
+    def test_a_failing_relay_keeps_the_decision(self):
+        with patch("django.core.mail.EmailMessage.send", side_effect=OSError("relay down")):
+            response = self._reject()
+
+        assert response["HX-Redirect"] == ADMIN_URL
+        self.access_request.refresh_from_db()
+        assert self.access_request.status == AccessRequest.Status.REJECTED
+
+    def test_the_beheer_page_drops_the_mailto(self):
+        self._approve()
+
+        self.assertNotContains(self.client.get(ADMIN_URL), "mailto:" + REQUESTER_EMAIL + "?")
+
+    def test_without_the_relay_nothing_is_mailed(self):
+        with override_settings(EMAIL_ENABLED=False):
+            self._approve()
+
+        assert mail.outbox == []
+
+
 class AccessRequestPublicIdTest(TestCase):
     """The decision routes resolve by public_id; the integer PK never does."""
 

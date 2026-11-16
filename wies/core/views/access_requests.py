@@ -87,19 +87,14 @@ def access_request_admin_required(view_func):
 
 
 def _approved_mailto(request, access_request) -> str:
-    """A prepared mail for the beheerder: Wies sends no mail itself (yet)."""
-    login_path = reverse("login")
-    login_url = (
-        f"{settings.SITE_BASE_URL}{login_path}" if settings.SITE_BASE_URL else request.build_absolute_uri(login_path)
-    )
-    query = urllib.parse.urlencode(
-        {
-            "subject": "Je hebt toegang tot Wies",
-            "body": f"Hoi {access_request.first_name},\n\nJe hebt nu toegang tot Wies. Log in via {login_url}",
-        },
-        quote_via=urllib.parse.quote,
-    )
+    """A prepared mail for the beheerder, for when Wies sends no mail itself."""
+    subject, body = access_requests.approval_mail(access_request, request)
+    query = urllib.parse.urlencode({"subject": subject, "body": body}, quote_via=urllib.parse.quote)
     return f"mailto:{access_request.email}?{query}"
+
+
+def _mail_note(access_request) -> str:
+    return f" {access_request.first_name} krijgt hierover een e-mail." if settings.EMAIL_ENABLED else ""
 
 
 @access_request_admin_required
@@ -111,7 +106,7 @@ def access_request_admin(request):
         .order_by("-decided_at")
     )
     for access_request in decided:
-        if access_request.status == AccessRequest.Status.APPROVED:
+        if access_request.status == AccessRequest.Status.APPROVED and not settings.EMAIL_ENABLED:
             access_request.mailto = _approved_mailto(request, access_request)
     return render(
         request,
@@ -122,6 +117,7 @@ def access_request_admin(request):
             ),
             "decided": decided,
             "retention_days": access_requests.DECIDED_RETENTION.days,
+            "email_enabled": settings.EMAIL_ENABLED,
         },
     )
 
@@ -166,7 +162,7 @@ def access_request_approve(request, public_id):
     # Disabled: Django takes the initial value and ignores whatever is posted.
     form.fields["email"].disabled = True
     if request.method == "POST" and form.is_valid() and _create_user_with_contract_period(request, form):
-        messages.success(request, f"{access_request.full_name} heeft nu toegang tot Wies.")
+        messages.success(request, f"{access_request.full_name} heeft nu toegang tot Wies.{_mail_note(access_request)}")
         return _back_to_access_request_admin()
     return render(
         request,
@@ -190,7 +186,9 @@ def access_request_reject(request, public_id):
     form = AccessRequestRejectForm(request.POST if request.method == "POST" else None)
     if request.method == "POST" and form.is_valid():
         access_requests.reject(access_request, request.user, form.cleaned_data["decision_note"], request=request)
-        messages.success(request, f"De toegangsaanvraag van {access_request.full_name} is afgewezen.")
+        messages.success(
+            request, f"De toegangsaanvraag van {access_request.full_name} is afgewezen.{_mail_note(access_request)}"
+        )
         return _back_to_access_request_admin()
     return render(
         request,
@@ -199,5 +197,6 @@ def access_request_reject(request, public_id):
             "content": form,
             "access_request": access_request,
             "form_post_url": reverse("access-request-reject", args=[access_request.public_id]),
+            "email_enabled": settings.EMAIL_ENABLED,
         },
     )
