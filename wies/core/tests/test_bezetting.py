@@ -41,7 +41,8 @@ from wies.core.services.occupancy import (
     timeline_horizon,
     today_marker_pct,
 )
-from wies.core.views import BEZETTING_PAGE_SIZE, _get_colleague_assignments
+from wies.core.views.bezetting import BEZETTING_PAGE_SIZE
+from wies.core.views.panels import _get_colleague_assignments
 
 User = get_user_model()
 

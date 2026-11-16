@@ -22,7 +22,7 @@ from wies.core.models import (
 )
 from wies.core.querysets import annotate_service_dates
 from wies.core.tests.role_helpers import grant_consultant, make_business_manager_user, make_other_business_manager_user
-from wies.core.views import AssignmentListView
+from wies.core.views.assignments import AssignmentListView
 
 User = get_user_model()
 

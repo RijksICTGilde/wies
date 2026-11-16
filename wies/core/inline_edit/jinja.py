@@ -9,7 +9,7 @@ from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
 from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.views import _concurrency_token, _resolve_display, _spec_label
+from wies.core.views.inline_edit import _concurrency_token, _resolve_display, _spec_label
 
 
 @pass_context

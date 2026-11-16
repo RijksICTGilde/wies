@@ -116,7 +116,7 @@ class OnboardingLabelSaveTest(TestCase):
 
     def _token_for(self, category_id):
         from wies.core.editables.colleague import ColleagueEditables  # noqa: PLC0415 — test-local
-        from wies.core.views import _concurrency_token  # noqa: PLC0415 — avoids import cycle at module load
+        from wies.core.views.inline_edit import _concurrency_token  # noqa: PLC0415 — avoids import cycle at module load
 
         spec = ColleagueEditables.resolve_dynamic(f"labels_{category_id}")
         return _concurrency_token(ColleagueEditables, spec, self.colleague)

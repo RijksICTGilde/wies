@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 842: upgrade NLDD design system from 0.21.1 to 0.25.0
+- 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
 
 ## 2026-11-11
 
