@@ -603,6 +603,18 @@ def assignment_create_sheet(request):
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
+def _off_the_aanvraag_panel(return_path: str, assignment) -> str:
+    """``return_path`` with an aanvraag panel swapped for its opdracht's.
+
+    A filled or deleted aanvraag has no panel: it would 404, and htmx swaps
+    nothing on an error, leaving the sheet open. Any other return path (the
+    opdracht or a colleague panel) stays as it is.
+    """
+    if "aanvraag" not in QueryDict(urlsplit(return_path).query):
+        return return_path
+    return url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+
+
 @require_POST
 def assignment_member_edit_view(request, public_id):
     """Saves one team member from the child sheet, editing or adding.
@@ -651,10 +663,8 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
-    # A filled aanvraag has no panel (it would 404 and htmx would leave the sheet
-    # open), so return to its opdracht's panel instead.
-    if form.cleaned_data.get("is_filled") == "ingevuld" and "aanvraag" in QueryDict(urlsplit(return_path).query):
-        return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+    if form.cleaned_data.get("is_filled") == "ingevuld":
+        return_path = _off_the_aanvraag_panel(return_path, assignment)
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
     response = HttpResponse(status=204)
@@ -686,10 +696,7 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = safe_return_path(
         request.POST.get("terug_url"), build_panel_url(request, opdracht=assignment.public_id)
     )
-    # A deleted aanvraag has no panel (it would 404 and htmx would leave the sheet
-    # open), so return to its opdracht's panel instead.
-    if "aanvraag" in QueryDict(urlsplit(return_path).query):
-        return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+    return_path = _off_the_aanvraag_panel(return_path, assignment)
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
