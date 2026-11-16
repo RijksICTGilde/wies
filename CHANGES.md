@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- XXX: a Gebruikersbeheerder can delete their own account; it used to fail with a server error
+
 - 843: replace custom JavaScript with NLDD's own components; the "Probeer het inloggen opnieuw" button on the login error page works again, and the opdrachtgever picker and filter get a back button when opened from another sheet
 - 842: upgrade NLDD design system from 0.21.1 to 0.25.0
 - 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
