@@ -184,9 +184,9 @@ if EMAIL_ENABLED:
     EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
     EMAIL_HOST_USER = os.environ.get("SMTP_USERNAME", "")
     EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-    SMTPS_PORT, SUBMISSION_PORT = 465, 587
-    EMAIL_USE_SSL = EMAIL_PORT == SMTPS_PORT
-    EMAIL_USE_TLS = EMAIL_PORT == SUBMISSION_PORT
+    # The relay is in-cluster and presents a self-signed certificate: plain SMTP.
+    EMAIL_USE_SSL = False
+    EMAIL_USE_TLS = False
     # A decision must not hang on a slow relay.
     EMAIL_TIMEOUT = 10
     DEFAULT_FROM_EMAIL = os.environ.get("SMTP_FROM", "")
