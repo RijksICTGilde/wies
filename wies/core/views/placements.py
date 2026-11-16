@@ -636,7 +636,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         assignment_id = self.request.GET.get("opdracht")
         service_id = self.request.GET.get("aanvraag")
 
-        if service_id and not self.request.GET.get("teamlid"):
+        if service_id:
             service = resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = build_aanvraag_panel_data(service, self.request)

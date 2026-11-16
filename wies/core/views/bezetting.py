@@ -104,9 +104,7 @@ def bezetting(request):
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
     panel_data = assignment_create_panel(request)
-    if panel_data is None and service_id and not request.GET.get("teamlid"):
-        # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
-        # opdracht panel opens, and it returns to the aanvraag when done.
+    if panel_data is None and service_id:
         service = resolve_aanvraag_panel(request, service_id)
         if service is not None:
             panel_data = build_aanvraag_panel_data(service, request)

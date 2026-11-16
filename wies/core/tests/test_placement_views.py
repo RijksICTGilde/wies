@@ -784,7 +784,7 @@ class PlacementPanelVisibilityTest(TestCase):
 
 
 class OwnRoleSheetPermissionTest(TestCase):
-    """``?opdracht=&teamlid=`` opens the right sheet for who asks.
+    """``?opdracht=&bewerken=<service>`` opens the right sheet for who asks.
 
     A placed colleague may edit their own role description but not the role,
     hours or period, so their row opens "Taken wijzigen" with the role
@@ -819,7 +819,7 @@ class OwnRoleSheetPermissionTest(TestCase):
 
     def _sheet(self, user, pl):
         self.client.force_login(user)
-        url = reverse("home") + f"?opdracht={pl.service.assignment.public_id}&teamlid={pl.service.public_id}"
+        url = reverse("home") + f"?opdracht={pl.service.assignment.public_id}&bewerken={pl.service.public_id}"
         return self.client.get(url, headers=self.HX)
 
     @patch("wies.core.views.placements.timezone")

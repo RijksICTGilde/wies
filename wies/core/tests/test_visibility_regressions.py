@@ -2,7 +2,7 @@
 
 Two holes found in review:
 
-- The ``?teamlid=`` member-edit sheet resolved its row against the unfiltered
+- The member-edit sheet (then ``?teamlid=``, now ``?bewerken=``) resolved its row against the unfiltered
   team list, so a viewer with UPDATE rights but without visibility could read
   a hidden ended placement's colleague and dates through a crafted URL.
 - The timeline's privacy note was taken from the *first* noted row of the
@@ -39,7 +39,7 @@ def _place(assignment, skill, colleague, *, start, end):
 
 
 class MemberSheetHiddenRowTest(TestCase):
-    """The ``?teamlid=`` sheet must honour the row-visibility rule.
+    """The ``?bewerken=<service>`` sheet must honour the row-visibility rule.
 
     Dates are real offsets from ``timezone.now()`` so the view and the editables
     module agree on today without patching.
@@ -78,13 +78,13 @@ class MemberSheetHiddenRowTest(TestCase):
         self.editor_client.force_login(self.editor_user)
 
     def _sheet_url(self, placement) -> str:
-        teamlid = placement.service.public_id
-        return reverse("home") + f"?opdracht={self.assignment.public_id}&teamlid={teamlid}"
+        service_id = placement.service.public_id
+        return reverse("home") + f"?opdracht={self.assignment.public_id}&bewerken={service_id}"
 
     def test_hidden_row_sheet_does_not_leak_to_an_editor_without_visibility(self):
         response = self.editor_client.get(self._sheet_url(self.hidden_placement), headers=self.HX)
 
-        # The teamlid misses against the filtered rows, so the request falls
+        # The ?bewerken= id misses against the filtered rows, so the request falls
         # back to the read-only panel — which strips the hidden member too.
         assert response.status_code == 200
         self.assertNotContains(response, "Hidden Member")
@@ -128,7 +128,7 @@ class MemberSheetHiddenRowTest(TestCase):
 
     # ── Mutation paths: the same visibility gate as the sheet (#655) ──────────
     #
-    # The ?teamlid= sheet above resolves its row through visible_service_rows;
+    # The ?bewerken= sheet above resolves its row through visible_service_rows;
     # the edit and delete endpoints mutate that same row and must not be reachable
     # for a row the viewer cannot see, even with UPDATE rights.
 

@@ -21,7 +21,7 @@
 
   // The params that open a sheet on top of a panel; without them the URL is
   // that panel. Mirrors the parent_url drops in views/panels.py.
-  const CHILD_PARAMS = ["bewerken", "teamlid", "veld"];
+  const CHILD_PARAMS = ["bewerken", "toevoegen", "veld"];
 
   // The panel a directly loaded sheet sits on, or null when the URL is a
   // panel itself.
@@ -55,7 +55,7 @@
   // list's, not the panel's, so PANEL_PARAMS in views/_common.py has one more.
   const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
     "bewerken",
-    "teamlid",
+    "toevoegen",
     "veld",
     "uitgeklapt",
   ]);
@@ -105,12 +105,6 @@
   // Called from afterSwap, before first paint: doing it in afterSettle redraws
   // the bar a frame later and the header visibly jumps.
   function writeBackButton(bar, section, parent) {
-    // The server named the parent (data-back-url): its back-text stays, also
-    // on a full page load where the stack is empty.
-    if (bar.hasAttribute("data-back-url")) {
-      if (section) section.removeAttribute("padding-top");
-      return;
-    }
     if (parent)
       bar.setAttribute(
         "back-text",
@@ -159,24 +153,7 @@
     history.replaceState({}, "", url.toString());
   }
 
-  // A sheet that names its parent (data-back-url) goes back there, so label and
-  // target agree also after a save or reload left the stack behind.
-  function serverBackUrl() {
-    const content = document.getElementById(CONTENT_ID);
-    const bar = content && content.querySelector(":scope > nldd-top-title-bar");
-    return bar ? bar.getAttribute("data-back-url") : null;
-  }
-
   function panelBack() {
-    const backUrl = serverBackUrl();
-    if (backUrl) {
-      const backTo = panelStack.findIndex((entry) => entry.url === backUrl);
-      panelStack.length = backTo === -1 ? 0 : backTo;
-      history.replaceState({}, "", backUrl);
-      _skipNextPush = true;
-      swapPanel(backUrl);
-      return;
-    }
     if (panelStack.length > 0) {
       const prevUrl = panelStack.pop().url;
       const url = new URL(prevUrl, window.location.origin);
