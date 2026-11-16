@@ -174,7 +174,7 @@ anyway; there is simply no reason for it, and real migration risk.)
   resolution)
 - `wies/core/models.py`: the per-model `public_id` field, defaulting to
   `uuid.uuid4`
-- `wies/core/views.py`: `PublicIdFacetsMixin`, which gives a list view its
+- `wies/core/views/filters.py`: `PublicIdFacetsMixin`, which gives a list view its
   `facets` resolver and the shared org-filter/chip helpers
 - `wies/core/inline_edit/forms.py`: `use_public_id_choices` (select
   option values)

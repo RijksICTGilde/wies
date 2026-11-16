@@ -21,7 +21,7 @@ from django.utils import timezone
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import _RULES, Verb, registered_rules
 from wies.core.tests.role_helpers import grant_business_manager, make_other_business_manager_user
-from wies.core.views import _team_event_privacy_note
+from wies.core.views.events import _team_event_privacy_note
 from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_OWN
 from wies.rijksauth.models import User
 

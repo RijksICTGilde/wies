@@ -21,7 +21,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
-from wies.core.views import PlacementListView
+from wies.core.views.placements import PlacementListView
 
 User = get_user_model()
 

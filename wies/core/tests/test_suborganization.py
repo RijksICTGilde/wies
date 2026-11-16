@@ -13,7 +13,8 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill, S
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views import PlacementListView, UserListView
+from wies.core.views.placements import PlacementListView
+from wies.core.views.users import UserListView
 
 User = get_user_model()
 
