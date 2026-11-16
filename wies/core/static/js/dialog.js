@@ -10,15 +10,14 @@ document.addEventListener("htmx:afterSwap", function (e) {
 });
 
 /**
+ * Remove, with the `back` handler below, once NLDD #449 is fixed.
+ *
  * Gives a sheet a back button when it opens on top of another one. The template
  * cannot know this: the filter sidebar is a panel when wide and a sheet when
  * narrow, so the same button opens a child in one case only.
  */
 window.syncSheetBackButton = function syncSheetBackButton(sheet) {
-  function isOpen(el) {
-    const dlg = el && el.shadowRoot && el.shadowRoot.querySelector("dialog");
-    return !!(dlg && dlg.open);
-  }
+  const isOpen = (el) => !!(el && el.open);
 
   const parentSheet = Array.from(document.querySelectorAll("nldd-sheet")).find(
     function (other) {
@@ -70,6 +69,28 @@ document.addEventListener("back", function (e) {
   if (sheet.id === "side-panel") return;
   sheet.hide();
 });
+
+// A sheet fetched on demand is dropped once it closes, so the next opening
+// fetches it fresh. Only the sheet's own close: overlays inside it close too.
+document.addEventListener(
+  "close",
+  function (e) {
+    const sheet = e.composedPath()[0];
+    if (sheet.matches?.("nldd-sheet[data-clear-on-close]")) sheet.remove();
+  },
+  true,
+);
+
+// A sheet that is already in the page, opened by the button or menu item that
+// names it. The menu item reports `select`, also when chosen by keyboard.
+function openNamedSheet(e) {
+  const trigger = window.wiesClosestInPath(e, "[data-open-sheet]");
+  if (!trigger) return;
+  if (e.type === "click") e.preventDefault();
+  document.getElementById(trigger.dataset.openSheet)?.show();
+}
+document.addEventListener("click", openNamedSheet);
+document.addEventListener("select", openNamedSheet);
 
 // composedPath: the button may live in the dialog's shadow root.
 document.addEventListener("click", function (e) {

@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - tbd
+- tbd: "Probeer het inloggen opnieuw" on the login error page works again; the user menu's links and logout use NLDD's own href and submit items instead of custom script
 
 ## 2026-11-11
 

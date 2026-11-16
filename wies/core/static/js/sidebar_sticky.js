@@ -1,3 +1,4 @@
+// Remove once NLDD #447 is fixed.
 // Keeps the sidebar box within the viewport: sticky-top feeds both `top` and
 // `max-height`, which only lines up when the bar above it is sticky too.
 
