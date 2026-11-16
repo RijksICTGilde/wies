@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - tbd
 - 843: "Probeer het inloggen opnieuw" on the login error page works again; the opdrachtgever picker and filter get a back button when opened from another sheet; the user menu's links and logout use NLDD's own href and submit items instead of custom script
+- 842: upgrade NLDD design system from 0.21.1 to 0.25.0
 
 ## 2026-11-11
 

@@ -57,7 +57,7 @@
       {% endif %}
       {# Client: top-3 quick options (each with its own param) plus a "Meer"
   button that opens the client tree. #}
-      <nldd-title size="6">
+      <nldd-title size="display-6">
       <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
@@ -98,7 +98,7 @@
           <nldd-spacer size="24"></nldd-spacer>
         {% endif %}
         {% set ns.rendered = true %}
-        <nldd-title size="6">
+        <nldd-title size="display-6">
         <h2>{{ filter_group.label }}</h2>
         </nldd-title>
         <nldd-spacer size="4"></nldd-spacer>
@@ -149,7 +149,7 @@
     {% elif filter_group.type == "date" %}
       {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
       {% set ns.rendered = true %}
-      <nldd-title size="6">
+      <nldd-title size="display-6">
       <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>

@@ -6,7 +6,7 @@
 {% endmacro %}
 {# The htmx re-render after a change reuses this partial, so this is the only
    markup for a category. #}
-<nldd-title size="4">
+<nldd-title size="display-4">
 <h2>{{ category.name }}</h2>
 </nldd-title>
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>
@@ -15,8 +15,8 @@
   {% for label in category.labels.all() %}
     <nldd-list-item>
     <nldd-text-cell>
-    <span>{{ label.name }}</span>
-    <span slot="supporting-text">{{ label.usage_count|default(0) }} {{ "collega" if label.usage_count == 1 else "collega's" }}</span>
+    <p>{{ label.name }}</p>
+    <p slot="supporting-text">{{ label.usage_count|default(0) }} {{ "collega" if label.usage_count == 1 else "collega's" }}</p>
     </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>

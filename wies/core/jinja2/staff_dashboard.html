@@ -9,7 +9,7 @@
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-title size="3">
+  <nldd-title size="display-3">
   <h1>Statistieken</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
@@ -26,9 +26,9 @@
   {% for value, label in _tiles %}
     <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">
-    <nldd-title size="2">
+    <nldd-text size="display-2">
     <p>{{ value }}</p>
-    </nldd-title>
+    </nldd-text>
     <nldd-rich-text>
     <p>{{ label }}</p>
     </nldd-rich-text>
@@ -37,7 +37,7 @@
   {% endfor %}
   </nldd-collection>
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-  <nldd-title size="4">
+  <nldd-title size="display-4">
   <h2>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
@@ -68,7 +68,7 @@
     </tbody>
   </table>
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-  <nldd-title size="4">
+  <nldd-title size="display-4">
   <h2>Recente foutmeldingen</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>

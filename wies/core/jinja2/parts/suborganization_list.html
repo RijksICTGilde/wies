@@ -11,8 +11,8 @@
   {% for suborganization in suborganizations %}
     <nldd-list-item>
     <nldd-text-cell>
-    <span>{{ suborganization.name }}</span>
-    <span slot="supporting-text">{{ suborganization.usage_count|default(0) }} {{ "collega" if suborganization.usage_count == 1 else "collega's" }}</span>
+    <p>{{ suborganization.name }}</p>
+    <p slot="supporting-text">{{ suborganization.usage_count|default(0) }} {{ "collega" if suborganization.usage_count == 1 else "collega's" }}</p>
     </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>
