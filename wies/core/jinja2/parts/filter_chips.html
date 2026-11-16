@@ -11,8 +11,8 @@
    - filter_groups   — list of {type, name, label, options}; select-multi and
                        date groups produce chips here.
    - active_filters  — {param_name: iterable_of_selected_values}.
-   - org_chip_data   — org-facet chips (only the PublicIdFacetsMixin pages pass
-                       these); each {param_name, param_value, label}.
+   - org_chip_data   — opdrachtgever chips (only the lists with that filter
+                       pass these); each {param_name, param_value, label}.
    - unknown_chip_data — fail-closed "Onbekend" chips, same shape.
 
    The caller keeps the `{% if has_active_filters %}` guard and the trailing
@@ -26,7 +26,7 @@
   {% endfor %}
   {# Fail-closed: a facet value that matches nothing (stale or invented public_id)
      gets an "Onbekend" chip instead of vanishing, keeping the empty list
-     explainable and clearable. See PublicIdFacetsMixin.add_unknown_filter_chips. #}
+     explainable and clearable. See Facet.unknown_chips in views/filters.py. #}
   {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}

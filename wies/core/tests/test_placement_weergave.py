@@ -26,6 +26,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.views.placements import PlacementListView
 
 User = get_user_model()
 
@@ -168,7 +169,9 @@ class TestGroupPagination:
         response = self.client.get(reverse("home"), {"weergave": "opdracht"})
         assert response.status_code == 200
         assert response.context_data["paginator"].count == 2
-        assert len(response.context_data["object_list"]) == 6
+        # The opdracht weergave pages the opdrachten themselves.
+        assert len(response.context_data["object_list"]) == 2
+        assert [len(card["team"]) for card in response.context_data["cards"]] == [3, 3]
 
     def test_group_is_never_split_across_a_page_boundary(self):
         """Every placement of a person sits on the same page as that person's card.
@@ -678,6 +681,53 @@ class TestSortOptions:
 
         names = self._card_names({"weergave": "opdracht", "order": "-assignment"})
         assert names == ["Chatbot", "Bouwportaal", "Anonimisering"]
+
+    def _end_date_people(self):
+        """Anna on one open-ended and one dated opdracht, Bob dated later, Carla earlier."""
+        today = timezone.now().date()
+
+        def assignment(name, end):
+            a = _make_assignment(name)
+            a.end_date = end
+            a.save(update_fields=["end_date"])
+            return a
+
+        anna = _make_colleague("Anna Bakker")
+        _place(anna, assignment("Zonder einde", None), self.skill)
+        _place(anna, assignment("Anna gedateerd", today + timedelta(days=10)), self.skill)
+        _place(_make_colleague("Bob Smit"), assignment("Bob later", today + timedelta(days=90)), self.skill)
+        _place(_make_colleague("Carla Jansen"), assignment("Carla eerder", today + timedelta(days=5)), self.skill)
+
+    def test_person_view_newest_end_date_puts_an_open_ended_opdracht_first(self):
+        """A card ranks where its first placement lands: Anna's open-ended one leads
+        on newest-first, as an opdracht without end date does in the list itself."""
+        self._end_date_people()
+        assert self._card_names({"order": "-end_date"}) == ["Anna Bakker", "Bob Smit", "Carla Jansen"]
+
+    def test_person_view_oldest_end_date_ranks_on_the_earliest_dated_placement(self):
+        """Anna's dated opdracht puts her before Bob; her open-ended one does not
+        push her to the end."""
+        self._end_date_people()
+        assert self._card_names({"order": "end_date"}) == ["Carla Jansen", "Anna Bakker", "Bob Smit"]
+
+    def test_assignment_view_newest_end_date_puts_open_ended_first(self):
+        self._end_date_people()
+        names = self._card_names({"weergave": "opdracht", "order": "-end_date"})
+        assert names[0] == "Zonder einde"
+        assert names[1:] == ["Bob later", "Anna gedateerd", "Carla eerder"]
+
+    def test_ties_keep_a_stable_order_across_pages(self, monkeypatch):
+        """Everyone starts the same day: the order falls back on the group, so
+        paging neither repeats nor skips a card."""
+        monkeypatch.setattr(PlacementListView, "page_size", 2)
+        shared = _make_assignment("Gedeelde start")
+        for i in range(5):
+            _place(_make_colleague(f"Collega {i}"), shared, self.skill)
+
+        seen = []
+        for page in (1, 2, 3):
+            seen.extend(self._card_names({"pagina": str(page)}))
+        assert sorted(seen) == [f"Collega {i}" for i in range(5)]
 
 
 @pytest.mark.django_db

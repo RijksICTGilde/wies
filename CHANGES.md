@@ -11,6 +11,12 @@ This files lists the changes during the lifetime of this project.
 - 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
 - 856: team member edit URLs say what they edit (`?bewerken=`/`?toevoegen=` on the panel you came from instead of `?opdracht=…&teamlid=…`); back and save from the role sheet on a colleague panel now return to that panel instead of the opdracht
 - 858: (internal) one `resolve_side_panel` helper decides which side panel the URL opens, replacing four copies in the list, profile and bezetting views; `is_side_panel_request` is the single HX-Target check and only accepts `side-panel-content`
+- XXX: opening a side panel, "Meer tonen" and a filter's "Meer…" sheet on Wie zit waar?, Aanvragen, Gebruikers and Bezetting no longer rebuild the whole list and every filter count, so they respond faster
+- XXX: the Rol filter on Gebruikers filters on every ticked role instead of only the last one
+- XXX: an unknown filter value from an old link (a deleted label, onderdeel or role) empties the list with an "Onbekend …" chip on Bezetting and Gebruikers too, instead of being ignored on Bezetting; the filter counts next to such an empty list are zero
+- XXX: the filter counts on Bezetting follow the search term, like the status cards already did
+- XXX: a page number that does not exist (`?pagina=`) shows the first page on every list instead of an error page on Gebruikers and Aanvragen
+- XXX: (internal) the four list pages share one faceted-search abstraction (`ListSearch` with declarative facets, `FacetedListView` with per-fragment dispatch) instead of four hand-rolled `ListView`s; the persoon and opdracht weergave of Wie zit waar? are separate views, and the opdracht weergave pages the opdrachten themselves
 
 ## 2026-11-11
 

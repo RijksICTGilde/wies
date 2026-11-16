@@ -29,7 +29,7 @@ from wies.core.views.assignments import (
     assignment_member_delete_view,
     assignment_member_edit_view,
 )
-from wies.core.views.bezetting import bezetting
+from wies.core.views.bezetting import BezettingListView
 from wies.core.views.client_picker import client_modal
 from wies.core.views.events import assignment_events_partial
 from wies.core.views.inline_edit import inline_edit_view
@@ -50,7 +50,7 @@ from wies.core.views.pages import (
     toegankelijkheid,
     toegankelijkheid_onderzoek,
 )
-from wies.core.views.placements import PlacementListView, placement_edit_view
+from wies.core.views.placements import placement_edit_view, placement_list
 from wies.core.views.profile import (
     onboarding_assignment_edit,
     onboarding_complete,
@@ -91,7 +91,7 @@ urlpatterns = [
         name="security-txt",
     ),
     # Wies
-    path("", PlacementListView.as_view(), name="home"),
+    path("", placement_list, name="home"),
     path("inloggen/", login, name="login"),
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),
@@ -107,7 +107,7 @@ urlpatterns = [
         RedirectView.as_view(pattern_name="bezetting", permanent=False),
         name="business-management",
     ),
-    path("business-management/bezetting/", bezetting, name="bezetting"),
+    path("business-management/bezetting/", BezettingListView.as_view(), name="bezetting"),
     path("beheer/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
     path("beheer/gebruikers/", UserListView.as_view(), name="admin-users"),
     path("beheer/gebruikers/aanmaken/", user_create, name="user-create"),

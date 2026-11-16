@@ -1,6 +1,5 @@
 """User management: list, create, edit, delete, CSV import and contract periods."""
 
-from collections import Counter
 from functools import cached_property
 
 from django.contrib import messages
@@ -20,7 +19,6 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.views.generic.list import ListView
 
 from wies.core.forms import (
     ContractPeriodForm,
@@ -44,7 +42,7 @@ from wies.core.roles import (
     role_label,
 )
 from wies.core.services.events import create_event
-from wies.core.services.urls import PAGE_PARAM, current_page_url_on, rebuild_url
+from wies.core.services.urls import current_page_url_on
 from wies.core.services.users import (
     close_contract_periods,
     close_placements,
@@ -56,19 +54,64 @@ from wies.core.services.users import (
 )
 
 from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from .filters import Choice, ModelFacet, categories_with_labels, label_facets, model_choices, resolve_pk_facet
+from .listing import FacetedListView, ListSearch
 
 User = get_user_model()
 
 
-class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
+class UserSearch(ListSearch):
+    """The users in Beheer under the request's search and filters."""
+
+    def scope(self):
+        qs = User.objects.filter(is_superuser=False)
+        if self.query:
+            qs = qs.annotate(full_name=Concat("first_name", Value(" "), "last_name")).filter(
+                Q(full_name__icontains=self.query)
+                | Q(first_name__icontains=self.query)
+                | Q(last_name__icontains=self.query)
+                | Q(email__icontains=self.query)
+            )
+        return qs
+
+    def build_facets(self):
+        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
+        groups = sorted(Group.objects.all(), key=lambda group: role_label(group.name))
+        return [
+            # ?rol= carries Group pks: Group is Django's own model and has no public_id.
+            ModelFacet(
+                "rol",
+                "Rol",
+                resolve_pk_facet(Group, self.params.getlist("rol")),
+                lookup="groups__id",
+                choices=lambda: [Choice(str(group.pk), role_label(group.name), group.pk) for group in groups],
+            ),
+            *label_facets(
+                self.resolver("labels", Label),
+                categories_with_labels(LabelCategory.objects.all()),
+                lookup="colleague__labels__id",
+            ),
+            # One onderdeel per colleague: OR within the group.
+            ModelFacet(
+                "onderdeel",
+                "Onderdeel",
+                self.resolver("onderdeel", Suborganization),
+                lookup="colleague__suborganization_id",
+                choices=lambda: model_choices(Suborganization.objects.all()),
+            ),
+        ]
+
+
+class UserListView(PermissionRequiredMixin, FacetedListView):
     """User list with filtering and infinite scroll pagination."""
 
-    model = User
-    template_name = "user_admin.html"
-    paginate_by = 60
-    page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
+    search_class = UserSearch
+    template_name = "user_admin.html"
+    # Filter change: replace the result list (the sheet swaps OOB).
+    results_template = "parts/user_results.html"
+    rows_template = "parts/user_table_rows.html"
+    filter_url_name = "admin-users"
 
     # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
     DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
@@ -88,236 +131,37 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         requested = self.request.GET.get("order", "")
         return requested if requested in self.SORT_OPTIONS else ""
 
-    def _get_base_queryset(self):
-        """Base queryset with search and ordering applied."""
+    def page_source(self):
         ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
-        qs = annotate_sort_names(
-            User.objects.select_related("colleague__suborganization")
+        return (
+            annotate_sort_names(self.search.filtered)
+            .select_related("colleague__suborganization")
             .prefetch_related("groups", "colleague__labels__category")
-            .filter(is_superuser=False)
-        ).order_by(*ordering)
+            .order_by(*ordering)
+        )
 
-        search_filter = self.request.GET.get("zoek")
-        if search_filter:
-            qs = qs.annotate(
-                full_name=Concat("first_name", Value(" "), "last_name"),
-            ).filter(
-                Q(full_name__icontains=search_filter)
-                | Q(first_name__icontains=search_filter)
-                | Q(last_name__icontains=search_filter)
-                | Q(email__icontains=search_filter)
-            )
+    def row_context(self, page):
+        return {"object_list": page.object_list, "row_label_categories": self.ROW_LABEL_CATEGORIES}
 
-        return qs
+    def filter_context(self):
+        return {**super().filter_context(), "search_field": "zoek", "search_placeholder": "Zoek op naam of email..."}
 
-    @cached_property
-    def role_filter(self) -> str:
-        """``?rol=`` carries a Group pk: Group is Django's own model and has no public_id."""
-        return self.request.GET.get("rol", "").strip()
-
-    @cached_property
-    def role_filter_ids(self) -> list[int]:
-        """The group the filter names, empty when it names none; fails closed like every facet."""
-        if not self.role_filter.isdigit():
-            return []
-        return list(Group.objects.filter(id=self.role_filter).values_list("id", flat=True))
-
-    def _apply_filters(self, qs, *, exclude_filter=None):
-        """Applies all selection filters, optionally excluding one filter type.
-
-        ``exclude_filter`` is "rol", "onderdeel", or a category_id (int) for labels.
-        """
-        # Label filter: OR within category, AND between categories
-        for cat_id, cat_label_ids in self.labels_by_category.items():
-            if exclude_filter != cat_id:
-                qs = qs.filter(colleague__labels__id__in=cat_label_ids)
-
-        # Onderdeel filter: OR within the group (one onderdeel per colleague)
-        suborganization_facet = self.facets("onderdeel", Suborganization)
-        if exclude_filter != "onderdeel" and suborganization_facet.requested:
-            qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
-
-        # Rol filter: an integer Group id, since Group has no public_id.
-        if exclude_filter != "rol" and self.role_filter:
-            qs = qs.filter(groups__id__in=self.role_filter_ids)
-
-        return qs
-
-    def get_queryset(self):
-        """Applies the filters to the users queryset."""
-        if self.labels_match_nothing:
-            return User.objects.none()
-        return self._apply_filters(self._get_base_queryset()).distinct()
-
-    def get_template_names(self):
-        """Returns the template for this request type."""
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/user_table_rows.html"]
-            # Filter change: replace the result list (the sheet swaps OOB).
-            return ["parts/user_results.html"]
-        return ["user_admin.html"]
-
-    def get_context_data(self, **kwargs):
-        """Adds the dynamic filter options."""
-        context = super().get_context_data(**kwargs)
-
-        context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op naam of email..."
-        context["search_filter"] = self.request.GET.get("zoek")
-
-        active_filters = {}
-
-        # label filter supports multi-select (values are label public_ids)
-        label_filter = self.facets("labels", Label).active_values
-        if label_filter:
-            active_filters["labels"] = label_filter
-
-        # Onderdeel filter supports multi-select (values are suborganization public_ids)
-        suborganization_filter = self.facets("onderdeel", Suborganization).active_values
-        if suborganization_filter:
-            active_filters["onderdeel"] = suborganization_filter
-
-        if self.role_filter:
-            # A list, not the bare string: the chips iterate every active_filters
-            # value, and a string would be walked character by character — which
-            # silently matches nothing once a Group pk hits two digits.
-            active_filters["rol"] = [self.role_filter]
-
-        # Chips render in user_results.html: the filter panel is a sheet here, so
-        # nothing outside it would otherwise say WHAT is filtered.
-
-        # For each label category, count on a queryset excluding that category's filter.
-        base_qs = self._get_base_queryset()
-
-        label_filter_groups = []
-        for category in LabelCategory.objects.all():
-            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_ids = cat_user_qs.values_list("colleague__labels__id", flat=True)
-            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
-
-            options = [{"value": "", "label": ""}]
-            selected_values = []
-            for label in Label.objects.filter(category=category):
-                options.append(
-                    {
-                        "value": str(label.public_id),
-                        "label": f"{label.name}",
-                        "count": cat_label_counts.get(label.id, 0),
-                    }
-                )
-                if str(label.public_id) in active_filters.get("labels", set()):
-                    options[-1]["selected"] = True
-                    selected_values.append(str(label.public_id))
-
-            label_filter_groups.append(
-                {
-                    "type": "select-multi",
-                    "name": "labels",
-                    "label": category.name,
-                    "options": options,
-                    "selected_values": selected_values,
-                }
-            )
-
-        # Onderdeel filter group (one per colleague; counts exclude its own filter)
-        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
-        suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
-        suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
-        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
-
-        suborganization_options = [{"value": "", "label": ""}]
-        suborganization_selected_values = []
-        for suborganization in Suborganization.objects.all():
-            suborganization_options.append(
-                {
-                    "value": str(suborganization.public_id),
-                    "label": suborganization.name,
-                    "count": suborg_counts.get(suborganization.id, 0),
-                }
-            )
-            if str(suborganization.public_id) in active_filters.get("onderdeel", set()):
-                suborganization_options[-1]["selected"] = True
-                suborganization_selected_values.append(str(suborganization.public_id))
-
-        suborganization_filter_group = {
-            "type": "select-multi",
-            "name": "onderdeel",
-            "label": "Onderdeel",
-            "options": suborganization_options,
-            "selected_values": suborganization_selected_values,
-        }
-
-        # Rol group; counts exclude the rol filter itself, like the suborganization group.
-        role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
-        role_id_values = role_user_qs.values_list("groups__id", flat=True)
-        role_counts = Counter(gid for gid in role_id_values if gid is not None)
-
-        role_options = [{"value": "", "label": ""}]
-        role_selected_values = []
-        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
-        for group in sorted(Group.objects.all(), key=lambda g: role_label(g.name)):
-            role_options.append(
-                {"value": str(group.id), "label": role_label(group.name), "count": role_counts.get(group.id, 0)}
-            )
-            # ?rol= holds a single Group id, so compare exactly.
-            if str(group.id) == self.role_filter:
-                role_options[-1]["selected"] = True
-                role_selected_values.append(str(group.id))
-
-        role_filter_group = {
-            "type": "select-multi",
-            "name": "rol",
-            "label": "Rol",
-            "options": role_options,
-            "selected_values": role_selected_values,
-        }
-
-        context["active_filters"] = active_filters
-        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
-        context["filter_target_url"] = reverse("admin-users")
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
-
-        context["filter_groups"] = [
-            role_filter_group,
-            *label_filter_groups,
-            suborganization_filter_group,
-        ]
-        # Adds top_options + has_more per select-multi group, so the filter sheet
-        # shows a top-3 with a "Meer..." toggle like the other lists.
-        finalize_filter_groups(context["filter_groups"])
-
-        context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
-        context.update(
-            sort_control_context(
+    def extra_context(self):
+        return {
+            **sort_control_context(
                 self.active_order,
                 [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
                 self.DEFAULT_SORT_LABEL,
-            )
-        )
-
-        context["primary_button"] = {
-            "button_text": "Gebruiker toevoegen",
-            "attrs": {
-                "hx-get": reverse("user-create"),
-                "hx-target": "#userFormModal",
-                "hx-push-url": "false",  # necessary because nested in htmx powered form
+            ),
+            "primary_button": {
+                "button_text": "Gebruiker toevoegen",
+                "attrs": {
+                    "hx-get": reverse("user-create"),
+                    "hx-target": "#userFormModal",
+                    "hx-push-url": "false",  # necessary because nested in htmx powered form
+                },
             },
         }
-
-        # Build next page URL with all current filters
-        if context.get("page_obj") and context["page_obj"].has_next():
-            context["next_page_url"] = rebuild_url(
-                "", self.request.GET, **{PAGE_PARAM: context["page_obj"].next_page_number()}
-            )
-        else:
-            context["next_page_url"] = None
-
-        return context
 
 
 def _user_list_behind_sheet(request) -> str:

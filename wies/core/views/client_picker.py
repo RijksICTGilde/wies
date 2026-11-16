@@ -13,11 +13,21 @@ from wies.core.services.organizations import (
     ORG_TYPE_PLURAL,
     build_org_hierarchy,
     get_excluded_org_ids,
+    ministry_short_labels,
     nested_folder_label,
 )
 
-from .assignments import AssignmentListView
-from .placements import PlacementListView
+from .assignments import AssignmentSearch
+from .placements import placement_search
+
+# The lists whose filter panel opens the picker, by the count_mode it sends.
+# The counts come from the list's own search (the single source of the
+# predicates), with the list's other active filters (and the weergave) sent
+# along via hx-include, so the tree matches the sidebar.
+COUNT_MODES = {
+    "open_assignments": AssignmentSearch,
+    "placements": placement_search,
+}
 
 
 def _build_current_selections(request) -> dict[str, str]:
@@ -45,12 +55,7 @@ def _build_current_selections(request) -> dict[str, str]:
     # restored selection reads identically. Abbreviation, else label as fallback.
     nested = [value.partition(":") for value in request.GET.getlist("org_type_in")]
     nested = [(pid, tl) for pid, sep, tl in nested if sep and pid and tl]
-    ministry_abbreviations: dict[str, str] = {
-        str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
-        for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
-            public_id__in=parse_public_ids([pid for pid, _ in nested])
-        ).values_list("public_id", "label", "name", "abbreviations")
-    }
+    ministry_abbreviations = ministry_short_labels([pid for pid, _ in nested])
     for ministry_public_id, type_label in nested:
         abbreviation = ministry_abbreviations.get(ministry_public_id)
         if abbreviation is None:
@@ -66,21 +71,11 @@ def client_modal(request):
     count_mode = request.GET.get("count_mode")
 
     # count_mode "none" is the assignment-form org picker, not a filter list, so
-    # the tree carries no counts (the whole org tree is shown, unpruned). The
-    # filter modes count over the list's other active filters (sent along via
-    # hx-include) so the tree matches the sidebar: ask the list view for its
-    # org_counts (the single source of the predicates) rather than re-implementing
-    # them here, which would drift.
+    # the tree carries no counts (the whole org tree is shown, unpruned).
     if count_mode == "none":
         org_self_counts = Counter()
-    elif count_mode == "open_assignments":
-        view = AssignmentListView()
-        view.request = request
-        org_self_counts = view.org_counts()
-    elif count_mode == "placements":
-        view = PlacementListView()
-        view.request = request
-        org_self_counts = view.org_counts()
+    elif count_mode in COUNT_MODES:
+        org_self_counts = COUNT_MODES[count_mode](request).org_counts()
     else:
         return HttpResponseBadRequest("Onbekende count_mode")
     hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")

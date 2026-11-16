@@ -133,6 +133,25 @@ class UserFilterFlowTest(UserFilterRenderTest):
         self.client.force_login(self.admin)
         resp = self.client.get(reverse("admin-users") + f"?rol={self.user_admin.id}&rol={other.id}")
         assert resp.status_code == 200
+        # Both roles filter (OR) and both stay ticked, not just the last one.
+        assert u2 in resp.context_data["object_list"]
+        group = next(g for g in resp.context_data["filter_groups"] if g["name"] == "rol")
+        assert set(group["selected_values"]) == {str(self.user_admin.id), str(other.id)}
+
+    def test_unknown_role_fails_closed_with_a_chip(self):
+        self.client.force_login(self.admin)
+        resp = self.client.get(reverse("admin-users"), {"rol": "999999"})
+        assert resp.status_code == 200
+        assert list(resp.context_data["object_list"]) == []
+        assert "Onbekende rol" in resp.content.decode()
+
+    def test_page_number_out_of_range_shows_a_page(self):
+        self.client.force_login(self.admin)
+        for page in ("999", "abc", "0"):
+            with self.subTest(page=page):
+                resp = self.client.get(reverse("admin-users"), {"pagina": page})
+                assert resp.status_code == 200
+                assert resp.context_data["page_obj"].number == 1
 
 
 class UserFilterSlotTest(UserFilterRenderTest):

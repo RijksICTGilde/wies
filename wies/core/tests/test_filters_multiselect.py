@@ -16,7 +16,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_top_org_options
-from wies.core.views.placements import PlacementListView
+from wies.core.views.placements import PersoonSearch
 
 User = get_user_model()
 
@@ -69,21 +69,15 @@ class FilterCombiningTestBase(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        return list(view.get_queryset().values_list("id", flat=True))
+        return list(PersoonSearch(request).filtered.values_list("id", flat=True))
 
     def _get_org_quick_options(self, params: dict) -> list[dict]:
         """Return the opdrachtgever quick options from the rendered context."""
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
-        org_group = next(g for g in context["filter_groups"] if g.get("type") == "modal")
+        groups = PersoonSearch(request).filter_groups
+        org_group = next(g for g in groups if g.get("type") == "modal")
         return org_group["top_options"]
 
 

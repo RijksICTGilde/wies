@@ -22,7 +22,7 @@ from wies.core.models import (
 )
 from wies.core.querysets import annotate_service_dates
 from wies.core.tests.role_helpers import grant_consultant, make_business_manager_user, make_other_business_manager_user
-from wies.core.views.assignments import AssignmentListView
+from wies.core.views.assignments import AssignmentSearch
 
 User = get_user_model()
 
@@ -236,11 +236,7 @@ class AssignmentListViewTest(TestCase):
         Assignment.objects.update(created_at=None)
         request = RequestFactory().get(self.list_url, query_params or {})
         request.user = self.auth_user
-        view = AssignmentListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        return view.get_context_data()["filter_groups"]
+        return AssignmentSearch(request).filter_groups
 
     def _org_count(self, groups, org):
         """Returns the sidebar 'org' facet count for ``org``."""

@@ -8,7 +8,6 @@ import io
 import logging
 import re
 import xml.etree.ElementTree as ET
-from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import IO, TYPE_CHECKING
@@ -17,6 +16,7 @@ from urllib.parse import urlsplit
 import requests
 
 if TYPE_CHECKING:
+    from collections import Counter
     from collections.abc import Iterator
 from django.db.models import Q
 from django.utils import timezone
@@ -102,10 +102,25 @@ def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
 
     One recognizable plain string shared by the picker folder (get_org_tree
     JSON → org_tree.js), its selection token (tree_state.js) and the active
-    chip (PublicIdFacetsMixin._org_chips). Plain text so it needs no aria wiring
-    across the web-component shadow boundary.
+    chip (OrgFacet.chips). Plain text so it needs no aria wiring across the
+    web-component shadow boundary.
     """
     return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"
+
+
+def ministry_short_label(abbreviations: list[str] | None, label: str | None, name: str) -> str:
+    """How a ministry is named in its nested folders: the abbreviation, else the label or name."""
+    return (abbreviations[0] if abbreviations else "") or label or name
+
+
+def ministry_short_labels(public_ids: list[str]) -> dict[str, str]:
+    """``ministry_short_label`` per public_id; an unknown or malformed id is left out."""
+    return {
+        str(public_id): ministry_short_label(abbreviations, label, name)
+        for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+            public_id__in=parse_public_ids(public_ids)
+        ).values_list("public_id", "label", "name", "abbreviations")
+    }
 
 
 def build_source_url(system_id: str, name: str) -> str:
@@ -625,24 +640,6 @@ def get_org_descendant_ids(root_ids: list[int]) -> set[int]:
     return result
 
 
-def org_counts_from_filtered(filtered_qs, model, org_lookup: str, group_field: str | None = None) -> Counter[int]:
-    """Per-org counts from an already org-excluded, filter-applied queryset.
-
-    Re-key on distinct row ids first: projecting the org id straight off a
-    .distinct() queryset emits SELECT DISTINCT org_id and undercounts orgs
-    shared by multiple rows. The base queryset already drops excluded orgs, so
-    the exclusion is not re-applied here.
-
-    With ``group_field`` the count is per distinct group (a colleague or an
-    assignment) instead of per row, so it matches a list that shows one card
-    per group.
-    """
-    rows = model.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    # Without group_field each row is its own group, so counting is per row.
-    pairs = rows.values_list(org_lookup, group_field or "id").distinct()
-    return Counter(oid for oid, _ in pairs if oid is not None)
-
-
 def get_top_org_options(
     selected_org_ids: set[int],
     org_counts: Counter[int],
@@ -811,9 +808,8 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
         key = (ministry["id"], main_type)
         folder = synthetic_folders.get(key)
         if folder is None:
-            # Label the folder with the ministry's abbreviation, same rule as the
-            # chip (PublicIdFacetsMixin._org_chips): the abbreviation, else the label as fallback.
-            ministry_abbreviation = (ministry["abbreviations"] or [None])[0] or ministry["label"] or ministry["name"]
+            # Same name as the folder's chip and its restored selection.
+            ministry_abbreviation = ministry_short_label(ministry["abbreviations"], ministry["label"], ministry["name"])
             folder = {
                 "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped
                 "type_label": main_type,

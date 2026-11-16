@@ -24,24 +24,21 @@ from wies.core.models import (
     Skill,
     Suborganization,
 )
-from wies.core.public_id import resolve_facet
 from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, setup_roles
 from wies.core.services.occupancy import (
     FLIP_LABEL_PCT,
     HORIZON_AHEAD_DAYS,
     HORIZON_BACK_DAYS,
     NARROW_BAR_PCT,
-    bezetting_filter_groups,
     colleague_occupancy,
     horizon_days,
-    labels_by_category,
     month_ticks,
     occupancy_summary,
     placement_order_key,
     timeline_horizon,
     today_marker_pct,
 )
-from wies.core.views.bezetting import BEZETTING_PAGE_SIZE
+from wies.core.views.bezetting import BEZETTING_PAGE_SIZE, BezettingSearch
 from wies.core.views.panels import get_colleague_assignments
 
 User = get_user_model()
@@ -612,7 +609,9 @@ class OccupancySuborganizationFilterTest(TestCase):
         self.c = _consultant("Cora Zonder", "c@x.nl")
 
     def _ids(self, suborganization_ids):
-        return {r.colleague.id for r in colleague_occupancy(self.today, suborganization_ids=suborganization_ids)}
+        tokens = [str(s.public_id) for s in Suborganization.objects.filter(id__in=suborganization_ids or [])]
+        search = BezettingSearch(RequestFactory().get("/", {"onderdeel": tokens}))
+        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered)}
 
     def test_no_filter_shows_everyone(self):
         assert self._ids(None) == {self.a.id, self.b.id, self.c.id}
@@ -664,12 +663,29 @@ class BezettingSuborganizationFilterViewTest(TestCase):
         assert b"Aisha Digi" in response.content
         assert b"Bram Mindful" not in response.content
 
-    def test_unknown_suborganization_token_ignored(self):
-        # A bogus public_id resolves to no ids: an empty filter shows everyone.
+    def test_unknown_suborganization_token_fails_closed(self):
+        # A bogus public_id matches nothing, like on every other list: a stale
+        # link must never show more than it asks for. The chip explains the
+        # empty list and clears it.
         response = self.client.get(self.url, {"onderdeel": "not-a-real-uuid"})
         assert response.status_code == 200
-        assert b"Aisha Digi" in response.content
-        assert b"Bram Mindful" in response.content
+        assert b"Aisha Digi" not in response.content
+        assert b"Bram Mindful" not in response.content
+        assert b"Onbekend onderdeel" in response.content
+
+    def test_unknown_label_token_fails_closed(self):
+        response = self.client.get(self.url, {"labels": "not-a-real-uuid"})
+        assert response.status_code == 200
+        assert b"Aisha Digi" not in response.content
+        assert b"Onbekend label" in response.content
+
+    def test_filter_counts_follow_the_search(self):
+        # Only Aisha matches the search, so only her onderdeel counts.
+        response = self.client.get(self.url, {"zoek": "Aisha"})
+        group = next(g for g in response.context_data["filter_groups"] if g["name"] == "onderdeel")
+        counts = {o["value"]: o["count"] for o in group["options"] if o["value"]}
+        assert counts[str(self.digi.public_id)] == 1
+        assert counts[str(self.mindful.public_id)] == 0
 
 
 class OccupancyLabelFilterTest(TestCase):
@@ -691,7 +707,10 @@ class OccupancyLabelFilterTest(TestCase):
         self.c.labels.add(self.ai)
 
     def _ids(self, labels_by_category):
-        return {r.colleague.id for r in colleague_occupancy(self.today, labels_by_category=labels_by_category)}
+        label_ids = [label_id for ids in (labels_by_category or {}).values() for label_id in ids]
+        tokens = [str(label.public_id) for label in Label.objects.filter(id__in=label_ids)]
+        search = BezettingSearch(RequestFactory().get("/", {"labels": tokens}))
+        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered)}
 
     def test_no_filter_shows_everyone(self):
         assert self._ids(None) == {self.a.id, self.b.id, self.c.id}
@@ -711,7 +730,7 @@ class OccupancyLabelFilterTest(TestCase):
 class BezettingFilterGroupCountTest(TestCase):
     """The cross-filtered counts on each filter option (issue #666: every count
     collapsed to 1 because the counting queryset still carried the filter JOIN +
-    distinct that apply_colleague_filters leaves behind)."""
+    distinct that the filtering leaves behind)."""
 
     def setUp(self):
         setup_roles()
@@ -734,9 +753,8 @@ class BezettingFilterGroupCountTest(TestCase):
         d.labels.add(self.data, self.senior)
 
     def _groups(self, suborganization_tokens=None, label_tokens=None):
-        suborganization = resolve_facet(Suborganization, suborganization_tokens or [])
-        labels = resolve_facet(Label, label_tokens or [])
-        return bezetting_filter_groups(suborganization, labels, labels_by_category(labels.ids))
+        request = RequestFactory().get("/", {"onderdeel": suborganization_tokens or [], "labels": label_tokens or []})
+        return BezettingSearch(request).filter_groups
 
     def _count(self, groups, group_label, public_id):
         group = next(g for g in groups if g["label"] == group_label)

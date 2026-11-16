@@ -5,10 +5,28 @@ This module provides efficient database-level annotations for start_date and end
 that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
-from django.db.models import Case, Count, F, Func, Prefetch, Value, When
+from collections import Counter
+
+from django.db.models import Case, Count, F, Func, Prefetch, QuerySet, Value, When
 from django.db.models.functions import Lower, Trim
 
 from wies.core.models import SUBGROEP_CATEGORY, Label, LabelCategory
+
+
+def count_distinct(filtered: QuerySet, lookup: str, group_field: str | None = None) -> Counter:
+    """Counts, per value of ``lookup``, the distinct groups in ``filtered``.
+
+    A list that shows one card per colleague or per assignment counts those
+    groups (``group_field``), not rows; without it every row is its own group.
+
+    Re-keys on pk first: ``filtered`` is usually ``.distinct()`` and joined
+    through a filter, and projecting the lookup straight off it emits SELECT
+    DISTINCT on the projected columns only, which drops rows that differ
+    elsewhere, or counts a row once per joined filter value.
+    """
+    rows = filtered.model.objects.filter(pk__in=filtered.values("pk"))
+    pairs = rows.values_list(lookup, group_field or "pk").distinct()
+    return Counter(value for value, _ in pairs if value is not None)
 
 
 def label_categories_for_everyone():

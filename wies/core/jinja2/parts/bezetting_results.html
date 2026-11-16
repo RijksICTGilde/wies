@@ -3,7 +3,7 @@
    separately as OOB so its counts and selection follow. #}
 {% from "parts/filter_chips.html" import filter_chips %}
 <nldd-container id="results">
-{% set has_active_filters = active_filters|length > 0 %}
+{% set has_active_filters = (unknown_chip_data|length > 0) or (active_filters|length > 0) %}
 {# Samenvatting — each card is an independent status filter (OR-toggle). The card
    is a native <button> (keyboard-accessible for free). It carries no input of its
    own: the same status is a group in the filter sheet, and two checkboxes with
@@ -90,7 +90,7 @@
 </div>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% if has_active_filters %}
-  {{ filter_chips(filter_groups, active_filters) }}
+  {{ filter_chips(filter_groups, active_filters, unknown_chip_data=unknown_chip_data) }}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
 {% endif %}
 {# Tijdlijn #}

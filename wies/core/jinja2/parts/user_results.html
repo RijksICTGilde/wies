@@ -2,12 +2,12 @@
    sheet itself swaps separately as OOB so its counts and selection follow.
    No chip for the search term: it is already visible in the search field. #}
 {% from "parts/filter_chips.html" import filter_chips %}
-{% set has_active_filters = active_filters|length > 0 %}
+{% set has_active_filters = (unknown_chip_data|length > 0) or (active_filters|length > 0) %}
 <nldd-container id="results">
 {% if has_active_filters %}
   {# The filter panel lives in a sheet, so without these tokens there is no way
      to see what is being filtered on: the badge counts but does not say what. #}
-  {{ filter_chips(filter_groups, active_filters) }}
+  {{ filter_chips(filter_groups, active_filters, unknown_chip_data=unknown_chip_data) }}
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
 {# No count line at zero: the empty state below already says it, and "0

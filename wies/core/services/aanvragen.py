@@ -15,17 +15,20 @@ from wies.core.services.organizations import get_excluded_org_ids
 TEAM_NAMES_SHOWN = 2
 
 
-def open_aanvragen() -> QuerySet[Service]:
+def open_aanvragen(excluded_org_ids: set[int] | None = None) -> QuerySet[Service]:
     """Every open, unfilled role, with its effective dates. Hides
-    intelligence-service orgs, as the placement list does."""
+    intelligence-service orgs, as the placement list does.
+
+    ``excluded_org_ids`` saves a caller that already has them the lookup."""
     qs = annotate_service_dates(Service.objects.filter(status="OPEN", placements__isnull=True))
-    excluded_org_ids = get_excluded_org_ids()
+    if excluded_org_ids is None:
+        excluded_org_ids = get_excluded_org_ids()
     if excluded_org_ids:
         qs = qs.exclude(assignment__organizations__id__in=excluded_org_ids)
     return qs
 
 
-def assignments_without_aanvraag() -> QuerySet[Assignment]:
+def assignments_without_aanvraag(excluded_org_ids: set[int] | None = None) -> QuerySet[Assignment]:
     """Opdrachten without any role yet, such as one just entered. Aanvragen
     lists them, or they could not be found anywhere once created.
 
@@ -33,7 +36,8 @@ def assignments_without_aanvraag() -> QuerySet[Assignment]:
     duplicate rows as soon as a filter also joins the opdrachtgevers.
     """
     qs = Assignment.objects.filter(~Exists(Service.objects.filter(assignment=OuterRef("pk"))))
-    excluded_org_ids = get_excluded_org_ids()
+    if excluded_org_ids is None:
+        excluded_org_ids = get_excluded_org_ids()
     if excluded_org_ids:
         qs = qs.exclude(organizations__id__in=excluded_org_ids)
     return qs

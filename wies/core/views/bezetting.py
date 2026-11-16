@@ -1,16 +1,18 @@
 """The bezetting (occupancy) overview."""
 
-from django.core.paginator import Paginator
-from django.shortcuts import render
-from django.urls import reverse
+from functools import cached_property
+
+from django.db.models import Q
+from django.db.models.functions import Lower
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 
 from wies.core.models import (
     Label,
     Suborganization,
 )
-from wies.core.public_id import resolve_facet
 from wies.core.roles import (
+    ROLE_CONSULTANT,
     business_management_access_required,
 )
 from wies.core.services.occupancy import (
@@ -18,10 +20,9 @@ from wies.core.services.occupancy import (
     STATUS_ENDS_SOON,
     STATUS_PARTIAL,
     STATUS_VALUES,
-    bezetting_filter_groups,
     colleague_occupancy,
+    consultant_colleagues,
     horizon_days,
-    labels_by_category,
     month_ticks,
     occupancy_summary,
     row_has_status,
@@ -29,52 +30,82 @@ from wies.core.services.occupancy import (
     timeline_horizon,
     today_marker_pct,
 )
-from wies.core.services.urls import PAGE_PARAM, rebuild_url
 
-from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request
-from .filters import finalize_filter_groups
-from .panels import (
-    assignment_create_button,
-    resolve_side_panel,
-)
+from ._common import build_panel_url
+from .filters import Choice, ModelFacet, label_facets, model_choices, select_multi_group
+from .listing import FacetedListView, ListSearch
+from .panels import assignment_create_button
 
 
-def _bezetting_status_group(selected, summary):
-    """The summary cards as a filter group, for when they do not fit the row.
+class BezettingSearch(ListSearch):
+    """The consultants on the timeline under the request's search and filters.
 
-    Same values and counts as the cards, so toggling either keeps one state.
+    Labels are OR within a category and AND between categories, like "Wie zit
+    waar?"; each label category is its own filter group under the shared
+    ``labels`` param, and the onderdeel is its own group. No "Rol" group:
+    everyone on this page is a consultant. The filters offer only the values a
+    consultant has.
     """
-    options = [{"value": "", "label": ""}]
-    for value, label, count in (
-        (STATUS_BENCH, "Op de bank", summary["bench_count"]),
-        (STATUS_PARTIAL, "Deels beschikbaar", summary["partial_count"]),
-        (STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", summary["ends_soon_count"]),
-    ):
-        option = {"value": value, "label": label, "count": count}
-        if value in selected:
-            option["selected"] = True
-        options.append(option)
-    real_options = options[1:]
-    return {
-        "type": "select-multi",
-        "name": "status",
-        "label": "Status",
-        "options": options,
-        "selected_values": list(selected),
-        # Finalized by hand, outside finalize_filter_groups: that keeps the top
-        # three by count and hides the rest behind "Meer…", which would drop a
-        # status's hidden input and leave its card dead.
-        "group_id": "status",
-        "top_options": real_options,
-        "has_more": False,
-    }
+
+    def scope(self):
+        qs = consultant_colleagues()
+        if self.query:
+            # Like the search box on the user list.
+            qs = qs.filter(Q(name__icontains=self.query) | Q(email__icontains=self.query))
+        return qs
+
+    def build_facets(self):
+        used_labels = (
+            Label.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT)
+            .distinct()
+            .select_related("category")
+            .order_by("category__name", Lower("name"))
+        )
+        by_category: dict[int, tuple] = {}
+        for label in used_labels:
+            by_category.setdefault(label.category_id, (label.category, []))[1].append(label)
+        return [
+            *label_facets(self.resolver("labels", Label), by_category.values(), lookup="labels__id"),
+            ModelFacet(
+                "onderdeel",
+                "Onderdeel",
+                self.resolver("onderdeel", Suborganization),
+                lookup="suborganization_id",
+                choices=lambda: model_choices(
+                    Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
+                ),
+            ),
+        ]
 
 
 BEZETTING_PAGE_SIZE = 60
 
 
-@business_management_access_required
-def bezetting(request):
+def _status_group(selected: list[str], summary: dict) -> dict:
+    """The summary cards as a filter group, for when they do not fit the row.
+
+    Same values and counts as the cards, so toggling either keeps one state.
+    Finalized here rather than by finalize_filter_groups: that keeps the top
+    three by count and hides the rest behind "Meer…", which would drop a
+    status's hidden input and leave its card dead.
+    """
+    choices = [
+        Choice(STATUS_BENCH, "Op de bank", STATUS_BENCH),
+        Choice(STATUS_PARTIAL, "Deels beschikbaar", STATUS_PARTIAL),
+        Choice(STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", STATUS_ENDS_SOON),
+    ]
+    counts = {
+        STATUS_BENCH: summary["bench_count"],
+        STATUS_PARTIAL: summary["partial_count"],
+        STATUS_ENDS_SOON: summary["ends_soon_count"],
+    }
+    group = select_multi_group("status", "Status", choices, selected, counts)
+    group.update(group_id="status", top_options=group["options"][1:], has_more=False)
+    return group
+
+
+@method_decorator(business_management_access_required, name="dispatch")
+class BezettingListView(FacetedListView):
     """ "Bezetting" — the business-manager occupancy timeline.
 
     Rows are colleagues, sorted most-pressing first (bench → full). A row click
@@ -87,97 +118,74 @@ def bezetting(request):
     for here. Moving it into the queryset means moving the sort into annotations
     and is its own change.
     """
-    today = timezone.now().date()
 
-    # Side panel: reuse the shared machinery. A row click opens the colleague
-    # panel (?collega); links inside that panel open an opdracht (?opdracht)
-    # panel, exactly like on "Wie zit waar?".
-    panel_data = resolve_side_panel(request, allow_create=True)
+    search_class = BezettingSearch
+    template_name = "bezetting.html"
+    # HTMX filter change: just the results block; the filter sheet swaps back
+    # OOB. The "Meer…" sheet reuses the shared template, like the user list.
+    results_template = "parts/bezetting_results.html"
+    # "Meer tonen" replaces itself with the next page of rows.
+    rows_template = "parts/bezetting_rows.html"
+    filter_url_name = "bezetting"
+    page_size = BEZETTING_PAGE_SIZE
+    side_panel = True
+    allow_create = True
 
-    # HTMX panel requests return just the panel content, like WZW.
-    if is_side_panel_request(request) and panel_data:
-        return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+    @cached_property
+    def today(self):
+        return timezone.now().date()
 
-    # Onderdeel (suborganisation) and label-category filters, resolved from the URL.
-    # Labels are OR within a category and AND between categories (like "Wie zit
-    # waar?"); each label category becomes its own filter group under the shared
-    # ``labels`` param, and the onderdeel is its own group.
-    suborganization_facet = resolve_facet(Suborganization, request.GET.getlist("onderdeel"))
-    labels = resolve_facet(Label, request.GET.getlist("labels"))
-    labels_by_cat = labels_by_category(labels.ids)
-    search = request.GET.get("zoek", "").strip()
+    @cached_property
+    def all_rows(self):
+        rows = colleague_occupancy(self.today, self.search.filtered)
+        for row in rows:
+            row.colleague.panel_url = build_panel_url(self.request, collega=row.colleague.public_id)
+        return rows
 
-    rows = colleague_occupancy(
-        today, suborganization_ids=suborganization_facet.ids, labels_by_category=labels_by_cat, search=search
-    )
-    for row in rows:
-        row.colleague.panel_url = build_panel_url(request, collega=row.colleague.public_id)
+    @cached_property
+    def summary(self) -> dict:
+        """Follows the search and the filters, but not the status filter, which
+        is applied after it: a card has to keep showing what it would select."""
+        return occupancy_summary(self.all_rows)
 
-    # Summary-card counts follow onderdeel, labels and the search term (they all
-    # narrowed the queryset above) but not the status filter, which is applied
-    # after this: a card has to keep showing what it would select.
-    summary = occupancy_summary(rows)
+    @cached_property
+    def selected_statuses(self) -> list[str]:
+        return [status for status in self.request.GET.getlist("status") if status in STATUS_VALUES]
 
-    # Status facet: the three summary cards, as independent OR-toggles. Derived
-    # from the built rows (not a queryset column), so it filters here in-memory.
-    selected_statuses = [s for s in request.GET.getlist("status") if s in STATUS_VALUES]
-    if selected_statuses:
-        rows = [r for r in rows if any(row_has_status(r, s) for s in selected_statuses)]
+    def page_source(self):
+        # Status is derived from the built rows (not a queryset column), so it
+        # filters here, in memory: the three cards as independent OR-toggles.
+        rows = self.all_rows
+        if self.selected_statuses:
+            rows = [r for r in rows if any(row_has_status(r, s) for s in self.selected_statuses)]
+        return rows_in_display_order(rows)
 
-    # Filter sheet: one select-multi group per facet, with cross-filtered counts,
-    # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
-    # everyone on this page is a consultant.
-    filter_groups = bezetting_filter_groups(suborganization_facet, labels, labels_by_cat)
-    # Status also lives in the sheet, not only on the cards: on a narrow window
-    # the cards are hidden, and a filter you cannot reach is a filter you cannot
-    # switch off.
-    finalize_filter_groups(filter_groups)
-    filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
+    def row_context(self, page):
+        return {
+            "rows": page.object_list,
+            "row_count": page.paginator.count,
+            "today_pct": today_marker_pct(),
+            "horizon_days": horizon_days(),
+            "month_ticks": month_ticks(self.today),
+        }
 
-    active_filters = {}
-    if suborganization_facet.active_values:
-        active_filters["onderdeel"] = suborganization_facet.active_values
-    if labels.active_values:
-        active_filters["labels"] = labels.active_values
-    if selected_statuses:
-        active_filters["status"] = selected_statuses
+    def filter_context(self):
+        context = super().filter_context()
+        # Status also lives in the sheet, not only on the cards: on a narrow
+        # window the cards are hidden, and a filter you cannot reach is a filter
+        # you cannot switch off.
+        context["filter_groups"] = [_status_group(self.selected_statuses, self.summary), *context["filter_groups"]]
+        if self.selected_statuses:
+            context["active_filters"] = {**context["active_filters"], "status": self.selected_statuses}
+            context["active_filter_count"] = len(context["active_filters"])
+        context["search_filter"] = self.search.query
+        return context
 
-    page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
-    next_page_url = (
-        rebuild_url(request.path, request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: page.next_page_number()})
-        if page.has_next()
-        else None
-    )
-
-    context = {
-        "rows": page.object_list,
-        "row_count": page.paginator.count,
-        "next_page_url": next_page_url,
-        "search_filter": search,
-        "panel_data": panel_data,
-        "today_pct": today_marker_pct(),
-        "horizon_days": horizon_days(),
-        "today": today,
-        "horizon": timeline_horizon(today),
-        "month_ticks": month_ticks(today),
-        **summary,
-        "selected_statuses": selected_statuses,
-        "filter_groups": filter_groups,
-        "active_filters": active_filters,
-        "filter_target_url": reverse("bezetting"),
-        "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "primary_button": assignment_create_button(request),
-    }
-
-    # HTMX filter change: return just the results block; the filter sheet swaps
-    # back OOB (see parts/bezetting_results.html). The "Meer…" sheet reuses the
-    # shared template, exactly like the user list.
-    if "HX-Request" in request.headers:
-        if request.GET.get("filter_modal"):
-            return render(request, "parts/filter_options_modal.html", context)
-        # "Meer tonen" replaces itself with the next page of rows.
-        if request.GET.get("pagina"):
-            return render(request, "parts/bezetting_rows.html", context)
-        return render(request, "parts/bezetting_results.html", context)
-
-    return render(request, "bezetting.html", context)
+    def extra_context(self):
+        return {
+            "today": self.today,
+            "horizon": timeline_horizon(self.today),
+            **self.summary,
+            "selected_statuses": self.selected_statuses,
+            "primary_button": assignment_create_button(self.request),
+        }

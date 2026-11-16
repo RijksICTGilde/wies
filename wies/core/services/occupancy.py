@@ -15,13 +15,11 @@ hours are an upper bound until it is filled in.
 
 from __future__ import annotations
 
-from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, timedelta
 from itertools import pairwise
 
-from django.db.models import Q
-from django.db.models.functions import Lower
+from django.db.models import Q, QuerySet
 from django.utils.formats import date_format
 
 from wies.core.models import (
@@ -29,10 +27,8 @@ from wies.core.models import (
     AssignmentOrganizationUnit,
     Colleague,
     ContractPeriod,
-    Label,
     OrganizationUnitRole,
     Placement,
-    Suborganization,
 )
 from wies.core.querysets import annotate_placement_dates
 from wies.core.roles import ROLE_CONSULTANT
@@ -319,13 +315,7 @@ def _assign_lanes(segments: list[TimelineSegment], horizon_start: date, horizon_
             lanes.append([span])
 
 
-def colleague_occupancy(
-    today: date,
-    *,
-    suborganization_ids: list[int] | None = None,
-    labels_by_category: dict[int, list[int]] | None = None,
-    search: str = "",
-) -> list[OccupancyRow]:
+def colleague_occupancy(today: date, colleagues: QuerySet[Colleague] | None = None) -> list[OccupancyRow]:
     """Build the occupancy rows, sorted most-pressing first.
 
     Sort key (ascending): (bench, partial, full), then the most hours left,
@@ -333,38 +323,21 @@ def colleague_occupancy(
     ones with the most free hours first, then fully-placed colleagues by
     soonest-ending assignment.
 
-    ``suborganization_ids`` optionally restricts the rows to colleagues in those
-    suborganisations (onderdelen); an empty/None value shows everyone.
-
-    ``labels_by_category`` maps a label-category id to the selected label ids in
-    that category. Matching is OR within a category and AND between categories,
-    matching the "Wie zit waar?" filter semantics.
-
-    ``search`` narrows the rows to colleagues whose name or e-mail contains it,
-    like the search box on the user list.
+    ``colleagues`` are the rows to build, already narrowed by the page's search
+    and filters (``BezettingSearch``); by default every consultant.
     """
     horizon_start, horizon_end = timeline_horizon(today)
     far_future = date.max
 
-    # Only consultants: colleagues whose linked user holds the Consultant role.
-    # Colleagues without a user (e.g. imported without an account) are excluded.
+    if colleagues is None:
+        colleagues = consultant_colleagues()
     # The labels and onderdeel ride along: the row shows them as chips, and without
     # the prefetch that is a query per colleague.
     colleagues = (
-        Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
-        .select_related("suborganization")
+        colleagues.select_related("suborganization")
         .prefetch_related("labels__category", "contract_periods")
         .order_by("name")
     )
-    if suborganization_ids:
-        colleagues = colleagues.filter(suborganization_id__in=suborganization_ids)
-    if search:
-        colleagues = colleagues.filter(Q(name__icontains=search) | Q(email__icontains=search))
-    for label_ids in (labels_by_category or {}).values():
-        # AND between categories: chain a filter per category (OR within).
-        colleagues = colleagues.filter(labels__id__in=label_ids)
-    if labels_by_category:
-        colleagues = colleagues.distinct()
 
     # Materialise the row set once for both placement queries below
     colleagues = list(colleagues)
@@ -637,117 +610,8 @@ def month_ticks(today: date) -> list[dict]:
     return ticks
 
 
-def labels_by_category(label_ids: list[int]) -> dict[int, list[int]]:
-    """Group label ids by their category id."""
-    by_category: dict[int, list[int]] = {}
-    for label in Label.objects.filter(id__in=label_ids).values("id", "category_id"):
-        by_category.setdefault(label["category_id"], []).append(label["id"])
-    return by_category
-
-
-def consultant_colleagues():
-    """Base colleague queryset for the Bezetting page: only consultants, matching
-    the occupancy timeline (colleagues whose linked user is in that group)."""
+def consultant_colleagues() -> QuerySet[Colleague]:
+    """Who the Bezetting page is about: colleagues whose linked user holds the
+    Consultant role. A colleague without a user (e.g. imported without an
+    account) is not one."""
     return Colleague.objects.filter(user__groups__name=ROLE_CONSULTANT)
-
-
-def apply_colleague_filters(qs, suborganization_facet, labels_by_cat, *, exclude_filter=None):
-    """Apply the onderdeel + label filters to a consultant-colleague queryset.
-
-    ``exclude_filter`` leaves one facet out so a facet's own counts don't collapse
-    to its current selection: "onderdeel" for the onderdeel group, or a label ``category_id``
-    (int) for that category's group. Labels are OR within a category, AND between.
-    """
-    for cat_id, cat_label_ids in labels_by_cat.items():
-        if exclude_filter != cat_id:
-            qs = qs.filter(labels__id__in=cat_label_ids)
-    if exclude_filter != "onderdeel" and suborganization_facet.ids:
-        qs = qs.filter(suborganization_id__in=suborganization_facet.ids)
-    return qs.distinct()
-
-
-def bezetting_filter_groups(suborganization_facet, labels, labels_by_cat) -> list[dict]:
-    """Build the select-multi filter groups for the Bezetting sheet.
-
-    One group per label category (only labels used by a consultant; empty
-    categories dropped) plus one onderdeel group. Each option carries a cross-filtered
-    count — the number of consultants that would remain if only this value were
-    added to the other active filters — like the "Gebruikers" filter sheet.
-    """
-    base_qs = consultant_colleagues()
-    selected_label_ids = set(labels.public_ids)
-    selected_suborganization_ids = set(suborganization_facet.public_ids)
-
-    groups = []
-
-    # Label categories: one group each, only labels actually used by a consultant.
-    used_labels = (
-        Label.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT)
-        .distinct()
-        .select_related("category")
-        .order_by("category__name", Lower("name"))
-    )
-    labels_by_cat_display: dict[int, list] = {}
-    category_names: dict[int, str] = {}
-    for label in used_labels:
-        labels_by_cat_display.setdefault(label.category_id, []).append(label)
-        category_names[label.category_id] = label.category.name
-
-    for cat_id, cat_labels in labels_by_cat_display.items():
-        cat_qs = apply_colleague_filters(base_qs, suborganization_facet, labels_by_cat, exclude_filter=cat_id)
-        # Re-query by id to get proper filter numbers
-        # cat_qs contains distinct and values_list re-uses the filter JOIN
-        cat_colleagues = Colleague.objects.filter(id__in=cat_qs.values_list("id", flat=True))
-        counts = Counter(lid for lid in cat_colleagues.values_list("labels__id", flat=True) if lid is not None)
-        options = [{"value": "", "label": ""}]
-        selected_values = []
-        for label in cat_labels:
-            value = str(label.public_id)
-            option = {"value": value, "label": label.name, "count": counts.get(label.id, 0)}
-            if value in selected_label_ids:
-                option["selected"] = True
-                selected_values.append(value)
-            options.append(option)
-        groups.append(
-            {
-                "type": "select-multi",
-                "name": "labels",
-                "label": category_names[cat_id],
-                "options": options,
-                "selected_values": selected_values,
-            }
-        )
-
-    # Onderdeel: only suborganisations that have at least one consultant.
-    suborganization_qs = apply_colleague_filters(
-        base_qs, suborganization_facet, labels_by_cat, exclude_filter="onderdeel"
-    )
-    # Same re-query as above: A fresh queryset by id counts one row per colleague.
-    suborganization_colleagues = Colleague.objects.filter(id__in=suborganization_qs.values_list("id", flat=True))
-    suborganization_ids = suborganization_colleagues.values_list("suborganization_id", flat=True)
-    suborganization_counts = Counter(mid for mid in suborganization_ids if mid is not None)
-    suborganization_options = [{"value": "", "label": ""}]
-    suborganization_selected = []
-    used_suborgs = Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
-    for suborganization in used_suborgs:
-        value = str(suborganization.public_id)
-        option = {
-            "value": value,
-            "label": suborganization.name,
-            "count": suborganization_counts.get(suborganization.id, 0),
-        }
-        if value in selected_suborganization_ids:
-            option["selected"] = True
-            suborganization_selected.append(value)
-        suborganization_options.append(option)
-    groups.append(
-        {
-            "type": "select-multi",
-            "name": "onderdeel",
-            "label": "Onderdeel",
-            "options": suborganization_options,
-            "selected_values": suborganization_selected,
-        }
-    )
-
-    return groups

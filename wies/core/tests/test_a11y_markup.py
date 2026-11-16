@@ -115,7 +115,7 @@ class A11yMarkupTest(TestCase):
             colleague = Colleague.objects.create(name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl")
             Placement.objects.create(colleague=colleague, service=service, source="wies")
 
-        with patch.object(PlacementListView, "paginate_by", 1):
+        with patch.object(PlacementListView, "page_size", 1):
             body = self.client.get(reverse("home")).content.decode()
 
         assert '<div class="wies-load-more" role="listitem">' in body
