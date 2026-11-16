@@ -5,6 +5,10 @@
    button) and land on the empty HX-Redirect response. On a validation error the
    modal comes back into its mount and reopens. #}
 <nldd-modal-dialog data-auto-show text="Gebruiker verwijderen?" supporting-text="{{ dialog_supporting }}">
+{# The actions come first: the button group hides every child past the third
+   with :nth-child, which counts the host's children, form and spacers included. #}
+<nldd-button slot="actions" appearance="primary" text="Behoud gebruiker" data-dismiss-modal></nldd-button>
+<nldd-button slot="actions" appearance="destructive" text="Verwijder gebruiker" hx-post="{{ form_post_url }}" hx-include="#userDeleteForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
 {% if content %}
   {# Room between the running text and the field, and between the field and
      the buttons: the dialog stacks its slot content without any. #}
@@ -38,6 +42,4 @@
   </nldd-form>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
 {% endif %}
-<nldd-button slot="actions" appearance="primary" text="Behoud gebruiker" data-dismiss-modal></nldd-button>
-<nldd-button slot="actions" appearance="destructive" text="Verwijder gebruiker" hx-post="{{ form_post_url }}" hx-include="#userDeleteForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
 </nldd-modal-dialog>
