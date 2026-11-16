@@ -11,7 +11,7 @@
  * nldd-form-field links that only to an input too.
  *
  * TODO: delete this file once nldd-form-field describes the control that an
- * nldd-validation-list names in `for`. Reported to NLDD; not in 0.8.92. Check:
+ * nldd-validation-list names in `for`. NLDD #415; not in 0.21.1. Check:
  * submit the opdracht form with only a name, and VoiceOver should read "Fout:
  * Voeg minimaal 1 opdrachtgever toe." on the picker button without this script.
  */

@@ -73,26 +73,19 @@
   }
 
   function isSheetOpen(sheet) {
-    if (!sheet) return false;
-    // nldd-sheet exposes its open state as <dialog open> in the shadow root.
-    const dlg = sheet.shadowRoot && sheet.shadowRoot.querySelector("dialog");
-    return !!(dlg && dlg.open);
+    return !!(sheet && sheet.open);
   }
 
   function openSheet() {
     const sheet = getSheet();
     if (!sheet) return;
-    if (typeof sheet.show === "function") sheet.show();
-    else if (typeof sheet.open === "function") sheet.open();
-    document.documentElement.style.overflow = "hidden";
+    sheet.show();
   }
 
   function closeSheet() {
     const sheet = getSheet();
     if (!sheet) return;
-    if (typeof sheet.hide === "function") sheet.hide();
-    else if (typeof sheet.close === "function") sheet.close();
-    document.documentElement.style.overflow = "";
+    sheet.hide();
   }
 
   function clearContent() {
@@ -199,6 +192,7 @@
     }
   }
 
+  // The gutter goes once NLDD #448 is fixed.
   // The panel's scroller is a div in nldd-page's shadow root, out of app.css's
   // reach; an adopted sheet, since the CSP allows no inline styles. The gutter
   // stops "Toon meer" shifting the panel sideways; the padding replaces a
@@ -232,14 +226,10 @@
     }
 
     document.addEventListener("select", (e) => {
-      const item = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.dataset &&
-            el.dataset.wiesAction === "team-member-delete",
-        );
+      const item = window.wiesClosestInPath(
+        e,
+        '[data-wies-action="team-member-delete"]',
+      );
       if (!item) return;
       const dialog = document.getElementById("team-member-delete-dialog");
       if (!dialog) return;
@@ -255,15 +245,10 @@
     });
 
     document.addEventListener("click", (e) => {
-      const btn = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.dataset &&
-            (el.dataset.wiesAction === "team-member-delete-cancel" ||
-              el.dataset.wiesAction === "team-member-delete-confirm"),
-        );
+      const btn = window.wiesClosestInPath(
+        e,
+        '[data-wies-action^="team-member-delete-"]',
+      );
       if (!btn) return;
       const dialog = document.getElementById("team-member-delete-dialog");
       if (!dialog) return;
@@ -303,7 +288,6 @@
           clearContent();
           PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
           history.replaceState({}, "", url.toString());
-          document.documentElement.style.overflow = "";
         }
       });
     }

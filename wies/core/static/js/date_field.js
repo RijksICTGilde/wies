@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Two gaps of nldd-date-field in a server-rendered form.
+ * A gap of nldd-date-field in a server-rendered form.
  *
  * Text that is no date: the field's value is then '', so the form posts an
  * empty date. The server catches that only for an end date behind the
@@ -11,10 +11,6 @@
  * field's own message the way the server's errors are wired: an
  * nldd-validation-item in the nldd-form-field, named in the field's `unmet`.
  * Everything else stays with the server.
- *
- * Tab past the last button of the open calendar closes it and drops focus on
- * <body>, so the next Tab starts at the top of the page. Focus goes back to
- * the calendar button, where Escape leaves it too.
  */
 
 (function () {
@@ -114,46 +110,5 @@
     if (event.target.localName !== DATE_FIELD) return;
     var result = check(event.target);
     if (result.isNew && liveRegion) liveRegion.announce(result.message);
-  });
-
-  // Only after Tab: a click on an empty spot also drops focus on <body>, and
-  // there the user chose where focus goes.
-  var lastKeyWasTab = false;
-  document.addEventListener(
-    "keydown",
-    function (event) {
-      lastKeyWasTab = event.key === "Tab";
-    },
-    true,
-  );
-  document.addEventListener(
-    "pointerdown",
-    function () {
-      lastKeyWasTab = false;
-    },
-    true,
-  );
-
-  document.addEventListener("focusout", function (event) {
-    if (event.relatedTarget || !lastKeyWasTab) return;
-    var path = event.composedPath();
-    var field = path.find(function (el) {
-      return el.localName === DATE_FIELD;
-    });
-    var inPicker = path.some(function (el) {
-      return el.localName === "nldd-date-picker";
-    });
-    if (!field || !inPicker) return;
-    // After the field's own close handling, which runs in a microtask.
-    requestAnimationFrame(function () {
-      if (document.activeElement && document.activeElement !== document.body)
-        return;
-      var trigger =
-        field.shadowRoot &&
-        field.shadowRoot.querySelector(
-          ".date-field__picker-button nldd-icon-button",
-        );
-      (trigger || field).focus();
-    });
   });
 })();

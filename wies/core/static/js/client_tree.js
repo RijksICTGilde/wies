@@ -65,10 +65,6 @@ if (typeof document !== "undefined")
         );
       }
 
-      // Above this many, the tokens push the CTA off-screen; the button's count
-      // says the same thing.
-      var MAX_VISIBLE_TOKENS = 6;
-
       function updateApplyLabel() {
         if (!applyBtn) return;
         var n = treeState.explicitSelections.size;
@@ -82,29 +78,10 @@ if (typeof document !== "undefined")
         updateApplyLabel();
         var box = document.getElementById("client-selection-tokens");
         if (!box) return;
-        box.innerHTML = "";
-        var count = treeState.explicitSelections.size;
-        box.hidden = count === 0 || count > MAX_VISIBLE_TOKENS;
-        if (box.hidden) return;
-        for (var entry of treeState.explicitSelections) {
-          var nodeId = entry[0];
-          var text = entry[1];
-          var token = document.createElement("nldd-token");
-          token.setAttribute("control", "dismiss");
-          token.setAttribute("dismiss-text", "Verwijder " + text);
-          token.textContent = text;
-          token.addEventListener(
-            "dismiss",
-            (function (id) {
-              return function () {
-                treeState.removeSelection(id);
-                tree.sync();
-                rebuildSelectionList();
-              };
-            })(nodeId),
-          );
-          box.appendChild(token);
-        }
+        var rows = Array.from(treeState.explicitSelections, function (entry) {
+          return { nodeId: entry[0], label: entry[1] };
+        });
+        tree.renderTokens(box, rows, rebuildSelectionList);
       }
 
       if (applyBtn) {

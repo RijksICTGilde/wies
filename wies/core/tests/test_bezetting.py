@@ -880,7 +880,7 @@ class BezettingFilterChipTest(TestCase):
 
     def test_filters_button_has_an_overflow_twin(self):
         content = self.client.get(self.url).content.decode()
-        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-user-filter-open', content)
+        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-open-sheet="user-filter-sheet"', content)
 
     def test_bm_gets_the_create_action_with_its_overflow_twin(self):
         """Same button and same ?nieuwe-opdracht panel as the Aanvragen list."""

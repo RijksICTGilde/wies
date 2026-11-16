@@ -19,9 +19,11 @@ de htmx-respons weg. Kies er één, of onderschep de default click.
 
 ## 2. POST vanuit een component in een shadow root
 
-Uitloggen en verwijderen horen POST te zijn, maar een menu-item in een shadow
-root kun je niet in een `<form>` wikkelen. Doe de POST vanuit JS met het
-CSRF-token uit de markup — zie `wies/core/static/js/menu_nav.js`.
+Uitloggen en verwijderen horen POST te zijn, maar een menu-item kun je niet in
+een `<form>` wikkelen. Geef het `type="submit" form="<id>"` en zet het formulier
+met het CSRF-token ernaast (zie `parts/utility_menu.html`). Het item zoekt dat
+formulier alleen in zijn eigen boom: een item dat een component naar zijn
+shadow root kloont (het overflowmenu van `nldd-toolbar`) vindt het niet.
 
 ## 3. Formuliervalidatie koppelt zichzelf niet
 
