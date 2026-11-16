@@ -31,8 +31,9 @@ from wies.core.services.occupancy import (
     timeline_horizon,
     today_marker_pct,
 )
+from wies.core.services.urls import PAGE_PARAM, rebuild_url
 
-from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object, url_drop_params
+from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object
 from .filters import finalize_filter_groups
 from .panels import (
     assignment_create_button,
@@ -170,7 +171,7 @@ def bezetting(request):
 
     page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
     next_page_url = (
-        url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
+        rebuild_url(request.path, request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: page.next_page_number()})
         if page.has_next()
         else None
     )

@@ -51,13 +51,14 @@ from wies.core.services.occupancy import (
 from wies.core.services.placements import (
     placement_edit_specs,
 )
+from wies.core.services.urls import rebuild_url
 from wies.core.visibility_rules import (
     LABELS,
     evaluate_assignment_visibility,
     evaluate_placement_visibility,
 )
 
-from ._common import build_close_url, build_panel_url, is_side_panel_request, resolve_panel_object, url_drop_params
+from ._common import build_close_url, build_panel_url, is_side_panel_request, resolve_panel_object
 
 
 def build_assignment_panel_data(assignment, request):
@@ -115,7 +116,7 @@ def _build_own_role_panel_data(request, team_rows):
         row["placement"],
         request,
         only="skill",
-        parent_url=url_drop_params(request.path, request.GET, ("teamlid",)),
+        parent_url=rebuild_url(request.path, request.GET, drop=("teamlid",)),
     )
 
 
@@ -498,7 +499,7 @@ def build_placement_edit_panel_data(placement, request, *, only=None, form=None,
     """
     only = only or request.GET.get("veld") or None
     if parent_url is None:
-        parent_url = url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid"))
+        parent_url = rebuild_url(request.path, request.GET, drop=("bewerken", "veld", "teamlid"))
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
@@ -546,7 +547,7 @@ def build_assignment_edit_panel_data(assignment, request, *, form=None, parent_u
         "edit_heading": f"{spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht wijzigen",
         "parent_url": parent_url
         if parent_url is not None
-        else url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        else rebuild_url(request.path, request.GET, drop=("bewerken", "veld")),
         "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
     }
 
@@ -590,7 +591,7 @@ def build_assignment_member_panel_data(assignment, request, *, member_form=None,
         # Opened from the aanvraag panel, back is that panel alone; the sheet
         # itself needed ?opdracht=.
         dropped = ("teamlid", "opdracht") if request.GET.get("aanvraag") else ("teamlid",)
-        parent_url = url_drop_params(request.path, request.GET, dropped)
+        parent_url = rebuild_url(request.path, request.GET, drop=dropped)
     from_aanvraag = QueryDict(urllib.parse.urlparse(parent_url).query).get("aanvraag")
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",

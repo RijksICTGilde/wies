@@ -1,17 +1,18 @@
-"""Helpers shared by the views: panel URLs, sort controls, safe return paths, CSV upload limit."""
-
-import urllib.parse
+"""Helpers shared by the views: panel URLs, sort controls, CSV upload limit."""
 
 from django.core.exceptions import ValidationError
-from django.http import Http404, QueryDict
+from django.http import Http404
 from django.urls import reverse
 
-from wies.core.services.urls import is_local_path
+from wies.core.services.urls import PAGE_PARAM, hx_current_url, rebuild_url
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
-# ``bewerken`` puts the panel in edit mode (the child sheet).
+# ``bewerken`` puts the panel in edit mode (the child sheet). The list's page
+# number goes too: "Meer tonen" fetches page N without pushing it, so a card
+# from that page would otherwise put ``pagina=N`` in the address bar when its
+# panel opens, and a reload would show page N alone.
 PANEL_PARAMS = (
-    "pagina",
+    PAGE_PARAM,
     "collega",
     "opdracht",
     "aanvraag",
@@ -23,21 +24,9 @@ PANEL_PARAMS = (
 )
 
 
-def url_drop_params(path, query, names, **overrides):
-    """Rebuild ``path`` from ``query`` (a QueryDict) with ``names`` dropped and
-    ``overrides`` applied. Returns ``path`` alone when no params remain."""
-    params = query.copy()
-    for name in names:
-        params.pop(name, None)
-    for key, value in overrides.items():
-        params[key] = value
-    encoded = params.urlencode()
-    return f"{path}?{encoded}" if encoded else path
-
-
 def build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
-    return url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
+    return rebuild_url(request.path, request.GET, drop=PANEL_PARAMS, **overrides)
 
 
 def sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
@@ -57,7 +46,7 @@ def sort_control_context(active_order: str, options: list[tuple[str, str]], defa
 
 def build_close_url(request):
     """Build close URL preserving current filters."""
-    return url_drop_params(request.path, request.GET, PANEL_PARAMS)
+    return rebuild_url(request.path, request.GET, drop=PANEL_PARAMS)
 
 
 def is_side_panel_request(request):
@@ -90,29 +79,14 @@ def page_url_behind_panel(request) -> str:
 
     The panel is an overlay on a real page, so after deleting we return there
     instead of jumping to the assignment list. Falls back to that list when the
-    HX-Current-URL header is absent, or (being client controlled) names a path
-    that would leave the site.
+    HX-Current-URL header is absent or names a path that would leave the site.
+    Drops the same params as :func:`build_close_url`: ``collega`` too, or the
+    colleague panel would open, and ``pagina``, or the list shows one page.
     """
-    current = request.headers.get("HX-Current-URL")
-    if not current:
+    current = hx_current_url(request)
+    if current is None:
         return reverse("assignment-list")
-    parsed = urllib.parse.urlparse(current)
-    if not is_local_path(parsed.path):
-        return reverse("assignment-list")
-    # Keep pagina/filters; collega goes too, or the colleague panel would open.
-    return url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "collega"))
-
-
-def safe_return_path(raw: str | None, fallback: str) -> str:
-    """Returns ``raw`` only when it is a path on this site, else the fallback.
-
-    The value comes from a hidden input, so the client controls it. It ends up in
-    HX-Location/HX-Push-Url, where a protocol-relative "//host" — or "/\\host",
-    which browsers read the same way — would point at a foreign origin.
-    """
-    if is_local_path(raw):
-        return raw
-    return fallback
+    return rebuild_url(current.path, current.query, drop=PANEL_PARAMS)
 
 
 # Safety ceiling so a single upload can't exhaust a worker's memory

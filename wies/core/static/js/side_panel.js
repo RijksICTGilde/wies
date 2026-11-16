@@ -20,7 +20,7 @@
   }
 
   // The params that open a sheet on top of a panel; without them the URL is
-  // that panel. Mirrors _url_drop_params in views.py.
+  // that panel. Mirrors the parent_url drops in views/panels.py.
   const CHILD_PARAMS = ["bewerken", "teamlid", "veld"];
 
   // The panel a directly loaded sheet sits on, or null when the URL is a
@@ -52,7 +52,7 @@
 
   // Everything the panel puts in the URL, stripped when it closes. The ones
   // above plus the params that only modify an open panel; 'pagina' is the
-  // list's, not the panel's, so PANEL_PARAMS in views.py has one more.
+  // list's, not the panel's, so PANEL_PARAMS in views/_common.py has one more.
   const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
     "bewerken",
     "teamlid",
