@@ -39,7 +39,7 @@ def _business_manager_queryset(assignment=None):
     return Colleague.objects.filter(in_group).distinct().order_by("name")
 
 
-def _owner_display_context(assignment, request) -> dict:
+def owner_display_context(assignment, request) -> dict:
     """Builds the link and mailto for the owner display partial.
 
     Derived only from ``assignment`` and ``request``, never the current page's GET
@@ -72,7 +72,7 @@ def _owner_display_context(assignment, request) -> dict:
     return {"owner_url": owner_url, "owner_mailto": owner_mailto}
 
 
-def _organizations_initial(assignment):
+def organizations_initial(assignment):
     return [
         {"organization": rel.organization, "role": rel.role}
         for rel in assignment.organization_relations.select_related(
@@ -504,7 +504,7 @@ class AssignmentEditables(EditableSet):
         error_messages={"required": "Selecteer een business manager."},
         audit_state=lambda c: c.name if c else None,
         display="forms/displays/assignment_owner.html",
-        display_context=_owner_display_context,
+        display_context=owner_display_context,
     )
 
     period = EditableGroup(
@@ -519,7 +519,7 @@ class AssignmentEditables(EditableSet):
         label="Opdrachtgever(s)",
         help_text="Minimaal 1 opdrachtgever.",
         form_field_factory=lambda: OrganizationsField(required=True),
-        initial=_organizations_initial,
+        initial=organizations_initial,
         save=_save_organizations,
         audit_state=_organizations_audit_state,
         render_change=_organizations_render_change,

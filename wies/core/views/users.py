@@ -52,9 +52,9 @@ from wies.core.services.users import (
     update_user,
 )
 
-from ._common import _CSV_TOO_LARGE_MSG, _csv_too_large, _sort_control_context
+from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
 from .contract_periods import contract_periods_block
-from .filters import PublicIdFacetsMixin, _finalize_filter_groups
+from .filters import PublicIdFacetsMixin, finalize_filter_groups
 
 User = get_user_model()
 
@@ -287,11 +287,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         ]
         # Adds top_options + has_more per select-multi group, so the filter sheet
         # shows a top-3 with a "Meer..." toggle like the other lists.
-        _finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(context["filter_groups"])
 
         context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
         context.update(
-            _sort_control_context(
+            sort_control_context(
                 self.active_order,
                 [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
                 self.DEFAULT_SORT_LABEL,
@@ -625,11 +625,11 @@ def user_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
-        if _csv_too_large(csv_file):
+        if csv_too_large(csv_file):
             return render(
                 request,
                 "user_import.html",
-                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
+                {"result": {"success": False, "errors": [CSV_TOO_LARGE_MSG]}},
             )
 
         try:

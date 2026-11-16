@@ -118,7 +118,7 @@ anyway; there is simply no reason for it, and real migration risk.)
   strand the user on a filter they never chose.
 - **Select options:** Django keys `ModelChoiceField` options on the pk, so
   `use_public_id_choices()` sets `to_field_name="public_id"` for every
-  choice field whose model has one. `_build_form_field` applies it to all
+  choice field whose model has one. `build_form_field` applies it to all
   Editables; the hand-declared fields in `forms.py` pass the same
   `to_field_name`. A model without a `public_id` (e.g. `Group`) keeps the
   pk. Junk and stale pks come back as a normal "invalid choice" error.

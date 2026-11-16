@@ -65,7 +65,7 @@ def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
         raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
-def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, source):
+def find_or_create_colleague_for_user(user, first_name, last_name, email, *, source):
     """
     Link a colleague with the given source to the given user. If the user is
     already linked to a colleague, update it in place. Otherwise reuse an
@@ -134,7 +134,7 @@ def create_user(
         last_name=last_name,
     )
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
+    colleague = find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels is not None:
@@ -195,7 +195,7 @@ def update_user(
     user.email = email
     user.save()
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
+    colleague = find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels is not None:

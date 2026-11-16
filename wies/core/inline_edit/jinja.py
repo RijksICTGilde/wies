@@ -8,7 +8,7 @@ from jinja2 import pass_context
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
 from wies.core.inline_edit.display import concurrency_token, resolve_display, spec_label
-from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
+from wies.core.inline_edit.forms import build_form_class, current_value, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
 
 
@@ -46,9 +46,9 @@ def inline_edit(ctx, obj, name, **extras):
     if is_collection:
         value = spec.initial(obj)
     elif isinstance(spec, Editable):
-        value = _current_value(obj, spec)
+        value = current_value(obj, spec)
     else:
-        value = {e.field or e.name: _current_value(obj, e) for e in editables}
+        value = {e.field or e.name: current_value(obj, e) for e in editables}
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
         "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),

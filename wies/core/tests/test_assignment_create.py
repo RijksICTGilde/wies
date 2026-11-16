@@ -193,7 +193,7 @@ class AssignmentCreateTest(TestCase):
         assert "invalid" in picker.group(1)
 
     def test_sheet_post_unsafe_terug_url_falls_back_to_list(self):
-        # _safe_return_path rejects a protocol-relative terug_url, and its
+        # safe_return_path rejects a protocol-relative terug_url, and its
         # backslash form (browsers read "\\" as "/"), so the HX-Location falls
         # back to the list.
         self.client.force_login(self.business_manager_user)

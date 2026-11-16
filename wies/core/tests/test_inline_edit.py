@@ -529,7 +529,7 @@ class AssignmentPanelRenderTest(TestCase):
         """A panel HTMX request whose opdracht can't be resolved must 404 (so
         HTMX shows the graceful "Niet gevonden" partial) rather than returning a
         full page that gets swapped into the slide-over. Guards the HX-Target
-        string match in _is_side_panel_request (side-panel-content, hyphens)."""
+        string match in is_side_panel_request (side-panel-content, hyphens)."""
         response = self.client.get(
             "/?opdracht=999",  # integer, never a valid public_id
             headers={"hx-request": "true", "hx-target": "side-panel-content"},

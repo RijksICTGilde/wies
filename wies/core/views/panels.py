@@ -8,8 +8,8 @@ from django.utils import timezone
 
 from wies.core.editables.assignment import (
     AssignmentEditables,
-    _organizations_initial,
-    _owner_display_context,
+    organizations_initial,
+    owner_display_context,
     skill_choices,
     visible_service_rows,
 )
@@ -57,10 +57,10 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import _build_close_url, _build_panel_url, _is_side_panel_request, _resolve_panel_object, _url_drop_params
+from ._common import build_close_url, build_panel_url, is_side_panel_request, resolve_panel_object, url_drop_params
 
 
-def _build_assignment_panel_data(assignment, request):
+def build_assignment_panel_data(assignment, request):
     """Builds the assignment panel context, shared by both views."""
     team_rows = visible_service_rows(assignment, request)
     for row in team_rows:
@@ -69,7 +69,7 @@ def _build_assignment_panel_data(assignment, request):
     data = {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
-        "close_url": _build_close_url(request),
+        "close_url": build_close_url(request),
         "assignment": assignment,
         "team_rows": team_rows,
         # Same human label as the "Externe bron" row, so the intro says "OTYS",
@@ -82,21 +82,21 @@ def _build_assignment_panel_data(assignment, request):
         "organization_count": assignment.organization_relations.count(),
         # Read-only display context: per-field inline edit was replaced by the
         # edit child sheet, so the panel shows values directly.
-        "organization_rows": _organizations_initial(assignment),
-        "owner_display": _owner_display_context(assignment, request),
-        "edit_panel_url": _build_panel_url(request, opdracht=assignment.public_id, bewerken=1),
-        "member_add_aanvraag_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-aanvraag"),
-        "member_add_ingevuld_url": _build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-ingevuld"),
+        "organization_rows": organizations_initial(assignment),
+        "owner_display": owner_display_context(assignment, request),
+        "edit_panel_url": build_panel_url(request, opdracht=assignment.public_id, bewerken=1),
+        "member_add_aanvraag_url": build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-aanvraag"),
+        "member_add_ingevuld_url": build_panel_url(request, opdracht=assignment.public_id, teamlid="nieuw-ingevuld"),
     }
     # Child sheets: ?bewerken= opens the combined assignment form, ?teamlid= the
     # form for one team member. Without the rights the param falls back to the
     # read-only panel.
     if request.GET.get("bewerken"):
-        edit_panel = _build_assignment_edit_panel_data(assignment, request)
+        edit_panel = build_assignment_edit_panel_data(assignment, request)
         if edit_panel is not None:
             data.update(edit_panel)
     elif request.GET.get("teamlid"):
-        member_panel = _build_assignment_member_panel_data(assignment, request) or _build_own_role_panel_data(
+        member_panel = build_assignment_member_panel_data(assignment, request) or _build_own_role_panel_data(
             request, team_rows
         )
         if member_panel is not None:
@@ -111,15 +111,15 @@ def _build_own_role_panel_data(request, team_rows):
     row = next((r for r in team_rows if r["service_public_id"] == teamlid and r.get("can_edit_role")), None)
     if row is None:
         return None
-    return _build_placement_edit_panel_data(
+    return build_placement_edit_panel_data(
         row["placement"],
         request,
         only="skill",
-        parent_url=_url_drop_params(request.path, request.GET, ("teamlid",)),
+        parent_url=url_drop_params(request.path, request.GET, ("teamlid",)),
     )
 
 
-def _build_assignment_create_panel_data(request, form, *, parent_url=None):
+def build_assignment_create_panel_data(request, form, *, parent_url=None):
     """Builds panel_data for the empty or invalid create form.
 
     Shared by the list GET branch (``?nieuwe-opdracht``) and the POST handler.
@@ -130,7 +130,7 @@ def _build_assignment_create_panel_data(request, form, *, parent_url=None):
         "form": form,
         "panel_content_template": "parts/assignment_create_panel_content.html",
         "edit_url": reverse("assignment-create-sheet"),  # POST target
-        "parent_url": parent_url if parent_url is not None else _build_close_url(request),
+        "parent_url": parent_url if parent_url is not None else build_close_url(request),
         "edit_heading": "Opdracht invoeren",
         "submit_label": "Voer opdracht in",
     }
@@ -155,7 +155,7 @@ def _make_assignment_entry(
     params = {"opdracht": public_id}
     if colleague_public_id:
         params["collega"] = colleague_public_id
-    url = _build_panel_url(request, **params)
+    url = build_panel_url(request, **params)
     return {
         "name": name,
         "id": aid,
@@ -170,7 +170,7 @@ def _make_assignment_entry(
     }
 
 
-def _get_colleague_assignments(request, colleague):
+def get_colleague_assignments(request, colleague):
     today = timezone.now().date()
 
     active_by_id: dict[int, dict] = {}
@@ -260,7 +260,7 @@ def _get_colleague_assignments(request, colleague):
                 "hours": placement["service__hours_per_week"] if show_hours else None,
                 # The label names the sheet the right opens, not the pencil.
                 "edit_url": (
-                    _build_panel_url(
+                    build_panel_url(
                         request,
                         opdracht=placement["service__assignment__public_id"],
                         collega=colleague.public_id,
@@ -389,20 +389,20 @@ def _cv_taken(roles: list[dict], *, open_requested: bool) -> dict:
     }
 
 
-def _build_colleague_panel_data(colleague, request):
+def build_colleague_panel_data(colleague, request):
     """Builds the colleague panel context, shared by both views."""
-    assignments = _get_colleague_assignments(request, colleague)
+    assignments = get_colleague_assignments(request, colleague)
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
         "panel_title": colleague.name,
-        "close_url": _build_close_url(request),
+        "close_url": build_close_url(request),
         "colleague": colleague,
         "labels": list(colleague.labels.filter(category__in=label_categories_for_everyone())),
         "assignments": assignments,
     }
 
 
-def _resolve_aanvraag_panel(request, public_id):
+def resolve_aanvraag_panel(request, public_id):
     """Resolves ``?aanvraag=`` to an open role, through the viewer's own rows.
 
     Only a vacancy has this panel: a filled row's hours and role text follow
@@ -413,7 +413,7 @@ def _resolve_aanvraag_panel(request, public_id):
     """
     # Deferred: wies.core.editables imports from views at module level.
 
-    service = _resolve_panel_object(request, Service, public_id, select_related=("assignment", "skill"))
+    service = resolve_panel_object(request, Service, public_id, select_related=("assignment", "skill"))
     if service is not None:
         row = next(
             (r for r in visible_service_rows(service.assignment, request) if r["service_public_id"] == str(public_id)),
@@ -421,17 +421,17 @@ def _resolve_aanvraag_panel(request, public_id):
         )
         if row is not None and row["placement"] is None:
             return service
-    if _is_side_panel_request(request):
+    if is_side_panel_request(request):
         raise Http404 from None
     return None
 
 
-def _build_aanvraag_panel_data(service, request):
+def build_aanvraag_panel_data(service, request):
     """Builds the aanvraag panel: the read view of one open role on an opdracht.
 
     A team row for a placement opens that colleague's panel; an aanvraag has no
     colleague, so it opens this one. Reached only through
-    ``_resolve_aanvraag_panel``, which keeps this to real vacancies.
+    ``resolve_aanvraag_panel``, which keeps this to real vacancies.
     """
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
@@ -443,21 +443,21 @@ def _build_aanvraag_panel_data(service, request):
         "panel_content_template": "parts/aanvraag_panel_content.html",
         "panel_title": f"Aanvraag: {role}" if role else "Aanvraag",
         "heading": role or "Rol niet ingevuld",
-        "close_url": _build_close_url(request),
+        "close_url": build_close_url(request),
         "service": service,
         "assignment": assignment,
-        "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
+        "assignment_url": build_panel_url(request, opdracht=assignment.public_id),
         "period_text": request_period_text(service) or "Geen periode opgegeven",
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "external_source": external_source(assignment),
         # Keeps ?aanvraag=, so saving or going back lands on this panel again.
-        "edit_url": _build_panel_url(
+        "edit_url": build_panel_url(
             request, opdracht=assignment.public_id, aanvraag=service.public_id, teamlid=service.public_id
         ),
     }
 
 
-def _assignment_create_button(request):
+def assignment_create_button(request):
     """The "Opdracht invoeren" action, or None without the permission.
 
     Same button and same ``?nieuwe-opdracht`` panel as the Aanvragen list, so
@@ -468,7 +468,7 @@ def _assignment_create_button(request):
     return {
         "button_text": "Opdracht invoeren",
         "attrs": {
-            "hx-get": _build_panel_url(request, **{"nieuwe-opdracht": ""}),
+            "hx-get": build_panel_url(request, **{"nieuwe-opdracht": ""}),
             "hx-target": "#side-panel-content",
             "hx-swap": "innerHTML",
             "hx-push-url": "true",
@@ -476,7 +476,7 @@ def _assignment_create_button(request):
     }
 
 
-def _assignment_create_panel(request):
+def assignment_create_panel(request):
     """panel_data for the empty create form, or None when it does not apply.
 
     Without the permission it falls away silently: these are list pages, not a
@@ -489,10 +489,10 @@ def _assignment_create_panel(request):
     # Prefill: the creator is usually the BM themselves.
     if getattr(request.user, "colleague", None):
         initial["owner"] = request.user.colleague
-    return _build_assignment_create_panel_data(request, form_cls(initial=initial))
+    return build_assignment_create_panel_data(request, form_cls(initial=initial))
 
 
-def _build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None):
+def build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None):
     """Context for the placement edit child sheet, or None without edit rights.
 
     The single source for this sheet: the open-GET path merges the returned dict
@@ -503,7 +503,7 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     """
     only = only or request.GET.get("veld") or None
     if parent_url is None:
-        parent_url = _url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid"))
+        parent_url = url_drop_params(request.path, request.GET, ("bewerken", "veld", "teamlid"))
     specs = placement_edit_specs(placement, request.user, only=only)
     if not specs:
         return None
@@ -526,13 +526,13 @@ def _build_placement_edit_panel_data(placement, request, *, only=None, form=None
     }
 
 
-def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
+def build_assignment_edit_panel_data(assignment, request, *, form=None, parent_url=None):
     """Context for the assignment edit child sheet, or None without edit rights.
 
     The team is a formset and does not fit this flat form, so it keeps a child
     sheet of its own.
 
-    The single source for this sheet (see ``_build_placement_edit_panel_data``):
+    The single source for this sheet (see ``build_placement_edit_panel_data``):
     pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
     submission instead of a fresh form.
     """
@@ -551,12 +551,12 @@ def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_
         "edit_heading": f"{spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht wijzigen",
         "parent_url": parent_url
         if parent_url is not None
-        else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        else url_drop_params(request.path, request.GET, ("bewerken", "veld")),
         "edit_url": reverse("assignment-edit", args=[assignment.public_id]) + (f"?veld={only}" if only else ""),
     }
 
 
-def _build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):
+def build_assignment_member_panel_data(assignment, request, *, member_form=None, member_heading=None, parent_url=None):
     """Context for the team member child sheet, or None without rights.
 
     The single source for this sheet. On open (GET), ``?teamlid=<service public_id>``
@@ -595,7 +595,7 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
         # Opened from the aanvraag panel, back is that panel alone; the sheet
         # itself needed ?opdracht=.
         dropped = ("teamlid", "opdracht") if request.GET.get("aanvraag") else ("teamlid",)
-        parent_url = _url_drop_params(request.path, request.GET, dropped)
+        parent_url = url_drop_params(request.path, request.GET, dropped)
     from_aanvraag = QueryDict(urllib.parse.urlparse(parent_url).query).get("aanvraag")
     return {
         "panel_content_template": "parts/assignment_member_edit_panel_content.html",

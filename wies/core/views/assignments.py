@@ -66,24 +66,24 @@ from wies.core.services.placements import (
 from wies.core.services.urls import url_replacing_param
 
 from ._common import (
-    _CSV_TOO_LARGE_MSG,
-    _build_panel_url,
-    _csv_too_large,
-    _page_url_behind_panel,
-    _resolve_panel_object,
-    _safe_return_path,
+    CSV_TOO_LARGE_MSG,
+    build_panel_url,
+    csv_too_large,
+    page_url_behind_panel,
+    resolve_panel_object,
+    safe_return_path,
 )
-from .filters import PublicIdFacetsMixin, _finalize_filter_groups
+from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
-    _assignment_create_button,
-    _assignment_create_panel,
-    _build_aanvraag_panel_data,
-    _build_assignment_create_panel_data,
-    _build_assignment_edit_panel_data,
-    _build_assignment_member_panel_data,
-    _build_assignment_panel_data,
-    _build_colleague_panel_data,
-    _resolve_aanvraag_panel,
+    assignment_create_button,
+    assignment_create_panel,
+    build_aanvraag_panel_data,
+    build_assignment_create_panel_data,
+    build_assignment_edit_panel_data,
+    build_assignment_member_panel_data,
+    build_assignment_panel_data,
+    build_colleague_panel_data,
+    resolve_aanvraag_panel,
 )
 
 
@@ -228,10 +228,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         for _, assignment_id, service_id in rows:
             # .get(): a card removed since the page was counted is skipped.
             if service_id and (service := services.get(service_id)):
-                url = _build_panel_url(self.request, aanvraag=service.public_id)
+                url = build_panel_url(self.request, aanvraag=service.public_id)
                 cards.append(aanvraag_card(service, url))
             elif not service_id and (assignment := assignments.get(assignment_id)):
-                url = _build_panel_url(self.request, opdracht=assignment.public_id)
+                url = build_panel_url(self.request, opdracht=assignment.public_id)
                 cards.append(opdracht_without_aanvraag_card(assignment, url))
         return cards
 
@@ -359,7 +359,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
-        _finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(context["filter_groups"])
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
@@ -373,7 +373,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # Opens the create sheet as a panel on the list itself via
         # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
         # in the address bar so a reload reopens the sheet (see side_panel.js).
-        context["primary_button"] = _assignment_create_button(self.request)
+        context["primary_button"] = assignment_create_button(self.request)
 
         # Side panel
         colleague_id = self.request.GET.get("collega")
@@ -382,21 +382,21 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # ?nieuwe-opdracht opens the empty create form as a panel on the list.
         # Checked before the object lookups: this panel has no object. Without the
         # permission it falls away silently — this is the list view, not a 403.
-        create_panel = _assignment_create_panel(self.request)
+        create_panel = assignment_create_panel(self.request)
         if create_panel is not None:
             context["panel_data"] = create_panel
         elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
-            service = _resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
+            service = resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
             if service is not None:
-                context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
+                context["panel_data"] = build_aanvraag_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
-            colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
+            colleague = resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
-                context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
+                context["panel_data"] = build_colleague_panel_data(colleague, self.request)
         elif assignment_id:
-            assignment = _resolve_panel_object(self.request, Assignment, assignment_id, select_related=("owner",))
+            assignment = resolve_panel_object(self.request, Assignment, assignment_id, select_related=("owner",))
             if assignment is not None:
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = build_assignment_panel_data(assignment, self.request)
 
         # See PlacementListView.get_context_data: get_template_names reads this.
         self._panel_data = context.get("panel_data")
@@ -434,11 +434,11 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
-        if _csv_too_large(csv_file):
+        if csv_too_large(csv_file):
             return render(
                 request,
                 "assignment_import.html",
-                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
+                {"result": {"success": False, "errors": [CSV_TOO_LARGE_MSG]}},
             )
 
         try:
@@ -498,7 +498,7 @@ def assignment_delete(request, public_id):
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = _page_url_behind_panel(request)
+        response["HX-Redirect"] = page_url_behind_panel(request)
         return response
     return HttpResponse(status=405)
 
@@ -539,13 +539,13 @@ def assignment_edit_view(request, public_id):
     if not specs:
         return HttpResponseForbidden()
 
-    fallback = _build_panel_url(request, opdracht=assignment.public_id)
-    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+    fallback = build_panel_url(request, opdracht=assignment.public_id)
+    return_path = safe_return_path(request.POST.get("terug_url"), fallback)
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_assignment_edit_panel_data(assignment, request, form=form, parent_url=return_path)
+        panel_data = build_assignment_edit_panel_data(assignment, request, form=form, parent_url=return_path)
         return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
 
     with transaction.atomic():
@@ -570,7 +570,7 @@ def assignment_create_sheet(request):
 
     specs = assignment_create_specs()
     form_cls, _ = build_combined_form_class(specs)
-    return_to = _safe_return_path(request.POST.get("terug_url"), reverse("assignment-list"))
+    return_to = safe_return_path(request.POST.get("terug_url"), reverse("assignment-list"))
 
     form = form_cls(request.POST)
     if form.is_valid():
@@ -597,7 +597,7 @@ def assignment_create_sheet(request):
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised
     # return address, so terug_url survives a failed submit.
-    panel_data = _build_assignment_create_panel_data(request, form, parent_url=return_to)
+    panel_data = build_assignment_create_panel_data(request, form, parent_url=return_to)
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
@@ -616,11 +616,11 @@ def assignment_member_edit_view(request, public_id):
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return HttpResponseForbidden()
 
-    fallback = _build_panel_url(request, opdracht=assignment.public_id)
-    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+    fallback = build_panel_url(request, opdracht=assignment.public_id)
+    return_path = safe_return_path(request.POST.get("terug_url"), fallback)
 
     def rerender(form):
-        panel_data = _build_assignment_member_panel_data(
+        panel_data = build_assignment_member_panel_data(
             assignment,
             request,
             member_form=form,
@@ -679,8 +679,8 @@ def assignment_member_delete_view(request, public_id, service_public_id):
 
     messages.success(request, "Teamlid is verwijderd.")
 
-    return_path = _safe_return_path(
-        request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.public_id)
+    return_path = safe_return_path(
+        request.POST.get("terug_url"), build_panel_url(request, opdracht=assignment.public_id)
     )
     return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     response = HttpResponse(status=204)

@@ -31,13 +31,13 @@ from wies.core.services.assignments import (
 )
 from wies.core.services.inline_edit_save import save_edit_specs
 
-from ._common import _resolve_panel_object
+from ._common import resolve_panel_object
 from .panels import (
-    _build_aanvraag_panel_data,
-    _build_assignment_panel_data,
-    _build_colleague_panel_data,
-    _get_colleague_assignments,
-    _resolve_aanvraag_panel,
+    build_aanvraag_panel_data,
+    build_assignment_panel_data,
+    build_colleague_panel_data,
+    get_colleague_assignments,
+    resolve_aanvraag_panel,
 )
 
 
@@ -149,17 +149,17 @@ def user_profile(request):
     panel_data = None
 
     if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
-        service = _resolve_aanvraag_panel(request, request.GET["aanvraag"])
+        service = resolve_aanvraag_panel(request, request.GET["aanvraag"])
         if service is not None:
-            panel_data = _build_aanvraag_panel_data(service, request)
+            panel_data = build_aanvraag_panel_data(service, request)
     elif assignment_id:
-        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        assignment = resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
-            panel_data = _build_assignment_panel_data(assignment, request)
+            panel_data = build_assignment_panel_data(assignment, request)
     elif colleague_id:
-        panel_colleague = _resolve_panel_object(request, Colleague, colleague_id)
+        panel_colleague = resolve_panel_object(request, Colleague, colleague_id)
         if panel_colleague is not None:
-            panel_data = _build_colleague_panel_data(panel_colleague, request)
+            panel_data = build_colleague_panel_data(panel_colleague, request)
 
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
@@ -172,7 +172,7 @@ def user_profile(request):
         selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
         label_categories.append({"category": category, "labels": selected})
 
-    assignment_list = _get_colleague_assignments(request, colleague) if colleague else []
+    assignment_list = get_colleague_assignments(request, colleague) if colleague else []
 
     return render(
         request,

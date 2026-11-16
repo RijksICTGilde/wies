@@ -14,7 +14,7 @@ from wies.core.inline_edit.base import (
     EditableGroup,
     EditableSet,
 )
-from wies.core.inline_edit.forms import _current_value, resolve_editables
+from wies.core.inline_edit.forms import current_value, resolve_editables
 
 
 def spec_label(editable_set: type[EditableSet], spec: Editable | EditableGroup | EditableCollection) -> str:
@@ -39,7 +39,7 @@ def edit_state(editable_set, spec, obj):
     """
     state = {}
     for e in resolve_editables(editable_set, spec):
-        value = _current_value(obj, e)
+        value = current_value(obj, e)
         if isinstance(value, list):
             # Rows carry their own shape (dicts for organizations, models for
             # M2M), so let audit_state flatten them where it exists rather than
@@ -72,10 +72,10 @@ def resolve_display(obj, spec, editables) -> dict:
         if isinstance(spec, EditableGroup):
             parts = []
             for e in editables:
-                v = _current_value(obj, e)
+                v = current_value(obj, e)
                 parts.append("" if v is None else str(v))
             return {"text": " · ".join(p for p in parts if p)}
-        value = _current_value(obj, spec)
+        value = current_value(obj, spec)
         return {"text": "" if value is None else str(value)}
 
     if callable(spec.display):

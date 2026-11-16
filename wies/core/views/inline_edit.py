@@ -21,8 +21,8 @@ from wies.core.inline_edit.base import (
 )
 from wies.core.inline_edit.display import concurrency_token, edit_state, hash_state, resolve_display, spec_label
 from wies.core.inline_edit.forms import (
-    _current_value,
     build_form_class,
+    current_value,
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
@@ -53,7 +53,7 @@ def _readable_current_value(obj, spec) -> str | None:
     value, so this returns None and the caller uses the generic warning."""
     if not isinstance(spec, Editable):
         return None
-    value = _current_value(obj, spec)
+    value = current_value(obj, spec)
     # The audit timeline already renders this field for a human (the colleague's
     # name, not "Colleague object (3)"), so reuse that chain.
     if spec.audit_state:
@@ -170,9 +170,9 @@ def _render_inline_edit_display(
         if isinstance(spec, EditableCollection):
             value = spec.initial(obj)
         elif isinstance(spec, Editable):
-            value = _current_value(obj, spec)
+            value = current_value(obj, spec)
         else:
-            value = {e.field or e.name: _current_value(obj, e) for e in editables}
+            value = {e.field or e.name: current_value(obj, e) for e in editables}
     extra = {}
     display_context = getattr(spec, "display_context", None)
     if alert is None and display_context is not None:

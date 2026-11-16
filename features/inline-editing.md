@@ -140,7 +140,7 @@ on a container `<div>` inside the body instead.
 organizations = Editable(
     label="Opdrachtgever(s)",
     form_field_factory=lambda: OrganizationsField(required=True),
-    initial=_organizations_initial,   # (obj) -> current value
+    initial=organizations_initial,   # (obj) -> current value
     save=_save_organizations,         # (obj, value) -> persist
     display="rvo/forms/displays/organizations.html",
 )
