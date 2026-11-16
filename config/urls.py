@@ -31,7 +31,6 @@ from wies.core.views.assignments import (
 )
 from wies.core.views.bezetting import bezetting
 from wies.core.views.client_picker import client_modal
-from wies.core.views.contract_periods import contract_period_add, contract_period_delete, contract_period_edit
 from wies.core.views.events import assignment_events_partial
 from wies.core.views.inline_edit import inline_edit_view
 from wies.core.views.labels import label_admin, label_category_delete, label_category_manage, label_delete, label_form
@@ -68,7 +67,16 @@ from wies.core.views.suborganizations import (
     suborganization_delete,
     suborganization_edit,
 )
-from wies.core.views.users import UserListView, user_create, user_delete, user_edit, user_import_csv
+from wies.core.views.users import (
+    UserListView,
+    contract_period_add,
+    contract_period_delete,
+    contract_period_edit,
+    user_create,
+    user_delete,
+    user_edit,
+    user_import_csv,
+)
 from wies.rijksauth.views import auth, login, logout
 
 urlpatterns = [

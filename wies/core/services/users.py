@@ -415,6 +415,33 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     }
 
 
+def contract_period_event(request, period, action, before=None):
+    """Logs a contract-period change on the colleague the hours belong to.
+
+    On the colleague, not the user: the colleague outlives the user, and the
+    hours of someone who has left are exactly what must stay traceable. Nothing
+    displays these events yet.
+    """
+    after = None if action == "delete" else contract_period_snapshot(period)
+    create_event(
+        object_type="Colleague",
+        action="update",
+        source="user",
+        object_id=period.colleague_id,
+        user=request.user,
+        request=request,
+        context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
+    )
+
+
+def contract_period_snapshot(period):
+    return {
+        "hours_per_week": period.hours_per_week,
+        "start_date": period.start_date.isoformat(),
+        "end_date": period.end_date.isoformat() if period.end_date else None,
+    }
+
+
 def close_contract_periods(colleague, day):
     """Ends the colleague's contract on ``day``: the running period stops there
     and periods still to start go.
