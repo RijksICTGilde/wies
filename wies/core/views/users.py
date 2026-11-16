@@ -5,7 +5,7 @@ from functools import cached_property
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -550,7 +550,6 @@ def _contract_period_sheet(request, period, post_url, contract_block):
     )
 
 
-@login_required
 def contract_period_add(request, colleague_public_id):
     colleague = get_object_or_404(Colleague, public_id=colleague_public_id)
     period = ContractPeriod(colleague=colleague)
@@ -560,7 +559,6 @@ def contract_period_add(request, colleague_public_id):
     return _contract_period_sheet(request, period, post_url, _contract_periods_block(colleague, request.user))
 
 
-@login_required
 def contract_period_edit(request, public_id):
     period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
     if not has_permission(Verb.UPDATE, period, request.user):
@@ -569,7 +567,6 @@ def contract_period_edit(request, public_id):
     return _contract_period_sheet(request, period, post_url, _contract_periods_block(period.colleague, request.user))
 
 
-@login_required
 def contract_period_delete(request, public_id):
     """GET asks in the shared confirm modal; POST deletes and swaps the block back
     in through the same response as a save, which also empties the mount the
