@@ -8,7 +8,7 @@ This files lists the changes during the lifetime of this project.
 - 842: upgrade NLDD design system from 0.21.1 to 0.25.0
 - 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
 - 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
-- XXX: one helper rebuilds every URL with params dropped or set (#848); after deleting an opdracht from its panel, the list no longer reopens on a later page
+- 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
 
 ## 2026-11-11
 
