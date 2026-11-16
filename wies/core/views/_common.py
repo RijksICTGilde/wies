@@ -55,7 +55,7 @@ def is_side_panel_request(request):
     Lets a view 404 an unresolved panel target instead of rendering a template
     with no ``panel_data``; a full-page load stays graceful and shows no panel.
     """
-    return request.headers.get("HX-Target") in ("side-panel-content", "side-panel-container")
+    return request.headers.get("HX-Target") == "side-panel-content"
 
 
 def resolve_panel_object(request, model, public_id, *, select_related=()):
