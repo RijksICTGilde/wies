@@ -73,6 +73,12 @@ authority. The alternative was to keep it behind the Applicatiebeheerder, which
 would stall onboarding a Business Manager on a deploy-level address list; the team
 chose onboarding.
 
+Approving a request on **Beheer > Toegangsaanvragen** is the same Nieuwe
+gebruiker sheet, prefilled from the request with the address locked, behind the
+same gates plus the rule "Toegangsaanvragen beoordelen". `create_user` closes
+any pending request on the address, so a user added by hand or by CSV answers it
+too.
+
 Granting happens on the user sheet, Wijzigen in the row menu on **Beheer >
 Gebruikers**, behind `rijksauth.change_user`. Nieuwe gebruiker is the same sheet
 under its own `rijksauth.add_user`. `_apply_groups` asks `may_grant` per role and

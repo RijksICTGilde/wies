@@ -22,6 +22,7 @@ from wies.core.roles import (
     may_grant,
     role_label,
 )
+from wies.core.services.access_requests import close_pending_for
 from wies.core.services.assignments import member_audit_event
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name, renamed_column_errors
@@ -162,6 +163,7 @@ def create_user(
         request=request,
         context=context,
     )
+    close_pending_for(user, creator, request)
 
     return user
 

@@ -1,0 +1,39 @@
+{# A POST reaches this template only on a validation error: then only the body is
+   returned, so the open sheet stays (pattern of user_form_modal.html). #}
+{% set body %}
+  <nldd-form>
+  <form id="accessRequestForm"
+        novalidate
+        method="post"
+        action="{{ form_post_url }}"
+        hx-post="{{ form_post_url }}"
+        hx-target="#accessRequestSheetBody"
+        hx-swap="innerHTML">
+    {{ get_csrf_hidden_input(request) }}
+    {{ content.first_name.as_field_group() }}
+    {{ content.last_name.as_field_group() }}
+    {{ content.suborganization.as_field_group() }}
+    {{ content.motivation.as_field_group() }}
+    <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
+  </form>
+  </nldd-form>
+{% endset %}
+{% if request.method == "POST" %}
+  {{ body }}
+{% else %}
+  <nldd-sheet id="accessRequestSheet" data-auto-show placement="right" width="480px" accessible-label="Toegang aanvragen">
+  <nldd-page sticky-header sticky-footer>
+  <nldd-top-title-bar slot="header" text="Toegang aanvragen" dismiss-text="Annuleer"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-rich-text>
+  <p>Je vraagt toegang aan voor <strong>{{ email }}</strong>.</p>
+  </nldd-rich-text>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <div id="accessRequestSheetBody">{{ body }}</div>
+  </nldd-simple-section>
+  <nldd-container slot="footer" padding="16" padding-top="0">
+  <nldd-button appearance="primary" width="full" text="Verstuur aanvraag" hx-post="{{ form_post_url }}" hx-include="#accessRequestForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#accessRequestSheetBody" hx-swap="innerHTML"></nldd-button>
+  </nldd-container>
+  </nldd-page>
+  </nldd-sheet>
+{% endif %}

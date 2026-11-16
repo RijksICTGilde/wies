@@ -8,6 +8,7 @@ SUPPORTED_OBJECT_TYPES = {
     "Colleague",
     "OrganizationUnit",
     "Assignment",
+    "AccessRequest",
 }
 
 

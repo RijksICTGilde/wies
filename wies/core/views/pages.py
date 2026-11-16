@@ -6,10 +6,13 @@ from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.templatetags.static import static
 
+from wies.core.services import access_requests
 from wies.core.services.sitemap import sitemap_sections
 from wies.core.services.users import (
     is_allowed_email_domain,
 )
+
+from .access_requests import ACCESS_REQUEST_SENT_SESSION_KEY, access_request_state
 
 # Static path of the WCAG audit report that /toegankelijkheid/onderzoek/ serves.
 # A new audit: drop the HTML next to this one, point this at it, and leave the
@@ -19,7 +22,7 @@ CURRENT_AUDIT_REPORT = "toegankelijkheid/onderzoek-wcag22-2026-09-30.html"
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
-    email = request.session.pop("failed_login_email", None)
+    email = request.session.get("failed_login_email")
     is_allowed_domain = email and is_allowed_email_domain(email)
     return render(
         request,
@@ -28,6 +31,10 @@ def no_access(request):
             "email": email,
             "is_allowed_domain": is_allowed_domain,
             "allowed_domains": ", ".join(settings.ALLOWED_EMAIL_DOMAINS),
+            "access": access_request_state(request),
+            "access_states": access_requests.AccessState,
+            "rejection_cooldown_days": access_requests.REJECTION_COOLDOWN.days,
+            "just_sent": request.session.pop(ACCESS_REQUEST_SENT_SESSION_KEY, False),
         },
     )
 

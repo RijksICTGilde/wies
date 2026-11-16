@@ -255,6 +255,40 @@ class AuthViewsTest(TestCase):
         # Email should be stored in session
         assert self.client.session.get("failed_login_email") == "unknown@external.com"
 
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_failed_login_stores_verified_claims_in_session(self, mock_get_oidc):
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "userinfo": {
+                "sub": "unknown_user",
+                "given_name": "Sanne",
+                "family_name": "de Vries",
+                "email": "S.deVries@rijksoverheid.nl",
+                "email_verified": True,
+            }
+        }
+
+        self.client.get(reverse("auth"))
+
+        assert self.client.session.get("failed_login_claims") == {
+            "email": "s.devries@rijksoverheid.nl",
+            "given_name": "Sanne",
+            "family_name": "de Vries",
+        }
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_failed_login_with_unverified_email_stores_no_claims(self, mock_get_oidc):
+        """An unverified address could be anyone's: it must never reach an access request."""
+        session = self.client.session
+        session["failed_login_claims"] = {"email": "earlier@rijksoverheid.nl", "given_name": "", "family_name": ""}
+        session.save()
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "userinfo": {"sub": "unknown_user", "email": "someone@rijksoverheid.nl", "email_verified": False}
+        }
+
+        self.client.get(reverse("auth"))
+
+        assert "failed_login_claims" not in self.client.session
+
 
 class OidcCallbackErrorTest(TestCase):
     """Keycloak redirects `?error=...` to the callback when its authentication session
@@ -323,6 +357,22 @@ class OidcCallbackErrorTest(TestCase):
 
         assert response.status_code == 400
         assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_successful_login_drops_claims_of_an_earlier_failed_login(self, mock_get_oidc):
+        User.objects.create_user(email="test@rijksoverheid.nl", first_name="Test", last_name="User")
+        session = self.client.session
+        session["failed_login_email"] = "other@rijksoverheid.nl"
+        session["failed_login_claims"] = {"email": "other@rijksoverheid.nl", "given_name": "", "family_name": ""}
+        session.save()
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "userinfo": {"sub": "test_sso_user", "email": "test@rijksoverheid.nl", "email_verified": True},
+        }
+
+        self.client.get(reverse("auth"))
+
+        assert "failed_login_email" not in self.client.session
+        assert "failed_login_claims" not in self.client.session
 
     @patch("wies.rijksauth.views._get_oidc")
     def test_successful_login_clears_retry_marker(self, mock_get_oidc):
