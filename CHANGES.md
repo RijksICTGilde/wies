@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 843: replace custom JavaScript with NLDD's own components; the "Probeer het inloggen opnieuw" button on the login error page works again, and the opdrachtgever picker and filter get a back button when opened from another sheet
 - 842: upgrade NLDD design system from 0.21.1 to 0.25.0
 - 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
+- 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
 
 ## 2026-11-11
 
