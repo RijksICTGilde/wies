@@ -411,8 +411,6 @@ def resolve_aanvraag_panel(request, public_id):
     ``visible_service_or_404`` uses for mutations (#655). Not-found, hidden and
     filled are indistinguishable.
     """
-    # Deferred: wies.core.editables imports from views at module level.
-
     service = resolve_panel_object(request, Service, public_id, select_related=("assignment", "skill"))
     if service is not None:
         row = next(
@@ -433,9 +431,6 @@ def build_aanvraag_panel_data(service, request):
     colleague, so it opens this one. Reached only through
     ``resolve_aanvraag_panel``, which keeps this to real vacancies.
     """
-    # Deferred like the other panel builders: wies.core.editables imports from
-    # views at module level, so a top-level import here is circular.
-
     assignment = service.assignment
     role = aanvraag_role(service)
     return {
