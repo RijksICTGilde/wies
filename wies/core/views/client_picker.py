@@ -7,7 +7,6 @@ from django.shortcuts import render
 
 from wies.core.models import (
     OrganizationUnit,
-    Placement,
 )
 from wies.core.public_id import parse_public_ids
 from wies.core.services.organizations import (
@@ -15,7 +14,6 @@ from wies.core.services.organizations import (
     build_org_hierarchy,
     get_excluded_org_ids,
     nested_folder_label,
-    org_counts_from_filtered,
 )
 
 from .assignments import AssignmentListView
@@ -70,8 +68,8 @@ def client_modal(request):
     # count_mode "none" is the assignment-form org picker, not a filter list, so
     # the tree carries no counts (the whole org tree is shown, unpruned). The
     # filter modes count over the list's other active filters (sent along via
-    # hx-include) so the tree matches the sidebar: borrow the list view's own
-    # _apply_filters (single source of the predicates) rather than re-implementing
+    # hx-include) so the tree matches the sidebar: ask the list view for its
+    # org_counts (the single source of the predicates) rather than re-implementing
     # them here, which would drift.
     if count_mode == "none":
         org_self_counts = Counter()
@@ -82,16 +80,7 @@ def client_modal(request):
     elif count_mode == "placements":
         view = PlacementListView()
         view.request = request
-        # The tree counts the same groups the sidebar does, and the sidebar
-        # follows ?weergave=. Without this the modal counted placements whatever
-        # the view, so its numbers sat next to sidebar numbers that disagreed.
-        filtered_qs = view._apply_filters(view._get_base_queryset(), exclude_filter="org").distinct()
-        org_self_counts = org_counts_from_filtered(
-            filtered_qs,
-            Placement,
-            "service__assignment__organizations__id",
-            group_field=view.GROUP_FIELD[view.active_view],
-        )
+        org_self_counts = view.org_counts()
     else:
         return HttpResponseBadRequest("Onbekende count_mode")
     hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")

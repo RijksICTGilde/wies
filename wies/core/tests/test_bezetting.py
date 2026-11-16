@@ -42,7 +42,7 @@ from wies.core.services.occupancy import (
     today_marker_pct,
 )
 from wies.core.views.bezetting import BEZETTING_PAGE_SIZE
-from wies.core.views.panels import _get_colleague_assignments
+from wies.core.views.panels import get_colleague_assignments
 
 User = get_user_model()
 
@@ -1382,7 +1382,7 @@ class PlacementOrderTest(TestCase):
     def test_panel_order(self):
         request = RequestFactory().get("/")
         request.user = self.bdm
-        names = [a["name"] for a in _get_colleague_assignments(request, self.colleague)]
+        names = [a["name"] for a in get_colleague_assignments(request, self.colleague)]
         assert names == ["Lopend oud", "Lopend nieuw", "Gepland", "Afgerond"]
 
     def test_panel_and_timeline_agree(self):

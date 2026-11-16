@@ -1,20 +1,15 @@
-"""Filter facets and search suggestions, shared by the list views."""
+"""Filter facets, shared by the list views."""
 
-from collections import Counter
 from functools import cached_property
 from typing import TYPE_CHECKING
-
-from django.shortcuts import render
 
 from wies.core.models import (
     Label,
     OrganizationUnit,
-    Placement,
 )
-from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
+from wies.core.public_id import FacetResolver, parse_public_ids
 from wies.core.services.organizations import (
     ORG_TYPE_PLURAL,
-    find_orgs_by_abbreviation,
     get_ministry_nested_root_ids,
     get_org_descendant_ids,
     get_type_folder_root_ids,
@@ -38,70 +33,6 @@ UNKNOWN_FACET_LABELS = {
     "labels": "Onbekend label",
     "onderdeel": "Onbekend onderdeel",
 }
-
-
-def _org_chip_data(
-    org: ResolvedFacet,
-    org_self: ResolvedFacet,
-    type_labels: list[str],
-    type_in: list[tuple[str, str]] | None = None,
-) -> list[dict]:
-    """Chips for the opdrachtgever facets, in the order they appear in the URL."""
-    type_in = type_in or []
-    labels: dict[str, str] = {}
-    if org.ids or org_self.ids:
-        labels = {
-            str(public_id): label
-            for public_id, label in OrganizationUnit.objects.filter(id__in=[*org.ids, *org_self.ids]).values_list(
-                "public_id", "label"
-            )
-        }
-    # Ministry labels for the scoped nested-folder chips ("Agentschappen van BZK").
-    ministry_labels: dict[str, str] = {}
-    if type_in:
-        ministry_labels = {
-            str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
-            for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
-                public_id__in=parse_public_ids([pid for pid, _ in type_in])
-            ).values_list("public_id", "label", "name", "abbreviations")
-        }
-    chips: list[dict] = [
-        {
-            "param_name": "org",
-            "param_value": public_id,
-            "label": labels.get(public_id, UNKNOWN_FACET_LABELS["org"]),
-        }
-        for public_id in org.active_values
-    ]
-    chips.extend(
-        {
-            "param_name": "org_self",
-            "param_value": public_id,
-            "label": f"{labels[public_id]} (direct)" if public_id in labels else UNKNOWN_FACET_LABELS["org_self"],
-        }
-        for public_id in org_self.active_values
-    )
-    chips.extend(
-        {
-            "param_name": "org_type",
-            "param_value": type_label,
-            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-        }
-        for type_label in type_labels
-    )
-    chips.extend(
-        {
-            "param_name": "org_type_in",
-            "param_value": f"{ministry_public_id}:{type_label}",
-            "label": (
-                nested_folder_label(ministry_labels[ministry_public_id], type_label)
-                if ministry_public_id in ministry_labels
-                else UNKNOWN_FACET_LABELS["org_type_in"]
-            ),
-        }
-        for ministry_public_id, type_label in type_in
-    )
-    return chips
 
 
 class PublicIdFacetsMixin:
@@ -204,7 +135,68 @@ class PublicIdFacetsMixin:
             active_filters["org_type"] = self.org_type_filter
         if self.org_type_in_filter:
             active_filters["org_type_in"] = [f"{pid}:{label}" for pid, label in self.org_type_in_filter]
-        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter, self.org_type_in_filter)
+        context["org_chip_data"] = self._org_chips()
+
+    def _org_chips(self) -> list[dict]:
+        """Chips for the opdrachtgever facets, in the order they appear in the URL."""
+        org = self.facets("org", OrganizationUnit)
+        org_self = self.facets("org_self", OrganizationUnit)
+        type_labels = self.org_type_filter
+        type_in = self.org_type_in_filter
+        labels: dict[str, str] = {}
+        if org.ids or org_self.ids:
+            labels = {
+                str(public_id): label
+                for public_id, label in OrganizationUnit.objects.filter(id__in=[*org.ids, *org_self.ids]).values_list(
+                    "public_id", "label"
+                )
+            }
+        # Ministry labels for the scoped nested-folder chips ("Agentschappen van BZK").
+        ministry_labels: dict[str, str] = {}
+        if type_in:
+            ministry_labels = {
+                str(public_id): ((abbreviations[0] if abbreviations else "") or label or name)
+                for public_id, label, name, abbreviations in OrganizationUnit.objects.filter(
+                    public_id__in=parse_public_ids([pid for pid, _ in type_in])
+                ).values_list("public_id", "label", "name", "abbreviations")
+            }
+        chips: list[dict] = [
+            {
+                "param_name": "org",
+                "param_value": public_id,
+                "label": labels.get(public_id, UNKNOWN_FACET_LABELS["org"]),
+            }
+            for public_id in org.active_values
+        ]
+        chips.extend(
+            {
+                "param_name": "org_self",
+                "param_value": public_id,
+                "label": f"{labels[public_id]} (direct)" if public_id in labels else UNKNOWN_FACET_LABELS["org_self"],
+            }
+            for public_id in org_self.active_values
+        )
+        chips.extend(
+            {
+                "param_name": "org_type",
+                "param_value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            }
+            for type_label in type_labels
+        )
+        chips.extend(
+            {
+                "param_name": "org_type_in",
+                "param_value": f"{ministry_public_id}:{type_label}",
+                "label": (
+                    nested_folder_label(ministry_labels[ministry_public_id], type_label)
+                    if ministry_public_id in ministry_labels
+                    else UNKNOWN_FACET_LABELS["org_type_in"]
+                ),
+            }
+            for ministry_public_id, type_label in type_in
+        )
+        return chips
 
     def add_unknown_filter_chips(self, context: dict, facets: dict[str, type[Model]]) -> None:
         """Chips for the values of ``facets`` that match no row.
@@ -240,33 +232,7 @@ class PublicIdFacetsMixin:
         return self.facets("labels", Label).requested and not self.labels_by_category
 
 
-def search_suggestions(request):
-    """Returns org abbreviation suggestions for the search input (HTMX partial)."""
-    term = request.GET.get("zoek", "")
-    orgs = find_orgs_by_abbreviation(term)
-    return render(
-        request,
-        "parts/search_suggestions.html",
-        {"org_suggestions": orgs, "search_term": term.strip()},
-    )
-
-
-def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[int]:
-    """Counts distinct groups per facet value, not placements.
-
-    The list shows one card per colleague or per assignment, so a sidebar that
-    counted placements would report a higher number than the list has cards.
-
-    Re-keys on distinct placement ids first: projecting straight off a
-    .distinct() queryset emits SELECT DISTINCT on the projected columns only,
-    which drops rows that differ elsewhere.
-    """
-    rows = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
-    pairs = rows.values_list(facet_lookup, group_field).distinct()
-    return Counter(fid for fid, _ in pairs if fid is not None)
-
-
-def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
+def finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
     """Post-processes the select-multi groups in place for the top-N + "Meer" modal.
 
     Each group gets a unique ``group_id`` (the key the modal opens by),

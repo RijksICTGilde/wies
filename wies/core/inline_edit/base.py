@@ -76,9 +76,9 @@ class Editable:
                 name = MyEditables.name.form_field()
         """
         # Imported inside the method to avoid pulling form modules at import time.
-        from wies.core.inline_edit.forms import _build_form_field  # noqa: PLC0415
+        from wies.core.inline_edit.forms import build_form_field  # noqa: PLC0415
 
-        return _build_form_field(self)
+        return build_form_field(self)
 
 
 @dataclass

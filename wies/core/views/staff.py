@@ -26,11 +26,34 @@ from wies.core.roles import (
     user_admin_required,
 )
 from wies.core.services import role_matrix as role_matrix_rules
+from wies.core.services.assignments import find_duplicate_groups, merge_group
 from wies.core.services.events import create_event
 from wies.core.services.tasks import create_task, get_latest_tasks, has_active_task
 from wies.rijksauth.services.usage import get_usage_stats
 
-from .panels import _merge_preview_rows
+
+def _merge_preview_rows(group) -> list[dict]:
+    """One row per placement for the merge preview: assignment, consultant, fate.
+
+    The first assignment in the group is the one that stays; everything else
+    moves into it. A service without placements is a vacancy and still counts as
+    a line, because it moves along too.
+    """
+    target = group[0]
+    rows = []
+    for assignment in group:
+        keeps = assignment.id == target.id
+        # Indicative, not imperative: this describes what happens, it is not a
+        # button. Source and destination both sit in the sentence, so a row reads
+        # on its own without a separate assignment column.
+        action = f"Blijft in opdracht {target.id}" if keeps else f"Van opdracht {assignment.id} naar {target.id}"
+        for service in assignment.services.all():
+            names = [placement.colleague.name for placement in service.placements.all()]
+            if names:
+                rows.extend({"consultant": name, "vacant": False, "action": action, "keeps": keeps} for name in names)
+            else:
+                rows.append({"consultant": "Vacant", "vacant": True, "action": action, "keeps": keeps})
+    return rows
 
 
 @user_admin_required
@@ -199,8 +222,6 @@ def staff_database(request):
                 return render(request, "parts/task_list.html", context)
 
         elif action == "merge_duplicates_preview":
-            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
-
             groups = find_duplicate_groups()
             # The sheet opens even without duplicates: the empty case is handled
             # inside it. Rows are flat (one per placement) because a reviewer
@@ -220,11 +241,6 @@ def staff_database(request):
         elif action == "merge_duplicates_apply":
             # Deliberately not behind ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
             # this merge is a cleanup meant for production data.
-            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
-                find_duplicate_groups,
-                merge_group,
-            )
-
             groups = find_duplicate_groups()
             if not groups:
                 messages.info(request, "Geen dubbele opdrachten gevonden.")

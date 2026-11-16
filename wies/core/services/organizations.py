@@ -102,8 +102,8 @@ def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
 
     One recognizable plain string shared by the picker folder (get_org_tree
     JSON → org_tree.js), its selection token (tree_state.js) and the active
-    chip (_org_chip_data). Plain text so it needs no aria wiring across the
-    web-component shadow boundary.
+    chip (PublicIdFacetsMixin._org_chips). Plain text so it needs no aria wiring
+    across the web-component shadow boundary.
     """
     return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"
 
@@ -812,7 +812,7 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
         folder = synthetic_folders.get(key)
         if folder is None:
             # Label the folder with the ministry's abbreviation, same rule as the
-            # chip (_org_chip_data): the abbreviation, else the label as fallback.
+            # chip (PublicIdFacetsMixin._org_chips): the abbreviation, else the label as fallback.
             ministry_abbreviation = (ministry["abbreviations"] or [None])[0] or ministry["label"] or ministry["name"]
             folder = {
                 "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped

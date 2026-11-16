@@ -1,4 +1,4 @@
-"""Helpers shared by the views: panel URLs, sort controls, safe return paths."""
+"""Helpers shared by the views: panel URLs, sort controls, safe return paths, CSV upload limit."""
 
 import urllib.parse
 
@@ -23,7 +23,7 @@ PANEL_PARAMS = (
 )
 
 
-def _url_drop_params(path, query, names, **overrides):
+def url_drop_params(path, query, names, **overrides):
     """Rebuild ``path`` from ``query`` (a QueryDict) with ``names`` dropped and
     ``overrides`` applied. Returns ``path`` alone when no params remain."""
     params = query.copy()
@@ -35,12 +35,12 @@ def _url_drop_params(path, query, names, **overrides):
     return f"{path}?{encoded}" if encoded else path
 
 
-def _build_panel_url(request, **overrides):
+def build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
-    return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
+    return url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
 
 
-def _sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
+def sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
     """The four keys parts/sort_control.html reads, built once for every list.
 
     ``options`` are (value, label) pairs in menu order; ``active_order`` is ""
@@ -55,12 +55,12 @@ def _sort_control_context(active_order: str, options: list[tuple[str, str]], def
     }
 
 
-def _build_close_url(request):
+def build_close_url(request):
     """Build close URL preserving current filters."""
-    return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
+    return url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
-def _is_side_panel_request(request):
+def is_side_panel_request(request):
     """True for the HTMX requests that render a panel partial.
 
     Lets a view 404 an unresolved panel target instead of rendering a template
@@ -69,7 +69,7 @@ def _is_side_panel_request(request):
     return request.headers.get("HX-Target") in ("side-panel-content", "side-panel-container")
 
 
-def _resolve_panel_object(request, model, public_id, *, select_related=()):
+def resolve_panel_object(request, model, public_id, *, select_related=()):
     """Looks up a side-panel object (Assignment, Colleague, ...) by its public_id.
 
     A miss (including a malformed public_id) raises Http404 only for the HTMX
@@ -80,12 +80,12 @@ def _resolve_panel_object(request, model, public_id, *, select_related=()):
     try:
         return qs.get(public_id=public_id)
     except model.DoesNotExist, ValidationError, ValueError:
-        if _is_side_panel_request(request):
+        if is_side_panel_request(request):
             raise Http404 from None
         return None
 
 
-def _page_url_behind_panel(request) -> str:
+def page_url_behind_panel(request) -> str:
     """The page the side panel was opened over, with the panel params dropped.
 
     The panel is an overlay on a real page, so after deleting we return there
@@ -100,10 +100,10 @@ def _page_url_behind_panel(request) -> str:
     if not is_local_path(parsed.path):
         return reverse("assignment-list")
     # Keep pagina/filters; collega goes too, or the colleague panel would open.
-    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "collega"))
+    return url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "collega"))
 
 
-def _safe_return_path(raw: str | None, fallback: str) -> str:
+def safe_return_path(raw: str | None, fallback: str) -> str:
     """Returns ``raw`` only when it is a path on this site, else the fallback.
 
     The value comes from a hidden input, so the client controls it. It ends up in
@@ -113,3 +113,17 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
     if is_local_path(raw):
         return raw
     return fallback
+
+
+# Safety ceiling so a single upload can't exhaust a worker's memory
+MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
+
+
+CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def csv_too_large(csv_file) -> bool:
+    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES

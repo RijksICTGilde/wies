@@ -32,15 +32,15 @@ from wies.core.services.occupancy import (
     today_marker_pct,
 )
 
-from ._common import PANEL_PARAMS, _build_panel_url, _resolve_panel_object, _url_drop_params
-from .filters import _finalize_filter_groups
+from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object, url_drop_params
+from .filters import finalize_filter_groups
 from .panels import (
-    _assignment_create_button,
-    _assignment_create_panel,
-    _build_aanvraag_panel_data,
-    _build_assignment_panel_data,
-    _build_colleague_panel_data,
-    _resolve_aanvraag_panel,
+    assignment_create_button,
+    assignment_create_panel,
+    build_aanvraag_panel_data,
+    build_assignment_panel_data,
+    build_colleague_panel_data,
+    resolve_aanvraag_panel,
 )
 
 
@@ -66,7 +66,7 @@ def _bezetting_status_group(selected, summary):
         "label": "Status",
         "options": options,
         "selected_values": list(selected),
-        # Finalized by hand, outside _finalize_filter_groups: that keeps the top
+        # Finalized by hand, outside finalize_filter_groups: that keeps the top
         # three by count and hides the rest behind "Meer…", which would drop a
         # status's hidden input and leave its card dead.
         "group_id": "status",
@@ -102,21 +102,21 @@ def bezetting(request):
     service_id = request.GET.get("aanvraag")
     # The create form takes precedence: it is the only panel here without an
     # object, so it is checked before the id lookups.
-    panel_data = _assignment_create_panel(request)
+    panel_data = assignment_create_panel(request)
     if panel_data is None and service_id and not request.GET.get("teamlid"):
         # Not with ?teamlid=: that is the aanvraag's edit sheet, which the
         # opdracht panel opens, and it returns to the aanvraag when done.
-        service = _resolve_aanvraag_panel(request, service_id)
+        service = resolve_aanvraag_panel(request, service_id)
         if service is not None:
-            panel_data = _build_aanvraag_panel_data(service, request)
+            panel_data = build_aanvraag_panel_data(service, request)
     elif panel_data is None and assignment_id:
-        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        assignment = resolve_panel_object(request, Assignment, assignment_id)
         if assignment is not None:
-            panel_data = _build_assignment_panel_data(assignment, request)
+            panel_data = build_assignment_panel_data(assignment, request)
     elif panel_data is None and colleague_id:
-        colleague = _resolve_panel_object(request, Colleague, colleague_id)
+        colleague = resolve_panel_object(request, Colleague, colleague_id)
         if colleague is not None:
-            panel_data = _build_colleague_panel_data(colleague, request)
+            panel_data = build_colleague_panel_data(colleague, request)
 
     # HTMX panel requests return just the panel content, like WZW.
     if "HX-Request" in request.headers:
@@ -137,7 +137,7 @@ def bezetting(request):
         today, suborganization_ids=suborganization_facet.ids, labels_by_category=labels_by_cat, search=search
     )
     for row in rows:
-        row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.public_id)
+        row.colleague.panel_url = build_panel_url(request, collega=row.colleague.public_id)
 
     # Summary-card counts follow onderdeel, labels and the search term (they all
     # narrowed the queryset above) but not the status filter, which is applied
@@ -157,7 +157,7 @@ def bezetting(request):
     # Status also lives in the sheet, not only on the cards: on a narrow window
     # the cards are hidden, and a filter you cannot reach is a filter you cannot
     # switch off.
-    _finalize_filter_groups(filter_groups)
+    finalize_filter_groups(filter_groups)
     filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
 
     active_filters = {}
@@ -170,7 +170,7 @@ def bezetting(request):
 
     page = Paginator(rows_in_display_order(rows), BEZETTING_PAGE_SIZE).get_page(request.GET.get("pagina"))
     next_page_url = (
-        _url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
+        url_drop_params(request.path, request.GET, PANEL_PARAMS, pagina=page.next_page_number())
         if page.has_next()
         else None
     )
@@ -192,7 +192,7 @@ def bezetting(request):
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
         "filter_modal_group_id": request.GET.get("filter_modal", ""),
-        "primary_button": _assignment_create_button(request),
+        "primary_button": assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps

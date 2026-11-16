@@ -1,11 +1,11 @@
-"""User management: list, create, edit, delete and CSV import."""
+"""User management: list, create, edit, delete, CSV import and contract periods."""
 
 from collections import Counter
 from functools import cached_property
 
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
@@ -23,11 +23,13 @@ from django.utils.formats import date_format
 from django.views.generic.list import ListView
 
 from wies.core.forms import (
+    ContractPeriodForm,
     UserDeleteForm,
     UserForm,
 )
 from wies.core.models import (
     SUBGROEP_CATEGORY,
+    Colleague,
     ContractPeriod,
     Label,
     LabelCategory,
@@ -46,14 +48,15 @@ from wies.core.services.urls import current_page_url_on
 from wies.core.services.users import (
     close_contract_periods,
     close_placements,
+    contract_period_event,
+    contract_period_snapshot,
     create_user,
     create_users_from_csv,
     update_user,
 )
 
-from ._common import _sort_control_context
-from .filters import PublicIdFacetsMixin, _finalize_filter_groups
-from .profile import _contract_block, _contract_period_event, _contract_period_snapshot
+from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
+from .filters import PublicIdFacetsMixin, finalize_filter_groups
 
 User = get_user_model()
 
@@ -286,11 +289,11 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
         ]
         # Adds top_options + has_more per select-multi group, so the filter sheet
         # shows a top-3 with a "Meer..." toggle like the other lists.
-        _finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(context["filter_groups"])
 
         context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
         context.update(
-            _sort_control_context(
+            sort_control_context(
                 self.active_order,
                 [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
                 self.DEFAULT_SORT_LABEL,
@@ -411,7 +414,7 @@ def _create_user_with_contract_period(request, form) -> bool:
                     form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
                 return False
             period.save()
-            _contract_period_event(request, period, "create")
+            contract_period_event(request, period, "create")
     return True
 
 
@@ -426,7 +429,7 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, request.user) if colleague else None
+    contract_block = _contract_periods_block(colleague, request.user) if colleague else None
 
     if request.method == "GET":
         form = UserForm(instance=edited_user, editor=request.user)
@@ -481,6 +484,122 @@ def user_edit(request, public_id):
             },
         )
     return HttpResponse(status=405)
+
+
+# Contract periods: the block on the user edit sheet and its add/edit/delete sheets.
+
+
+def _contract_periods_block(colleague, user):
+    """Context for parts/contract_periods_block.html, or None for a viewer who
+    may not read the hours."""
+    if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
+        return None
+    today = timezone.now().date()
+    periods = colleague.contract_periods.all()
+    # exists(), not bool(): the add/edit sheet builds this block before it saves
+    # and renders it after, so the queryset must stay unevaluated until then.
+    if periods.exists():
+        empty_text = ""
+    else:
+        empty_text = "Niet ingevuld. De overzichten voor business managers rekenen dan zonder deze uren."
+    return {
+        "colleague": colleague,
+        "periods": periods,
+        # For the label: a running period reads "t/m heden", one still to start "Vanaf".
+        "today": today,
+        "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
+        "add_url": reverse("contract-period-add", args=[colleague.public_id]),
+        "empty_text": empty_text,
+    }
+
+
+def _contract_period_sheet(request, period, post_url, contract_block):
+    """Add or edit one contract period in a sheet; a save swaps the block back in."""
+    if request.method == "POST":
+        before = contract_period_snapshot(period) if period.pk else None
+        form = ContractPeriodForm(request.POST, instance=period)
+        # One transaction: ending the running period is undone when the new
+        # period turns out invalid (see ContractPeriodForm.end_running_period).
+        with transaction.atomic():
+            running_before = contract_period_snapshot(form.running) if form.running else None
+            closed = form.end_running_period()
+            if form.is_valid():
+                form.save()
+                if closed is not None:
+                    contract_period_event(request, closed, "update", running_before)
+                contract_period_event(request, period, "update" if before else "create", before)
+                return render(
+                    request,
+                    "parts/contract_period_saved.html",
+                    {"contract_block": contract_block, "announce": "Contractperiode opgeslagen"},
+                )
+            transaction.set_rollback(True)
+        if form.running is not None:
+            # The rollback undid the database write, not the end_date set on the
+            # object the banner renders from.
+            form.running.refresh_from_db()
+    else:
+        form = ContractPeriodForm(instance=period)
+
+    form.fields["hours_per_week"].widget.attrs["autofocus"] = True
+    title = "Contractperiode wijzigen" if period.pk else "Contractperiode toevoegen"
+    return render(
+        request,
+        "parts/contract_period_sheet.html",
+        {"content": form, "form_post_url": post_url, "sheet_title": title},
+    )
+
+
+@login_required
+def contract_period_add(request, colleague_public_id):
+    colleague = get_object_or_404(Colleague, public_id=colleague_public_id)
+    period = ContractPeriod(colleague=colleague)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    post_url = reverse("contract-period-add", args=[colleague.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_periods_block(colleague, request.user))
+
+
+@login_required
+def contract_period_edit(request, public_id):
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    post_url = reverse("contract-period-edit", args=[period.public_id])
+    return _contract_period_sheet(request, period, post_url, _contract_periods_block(period.colleague, request.user))
+
+
+@login_required
+def contract_period_delete(request, public_id):
+    """GET asks in the shared confirm modal; POST deletes and swaps the block back
+    in through the same response as a save, which also empties the mount the
+    modal sits in."""
+    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
+    if not has_permission(Verb.UPDATE, period, request.user):
+        return HttpResponseForbidden()
+    if request.method != "POST":
+        return render(
+            request,
+            "parts/confirm_delete_modal.html",
+            {
+                "dialog_text": "Contractperiode verwijderen?",
+                "dialog_supporting": (
+                    f"De periode van {period.hours_per_week} uur vanaf {date_format(period.start_date, 'j b Y')} "
+                    "verdwijnt uit de geschiedenis. Een periode afsluiten kan ook met een einddatum."
+                ),
+                "confirm_label": "Verwijder periode",
+                "cancel_label": "Behoud periode",
+                "form_post_url": reverse("contract-period-delete", args=[period.public_id]),
+            },
+        )
+    colleague = period.colleague
+    before = contract_period_snapshot(period)
+    period.delete()
+    contract_period_event(request, period, "delete", before)
+    block = _contract_periods_block(colleague, request.user)
+    return render(
+        request, "parts/contract_period_saved.html", {"contract_block": block, "announce": "Contractperiode verwijderd"}
+    )
 
 
 def _colleague_delete_overview(colleague, today) -> list[dict] | None:
@@ -579,8 +698,8 @@ def user_delete(request, public_id):
                 "label_names": label_names,
                 "group_names": [role_label(g.name) for g in user.groups.all()],
                 "left_on": left_on.isoformat() if left_on else None,
-                "contract_ended": _contract_period_snapshot(ended) if ended else None,
-                "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+                "contract_ended": contract_period_snapshot(ended) if ended else None,
+                "contract_dropped": [contract_period_snapshot(p) for p in dropped],
                 "placements_ended": [_placement_snapshot(p) for p in placements_ended],
                 "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
             }
@@ -600,20 +719,6 @@ def user_delete(request, public_id):
         response["HX-Redirect"] = _user_list_behind_sheet(request)
         return response
     return HttpResponse(status=405)
-
-
-# Safety ceiling so a single upload can't exhaust a worker's memory
-MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
-
-
-_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
-
-
-_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
-
-
-def _csv_too_large(csv_file) -> bool:
-    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
 
 
 @permission_required("rijksauth.add_user", raise_exception=True)
@@ -638,11 +743,11 @@ def user_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
-        if _csv_too_large(csv_file):
+        if csv_too_large(csv_file):
             return render(
                 request,
                 "user_import.html",
-                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
+                {"result": {"success": False, "errors": [CSV_TOO_LARGE_MSG]}},
             )
 
         try:
