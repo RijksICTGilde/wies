@@ -37,7 +37,7 @@
     return;
   }
 
-  document.addEventListener("tabchange", (e) => {
+  document.addEventListener("tab-change", (e) => {
     const bar = e.target.closest("[data-side-panel-tabs]");
     if (!bar) return;
     const selectedId = e.detail?.item?.dataset.tabPanel;

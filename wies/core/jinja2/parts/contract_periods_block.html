@@ -16,7 +16,7 @@
      {% if contract_block_oob is defined and contract_block_oob %} hx-swap-oob="outerHTML"{% endif %}
      {% if announce is defined and announce %} data-announce="{{ announce }}"{% endif %}>
   {% set periods = contract_block.periods %}
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h3>Arbeidsuren</h3>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -26,7 +26,7 @@
     {% for period in periods %}
       <nldd-list-item size="sm">
       <nldd-text-cell text="{{ period.hours_per_week }} uur">
-      <span slot="supporting-text">{{ period_dates(period) }}</span>
+      <p slot="supporting-text">{{ period_dates(period) }}</p>
       </nldd-text-cell>
       {% if contract_block.can_edit %}
         <nldd-cell>

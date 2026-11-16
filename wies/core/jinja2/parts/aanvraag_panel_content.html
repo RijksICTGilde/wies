@@ -20,11 +20,8 @@
   {# collapse-anchor: the title appears in the bar only once it scrolls out of view. #}
   <nldd-top-title-bar slot="header" text="{{ panel_data.panel_title }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  <nldd-title size="6">
-  <p>Aanvraag</p>
-  </nldd-title>
-  <nldd-spacer size="2" direction="vertical"></nldd-spacer>
-  <nldd-title size="3">
+  <nldd-title size="display-3">
+  <p slot="overline">Aanvraag</p>
   {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
      in the new panel matches where they came from. #}
   <h2 id="panel-title" tabindex="-1">{{ panel_data.heading }}</h2>
@@ -89,9 +86,9 @@
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-text-cell vertical-alignment="top">
   {% if service.request_description %}
-    <span class="wies-role-description__text">{{ service.request_description }}</span>
+    <p><span class="wies-role-description__text">{{ service.request_description }}</span></p>
   {% else %}
-    <span class="wies-text-secondary">Niet ingevuld</span>
+    <p><span class="wies-text-secondary">Niet ingevuld</span></p>
   {% endif %}
   </nldd-text-cell>
   </nldd-list-item>

@@ -4,11 +4,8 @@
 {% set assignment = entry.assignment %}
 {# The back button lives in the window title bar; onboarding.js adds it when this
    screen opens. #}
-<nldd-title size="6">
-<p>Opdracht wijzigen</p>
-</nldd-title>
-<nldd-spacer size="2" direction="vertical"></nldd-spacer>
-<nldd-title size="3">
+<nldd-title size="display-3">
+<p slot="overline">Opdracht wijzigen</p>
 <h3 id="onboarding-detail-title" data-detail-title>{{ assignment.name }}</h3>
 </nldd-title>
 <nldd-spacer size="16" direction="vertical"></nldd-spacer>
@@ -21,7 +18,7 @@
       hx-swap="innerHTML">
   {% for group in groups %}
     {% if group.title %}
-      <nldd-title size="5">
+      <nldd-title size="display-5">
       <h4>{{ group.title }}</h4>
       </nldd-title>
     {% endif %}
