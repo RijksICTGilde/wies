@@ -689,9 +689,7 @@ def placement_edit_view(request, public_id):
     if not specs:
         return HttpResponseForbidden()
 
-    fallback = build_panel_url(
-        request, opdracht=placement.service.assignment.public_id, collega=placement.colleague.public_id
-    )
+    fallback = build_panel_url(request, opdracht=placement.service.assignment.public_id)
     return_path = safe_return_path(request.POST.get("terug_url"), fallback)
 
     form_cls, _ = build_combined_form_class(specs)

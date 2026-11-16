@@ -1155,9 +1155,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "24 uur" not in team  # own
         assert "16 uur" not in team  # the team mate's
         assert "8 uur" in team  # the aanvraag's
-        mate_panel = client.get(
-            reverse("home"), {"opdracht": assignment.public_id, "collega": mate.public_id}
-        ).content.decode()
+        mate_panel = client.get(reverse("home"), {"collega": mate.public_id}).content.decode()
         assert "Maat" in mate_panel
         assert "16 uur" not in mate_panel
 
@@ -1177,9 +1175,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "description" in names
         client = Client()
         client.force_login(self.user)
-        body = client.get(
-            reverse("home"), {"opdracht": self.service.assignment.public_id, "collega": self.colleague.public_id}
-        ).content.decode()
+        body = client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "24 uur" not in body
 
 
