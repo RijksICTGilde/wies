@@ -27,9 +27,7 @@ from wies.core.inline_edit.forms import (
     build_combined_form_class,
 )
 from wies.core.models import (
-    Assignment,
     AssignmentOrganizationUnit,
-    Colleague,
     Event,
     Label,
     OrganizationUnit,
@@ -56,14 +54,11 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object, sort_control_context
+from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request, sort_control_context
 from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
-    build_aanvraag_panel_data,
-    build_assignment_panel_data,
-    build_colleague_panel_data,
     build_placement_edit_panel_data,
-    resolve_aanvraag_panel,
+    resolve_side_panel,
 )
 
 
@@ -345,8 +340,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
-            hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
+            if is_side_panel_request(self.request):
                 # panel_data picks its own template (e.g. the edit child sheet);
                 # get_context_data has already stored it.
                 panel_data = getattr(self, "_panel_data", None)
@@ -632,25 +626,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         else:
             context["next_page_url"] = None
 
-        colleague_id = self.request.GET.get("collega")
-        assignment_id = self.request.GET.get("opdracht")
-        service_id = self.request.GET.get("aanvraag")
-
-        if service_id:
-            service = resolve_aanvraag_panel(self.request, service_id)
-            if service is not None:
-                context["panel_data"] = build_aanvraag_panel_data(service, self.request)
-        elif colleague_id and not assignment_id:
-            colleague = resolve_panel_object(self.request, Colleague, colleague_id)
-            if colleague is not None:
-                context["panel_data"] = build_colleague_panel_data(colleague, self.request)
-        elif assignment_id:
-            assignment = resolve_panel_object(self.request, Assignment, assignment_id)
-            if assignment is not None:
-                context["panel_data"] = build_assignment_panel_data(assignment, self.request)
+        context["panel_data"] = resolve_side_panel(self.request)
         # get_context_data runs before get_template_names, which reads the panel
         # template from here instead of deriving it again.
-        self._panel_data = context.get("panel_data")
+        self._panel_data = context["panel_data"]
         return context
 
 

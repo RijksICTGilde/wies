@@ -22,6 +22,7 @@ from wies.core.models import (
     DEFAULT_HOURS_PER_WEEK,
     Assignment,
     AssignmentOrganizationUnit,
+    Colleague,
     Placement,
     Service,
 )
@@ -550,6 +551,27 @@ def assignment_create_panel(request):
     if getattr(request.user, "colleague", None):
         initial["owner"] = request.user.colleague
     return build_assignment_create_panel_data(request, form_cls(initial=initial))
+
+
+def resolve_side_panel(request, *, allow_create=False):
+    """panel_data for the panel the URL opens, or None.
+
+    One order for every page: the create form (no object, so first), then
+    ?aanvraag, ?opdracht, ?collega. A miss 404s on the HTMX panel request
+    (see resolve_panel_object); a full-page load just shows no panel.
+    """
+    if allow_create and (create_panel := assignment_create_panel(request)) is not None:
+        return create_panel
+    if service_id := request.GET.get("aanvraag"):
+        service = resolve_aanvraag_panel(request, service_id)
+        return build_aanvraag_panel_data(service, request) if service else None
+    if assignment_id := request.GET.get("opdracht"):
+        assignment = resolve_panel_object(request, Assignment, assignment_id, select_related=("owner",))
+        return build_assignment_panel_data(assignment, request) if assignment else None
+    if colleague_id := request.GET.get("collega"):
+        colleague = resolve_panel_object(request, Colleague, colleague_id)
+        return build_colleague_panel_data(colleague, request) if colleague else None
+    return None
 
 
 def build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None, back_text=None):

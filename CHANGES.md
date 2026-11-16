@@ -10,6 +10,7 @@ This files lists the changes during the lifetime of this project.
 - 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
 - 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
 - 856: team member edit URLs say what they edit (`?bewerken=`/`?toevoegen=` on the panel you came from instead of `?opdracht=…&teamlid=…`); back and save from the role sheet on a colleague panel now return to that panel instead of the opdracht
+- XXX: (internal) one `resolve_side_panel` helper decides which side panel the URL opens, replacing four copies in the list, profile and bezetting views; `is_side_panel_request` is the single HX-Target check and only accepts `side-panel-content`
 
 ## 2026-11-11
 

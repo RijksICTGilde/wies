@@ -6,8 +6,6 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.models import (
-    Assignment,
-    Colleague,
     Label,
     Suborganization,
 )
@@ -33,15 +31,11 @@ from wies.core.services.occupancy import (
 )
 from wies.core.services.urls import PAGE_PARAM, rebuild_url
 
-from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object
+from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request
 from .filters import finalize_filter_groups
 from .panels import (
     assignment_create_button,
-    assignment_create_panel,
-    build_aanvraag_panel_data,
-    build_assignment_panel_data,
-    build_colleague_panel_data,
-    resolve_aanvraag_panel,
+    resolve_side_panel,
 )
 
 
@@ -98,30 +92,11 @@ def bezetting(request):
     # Side panel: reuse the shared machinery. A row click opens the colleague
     # panel (?collega); links inside that panel open an opdracht (?opdracht)
     # panel, exactly like on "Wie zit waar?".
-    assignment_id = request.GET.get("opdracht")
-    colleague_id = request.GET.get("collega")
-    service_id = request.GET.get("aanvraag")
-    # The create form takes precedence: it is the only panel here without an
-    # object, so it is checked before the id lookups.
-    panel_data = assignment_create_panel(request)
-    if panel_data is None and service_id:
-        service = resolve_aanvraag_panel(request, service_id)
-        if service is not None:
-            panel_data = build_aanvraag_panel_data(service, request)
-    elif panel_data is None and assignment_id:
-        assignment = resolve_panel_object(request, Assignment, assignment_id)
-        if assignment is not None:
-            panel_data = build_assignment_panel_data(assignment, request)
-    elif panel_data is None and colleague_id:
-        colleague = resolve_panel_object(request, Colleague, colleague_id)
-        if colleague is not None:
-            panel_data = build_colleague_panel_data(colleague, request)
+    panel_data = resolve_side_panel(request, allow_create=True)
 
     # HTMX panel requests return just the panel content, like WZW.
-    if "HX-Request" in request.headers:
-        hx_target = request.headers.get("HX-Target")
-        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
-            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+    if is_side_panel_request(request) and panel_data:
+        return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Onderdeel (suborganisation) and label-category filters, resolved from the URL.
     # Labels are OR within a category and AND between categories (like "Wie zit

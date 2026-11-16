@@ -31,7 +31,6 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.models import (
     Assignment,
-    Colleague,
     OrganizationUnit,
     Service,
     Skill,
@@ -71,20 +70,16 @@ from ._common import (
     PANEL_PARAMS,
     build_panel_url,
     csv_too_large,
+    is_side_panel_request,
     page_url_behind_panel,
-    resolve_panel_object,
 )
 from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
     assignment_create_button,
-    assignment_create_panel,
-    build_aanvraag_panel_data,
     build_assignment_create_panel_data,
     build_assignment_edit_panel_data,
     build_assignment_member_panel_data,
-    build_assignment_panel_data,
-    build_colleague_panel_data,
-    resolve_aanvraag_panel,
+    resolve_side_panel,
 )
 
 
@@ -249,8 +244,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
-            hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
+            if is_side_panel_request(self.request):
                 # See PlacementListView.get_template_names.
                 panel_data = getattr(self, "_panel_data", None)
                 if panel_data:
@@ -376,32 +370,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # in the address bar so a reload reopens the sheet (see side_panel.js).
         context["primary_button"] = assignment_create_button(self.request)
 
-        # Side panel
-        colleague_id = self.request.GET.get("collega")
-        assignment_id = self.request.GET.get("opdracht")
-        service_id = self.request.GET.get("aanvraag")
-
-        # ?nieuwe-opdracht opens the empty create form as a panel on the list.
-        # Checked before the object lookups: this panel has no object. Without the
-        # permission it falls away silently — this is the list view, not a 403.
-        create_panel = assignment_create_panel(self.request)
-        if create_panel is not None:
-            context["panel_data"] = create_panel
-        elif service_id:
-            service = resolve_aanvraag_panel(self.request, service_id)
-            if service is not None:
-                context["panel_data"] = build_aanvraag_panel_data(service, self.request)
-        elif colleague_id and not assignment_id:
-            colleague = resolve_panel_object(self.request, Colleague, colleague_id)
-            if colleague is not None:
-                context["panel_data"] = build_colleague_panel_data(colleague, self.request)
-        elif assignment_id:
-            assignment = resolve_panel_object(self.request, Assignment, assignment_id, select_related=("owner",))
-            if assignment is not None:
-                context["panel_data"] = build_assignment_panel_data(assignment, self.request)
-
+        # Side panel; ?nieuwe-opdracht opens the empty create form on the list.
+        context["panel_data"] = resolve_side_panel(self.request, allow_create=True)
         # See PlacementListView.get_context_data: get_template_names reads this.
-        self._panel_data = context.get("panel_data")
+        self._panel_data = context["panel_data"]
         return context
 
 
