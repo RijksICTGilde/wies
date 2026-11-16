@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- PR#: upgrade NLDD design system from 0.21.1 to 0.25.0
 
 ## 2026-11-11
 

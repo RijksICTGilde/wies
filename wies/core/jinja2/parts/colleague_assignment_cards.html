@@ -19,7 +19,9 @@
         {% if assignment.privacy_warning_text %}
           <nldd-list-item class="wies-cv__privacy">
           <nldd-text-cell size="sm" color="secondary">
-          <span class="wies-cv__privacy-text"><nldd-icon icon="eye-slash" size="16" aria-hidden="true"></nldd-icon>{{ assignment.privacy_warning_text }}</span>
+          <p>
+            <span class="wies-cv__privacy-text"><nldd-icon icon="eye-slash" size="16" aria-hidden="true"></nldd-icon>{{ assignment.privacy_warning_text }}</span>
+          </p>
           </nldd-text-cell>
           </nldd-list-item>
         {% endif %}
@@ -30,7 +32,7 @@
          its own row. hx_link_guard.js cancels the anchor so htmx fills the
          panel. #}
         <nldd-list-item class="wies-cv__link" href="{{ assignment.assignment_url }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
-        <nldd-title-cell size="5" text="{{ assignment.name }}" {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
+        <nldd-title-cell size="display-5" text="{{ assignment.name }}" {% if assignment.organization %}supporting-text="{{ assignment.organization }}"{% endif %}></nldd-title-cell>
         <nldd-icon-cell icon="chevron-right" size="20"></nldd-icon-cell>
         </nldd-list-item>
         {% if assignment.role_text %}
@@ -57,17 +59,19 @@
          as it does on a team row. A supporting-text slot would drop it to a
          line of its own, where it reads as a second value. The privacy note is
          not about the dates and stays by the opdracht's name. #}
-      <span class="wies-cv__period">
-        <span title="{{ exact_period|trim }}">
-          {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} t/m {{ assignment.end_date|datum_nl("b Y") }}
-          {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
-          {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
+      <p>
+        <span class="wies-cv__period">
+          <span title="{{ exact_period|trim }}">
+            {%- if assignment.start_date and assignment.end_date %}{{ assignment.start_date|datum_nl("b Y") }} t/m {{ assignment.end_date|datum_nl("b Y") }}
+            {%- elif assignment.start_date %}Vanaf {{ assignment.start_date|datum_nl("b Y") }}
+            {%- elif assignment.end_date %}t/m {{ assignment.end_date|datum_nl("b Y") }}
     {%- else %}Geen periode opgegeven{% endif -%}
       </span>
       {% if assignment.period_label %}
         <nldd-tag size="sm" text="{{ assignment.period_label }}"></nldd-tag>
       {% endif %}
       </span>
+      </p>
       </nldd-text-cell>
       </nldd-list-item>
       {# The pencil opens the same sheet the team row offers as "Mijn taken
@@ -77,31 +81,35 @@
         <nldd-list-item>
         <nldd-text-cell width="120px" text="Taken" vertical-alignment="top"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
-        <nldd-text-cell vertical-alignment="top">
-        {% if taken.preview %}
-          {# Closed, every role's text runs together, clamped to three lines, so
+        {# A plain cell: the role blocks and their toggle are block content, which
+           a text cell's slot does not take. #}
+        <nldd-cell width="full" vertical-alignment="top">
+        <div class="wies-cell-text">
+          {% if taken.preview %}
+            {# Closed, every role's text runs together, clamped to three lines, so
              what is cut off is visibly cut off and "Toon meer" names what it
              reveals. Open, the per-role blocks below take over. #}
-          <p class="wies-cv__preview"
-             data-cv-preview{% if taken.open %}
-             hidden{% endif %}>{{ taken.preview }}</p>
-          <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
-            {% for block in taken.blocks %}
-              <div class="wies-cv__role-block">
-                {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
-                <div class="wies-role-description"><span class="wies-role-description__text">{{ block.text }}</span></div>
-              </div>
-            {% endfor %}
-          </div>
-          {# The toggle belongs under the text it unfolds, not in a row of its
+            <p class="wies-cv__preview"
+               data-cv-preview{% if taken.open %}
+               hidden{% endif %}>{{ taken.preview }}</p>
+            <div class="wies-cv__more"{% if not taken.open %} hidden{% endif %}>
+              {% for block in taken.blocks %}
+                <div class="wies-cv__role-block">
+                  {% if block.label %}<p class="wies-cv__role-label">{{ block.label }}</p>{% endif %}
+                  <div class="wies-role-description"><span class="wies-role-description__text">{{ block.text }}</span></div>
+                </div>
+              {% endfor %}
+            </div>
+            {# The toggle belongs under the text it unfolds, not in a row of its
              own: a lone button in an empty row reads as if it were a value.
              A short text fits three lines on a wide panel, but not on a narrow
              screen: cv_clamp.js shows the toggle once the clamp cuts. #}
-          <nldd-button class="wies-cv__toggle" size="sm" appearance="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-toggle-object="taken bij {{ assignment.name }}" data-action="toggle-card"{% if not taken.has_more %} data-reveal-when-clamped hidden{% endif %}></nldd-button>
-        {% else %}
-          <span class="wies-text-secondary">Niet ingevuld</span>
-        {% endif %}
-        </nldd-text-cell>
+            <nldd-button class="wies-cv__toggle" size="sm" appearance="accent-transparent" start-icon="{{ 'chevron-up' if taken.open else 'chevron-down' }}" text="{{ 'Toon minder' if taken.open else 'Toon meer' }}"{% if taken.open %} expanded{% endif %} accessible-label="{{ 'Toon minder' if taken.open else 'Toon meer' }} taken bij {{ assignment.name }}" data-toggle-object="taken bij {{ assignment.name }}" data-action="toggle-card"{% if not taken.has_more %} data-reveal-when-clamped hidden{% endif %}></nldd-button>
+          {% else %}
+            <span class="wies-text-secondary">Niet ingevuld</span>
+          {% endif %}
+        </div>
+        </nldd-cell>
         {% if taken.edit_url %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell vertical-alignment="top">

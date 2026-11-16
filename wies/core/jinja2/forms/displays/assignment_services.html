@@ -25,35 +25,39 @@ profiel" with the actions. #}
       </nldd-cell>
       <nldd-spacer-cell size="12"></nldd-spacer-cell>
       <nldd-text-cell divider-start>
-      {% if has_actions %}
-        {# htmx cancels the anchor's own navigation. #}
-        <a class="wies-quiet-link"
-           href="{{ row.panel_url }}"
-           hx-get="{{ row.panel_url }}"
-           hx-target="#side-panel-content"
-           hx-swap="innerHTML"
-           hx-push-url="false">{{ row.colleague.name }}</a>
-      {% else %}
-        <span>{{ row.colleague.name }}</span>
-      {% endif %}
+      <p>
+        {% if has_actions %}
+          {# htmx cancels the anchor's own navigation. #}
+          <a class="wies-quiet-link"
+             href="{{ row.panel_url }}"
+             hx-get="{{ row.panel_url }}"
+             hx-target="#side-panel-content"
+             hx-swap="innerHTML"
+             hx-push-url="false">{{ row.colleague.name }}</a>
+        {% else %}
+          {{ row.colleague.name }}
+        {% endif %}
+      </p>
       {% if row.skill_name or pl.start_date or pl.end_date or row.shown_hours %}
-        <span slot="supporting-text" class="wies-team-row-meta">
-          {# The period leads the second line, so it starts at the same place on
+        <p slot="supporting-text">
+          <span class="wies-team-row-meta">
+            {# The period leads the second line, so it starts at the same place on
              every row: a role tag in front of it is as wide as its name, which
              left the dates stepping in and out down the list. Icons are
              decorative: the text says what the number is. #}
-          {% if pl.start_date or pl.end_date %}
-            <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>
-              {%- if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}{% elif pl.start_date %}Vanaf {{ pl.start_date|datum_nl }}{% else %}t/m {{ pl.end_date|datum_nl }}{% endif -%}
-            </span>
-          {% endif %}
-          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
-          {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
-          {# A visible non-active row carries a note; only an ended one also a
+            {% if pl.start_date or pl.end_date %}
+              <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>
+                {%- if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl }} t/m {{ pl.end_date|datum_nl }}{% elif pl.start_date %}Vanaf {{ pl.start_date|datum_nl }}{% else %}t/m {{ pl.end_date|datum_nl }}{% endif -%}
+              </span>
+            {% endif %}
+            {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
+            {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
+            {# A visible non-active row carries a note; only an ended one also a
              label (see visibility_rules.LABELS). #}
-          {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
-          {% if row.privacy_warning_text %}{{ privacy_chip(row.privacy_warning_text, size="sm") }}{% endif %}
-        </span>
+            {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
+            {% if row.privacy_warning_text %}{{ privacy_chip(row.privacy_warning_text, size="sm") }}{% endif %}
+          </span>
+        </p>
       {% endif %}
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -61,7 +65,7 @@ profiel" with the actions. #}
         {% include "forms/displays/assignment_services_row_menu.html" %}
       {% else %}
         {# Decorative, as on the cards: the whole row is the link. #}
-        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20"></nldd-icon-cell>
+        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20" color="secondary"></nldd-icon-cell>
       {% endif %}
       </nldd-list-item>
     {% else %}
@@ -83,23 +87,27 @@ profiel" with the actions. #}
          is its own click target), so the title is a quiet link to the aanvraag,
          as the name is on a person's row. htmx cancels the anchor's own
          navigation. #}
-      {% if user_can_edit %}
-        <a class="wies-quiet-link"
-           href="{{ row.panel_url }}"
-           hx-get="{{ row.panel_url }}"
-           hx-target="#side-panel-content"
-           hx-swap="innerHTML"
-           hx-push-url="false">Aanvraag: {{ row.skill_name }}</a>
-      {% else %}
-        <span>Aanvraag: {{ row.skill_name }}</span>
-      {% endif %}
+      <p>
+        {% if user_can_edit %}
+          <a class="wies-quiet-link"
+             href="{{ row.panel_url }}"
+             hx-get="{{ row.panel_url }}"
+             hx-target="#side-panel-content"
+             hx-swap="innerHTML"
+             hx-push-url="false">Aanvraag: {{ row.skill_name }}</a>
+        {% else %}
+          Aanvraag: {{ row.skill_name }}
+        {% endif %}
+      </p>
       {% if row.period_text or row.shown_hours %}
-        <span slot="supporting-text" class="wies-team-row-meta">
-          {% if row.period_text %}
-            <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>{{ row.period_text }}</span>
-          {% endif %}
-          {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
-        </span>
+        <p slot="supporting-text">
+          <span class="wies-team-row-meta">
+            {% if row.period_text %}
+              <span class="wies-team-row-meta__item"><nldd-icon icon="calendar-event" size="16" aria-hidden="true"></nldd-icon>{{ row.period_text }}</span>
+            {% endif %}
+            {% if row.shown_hours %}<span class="wies-team-row-meta__item"><nldd-icon icon="clock" size="16" aria-hidden="true"></nldd-icon>{{ row.shown_hours }} uur</span>{% endif %}
+          </span>
+        </p>
       {% endif %}
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -107,7 +115,7 @@ profiel" with the actions. #}
         {% include "forms/displays/assignment_services_row_menu.html" %}
       {% else %}
         {# Decorative: the whole row is the link to the aanvraag. #}
-        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20"></nldd-icon-cell>
+        <nldd-icon-cell class="wies-team-row__chevron" icon="chevron-right" size="20" color="secondary"></nldd-icon-cell>
       {% endif %}
       </nldd-list-item>
     {% endif %}

@@ -120,6 +120,8 @@ a {
    :last-child, so this stays about the trailing icon it was written for: an
    icon placed BEFORE the link text would otherwise get a stray left margin. */
 a > nldd-icon:last-child {
+  /* The icon takes its colour from this variable, not from the link's `color`. */
+  --context-content-color: currentColor;
   display: inline-block;
   vertical-align: -0.125em;
   margin-inline-start: 0.25em;
@@ -241,12 +243,15 @@ nldd-rich-text blockquote {
   padding: 0.25rem;
   border-radius: 4px;
   color: var(--semantics-content-secondary-color, #64748b);
+  /* The pencil is an nldd-icon, which takes this variable and not `color`. */
+  --context-content-color: var(--semantics-content-secondary-color);
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
 }
 .edit-icon-button:hover {
   color: var(--semantics-content-accent-color, #154273);
+  --context-content-color: var(--semantics-content-accent-color);
   background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
 }
 .edit-icon-button__pencil {
@@ -262,7 +267,6 @@ nldd-rich-text blockquote {
 .assignment-card__chevron,
 .wies-team-row__chevron {
   pointer-events: none;
-  color: var(--semantics-content-secondary-color, #64748b);
 }
 
 /* Above nldd-card's overlay link, which would otherwise swallow the hover and
@@ -284,8 +288,10 @@ nldd-rich-text blockquote {
   gap: var(--primitives-space-24, 24px);
   margin-top: var(--primitives-space-4, 4px);
   /* Period and hours are facts, not commentary: the primary text colour, not
-     the muted one the supporting-text slot gives them. */
+     the muted one the supporting-text slot gives them. The variable carries it
+     to the icons. */
   color: var(--semantics-content-color);
+  --context-content-color: var(--semantics-content-color);
 }
 
 /* Icon and its value read as one unit; the icon inherits the muted text colour. */
@@ -346,6 +352,7 @@ nldd-rich-text blockquote {
   align-items: center;
   gap: var(--primitives-space-8, 8px);
   color: var(--semantics-content-secondary-color, #64748b);
+  --context-content-color: var(--semantics-content-secondary-color);
   font: var(--primitives-font-body-sm-regular-flat);
 }
 
@@ -376,6 +383,13 @@ nldd-rich-text blockquote {
    full width again: the button is level with the first line only. */
 .wies-cv__item:has(.wies-cv__edit) .wies-cv__preview:not([hidden]) {
   padding-right: var(--primitives-space-40, 40px);
+}
+
+/* Block content in a plain nldd-cell, where a text cell's slot takes only a <p>:
+   the type and colour a text cell gives its text. */
+.wies-cell-text {
+  font: var(--primitives-font-body-md-regular-tight);
+  color: var(--context-content-color);
 }
 
 .wies-cv__more:not([hidden]) {
@@ -417,6 +431,7 @@ nldd-rich-text blockquote {
 /* A Van/Naar value below a timeline sentence, as its own block so long text does
    not run on behind "Naar:". */
 .wies-event-value {
+  display: block;
   margin-top: var(--primitives-space-4, 4px);
 }
 
