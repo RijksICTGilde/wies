@@ -7,7 +7,7 @@ from django.urls import reverse
 
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.tests.role_helpers import grant_business_manager
-from wies.core.views import CURRENT_AUDIT_REPORT
+from wies.core.views.pages import CURRENT_AUDIT_REPORT
 
 User = get_user_model()
 

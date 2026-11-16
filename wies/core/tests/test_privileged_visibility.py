@@ -17,7 +17,7 @@ from wies.core.editables.assignment import _services_display_context
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.roles import ROLE_BUSINESS_MANAGER, is_business_manager_request
 from wies.core.tests.role_helpers import STAFF_EMAIL, make_other_business_manager_user, make_staff_user
-from wies.core.views import _get_colleague_assignments
+from wies.core.views.panels import _get_colleague_assignments
 from wies.core.visibility_rules import PRIVACY_BM
 from wies.rijksauth.models import User
 
@@ -104,7 +104,7 @@ class AssignmentAdminSeesTeamRowTest(_VisibilityFixture):
 
 
 class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_a_bdm_sees_historical_placement_on_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
@@ -115,7 +115,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
         assert historical[0]["privacy_warning_text"] == PRIVACY_BM
 
     @override_settings(STAFF_EMAILS=[STAFF_EMAIL])
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_bare_staff_does_not_see_historical_placement_on_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
@@ -123,7 +123,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
 
         assert [a for a in assignments if a["historical"]] == []
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_a_bdm_sees_ended_owned_assignment_on_profile(self, mock_tz):
         # An assignment Alice OWNS (no placement) that has ended: shown to a
         # privileged viewer via the owned-assignment branch.
@@ -149,7 +149,7 @@ class OwnerPlacedOnEndedAssignmentTest(_VisibilityFixture):
     label for a non-privileged viewer, dropping it from a card that is shown anyway.
     """
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_own_profile_keeps_the_bm_label_on_the_ended_card(self, mock_tz):
         # Alice is not a Business Manager; she views her own profile. The ended
         # assignment she owns is also one she is placed on (self.ended).

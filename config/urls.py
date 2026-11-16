@@ -20,65 +20,57 @@ from django.contrib.auth.decorators import login_not_required
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from wies.core.views import (
+from wies.core.views.assignments import (
     AssignmentListView,
-    PlacementListView,
-    UserListView,
     assignment_create_sheet,
     assignment_delete,
     assignment_edit_view,
-    assignment_events_partial,
     assignment_import_csv,
     assignment_member_delete_view,
     assignment_member_edit_view,
+)
+from wies.core.views.bezetting import bezetting
+from wies.core.views.client_picker import client_modal
+from wies.core.views.events import assignment_events_partial
+from wies.core.views.filters import search_suggestions
+from wies.core.views.inline_edit import inline_edit_view
+from wies.core.views.labels import label_admin, label_category_delete, label_category_manage, label_delete, label_form
+from wies.core.views.pages import (
     beveiliging,
-    bezetting,
-    client_modal,
     contact,
-    contract_period_add,
-    contract_period_delete,
-    contract_period_edit,
-    delete_error,
     error_400,
     error_403,
     error_404,
     error_500,
-    error_detail,
-    error_table,
     faq,
     handleiding,
-    inline_edit_view,
-    label_admin,
-    label_category_delete,
-    label_category_manage,
-    label_delete,
-    label_form,
     no_access,
+    privacy,
+    robots_txt,
+    sitemap,
+    toegankelijkheid,
+    toegankelijkheid_onderzoek,
+)
+from wies.core.views.placements import PlacementListView, placement_edit_view
+from wies.core.views.profile import (
+    contract_period_add,
+    contract_period_delete,
+    contract_period_edit,
     onboarding_assignment_edit,
     onboarding_complete,
-    placement_edit_view,
-    privacy,
     profile_labels_edit,
     profile_name_edit,
-    robots_txt,
-    role_matrix,
-    search_suggestions,
-    sitemap,
-    staff_dashboard,
-    staff_database,
+    user_profile,
+    user_theme,
+)
+from wies.core.views.staff import delete_error, error_detail, error_table, role_matrix, staff_dashboard, staff_database
+from wies.core.views.suborganizations import (
     suborganization_admin,
     suborganization_create,
     suborganization_delete,
     suborganization_edit,
-    toegankelijkheid,
-    toegankelijkheid_onderzoek,
-    user_create,
-    user_delete,
-    user_edit,
-    user_import_csv,
-    user_profile,
-    user_theme,
 )
+from wies.core.views.users import UserListView, user_create, user_delete, user_edit, user_import_csv
 from wies.rijksauth.views import auth, login, logout
 
 urlpatterns = [

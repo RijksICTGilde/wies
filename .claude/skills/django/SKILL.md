@@ -19,7 +19,7 @@ Always check the latest Django documentation when uncertain about APIs or best p
 wies/
 ├── core/
 │   ├── models.py      # All models
-│   ├── views.py       # View functions/classes
+│   ├── views/         # View functions/classes, one module per domain
 │   ├── forms.py       # Django forms with NlddFormMixin
 │   ├── urls.py        # URL routing
 │   ├── roles.py       # Role/permission definitions

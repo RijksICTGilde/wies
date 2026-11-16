@@ -1,0 +1,660 @@
+"""User management: list, create, edit, delete and CSV import."""
+
+from collections import Counter
+from functools import cached_property
+
+from django.contrib import messages
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import permission_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import Group
+from django.core.exceptions import ValidationError
+from django.db import transaction
+from django.db.models import (
+    Q,
+    Value,
+)
+from django.db.models.functions import Concat
+from django.http import HttpResponse, HttpResponseForbidden
+from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
+from django.utils import timezone
+from django.utils.formats import date_format
+from django.views.generic.list import ListView
+
+from wies.core.forms import (
+    UserDeleteForm,
+    UserForm,
+)
+from wies.core.models import (
+    SUBGROEP_CATEGORY,
+    ContractPeriod,
+    Label,
+    LabelCategory,
+    Suborganization,
+)
+from wies.core.permission_engine import Verb, has_permission
+from wies.core.querysets import (
+    annotate_placement_dates,
+    annotate_sort_names,
+)
+from wies.core.roles import (
+    role_label,
+)
+from wies.core.services.events import create_event
+from wies.core.services.urls import current_page_url_on
+from wies.core.services.users import (
+    close_contract_periods,
+    close_placements,
+    create_user,
+    create_users_from_csv,
+    update_user,
+)
+
+from ._common import _sort_control_context
+from .filters import PublicIdFacetsMixin, _finalize_filter_groups
+from .profile import _contract_block, _contract_period_event, _contract_period_snapshot
+
+User = get_user_model()
+
+
+class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
+    """User list with filtering and infinite scroll pagination."""
+
+    model = User
+    template_name = "user_admin.html"
+    paginate_by = 60
+    page_kwarg = "pagina"
+    permission_required = "rijksauth.view_user"
+
+    # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
+    DEFAULT_SORT_LABEL = "Achternaam (A-Z)"
+    DEFAULT_ORDERING = ("sort_last_name", "sort_first_name")
+    SORT_OPTIONS = {
+        "-last_name": ("Achternaam (Z-A)", ("-sort_last_name", "-sort_first_name")),
+        "first_name": ("Voornaam (A-Z)", ("sort_first_name", "sort_last_name")),
+        "-first_name": ("Voornaam (Z-A)", ("-sort_first_name", "-sort_last_name")),
+        "-date_joined": ("Toegevoegd (nieuwste eerst)", ("-date_joined",)),
+    }
+    # Label categories shown on the row next to the onderdeel, by name (see SUBGROEP_CATEGORY).
+    ROW_LABEL_CATEGORIES = (SUBGROEP_CATEGORY,)
+
+    @cached_property
+    def active_order(self) -> str:
+        """The requested ``?order=``; empty for the default and for unknown values."""
+        requested = self.request.GET.get("order", "")
+        return requested if requested in self.SORT_OPTIONS else ""
+
+    def _get_base_queryset(self):
+        """Base queryset with search and ordering applied."""
+        ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
+        qs = annotate_sort_names(
+            User.objects.select_related("colleague__suborganization")
+            .prefetch_related("groups", "colleague__labels__category")
+            .filter(is_superuser=False)
+        ).order_by(*ordering)
+
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.annotate(
+                full_name=Concat("first_name", Value(" "), "last_name"),
+            ).filter(
+                Q(full_name__icontains=search_filter)
+                | Q(first_name__icontains=search_filter)
+                | Q(last_name__icontains=search_filter)
+                | Q(email__icontains=search_filter)
+            )
+
+        return qs
+
+    @cached_property
+    def role_filter(self) -> str:
+        """``?rol=`` carries a Group pk: Group is Django's own model and has no public_id."""
+        return self.request.GET.get("rol", "").strip()
+
+    @cached_property
+    def role_filter_ids(self) -> list[int]:
+        """The group the filter names, empty when it names none; fails closed like every facet."""
+        if not self.role_filter.isdigit():
+            return []
+        return list(Group.objects.filter(id=self.role_filter).values_list("id", flat=True))
+
+    def _apply_filters(self, qs, *, exclude_filter=None):
+        """Applies all selection filters, optionally excluding one filter type.
+
+        ``exclude_filter`` is "rol", "onderdeel", or a category_id (int) for labels.
+        """
+        # Label filter: OR within category, AND between categories
+        for cat_id, cat_label_ids in self.labels_by_category.items():
+            if exclude_filter != cat_id:
+                qs = qs.filter(colleague__labels__id__in=cat_label_ids)
+
+        # Onderdeel filter: OR within the group (one onderdeel per colleague)
+        suborganization_facet = self.facets("onderdeel", Suborganization)
+        if exclude_filter != "onderdeel" and suborganization_facet.requested:
+            qs = qs.filter(colleague__suborganization_id__in=suborganization_facet.ids)
+
+        # Rol filter: an integer Group id, since Group has no public_id.
+        if exclude_filter != "rol" and self.role_filter:
+            qs = qs.filter(groups__id__in=self.role_filter_ids)
+
+        return qs
+
+    def get_queryset(self):
+        """Applies the filters to the users queryset."""
+        if self.labels_match_nothing:
+            return User.objects.none()
+        return self._apply_filters(self._get_base_queryset()).distinct()
+
+    def get_template_names(self):
+        """Returns the template for this request type."""
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
+            if self.request.GET.get("pagina"):
+                return ["parts/user_table_rows.html"]
+            # Filter change: replace the result list (the sheet swaps OOB).
+            return ["parts/user_results.html"]
+        return ["user_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        """Adds the dynamic filter options."""
+        context = super().get_context_data(**kwargs)
+
+        context["search_field"] = "zoek"
+        context["search_placeholder"] = "Zoek op naam of email..."
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        active_filters = {}
+
+        # label filter supports multi-select (values are label public_ids)
+        label_filter = self.facets("labels", Label).active_values
+        if label_filter:
+            active_filters["labels"] = label_filter
+
+        # Onderdeel filter supports multi-select (values are suborganization public_ids)
+        suborganization_filter = self.facets("onderdeel", Suborganization).active_values
+        if suborganization_filter:
+            active_filters["onderdeel"] = suborganization_filter
+
+        if self.role_filter:
+            # A list, not the bare string: the chips iterate every active_filters
+            # value, and a string would be walked character by character — which
+            # silently matches nothing once a Group pk hits two digits.
+            active_filters["rol"] = [self.role_filter]
+
+        # Chips render in user_results.html: the filter panel is a sheet here, so
+        # nothing outside it would otherwise say WHAT is filtered.
+
+        # For each label category, count on a queryset excluding that category's filter.
+        base_qs = self._get_base_queryset()
+
+        label_filter_groups = []
+        for category in LabelCategory.objects.all():
+            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
+            cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
+            cat_label_ids = cat_user_qs.values_list("colleague__labels__id", flat=True)
+            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
+
+            options = [{"value": "", "label": ""}]
+            selected_values = []
+            for label in Label.objects.filter(category=category):
+                options.append(
+                    {
+                        "value": str(label.public_id),
+                        "label": f"{label.name}",
+                        "count": cat_label_counts.get(label.id, 0),
+                    }
+                )
+                if str(label.public_id) in active_filters.get("labels", set()):
+                    options[-1]["selected"] = True
+                    selected_values.append(str(label.public_id))
+
+            label_filter_groups.append(
+                {
+                    "type": "select-multi",
+                    "name": "labels",
+                    "label": category.name,
+                    "options": options,
+                    "selected_values": selected_values,
+                }
+            )
+
+        # Onderdeel filter group (one per colleague; counts exclude its own filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
+        suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
+        suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
+        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+
+        suborganization_options = [{"value": "", "label": ""}]
+        suborganization_selected_values = []
+        for suborganization in Suborganization.objects.all():
+            suborganization_options.append(
+                {
+                    "value": str(suborganization.public_id),
+                    "label": suborganization.name,
+                    "count": suborg_counts.get(suborganization.id, 0),
+                }
+            )
+            if str(suborganization.public_id) in active_filters.get("onderdeel", set()):
+                suborganization_options[-1]["selected"] = True
+                suborganization_selected_values.append(str(suborganization.public_id))
+
+        suborganization_filter_group = {
+            "type": "select-multi",
+            "name": "onderdeel",
+            "label": "Onderdeel",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected_values,
+        }
+
+        # Rol group; counts exclude the rol filter itself, like the suborganization group.
+        role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
+        role_id_values = role_user_qs.values_list("groups__id", flat=True)
+        role_counts = Counter(gid for gid in role_id_values if gid is not None)
+
+        role_options = [{"value": "", "label": ""}]
+        role_selected_values = []
+        # ``Group.name`` is a key, so the database order is not the reader's A-Z.
+        for group in sorted(Group.objects.all(), key=lambda g: role_label(g.name)):
+            role_options.append(
+                {"value": str(group.id), "label": role_label(group.name), "count": role_counts.get(group.id, 0)}
+            )
+            # ?rol= holds a single Group id, so compare exactly.
+            if str(group.id) == self.role_filter:
+                role_options[-1]["selected"] = True
+                role_selected_values.append(str(group.id))
+
+        role_filter_group = {
+            "type": "select-multi",
+            "name": "rol",
+            "label": "Rol",
+            "options": role_options,
+            "selected_values": role_selected_values,
+        }
+
+        context["active_filters"] = active_filters
+        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
+        context["filter_target_url"] = reverse("admin-users")
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
+
+        context["filter_groups"] = [
+            role_filter_group,
+            *label_filter_groups,
+            suborganization_filter_group,
+        ]
+        # Adds top_options + has_more per select-multi group, so the filter sheet
+        # shows a top-3 with a "Meer..." toggle like the other lists.
+        _finalize_filter_groups(context["filter_groups"])
+
+        context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
+        context.update(
+            _sort_control_context(
+                self.active_order,
+                [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
+                self.DEFAULT_SORT_LABEL,
+            )
+        )
+
+        context["primary_button"] = {
+            "button_text": "Gebruiker toevoegen",
+            "attrs": {
+                "hx-get": reverse("user-create"),
+                "hx-target": "#userFormModal",
+                "hx-push-url": "false",  # necessary because nested in htmx powered form
+            },
+        }
+
+        # Build next page URL with all current filters
+        if context.get("page_obj") and context["page_obj"].has_next():
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
+        else:
+            context["next_page_url"] = None
+
+        return context
+
+
+def _user_list_behind_sheet(request) -> str:
+    """The user list with the filters, search and order the sheet was opened over."""
+    return current_page_url_on(request, reverse("admin-users"))
+
+
+@permission_required("rijksauth.add_user", raise_exception=True)
+def user_create(request):
+    """Creates a user: GET returns the form modal, POST processes the creation."""
+
+    form_post_url = reverse("user-create")
+    modal_title = "Nieuwe gebruiker"
+    element_id = "userFormModal"
+
+    # The sheet carries the first contract period, so creating is all or nothing:
+    # whoever may not keep contract hours may not create a user through it.
+    if not has_permission(Verb.UPDATE, ContractPeriod(), request.user):
+        return HttpResponseForbidden()
+
+    if request.method == "GET":
+        form = UserForm(editor=request.user)
+        form.fields["first_name"].widget.attrs["autofocus"] = True
+        return render(
+            request,
+            "parts/user_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Voeg gebruiker toe",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
+        )
+    if request.method == "POST":
+        form = UserForm(request.POST, editor=request.user)
+        if form.is_valid() and _create_user_with_contract_period(request, form):
+            # HTMX needs HX-Redirect to force a full page redirect.
+            messages.success(
+                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is toegevoegd."
+            )
+            if "HX-Request" in request.headers:
+                response = HttpResponse(status=200)
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
+                return response
+            return redirect(_user_list_behind_sheet(request))
+        # Re-render with errors; HTMX keeps the modal open.
+        return render(
+            request,
+            "parts/user_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Voeg gebruiker toe",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
+        )
+    return HttpResponse(status=405)
+
+
+def _create_user_with_contract_period(request, form) -> bool:
+    """Creates the user and, when filled in, its first contract period.
+
+    One transaction: a period that does not validate (the colleague may be an
+    existing one with periods of its own) leaves no user behind. Returns False
+    with the error on the form then.
+    """
+    hours = form.cleaned_data.get("contract_hours_per_week")
+    with transaction.atomic():
+        user = create_user(
+            request.user,
+            first_name=form.cleaned_data["first_name"],
+            last_name=form.cleaned_data["last_name"],
+            email=form.cleaned_data["email"],
+            labels=form.cleaned_data.get("labels"),
+            groups=form.cleaned_data.get("groups"),
+            suborganization=form.cleaned_data.get("suborganization"),
+            request=request,
+        )
+        if hours:
+            period = ContractPeriod(
+                colleague=user.colleague,
+                hours_per_week=hours,
+                start_date=form.cleaned_data["contract_start_date"],
+            )
+            try:
+                period.full_clean()
+            except ValidationError as e:
+                transaction.set_rollback(True)
+                for field, errors in e.message_dict.items():
+                    form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
+                return False
+            period.save()
+            _contract_period_event(request, period, "create")
+    return True
+
+
+@permission_required("rijksauth.change_user", raise_exception=True)
+def user_edit(request, public_id):
+    """Edits a user: GET returns the populated form modal, POST processes the update."""
+    edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    form_post_url = reverse("user-edit", args=[edited_user.public_id])
+    modal_title = "Gebruiker wijzigen"
+    element_id = "userFormModal"
+
+    # Contract periods sit on the linked colleague; a user without one has
+    # nothing to hang them on and gets no block.
+    colleague = getattr(edited_user, "colleague", None)
+    contract_block = _contract_block(colleague, request.user) if colleague else None
+
+    if request.method == "GET":
+        form = UserForm(instance=edited_user, editor=request.user)
+        return render(
+            request,
+            "parts/user_form_modal.html",
+            {
+                "content": form,
+                "contract_block": contract_block,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Opslaan",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
+        )
+    if request.method == "POST":
+        form = UserForm(request.POST, instance=edited_user, editor=request.user)
+        if form.is_valid():
+            update_user(
+                updater=request.user,
+                user=edited_user,
+                first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"],
+                email=form.cleaned_data["email"],
+                labels=form.cleaned_data.get("labels"),
+                groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
+                request=request,
+            )
+            # HTMX needs HX-Redirect to force a full page redirect.
+            messages.success(
+                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is aangepast."
+            )
+            if "HX-Request" in request.headers:
+                response = HttpResponse(status=200)
+                response["HX-Redirect"] = _user_list_behind_sheet(request)
+                return response
+            return redirect(_user_list_behind_sheet(request))
+        # Re-render with errors; HTMX keeps the modal open.
+        return render(
+            request,
+            "parts/user_form_modal.html",
+            {
+                "content": form,
+                "contract_block": contract_block,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Opslaan",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
+        )
+    return HttpResponse(status=405)
+
+
+def _colleague_delete_overview(colleague, today) -> list[dict] | None:
+    """What ends and what lapses when the user goes, for the confirm dialog.
+
+    Measured against today, and the headings say so: the dialog cannot know the
+    day the beheerder will pick, so it lists what runs now and what is still to
+    start, and the field's help text says what the chosen day does with each.
+    Three groups, each a heading with title/detail rows: the contract and the
+    placements apart, so they do not read as one kind of thing. The colleague
+    profile itself stays, with this history.
+    """
+    if colleague is None:
+        return None
+    placements = annotate_placement_dates(colleague.placements.select_related("service__assignment", "service__skill"))
+    contract, placed, lapses = [], [], []
+    for period in colleague.contract_periods.all():
+        hours = f"{period.hours_per_week} uur per week"
+        if period.start_date > today:
+            lapses.append({"title": f"Contract vanaf {date_format(period.start_date, 'j b Y')}", "detail": hours})
+        elif period.end_date is None or period.end_date >= today:
+            contract.append({"title": hours, "detail": f"sinds {date_format(period.start_date, 'j b Y')}"})
+    for placement in placements:
+        start, end = placement.actual_start_date, placement.actual_end_date
+        service = placement.service
+        role = service.skill.name if service.skill else "Plaatsing"
+        if start is not None and start > today:
+            lapses.append({"title": service.assignment.name, "detail": f"{role} · vanaf {date_format(start, 'j b Y')}"})
+        elif end is None or end >= today:
+            placed.append({"title": service.assignment.name, "detail": role})
+    groups = [
+        ("Lopend contract", contract),
+        ("Lopende plaatsingen", placed),
+        ("Begint later", lapses),
+    ]
+    return [{"heading": heading, "rows": rows} for heading, rows in groups if rows]
+
+
+def _placement_snapshot(placement) -> dict:
+    return {
+        "assignment": placement.service.assignment.name,
+        "assignment_id": placement.service.assignment_id,
+        "skill": placement.service.skill.name if placement.service.skill else None,
+        "start_date": placement.start_date.isoformat() if placement.start_date else None,
+        "end_date": placement.end_date.isoformat() if placement.end_date else None,
+    }
+
+
+@permission_required("rijksauth.delete_user", raise_exception=True)
+def user_delete(request, public_id):
+    """Deletes a user, after the confirmation modal."""
+    user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    colleague = getattr(user, "colleague", None)
+    today = timezone.now().date()
+
+    def render_modal(form):
+        return render(
+            request,
+            "parts/user_delete_modal.html",
+            {
+                "content": form,
+                "dialog_supporting": (
+                    f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
+                    "Dit is niet terug te draaien." + (" Het collegaprofiel blijft bestaan." if colleague else "")
+                ),
+                "delete_overview": _colleague_delete_overview(colleague, today),
+                "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
+            },
+        )
+
+    if request.method == "GET":
+        return render_modal(UserDeleteForm(initial={"left_on": today}, colleague=colleague) if colleague else None)
+    if request.method == "POST":
+        form = UserDeleteForm(request.POST, colleague=colleague) if colleague else None
+        if form is not None and not form.is_valid():
+            return render_modal(form)
+        label_names = [label.name for label in colleague.labels.all()] if colleague else []
+        # The colleague outlives the user (SET_NULL) and drops off Bezetting with
+        # the user. The contract and the placements end here so the colleague
+        # panel, the opdrachten and the history say when the work stopped.
+        # Capture the int PK before delete() nulls it; Event.object_id keeps
+        # referencing the internal id, not the public_id.
+        user_pk = user.id
+        # One transaction: a contract ended without the user gone, or a user
+        # gone without a trace, would both be worse than the failure itself.
+        with transaction.atomic():
+            left_on = form.cleaned_data["left_on"] if colleague else None
+            ended, dropped = close_contract_periods(colleague, left_on) if left_on else (None, [])
+            placements_ended, placements_dropped = (
+                close_placements(colleague, left_on, request) if left_on else ([], [])
+            )
+            context = {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "label_names": label_names,
+                "group_names": [role_label(g.name) for g in user.groups.all()],
+                "left_on": left_on.isoformat() if left_on else None,
+                "contract_ended": _contract_period_snapshot(ended) if ended else None,
+                "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+                "placements_ended": [_placement_snapshot(p) for p in placements_ended],
+                "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
+            }
+            user.delete()
+            create_event(
+                object_type="User",
+                action="delete",
+                source="user",
+                object_id=user_pk,
+                user=request.user,
+                request=request,
+                context=context,
+            )
+        name = f"{user.first_name} {user.last_name}".strip() or user.email
+        messages.success(request, f"{name} is verwijderd.")
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = _user_list_behind_sheet(request)
+        return response
+    return HttpResponse(status=405)
+
+
+# Safety ceiling so a single upload can't exhaust a worker's memory
+MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
+
+
+_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def _csv_too_large(csv_file) -> bool:
+    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
+
+
+@permission_required("rijksauth.add_user", raise_exception=True)
+def user_import_csv(request):
+    """Imports users from a CSV file; see ``create_users_from_csv`` for the format."""
+    if request.method == "GET":
+        return render(request, "user_import.html")
+    if request.method == "POST":
+        if "csv_file" not in request.FILES:
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
+            )
+
+        csv_file = request.FILES["csv_file"]
+
+        if not csv_file.name.endswith(".csv"):
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        if _csv_too_large(csv_file):
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
+            )
+
+        try:
+            csv_content = csv_file.read().decode("utf-8-sig")
+        except UnicodeDecodeError:
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
+            )
+
+        result = create_users_from_csv(request.user, csv_content, request=request)
+
+        return render(request, "user_import.html", {"result": result})
+    return HttpResponse(status=405)

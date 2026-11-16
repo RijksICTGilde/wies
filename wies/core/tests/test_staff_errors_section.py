@@ -6,7 +6,7 @@ from django.urls import reverse
 
 from config.jinja2 import datetime_nl
 from wies.core.models import ErrorEvent
-from wies.core.views import ERRORS_PER_PAGE
+from wies.core.views.staff import ERRORS_PER_PAGE
 
 User = get_user_model()
 
