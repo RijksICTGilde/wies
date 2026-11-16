@@ -44,7 +44,7 @@ from wies.core.roles import (
     role_label,
 )
 from wies.core.services.events import create_event
-from wies.core.services.urls import current_page_url_on
+from wies.core.services.urls import PAGE_PARAM, current_page_url_on, rebuild_url
 from wies.core.services.users import (
     close_contract_periods,
     close_placements,
@@ -311,9 +311,9 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            params = self.request.GET.copy()
-            params["pagina"] = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?{params.urlencode()}"
+            context["next_page_url"] = rebuild_url(
+                "", self.request.GET, **{PAGE_PARAM: context["page_obj"].next_page_number()}
+            )
         else:
             context["next_page_url"] = None
 

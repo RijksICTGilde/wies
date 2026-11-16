@@ -51,11 +51,12 @@ from wies.core.services.placements import (
     placement_edit_specs,
     save_placement_edit,
 )
+from wies.core.services.urls import PAGE_PARAM, rebuild_url, safe_return_path
 from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import build_panel_url, resolve_panel_object, safe_return_path, sort_control_context
+from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object, sort_control_context
 from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
     build_aanvraag_panel_data,
@@ -363,15 +364,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         The sort options differ per view, so an ?order= from the other view would
         not resolve here.
         """
-        params = self.request.GET.copy()
-        params.pop(self.page_kwarg, None)
-        params.pop("order", None)
+        dropped = (self.page_kwarg, "order")
         if value == self.VIEW_DEFAULT:
-            params.pop("weergave", None)
-        else:
-            params["weergave"] = value
-        query = params.urlencode()
-        return f"{reverse('home')}?{query}" if query else reverse("home")
+            return rebuild_url(reverse("home"), self.request.GET, drop=(*dropped, "weergave"))
+        return rebuild_url(reverse("home"), self.request.GET, drop=dropped, weergave=value)
 
     def _person_cards(self, placements) -> list[dict]:
         """One card per colleague, with the assignments they are placed on.
@@ -630,9 +626,9 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            params = self.request.GET.copy()
-            params["pagina"] = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?{params.urlencode()}"
+            context["next_page_url"] = rebuild_url(
+                "", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: context["page_obj"].next_page_number()}
+            )
         else:
             context["next_page_url"] = None
 

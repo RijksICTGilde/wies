@@ -63,15 +63,15 @@ from wies.core.services.organizations import (
 from wies.core.services.placements import (
     create_assignments_from_csv,
 )
-from wies.core.services.urls import url_replacing_param
+from wies.core.services.urls import PAGE_PARAM, rebuild_url, safe_return_path, url_replacing_param
 
 from ._common import (
     CSV_TOO_LARGE_MSG,
+    PANEL_PARAMS,
     build_panel_url,
     csv_too_large,
     page_url_behind_panel,
     resolve_panel_object,
-    safe_return_path,
 )
 from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
@@ -364,9 +364,9 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            params = self.request.GET.copy()
-            params["pagina"] = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?{params.urlencode()}"
+            context["next_page_url"] = rebuild_url(
+                "", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: context["page_obj"].next_page_number()}
+            )
         else:
             context["next_page_url"] = None
 
