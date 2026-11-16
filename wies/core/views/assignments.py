@@ -23,6 +23,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
+from wies.core.editables.assignment import AssignmentEditables, skill_choices, visible_service_or_404
+from wies.core.forms import ServiceForm
 from wies.core.inline_edit.forms import (
     build_combined_form_class,
 )
@@ -46,7 +48,9 @@ from wies.core.services.aanvragen import (
     standplaats_labels,
 )
 from wies.core.services.assignments import (
+    assignment_create_specs,
     assignment_edit_specs,
+    create_assignment_from_specs,
     member_audit_event,
     save_service_from_form,
 )
@@ -61,7 +65,14 @@ from wies.core.services.placements import (
 )
 from wies.core.services.urls import url_replacing_param
 
-from ._common import _build_panel_url, _page_url_behind_panel, _resolve_panel_object, _safe_return_path
+from ._common import (
+    _CSV_TOO_LARGE_MSG,
+    _build_panel_url,
+    _csv_too_large,
+    _page_url_behind_panel,
+    _resolve_panel_object,
+    _safe_return_path,
+)
 from .filters import PublicIdFacetsMixin, _finalize_filter_groups
 from .panels import (
     _assignment_create_button,
@@ -74,7 +85,6 @@ from .panels import (
     _build_colleague_panel_data,
     _resolve_aanvraag_panel,
 )
-from .users import _CSV_TOO_LARGE_MSG, _csv_too_large
 
 
 class AssignmentListView(PublicIdFacetsMixin, ListView):
@@ -555,11 +565,6 @@ def assignment_create_sheet(request):
     panel via HX-Location. Roles are added afterwards in that panel. The empty
     form itself is rendered by AssignmentListView (?nieuwe-opdracht), so it lives
     on the list URL like the object panels and survives a reload."""
-    from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
-        assignment_create_specs,
-        create_assignment_from_specs,
-    )
-
     if not request.user.has_perm("core.add_assignment"):
         return HttpResponseForbidden()
 
@@ -603,13 +608,6 @@ def assignment_member_edit_view(request, public_id):
     The form posts a single formset row, which mutates exactly that one service
     (and its placement). Same contract as assignment_edit_view.
     """
-    from wies.core.editables.assignment import (  # noqa: PLC0415
-        AssignmentEditables,
-        skill_choices,
-        visible_service_or_404,
-    )
-    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
-
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")
@@ -663,8 +661,6 @@ def assignment_member_edit_view(request, public_id):
 @require_POST
 def assignment_member_delete_view(request, public_id, service_public_id):
     """Deletes one team member, after the confirmation dialog in the panel."""
-    from wies.core.editables.assignment import AssignmentEditables, visible_service_or_404  # noqa: PLC0415
-
     assignment = Assignment.objects.filter(public_id=public_id).first()
     if assignment is None:
         raise Http404("Unknown assignment")

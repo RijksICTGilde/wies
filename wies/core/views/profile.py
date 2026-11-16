@@ -1,17 +1,18 @@
-"""Your own profile: name, theme, labels, contract periods and onboarding."""
+"""Your own profile: name, theme, labels and onboarding."""
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.formats import date_format
 from django.views.decorators.http import require_POST
 
+from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.service import ServiceEditables
+from wies.core.editables.user import UserEditables
 from wies.core.forms import (
-    ContractPeriodForm,
     ProfileLabelsForm,
     ProfileNameForm,
 )
@@ -21,7 +22,6 @@ from wies.core.inline_edit.forms import (
 from wies.core.models import (
     Assignment,
     Colleague,
-    ContractPeriod,
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.querysets import (
@@ -30,8 +30,8 @@ from wies.core.querysets import (
 from wies.core.services.assignments import (
     assignment_edit_specs,
 )
-from wies.core.services.events import create_event
 from wies.core.services.inline_edit_save import save_edit_specs
+from wies.core.services.onboarding import onboarding_assignments
 
 from ._common import _resolve_panel_object
 from .panels import (
@@ -72,8 +72,6 @@ def profile_name_edit(request):
     Saving goes through each field's Editable save, so the name on the linked
     Colleague follows along exactly as it does for inline edit.
     """
-    from wies.core.editables.user import UserEditables  # noqa: PLC0415 — mirrors the other editable imports here
-
     user = request.user
 
     if request.method == "POST":
@@ -105,146 +103,6 @@ def _own_colleague_or_404(request):
     if colleague is None:
         raise Http404("Geen collegaprofiel om te bewerken")
     return colleague
-
-
-def _contract_block(colleague, user):
-    """Context for parts/contract_periods_block.html, or None for a viewer who
-    may not read the hours."""
-    if not has_permission(Verb.READ, ContractPeriod(colleague=colleague), user):
-        return None
-    today = timezone.now().date()
-    periods = colleague.contract_periods.all()
-    # exists(), not bool(): the add/edit sheet builds this block before it saves
-    # and renders it after, so the queryset must stay unevaluated until then.
-    if periods.exists():
-        empty_text = ""
-    else:
-        empty_text = "Niet ingevuld. De overzichten voor business managers rekenen dan zonder deze uren."
-    return {
-        "colleague": colleague,
-        "periods": periods,
-        # For the label: a running period reads "t/m heden", one still to start "Vanaf".
-        "today": today,
-        "can_edit": has_permission(Verb.UPDATE, ContractPeriod(colleague=colleague), user),
-        "add_url": reverse("contract-period-add", args=[colleague.public_id]),
-        "empty_text": empty_text,
-    }
-
-
-def _contract_period_event(request, period, action, before=None):
-    """Logs a contract-period change on the colleague the hours belong to.
-
-    On the colleague, not the user: the colleague outlives the user, and the
-    hours of someone who has left are exactly what must stay traceable. Nothing
-    displays these events yet.
-    """
-    after = None if action == "delete" else _contract_period_snapshot(period)
-    create_event(
-        object_type="Colleague",
-        action="update",
-        source="user",
-        object_id=period.colleague_id,
-        user=request.user,
-        request=request,
-        context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
-    )
-
-
-def _contract_period_snapshot(period):
-    return {
-        "hours_per_week": period.hours_per_week,
-        "start_date": period.start_date.isoformat(),
-        "end_date": period.end_date.isoformat() if period.end_date else None,
-    }
-
-
-def _contract_period_sheet(request, period, post_url, contract_block):
-    """Add or edit one contract period in a sheet; a save swaps the block back in."""
-    if request.method == "POST":
-        before = _contract_period_snapshot(period) if period.pk else None
-        form = ContractPeriodForm(request.POST, instance=period)
-        # One transaction: ending the running period is undone when the new
-        # period turns out invalid (see ContractPeriodForm.end_running_period).
-        with transaction.atomic():
-            running_before = _contract_period_snapshot(form.running) if form.running else None
-            closed = form.end_running_period()
-            if form.is_valid():
-                form.save()
-                if closed is not None:
-                    _contract_period_event(request, closed, "update", running_before)
-                _contract_period_event(request, period, "update" if before else "create", before)
-                return render(
-                    request,
-                    "parts/contract_period_saved.html",
-                    {"contract_block": contract_block, "announce": "Contractperiode opgeslagen"},
-                )
-            transaction.set_rollback(True)
-        if form.running is not None:
-            # The rollback undid the database write, not the end_date set on the
-            # object the banner renders from.
-            form.running.refresh_from_db()
-    else:
-        form = ContractPeriodForm(instance=period)
-
-    form.fields["hours_per_week"].widget.attrs["autofocus"] = True
-    title = "Contractperiode wijzigen" if period.pk else "Contractperiode toevoegen"
-    return render(
-        request,
-        "parts/contract_period_sheet.html",
-        {"content": form, "form_post_url": post_url, "sheet_title": title},
-    )
-
-
-@login_required
-def contract_period_add(request, colleague_public_id):
-    colleague = get_object_or_404(Colleague, public_id=colleague_public_id)
-    period = ContractPeriod(colleague=colleague)
-    if not has_permission(Verb.UPDATE, period, request.user):
-        return HttpResponseForbidden()
-    post_url = reverse("contract-period-add", args=[colleague.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(colleague, request.user))
-
-
-@login_required
-def contract_period_edit(request, public_id):
-    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
-    if not has_permission(Verb.UPDATE, period, request.user):
-        return HttpResponseForbidden()
-    post_url = reverse("contract-period-edit", args=[period.public_id])
-    return _contract_period_sheet(request, period, post_url, _contract_block(period.colleague, request.user))
-
-
-@login_required
-def contract_period_delete(request, public_id):
-    """GET asks in the shared confirm modal; POST deletes and swaps the block back
-    in through the same response as a save, which also empties the mount the
-    modal sits in."""
-    period = get_object_or_404(ContractPeriod.objects.select_related("colleague"), public_id=public_id)
-    if not has_permission(Verb.UPDATE, period, request.user):
-        return HttpResponseForbidden()
-    if request.method != "POST":
-        return render(
-            request,
-            "parts/confirm_delete_modal.html",
-            {
-                "dialog_text": "Contractperiode verwijderen?",
-                "dialog_supporting": (
-                    f"De periode van {period.hours_per_week} uur vanaf {date_format(period.start_date, 'j b Y')} "
-                    "verdwijnt uit de geschiedenis. Een periode afsluiten kan ook met een einddatum."
-                ),
-                "confirm_label": "Verwijder periode",
-                "cancel_label": "Behoud periode",
-                "form_post_url": reverse("contract-period-delete", args=[period.public_id]),
-            },
-        )
-    colleague = period.colleague
-    before = _contract_period_snapshot(period)
-    period.delete()
-    _contract_period_event(request, period, "delete", before)
-    block = _contract_block(colleague, request.user)
-    return render(
-        request, "parts/contract_period_saved.html", {"contract_block": block, "announce": "Contractperiode verwijderd"}
-    )
 
 
 @login_required
@@ -356,10 +214,8 @@ def onboarding_complete(request):
 
 def _onboarding_entry(request, public_id):
     """The onboarding entry for this assignment, or None when you are not on it."""
-    from wies.core.context_processors import _onboarding_assignments  # noqa: PLC0415 — avoids import cycle
-
     colleague = getattr(request.user, "colleague", None)
-    for entry in _onboarding_assignments(colleague, request.user):
+    for entry in onboarding_assignments(colleague, request.user):
         if entry["assignment"].public_id == public_id:
             return entry
     return None
@@ -372,9 +228,6 @@ def _onboarding_edit_groups(request, entry, data=None):
     collide on the same names. The Business Manager is deliberately left out:
     here they are the contact person, not something you set yourself.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
-
     assignment = entry["assignment"]
     groups = []
 

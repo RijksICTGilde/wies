@@ -896,7 +896,7 @@ class UserImportTest(TestCase):
         content = response.content.decode()
         assert "Geen bestand geüpload" in content
 
-    @patch("wies.core.views.users.MAX_CSV_UPLOAD_BYTES", 10)
+    @patch("wies.core.views._common.MAX_CSV_UPLOAD_BYTES", 10)
     def test_import_rejects_oversized_file(self):
         """An upload above the size cap is rejected before it is read into
         memory (cap patched small here to avoid a real large file)."""

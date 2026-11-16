@@ -2,9 +2,11 @@
 
 import logging
 
+from django import forms
 from django.shortcuts import get_object_or_404, render
 
 from wies.core.editables import REGISTRY
+from wies.core.editables.assignment import restricted_change_ids
 from wies.core.inline_edit.base import (
     EditableCollection,
 )
@@ -113,8 +115,6 @@ def _team_event_privacy_note(assignment, request, changes) -> str:
     current row carries a note then), and an unrelated row's note must not label
     this event.
     """
-    from wies.core.editables.assignment import restricted_change_ids  # noqa: PLC0415 — avoids import cycle
-
     hidden = restricted_change_ids(assignment, changes)
     if not hidden:
         return ""
@@ -183,8 +183,6 @@ def _attach_audit_render_data(event, obj, request) -> bool:
                 )
                 event.diff_entries = None
         return True
-
-    from django import forms  # noqa: PLC0415
 
     # A textarea gets the Van/Naar block, unless it is one row high: that is a
     # plain text field allowed to wrap, and "van X naar Y" reads better there.

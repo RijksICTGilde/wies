@@ -41,6 +41,7 @@ from wies.core.querysets import (
 from wies.core.roles import (
     role_label,
 )
+from wies.core.services.contract_periods import contract_period_event, contract_period_snapshot
 from wies.core.services.events import create_event
 from wies.core.services.urls import current_page_url_on
 from wies.core.services.users import (
@@ -51,9 +52,9 @@ from wies.core.services.users import (
     update_user,
 )
 
-from ._common import _sort_control_context
+from ._common import _CSV_TOO_LARGE_MSG, _csv_too_large, _sort_control_context
+from .contract_periods import contract_periods_block
 from .filters import PublicIdFacetsMixin, _finalize_filter_groups
-from .profile import _contract_block, _contract_period_event, _contract_period_snapshot
 
 User = get_user_model()
 
@@ -411,7 +412,7 @@ def _create_user_with_contract_period(request, form) -> bool:
                     form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
                 return False
             period.save()
-            _contract_period_event(request, period, "create")
+            contract_period_event(request, period, "create")
     return True
 
 
@@ -426,7 +427,7 @@ def user_edit(request, public_id):
     # Contract periods sit on the linked colleague; a user without one has
     # nothing to hang them on and gets no block.
     colleague = getattr(edited_user, "colleague", None)
-    contract_block = _contract_block(colleague, request.user) if colleague else None
+    contract_block = contract_periods_block(colleague, request.user) if colleague else None
 
     if request.method == "GET":
         form = UserForm(instance=edited_user, editor=request.user)
@@ -579,8 +580,8 @@ def user_delete(request, public_id):
                 "label_names": label_names,
                 "group_names": [role_label(g.name) for g in user.groups.all()],
                 "left_on": left_on.isoformat() if left_on else None,
-                "contract_ended": _contract_period_snapshot(ended) if ended else None,
-                "contract_dropped": [_contract_period_snapshot(p) for p in dropped],
+                "contract_ended": contract_period_snapshot(ended) if ended else None,
+                "contract_dropped": [contract_period_snapshot(p) for p in dropped],
                 "placements_ended": [_placement_snapshot(p) for p in placements_ended],
                 "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
             }
@@ -600,20 +601,6 @@ def user_delete(request, public_id):
         response["HX-Redirect"] = _user_list_behind_sheet(request)
         return response
     return HttpResponse(status=405)
-
-
-# Safety ceiling so a single upload can't exhaust a worker's memory
-MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
-
-
-_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
-
-
-_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
-
-
-def _csv_too_large(csv_file) -> bool:
-    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
 
 
 @permission_required("rijksauth.add_user", raise_exception=True)

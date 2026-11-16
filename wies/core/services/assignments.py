@@ -7,7 +7,10 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
 
+from wies.core.editables.assignment import AssignmentEditables
+from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.permission_engine import Verb, has_permission
 
 if TYPE_CHECKING:
     from datetime import date
@@ -219,8 +222,6 @@ def assignment_create_specs():
     without an object and without a per-object permission check — creating is
     gated on ``core.add_assignment``.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
     specs = [
         AssignmentEditables.name,
         AssignmentEditables.extra_info,
@@ -345,9 +346,6 @@ def member_audit_event(request, assignment):
     whole-team, so the audit delta still reports exactly the one row that
     changed, keyed on the internal ``service.id``.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
-
     spec = AssignmentEditables.services
     before = spec.audit_state(assignment) if spec.audit_state else None
     with transaction.atomic():
@@ -364,9 +362,6 @@ def assignment_edit_specs(assignment, user, only=None):
     ``only`` (a spec name) narrows it to one field: a row's ⋯-menu edits just that
     field, while the pencil edits everything.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
-
     candidates = [
         AssignmentEditables.name,
         AssignmentEditables.extra_info,

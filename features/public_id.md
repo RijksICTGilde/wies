@@ -94,9 +94,9 @@ anyway; there is simply no reason for it, and real migration risk.)
 - **Routing:** Django's built-in `<uuid:public_id>` converter, so a
   malformed value 404s at routing and never reaches the database.
 - **Filters:** the facet params arrive as raw query strings, so
-  `FacetResolver` resolves each one to internal ids once per request
-  (`_apply_filters` runs once per facet to compute the cross-filter
-  counts). The tree traversal and per-org counts stay on internal `id`;
+  `FacetResolver` resolves each one to internal ids once per request,
+  although a list view filters several times per request (once for its
+  results and again for each cross-filter count). The tree traversal and per-org counts stay on internal `id`;
   only the URL boundary speaks UUID.
 - **Filters fail closed.** A facet that is present in the URL but
   resolves to no row filters everything away, it is never dropped. See

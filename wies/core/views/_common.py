@@ -1,4 +1,4 @@
-"""Helpers shared by the views: panel URLs, sort controls, safe return paths."""
+"""Helpers shared by the views: panel URLs, sort controls, safe return paths, CSV upload limit."""
 
 import urllib.parse
 
@@ -113,3 +113,17 @@ def _safe_return_path(raw: str | None, fallback: str) -> str:
     if is_local_path(raw):
         return raw
     return fallback
+
+
+# Safety ceiling so a single upload can't exhaust a worker's memory
+MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
+
+
+_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
+
+
+_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def _csv_too_large(csv_file) -> bool:
+    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES

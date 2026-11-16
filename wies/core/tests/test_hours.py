@@ -1271,7 +1271,7 @@ class ContractHoursAudienceTest(TestCase):
         )
 
     def test_whoever_may_keep_the_hours_may_read_them(self):
-        """What ``_contract_block`` rests on: it returns nothing to a non-reader,
+        """What ``contract_periods_block`` rests on: it returns nothing to a non-reader,
         and the add/edit/delete routes render it after a save on the UPDATE right
         alone. A role that could write without reading would get an empty block
         swapped back in.

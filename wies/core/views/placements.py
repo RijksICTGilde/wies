@@ -2,6 +2,7 @@
 
 import json
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from django.contrib import messages
 from django.db.models import (
@@ -63,6 +64,9 @@ from .panels import (
     _build_placement_edit_panel_data,
     _resolve_aanvraag_panel,
 )
+
+if TYPE_CHECKING:
+    from collections import Counter
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
@@ -218,6 +222,20 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         count_beyond = group_count(filtered_qs.filter(service__assignment__end_date__gt=half_year))
         options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
         return options
+
+    def org_counts(self) -> Counter[int]:
+        """Groups per opdrachtgever under every filter but the opdrachtgever's,
+        for the sidebar and the opdrachtgever picker alike.
+
+        Counts the groups of the active ``?weergave=``, so the picker's numbers
+        match the sidebar's next to it.
+        """
+        return org_counts_from_filtered(
+            self._apply_filters(self._get_base_queryset(), exclude_filter="org").distinct(),
+            Placement,
+            "service__assignment__organizations__id",
+            group_field=self.GROUP_FIELD[self.active_view],
+        )
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Applies all selection filters, optionally excluding one filter type.
@@ -557,14 +575,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
-        # Org counts exclude the org filter, so the numbers reflect the other
-        # active filters.
-        org_counts = org_counts_from_filtered(
-            self._apply_filters(base_qs, exclude_filter="org").distinct(),
-            Placement,
-            "service__assignment__organizations__id",
-            group_field=group_field,
-        )
+        org_counts = self.org_counts()
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)

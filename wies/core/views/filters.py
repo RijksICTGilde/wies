@@ -1,10 +1,8 @@
-"""Filter facets and search suggestions, shared by the list views."""
+"""Filter facets, shared by the list views."""
 
 from collections import Counter
 from functools import cached_property
 from typing import TYPE_CHECKING
-
-from django.shortcuts import render
 
 from wies.core.models import (
     Label,
@@ -14,7 +12,6 @@ from wies.core.models import (
 from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.core.services.organizations import (
     ORG_TYPE_PLURAL,
-    find_orgs_by_abbreviation,
     get_ministry_nested_root_ids,
     get_org_descendant_ids,
     get_type_folder_root_ids,
@@ -238,17 +235,6 @@ class PublicIdFacetsMixin:
     def labels_match_nothing(self) -> bool:
         """A ``?labels=`` was given but none of its values exist."""
         return self.facets("labels", Label).requested and not self.labels_by_category
-
-
-def search_suggestions(request):
-    """Returns org abbreviation suggestions for the search input (HTMX partial)."""
-    term = request.GET.get("zoek", "")
-    orgs = find_orgs_by_abbreviation(term)
-    return render(
-        request,
-        "parts/search_suggestions.html",
-        {"org_suggestions": orgs, "search_term": term.strip()},
-    )
 
 
 def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[int]:

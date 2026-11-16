@@ -6,6 +6,16 @@ from django.http import Http404, QueryDict
 from django.urls import reverse
 from django.utils import timezone
 
+from wies.core.editables.assignment import (
+    AssignmentEditables,
+    _organizations_initial,
+    _owner_display_context,
+    skill_choices,
+    visible_service_rows,
+)
+from wies.core.editables.service import ServiceEditables
+from wies.core.forms import ServiceForm
+from wies.core.inline_edit.display import spec_label
 from wies.core.inline_edit.forms import (
     build_combined_form_class,
 )
@@ -29,6 +39,7 @@ from wies.core.services.aanvragen import (
     team_names_text,
 )
 from wies.core.services.assignments import (
+    assignment_create_specs,
     assignment_edit_specs,
     external_source,
 )
@@ -47,18 +58,10 @@ from wies.core.visibility_rules import (
 )
 
 from ._common import _build_close_url, _build_panel_url, _is_side_panel_request, _resolve_panel_object, _url_drop_params
-from .inline_edit import _spec_label
 
 
 def _build_assignment_panel_data(assignment, request):
     """Builds the assignment panel context, shared by both views."""
-    from wies.core.editables.assignment import (  # noqa: PLC0415
-        AssignmentEditables,
-        _organizations_initial,
-        _owner_display_context,
-        visible_service_rows,
-    )
-
     team_rows = visible_service_rows(assignment, request)
     for row in team_rows:
         # The viewer's own row: its menu speaks of "mijn", not "teamlid".
@@ -133,30 +136,6 @@ def _build_assignment_create_panel_data(request, form, *, parent_url=None):
     }
 
 
-def _merge_preview_rows(group) -> list[dict]:
-    """One row per placement for the merge preview: assignment, consultant, fate.
-
-    The first assignment in the group is the one that stays; everything else
-    moves into it. A service without placements is a vacancy and still counts as
-    a line, because it moves along too.
-    """
-    target = group[0]
-    rows = []
-    for assignment in group:
-        keeps = assignment.id == target.id
-        # Indicative, not imperative: this describes what happens, it is not a
-        # button. Source and destination both sit in the sentence, so a row reads
-        # on its own without a separate assignment column.
-        action = f"Blijft in opdracht {target.id}" if keeps else f"Van opdracht {assignment.id} naar {target.id}"
-        for service in assignment.services.all():
-            names = [placement.colleague.name for placement in service.placements.all()]
-            if names:
-                rows.extend({"consultant": name, "vacant": False, "action": action, "keeps": keeps} for name in names)
-            else:
-                rows.append({"consultant": "Vacant", "vacant": True, "action": action, "keeps": keeps})
-    return rows
-
-
 def _merge_date_range(existing: dict, start, end):
     """Widen the date range of an assignment entry to include the given start/end."""
     if start and (existing["start_date"] is None or start < existing["start_date"]):
@@ -192,8 +171,6 @@ def _make_assignment_entry(
 
 
 def _get_colleague_assignments(request, colleague):
-    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415 — avoids import cycle
-
     today = timezone.now().date()
 
     active_by_id: dict[int, dict] = {}
@@ -435,7 +412,6 @@ def _resolve_aanvraag_panel(request, public_id):
     filled are indistinguishable.
     """
     # Deferred: wies.core.editables imports from views at module level.
-    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415
 
     service = _resolve_panel_object(request, Service, public_id, select_related=("assignment", "skill"))
     if service is not None:
@@ -459,7 +435,6 @@ def _build_aanvraag_panel_data(service, request):
     """
     # Deferred like the other panel builders: wies.core.editables imports from
     # views at module level, so a top-level import here is circular.
-    from wies.core.editables.assignment import AssignmentEditables, visible_service_rows  # noqa: PLC0415
 
     assignment = service.assignment
     role = aanvraag_role(service)
@@ -509,9 +484,6 @@ def _assignment_create_panel(request):
     """
     if request.GET.get("nieuwe-opdracht") is None or not request.user.has_perm("core.add_assignment"):
         return None
-    from wies.core.services.assignments import (  # noqa: PLC0415 (import not at top level) — avoids import cycle
-        assignment_create_specs,
-    )
 
     form_cls, initial = build_combined_form_class(assignment_create_specs())
     # Prefill: the creator is usually the BM themselves.
@@ -564,8 +536,6 @@ def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_
     pass the bound ``form`` + sanitised ``parent_url`` to re-render an invalid
     submission instead of a fresh form.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
     only = request.GET.get("veld") or None
     specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
@@ -578,7 +548,7 @@ def _build_assignment_edit_panel_data(assignment, request, *, form=None, parent_
         "assignment": assignment,
         "form": form,
         # Single-field sheet: the title names that field ("Business Manager wijzigen").
-        "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht wijzigen",
+        "edit_heading": f"{spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht wijzigen",
         "parent_url": parent_url
         if parent_url is not None
         else _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
@@ -595,9 +565,6 @@ def _build_assignment_member_panel_data(assignment, request, *, member_form=None
     invalid POST, pass the bound ``member_form`` + its ``member_heading`` +
     sanitised ``parent_url`` to re-render; the ``teamlid`` lookup is then skipped.
     """
-    from wies.core.editables.assignment import AssignmentEditables, skill_choices, visible_service_rows  # noqa: PLC0415
-    from wies.core.forms import ServiceForm  # noqa: PLC0415 — avoids circular import
-
     spec = AssignmentEditables.services
     if not has_permission(Verb.UPDATE, assignment, request.user, spec):
         return None

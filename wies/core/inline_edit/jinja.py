@@ -7,9 +7,9 @@ from jinja2 import pass_context
 
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
+from wies.core.inline_edit.display import concurrency_token, resolve_display, spec_label
 from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.views.inline_edit import _concurrency_token, _resolve_display, _spec_label
 
 
 @pass_context
@@ -42,7 +42,7 @@ def inline_edit(ctx, obj, name, **extras):
 
     user_can_edit = has_permission(Verb.UPDATE, obj, user, spec)
 
-    display = _resolve_display(obj, spec, editables)
+    display = resolve_display(obj, spec, editables)
     if is_collection:
         value = spec.initial(obj)
     elif isinstance(spec, Editable):
@@ -52,7 +52,7 @@ def inline_edit(ctx, obj, name, **extras):
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
         "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
-        "label": _spec_label(editable_set, spec),
+        "label": spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
         "value": value,
@@ -103,14 +103,14 @@ def inline_edit_form(ctx, obj, name, **extras):
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
         "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
-        "label": _spec_label(editable_set, spec),
+        "label": spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
         "form": form_cls(initial=initial),
         "bare": True,
         # Without a token the save view rejects the post as a conflict; the view
         # sets it on a normal inline edit, but this macro renders the form itself.
-        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "concurrency_token": concurrency_token(editable_set, spec, obj),
         **extras,
     }
     html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
