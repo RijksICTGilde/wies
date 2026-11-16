@@ -7,6 +7,7 @@ import urllib.parse
 from types import SimpleNamespace
 
 from django import forms
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import Http404
@@ -16,7 +17,7 @@ from django.utils import timezone
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
-from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
+from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Placement, Skill
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.dates import request_period_text
@@ -119,8 +120,6 @@ def skill_choices():
 
 def _services_initial(assignment):
     """Returns one row per service, vacancies first."""
-    from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
-
     # One prefetch for the latest placement per service, instead of a query each.
     services = (
         assignment.services.select_related("skill")
@@ -317,8 +316,6 @@ def placement_audit_row(placement) -> dict:
     Lets a period edit made directly on a placement show on the assignment
     timeline, not only via "Team bewerken" (#393).
     """
-    from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
-
     service = placement.service
     return _service_audit_row(
         {
@@ -458,8 +455,6 @@ def _services_render_change(change: dict) -> dict:
 
 def _validate_period(cleaned):
     """Rejects an end date before the start date, across the period group."""
-    from django.core.exceptions import ValidationError  # noqa: PLC0415
-
     start, end = cleaned.get("start_date"), cleaned.get("end_date")
     if start and end and end < start:
         raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
