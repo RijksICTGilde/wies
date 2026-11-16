@@ -493,6 +493,22 @@ class UserViewsTest(TestCase):
             role_label(ROLE_USER_ADMIN),
         }
 
+    def test_user_delete_yourself(self):
+        """The event keeps who deleted, though that user is gone; TestCase checks
+        the deferred foreign keys at teardown, where a dangling Event.user fails."""
+        self.client.force_login(self.auth_user)
+        user_id = self.auth_user.id
+
+        response = self.client.post(reverse("user-delete", args=[self.auth_user.public_id]))
+
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("home")
+        assert not User.objects.filter(id=user_id).exists()
+        event = Event.objects.get(object_type="User", action="delete", object_id=user_id)
+        assert event.user is None
+        assert event.user_email == self.auth_user.email
+        assert "_auth_user_id" not in self.client.session
+
     def test_user_delete_prevents_superuser_deletion(self):
         """Test that superusers cannot be deleted via this endpoint"""
         self.client.force_login(self.auth_user)
