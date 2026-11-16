@@ -29,7 +29,7 @@ from wies.core.models import (
 from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
 from wies.core.views.panels import build_assignment_panel_data, get_colleague_assignments
-from wies.core.views.placements import PersoonSearch
+from wies.core.views.placements import PlacementSearch
 from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
@@ -292,7 +292,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        qs = PersoonSearch(request).filtered
+        qs = PlacementSearch(request, group_field="colleague_id").filtered()
 
         # Verify placement is NOT in queryset
         assert placement not in qs, "Historical placement should be excluded"
@@ -313,7 +313,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        qs = PersoonSearch(request).filtered
+        qs = PlacementSearch(request, group_field="colleague_id").filtered()
 
         # Verify placement IS in queryset
         assert placement in qs, "Placement ending today should be included"
@@ -334,7 +334,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        qs = PersoonSearch(request).filtered
+        qs = PlacementSearch(request, group_field="colleague_id").filtered()
 
         # Verify placement IS in queryset
         assert placement in qs, "Future placement should be included"
@@ -373,7 +373,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        qs = PersoonSearch(request).filtered
+        qs = PlacementSearch(request, group_field="colleague_id").filtered()
 
         # Verify placement is NOT in queryset (service ended yesterday)
         assert placement not in qs, "Placement with service ending yesterday should be excluded"
@@ -412,7 +412,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        qs = PersoonSearch(request).filtered
+        qs = PlacementSearch(request, group_field="colleague_id").filtered()
 
         # Verify placement is NOT in queryset (assignment ended yesterday)
         assert placement not in qs, "Placement with assignment ending yesterday should be excluded"
@@ -1091,7 +1091,7 @@ class PlacementListFutureVisibilityTest(TestCase):
         mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         request = RequestFactory().get(self.list_url)
         request.user = user
-        return PersoonSearch(request).filtered
+        return PlacementSearch(request, group_field="colleague_id").filtered()
 
     @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_unrelated(self, mock_tz):
@@ -1754,7 +1754,7 @@ class PlacementOrganizationFilterTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        return PersoonSearch(request).filtered
+        return PlacementSearch(request, group_field="colleague_id").filtered()
 
     def test_org_filter_rejects_sequential_pk(self):
         """Anti-enumeration: the org's integer pk is not a usable filter token, so
@@ -1912,7 +1912,7 @@ class OrgFilterCountCrossFilterTest(TestCase):
         """
         request = RequestFactory().get(reverse("home"), params)
         request.user = self.user
-        groups = PersoonSearch(request).filter_groups
+        groups = PlacementSearch(request, group_field="colleague_id").filter_groups
         org_group = next(g for g in groups if g["name"] == "organisatie")
         return {opt["value"]: opt["count"] for opt in org_group["top_options"] if opt["param"] == "org"}
 
@@ -1999,7 +1999,7 @@ class PlacementSearchTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", {"zoek": query})
         request.user = self.auth_user
-        return PersoonSearch(request).filtered
+        return PlacementSearch(request, group_field="colleague_id").filtered()
 
     def test_search_by_colleague_name(self):
         p = self._create_placement(colleague_name="Jan de Vries")
@@ -2053,7 +2053,7 @@ class PlacementLooptAfFilterTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        return set(PersoonSearch(request).filtered.values_list("id", flat=True))
+        return set(PlacementSearch(request, group_field="colleague_id").filtered().values_list("id", flat=True))
 
     @patch("wies.core.views.placements.timezone")
     def test_loopt_af_3m(self, mock_timezone):
@@ -2343,7 +2343,7 @@ class ScopedOrgTypeInFilterTest(TestCase):
         unit.save(update_fields=["main_type"])
 
     def _matched_ids(self, params):
-        search = PersoonSearch(RequestFactory().get("/", params))
+        search = PlacementSearch(RequestFactory().get("/", params), group_field="colleague_id")
         return set(OrganizationUnit.objects.filter(id__in=search.org.matching_ids).values_list("id", flat=True))
 
     def test_selecting_ministry_includes_its_linked_units(self):
@@ -2433,7 +2433,7 @@ class TopLevelTypeFolderFilterTest(TestCase):
         unit.save(update_fields=["main_type"])
 
     def _matched_ids(self, params):
-        search = PersoonSearch(RequestFactory().get("/", params))
+        search = PlacementSearch(RequestFactory().get("/", params), group_field="colleague_id")
         return set(OrganizationUnit.objects.filter(id__in=search.org.matching_ids).values_list("id", flat=True))
 
     def test_ministries_folder_includes_units_nested_under_them(self):

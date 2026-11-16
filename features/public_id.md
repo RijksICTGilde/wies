@@ -174,9 +174,9 @@ anyway; there is simply no reason for it, and real migration risk.)
   resolution)
 - `wies/core/models.py`: the per-model `public_id` field, defaulting to
   `uuid.uuid4`
-- `wies/core/views/filters.py`: the facets (`ModelFacet`, `LabelSelection`,
-  `OrgFacet`, ...) that apply a resolved filter fail-closed and build its chips
-- `wies/core/views/listing.py`: `ListSearch`, which resolves a list's facets
+- `wies/core/views/filters.py`: `Filter` / `model_filter` / `label_filters` /
+  `OrgFilter`, which apply a resolved selection fail-closed and carry its chips
+- `wies/core/views/listing.py`: `ListSearch`, which resolves a list's filters
   once per request
 - `wies/core/inline_edit/forms.py`: `use_public_id_choices` (select
   option values)

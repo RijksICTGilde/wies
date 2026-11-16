@@ -32,21 +32,45 @@ from wies.core.services.occupancy import (
 )
 
 from ._common import build_panel_url
-from .filters import Choice, ModelFacet, label_facets, model_choices, select_multi_group
+from .filters import (
+    Choice,
+    Filter,
+    finalize_filter_groups,
+    label_filters,
+    model_choices,
+    model_filter,
+    select_multi_group,
+)
 from .listing import FacetedListView, ListSearch
 from .panels import assignment_create_button
+
+BEZETTING_PAGE_SIZE = 60
+
+STATUS_LABELS = {
+    STATUS_BENCH: "Op de bank",
+    STATUS_PARTIAL: "Deels beschikbaar",
+    STATUS_ENDS_SOON: "Eindigt binnen 3 maanden",
+}
 
 
 class BezettingSearch(ListSearch):
     """The consultants on the timeline under the request's search and filters.
 
     Labels are OR within a category and AND between categories, like "Wie zit
-    waar?"; each label category is its own filter group under the shared
+    waar?"; each label category is its own sidebar group under the shared
     ``labels`` param, and the onderdeel is its own group. No "Rol" group:
     everyone on this page is a consultant. The filters offer only the values a
     consultant has.
+
+    The status is not a column but derived from the built timeline rows, so it
+    filters those rows, after the queryset.
     """
 
+    @cached_property
+    def today(self):
+        return timezone.now().date()
+
+    @cached_property
     def scope(self):
         qs = consultant_colleagues()
         if self.query:
@@ -54,54 +78,97 @@ class BezettingSearch(ListSearch):
             qs = qs.filter(Q(name__icontains=self.query) | Q(email__icontains=self.query))
         return qs
 
-    def build_facets(self):
+    # The filters
+
+    @cached_property
+    def labels(self):
+        return label_filters(self.resolver("labels", Label), "labels__id")
+
+    @cached_property
+    def onderdeel(self):
+        return model_filter("onderdeel", self.resolver("onderdeel", Suborganization), "suborganization_id")
+
+    @cached_property
+    def status(self):
+        # Not active: it narrows the rows below, not the queryset.
+        selected = [status for status in self.params.getlist("status") if status in STATUS_VALUES]
+        return Filter("status", active=False, narrow=lambda qs: qs, values=selected)
+
+    def filters(self):
+        return [*self.labels, self.onderdeel, self.status]
+
+    # The rows
+
+    @cached_property
+    def all_rows(self):
+        """Every consultant under the queryset filters, before the status filter."""
+        rows = colleague_occupancy(self.today, self.filtered())
+        for row in rows:
+            row.colleague.panel_url = build_panel_url(self.request, collega=row.colleague.public_id)
+        return rows
+
+    @cached_property
+    def summary(self) -> dict:
+        """Follows the search and the filters, but not the status filter, which
+        is applied after it: a card has to keep showing what it would select."""
+        return occupancy_summary(self.all_rows)
+
+    @cached_property
+    def rows(self):
+        """Most pressing first; the status cards as independent OR-toggles."""
+        rows = self.all_rows
+        if self.status.values:
+            rows = [r for r in rows if any(row_has_status(r, s) for s in self.status.values)]
+        return rows_in_display_order(rows)
+
+    # The sidebar
+
+    @cached_property
+    def filter_groups(self):
         used_labels = (
             Label.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT)
             .distinct()
             .select_related("category")
             .order_by("category__name", Lower("name"))
         )
-        by_category: dict[int, tuple] = {}
+        categories: dict[int, tuple] = {}
         for label in used_labels:
-            by_category.setdefault(label.category_id, (label.category, []))[1].append(label)
-        return [
-            *label_facets(self.resolver("labels", Label), by_category.values(), lookup="labels__id"),
-            ModelFacet(
-                "onderdeel",
-                "Onderdeel",
-                self.resolver("onderdeel", Suborganization),
-                lookup="suborganization_id",
-                choices=lambda: model_choices(
-                    Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
+            categories.setdefault(label.category_id, (label.category, []))[1].append(label)
+        return finalize_filter_groups(
+            [
+                self._status_group(),
+                *self.label_groups(categories.values(), "labels__id"),
+                select_multi_group(
+                    "onderdeel",
+                    "Onderdeel",
+                    model_choices(
+                        Suborganization.objects.filter(colleagues__user__groups__name=ROLE_CONSULTANT).distinct()
+                    ),
+                    self.onderdeel.values,
+                    self.count("onderdeel", "suborganization_id"),
                 ),
-            ),
-        ]
+            ]
+        )
 
+    def _status_group(self) -> dict:
+        """The summary cards as a filter group, for when they do not fit the row.
 
-BEZETTING_PAGE_SIZE = 60
-
-
-def _status_group(selected: list[str], summary: dict) -> dict:
-    """The summary cards as a filter group, for when they do not fit the row.
-
-    Same values and counts as the cards, so toggling either keeps one state.
-    Finalized here rather than by finalize_filter_groups: that keeps the top
-    three by count and hides the rest behind "Meer…", which would drop a
-    status's hidden input and leave its card dead.
-    """
-    choices = [
-        Choice(STATUS_BENCH, "Op de bank", STATUS_BENCH),
-        Choice(STATUS_PARTIAL, "Deels beschikbaar", STATUS_PARTIAL),
-        Choice(STATUS_ENDS_SOON, "Eindigt binnen 3 maanden", STATUS_ENDS_SOON),
-    ]
-    counts = {
-        STATUS_BENCH: summary["bench_count"],
-        STATUS_PARTIAL: summary["partial_count"],
-        STATUS_ENDS_SOON: summary["ends_soon_count"],
-    }
-    group = select_multi_group("status", "Status", choices, selected, counts)
-    group.update(group_id="status", top_options=group["options"][1:], has_more=False)
-    return group
+        Status also lives in the sheet, not only on the cards: on a narrow
+        window the cards are hidden, and a filter you cannot reach is a filter
+        you cannot switch off. Same values and counts as the cards, so toggling
+        either keeps one state. All three always show: finalize_filter_groups
+        would keep the top three by count and hide the rest behind "Meer…",
+        which would drop a status's hidden input and leave its card dead.
+        """
+        counts = {
+            STATUS_BENCH: self.summary["bench_count"],
+            STATUS_PARTIAL: self.summary["partial_count"],
+            STATUS_ENDS_SOON: self.summary["ends_soon_count"],
+        }
+        choices = [Choice(status, label, status) for status, label in STATUS_LABELS.items()]
+        group = select_multi_group("status", "Status", choices, self.status.values, counts)
+        group.update(group_id="status", top_options=group["options"][1:], has_more=False)
+        return group
 
 
 @method_decorator(business_management_access_required, name="dispatch")
@@ -131,61 +198,23 @@ class BezettingListView(FacetedListView):
     side_panel = True
     allow_create = True
 
-    @cached_property
-    def today(self):
-        return timezone.now().date()
-
-    @cached_property
-    def all_rows(self):
-        rows = colleague_occupancy(self.today, self.search.filtered)
-        for row in rows:
-            row.colleague.panel_url = build_panel_url(self.request, collega=row.colleague.public_id)
-        return rows
-
-    @cached_property
-    def summary(self) -> dict:
-        """Follows the search and the filters, but not the status filter, which
-        is applied after it: a card has to keep showing what it would select."""
-        return occupancy_summary(self.all_rows)
-
-    @cached_property
-    def selected_statuses(self) -> list[str]:
-        return [status for status in self.request.GET.getlist("status") if status in STATUS_VALUES]
-
     def page_source(self):
-        # Status is derived from the built rows (not a queryset column), so it
-        # filters here, in memory: the three cards as independent OR-toggles.
-        rows = self.all_rows
-        if self.selected_statuses:
-            rows = [r for r in rows if any(row_has_status(r, s) for s in self.selected_statuses)]
-        return rows_in_display_order(rows)
+        return self.search.rows
 
-    def row_context(self, page):
+    def rows(self, page):
         return {
             "rows": page.object_list,
             "row_count": page.paginator.count,
             "today_pct": today_marker_pct(),
             "horizon_days": horizon_days(),
-            "month_ticks": month_ticks(self.today),
+            "month_ticks": month_ticks(self.search.today),
         }
 
-    def filter_context(self):
-        context = super().filter_context()
-        # Status also lives in the sheet, not only on the cards: on a narrow
-        # window the cards are hidden, and a filter you cannot reach is a filter
-        # you cannot switch off.
-        context["filter_groups"] = [_status_group(self.selected_statuses, self.summary), *context["filter_groups"]]
-        if self.selected_statuses:
-            context["active_filters"] = {**context["active_filters"], "status": self.selected_statuses}
-            context["active_filter_count"] = len(context["active_filters"])
-        context["search_filter"] = self.search.query
-        return context
-
-    def extra_context(self):
+    def controls(self):
         return {
-            "today": self.today,
-            "horizon": timeline_horizon(self.today),
-            **self.summary,
-            "selected_statuses": self.selected_statuses,
+            "today": self.search.today,
+            "horizon": timeline_horizon(self.search.today),
+            **self.search.summary,
+            "selected_statuses": self.search.status.values,
             "primary_button": assignment_create_button(self.request),
         }

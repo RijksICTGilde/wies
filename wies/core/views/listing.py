@@ -1,9 +1,9 @@
 """The faceted lists: a search per request, and a view that renders its fragments.
 
 Every list page (Wie zit waar?, Aanvragen, Gebruikers, Bezetting) is the same
-thing: a selection narrowed by a search term and a set of facets, shown a page
-at a time, with per-option counts in the filter panel. ``ListSearch`` is that
-selection for one request, parsed once; ``FacetedListView`` answers the
+thing: a selection narrowed by a search term and a set of filters, shown a
+page at a time, with per-option counts in the filter panel. ``ListSearch`` is
+that selection for one request, parsed once; ``FacetedListView`` answers the
 requests the page makes, each with only the work that response needs.
 """
 
@@ -17,44 +17,52 @@ from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.views import View
 
+from wies.core.models import Label
 from wies.core.public_id import FacetResolver
 from wies.core.querysets import count_distinct
 from wies.core.services.organizations import get_excluded_org_ids
 from wies.core.services.urls import PAGE_PARAM, rebuild_url
 
 from ._common import PANEL_PARAMS, is_side_panel_request
-from .filters import Facet, OrgFacet, finalize_filter_groups
+from .filters import Choice, label_category_param, select_multi_group
 from .panels import resolve_side_panel
 
 if TYPE_CHECKING:
     from collections import Counter
-    from collections.abc import Sequence
+    from collections.abc import Iterable, Sequence
 
     from django.db.models import Model, QuerySet
     from django.http import HttpRequest
 
+    from wies.core.models import LabelCategory
+
+    from .filters import Filter, OrgFilter
+
 
 class ListSearch:
-    """One list's selection for one request: scope, search term and facets.
+    """One list's selection for one request: scope, search term and filters.
 
-    Subclasses give the ``scope`` (what the list can show at all, with the
-    search applied) and the ``build_facets``. Everything is computed on first
-    use and kept for the request, so a count, a chip and the page itself never
-    parse the same parameter twice.
+    A subclass gives its ``scope`` (what the list can show at all, with the
+    search applied), its ``filters()`` and its sidebar (``filter_groups``),
+    written out in the order it shows. Everything is computed on first use and
+    kept for the request, so a count, a chip and the page itself never parse
+    the same parameter twice.
     """
 
     # Counts count distinct values of this field (one card per colleague, say)
     # instead of rows. None: every row is a card.
-    group_field: ClassVar[str | None] = None
-    # Whether the filtered queryset needs a DISTINCT: a facet that joins a
+    group_field: str | None = None
+    # Whether the filtered queryset needs a DISTINCT: a filter that joins a
     # to-many relation repeats rows otherwise.
     distinct: ClassVar[bool] = True
-    # The path to the opdrachtgever id, for lists with that filter.
+    # The opdrachtgever filter and its path to the organization id, on the lists that have one.
+    org: OrgFilter | None = None
     org_lookup: ClassVar[str] = ""
 
     def __init__(self, request: HttpRequest):
         self.request = request
         self.params = request.GET
+        self._filtered: dict[str | None, QuerySet] = {}
         self._counts: dict[tuple[str | None, str], Counter] = {}
 
     @cached_property
@@ -67,55 +75,47 @@ class ListSearch:
         return FacetResolver(self.request, self.facet_scopes())
 
     def facet_scopes(self) -> dict[type[Model], QuerySet]:
-        """Per model, the rows this list's facets may resolve to; see ``resolve_facet``."""
+        """Per model, the rows this list's filters may resolve to; see ``resolve_facet``."""
         return {}
 
     @cached_property
     def excluded_org_ids(self) -> set[int]:
         return get_excluded_org_ids()
 
+    @cached_property
     def scope(self) -> QuerySet:
-        """What the list shows before any facet: the selection, not its order."""
+        """What the list shows before any filter: the selection, not its order."""
         raise NotImplementedError
 
-    def build_facets(self) -> list[Facet]:
+    def filters(self) -> list[Filter | OrgFilter]:
         raise NotImplementedError
 
     @cached_property
-    def scoped(self) -> QuerySet:
-        return self.scope()
+    def filter_groups(self) -> list[dict]:
+        """The sidebar, top to bottom."""
+        raise NotImplementedError
 
-    @cached_property
-    def facets(self) -> list[Facet]:
-        return self.build_facets()
+    def filtered(self, skip: str | None = None) -> QuerySet:
+        """The scope under every active filter, or every one but the ``skip`` param."""
+        if skip not in self._filtered:
+            qs = self.scope
+            for f in self.filters():
+                if f.active and f.param != skip:
+                    qs = f.narrow(qs)
+            self._filtered[skip] = qs.distinct() if self.distinct else qs
+        return self._filtered[skip]
 
-    @cached_property
-    def org(self) -> OrgFacet | None:
-        return next((facet for facet in self.facets if isinstance(facet, OrgFacet)), None)
+    def count(self, skip: str | None, lookup: str) -> Counter:
+        """Groups per value of ``lookup``, under every filter but the ``skip`` param.
 
-    def filtered_except(self, excluded: Facet | None) -> QuerySet:
-        """The scope under every active facet but ``excluded``."""
-        qs = self.scoped
-        for facet in self.facets:
-            if facet is not excluded and facet.active:
-                qs = facet.apply(qs)
-        return qs.distinct() if self.distinct else qs
-
-    @cached_property
-    def filtered(self) -> QuerySet:
-        return self.filtered_except(None)
-
-    def count_by(self, facet: Facet, lookup: str) -> Counter:
-        """Groups per value of ``lookup``, under every facet but ``facet``.
-
-        An inactive facet excludes nothing, so all of them share one query.
+        Skipping a filter that is not active skips nothing, so those counts
+        share one query.
         """
-        key = (facet.key if facet.active else None, lookup)
-        if key not in self._counts:
-            self._counts[key] = count_distinct(
-                self.filtered_except(facet if facet.active else None), lookup, self.group_field
-            )
-        return self._counts[key]
+        if not any(f.active and f.param == skip for f in self.filters()):
+            skip = None
+        if (skip, lookup) not in self._counts:
+            self._counts[skip, lookup] = count_distinct(self.filtered(skip), lookup, self.group_field)
+        return self._counts[skip, lookup]
 
     def org_counts(self) -> Counter:
         """Groups per opdrachtgever under every filter but the opdrachtgever's.
@@ -123,29 +123,51 @@ class ListSearch:
         For the sidebar and the opdrachtgever picker alike, so their numbers
         agree. Lists whose cards are not rows of one queryset override this.
         """
-        return self.count_by(self.org, self.org_lookup)
+        return self.count("org", self.org_lookup)
+
+    def label_groups(
+        self,
+        categories: Iterable[tuple[LabelCategory, list[Label]]],
+        lookup: str,
+        *,
+        with_color: bool = False,
+    ) -> list[dict]:
+        """One sidebar group per label category, each counted without its own selection."""
+        selected = self.resolver("labels", Label).active_values
+        return [
+            select_multi_group(
+                "labels",
+                category.name,
+                [
+                    Choice(
+                        str(label.public_id),
+                        label.name,
+                        label.pk,
+                        {"category_color": category.color} if with_color else {},
+                    )
+                    for label in labels
+                ],
+                selected,
+                self.count(label_category_param(category.id), lookup),
+            )
+            for category, labels in categories
+        ]
 
     @cached_property
     def active_filters(self) -> dict[str, Any]:
-        """``{param: values}`` of every active facet, values in URL order."""
+        """``{param: values}`` of every active filter, values in URL order."""
         active: dict[str, Any] = {}
-        for facet in self.facets:
-            active.update(facet.active_filters())
+        for f in self.filters():
+            active.update(f.active_filters())
         return active
 
     @cached_property
     def unknown_chip_data(self) -> list[dict]:
-        return [chip for facet in self.facets for chip in facet.unknown_chips()]
+        return [chip for f in self.filters() for chip in f.unknown_chips()]
 
     @cached_property
     def org_chip_data(self) -> list[dict]:
         return self.org.chips() if self.org else []
-
-    @cached_property
-    def filter_groups(self) -> list[dict]:
-        groups = [group for facet in self.facets if (group := facet.group(facet.counts(self))) is not None]
-        finalize_filter_groups(groups)
-        return groups
 
 
 def clamped_page(paginator: Paginator, raw: str | None) -> Page:
@@ -164,17 +186,9 @@ def clamped_page(paginator: Paginator, raw: str | None) -> Page:
 class FacetedListView(View):
     """A list page and the fragments it requests, each built from one ``ListSearch``.
 
-    - a side-panel request (``HX-Target: side-panel-content``): the panel only;
-      the list is not touched
-    - ``?filter_modal=<group_id>``: the full option list of one filter group
-    - ``?pagina=N`` (htmx): the next page of rows, for "Meer tonen"
-    - any other htmx request (a filter, sort or search change): the results,
-      with the filter panel out of band
-    - a plain request: the whole page
-
-    Subclasses give the templates, ``page_source`` (what to paginate) and
-    ``row_context`` (what a page of it renders as), and add their own
-    controls in ``extra_context``.
+    A list gives its templates, ``page_source`` (what is paged), ``rows``
+    (what a page of it renders as) and ``controls`` (what sits next to the
+    results: sort, weergave, primary button).
     """
 
     search_class: ClassVar[type[ListSearch]]
@@ -189,19 +203,36 @@ class FacetedListView(View):
     # Whether ?nieuwe-opdracht opens the create form as that panel.
     allow_create: ClassVar[bool] = False
 
+    @classmethod
+    def make_search(cls, request: HttpRequest) -> ListSearch:
+        return cls.search_class(request)
+
     def get(self, request, *args, **kwargs):
-        if self.side_panel and is_side_panel_request(request):
-            panel_data = self.panel_data
-            if panel_data:
-                return self.respond(panel_data["panel_content_template"], {"panel_data": panel_data})
-        self.search = self.search_class(request)
+        # The side panel: just the panel, the list underneath is not touched.
+        if self.side_panel and is_side_panel_request(request) and self.panel_data:
+            return self.respond(self.panel_data["panel_content_template"], {"panel_data": self.panel_data})
+        self.search = self.make_search(request)
         if "HX-Request" in request.headers:
+            # "Meer…": the full option list of one filter group.
             if request.GET.get("filter_modal"):
-                return self.respond(self.filter_modal_template, self.filter_context())
+                return self.respond(self.filter_modal_template, self.filters_context())
+            # "Meer tonen": the next page of rows.
             if request.GET.get(PAGE_PARAM):
                 return self.respond(self.rows_template, self.rows_context())
-            return self.respond(self.results_template, {**self.results_context(), "render_filter_fields_oob": True})
-        return self.respond(self.template_name, self.page_context())
+            # A filter, sort or search change: the results, with the filter panel out of band.
+            return self.respond(
+                self.results_template,
+                {**self.rows_context(), **self.filters_context(), **self.controls(), "render_filter_fields_oob": True},
+            )
+        return self.respond(
+            self.template_name,
+            {
+                **self.rows_context(),
+                **self.filters_context(),
+                **self.controls(),
+                "panel_data": self.panel_data if self.side_panel else None,
+            },
+        )
 
     def respond(self, template: str, context: dict) -> TemplateResponse:
         return TemplateResponse(self.request, template, context)
@@ -214,12 +245,12 @@ class FacetedListView(View):
         """What is paged: a sliceable, countable sequence in display order."""
         raise NotImplementedError
 
-    def row_context(self, page: Page) -> dict:
+    def rows(self, page: Page) -> dict:
         """What a page of ``page_source`` renders as (cards, rows, ...)."""
         raise NotImplementedError
 
-    def extra_context(self) -> dict:
-        """The list's own controls next to the results (sort, primary button, ...)."""
+    def controls(self) -> dict:
+        """What sits next to the results (sort, weergave, primary button)."""
         return {}
 
     @cached_property
@@ -238,10 +269,10 @@ class FacetedListView(View):
             "paginator": page.paginator,
             "is_paginated": page.has_other_pages(),
             "next_page_url": next_page_url,
-            **self.row_context(page),
+            **self.rows(page),
         }
 
-    def filter_context(self) -> dict:
+    def filters_context(self) -> dict:
         search = self.search
         return {
             "filter_groups": search.filter_groups,
@@ -253,12 +284,3 @@ class FacetedListView(View):
             "filter_modal_group_id": self.request.GET.get("filter_modal", ""),
             "search_filter": self.request.GET.get("zoek"),
         }
-
-    def results_context(self) -> dict:
-        return {**self.rows_context(), **self.filter_context(), **self.extra_context()}
-
-    def page_context(self) -> dict:
-        context = self.results_context()
-        if self.side_panel:
-            context["panel_data"] = self.panel_data
-        return context

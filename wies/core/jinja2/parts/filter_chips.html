@@ -26,7 +26,7 @@
   {% endfor %}
   {# Fail-closed: a facet value that matches nothing (stale or invented public_id)
      gets an "Onbekend" chip instead of vanishing, keeping the empty list
-     explainable and clearable. See Facet.unknown_chips in views/filters.py. #}
+     explainable and clearable. See Filter.unknown_chips in views/filters.py. #}
   {% for chip in unknown_chip_data %}
     <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-wies-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
   {% endfor %}

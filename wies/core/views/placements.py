@@ -9,6 +9,7 @@ from typing import Any, ClassVar
 from django.contrib import messages
 from django.db.models import (
     Case,
+    Count,
     F,
     Max,
     Min,
@@ -54,13 +55,15 @@ from wies.core.visibility_rules import (
 
 from ._common import build_panel_url, sort_control_context
 from .filters import (
-    ModelFacet,
-    OrgFacet,
-    Preset,
-    PresetFacet,
+    Choice,
+    Filter,
+    OrgFilter,
     categories_with_labels,
-    label_facets,
+    finalize_filter_groups,
+    label_filters,
     model_choices,
+    model_filter,
+    select_multi_group,
 )
 from .listing import FacetedListView, ListSearch
 from .panels import build_placement_edit_panel_data
@@ -91,16 +94,6 @@ class SortOption:
         return expression.desc(nulls_last=True) if self.nulls_last else expression.desc()
 
 
-def loopt_af_presets(today: date) -> list[Preset]:
-    """The "loopt af" choices, on the opdracht's end date. Cumulative: 6m includes 3m."""
-    half_year = today + timedelta(days=182)
-    return [
-        Preset("3m", "Binnen 3 maanden", Q(service__assignment__end_date__lte=today + timedelta(days=91))),
-        Preset("6m", "Binnen 6 maanden", Q(service__assignment__end_date__lte=half_year)),
-        Preset("6m+", "Langer dan 6 maanden", Q(service__assignment__end_date__gt=half_year)),
-    ]
-
-
 class PlacementSearch(ListSearch):
     """The placements on "Wie zit waar?" under the request's search and filters.
 
@@ -108,12 +101,16 @@ class PlacementSearch(ListSearch):
     viewer alike. History and planned placements live on the profile and the
     side panels, not here.
 
-    The weergaven count differently, so each has its own subclass: a count
-    follows the cards, and two colleagues on one assignment are two cards in
-    the person view and one in the assignment view.
+    ``group_field`` is what a card is, so what the counts count: two colleagues
+    on one assignment are two cards in the person view and one in the
+    assignment view.
     """
 
     org_lookup = "service__assignment__organizations__id"
+
+    def __init__(self, request, group_field: str):
+        super().__init__(request)
+        self.group_field = group_field
 
     @cached_property
     def today(self) -> date:
@@ -124,6 +121,7 @@ class PlacementSearch(ListSearch):
         # the "Onbekend label" chip instead of filtering out of sight.
         return {Label: Label.objects.filter(category__in=label_categories_for_everyone())}
 
+    @cached_property
     def scope(self):
         qs = Placement.objects.all()
         if self.excluded_org_ids:
@@ -137,45 +135,95 @@ class PlacementSearch(ListSearch):
             )
         return filter_visible_placements(annotate_placement_dates(qs), self.today)
 
-    def build_facets(self):
-        resolve = self.resolver
-        return [
-            OrgFacet(
-                resolve,
-                self.params,
-                apply_ids=lambda qs, ids: qs.filter(service__assignment__organizations__id__in=ids),
-            ),
-            ModelFacet(
-                "rol",
-                "Rol",
-                resolve("rol", Skill),
-                lookup="service__skill_id",
-                choices=lambda: model_choices(Skill.objects.order_by("name")),
-            ),
-            # One onderdeel per colleague: OR within the group.
-            ModelFacet(
-                "onderdeel",
-                "Onderdeel",
-                resolve("onderdeel", Suborganization),
-                lookup="colleague__suborganization_id",
-                choices=lambda: model_choices(Suborganization.objects.all()),
-            ),
-            *label_facets(
-                resolve("labels", Label),
-                categories_with_labels(label_categories_for_everyone()),
-                lookup="colleague__labels__id",
-                with_color=True,
-            ),
-            PresetFacet("loopt_af", "Loopt af", loopt_af_presets(self.today), self.params.getlist("loopt_af")),
-        ]
+    # The filters
 
+    @cached_property
+    def org(self):
+        return OrgFilter(
+            self.resolver,
+            self.params,
+            apply_ids=lambda qs, ids: qs.filter(service__assignment__organizations__id__in=ids),
+        )
 
-class PersoonSearch(PlacementSearch):
-    group_field = "colleague_id"
+    @cached_property
+    def rol(self):
+        return model_filter("rol", self.resolver("rol", Skill), "service__skill_id")
 
+    @cached_property
+    def onderdeel(self):
+        # One onderdeel per colleague: OR within the selection.
+        return model_filter("onderdeel", self.resolver("onderdeel", Suborganization), "colleague__suborganization_id")
 
-class OpdrachtSearch(PlacementSearch):
-    group_field = "service__assignment_id"
+    @cached_property
+    def labels(self):
+        return label_filters(self.resolver("labels", Label), "colleague__labels__id")
+
+    @cached_property
+    def loopt_af_options(self) -> dict[str, tuple[str, Q]]:
+        """The "loopt af" choices, on the opdracht's end date. Cumulative: 6m includes 3m."""
+        half_year = self.today + timedelta(days=182)
+        return {
+            "3m": ("Binnen 3 maanden", Q(service__assignment__end_date__lte=self.today + timedelta(days=91))),
+            "6m": ("Binnen 6 maanden", Q(service__assignment__end_date__lte=half_year)),
+            "6m+": ("Langer dan 6 maanden", Q(service__assignment__end_date__gt=half_year)),
+        }
+
+    @cached_property
+    def loopt_af(self):
+        # An unknown value filters nothing, so it is dropped rather than left
+        # behind as a hidden input without a chip.
+        values = [v for v in dict.fromkeys(self.params.getlist("loopt_af")) if v in self.loopt_af_options]
+        either = Q()
+        for value in values:
+            either |= self.loopt_af_options[value][1]
+        return Filter("loopt_af", active=bool(values), narrow=lambda qs: qs.filter(either), values=values)
+
+    def filters(self):
+        return [self.org, self.rol, self.onderdeel, *self.labels, self.loopt_af]
+
+    # The sidebar
+
+    @cached_property
+    def filter_groups(self):
+        return finalize_filter_groups(
+            [
+                self.org.group(self.org_counts()),
+                select_multi_group(
+                    "rol",
+                    "Rol",
+                    model_choices(Skill.objects.order_by("name")),
+                    self.rol.values,
+                    self.count("rol", "service__skill_id"),
+                ),
+                select_multi_group(
+                    "onderdeel",
+                    "Onderdeel",
+                    model_choices(Suborganization.objects.all()),
+                    self.onderdeel.values,
+                    self.count("onderdeel", "colleague__suborganization_id"),
+                ),
+                *self.label_groups(
+                    categories_with_labels(label_categories_for_everyone()), "colleague__labels__id", with_color=True
+                ),
+                select_multi_group(
+                    "loopt_af",
+                    "Loopt af",
+                    [Choice(value, label, value) for value, (label, _) in self.loopt_af_options.items()],
+                    self.loopt_af.values,
+                    self.loopt_af_counts(),
+                ),
+            ]
+        )
+
+    def loopt_af_counts(self) -> dict[str, int]:
+        """Cards per "loopt af" choice, each on its own, in one query."""
+        base = self.filtered(skip="loopt_af")
+        return Placement.objects.filter(pk__in=base.values("pk")).aggregate(
+            **{
+                value: Count(self.group_field, distinct=True, filter=condition)
+                for value, (_, condition) in self.loopt_af_options.items()
+            }
+        )
 
 
 class PlacementListView(FacetedListView):
@@ -186,7 +234,6 @@ class PlacementListView(FacetedListView):
     ``placement_list`` picks one per request.
     """
 
-    search_class: ClassVar[type[PlacementSearch]]
     template_name = "placements.html"
     results_template = "parts/filter_and_table_container.html"
     rows_template = "parts/placement_cards.html"
@@ -196,8 +243,14 @@ class PlacementListView(FacetedListView):
     weergave: ClassVar[str]
     label: ClassVar[str]
     icon: ClassVar[str]
+    # What one card is: the field the cards are grouped, paged and counted on.
+    group_field: ClassVar[str]
     default_sort: ClassVar[SortOption]
     sorts: ClassVar[tuple[SortOption, ...]]
+
+    @classmethod
+    def make_search(cls, request) -> PlacementSearch:
+        return PlacementSearch(request, group_field=cls.group_field)
 
     @cached_property
     def sort(self) -> SortOption:
@@ -216,8 +269,8 @@ class PlacementListView(FacetedListView):
             return rebuild_url(reverse("home"), self.request.GET, drop=(*dropped, "weergave"))
         return rebuild_url(reverse("home"), self.request.GET, drop=dropped, weergave=view.weergave)
 
-    def extra_context(self):
-        filtered = self.search.filtered
+    def controls(self):
+        filtered = self.search.filtered()
         view_options = [
             {
                 "value": view.weergave,
@@ -227,7 +280,7 @@ class PlacementListView(FacetedListView):
                 "selected": view is type(self),
                 "count": self.page.paginator.count
                 if view is type(self)
-                else filtered.values(view.search_class.group_field).distinct().count(),
+                else filtered.values(view.group_field).distinct().count(),
             }
             for view in WEERGAVEN.values()
         ]
@@ -257,10 +310,10 @@ class PersoonListView(PlacementListView):
     ASC and on DESC NULLS LAST.
     """
 
-    search_class = PersoonSearch
     weergave = "persoon"
     label = "Persoon"
     icon = "person"
+    group_field = "colleague_id"
     # Nulls last: a placement without a start date says nothing about how recent it is.
     default_sort = SortOption("", "Startdatum (nieuwste eerst)", "actual_start_date", descending=True, nulls_last=True)
     sorts = (
@@ -288,18 +341,20 @@ class PersoonListView(PlacementListView):
     def page_source(self):
         """The colleague ids in display order; the colleague id breaks ties."""
         return (
-            self.search.filtered.order_by()
+            self.search.filtered()
+            .order_by()
             .values("colleague_id")
             .annotate(sort_key=self._group_key())
             .order_by(self.sort.order("sort_key"), "colleague_id")
             .values_list("colleague_id", flat=True)
         )
 
-    def row_context(self, page):
+    def rows(self, page):
         colleague_ids = list(page.object_list)
         placements = (
             list(
-                self.search.filtered.filter(colleague_id__in=colleague_ids)
+                self.search.filtered()
+                .filter(colleague_id__in=colleague_ids)
                 .select_related("colleague", "service__assignment", "service__skill")
                 .order_by(self.sort.order(), "colleague_id")
             )
@@ -343,10 +398,10 @@ class OpdrachtListView(PlacementListView):
     opdracht, so the filtered placements only decide which opdrachten are in.
     """
 
-    search_class = OpdrachtSearch
     weergave = "opdracht"
     label = "Opdracht"
     icon = "business-suitcase"
+    group_field = "service__assignment_id"
     # No modified-at on the model, so the audit log stands in. Nulls last:
     # events age out of retention.
     default_sort = SortOption("", "Laatst gewijzigd", "last_change", descending=True, nulls_last=True)
@@ -359,7 +414,7 @@ class OpdrachtListView(PlacementListView):
     )
 
     def page_source(self):
-        assignments = Assignment.objects.filter(id__in=self.search.filtered.values("service__assignment_id"))
+        assignments = Assignment.objects.filter(id__in=self.search.filtered().values("service__assignment_id"))
         if self.sort.field == "last_change":
             assignments = assignments.annotate(
                 last_change=Subquery(
@@ -380,7 +435,7 @@ class OpdrachtListView(PlacementListView):
             )
         )
 
-    def row_context(self, page):
+    def rows(self, page):
         assignments = list(page.object_list)
         return {"object_list": assignments, "cards": self._cards(assignments), "active_view": self.weergave}
 
@@ -430,22 +485,16 @@ class OpdrachtListView(PlacementListView):
 
 WEERGAVEN: dict[str, type[PlacementListView]] = {view.weergave: view for view in (PersoonListView, OpdrachtListView)}
 DEFAULT_WEERGAVE = PersoonListView
-_WEERGAVE_VIEWS = {name: view.as_view() for name, view in WEERGAVEN.items()}
 
 
-def weergave_for(request) -> type[PlacementListView]:
-    """The requested ?weergave=, falling back to the default for unknown values."""
+def weergave_view(request) -> type[PlacementListView]:
+    """The view of the requested ?weergave=, the default for unknown values."""
     return WEERGAVEN.get(request.GET.get("weergave") or "", DEFAULT_WEERGAVE)
 
 
 def placement_list(request, *args, **kwargs):
     """ "Wie zit waar?": hands the request to the view of its weergave."""
-    return _WEERGAVE_VIEWS[weergave_for(request).weergave](request, *args, **kwargs)
-
-
-def placement_search(request) -> PlacementSearch:
-    """The search behind the list the request is on, for the opdrachtgever picker."""
-    return weergave_for(request).search_class(request)
+    return weergave_view(request).as_view()(request, *args, **kwargs)
 
 
 @require_POST

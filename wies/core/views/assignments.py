@@ -2,8 +2,8 @@
 
 import json
 from collections import Counter
+from datetime import date
 from functools import cached_property
-from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from django.contrib import messages
@@ -67,7 +67,15 @@ from ._common import (
     csv_too_large,
     page_url_behind_panel,
 )
-from .filters import DateFacet, KeyFacet, ModelFacet, OrgFacet, model_choices
+from .filters import (
+    Choice,
+    Filter,
+    OrgFilter,
+    finalize_filter_groups,
+    model_choices,
+    model_filter,
+    select_multi_group,
+)
 from .listing import FacetedListView, ListSearch
 from .panels import (
     assignment_create_button,
@@ -75,9 +83,6 @@ from .panels import (
     build_assignment_edit_panel_data,
     build_assignment_member_panel_data,
 )
-
-if TYPE_CHECKING:
-    from datetime import date
 
 
 class AssignmentSearch(ListSearch):
@@ -109,6 +114,7 @@ class AssignmentSearch(ListSearch):
             | Q(organizations__abbreviations__icontains=self.query)
         )
 
+    @cached_property
     def scope(self):
         qs = open_aanvragen(self.excluded_org_ids)
         if self.query:
@@ -120,63 +126,92 @@ class AssignmentSearch(ListSearch):
             )
         return qs
 
-    def _available_from(self, qs, vanaf: date):
-        """An aanvraag that starts per direct, has no start or has already
-        started can be filled any day, so it stays; one that starts later has to
-        start on or after the chosen date. Either way it must still run on that
-        date."""
-        return qs.filter(
-            Q(starts_immediately=True)
-            | Q(effective_start_date__isnull=True)
-            | Q(effective_start_date__lte=self.today)
-            | Q(effective_start_date__gte=vanaf),
-            Q(effective_end_date__isnull=True) | Q(effective_end_date__gte=vanaf),
+    # The filters
+
+    @cached_property
+    def org(self):
+        return OrgFilter(
+            self.resolver,
+            self.params,
+            # Through the opdracht, for the same reason as the search above.
+            apply_ids=lambda qs, ids: qs.filter(assignment__in=Assignment.objects.filter(organizations__id__in=ids)),
         )
 
     @cached_property
-    def _locations(self) -> dict[str, str]:
+    def rol(self):
+        return model_filter("rol", self.resolver("rol", Skill), "skill_id")
+
+    @cached_property
+    def locations(self) -> dict[str, str]:
+        """Every standplaats of an open aanvraag, by its key."""
         return standplaats_labels(open_aanvragen(self.excluded_org_ids))
 
-    def build_facets(self):
-        locations = self._locations
-        return [
-            OrgFacet(
-                self.resolver,
-                self.params,
-                # Through the opdracht, for the same reason as the search above.
-                apply_ids=lambda qs, ids: qs.filter(
-                    assignment__in=Assignment.objects.filter(organizations__id__in=ids)
+    @cached_property
+    def standplaats(self):
+        # An unknown standplaats is dropped rather than emptying the list without a chip.
+        keys = known_standplaatsen(self.params.getlist("standplaats"), self.locations)
+        return Filter(
+            "standplaats", active=bool(keys), narrow=lambda qs: filter_on_standplaatsen(qs, keys), values=keys
+        )
+
+    @cached_property
+    def beschikbaar_vanaf(self):
+        """An aanvraag that starts per direct, has no start or has already
+        started can be filled any day, so it stays; one that starts later has to
+        start on or after the chosen date. Either way it must still run on that
+        date. An unparsable date filters nothing; the chip shows the date itself."""
+        try:
+            vanaf = date.fromisoformat(self.params.get("beschikbaar_vanaf", ""))
+        except ValueError:
+            return Filter("beschikbaar_vanaf", active=False, narrow=lambda qs: qs)
+        return Filter(
+            "beschikbaar_vanaf",
+            active=True,
+            narrow=lambda qs: qs.filter(
+                Q(starts_immediately=True)
+                | Q(effective_start_date__isnull=True)
+                | Q(effective_start_date__lte=self.today)
+                | Q(effective_start_date__gte=vanaf),
+                Q(effective_end_date__isnull=True) | Q(effective_end_date__gte=vanaf),
+            ),
+            values=vanaf,
+        )
+
+    def filters(self):
+        return [self.org, self.rol, self.standplaats, self.beschikbaar_vanaf]
+
+    # The sidebar
+
+    @cached_property
+    def filter_groups(self):
+        return finalize_filter_groups(
+            [
+                self.org.group(self.org_counts()),
+                # Counts aanvragen, so two for the same role on one opdracht count 2.
+                select_multi_group(
+                    "rol",
+                    "Rol",
+                    model_choices(Skill.objects.order_by("name")),
+                    self.rol.values,
+                    self.count("rol", "skill_id"),
                 ),
-            ),
-            # Counts aanvragen, so two for the same role on one opdracht count 2.
-            ModelFacet(
-                "rol",
-                "Rol",
-                self.resolver("rol", Skill),
-                lookup="skill_id",
-                choices=lambda: model_choices(Skill.objects.order_by("name")),
-            ),
-            KeyFacet(
-                "standplaats",
-                "Standplaats",
-                locations,
-                known_standplaatsen(self.params.getlist("standplaats"), locations),
-                apply=filter_on_standplaatsen,
-                count=lambda qs: Counter(
-                    standplaats_key(location) for location in qs.values_list("location", flat=True)
+                select_multi_group(
+                    "standplaats",
+                    "Standplaats",
+                    [Choice(key, label, key) for key, label in self.locations.items()],
+                    self.standplaats.values,
+                    Counter(
+                        standplaats_key(location)
+                        for location in self.filtered(skip="standplaats").values_list("location", flat=True)
+                    ),
                 ),
-            ),
-            DateFacet(
-                "beschikbaar_vanaf",
-                "Beschikbaar vanaf",
-                self.params.get("beschikbaar_vanaf", ""),
-                apply=self._available_from,
-            ),
-        ]
+                {"type": "date", "name": "beschikbaar_vanaf", "label": "Beschikbaar vanaf"},
+            ]
+        )
 
     def assignments_without_aanvraag(self, *, filter_on_org: bool = True):
         """The opdrachten without a role, under the same search and opdrachtgever filter."""
-        if any(facet.active for facet in self.facets if facet.key in ("rol", "standplaats", "beschikbaar_vanaf")):
+        if self.rol.active or self.standplaats.active or self.beschikbaar_vanaf.active:
             return Assignment.objects.none()
         qs = assignments_without_aanvraag(self.excluded_org_ids)
         if self.query:
@@ -188,7 +223,7 @@ class AssignmentSearch(ListSearch):
     def org_counts(self) -> Counter:
         """Cards per opdrachtgever under every filter but the opdrachtgever's:
         the roles and the opdrachten without one together."""
-        return count_distinct(self.filtered_except(self.org), "assignment__organizations__id") + count_distinct(
+        return count_distinct(self.filtered(skip="org"), "assignment__organizations__id") + count_distinct(
             self.assignments_without_aanvraag(filter_on_org=False), "organizations__id"
         )
 
@@ -198,9 +233,13 @@ class AssignmentSearch(ListSearch):
         the aanvraag id is None on an opdracht without one. A union, so paging
         and counting stay in the database."""
         columns = ("card_created", "card_assignment", "card_service")
-        aanvragen = self.filtered.annotate(
-            card_created=F("assignment__created_at"), card_assignment=F("assignment_id"), card_service=F("id")
-        ).values_list(*columns)
+        aanvragen = (
+            self.filtered()
+            .annotate(
+                card_created=F("assignment__created_at"), card_assignment=F("assignment_id"), card_service=F("id")
+            )
+            .values_list(*columns)
+        )
         without_aanvraag = (
             self.assignments_without_aanvraag()
             .annotate(
@@ -230,7 +269,7 @@ class AssignmentListView(FacetedListView):
     def page_source(self):
         return self.search.cards
 
-    def row_context(self, page):
+    def rows(self, page):
         return {"object_list": self._cards(page.object_list)}
 
     def _cards(self, rows) -> list[AanvraagCard]:
@@ -265,7 +304,7 @@ class AssignmentListView(FacetedListView):
             text += f" en {without} {'opdracht' if without == 1 else 'opdrachten'} zonder aanvraag"
         return text
 
-    def extra_context(self):
+    def controls(self):
         return {
             "results_text": self._results_text(self.page.paginator.count),
             "search_field": "zoek",

@@ -54,7 +54,16 @@ from wies.core.services.users import (
 )
 
 from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
-from .filters import Choice, ModelFacet, categories_with_labels, label_facets, model_choices, resolve_pk_facet
+from .filters import (
+    Choice,
+    categories_with_labels,
+    finalize_filter_groups,
+    label_filters,
+    model_choices,
+    model_filter,
+    resolve_pk_facet,
+    select_multi_group,
+)
 from .listing import FacetedListView, ListSearch
 
 User = get_user_model()
@@ -63,6 +72,7 @@ User = get_user_model()
 class UserSearch(ListSearch):
     """The users in Beheer under the request's search and filters."""
 
+    @cached_property
     def scope(self):
         qs = User.objects.filter(is_superuser=False)
         if self.query:
@@ -74,32 +84,50 @@ class UserSearch(ListSearch):
             )
         return qs
 
-    def build_facets(self):
+    # The filters
+
+    @cached_property
+    def rol(self):
+        # ?rol= carries Group pks: Group is Django's own model and has no public_id.
+        return model_filter("rol", resolve_pk_facet(Group, self.params.getlist("rol")), "groups__id")
+
+    @cached_property
+    def labels(self):
+        return label_filters(self.resolver("labels", Label), "colleague__labels__id")
+
+    @cached_property
+    def onderdeel(self):
+        # One onderdeel per colleague: OR within the selection.
+        return model_filter("onderdeel", self.resolver("onderdeel", Suborganization), "colleague__suborganization_id")
+
+    def filters(self):
+        return [self.rol, *self.labels, self.onderdeel]
+
+    # The sidebar
+
+    @cached_property
+    def filter_groups(self):
         # ``Group.name`` is a key, so the database order is not the reader's A-Z.
         groups = sorted(Group.objects.all(), key=lambda group: role_label(group.name))
-        return [
-            # ?rol= carries Group pks: Group is Django's own model and has no public_id.
-            ModelFacet(
-                "rol",
-                "Rol",
-                resolve_pk_facet(Group, self.params.getlist("rol")),
-                lookup="groups__id",
-                choices=lambda: [Choice(str(group.pk), role_label(group.name), group.pk) for group in groups],
-            ),
-            *label_facets(
-                self.resolver("labels", Label),
-                categories_with_labels(LabelCategory.objects.all()),
-                lookup="colleague__labels__id",
-            ),
-            # One onderdeel per colleague: OR within the group.
-            ModelFacet(
-                "onderdeel",
-                "Onderdeel",
-                self.resolver("onderdeel", Suborganization),
-                lookup="colleague__suborganization_id",
-                choices=lambda: model_choices(Suborganization.objects.all()),
-            ),
-        ]
+        return finalize_filter_groups(
+            [
+                select_multi_group(
+                    "rol",
+                    "Rol",
+                    [Choice(str(group.pk), role_label(group.name), group.pk) for group in groups],
+                    self.rol.values,
+                    self.count("rol", "groups__id"),
+                ),
+                *self.label_groups(categories_with_labels(LabelCategory.objects.all()), "colleague__labels__id"),
+                select_multi_group(
+                    "onderdeel",
+                    "Onderdeel",
+                    model_choices(Suborganization.objects.all()),
+                    self.onderdeel.values,
+                    self.count("onderdeel", "colleague__suborganization_id"),
+                ),
+            ]
+        )
 
 
 class UserListView(PermissionRequiredMixin, FacetedListView):
@@ -134,20 +162,19 @@ class UserListView(PermissionRequiredMixin, FacetedListView):
     def page_source(self):
         ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
         return (
-            annotate_sort_names(self.search.filtered)
+            annotate_sort_names(self.search.filtered())
             .select_related("colleague__suborganization")
             .prefetch_related("groups", "colleague__labels__category")
             .order_by(*ordering)
         )
 
-    def row_context(self, page):
+    def rows(self, page):
         return {"object_list": page.object_list, "row_label_categories": self.ROW_LABEL_CATEGORIES}
 
-    def filter_context(self):
-        return {**super().filter_context(), "search_field": "zoek", "search_placeholder": "Zoek op naam of email..."}
-
-    def extra_context(self):
+    def controls(self):
         return {
+            "search_field": "zoek",
+            "search_placeholder": "Zoek op naam of email...",
             **sort_control_context(
                 self.active_order,
                 [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],

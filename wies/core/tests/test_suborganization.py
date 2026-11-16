@@ -13,7 +13,7 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill, S
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views.placements import PersoonSearch
+from wies.core.views.placements import PlacementSearch
 from wies.core.views.users import UserSearch
 
 User = get_user_model()
@@ -152,7 +152,7 @@ class SuborganizationPlacementFilterTest(TestCase):
     def _suborganization_group(self, params=None):
         request = RequestFactory().get("/", params or {})
         request.user = self.auth_user
-        groups = PersoonSearch(request).filter_groups
+        groups = PlacementSearch(request, group_field="colleague_id").filter_groups
         return next(g for g in groups if g.get("name") == "onderdeel")
 
     def _count_for(self, suborganization, params=None):

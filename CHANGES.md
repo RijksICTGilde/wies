@@ -16,7 +16,7 @@ This files lists the changes during the lifetime of this project.
 - XXX: an unknown filter value from an old link (a deleted label, onderdeel or role) empties the list with an "Onbekend …" chip on Bezetting and Gebruikers too, instead of being ignored on Bezetting; the filter counts next to such an empty list are zero
 - XXX: the filter counts on Bezetting follow the search term, like the status cards already did
 - XXX: a page number that does not exist (`?pagina=`) shows the first page on every list instead of an error page on Gebruikers and Aanvragen
-- XXX: (internal) the four list pages share one faceted-search abstraction (`ListSearch` with declarative facets, `FacetedListView` with per-fragment dispatch) instead of four hand-rolled `ListView`s; the persoon and opdracht weergave of Wie zit waar? are separate views, and the opdracht weergave pages the opdrachten themselves
+- XXX: (internal) the four list pages share one search-per-request (`ListSearch`, with each list naming its filters and writing out its sidebar) and one view (`FacetedListView`, which answers each htmx request with only the work it needs) instead of four hand-rolled `ListView`s; the persoon and opdracht weergave of Wie zit waar? are separate views, and the opdracht weergave pages the opdrachten themselves
 
 ## 2026-11-11
 

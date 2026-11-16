@@ -18,16 +18,7 @@ from wies.core.services.organizations import (
 )
 
 from .assignments import AssignmentSearch
-from .placements import placement_search
-
-# The lists whose filter panel opens the picker, by the count_mode it sends.
-# The counts come from the list's own search (the single source of the
-# predicates), with the list's other active filters (and the weergave) sent
-# along via hx-include, so the tree matches the sidebar.
-COUNT_MODES = {
-    "open_assignments": AssignmentSearch,
-    "placements": placement_search,
-}
+from .placements import weergave_view
 
 
 def _build_current_selections(request) -> dict[str, str]:
@@ -71,11 +62,16 @@ def client_modal(request):
     count_mode = request.GET.get("count_mode")
 
     # count_mode "none" is the assignment-form org picker, not a filter list, so
-    # the tree carries no counts (the whole org tree is shown, unpruned).
+    # the tree carries no counts (the whole org tree is shown, unpruned). The
+    # filter lists count with their own search (the single source of the
+    # predicates), over the list's other active filters and weergave sent along
+    # via hx-include, so the tree matches the sidebar.
     if count_mode == "none":
         org_self_counts = Counter()
-    elif count_mode in COUNT_MODES:
-        org_self_counts = COUNT_MODES[count_mode](request).org_counts()
+    elif count_mode == "open_assignments":
+        org_self_counts = AssignmentSearch(request).org_counts()
+    elif count_mode == "placements":
+        org_self_counts = weergave_view(request).make_search(request).org_counts()
     else:
         return HttpResponseBadRequest("Onbekende count_mode")
     hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")

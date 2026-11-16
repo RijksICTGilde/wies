@@ -102,7 +102,7 @@ def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
 
     One recognizable plain string shared by the picker folder (get_org_tree
     JSON → org_tree.js), its selection token (tree_state.js) and the active
-    chip (OrgFacet.chips). Plain text so it needs no aria wiring across the
+    chip (OrgFilter.chips). Plain text so it needs no aria wiring across the
     web-component shadow boundary.
     """
     return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"

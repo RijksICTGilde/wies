@@ -611,7 +611,7 @@ class OccupancySuborganizationFilterTest(TestCase):
     def _ids(self, suborganization_ids):
         tokens = [str(s.public_id) for s in Suborganization.objects.filter(id__in=suborganization_ids or [])]
         search = BezettingSearch(RequestFactory().get("/", {"onderdeel": tokens}))
-        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered)}
+        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered())}
 
     def test_no_filter_shows_everyone(self):
         assert self._ids(None) == {self.a.id, self.b.id, self.c.id}
@@ -710,7 +710,7 @@ class OccupancyLabelFilterTest(TestCase):
         label_ids = [label_id for ids in (labels_by_category or {}).values() for label_id in ids]
         tokens = [str(label.public_id) for label in Label.objects.filter(id__in=label_ids)]
         search = BezettingSearch(RequestFactory().get("/", {"labels": tokens}))
-        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered)}
+        return {r.colleague.id for r in colleague_occupancy(self.today, search.filtered())}
 
     def test_no_filter_shows_everyone(self):
         assert self._ids(None) == {self.a.id, self.b.id, self.c.id}
