@@ -36,14 +36,14 @@ repos:
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.4
+    rev: v0.17.5
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/djlint/djLint
-    rev: v1.49.10
+    rev: v1.51.0
     hooks:
       # Het onderzoeksrapport is uitgezonderd: een gegenereerd, zelfstandig
       # HTML-document, geen Jinja-template, en herformatteren levert alleen ruis op.
