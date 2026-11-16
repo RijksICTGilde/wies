@@ -9,7 +9,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
 from wies.core.forms import (
@@ -23,15 +22,14 @@ from wies.core.models import (
     Assignment,
     Colleague,
 )
-from wies.core.permission_engine import Verb, has_permission
 from wies.core.querysets import (
     label_categories_for_everyone,
 )
 from wies.core.services.assignments import (
-    assignment_edit_specs,
+    onboarding_assignments,
+    onboarding_edit_specs,
 )
 from wies.core.services.inline_edit_save import save_edit_specs
-from wies.core.services.onboarding import onboarding_assignments
 
 from ._common import _resolve_panel_object
 from .panels import (
@@ -225,17 +223,11 @@ def _onboarding_edit_groups(request, entry, data=None):
     """Form groups for the edit screen: the assignment and each of your own roles.
 
     Every group gets a prefix so the role fields of multiple services don't
-    collide on the same names. The Business Manager is deliberately left out:
-    here they are the contact person, not something you set yourself.
+    collide on the same names.
     """
-    assignment = entry["assignment"]
+    assignment_specs, service_specs = onboarding_edit_specs(entry, request.user)
     groups = []
 
-    assignment_specs = [
-        (editable_set, spec, obj)
-        for (editable_set, spec, obj) in assignment_edit_specs(assignment, request.user)
-        if spec is not AssignmentEditables.owner
-    ]
     if assignment_specs:
         form_cls, initial = build_combined_form_class(assignment_specs)
         groups.append(
@@ -248,24 +240,17 @@ def _onboarding_edit_groups(request, entry, data=None):
         )
 
     services = entry["services"]
-    for service in services:
-        service_specs = [
-            (ServiceEditables, spec, service)
-            for spec in (ServiceEditables.skill, ServiceEditables.description, ServiceEditables.hours_per_week)
-            if has_permission(Verb.UPDATE, service, request.user, spec)
-        ]
-        if not service_specs:
-            continue
-        form_cls, initial = build_combined_form_class(service_specs)
+    for service, specs in service_specs:
+        form_cls, initial = build_combined_form_class(specs)
         # Without edit rights on the role the form omits its field, so surface the
         # role read-only to keep the description in context.
-        skill_editable = any(spec is ServiceEditables.skill for (_, spec, _) in service_specs)
+        skill_editable = any(spec is ServiceEditables.skill for (_, spec, _) in specs)
         groups.append(
             {
                 # A heading only when there is more than one role; otherwise the
                 # field labels speak for themselves.
                 "title": None if len(services) == 1 else f"Rol: {service.skill.name if service.skill else 'onbekend'}",
-                "specs": service_specs,
+                "specs": specs,
                 "form": form_cls(data, initial=initial, prefix=f"rol-{service.id}"),
                 # None when editable (the form renders the field); otherwise the
                 # role name, or "" so the template shows its dash fallback.

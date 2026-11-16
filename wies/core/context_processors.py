@@ -1,7 +1,7 @@
 """Context processors injected into every template render."""
 
 from wies.core.querysets import label_categories_for_everyone
-from wies.core.services.onboarding import onboarding_assignments
+from wies.core.services.assignments import onboarding_assignments
 
 
 def onboarding(request):
