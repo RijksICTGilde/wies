@@ -1,6 +1,5 @@
 """Staff pages: role matrix, dashboard, error log and database tools."""
 
-import requests
 from django.conf import settings
 from django.contrib import messages
 from django.core import management
@@ -27,10 +26,8 @@ from wies.core.roles import (
     user_admin_required,
 )
 from wies.core.services import role_matrix as role_matrix_rules
-from wies.core.services.access_requests import ops_notification
 from wies.core.services.assignments import find_duplicate_groups, merge_group
 from wies.core.services.events import create_event
-from wies.core.services.mattermost import parse_channel_url, send_ops_message
 from wies.core.services.tasks import create_task, get_latest_tasks, has_active_task
 from wies.rijksauth.services.usage import get_usage_stats
 
@@ -146,31 +143,6 @@ def delete_error(request, public_id):
     return HttpResponse(status=405)
 
 
-def _send_test_ops_notification(request) -> None:
-    """Posts the real access request notification, so an environment's Mattermost
-    settings can be checked without someone having to request access."""
-    try:
-        sent = send_ops_message(ops_notification(request))
-    except requests.HTTPError as exc:
-        messages.error(
-            request,
-            f"Mattermost weigerde de melding (fout {exc.response.status_code}). "
-            "Controleer het token en of de bot lid is van het kanaal.",
-        )
-        return
-    except requests.RequestException:
-        messages.error(request, "Mattermost is niet bereikbaar. Probeer het later opnieuw.")
-        return
-    except ValueError:
-        messages.error(request, "Het Mattermost-kanaal is geen geldige kanaallink. Controleer de instelling.")
-        return
-    if not sent:
-        messages.error(request, "Mattermost is niet ingesteld: het token of het kanaal ontbreekt.")
-        return
-    _base_url, _team, channel = parse_channel_url(settings.MATTERMOST_WIES_OPS_CHANNEL_URL)
-    messages.success(request, f"De melding is verstuurd naar het Mattermost-kanaal {channel}.")
-
-
 @staff_required
 def staff_database(request):
     context = {
@@ -203,8 +175,6 @@ def staff_database(request):
             # environment that already has data regenerates cleanly.
             management.call_command("load_dummy_data", profile="base")
             messages.success(request, "Dummy data gegenereerd")
-        elif action == "test_ops_notification":
-            _send_test_ops_notification(request)
         elif action == "reset_onboarding":
             request.user.onboarding_completed_at = None
             request.user.save(update_fields=["onboarding_completed_at"])

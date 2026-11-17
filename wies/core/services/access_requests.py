@@ -137,16 +137,11 @@ def _mail_after_commit(access_request: AccessRequest, subject: str, body: str) -
     transaction.on_commit(send)
 
 
-def ops_notification(request=None) -> str:
-    """What the ops channel gets for a new request. No name or address: the
-    channel is wider than the Gebruikersbeheerders."""
-    return f"Nieuwe toegangsaanvraag voor Wies: {site_url(reverse('access-request-admin'), request)}"
-
-
 def _notify_ops(request) -> None:
-    """Tells the ops channel there is something to decide."""
+    """Tells the ops channel there is something to decide. No name or address: the
+    channel is wider than the Gebruikersbeheerders."""
     try:
-        send_ops_message(ops_notification(request))
+        send_ops_message(f"Nieuwe toegangsaanvraag voor Wies: {site_url(reverse('access-request-admin'), request)}")
     except requests.RequestException, ValueError:
         # The request is stored; the counter in the app still shows it. ValueError:
         # a malformed channel URL, which must not cost the requester a 500.

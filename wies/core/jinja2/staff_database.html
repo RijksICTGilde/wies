@@ -130,28 +130,6 @@
   <nldd-box>
   <nldd-container padding="16">
   <nldd-title size="display-5">
-  <h2>Mattermost-melding testen</h2>
-  </nldd-title>
-  <nldd-spacer size="4" direction="vertical"></nldd-spacer>
-  <nldd-rich-text>
-  <p>
-    Stuur de melding over een nieuwe toegangsaanvraag naar het Mattermost-kanaal.
-    Zo zie je of Mattermost goed is ingesteld, zonder dat iemand toegang hoeft aan
-    te vragen. Iedereen in het kanaal ziet de melding.
-  </p>
-  </nldd-rich-text>
-  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <form novalidate method="post">
-    {{ get_csrf_hidden_input(request) }}
-    <input type="hidden" name="action" value="test_ops_notification" />
-    <nldd-button appearance="secondary" type="submit" text="Testmelding versturen"></nldd-button>
-  </form>
-  </nldd-container>
-  </nldd-box>
-  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <nldd-box>
-  <nldd-container padding="16">
-  <nldd-title size="display-5">
   <h2>Onboarding resetten</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
