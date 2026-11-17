@@ -9,6 +9,7 @@ This files lists the changes during the lifetime of this project.
 - 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
 - 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
 - 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
+- 855: (internal) remove redundant `@login_required` decorators; `LoginRequiredMiddleware` already enforces login on every view
 
 ## 2026-11-11
 
