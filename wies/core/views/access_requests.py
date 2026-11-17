@@ -9,7 +9,7 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 
-from wies.core.forms import AccessRequestForm, AccessRequestRejectForm, UserForm
+from wies.core.forms import AccessRequestApproveForm, AccessRequestForm, AccessRequestRejectForm
 from wies.core.models import AccessRequest, ContractPeriod
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.services import access_requests
@@ -93,8 +93,18 @@ def _approved_mailto(request, access_request) -> str:
     return f"mailto:{access_request.email}?{query}"
 
 
-def _mail_note(access_request) -> str:
-    return f" {access_request.first_name} krijgt hierover een e-mail." if settings.EMAIL_ENABLED else ""
+def _mail_note(access_request, form) -> str:
+    return f" {access_request.first_name} krijgt hierover een e-mail." if form.cleaned_data.get("send_mail") else ""
+
+
+def _decision_form(form_class, request, mail_label: str, **kwargs):
+    """The approve or reject form; the mail checkbox only when Wies can send mail."""
+    form = form_class(request.POST if request.method == "POST" else None, **kwargs)
+    if settings.EMAIL_ENABLED:
+        form.fields["send_mail"].label = mail_label
+    else:
+        del form.fields["send_mail"]
+    return form
 
 
 @access_request_admin_required
@@ -158,11 +168,25 @@ def access_request_approve(request, public_id):
         "email": access_request.email,
         "suborganization": access_request.suborganization,
     }
-    form = UserForm(request.POST if request.method == "POST" else None, initial=initial, editor=request.user)
+    form = _decision_form(
+        AccessRequestApproveForm,
+        request,
+        f"Stuur {access_request.first_name} een e-mail dat er toegang is",
+        initial=initial,
+        editor=request.user,
+    )
     # Disabled: Django takes the initial value and ignores whatever is posted.
     form.fields["email"].disabled = True
-    if request.method == "POST" and form.is_valid() and _create_user_with_contract_period(request, form):
-        messages.success(request, f"{access_request.full_name} heeft nu toegang tot Wies.{_mail_note(access_request)}")
+    if (
+        request.method == "POST"
+        and form.is_valid()
+        and _create_user_with_contract_period(
+            request, form, mail_access_request=form.cleaned_data.get("send_mail", False)
+        )
+    ):
+        messages.success(
+            request, f"{access_request.full_name} heeft nu toegang tot Wies.{_mail_note(access_request, form)}"
+        )
         return _back_to_access_request_admin()
     return render(
         request,
@@ -183,11 +207,20 @@ def access_request_reject(request, public_id):
     access_request, decided = _pending_access_request_or_back(request, public_id)
     if decided:
         return decided
-    form = AccessRequestRejectForm(request.POST if request.method == "POST" else None)
+    form = _decision_form(
+        AccessRequestRejectForm, request, f"Stuur {access_request.first_name} een e-mail met de afwijzing"
+    )
     if request.method == "POST" and form.is_valid():
-        access_requests.reject(access_request, request.user, form.cleaned_data["decision_note"], request=request)
+        access_requests.reject(
+            access_request,
+            request.user,
+            form.cleaned_data["decision_note"],
+            request=request,
+            send_mail=form.cleaned_data.get("send_mail", False),
+        )
         messages.success(
-            request, f"De toegangsaanvraag van {access_request.full_name} is afgewezen.{_mail_note(access_request)}"
+            request,
+            f"De toegangsaanvraag van {access_request.full_name} is afgewezen.{_mail_note(access_request, form)}",
         )
         return _back_to_access_request_admin()
     return render(
@@ -197,6 +230,5 @@ def access_request_reject(request, public_id):
             "content": form,
             "access_request": access_request,
             "form_post_url": reverse("access-request-reject", args=[access_request.public_id]),
-            "email_enabled": settings.EMAIL_ENABLED,
         },
     )

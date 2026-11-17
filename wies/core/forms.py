@@ -423,6 +423,12 @@ class AccessRequestForm(NlddFormMixin, forms.ModelForm):
         self.fields["last_name"].widget.attrs["autocomplete"] = "family-name"
 
 
+class AccessRequestApproveForm(UserForm):
+    """The user sheet, plus whether the requester gets the approval mail."""
+
+    send_mail = forms.BooleanField(required=False, initial=True)
+
+
 class AccessRequestRejectForm(NlddFormMixin, forms.Form):
     decision_note = forms.CharField(
         label="Reden",
@@ -430,6 +436,7 @@ class AccessRequestRejectForm(NlddFormMixin, forms.Form):
         max_length=500,
         widget=forms.Textarea(attrs={"rows": 3}),
     )
+    send_mail = forms.BooleanField(required=False, initial=True)
 
 
 class UserDeleteForm(NlddFormMixin, forms.Form):

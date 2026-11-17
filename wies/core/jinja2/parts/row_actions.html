@@ -1,7 +1,8 @@
 {# Row actions: one action renders as a single icon button, several as a
    more-button with a menu. `actions` is a list of dicts with `icon`, `text` and
    `attrs` (a dict of hx-*/data-* attributes; values are autoescaped); both
-   branches share the same wiring.
+   branches share the same wiring. In the menu `icon` is optional; the lone
+   button needs one.
 
    An action may carry a `submenu` instead of `attrs`: a nested `nldd-menu`,
    which NLDD turns into a drill-in opener. Such an action does not navigate
@@ -20,11 +21,11 @@
     <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="{{ label }}">
     <nldd-menu slot="popup" placement="bottom-end">
     {% for a in actions %}
-      <nldd-menu-item text="{{ a.text }}" icon="{{ a.icon }}" {%- for name, value in (a.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}>
+      <nldd-menu-item text="{{ a.text }}" {%- if a.icon %} icon="{{ a.icon }}"{% endif %} {%- for name, value in (a.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}>
       {% if a.submenu %}
         <nldd-menu>
         {% for sub in a.submenu %}
-          <nldd-menu-item text="{{ sub.text }}" icon="{{ sub.icon }}" {%- for name, value in (sub.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
+          <nldd-menu-item text="{{ sub.text }}" {%- if sub.icon %} icon="{{ sub.icon }}"{% endif %} {%- for name, value in (sub.attrs or {}).items() %} {{ name }}="{{ value }}"{% endfor %}></nldd-menu-item>
         {% endfor %}
         </nldd-menu>
       {% endif %}

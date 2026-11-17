@@ -171,21 +171,23 @@ def _decide(access_request: AccessRequest, status: str, decided_by, request, **f
     )
 
 
-def approve(access_request: AccessRequest, created_user, decided_by, request=None) -> None:
+def approve(access_request: AccessRequest, created_user, decided_by, request=None, *, send_mail: bool = True) -> None:
     _decide(access_request, AccessRequest.Status.APPROVED, decided_by, request, created_user=created_user)
-    _mail_after_commit(access_request, *approval_mail(access_request, request))
+    if send_mail:
+        _mail_after_commit(access_request, *approval_mail(access_request, request))
 
 
-def reject(access_request: AccessRequest, decided_by, note: str = "", request=None) -> None:
+def reject(access_request: AccessRequest, decided_by, note: str = "", request=None, *, send_mail: bool = True) -> None:
     _decide(access_request, AccessRequest.Status.REJECTED, decided_by, request, decision_note=note)
-    _mail_after_commit(access_request, *_rejection_mail(access_request))
+    if send_mail:
+        _mail_after_commit(access_request, *_rejection_mail(access_request))
 
 
-def close_pending_for(user, decided_by, request=None) -> None:
+def close_pending_for(user, decided_by, request=None, *, send_mail: bool = True) -> None:
     """A user created by hand (sheet or CSV) answers a pending request on their address."""
     pending = AccessRequest.objects.filter(email__iexact=user.email, status=AccessRequest.Status.PENDING).first()
     if pending is not None:
-        approve(pending, user, decided_by, request)
+        approve(pending, user, decided_by, request, send_mail=send_mail)
 
 
 def purge_decided() -> None:

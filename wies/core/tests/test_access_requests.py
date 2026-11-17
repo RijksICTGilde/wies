@@ -8,6 +8,7 @@ from unittest.mock import patch
 import requests
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
+from django.contrib.messages import get_messages
 from django.core import mail
 from django.test import TestCase, override_settings
 from django.urls import reverse
@@ -30,6 +31,8 @@ NO_ACCESS_URL = "/geen-toegang/"
 CREATE_URL = "/geen-toegang/aanvragen/"
 ADMIN_URL = "/beheer/toegangsaanvragen/"
 REQUESTER_EMAIL = "nieuw@rijksoverheid.nl"
+# What the checked nldd-checkbox-field posts.
+SEND_MAIL = {"send_mail": "on"}
 SHEET_BUTTON = 'text="Vraag toegang aan"'
 ALLOWED_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
@@ -564,15 +567,37 @@ class DecisionMailTest(TestCase):
         self.client.force_login(make_user_admin())
         self.access_request = make_pending()
 
-    def _approve(self):
+    def _approve(self, **mail):
         url = reverse("access-request-approve", args=[self.access_request.public_id])
         with self.captureOnCommitCallbacks(execute=True):
-            return self.client.post(url, {"first_name": "Nora", "last_name": "Nieuw"})
+            return self.client.post(url, {"first_name": "Nora", "last_name": "Nieuw", **(mail or SEND_MAIL)})
 
-    def _reject(self, note=""):
+    def _reject(self, note="", **mail):
         url = reverse("access-request-reject", args=[self.access_request.public_id])
         with self.captureOnCommitCallbacks(execute=True):
-            return self.client.post(url, {"decision_note": note})
+            return self.client.post(url, {"decision_note": note, **(mail or SEND_MAIL)})
+
+    def test_the_mail_checkbox_is_checked_by_default(self):
+        for name in ("access-request-approve", "access-request-reject"):
+            with self.subTest(name=name):
+                response = self.client.get(reverse(name, args=[self.access_request.public_id]))
+
+                assert re.search(r'<nldd-checkbox-field name="send_mail"[^>]*\schecked', response.content.decode())
+
+    def test_unchecked_approving_mails_nothing(self):
+        response = self._approve(send_mail="")
+
+        assert mail.outbox == []
+        assert User.objects.filter(email=REQUESTER_EMAIL).exists()
+        [message] = get_messages(response.wsgi_request)
+        assert str(message) == "Nora Nieuw heeft nu toegang tot Wies."
+
+    def test_unchecked_rejecting_mails_nothing(self):
+        self._reject("Geen ODI-collega", send_mail="")
+
+        assert mail.outbox == []
+        self.access_request.refresh_from_db()
+        assert self.access_request.status == AccessRequest.Status.REJECTED
 
     def test_approving_mails_the_login_link(self):
         self._approve()
@@ -609,6 +634,12 @@ class DecisionMailTest(TestCase):
             self._approve()
 
         assert mail.outbox == []
+
+    def test_without_the_relay_there_is_no_mail_checkbox(self):
+        with override_settings(EMAIL_ENABLED=False):
+            response = self.client.get(reverse("access-request-approve", args=[self.access_request.public_id]))
+
+        self.assertNotContains(response, 'name="send_mail"')
 
 
 class AccessRequestPublicIdTest(TestCase):

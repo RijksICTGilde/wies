@@ -378,7 +378,7 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-def _create_user_with_contract_period(request, form) -> bool:
+def _create_user_with_contract_period(request, form, *, mail_access_request: bool = True) -> bool:
     """Creates the user and, when filled in, its first contract period.
 
     One transaction: a period that does not validate (the colleague may be an
@@ -396,6 +396,7 @@ def _create_user_with_contract_period(request, form) -> bool:
             groups=form.cleaned_data.get("groups"),
             suborganization=form.cleaned_data.get("suborganization"),
             request=request,
+            mail_access_request=mail_access_request,
         )
         if hours:
             period = ContractPeriod(

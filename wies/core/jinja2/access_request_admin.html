@@ -35,9 +35,9 @@
       </nldd-text-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
       <nldd-cell>
-      {% set approve = {"text": "Goedkeuren", "icon": "check-mark", "attrs": {"hx-get": url("access-request-approve", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
-      {% set email = {"text": "E-mailen", "icon": "envelope", "attrs": {"href": "mailto:" ~ access_request.email}} %}
-      {% set reject = {"text": "Afwijzen", "icon": "cross", "attrs": {"destructive": "", "hx-get": url("access-request-reject", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
+      {% set approve = {"text": "Goedkeuren", "attrs": {"hx-get": url("access-request-approve", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
+      {% set email = {"text": "E-mailen", "attrs": {"href": "mailto:" ~ access_request.email}} %}
+      {% set reject = {"text": "Afwijzen", "attrs": {"destructive": "", "hx-get": url("access-request-reject", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
       {{ render_row_actions([approve, email, reject], "Acties voor " ~ access_request.full_name) }}
       </nldd-cell>
       </nldd-list-item>

@@ -105,7 +105,16 @@ def _apply_groups(user, groups, updater) -> list:
 
 
 def create_user(
-    creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
+    creator: User,
+    first_name,
+    last_name,
+    email,
+    labels=None,
+    groups=None,
+    suborganization=None,
+    request=None,
+    *,
+    mail_access_request: bool = True,
 ):
     """Creates the person and the roles asked for, by the user form or the CSV import.
 
@@ -114,6 +123,8 @@ def create_user(
 
     :param creator: can be None when user create is triggered from system itself
     :param request: optional, for logging client IP + User-Agent on the audit event
+    :param mail_access_request: whether a pending access request on the address
+        gets the approval mail
     """
 
     if groups is None:
@@ -163,7 +174,7 @@ def create_user(
         request=request,
         context=context,
     )
-    close_pending_for(user, creator, request)
+    close_pending_for(user, creator, request, send_mail=mail_access_request)
 
     return user
 
