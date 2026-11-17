@@ -37,7 +37,7 @@ def use_public_id_choices(field: forms.Field) -> None:
         field.to_field_name = "public_id"
 
 
-def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
+def build_form_field(editable: Editable, obj: Model | None = None) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
     # Priority: explicit form_field_factory → derive from model field → CharField fallback.
     # Overrides (label/widget/choices/validators/error_messages/empty_label) apply last.
     if editable.form_field_factory is not None:
@@ -73,7 +73,7 @@ def _build_form_field(editable: Editable, obj: Model | None = None) -> forms.Fie
     return base
 
 
-def _current_value(obj: Model, editable: Editable) -> Any:
+def current_value(obj: Model, editable: Editable) -> Any:
     # Priority: editable.initial(obj) → model field (M2M → list, scalar → attr) → None.
     if obj is None:
         return None
@@ -104,9 +104,9 @@ def build_form_class(
         key = e.field or e.name
         if not key:
             raise ValueError(f"Editable must have a field or name: {e!r}")
-        form_fields[key] = _build_form_field(e, (field_objs or {}).get(key, obj))
+        form_fields[key] = build_form_field(e, (field_objs or {}).get(key, obj))
         if obj is not None:
-            initial[key] = _current_value(obj, e)
+            initial[key] = current_value(obj, e)
 
     attrs: dict[str, Any] = dict(form_fields)
     if group_clean is not None:
@@ -200,7 +200,7 @@ def build_combined_form_class(specs, *, bound_obj=None):
         editables.extend(spec_editables)
         for e in spec_editables:
             key = e.field or e.name
-            initial[key] = _current_value(obj, e)
+            initial[key] = current_value(obj, e)
             if obj is not None:
                 field_objs[key] = obj
         if getattr(spec, "clean", None):

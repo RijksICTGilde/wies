@@ -99,8 +99,9 @@ def resolve_facet(model: type[Model], tokens: list[str], queryset: QuerySet | No
 class FacetResolver:
     """Resolves a request's public_id filter params, once per facet.
 
-    List views call ``_apply_filters`` once per facet to compute the cross-filter
-    counts, so resolving inline would repeat the same lookup on every call.
+    A list view resolves the same facet several times per request (once for its
+    results and again for each cross-filter count), so each (param, model) result
+    is cached for the lifetime of the resolver.
     """
 
     def __init__(self, request: HttpRequest, scopes: dict[type[Model], QuerySet] | None = None):

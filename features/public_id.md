@@ -94,9 +94,9 @@ anyway; there is simply no reason for it, and real migration risk.)
 - **Routing:** Django's built-in `<uuid:public_id>` converter, so a
   malformed value 404s at routing and never reaches the database.
 - **Filters:** the facet params arrive as raw query strings, so
-  `FacetResolver` resolves each one to internal ids once per request
-  (`_apply_filters` runs once per facet to compute the cross-filter
-  counts). The tree traversal and per-org counts stay on internal `id`;
+  `FacetResolver` resolves each one to internal ids once per request,
+  although a list view filters several times per request (once for its
+  results and again for each cross-filter count). The tree traversal and per-org counts stay on internal `id`;
   only the URL boundary speaks UUID.
 - **Filters fail closed.** A facet that is present in the URL but
   resolves to no row filters everything away, it is never dropped. See
@@ -118,7 +118,7 @@ anyway; there is simply no reason for it, and real migration risk.)
   strand the user on a filter they never chose.
 - **Select options:** Django keys `ModelChoiceField` options on the pk, so
   `use_public_id_choices()` sets `to_field_name="public_id"` for every
-  choice field whose model has one. `_build_form_field` applies it to all
+  choice field whose model has one. `build_form_field` applies it to all
   Editables; the hand-declared fields in `forms.py` pass the same
   `to_field_name`. A model without a `public_id` (e.g. `Group`) keeps the
   pk. Junk and stale pks come back as a normal "invalid choice" error.

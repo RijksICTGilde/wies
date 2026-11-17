@@ -17,7 +17,7 @@ from wies.core.editables.assignment import _services_display_context
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.roles import ROLE_BUSINESS_MANAGER, is_business_manager_request
 from wies.core.tests.role_helpers import STAFF_EMAIL, make_other_business_manager_user, make_staff_user
-from wies.core.views.panels import _get_colleague_assignments
+from wies.core.views.panels import get_colleague_assignments
 from wies.core.visibility_rules import PRIVACY_BM
 from wies.rijksauth.models import User
 
@@ -108,7 +108,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
     def test_a_bdm_sees_historical_placement_on_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
-        assignments = _get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
@@ -119,7 +119,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
     def test_bare_staff_does_not_see_historical_placement_on_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
 
-        assignments = _get_colleague_assignments(self._request(self.user_staff), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.user_staff), self.colleague_alice)
 
         assert [a for a in assignments if a["historical"]] == []
 
@@ -136,7 +136,7 @@ class AssignmentAdminSeesProfileHistoryTest(_VisibilityFixture):
             end_date=date(2024, 6, 14),
         )
 
-        assignments = _get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.business_manager_viewer), self.colleague_alice)
 
         assert any(a["id"] == owned.id and a["historical"] for a in assignments)
 
@@ -159,7 +159,7 @@ class OwnerPlacedOnEndedAssignmentTest(_VisibilityFixture):
         self.assignment.end_date = date(2024, 6, 14)
         self.assignment.save(update_fields=["owner", "start_date", "end_date"])
 
-        assignments = _get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
 
         card = next(a for a in assignments if a["id"] == self.assignment.id)
         tag_names = {t["skill"] for t in card["tags"]}

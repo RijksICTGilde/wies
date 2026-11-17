@@ -10,7 +10,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Event, Label, Placement, Service, Suborganization
-from wies.core.services.users import _find_or_create_colleague_for_user
+from wies.core.services.users import find_or_create_colleague_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -196,7 +196,7 @@ class Command(BaseCommand):
             return
 
         # Ensure Colleague exists (needed before dev profile setup)
-        colleague = _find_or_create_colleague_for_user(user, user.first_name, user.last_name, email, source="wies")
+        colleague = find_or_create_colleague_for_user(user, user.first_name, user.last_name, email, source="wies")
 
         if settings.DEBUG:
             _setup_dev_profile(colleague)

@@ -1,6 +1,7 @@
 """Wie zit waar: the placement list and editing a placement."""
 
 import json
+from collections import Counter
 from datetime import timedelta
 
 from django.contrib import messages
@@ -50,19 +51,35 @@ from wies.core.services.placements import (
     placement_edit_specs,
     save_placement_edit,
 )
+from wies.core.services.urls import PAGE_PARAM, rebuild_url, safe_return_path
 from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import _build_panel_url, _resolve_panel_object, _safe_return_path, _sort_control_context
-from .filters import PublicIdFacetsMixin, _facet_counts, _finalize_filter_groups
+from ._common import PANEL_PARAMS, build_panel_url, resolve_panel_object, sort_control_context
+from .filters import PublicIdFacetsMixin, finalize_filter_groups
 from .panels import (
-    _build_aanvraag_panel_data,
-    _build_assignment_panel_data,
-    _build_colleague_panel_data,
-    _build_placement_edit_panel_data,
-    _resolve_aanvraag_panel,
+    build_aanvraag_panel_data,
+    build_assignment_panel_data,
+    build_colleague_panel_data,
+    build_placement_edit_panel_data,
+    resolve_aanvraag_panel,
 )
+
+
+def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[int]:
+    """Counts distinct groups per facet value, not placements.
+
+    The list shows one card per colleague or per assignment, so a sidebar that
+    counted placements would report a higher number than the list has cards.
+
+    Re-keys on distinct placement ids first: projecting straight off a
+    .distinct() queryset emits SELECT DISTINCT on the projected columns only,
+    which drops rows that differ elsewhere.
+    """
+    rows = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
+    pairs = rows.values_list(facet_lookup, group_field).distinct()
+    return Counter(fid for fid, _ in pairs if fid is not None)
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
@@ -219,6 +236,20 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
         return options
 
+    def org_counts(self) -> Counter[int]:
+        """Groups per opdrachtgever under every filter but the opdrachtgever's,
+        for the sidebar and the opdrachtgever picker alike.
+
+        Counts the groups of the active ``?weergave=``, so the picker's numbers
+        match the sidebar's next to it.
+        """
+        return org_counts_from_filtered(
+            self._apply_filters(self._get_base_queryset(), exclude_filter="org").distinct(),
+            Placement,
+            "service__assignment__organizations__id",
+            group_field=self.GROUP_FIELD[self.active_view],
+        )
+
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Applies all selection filters, optionally excluding one filter type.
 
@@ -333,15 +364,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         The sort options differ per view, so an ?order= from the other view would
         not resolve here.
         """
-        params = self.request.GET.copy()
-        params.pop(self.page_kwarg, None)
-        params.pop("order", None)
+        dropped = (self.page_kwarg, "order")
         if value == self.VIEW_DEFAULT:
-            params.pop("weergave", None)
-        else:
-            params["weergave"] = value
-        query = params.urlencode()
-        return f"{reverse('home')}?{query}" if query else reverse("home")
+            return rebuild_url(reverse("home"), self.request.GET, drop=(*dropped, "weergave"))
+        return rebuild_url(reverse("home"), self.request.GET, drop=dropped, weergave=value)
 
     def _person_cards(self, placements) -> list[dict]:
         """One card per colleague, with the assignments they are placed on.
@@ -366,7 +392,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "roles": roles,
                     # A person opens the colleague panel, whatever their number
                     # of opdrachten; its cards lead on to each opdracht.
-                    "panel_url": _build_panel_url(self.request, collega=rows[0].colleague.public_id),
+                    "panel_url": build_panel_url(self.request, collega=rows[0].colleague.public_id),
                 }
             )
         return cards
@@ -411,7 +437,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                     "assignment": assignment,
                     "client": (clients[0].organization.label or clients[0].organization.name) if clients else "",
                     "extra_clients": max(len(clients) - 1, 0),
-                    "panel_url": _build_panel_url(self.request, opdracht=assignment.public_id),
+                    "panel_url": build_panel_url(self.request, opdracht=assignment.public_id),
                     "team": teams[assignment.id],
                 }
             )
@@ -449,7 +475,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         order_param = self.request.GET.get("order")
         active_order = order_param if order_param in self.SORT_OPTIONS[active_view] else ""
         context.update(
-            _sort_control_context(
+            sort_control_context(
                 active_order,
                 [(value, self.SORT_LABELS[value]) for value in self.SORT_OPTIONS[active_view]],
                 self.DEFAULT_SORT_LABEL[active_view],
@@ -557,14 +583,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
-        # Org counts exclude the org filter, so the numbers reflect the other
-        # active filters.
-        org_counts = org_counts_from_filtered(
-            self._apply_filters(base_qs, exclude_filter="org").distinct(),
-            Placement,
-            "service__assignment__organizations__id",
-            group_field=group_field,
-        )
+        org_counts = self.org_counts()
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -602,14 +621,14 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 "selected_values": list(loopt_af_values),
             },
         ]
-        _finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(context["filter_groups"])
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            params = self.request.GET.copy()
-            params["pagina"] = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?{params.urlencode()}"
+            context["next_page_url"] = rebuild_url(
+                "", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: context["page_obj"].next_page_number()}
+            )
         else:
             context["next_page_url"] = None
 
@@ -618,17 +637,17 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         service_id = self.request.GET.get("aanvraag")
 
         if service_id and not self.request.GET.get("teamlid"):
-            service = _resolve_aanvraag_panel(self.request, service_id)
+            service = resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
-                context["panel_data"] = _build_aanvraag_panel_data(service, self.request)
+                context["panel_data"] = build_aanvraag_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
-            colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
+            colleague = resolve_panel_object(self.request, Colleague, colleague_id)
             if colleague is not None:
-                context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
+                context["panel_data"] = build_colleague_panel_data(colleague, self.request)
         elif assignment_id:
-            assignment = _resolve_panel_object(self.request, Assignment, assignment_id)
+            assignment = resolve_panel_object(self.request, Assignment, assignment_id)
             if assignment is not None:
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = build_assignment_panel_data(assignment, self.request)
         # get_context_data runs before get_template_names, which reads the panel
         # template from here instead of deriving it again.
         self._panel_data = context.get("panel_data")
@@ -670,15 +689,15 @@ def placement_edit_view(request, public_id):
     if not specs:
         return HttpResponseForbidden()
 
-    fallback = _build_panel_url(
+    fallback = build_panel_url(
         request, opdracht=placement.service.assignment.public_id, collega=placement.colleague.public_id
     )
-    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+    return_path = safe_return_path(request.POST.get("terug_url"), fallback)
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = _build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
+        panel_data = build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)
