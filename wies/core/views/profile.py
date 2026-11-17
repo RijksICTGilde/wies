@@ -1,7 +1,6 @@
 """Your own profile: name, theme, labels and onboarding."""
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
@@ -41,7 +40,6 @@ from .panels import (
 )
 
 
-@login_required
 @require_POST
 def user_theme(request):
     """Stores the display preference of the logged-in user.
@@ -63,7 +61,6 @@ def user_theme(request):
     return HttpResponse(status=204)
 
 
-@login_required
 def profile_name_edit(request):
     """First and last name of the logged-in user, in one sheet.
 
@@ -103,7 +100,6 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-@login_required
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
 
