@@ -1,4 +1,8 @@
+from unittest.mock import patch
+
+import requests
 from django.contrib.auth import get_user_model
+from django.contrib.messages import get_messages
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
 
@@ -88,3 +92,72 @@ class StaffResetOnboardingTest(TestCase):
         assert response.status_code == 302
         self.staff_user.refresh_from_db()
         assert self.staff_user.onboarding_completed_at is None
+
+
+@override_settings(
+    STAFF_EMAILS=[STAFF_EMAIL],
+    SITE_BASE_URL="https://wies.example",
+    MATTERMOST_TOKEN="bot-token",
+    MATTERMOST_WIES_OPS_CHANNEL_URL="https://mm.example/chat/odi/channels/wies-testing",
+)
+class StaffTestOpsNotificationTest(TestCase):
+    """The button that posts the access request notification to check an environment's Mattermost setup."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(email=STAFF_EMAIL, first_name="Staff", last_name="User")
+        self.client.force_login(self.staff_user)
+        patcher = patch("wies.core.views.staff.send_ops_message", return_value=True)
+        self.send_ops_message = patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def _post(self):
+        response = self.client.post("/beheer/database/", {"action": "test_ops_notification"})
+        return response, [str(m) for m in get_messages(response.wsgi_request)]
+
+    def test_button_is_on_the_database_page(self):
+        response = self.client.get("/beheer/database/")
+
+        assert "Testmelding versturen" in response.content.decode()
+
+    def test_posts_the_real_access_request_notification(self):
+        response, msgs = self._post()
+
+        assert response.status_code == 302
+        self.send_ops_message.assert_called_once_with(
+            "Nieuwe toegangsaanvraag voor Wies: https://wies.example/beheer/toegangsaanvragen/"
+        )
+        assert msgs == ["De melding is verstuurd naar het Mattermost-kanaal wies-testing."]
+
+    def test_says_when_mattermost_is_not_configured(self):
+        self.send_ops_message.return_value = False
+
+        _response, msgs = self._post()
+
+        assert msgs == ["Mattermost is niet ingesteld: het token of het kanaal ontbreekt."]
+
+    def test_names_the_status_when_mattermost_refuses(self):
+        refused = requests.Response()
+        refused.status_code = 403
+        self.send_ops_message.side_effect = requests.HTTPError(response=refused)
+
+        _response, msgs = self._post()
+
+        assert "fout 403" in msgs[0]
+
+    def test_says_when_mattermost_is_unreachable(self):
+        self.send_ops_message.side_effect = requests.ConnectionError
+
+        _response, msgs = self._post()
+
+        assert msgs == ["Mattermost is niet bereikbaar. Probeer het later opnieuw."]
+
+    def test_non_staff_cannot_send(self):
+        other = User.objects.create_user(email="gewoon@rijksoverheid.nl", first_name="Gewone", last_name="Gebruiker")
+        self.client.force_login(other)
+
+        response = self.client.post("/beheer/database/", {"action": "test_ops_notification"})
+
+        assert response.status_code == 302
+        assert response["Location"].startswith("/geen-toegang/")
+        self.send_ops_message.assert_not_called()
