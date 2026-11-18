@@ -46,7 +46,8 @@ class FilterModalTest(TestCase):
 
     def test_aanvragen_sheet_lists_the_group_without_building_the_page(self):
         self.client.force_login(self.business_manager)
-        with patch.object(AanvraagListView, "get_context_data") as page:
+        # The page build starts with the cards.
+        with patch.object(AanvraagListView, "_cards_context") as page:
             response = self._modal("assignment-list", "rol")
         assert response.status_code == 200
         assert _option_labels(response) == [f"rol {c}" for c in "abcde"]

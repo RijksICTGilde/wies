@@ -62,7 +62,7 @@ class A11yMarkupTest(TestCase):
         """The cards follow the page h1, so an h3 there skips a level.
 
         Both lists: Wie zit waar? renders placement_cards.html, Aanvragen
-        renders aanvraag_card_rows.html, whose heading is the role.
+        renders aanvraag_cards.html, whose heading is the role.
         """
         org = OrganizationUnit.objects.create(name="Toets Org", label="Toets Org")
         skill = Skill.objects.create(name="Python Developer")

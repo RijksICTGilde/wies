@@ -5,7 +5,7 @@ from datetime import date, timedelta
 
 from django.contrib.auth import get_user_model
 from django.db import connection
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
@@ -22,7 +22,6 @@ from wies.core.models import (
 )
 from wies.core.querysets import annotate_service_dates
 from wies.core.tests.role_helpers import grant_consultant, make_business_manager_user, make_other_business_manager_user
-from wies.core.views.assignments import AanvraagListView
 
 User = get_user_model()
 
@@ -226,21 +225,17 @@ class AanvraagListViewTest(TestCase):
         assert "Mix Opdracht" in content
 
     def _filter_groups(self, query_params=None):
-        """Builds the view's ``filter_groups`` context without rendering a template.
+        """The view's ``filter_groups`` context, from a filter-change response.
 
-        Jinja2 does not populate ``response.context``, so the view is driven
-        directly. ``created_at`` is nulled to mirror fixture-loaded assignments
+        ``created_at`` is nulled to mirror fixture-loaded assignments
         (``auto_now_add`` does not fire on ``loaddata``): distinct timestamps in
         the ``order_by`` SELECT otherwise hid the count collapse.
         """
         Assignment.objects.update(created_at=None)
-        request = RequestFactory().get(self.list_url, query_params or {})
-        request.user = self.auth_user
-        view = AanvraagListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        return view.get_context_data()["filter_groups"]
+        self.client.force_login(self.auth_user)
+        response = self.client.get(self.list_url, query_params or {}, headers={"HX-Request": "true"})
+        assert response.status_code == 200
+        return response.context_data["filter_groups"]
 
     def _org_count(self, groups, org):
         """Returns the sidebar 'org' facet count for ``org``."""
