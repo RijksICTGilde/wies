@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- #868: Show the onderdeel on the person cards in "Wie zit waar?" and on the rows in Bezetting
+- #868: Show the onderdeel on the person cards in "Wie zit waar?", on the rows in Bezetting and in the team list of an opdracht
 
 ## 2026-11-18
 
