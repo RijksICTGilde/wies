@@ -184,9 +184,9 @@ if EMAIL_ENABLED:
     EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
     EMAIL_HOST_USER = os.environ.get("SMTP_USERNAME", "")
     EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
-    # The relay is in-cluster and presents a self-signed certificate: plain SMTP.
-    EMAIL_USE_SSL = False
-    EMAIL_USE_TLS = False
+    # STARTTLS unless switched off: ZAD's in-cluster relay presents a self-signed
+    # certificate, so that deployment sets SMTP_USE_TLS=false.
+    EMAIL_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() != "false"
     # A decision must not hang on a slow relay.
     EMAIL_TIMEOUT = 10
     DEFAULT_FROM_EMAIL = os.environ.get("SMTP_FROM", "")

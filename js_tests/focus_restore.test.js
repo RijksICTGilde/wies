@@ -677,6 +677,17 @@ describe("rememberOpener", () => {
     restore.rememberOpener(button);
     assert.equal(restore.opener, button);
   });
+
+  it("keeps the opener when a form inside the overlay submits", () => {
+    const opener = element({ "hx-get": "/goedkeuren/" });
+    const submit = element({ "hx-post": "/goedkeuren/" });
+    submit.closest = (selector) =>
+      selector.includes("nldd-sheet") ? element({}) : null;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.rememberOpener(submit);
+    assert.equal(restore.opener, opener);
+  });
 });
 
 describe("handleOverlayClose", () => {

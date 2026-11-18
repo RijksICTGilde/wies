@@ -40,6 +40,11 @@ class AccessRequestState:
     kind: str
     access_request: AccessRequest | None = None
 
+    @property
+    def retry_from(self):
+        """When a rejected address may ask again."""
+        return self.access_request.decided_at + REJECTION_COOLDOWN
+
 
 def state_for_claims(claims: dict | None) -> AccessRequestState | None:
     """What the no-access page offers this login; None when it offers no request at all.
@@ -131,8 +136,9 @@ def _mail_after_commit(access_request: AccessRequest, subject: str, body: str) -
     def send() -> None:
         try:
             message.send()
-        except smtplib.SMTPException, OSError:
-            logger.warning("Could not mail the access request decision", exc_info=True)
+        except (smtplib.SMTPException, OSError) as exc:
+            # Only the type: SMTPRecipientsRefused carries the requester's address.
+            logger.warning("Could not mail the access request decision: %s", type(exc).__name__)
 
     transaction.on_commit(send)
 
@@ -162,7 +168,8 @@ def _decide(access_request: AccessRequest, status: str, decided_by, request, **f
         object_id=access_request.id,
         user=decided_by,
         request=request,
-        context={"status": status, "decision_note": access_request.decision_note},
+        # No decision_note: free text about someone, kept on the request for its retention only.
+        context={"status": status},
     )
 
 

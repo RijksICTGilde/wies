@@ -106,12 +106,13 @@ class AccessControlTest(TestCase):
         assert response.url.startswith(reverse("login"))
 
     def test_staff_page_requires_authentication(self):
-        """Test that staff subpages redirect unauthenticated users"""
+        """Test that staff subpages send unauthenticated users to the login"""
         for path in ("/beheer/statistieken/", "/beheer/database/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 
                 assert response.status_code == 302
+                assert response.url.startswith(reverse("login"))
 
     @override_settings(STAFF_EMAILS=["admin@rijksoverheid.nl"])
     def test_staff_email_can_access_staff_page(self):

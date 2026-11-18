@@ -2,6 +2,7 @@
 a Gebruikersbeheerder approves or rejects it on /beheer/toegangsaanvragen/."""
 
 import re
+import smtplib
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -14,6 +15,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
+from config.jinja2 import NL_TIMEZONE
 from wies.core.models import AccessRequest, Colleague, Event, Suborganization
 from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, setup_roles
 from wies.core.services.access_requests import DECIDED_RETENTION, REJECTION_COOLDOWN
@@ -192,6 +194,8 @@ class RequesterTest(TestCase):
         self.assertContains(page, "Je aanvraag is afgewezen")
         self.assertContains(page, "Geen ODI-medewerker")
         self.assertNotContains(page, SHEET_BUTTON)
+        retry_from = (timezone.now() + timedelta(days=1)).astimezone(NL_TIMEZONE)
+        self.assertContains(page, f"Vanaf {retry_from.day} ")
 
     def test_post_allowed_after_cooldown(self):
         make_pending(
@@ -468,11 +472,23 @@ class ApproveTest(TestCase):
         assert self.access_request.status == AccessRequest.Status.APPROVED
         assert self.access_request.created_user == user
         assert self.access_request.decided_by == self.admin
+        [message] = get_messages(response.wsgi_request)
+        assert "De toegangsaanvraag van Nora is daarmee goedgekeurd." in str(message)
+
+    def test_user_create_sheet_without_request_says_nothing_about_one(self):
+        response = self.client.post(
+            reverse("user-create"),
+            {"first_name": "Ander", "last_name": "Iemand", "email": "ander@rijksoverheid.nl"},
+        )
+
+        [message] = get_messages(response.wsgi_request)
+        assert str(message) == "Gebruiker Ander Iemand is toegevoegd."
 
     def test_csv_import_closes_pending_request(self):
         result = create_users_from_csv(self.admin, f"first_name,last_name,email\nNora,Nieuw,{REQUESTER_EMAIL}\n")
 
         assert result["success"], result
+        assert result["access_requests_approved"] == 1
         self.access_request.refresh_from_db()
         assert self.access_request.status == AccessRequest.Status.APPROVED
         assert self.access_request.created_user.email == REQUESTER_EMAIL
@@ -510,7 +526,7 @@ class RejectTest(TestCase):
 
         event = Event.objects.get(object_type="AccessRequest", action="update")
         assert event.user == self.admin
-        assert event.context == {"status": "rejected", "decision_note": "Niet bij ODI"}
+        assert event.context == {"status": "rejected"}
 
     def test_reject_without_reason_is_allowed(self):
         self.client.post(self.url, {"decision_note": ""})
@@ -623,6 +639,28 @@ class DecisionMailTest(TestCase):
         assert response["HX-Redirect"] == ADMIN_URL
         self.access_request.refresh_from_db()
         assert self.access_request.status == AccessRequest.Status.REJECTED
+
+    def test_a_refused_recipient_is_logged_without_the_address(self):
+        refused = smtplib.SMTPRecipientsRefused({REQUESTER_EMAIL: (550, b"unknown")})
+        with (
+            patch("django.core.mail.EmailMessage.send", side_effect=refused),
+            self.assertLogs("wies.core.services.access_requests", "WARNING") as logs,
+        ):
+            self._reject()
+
+        assert logs.output
+        assert REQUESTER_EMAIL not in "\n".join(logs.output)
+
+    def test_user_create_sheet_says_the_requester_gets_mail(self):
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(
+                reverse("user-create"),
+                {"first_name": "Nora", "last_name": "Nieuw", "email": REQUESTER_EMAIL},
+            )
+
+        [message] = get_messages(response.wsgi_request)
+        assert str(message).endswith("Nora krijgt hierover een e-mail.")
+        assert [m.to for m in mail.outbox] == [[REQUESTER_EMAIL]]
 
     def test_the_beheer_page_drops_the_mailto(self):
         self._approve()

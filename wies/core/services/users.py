@@ -362,6 +362,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         }
 
     users_created = 0
+    access_requests_approved = 0
     suborg_mapping = {}  # mapping from str to Suborganization, to avoid many DB queries
 
     try:
@@ -405,6 +406,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     request=request,
                 )
                 users_created += 1
+                access_requests_approved += user.access_requests.exists()
                 # No column asks for a role the importer may not grant today; this
                 # keeps a privileged column added later from being dropped silently.
                 dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
@@ -424,6 +426,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     return {
         "success": True,
         "users_created": users_created,
+        "access_requests_approved": access_requests_approved,
         "errors": errors,  # May contain warnings when success is True
     }
 

@@ -51,7 +51,7 @@
         <nldd-button appearance="primary" start-icon="person-badge-plus" text="Vraag toegang aan" hx-get="{{ url('access-request-create') }}" hx-target="#accessRequestModal" hx-swap="innerHTML"></nldd-button>
         <div id="accessRequestModal"></div>
       {% elif access.kind == access_states.PENDING and just_sent %}
-        <nldd-banner variant="success" text="Je aanvraag is verstuurd" supporting-text="Een gebruikersbeheerder beoordeelt je aanvraag. Na goedkeuring {{ 'krijg je een e-mail' if email_enabled else 'hoor je het van de gebruikersbeheerder' }} en kun je inloggen."></nldd-banner>
+        <nldd-banner variant="success" text="Je aanvraag is verstuurd" supporting-text="Een gebruikersbeheerder beoordeelt je aanvraag. Na goedkeuring kun je inloggen."></nldd-banner>
       {% elif access.kind == access_states.PENDING %}
         <nldd-banner icon="clock" text="Je aanvraag wacht nog op beoordeling" supporting-text="Je hebt op {{ access.access_request.created_at|datetime_nl('%Y-%m-%d')|datum_nl('j b') }} toegang aangevraagd.">{{ contact }}</nldd-banner>
       {% elif access.kind == access_states.REJECTED %}
@@ -62,7 +62,7 @@
         {% endif %}
         <p>
           Heb je een vraag? Mail naar <a href="mailto:wies-odi@rijksoverheid.nl?subject=Toegang%20Wies">wies-odi@rijksoverheid.nl</a>.
-          {{ rejection_cooldown_days }} dagen na de afwijzing kun je opnieuw toegang aanvragen.
+          Vanaf {{ access.retry_from|datetime_nl("%Y-%m-%d")|datum_nl('j b') }} kun je opnieuw toegang aanvragen.
         </p>
         </nldd-rich-text>
         </nldd-banner>

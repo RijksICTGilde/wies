@@ -33,9 +33,7 @@ def no_access(request):
             "allowed_domains": ", ".join(settings.ALLOWED_EMAIL_DOMAINS),
             "access": access_request_state(request),
             "access_states": access_requests.AccessState,
-            "rejection_cooldown_days": access_requests.REJECTION_COOLDOWN.days,
             "just_sent": request.session.pop(ACCESS_REQUEST_SENT_SESSION_KEY, False),
-            "email_enabled": settings.EMAIL_ENABLED,
         },
     )
 

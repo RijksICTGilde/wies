@@ -4,7 +4,7 @@ import urllib.parse
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth.decorators import login_not_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_not_required, permission_required
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -12,6 +12,7 @@ from django.urls import reverse
 from wies.core.forms import AccessRequestApproveForm, AccessRequestForm, AccessRequestRejectForm
 from wies.core.models import AccessRequest, ContractPeriod
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.roles import role_required
 from wies.core.services import access_requests
 from wies.core.services.users import is_allowed_email_domain
 from wies.rijksauth.views import FAILED_LOGIN_CLAIMS_SESSION_KEY
@@ -75,15 +76,7 @@ def _may_decide_access_requests(user) -> bool:
     return has_permission(Verb.UPDATE, AccessRequest(), user)
 
 
-def access_request_admin_required(view_func):
-    """Logged in but not allowed: the no-access page. Not logged in: the login.
-
-    LoginRequiredMiddleware sends an anonymous visitor to the view's own
-    ``login_url``, so the one user_passes_test sets has to be put back.
-    """
-    wrapped = user_passes_test(_may_decide_access_requests, login_url="/geen-toegang/")(view_func)
-    wrapped.login_url = settings.LOGIN_URL
-    return wrapped
+access_request_admin_required = role_required(_may_decide_access_requests)
 
 
 def _approved_mailto(request, access_request) -> str:

@@ -96,9 +96,13 @@ function FocusRestore(doc, options) {
 // The control an overlay hands focus back to. A menu item is gone with its
 // closed popover, so for one of those it is the button that opened the menu.
 var MENU_TRIGGER = "nldd-icon-button, nldd-button";
+var OVERLAY = "nldd-sheet, nldd-modal-dialog";
 
 FocusRestore.prototype.rememberOpener = function (element) {
   if (!element || typeof element.closest !== "function") return;
+  // A submit from inside the overlay (a rejected form) is not what opened it,
+  // and closes with it.
+  if (element.closest(OVERLAY)) return;
   var menu = element.closest("nldd-menu");
   var trigger = menu && menu.closest(MENU_TRIGGER);
   this.opener = trigger || element;
