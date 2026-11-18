@@ -73,6 +73,7 @@ from ._common import (
     is_side_panel_request,
     page_url_behind_panel,
 )
+from .client_picker import client_modal_response, is_client_modal_request
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     assignment_create_button,
@@ -244,6 +245,8 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
     def get(self, request, *args, **kwargs):
         if is_filter_modal_request(request):
             return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        if is_client_modal_request(request):
+            return client_modal_response(request, self.org_counts())
         if is_side_panel_request(request):
             return side_panel_response(request, allow_create=True)
         return super().get(request, *args, **kwargs)
@@ -364,7 +367,6 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
         self.add_unknown_filter_chips(context, {"rol": Skill})
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["client_modal_count_mode"] = "open_assignments"
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():

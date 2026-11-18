@@ -1932,8 +1932,9 @@ class OrgFilterCountCrossFilterTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(
-            reverse("client-modal"),
-            {"count_mode": "placements", "rol": str(self.skill_a.public_id)},
+            reverse("home"),
+            {"client_modal": "1", "rol": str(self.skill_a.public_id)},
+            headers={"HX-Request": "true"},
         )
         counts = _modal_org_self_counts(response)
 
@@ -2127,8 +2128,8 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_far.id in ids
 
 
-class ClientModalCountModeTest(TestCase):
-    """Tests for count_mode parameter in client_modal view."""
+class ClientModalTest(TestCase):
+    """The org tree: the form picker on /client-modal/, the filter sheet on the list views."""
 
     def setUp(self):
         self.client = Client()
@@ -2146,34 +2147,33 @@ class ClientModalCountModeTest(TestCase):
         service = Service.objects.create(assignment=assignment, description="S", skill=skill, source="wies")
         Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
 
-    def test_count_mode_none_uses_assignment_org_modal_template(self):
+    def test_form_picker_uses_assignment_org_modal_template(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
+        response = self.client.get(reverse("client-modal"))
         assert response.status_code == 200
         # assignment_org_modal.html has this unique element
         assert b'id="assignment-org-modal"' in response.content
 
-    def test_count_mode_none_includes_orgs_without_placements(self):
-        """count_mode=none should not prune orgs with zero placements."""
+    def test_form_picker_includes_orgs_without_placements(self):
+        """The form picker shows the whole tree, unpruned."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
-        content = response.content.decode()
-        assert "Org B" in content
+        response = self.client.get(reverse("client-modal"))
+        assert "Org B" in response.content.decode()
 
-    def test_placements_count_mode_prunes_empty_orgs(self):
-        """count_mode=placements should prune orgs with zero placements."""
+    def test_list_filter_sheet_prunes_empty_orgs(self):
+        """The filter sheet on a list drops orgs without cards."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
+        response = self.client.get(reverse("home"), {"client_modal": "1"}, headers={"HX-Request": "true"})
         content = response.content.decode()
+        assert 'id="client-modal"' in content
+        assert "Org A" in content
         assert "Org B" not in content
 
-    def test_missing_count_mode_is_bad_request(self):
+    def test_list_filter_sheet_needs_htmx(self):
+        """A plain page load with ?client_modal= renders the page, not the sheet."""
         self.client.force_login(self.auth_user)
-        assert self.client.get(reverse("client-modal")).status_code == 400
-
-    def test_unknown_count_mode_is_bad_request(self):
-        self.client.force_login(self.auth_user)
-        assert self.client.get(reverse("client-modal"), {"count_mode": "bogus"}).status_code == 400
+        response = self.client.get(reverse("home"), {"client_modal": "1"})
+        assert 'id="client-modal"' not in response.content.decode()
 
 
 MNRE_BZK = "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"
@@ -2602,7 +2602,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
     def _modal_count_for(self, user) -> int:
         self.client.force_login(user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
+        response = self.client.get(reverse("home"), {"client_modal": "1"}, headers={"HX-Request": "true"})
         assert response.status_code == 200
         return _modal_org_self_counts(response).get(str(self.org.public_id), 0)
 

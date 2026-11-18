@@ -429,7 +429,7 @@ class AanvraagListViewTest(TestCase):
         """
         self.client.force_login(self.auth_user)
         response = self.client.get(
-            "/client-modal/", {"count_mode": "open_assignments", "ndd": "1", **(query_params or {})}
+            reverse("assignment-list"), {"client_modal": "1", **(query_params or {})}, headers={"HX-Request": "true"}
         )
         assert response.status_code == 200
         raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', response.content.decode()).group(1)

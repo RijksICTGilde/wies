@@ -716,7 +716,7 @@ class TestClientModalCounts:
         Read back out of the tree container's data-tree: these templates are Jinja2, so
         there is no response.context to inspect.
         """
-        response = self.client.get("/client-modal/", {"count_mode": "placements", "ndd": "1", **(params or {})})
+        response = self.client.get("/", {"client_modal": "1", **(params or {})}, headers={"HX-Request": "true"})
         assert response.status_code == 200
         html = response.content.decode()
         raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', html).group(1)

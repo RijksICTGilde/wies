@@ -63,6 +63,7 @@ from wies.core.visibility_rules import (
 )
 
 from ._common import PANEL_PARAMS, build_panel_url, sort_control_context
+from .client_picker import client_modal_response, is_client_modal_request
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups
 from .panels import (
     build_placement_edit_panel_data,
@@ -542,6 +543,8 @@ class PlacementOverviewView(View):
         htmx = "HX-Request" in request.headers
         if htmx and request.GET.get("filter_modal"):
             return filter_modal_response(request, self._filter_groups(self._active_filters()))  # "Meer..."
+        if is_client_modal_request(request):
+            return client_modal_response(request, self.org_counts())  # opdrachtgever "Meer..."
         # The target, not a panel param: after a page load with ?collega=, the
         # weergave toggle and sort links keep it in their url, and want the results.
         if request.headers.get("HX-Target") == "side-panel-content":
@@ -779,7 +782,6 @@ class PlacementOverviewView(View):
         filters.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "onderdeel": Suborganization})
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["client_modal_count_mode"] = "placements"
         return context
 
     def _page_context(self) -> dict:
