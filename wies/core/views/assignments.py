@@ -80,6 +80,7 @@ from .panels import (
     build_assignment_edit_panel_data,
     build_assignment_member_panel_data,
     resolve_side_panel,
+    side_panel_response,
 )
 
 
@@ -243,6 +244,8 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
     def get(self, request, *args, **kwargs):
         if is_filter_modal_request(request):
             return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        if is_side_panel_request(request):
+            return side_panel_response(request, allow_create=True)
         return super().get(request, *args, **kwargs)
 
     def _active_filters(self) -> dict:
@@ -338,12 +341,6 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
-            if is_side_panel_request(self.request):
-                # See PlacementOverviewView.get_template_names.
-                panel_data = getattr(self, "_panel_data", None)
-                if panel_data:
-                    return [panel_data["panel_content_template"]]
-                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/aanvraag_card_rows.html"]
             return ["parts/filter_and_card_container_assignments.html"]
@@ -382,10 +379,9 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
         # in the address bar so a reload reopens the sheet (see side_panel.js).
         context["primary_button"] = assignment_create_button(self.request)
 
-        # Side panel; ?nieuwe-opdracht opens the empty create form on the list.
+        # A full page load with a panel param (or ?nieuwe-opdracht, the empty
+        # create form) opens the panel too.
         context["panel_data"] = resolve_side_panel(self.request, allow_create=True)
-        # See PlacementOverviewView.get_context_data: get_template_names reads this.
-        self._panel_data = context["panel_data"]
         return context
 
 

@@ -67,6 +67,7 @@ from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter
 from .panels import (
     build_placement_edit_panel_data,
     resolve_side_panel,
+    side_panel_response,
 )
 
 
@@ -540,6 +541,8 @@ class PlacementOverviewView(View):
     def get(self, request, *args, **kwargs):
         if is_filter_modal_request(request):
             return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        if is_side_panel_request(request):
+            return side_panel_response(request)
         context = self.get_context_data()
         return TemplateResponse(request, self.get_template_names(), context)
 
@@ -564,13 +567,6 @@ class PlacementOverviewView(View):
     def get_template_names(self):
         """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
-            if is_side_panel_request(self.request):
-                # panel_data picks its own template (e.g. the edit child sheet);
-                # get_context_data has already stored it.
-                panel_data = getattr(self, "_panel_data", None)
-                if panel_data:
-                    return [panel_data["panel_content_template"]]
-                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get(self.page_kwarg):
                 return ["parts/placement_cards.html"]
             return ["parts/filter_and_table_container.html"]
@@ -785,10 +781,8 @@ class PlacementOverviewView(View):
         else:
             context["next_page_url"] = None
 
+        # A full page load with ?collega= or ?opdracht= opens the panel too.
         context["panel_data"] = resolve_side_panel(self.request)
-        # get_context_data runs before get_template_names, which reads the panel
-        # template from here instead of deriving it again.
-        self._panel_data = context["panel_data"]
         return context
 
 

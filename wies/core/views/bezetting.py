@@ -36,6 +36,7 @@ from .filters import filter_modal_response, finalize_filter_groups, is_filter_mo
 from .panels import (
     assignment_create_button,
     resolve_side_panel,
+    side_panel_response,
 )
 
 
@@ -92,11 +93,9 @@ def bezetting(request):
     # Side panel: reuse the shared machinery. A row click opens the colleague
     # panel (?collega); links inside that panel open an opdracht (?opdracht)
     # panel, exactly like on "Wie zit waar?".
-    panel_data = resolve_side_panel(request, allow_create=True)
-
     # HTMX panel requests return just the panel content, like WZW.
-    if is_side_panel_request(request) and panel_data:
-        return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+    if is_side_panel_request(request):
+        return side_panel_response(request, allow_create=True)
 
     # Onderdeel (suborganisation) and label-category filters, resolved from the URL.
     # Labels are OR within a category and AND between categories (like "Wie zit
@@ -153,6 +152,9 @@ def bezetting(request):
         if page.has_next()
         else None
     )
+
+    # A full page load with ?collega= (or ?nieuwe-opdracht) opens the panel too.
+    panel_data = resolve_side_panel(request, allow_create=True)
 
     context = {
         "rows": page.object_list,
