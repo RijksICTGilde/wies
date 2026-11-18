@@ -126,6 +126,34 @@ class MemberSheetHiddenRowTest(TestCase):
         self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
         self.assertContains(response, "Hidden Member")
 
+    # ── The same sheet from the colleague panel ───────────────────────────────
+    #
+    # ?collega=C&uitgeklapt=A&bewerken=S opens the role sheet on the colleague
+    # panel; it resolves its row through the same visible_service_rows gate.
+
+    def _colleague_sheet_url(self, placement) -> str:
+        return (
+            reverse("home")
+            + f"?collega={placement.colleague.public_id}&uitgeklapt={self.assignment.public_id}"
+            + f"&bewerken={placement.service.public_id}"
+        )
+
+    def test_hidden_row_sheet_on_the_colleague_panel_does_not_leak_to_an_editor_without_visibility(self):
+        response = self.editor_client.get(self._colleague_sheet_url(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 200
+        self.assertNotContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
+        self.assertNotContains(response, 'name="terug_url"')
+
+    def test_a_bdm_opens_the_hidden_row_sheet_on_the_colleague_panel(self):
+        admin_client = Client()
+        admin_client.force_login(make_other_business_manager_user())
+
+        response = admin_client.get(self._colleague_sheet_url(self.hidden_placement), headers=self.HX)
+
+        assert response.status_code == 200
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Teamlid wijzigen</h3>')
+
     # ── Mutation paths: the same visibility gate as the sheet (#655) ──────────
     #
     # The ?bewerken= sheet above resolves its row through visible_service_rows;
