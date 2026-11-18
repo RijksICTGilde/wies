@@ -2,6 +2,11 @@
 # GitHub then merges once the required checks of the main ruleset (test-django,
 # test-js) are green; a failing test keeps the PR open. Majors and NLDD
 # upgrades are left for a human to review and merge.
+#
+# AUTOMERGE_TOKEN is a fine-grained PAT (contents and pull requests: write on
+# this repo), stored as a Dependabot secret: workflows that Dependabot starts
+# cannot read Actions secrets. A merge with GITHUB_TOKEN starts no push
+# workflows, so without the PAT the PR still merges but main-deploy does not run.
 
 name: Dependabot auto-merge
 
@@ -35,4 +40,4 @@ jobs:
         run: gh pr merge --auto --squash "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_TOKEN || secrets.GITHUB_TOKEN }}
