@@ -173,11 +173,12 @@ and nobody reaches the maintenance pages.
 
 Because the command grants on every start and not only on the one that creates the
 account, the way into a fresh environment is also the way back into a stuck one.
-That matters, because the lockout is easy to reach: the roles are handed out on
-the user sheet behind `rijksauth.change_user`, the Gebruikersbeheerder carries
-that, and nothing stops the last one from taking the role off themselves. After
-that nobody can reach the sheet, and an Applicatiebeheerder cannot help:
-that authority is the maintenance pages and carries nothing on users.
+The roles are handed out on the user sheet behind `rijksauth.change_user`, which
+the Gebruikersbeheerder carries. Wies will not delete the last one or take the
+role off them (`is_last_user_admin`), but that account can still be lost outside
+the app: its SSO login gone, or the person gone with it. Then nobody can reach the
+sheet, and an Applicatiebeheerder cannot help: that authority is the maintenance
+pages and carries nothing on users.
 
 So: set `INITIAL_USER_EMAIL` to the address that needs the roles, redeploy, and
 **remove the variable again** once that is done. Leaving it set means every

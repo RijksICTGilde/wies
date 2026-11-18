@@ -5,7 +5,7 @@ from functools import cached_property
 
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import get_user_model, logout
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
@@ -42,6 +42,8 @@ from wies.core.querysets import (
     annotate_sort_names,
 )
 from wies.core.roles import (
+    LAST_USER_ADMIN_MESSAGE,
+    is_last_user_admin,
     role_label,
 )
 from wies.core.services.events import create_event
@@ -55,6 +57,7 @@ from wies.core.services.users import (
     create_users_from_csv,
     update_user,
 )
+from wies.rijksauth.views import end_session, mark_logged_out
 
 from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
 from .filters import PublicIdFacetsMixin, finalize_filter_groups
@@ -660,8 +663,20 @@ def _placement_snapshot(placement) -> dict:
 def user_delete(request, public_id):
     """Deletes a user, after the confirmation modal."""
     user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    if is_last_user_admin(user):
+        return render(
+            request,
+            "parts/user_delete_blocked_modal.html",
+            {"dialog_supporting": LAST_USER_ADMIN_MESSAGE.format(name=user.first_name)},
+        )
     colleague = getattr(user, "colleague", None)
     today = timezone.now().date()
+    is_self = user.pk == request.user.pk
+    question = (
+        "Weet je zeker dat je je eigen account wilt verwijderen? Je wordt dan uitgelogd."
+        if is_self
+        else f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen?"
+    )
 
     def render_modal(form):
         return render(
@@ -670,8 +685,8 @@ def user_delete(request, public_id):
             {
                 "content": form,
                 "dialog_supporting": (
-                    f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
-                    "Dit is niet terug te draaien." + (" Het collegaprofiel blijft bestaan." if colleague else "")
+                    f"{question} Dit is niet terug te draaien."
+                    + (" Het collegaprofiel blijft bestaan." if colleague else "")
                 ),
                 "delete_overview": _colleague_delete_overview(colleague, today),
                 "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
@@ -722,11 +737,11 @@ def user_delete(request, public_id):
             )
             user.delete()
         response = HttpResponse(status=200)
-        if user.public_id == request.user.public_id:
-            # The session belongs to a user that no longer exists.
-            logout(request)
-            response["HX-Redirect"] = reverse("home")
-            return response
+        if is_self:
+            # Out of Keycloak too: its session outlives ours, so the login would sign
+            # you straight back in and land you on the no-access page.
+            response["HX-Redirect"] = end_session(request)
+            return mark_logged_out(request, response)
         name = f"{user.first_name} {user.last_name}".strip() or user.email
         messages.success(request, f"{name} is verwijderd.")
         response["HX-Redirect"] = _user_list_behind_sheet(request)

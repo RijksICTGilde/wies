@@ -25,7 +25,7 @@ from .models import (
     Suborganization,
 )
 from .querysets import annotate_placement_dates
-from .roles import may_change_email, role_label
+from .roles import LAST_USER_ADMIN_MESSAGE, ROLE_USER_ADMIN, is_last_user_admin, may_change_email, role_label
 from .services.users import validate_email_domain
 from .widgets import ComboBoxSelect, MultiselectDropdown
 
@@ -382,6 +382,15 @@ class UserForm(NlddFormMixin, forms.ModelForm):
             selected_labels = cleaned_data.pop(category_field_name, None)
             if selected_labels:
                 cleaned_data["labels"].extend(selected_labels)
+
+        groups = cleaned_data.get("groups")
+        if (
+            groups is not None
+            and self.instance.pk
+            and is_last_user_admin(self.instance)
+            and not any(group.name == ROLE_USER_ADMIN for group in groups)
+        ):
+            self.add_error("groups", LAST_USER_ADMIN_MESSAGE.format(name=self.instance.first_name))
 
         # Hours and start belong together: one without the other is no period.
         if self.with_contract_period:

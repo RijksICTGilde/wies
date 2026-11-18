@@ -482,6 +482,8 @@ class UserViewsTest(TestCase):
         """The deleted user is gone, so the event is all that is left of their
         roles: it keeps the name they were called by, not the key."""
         self.user1.groups.add(self.consultant_group, self.admin_group)
+        # Not the last Gebruikersbeheerder, which may not be deleted.
+        self.user2.groups.add(self.admin_group)
         self.client.force_login(self.auth_user)
 
         self.client.post(reverse("user-delete", args=[self.user1.public_id]))
@@ -502,12 +504,81 @@ class UserViewsTest(TestCase):
         response = self.client.post(reverse("user-delete", args=[self.auth_user.public_id]))
 
         assert response.status_code == 200
-        assert response["HX-Redirect"] == reverse("home")
         assert not User.objects.filter(id=user_id).exists()
         event = Event.objects.get(object_type="User", action="delete", object_id=user_id)
         assert event.user is None
         assert event.user_email == self.auth_user.email
         assert "_auth_user_id" not in self.client.session
+
+    def test_user_delete_yourself_logs_out_of_sso_too(self):
+        """Without an id token there is no Keycloak to end: the login, which then asks
+        for credentials instead of signing the deleted account straight back in."""
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(reverse("user-delete", args=[self.auth_user.public_id]))
+
+        assert response["HX-Redirect"] == reverse("login")
+        assert response.cookies[settings.OIDC_POST_LOGOUT_COOKIE_NAME].value == "1"
+
+    def test_user_delete_modal_says_it_is_your_own_account(self):
+        self.client.force_login(self.auth_user)
+
+        own = self.client.get(reverse("user-delete", args=[self.auth_user.public_id]))
+        other = self.client.get(reverse("user-delete", args=[self.user1.public_id]))
+
+        self.assertContains(own, "je eigen account")
+        self.assertNotContains(other, "je eigen account")
+
+    def test_user_delete_refuses_the_last_user_admin(self):
+        self.auth_user.groups.add(self.admin_group)
+        self.client.force_login(self.auth_user)
+        url = reverse("user-delete", args=[self.auth_user.public_id])
+
+        modal = self.client.get(url)
+        response = self.client.post(url)
+
+        self.assertContains(modal, "Auth is de enige gebruikersbeheerder.")
+        self.assertNotContains(modal, "Verwijder gebruiker")
+        assert "HX-Redirect" not in response
+        assert User.objects.filter(pk=self.auth_user.pk).exists()
+
+    def test_user_delete_allows_a_user_admin_when_there_is_another(self):
+        self.auth_user.groups.add(self.admin_group)
+        self.user1.groups.add(self.admin_group)
+        self.client.force_login(self.auth_user)
+
+        self.client.post(reverse("user-delete", args=[self.auth_user.public_id]))
+
+        assert not User.objects.filter(pk=self.auth_user.pk).exists()
+
+    def _edit_roles(self, user, groups):
+        return self.client.post(
+            reverse("user-edit", args=[user.public_id]),
+            {
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "email": user.email,
+                "groups": [g.pk for g in groups],
+            },
+        )
+
+    def test_user_edit_keeps_the_role_on_the_last_user_admin(self):
+        self.auth_user.groups.add(self.admin_group)
+        self.client.force_login(self.auth_user)
+
+        response = self._edit_roles(self.auth_user, [self.consultant_group])
+
+        self.assertContains(response, "Auth is de enige gebruikersbeheerder.")
+        assert self.auth_user.groups.filter(pk=self.admin_group.pk).exists()
+
+    def test_user_edit_drops_the_role_when_there_is_another_user_admin(self):
+        self.auth_user.groups.add(self.admin_group)
+        self.user1.groups.add(self.admin_group)
+        self.client.force_login(self.auth_user)
+
+        self._edit_roles(self.auth_user, [self.consultant_group])
+
+        assert not self.auth_user.groups.filter(pk=self.admin_group.pk).exists()
 
     def test_user_delete_prevents_superuser_deletion(self):
         """Test that superusers cannot be deleted via this endpoint"""
