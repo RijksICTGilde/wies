@@ -20,6 +20,12 @@ from django.contrib.auth.decorators import login_not_required
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from wies.core.views.access_requests import (
+    access_request_admin,
+    access_request_approve,
+    access_request_create,
+    access_request_reject,
+)
 from wies.core.views.assignments import (
     AssignmentListView,
     assignment_create_sheet,
@@ -93,7 +99,8 @@ urlpatterns = [
     # Wies
     path("", PlacementListView.as_view(), name="home"),
     path("inloggen/", login, name="login"),
-    path("geen-toegang/", no_access),
+    path("geen-toegang/", no_access, name="no-access"),
+    path("geen-toegang/aanvragen/", access_request_create, name="access-request-create"),
     path("uitloggen/", logout, name="logout"),
     path("auth/", auth, name="auth"),
     path("aanvragen/", AssignmentListView.as_view(), name="assignment-list"),
@@ -114,6 +121,13 @@ urlpatterns = [
     path("beheer/gebruikers/<uuid:public_id>/bewerken/", user_edit, name="user-edit"),
     path("beheer/gebruikers/<uuid:public_id>/verwijderen/", user_delete, name="user-delete"),
     path("beheer/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
+    path("beheer/toegangsaanvragen/", access_request_admin, name="access-request-admin"),
+    path(
+        "beheer/toegangsaanvragen/<uuid:public_id>/goedkeuren/",
+        access_request_approve,
+        name="access-request-approve",
+    ),
+    path("beheer/toegangsaanvragen/<uuid:public_id>/afwijzen/", access_request_reject, name="access-request-reject"),
     path("beheer/labels/", label_admin, name="label-admin"),
     path("beheer/labels/categorieen/", label_category_manage, name="label-category-manage"),
     path("beheer/labels/categorie/<uuid:public_id>/verwijderen/", label_category_delete, name="label-category-delete"),

@@ -15,7 +15,15 @@ from wies.core.editables.service import ServiceEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
-from .models import HOURS_PER_WEEK_CHOICES, Colleague, ContractPeriod, Label, LabelCategory, Suborganization
+from .models import (
+    HOURS_PER_WEEK_CHOICES,
+    AccessRequest,
+    Colleague,
+    ContractPeriod,
+    Label,
+    LabelCategory,
+    Suborganization,
+)
 from .querysets import annotate_placement_dates
 from .roles import may_change_email, role_label
 from .services.users import validate_email_domain
@@ -385,6 +393,50 @@ class UserForm(NlddFormMixin, forms.ModelForm):
                 self.add_error("contract_hours_per_week", "Vul het aantal uren per week in.")
 
         return cleaned_data
+
+
+class AccessRequestForm(NlddFormMixin, forms.ModelForm):
+    """What someone without an account fills in to ask for access.
+
+    No email field: the address is the verified one from the login, so nobody can
+    ask on behalf of an address that is not theirs.
+    """
+
+    suborganization = forms.ModelChoiceField(
+        label="Onderdeel",
+        queryset=Suborganization.objects.all(),
+        to_field_name="public_id",
+        required=False,
+        empty_label="Weet ik niet",
+    )
+
+    class Meta:
+        model = AccessRequest
+        fields = ["first_name", "last_name", "suborganization", "motivation"]
+        widgets = {"motivation": forms.Textarea(attrs={"rows": 4})}
+        help_texts = {"motivation": "Bijvoorbeeld je team of je functie."}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # WCAG 1.3.5: the requester fills in their own name.
+        self.fields["first_name"].widget.attrs["autocomplete"] = "given-name"
+        self.fields["last_name"].widget.attrs["autocomplete"] = "family-name"
+
+
+class AccessRequestApproveForm(UserForm):
+    """The user sheet, plus whether the requester gets the approval mail."""
+
+    send_mail = forms.BooleanField(required=False, initial=True)
+
+
+class AccessRequestRejectForm(NlddFormMixin, forms.Form):
+    decision_note = forms.CharField(
+        label="Reden",
+        required=False,
+        max_length=500,
+        widget=forms.Textarea(attrs={"rows": 3}),
+    )
+    send_mail = forms.BooleanField(required=False, initial=True)
 
 
 class UserDeleteForm(NlddFormMixin, forms.Form):

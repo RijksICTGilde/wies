@@ -14,6 +14,13 @@
   <nldd-title size="display-3">
   <h1>Gebruikers</h1>
   </nldd-title>
+  {% set open_requests = pending_access_request_count(request) %}
+  {% if open_requests %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-banner size="sm" variant="accent" text="{{ open_requests }} {{ 'toegangsaanvraag wacht' if open_requests == 1 else 'toegangsaanvragen wachten' }} op beoordeling">
+    <nldd-button slot="actions" appearance="secondary" text="Bekijk toegangsaanvragen" href="{{ url('access-request-admin') }}"></nldd-button>
+    </nldd-banner>
+  {% endif %}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-toolbar accessible-label="Gebruikers">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">

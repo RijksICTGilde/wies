@@ -653,3 +653,81 @@ describe("bind", () => {
     assert.deepEqual(seen, [target]);
   });
 });
+
+// ─── overlay close ───────────────────────────────────────────
+
+describe("rememberOpener", () => {
+  it("takes the button that opened the menu for an item inside one", () => {
+    const trigger = element({});
+    const menu = {
+      closest: (selector) =>
+        selector.includes("nldd-icon-button") ? trigger : null,
+    };
+    const item = element({ "hx-get": "/goedkeuren/" });
+    item.closest = (selector) => (selector === "nldd-menu" ? menu : null);
+    const restore = new FocusRestore(doc);
+    restore.rememberOpener(item);
+    assert.equal(restore.opener, trigger);
+  });
+
+  it("takes the element itself outside a menu", () => {
+    const button = element({ "hx-get": "/aanvragen/" });
+    button.closest = () => null;
+    const restore = new FocusRestore(doc);
+    restore.rememberOpener(button);
+    assert.equal(restore.opener, button);
+  });
+
+  it("keeps the opener when a form inside the overlay submits", () => {
+    const opener = element({ "hx-get": "/goedkeuren/" });
+    const submit = element({ "hx-post": "/goedkeuren/" });
+    submit.closest = (selector) =>
+      selector.includes("nldd-sheet") ? element({}) : null;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.rememberOpener(submit);
+    assert.equal(restore.opener, opener);
+  });
+});
+
+describe("handleOverlayClose", () => {
+  it("returns focus to the opener when it dropped to the body", () => {
+    const opener = element({});
+    doc.activeElement = doc.body;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.handleOverlayClose();
+    assert.equal(doc.activeElement, opener);
+  });
+
+  it("leaves focus alone when the overlay already placed it", () => {
+    const opener = element({});
+    const elsewhere = element({});
+    doc.activeElement = elsewhere;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.handleOverlayClose();
+    assert.equal(doc.activeElement, elsewhere);
+    assert.equal(opener.focusCalls.length, 0);
+  });
+
+  it("returns focus when it was left on the closed overlay", () => {
+    const opener = element({});
+    const overlay = element({});
+    doc.activeElement = overlay;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.handleOverlayClose(overlay);
+    assert.equal(doc.activeElement, opener);
+  });
+
+  it("does nothing when the opener left the document", () => {
+    const opener = element({});
+    opener.isConnected = false;
+    doc.activeElement = doc.body;
+    const restore = new FocusRestore(doc);
+    restore.opener = opener;
+    restore.handleOverlayClose();
+    assert.equal(opener.focusCalls.length, 0);
+  });
+});

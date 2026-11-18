@@ -36,6 +36,7 @@ from django.utils import timezone
 from wies.core.management.task import require_destructive_actions_enabled
 from wies.core.models import (
     SUBGROEP_CATEGORY,
+    AccessRequest,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -853,6 +854,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
 
     # ── 0. Clean up existing dummy data ──────────────────────────────
     write("Cleaning up existing data...")
+    AccessRequest.objects.all().delete()
     Placement.objects.all().delete()
     Service.objects.all().delete()
     # Assignment events carry the assignment PK in object_id (not a FK), so they
@@ -977,6 +979,46 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
                 end_date=started - timedelta(days=1),
             )
     write("Contract periods assigned")
+
+    # ── 4f. Access requests ──────────────────────────────────────────
+    # Three open, one approved and one rejected, so every state of the admin page
+    # and of the no-access page has something to show. Requesters have no account,
+    # so their addresses must not collide with a colleague's. Own random stream,
+    # so the data generated after this stays the same as before it existed.
+    request_rng = random.Random(7)  # noqa: S311
+    user_admin = next(
+        (c.user for c, role in zip(colleagues, roles, strict=True) if role == ROLE_USER_ADMIN),
+        None,
+    )
+    motivations = ["Ik begin maandag in een nieuw team.", "", "Ik vervang tijdelijk een collega."]
+    requesters = []
+    while len(requesters) < 5:  # noqa: PLR2004 (5 = three open, one approved, one rejected)
+        name = generate_name(request_rng)
+        email = f"{sanitize_email(name)}.aanvraag@rijksoverheid.nl"
+        if email not in used_emails:
+            used_emails.add(email)
+            requesters.append((name, email))
+    for index, (name, email) in enumerate(requesters):
+        first_name, _, last_name = name.partition(" ")
+        access_request = AccessRequest.objects.create(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            suborganization=request_rng.choice(suborganizations) if suborganizations and index % 2 == 0 else None,
+            motivation=motivations[index % len(motivations)],
+            created_at=timezone.now() - timedelta(days=index + 1),
+        )
+        if index == 3:  # noqa: PLR2004 (the approved one)
+            access_request.status = AccessRequest.Status.APPROVED
+            access_request.created_user = colleagues[0].user
+        elif index == 4:  # noqa: PLR2004 (the rejected one)
+            access_request.status = AccessRequest.Status.REJECTED
+            access_request.decision_note = "Wies is alleen voor medewerkers van ODI."
+        if access_request.status != AccessRequest.Status.PENDING:
+            access_request.decided_by = user_admin
+            access_request.decided_at = access_request.created_at + timedelta(hours=4)
+            access_request.save()
+    write("Access requests: 3 open, 1 approved, 1 rejected")
 
     # ── 5. Assignments ───────────────────────────────────────────────
     assignments = []

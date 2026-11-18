@@ -89,7 +89,44 @@ function FocusRestore(doc, options) {
   // Clicking is a pointing action: that user knows where they are and needs no
   // destination. Only a keyboard user loses their place when focus drops.
   this.lastInput = "keyboard";
+  // What started the last request, for when the overlay it opened closes again.
+  this.opener = null;
 }
+
+// The control an overlay hands focus back to. A menu item is gone with its
+// closed popover, so for one of those it is the button that opened the menu.
+var MENU_TRIGGER = "nldd-icon-button, nldd-button";
+var OVERLAY = "nldd-sheet, nldd-modal-dialog";
+
+FocusRestore.prototype.rememberOpener = function (element) {
+  if (!element || typeof element.closest !== "function") return;
+  // A submit from inside the overlay (a rejected form) is not what opened it,
+  // and closes with it.
+  if (element.closest(OVERLAY)) return;
+  var menu = element.closest("nldd-menu");
+  var trigger = menu && menu.closest(MENU_TRIGGER);
+  this.opener = trigger || element;
+};
+
+// The overlay returns focus to what was active when it opened, which for a
+// sheet opened from a menu item is that item: hidden by then, so focus is left
+// on the closed overlay itself or on <body>, and the next Tab starts at the top
+// of the page.
+FocusRestore.prototype.handleOverlayClose = function (overlay) {
+  var active = this.doc.activeElement;
+  var lost =
+    !active ||
+    active === this.doc.body ||
+    active === this.doc.documentElement ||
+    active === overlay ||
+    (overlay &&
+      typeof overlay.contains === "function" &&
+      overlay.contains(active));
+  if (!lost) return;
+  var opener = this.opener;
+  if (!opener || opener.isConnected === false) return;
+  this.focusFirst([opener]);
+};
 
 FocusRestore.prototype.describe = function (element) {
   if (!element || typeof element.getAttribute !== "function") return null;
@@ -297,7 +334,27 @@ FocusRestore.prototype.bind = function () {
       self.remember(active);
     }
     self.remember(event.detail.elt);
+    self.rememberOpener(event.detail.elt);
   });
+  // `close` does not bubble, so listen in the capture phase. A frame later:
+  // the overlay restores focus itself first, and only a miss is ours to fix.
+  this.doc.addEventListener(
+    "close",
+    function (event) {
+      var name = event.target && event.target.localName;
+      if (name !== "nldd-sheet" && name !== "nldd-modal-dialog") return;
+      var raf =
+        self.doc.defaultView && self.doc.defaultView.requestAnimationFrame;
+      if (typeof raf === "function") {
+        raf.call(self.doc.defaultView, function () {
+          self.handleOverlayClose(event.target);
+        });
+      } else {
+        self.handleOverlayClose(event.target);
+      }
+    },
+    true,
+  );
   // Going back in browser history is a different context; what we remembered
   // is not about that one.
   this.doc.addEventListener("htmx:historyRestore", function () {

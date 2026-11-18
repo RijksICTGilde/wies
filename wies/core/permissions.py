@@ -15,7 +15,7 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
-from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
+from wies.core.models import AccessRequest, Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import (
     PLACED,
     PLACED_ON_SERVICE,
@@ -153,6 +153,15 @@ rule(
     UPDATE,
     ContractPeriod,
     label="Contracturen van een collega bijhouden",
+    grants=[Grant(Role(ROLE_USER_ADMIN))],
+)
+
+# Seeing the list and deciding are one right: nobody needs to read requests
+# without being able to act on them.
+rule(
+    UPDATE,
+    AccessRequest,
+    label="Toegangsaanvragen beoordelen",
     grants=[Grant(Role(ROLE_USER_ADMIN))],
 )
 

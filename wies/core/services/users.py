@@ -22,6 +22,7 @@ from wies.core.roles import (
     may_grant,
     role_label,
 )
+from wies.core.services.access_requests import close_pending_for
 from wies.core.services.assignments import member_audit_event
 from wies.core.services.events import create_event
 from wies.core.services.suborganizations import get_suborganization_by_name, renamed_column_errors
@@ -104,7 +105,16 @@ def _apply_groups(user, groups, updater) -> list:
 
 
 def create_user(
-    creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None, request=None
+    creator: User,
+    first_name,
+    last_name,
+    email,
+    labels=None,
+    groups=None,
+    suborganization=None,
+    request=None,
+    *,
+    mail_access_request: bool = True,
 ):
     """Creates the person and the roles asked for, by the user form or the CSV import.
 
@@ -113,6 +123,8 @@ def create_user(
 
     :param creator: can be None when user create is triggered from system itself
     :param request: optional, for logging client IP + User-Agent on the audit event
+    :param mail_access_request: whether a pending access request on the address
+        gets the approval mail
     """
 
     if groups is None:
@@ -162,6 +174,7 @@ def create_user(
         request=request,
         context=context,
     )
+    close_pending_for(user, creator, request, send_mail=mail_access_request)
 
     return user
 
@@ -349,6 +362,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         }
 
     users_created = 0
+    access_requests_approved = 0
     suborg_mapping = {}  # mapping from str to Suborganization, to avoid many DB queries
 
     try:
@@ -392,6 +406,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
                     request=request,
                 )
                 users_created += 1
+                access_requests_approved += user.access_requests.exists()
                 # No column asks for a role the importer may not grant today; this
                 # keeps a privileged column added later from being dropped silently.
                 dropped = {g.name for g in groups_to_assign} - set(user.groups.values_list("name", flat=True))
@@ -411,6 +426,7 @@ def create_users_from_csv(creator, csv_content: str, request=None):
     return {
         "success": True,
         "users_created": users_created,
+        "access_requests_approved": access_requests_approved,
         "errors": errors,  # May contain warnings when success is True
     }
 

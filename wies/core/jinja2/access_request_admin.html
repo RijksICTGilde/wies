@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% from "parts/row_actions.html" import render_row_actions %}
+{% block title %}
+  Toegangsaanvragen · Wies
+{% endblock title %}
+{% block sidebar %}
+  {% include "parts/admin_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <nldd-title size="display-3">
+  <h1>Toegangsaanvragen</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>Hier zie je wie zonder account toegang tot Wies heeft gevraagd. Keur je een toegangsaanvraag goed, dan voeg je die persoon direct als gebruiker toe.</p>
+  </nldd-rich-text>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  <nldd-title size="display-5">
+  <h2>Open ({{ pending|length }})</h2>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {% if pending %}
+    <nldd-list dividers="always" accessible-label="Open toegangsaanvragen">
+    {% for access_request in pending %}
+      <nldd-list-item>
+      <nldd-cell>
+      <nldd-avatar size="40" name="{{ access_request.full_name }}" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      {% set details = [access_request.email, access_request.suborganization.name if access_request.suborganization else "Geen onderdeel", "aangevraagd " ~ access_request.created_at|datetime_nl("%Y-%m-%d")|datum_nl("j b")] %}
+      {% if access_request.motivation %}
+        {% set details = details + ["“" ~ access_request.motivation ~ "”"] %}
+      {% endif %}
+      <nldd-text-cell divider-start width="full" text="{{ access_request.full_name }}" supporting-text="{{ details|join(' · ') }}">
+      </nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-cell>
+      {% set approve = {"text": "Goedkeuren", "attrs": {"hx-get": url("access-request-approve", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
+      {% set email = {"text": "E-mailen", "attrs": {"href": "mailto:" ~ access_request.email}} %}
+      {% set reject = {"text": "Afwijzen", "attrs": {"destructive": "", "hx-get": url("access-request-reject", args=[access_request.public_id]), "hx-target": "#userFormModal", "hx-swap": "innerHTML"}} %}
+      {{ render_row_actions([approve, email, reject], "Acties voor " ~ access_request.full_name) }}
+      </nldd-cell>
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+  {% else %}
+    <nldd-inline-dialog text="Geen open toegangsaanvragen" supporting-text="Een nieuwe toegangsaanvraag verschijnt hier zodra iemand zonder account toegang aanvraagt."></nldd-inline-dialog>
+  {% endif %}
+  {% if decided %}
+    <nldd-spacer size="32" direction="vertical"></nldd-spacer>
+    <nldd-title size="display-5">
+    <h2>Afgehandeld</h2>
+    </nldd-title>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>Afgehandelde toegangsaanvragen blijven {{ retention_days }} dagen zichtbaar. Daarna verwijdert Wies ze.</p>
+    </nldd-rich-text>
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-list dividers="always" accessible-label="Afgehandelde toegangsaanvragen">
+    {% for access_request in decided %}
+      {% set approved = access_request.status == "approved" %}
+      {% set decider = access_request.decided_by.get_full_name() if access_request.decided_by else "een verwijderde gebruiker" %}
+      {% set details = [access_request.email, "door " ~ decider ~ " op " ~ access_request.decided_at|datetime_nl("%Y-%m-%d")|datum_nl("j b")] %}
+      {% if access_request.decision_note %}
+        {% set details = details + ["Reden: " ~ access_request.decision_note] %}
+      {% endif %}
+      <nldd-list-item>
+      <nldd-text-cell width="full" supporting-text="{{ details|join(' · ') }}">
+      <p>
+        {{ access_request.full_name }}
+        <nldd-tag size="sm" color="{{ 'success' if approved else 'critical' }}" text="{{ access_request.get_status_display() }}"></nldd-tag>
+      </p>
+      </nldd-text-cell>
+      {% if approved and not email_enabled %}
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-cell>
+        {% set email = {"text": "E-mailen dat er toegang is", "icon": "envelope", "attrs": {"href": access_request.mailto}} %}
+        {{ render_row_actions([email], "Acties voor " ~ access_request.full_name) }}
+        </nldd-cell>
+      {% endif %}
+      </nldd-list-item>
+    {% endfor %}
+    </nldd-list>
+  {% endif %}
+  <div id="userFormModal"></div>
+{% endblock content %}

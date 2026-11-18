@@ -367,6 +367,68 @@ class Service(models.Model):
         return self.specific_end_date
 
 
+class AccessRequest(models.Model):
+    """Someone without an account asking for access from the no-access page.
+
+    The address comes from the verified OIDC login, never from the form.
+    """
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Wacht op beoordeling"
+        APPROVED = "approved", "Goedgekeurd"
+        REJECTED = "rejected", "Afgewezen"
+
+    public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    email = models.EmailField(verbose_name="E-mailadres")
+    first_name = models.CharField(max_length=150, verbose_name="Voornaam")
+    last_name = models.CharField(max_length=150, verbose_name="Achternaam")
+    suborganization = models.ForeignKey(
+        Suborganization,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="access_requests",
+        verbose_name="Onderdeel",
+    )
+    motivation = models.TextField(blank=True, max_length=500, verbose_name="Toelichting")
+    status = models.CharField(max_length=10, choices=Status, default=Status.PENDING, db_index=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    decided_at = models.DateTimeField(null=True, blank=True)
+    decided_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="decided_access_requests",
+    )
+    decision_note = models.TextField(blank=True, max_length=500, verbose_name="Reden")
+    created_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="access_requests",
+    )
+
+    class Meta:
+        ordering = ["-created_at"]
+        constraints = [
+            # Also the guard against a double submit: the second insert fails.
+            models.UniqueConstraint(
+                Lower("email"),
+                condition=Q(status="pending"),
+                name="unique_pending_access_request_per_email",
+            ),
+        ]
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.email})"
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.first_name} {self.last_name}"
+
+
 class EventAction(models.TextChoices):
     CREATE = "create", "Aangemaakt"
     UPDATE = "update", "Gewijzigd"

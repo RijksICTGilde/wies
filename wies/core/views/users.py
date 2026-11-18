@@ -3,8 +3,9 @@
 from collections import Counter
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
@@ -355,10 +356,11 @@ def user_create(request):
         )
     if request.method == "POST":
         form = UserForm(request.POST, editor=request.user)
-        if form.is_valid() and _create_user_with_contract_period(request, form):
+        if form.is_valid() and (user := _create_user_with_contract_period(request, form)):
             # HTMX needs HX-Redirect to force a full page redirect.
             messages.success(
-                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is toegevoegd."
+                request,
+                f"Gebruiker {user.first_name} {user.last_name} is toegevoegd.{_access_request_note(user)}",
             )
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
@@ -381,11 +383,19 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-def _create_user_with_contract_period(request, form) -> bool:
+def _access_request_note(user: User) -> str:
+    """Tells the beheerder that adding this user also answered their access request."""
+    if not user.access_requests.exists():
+        return ""
+    mail = f" {user.first_name} krijgt hierover een e-mail." if settings.EMAIL_ENABLED else ""
+    return f" De toegangsaanvraag van {user.first_name} is daarmee goedgekeurd.{mail}"
+
+
+def _create_user_with_contract_period(request, form, *, mail_access_request: bool = True) -> User | None:
     """Creates the user and, when filled in, its first contract period.
 
     One transaction: a period that does not validate (the colleague may be an
-    existing one with periods of its own) leaves no user behind. Returns False
+    existing one with periods of its own) leaves no user behind. Returns None
     with the error on the form then.
     """
     hours = form.cleaned_data.get("contract_hours_per_week")
@@ -399,6 +409,7 @@ def _create_user_with_contract_period(request, form) -> bool:
             groups=form.cleaned_data.get("groups"),
             suborganization=form.cleaned_data.get("suborganization"),
             request=request,
+            mail_access_request=mail_access_request,
         )
         if hours:
             period = ContractPeriod(
@@ -412,10 +423,10 @@ def _create_user_with_contract_period(request, form) -> bool:
                 transaction.set_rollback(True)
                 for field, errors in e.message_dict.items():
                     form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
-                return False
+                return None
             period.save()
             contract_period_event(request, period, "create")
-    return True
+    return user
 
 
 @permission_required("rijksauth.change_user", raise_exception=True)
@@ -677,9 +688,6 @@ def user_delete(request, public_id):
         # The colleague outlives the user (SET_NULL) and drops off Bezetting with
         # the user. The contract and the placements end here so the colleague
         # panel, the opdrachten and the history say when the work stopped.
-        # Capture the int PK before delete() nulls it; Event.object_id keeps
-        # referencing the internal id, not the public_id.
-        user_pk = user.id
         # One transaction: a contract ended without the user gone, or a user
         # gone without a trace, would both be worse than the failure itself.
         with transaction.atomic():
@@ -700,19 +708,27 @@ def user_delete(request, public_id):
                 "placements_ended": [_placement_snapshot(p) for p in placements_ended],
                 "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
             }
-            user.delete()
+            # Before the delete: when you delete yourself, the delete then nulls
+            # your own event's user (SET_NULL) and user_email keeps who it was.
+            # Event.object_id is the internal id, not the public_id.
             create_event(
                 object_type="User",
                 action="delete",
                 source="user",
-                object_id=user_pk,
+                object_id=user.id,
                 user=request.user,
                 request=request,
                 context=context,
             )
+            user.delete()
+        response = HttpResponse(status=200)
+        if user.public_id == request.user.public_id:
+            # The session belongs to a user that no longer exists.
+            logout(request)
+            response["HX-Redirect"] = reverse("home")
+            return response
         name = f"{user.first_name} {user.last_name}".strip() or user.email
         messages.success(request, f"{name} is verwijderd.")
-        response = HttpResponse(status=200)
         response["HX-Redirect"] = _user_list_behind_sheet(request)
         return response
     return HttpResponse(status=405)
@@ -758,5 +774,5 @@ def user_import_csv(request):
 
         result = create_users_from_csv(request.user, csv_content, request=request)
 
-        return render(request, "user_import.html", {"result": result})
+        return render(request, "user_import.html", {"result": result, "email_enabled": settings.EMAIL_ENABLED})
     return HttpResponse(status=405)
