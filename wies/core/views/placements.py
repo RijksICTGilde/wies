@@ -129,7 +129,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         """Base queryset with search, ordering, and date filters applied."""
         excluded_org_ids = get_excluded_org_ids()
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill")
+            Placement.objects.select_related("colleague__suborganization", "service", "service__skill")
             .prefetch_related(
                 "colleague__labels",
                 Prefetch(
@@ -381,6 +381,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
             cards.append(
                 {
                     "name": rows[0].colleague.name,
+                    "suborganization": rows[0].colleague.suborganization,
                     "assignment": single,
                     "assignments": assignments,
                     "roles": roles,
