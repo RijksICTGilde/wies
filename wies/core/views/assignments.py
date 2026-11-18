@@ -83,7 +83,7 @@ from .panels import (
 )
 
 
-class AssignmentListView(PublicIdFacetsMixin, ListView):
+class AanvraagListView(PublicIdFacetsMixin, ListView):
     """Aanvragen as cards: one per role nobody fills yet, and one per opdracht
     that has no role at all yet. Infinite scroll pagination."""
 
@@ -245,7 +245,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
             if is_side_panel_request(self.request):
-                # See PlacementListView.get_template_names.
+                # See PlacementOverviewView.get_template_names.
                 panel_data = getattr(self, "_panel_data", None)
                 if panel_data:
                     return [panel_data["panel_content_template"]]
@@ -372,7 +372,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
 
         # Side panel; ?nieuwe-opdracht opens the empty create form on the list.
         context["panel_data"] = resolve_side_panel(self.request, allow_create=True)
-        # See PlacementListView.get_context_data: get_template_names reads this.
+        # See PlacementOverviewView.get_context_data: get_template_names reads this.
         self._panel_data = context["panel_data"]
         return context
 
@@ -537,7 +537,7 @@ def assignment_edit_view(request, public_id):
 def assignment_create_sheet(request):
     """Creates the assignment from the create sheet and sends the client to its
     panel via HX-Location. Roles are added afterwards in that panel. The empty
-    form itself is rendered by AssignmentListView (?nieuwe-opdracht), so it lives
+    form itself is rendered by AanvraagListView (?nieuwe-opdracht), so it lives
     on the list URL like the object panels and survives a reload."""
     if not request.user.has_perm("core.add_assignment"):
         return HttpResponseForbidden()

@@ -158,7 +158,7 @@ class TestGroupPagination:
         assert response.status_code == 200
         # Plus the viewer, who has no placement and so ends the list.
         assert response.context_data["paginator"].count == 6
-        assert len(response.context_data["object_list"]) == 10
+        assert len(response.context_data["cards"]) == 6
 
     def test_paginator_counts_assignments_in_opdracht_view(self):
         """Two assignments with three team members each is six placements but two cards."""
@@ -170,7 +170,7 @@ class TestGroupPagination:
         response = self.client.get(reverse("home"), {"weergave": "opdracht"})
         assert response.status_code == 200
         assert response.context_data["paginator"].count == 2
-        assert len(response.context_data["object_list"]) == 6
+        assert [len(card["team"]) for card in response.context_data["cards"]] == [3, 3]
 
     def test_group_is_never_split_across_a_page_boundary(self):
         """Every placement of a person sits on the same page as that person's card.
@@ -188,21 +188,17 @@ class TestGroupPagination:
         assert page1.status_code == 200
         assert page2.status_code == 200
 
-        page1_colleagues = {p.colleague_id for p in page1.context_data["object_list"]}
-        page2_colleagues = {p.colleague_id for p in page2.context_data["object_list"]}
+        # The viewer, who has no placement, ends the list on page 2.
+        page1_colleagues = {c.id for c in page1.context_data["page_obj"].object_list if c.current_placements}
+        page2_colleagues = {c.id for c in page2.context_data["page_obj"].object_list if c.current_placements}
 
         assert len(page1_colleagues) == 60
         assert len(page2_colleagues) == 1
         assert not (page1_colleagues & page2_colleagues)
 
         for page in (page1, page2):
-            counts = {}
-            for placement in page.context_data["object_list"]:
-                counts[placement.colleague_id] = counts.get(placement.colleague_id, 0) + 1
-            assert set(counts.values()) == {2}
-
-        assert len(page1.context_data["object_list"]) == 120
-        assert len(page2.context_data["object_list"]) == 2
+            placed = [c for c in page.context_data["page_obj"].object_list if c.current_placements]
+            assert {len(c.current_placements) for c in placed} == {2}
 
     def test_every_group_appears_exactly_once_across_pages(self):
         for i in range(61):
@@ -211,7 +207,7 @@ class TestGroupPagination:
         seen = []
         for page_number in (1, 2):
             response = self.client.get(reverse("home"), {"pagina": str(page_number)})
-            seen.extend(p.colleague_id for p in response.context_data["object_list"])
+            seen.extend(c.id for c in response.context_data["page_obj"].object_list if c.current_placements)
 
         assert len(seen) == 61
         assert len(set(seen)) == 61

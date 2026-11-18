@@ -22,7 +22,7 @@ from wies.core.models import (
 )
 from wies.core.querysets import annotate_service_dates
 from wies.core.tests.role_helpers import grant_consultant, make_business_manager_user, make_other_business_manager_user
-from wies.core.views.assignments import AssignmentListView
+from wies.core.views.assignments import AanvraagListView
 
 User = get_user_model()
 
@@ -32,7 +32,7 @@ CARD_AANVRAAG_RE = re.compile(r'<nldd-card[^>]*\shref="[^"]*aanvraag=([0-9a-f-]{
 CARD_OPDRACHT_RE = re.compile(r'<nldd-card[^>]*\shref="[^"]*opdracht=([0-9a-f-]{36})')
 
 
-class AssignmentListViewTest(TestCase):
+class AanvraagListViewTest(TestCase):
     """Tests for the assignment list (aanvragen cards) view."""
 
     def setUp(self):
@@ -236,7 +236,7 @@ class AssignmentListViewTest(TestCase):
         Assignment.objects.update(created_at=None)
         request = RequestFactory().get(self.list_url, query_params or {})
         request.user = self.auth_user
-        view = AssignmentListView()
+        view = AanvraagListView()
         view.request = request
         view.kwargs = {}
         view.object_list = view.get_queryset()
@@ -302,7 +302,7 @@ class AssignmentListViewTest(TestCase):
         """Intelligence-service orgs are hidden from the aanvragen list and its
         org quick-filters, matching how the plaatsingen list already hides them.
 
-        Regression: AssignmentListView never excluded ``get_excluded_org_ids``,
+        Regression: AanvraagListView never excluded ``get_excluded_org_ids``,
         so an excluded org could surface as a list card and a top-N quick filter.
         """
         aivd = OrganizationUnit.objects.create(

@@ -13,6 +13,11 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 User = get_user_model()
 
 
+def _placement_ids(response) -> list[int]:
+    """The placements on the cards of a person-view page."""
+    return [p.id for colleague in response.context_data["page_obj"].object_list for p in colleague.current_placements]
+
+
 @pytest.mark.django_db
 class TestPlacementPagination:
     """Test that placement pagination doesn't show duplicates."""
@@ -68,15 +73,14 @@ class TestPlacementPagination:
         response1 = self.client.get(reverse("home"))
         assert response1.status_code == 200
 
-        # page_obj holds colleague ids, object_list their placements.
-        page1_ids = [p.id for p in response1.context_data["object_list"]]
+        page1_ids = _placement_ids(response1)
 
         # Get second page
         response2 = self.client.get(reverse("home") + "?pagina=2")
         assert response2.status_code == 200
 
         # Extract placement IDs from page 2
-        page2_ids = [p.id for p in response2.context_data["object_list"]]
+        page2_ids = _placement_ids(response2)
 
         # Check no duplicates between pages
         duplicates = set(page1_ids) & set(page2_ids)
@@ -135,7 +139,7 @@ class TestPlacementPagination:
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
 
-        all_placement_ids = [p.id for p in response.context_data["object_list"]]
+        all_placement_ids = _placement_ids(response)
 
         # Should only see the 30 current placements
         assert len(all_placement_ids) == 30, f"Expected 30 current placements, got {len(all_placement_ids)}"

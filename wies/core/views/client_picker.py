@@ -16,8 +16,8 @@ from wies.core.services.organizations import (
     nested_folder_label,
 )
 
-from .assignments import AssignmentListView
-from .placements import PlacementListView
+from .assignments import AanvraagListView
+from .placements import PlacementOverviewView
 
 
 def _build_current_selections(request) -> dict[str, str]:
@@ -74,11 +74,11 @@ def client_modal(request):
     if count_mode == "none":
         org_self_counts = Counter()
     elif count_mode == "open_assignments":
-        view = AssignmentListView()
+        view = AanvraagListView()
         view.request = request
         org_self_counts = view.org_counts()
     elif count_mode == "placements":
-        view = PlacementListView()
+        view = PlacementOverviewView()
         view.request = request
         org_self_counts = view.org_counts()
     else:
