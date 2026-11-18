@@ -41,9 +41,16 @@
   {% else %}
     <nldd-container layout="row" gap="12" vertical-alignment="center">
     <nldd-avatar size="40" name="{{ card.name }}" decorative></nldd-avatar>
+    <nldd-container>
     <nldd-title size="display-5">
     <h2>{{ card.name }}</h2>
     </nldd-title>
+    {% if card.suborganization %}
+      <nldd-rich-text spacing="flat">
+      <p class="wies-text-secondary">{{ card.suborganization.name }}</p>
+      </nldd-rich-text>
+    {% endif %}
+    </nldd-container>
     </nldd-container>
     {% if card.roles %}
       <nldd-spacer size="8"></nldd-spacer>

@@ -25,6 +25,7 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 
 User = get_user_model()
@@ -302,6 +303,22 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht A"), None)
 
         assert self._cards()["Jan de Vries"]["roles"] == []
+
+    def test_card_shows_the_onderdeel(self):
+        colleague = _make_colleague("Jan de Vries")
+        colleague.suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
+        colleague.save()
+        _place(colleague, _make_assignment("Opdracht A"), self.skill)
+
+        response = self.client.get(reverse("home"))
+        assert '<p class="wies-text-secondary">Rijks ICT Gilde</p>' in response.content.decode()
+
+    def test_card_without_onderdeel_renders_no_empty_line(self):
+        _place(_make_colleague("Jan de Vries"), _make_assignment("Opdracht A"), self.skill)
+
+        response = self.client.get(reverse("home"))
+        assert self._cards()["Jan de Vries"]["suborganization"] is None
+        assert '<p class="wies-text-secondary">' not in response.content.decode()
 
 
 @pytest.mark.django_db

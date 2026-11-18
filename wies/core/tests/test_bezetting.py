@@ -664,6 +664,12 @@ class BezettingSuborganizationFilterViewTest(TestCase):
         assert b"Aisha Digi" in response.content
         assert b"Bram Mindful" not in response.content
 
+    def test_row_shows_the_onderdeel_as_a_tag(self):
+        # On the tag, not the bare name: the filter sheet lists every name too.
+        response = self.client.get(self.url)
+        assert b'<nldd-tag size="sm" color="neutral" text="Digi Gilde"></nldd-tag>' in response.content
+        assert b'<nldd-tag size="sm" color="neutral" text="Mindful Rijk"></nldd-tag>' in response.content
+
     def test_unknown_suborganization_token_ignored(self):
         # A bogus public_id resolves to no ids: an empty filter shows everyone.
         response = self.client.get(self.url, {"onderdeel": "not-a-real-uuid"})
