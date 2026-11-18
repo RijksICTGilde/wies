@@ -13,6 +13,7 @@ dependencies = [
   "psycopg[binary]>=3.3.6",
   "sqlparse>=0.6.0",  # transitive via Django; floor for ReDoS/DoS advisories fixed in 0.6.0
   "boto3==1.43.127",
+  "markdown-it-py==4.3.0",
 ]
 
 [dependency-groups]
@@ -24,7 +25,6 @@ dev = [
   "pytest-django>=4.14.0",
   "pytest-cov>=6.0",
   "coverage[toml]>=7.17.2",
-  "markdown-it-py>=4.2.0",
 ]
 
 [tool.setuptools]

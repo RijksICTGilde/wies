@@ -1,11 +1,12 @@
-// "Toon meer" under the Taken of a cv entry. The server shows it only past a
-// fixed length; on a narrow screen the three-line clamp cuts a shorter text
-// too, so the toggle has to follow what the browser actually clamps.
+// "Toon meer" under a clamped text: the Taken of a cv entry and a long
+// description. The server decides on a fixed length, but whether the line
+// clamp cuts depends on the width, so the toggle follows what the browser
+// actually clamps.
 
 (function () {
-  // An open entry hides its preview and keeps the toggle for "Toon minder".
+  // An open text is not clamped and keeps its toggle for "Toon minder".
   function syncClampedToggle(preview, toggle) {
-    if (preview.hidden) return;
+    if (toggle.hasAttribute("expanded")) return;
     toggle.hidden = preview.scrollHeight <= preview.clientHeight;
   }
 
@@ -30,7 +31,7 @@
   });
 
   function observeAll(root) {
-    root.querySelectorAll("[data-cv-preview]").forEach(function (preview) {
+    root.querySelectorAll("[data-clamp-preview]").forEach(function (preview) {
       observer.observe(preview);
     });
   }

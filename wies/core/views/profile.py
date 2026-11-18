@@ -135,6 +135,12 @@ def user_profile(request):
     user = request.user
     colleague = getattr(user, "colleague", None)
 
+    # The refresh after a save in the panel: the list alone, as the whole
+    # page's flash block would take the panel's success message first.
+    if request.headers.get("HX-Target") == "profile-assignments":
+        assignment_list = get_colleague_assignments(request, colleague) if colleague else []
+        return render(request, "parts/profile_assignments.html", {"assignment_list": assignment_list})
+
     panel_data = resolve_side_panel(request)
     # HTMX partial responses for panel swaps
     if is_side_panel_request(request) and panel_data:

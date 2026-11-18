@@ -1,7 +1,9 @@
 """Helpers shared by the views: panel URLs, sort controls, CSV upload limit."""
 
+import json
+
 from django.core.exceptions import ValidationError
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.urls import reverse
 
 from wies.core.services.urls import PAGE_PARAM, hx_current_url, rebuild_url
@@ -56,6 +58,16 @@ def is_side_panel_request(request):
     with no ``panel_data``; a full-page load stays graceful and shows no panel.
     """
     return request.headers.get("HX-Target") == "side-panel-content"
+
+
+def back_to_panel(path: str) -> HttpResponse:
+    """The answer to a save in a panel sheet: htmx loads ``path`` into the
+    panel, and ``panelSaved`` tells a page that shows the same data behind the
+    panel (the profile) to fetch it again."""
+    response = HttpResponse(status=204)
+    response["HX-Trigger"] = "panelSaved"
+    response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
 
 
 def resolve_panel_object(request, model, public_id, *, select_related=()):

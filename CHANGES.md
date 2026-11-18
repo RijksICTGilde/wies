@@ -4,7 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
+- 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
+- 694: (accessibility) an error when editing "Opdrachtgever(s)" in place is tied to the picker button, so a screen reader announces it with the control; before, it belonged to no control
 
 ## 2026-11-18
 
