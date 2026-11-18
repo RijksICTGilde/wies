@@ -62,9 +62,9 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, sort_control_context
+from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request, sort_control_context
 from .client_picker import client_modal_response, is_client_modal_request
-from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     build_placement_edit_panel_data,
     resolve_side_panel,
@@ -540,18 +540,18 @@ class PlacementOverviewView(View):
     }
 
     def get(self, request, *args, **kwargs):
-        htmx = "HX-Request" in request.headers
-        if htmx and request.GET.get("filter_modal"):
+        if is_filter_modal_request(request):
             return filter_modal_response(request, self._filter_groups(self._active_filters()))  # "Meer..."
         if is_client_modal_request(request):
             return client_modal_response(request, self.org_counts())  # opdrachtgever "Meer..."
         # The target, not a panel param: after a page load with ?collega=, the
         # weergave toggle and sort links keep it in their url, and want the results.
-        if request.headers.get("HX-Target") == "side-panel-content":
+        if is_side_panel_request(request):
             return side_panel_response(request)
 
         # The templates nest: the page holds the results, the results hold the
         # cards. Each layer's context builds on the one inside it.
+        htmx = "HX-Request" in request.headers
         if htmx and request.GET.get(self.page_kwarg):
             return TemplateResponse(request, "parts/placement_cards.html", self._cards_context())  # "Meer tonen"
         if htmx:
