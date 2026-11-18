@@ -1,0 +1,80 @@
+# TLS-certificaat wies.rijksorganisatieodi.nl, opgehaald op 2026-11-18 met:
+# openssl s_client -connect wies.rijksorganisatieodi.nl:443 -servername wies.rijksorganisatieodi.nl | openssl x509 -noout -text
+
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            05:d6:8f:02:8a:b3:19:61:a2:b1:8b:ee:54:4f:d8:28:79:e7
+        Signature Algorithm: ecdsa-with-SHA384
+        Issuer: C=US, O=Let's Encrypt, CN=YE1
+        Validity
+            Not Before: Oct 28 20:46:45 2026 GMT
+            Not After : Jan 26 20:46:44 2027 GMT
+        Subject: CN=wies.rijksorganisatieodi.nl
+        Subject Public Key Info:
+            Public Key Algorithm: id-ecPublicKey
+                Public-Key: (384 bit field, 192 bit security level)
+                pub:
+                    04:4b:86:ed:6b:f5:13:07:c8:6a:f5:92:8d:20:22:a7:
+                    1f:85:5f:3b:78:d1:b7:f2:27:6a:27:0e:bf:c9:4d:f6:
+                    9a:f2:19:26:83:30:d3:06:d2:7b:fe:13:5f:b6:d6:b3:
+                    7c:6c:6b:17:f6:80:d3:65:4a:2c:64:8d:e9:28:e3:f4:
+                    79:68:09:93:9e:3b:17:f8:1b:c5:61:b8:6e:d9:5a:2f:
+                    3e:e5:36:24:6a:a3:74:37:95:f6:c1:ea:7a:1c:b7:5d:
+                    6f
+                ASN1 OID: secp384r1
+                NIST CURVE: P-384
+        X509v3 extensions:
+            X509v3 Key Usage: critical
+                Digital Signature
+            X509v3 Extended Key Usage:
+                TLS Web Server Authentication
+            X509v3 Basic Constraints: critical
+                CA:FALSE
+            X509v3 Subject Key Identifier:
+                6B:DA:71:34:51:7D:88:6B:C1:48:43:B6:87:E3:61:51:3D:1E:74:1D
+            X509v3 Authority Key Identifier:
+                BB:20:CA:47:0B:FE:D7:E5:9C:F9:8F:09:2A:A3:8C:37:45:B1:BC:D8
+            Authority Information Access:
+                CA Issuers - URI:http://ye1.i.lencr.org/
+            X509v3 Subject Alternative Name:
+                DNS:wies.rijksorganisatieodi.nl
+            X509v3 Certificate Policies:
+                Policy: 2.23.140.1.2.1
+            X509v3 CRL Distribution Points:
+                Full Name:
+                  URI:http://ye1.c.lencr.org/104.crl
+
+            CT Precertificate SCTs:
+                Signed Certificate Timestamp:
+                    Version   : v1 (0x0)
+                    Log ID    : 4C:63:DC:98:E5:9C:1D:AB:88:F6:1E:8A:3D:DE:AE:8F:
+                                AB:44:A3:37:7B:5F:9B:94:C3:FB:A1:9C:FC:C1:BE:26
+                    Timestamp : Oct 28 21:45:15.491 2026 GMT
+                    Extensions: none
+                    Signature : ecdsa-with-SHA256
+                                30:46:02:21:00:90:9A:B7:4B:79:2A:82:36:D1:0A:59:
+                                B2:82:2D:D4:34:CC:3E:9E:26:11:0E:5E:74:5F:0F:44:
+                                CC:A7:26:3C:4F:02:21:00:85:31:56:67:07:56:EF:AF:
+                                32:C3:5F:98:F9:E9:28:21:33:78:56:CC:81:C6:30:03:
+                                12:DE:46:54:EA:C2:C8:48
+                Signed Certificate Timestamp:
+                    Version   : v1 (0x0)
+                    Log ID    : 1A:8B:9D:6B:8D:D7:91:D1:CD:05:49:ED:B6:03:55:D6:
+                                06:B6:4F:AD:30:DB:71:FE:78:8F:0F:C7:C8:FB:C4:B1
+                    Timestamp : Oct 28 21:45:16.740 2026 GMT
+                    Extensions: 00:00:05:00:0F:0D:B5:8F
+                    Signature : ecdsa-with-SHA256
+                                30:45:02:21:00:97:36:1F:A3:24:64:04:AB:C0:0C:EE:
+                                DE:3D:00:23:ED:F6:2A:E9:38:88:14:C9:88:57:7C:FD:
+                                A6:76:35:B0:00:02:20:7A:6B:84:B6:A3:61:F7:17:D5:
+                                36:3D:22:25:31:0A:53:74:13:B3:10:5A:55:83:DD:B7:
+                                43:0C:EE:06:0F:A9:C4
+    Signature Algorithm: ecdsa-with-SHA384
+    Signature Value:
+        30:65:02:31:00:eb:21:e1:b4:4c:25:60:90:2b:d0:c2:6c:b3:bc:03:ea:74:7e:9d:
+        b1:ed:2d:31:fc:2a:32:dd:3b:95:be:2a:e4:67:9a:6b:81:a5:24:5a:3b:0d:d1:5e:
+        fe:8f:58:23:62:02:30:12:e4:c0:e7:e4:e0:04:19:f0:bf:ee:86:05:4a:dd:8d:d8:
+        23:20:3e:9b:73:99:a4:4b:07:31:88:c9:fa:95:a8:39:a5:0e:d0:cb:3e:d6:3b:35:
+        c4:a7:c3:4b:03:a6:0b

@@ -65,7 +65,8 @@ wetgeving.** — Deels
 Wel encryptie via Let's Encrypt. OV-certificaten lijken wel nodig. We gaan deze
 aanvragen. Actie: Robbert U.
 
-Bewijs: [lets_encrypt.pdf](bewijs/lets_encrypt.pdf)
+Bewijs: [lets_encrypt_2026-11-18.txt](bewijs/lets_encrypt_2026-11-18.txt)
+(18 november 2026), live: [certificaten op crt.sh](https://crt.sh/?q=wies.rijksorganisatieodi.nl)
 
 **Om zekerheid te bieden over de integriteit van het elektronische bericht,
 wordt voor elektronische handtekeningen gebruik gemaakt van de AdES Baseline
@@ -174,7 +175,7 @@ in de GitHub-repo. Zichtbaar wie beheerder is in de gebruikerslijst op
 https://wies.rijksorganisatieodi.nl/beheer/gebruikers/.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permissions.py), [beheerders.png](bewijs/beheerders.png),
+[permission definitions](../../wies/core/permissions.py), [beheerders.png](bewijs/beheerders.png) (juni 2026),
 [controle speciale rollen](20261014_speciale_rollen.md)
 
 **Alle uitgegeven toegangsrechten worden minimaal eenmaal per halfjaar
@@ -237,7 +238,7 @@ beoordeeld.** — Voldoet
 Drie rollen met duidelijke permissies. Rollen zichtbaar in UI. Staff-toegang via
 `STAFF_EMAILS` env var. Env var zichtbaar in ZAD.
 
-Bewijs: [beheerders.png](bewijs/beheerders.png), [controle speciale rollen](20261014_speciale_rollen.md)
+Bewijs: [beheerders.png](bewijs/beheerders.png) (juni 2026), [controle speciale rollen](20261014_speciale_rollen.md)
 
 ## 8.03
 
@@ -303,6 +304,8 @@ mitigerende maatregelen getroffen worden.** — Voldoet
 Dependabot signaleert kwetsbaarheden. Geen formeel risicoafwegingsproces
 gedocumenteerd. Proces in GitHub Security Advisory aanhouden.
 
+Bewijs: [github_2026-11-18.txt](bewijs/github_2026-11-18.txt) (18 november 2026)
+
 - TODO: risicoafwegingsproces maken
 - TODO: melding Dependabot in Mattermost
 
@@ -330,7 +333,7 @@ voor vulnerabilities bij dependencies.
 Bewijs: [access control tests](../../wies/core/tests/test_access_control.py),
 [permission tests](../../wies/core/tests/test_permissions.py),
 [role tests](../../wies/core/tests/test_roles.py),
-[security_scan_dependencies.png](bewijs/security_scan_dependencies.png), [security_scanning_config.png](bewijs/security_scanning_config.png)
+[security_scan_dependencies.png](bewijs/security_scan_dependencies.png) (juni 2026), [security_scanning_config.png](bewijs/security_scanning_config.png) (juni 2026)
 
 ## 8.13
 
@@ -369,7 +372,7 @@ tegen veranderingen.** — Voldoet
 om de goede werking te waarborgen als deze in noodgevallen uitgevoerd moet
 worden.** — Voldoet
 
-Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png)
+Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png) (juni 2026)
 
 ## 8.15
 
@@ -421,7 +424,7 @@ Bewijs: [enforcen van niet bewerken](../../wies/core/models.py) (`Event.save`)
 opzichte van de uitvoering) getoetst op het ongewijzigd bestaan van logbestanden
 gedurende de bewaartermijn.** — Voldoet
 
-Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png)
+Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png) (juni 2026)
 
 ## 8.21
 
@@ -486,7 +489,7 @@ gebruikt. De testen worden bij voorkeur geautomatiseerd uitgevoerd.** — Voldoe
 Django TestCase-framework met `just test`. CI-pipeline via GitHub Actions.
 Pre-commit hooks.
 
-Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png), [logs_75762501481](bewijs/logs_75762501481/),
+Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png) (juni 2026), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png) (juni 2026), [logs_75762501481](bewijs/logs_75762501481/) (juni 2026),
 [testworkflow](../../.github/workflows/test.yml)
 
 **Van de resultaten van de testen wordt verslag gemaakt.** — Voldoet
@@ -494,7 +497,7 @@ Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_
 CI-pipeline genereert testresultaten. Eventueel testresultaten opnemen in
 release packages: onderzoekend.
 
-Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png), [logs_75762501481](bewijs/logs_75762501481/)
+Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png) (juni 2026), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png) (juni 2026), [logs_75762501481](bewijs/logs_75762501481/) (juni 2026)
 
 ## 8.31
 
@@ -505,7 +508,7 @@ Standaardisatie.** — dubbel, zie 8.24
 door de proceseigenaar en schriftelijke vastlegging hiervan, kan hiervan worden
 afgeweken.** — Voldoet
 
-Bewijs: [separate_deployments.png](bewijs/separate_deployments.png)
+Bewijs: [separate_deployments.png](bewijs/separate_deployments.png) (juni 2026)
 
 **Wijzigingen in de productieomgeving worden altijd getest voordat zij in
 productie gebracht worden. Alleen met voorafgaande goedkeuring door de
@@ -516,7 +519,8 @@ GitHub PR-workflow met review (4-ogenprincipe). Test pipeline checkt of wordt
 voldaan aan alle eisen. Als tests niet slagen kan de branch niet naar main
 worden gemerged.
 
-Bewijs: [github_ruleset.png](bewijs/github_ruleset.png)
+Bewijs: [github_ruleset.png](bewijs/github_ruleset.png) (juni 2026),
+[github_2026-11-18.txt](bewijs/github_2026-11-18.txt) (18 november 2026)
 
 **In de procedure voor wijzigingenbeheer is minimaal aandacht besteed aan:**
 **(a) het administreren van wijzigingen;**
@@ -526,8 +530,8 @@ Bewijs: [github_ruleset.png](bewijs/github_ruleset.png)
 Git + GitHub PR-workflow. CI checks (tests, linting). Django migrations voor
 databasewijzigingen. PR-review als goedkeuringsprocedure.
 
-Bewijs: [pr_approval.png](bewijs/pr_approval.png), [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png),
-[logs_75762501481](bewijs/logs_75762501481/)
+Bewijs: [pr_approval.png](bewijs/pr_approval.png) (juni 2026), [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png) (juni 2026), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png) (juni 2026),
+[logs_75762501481](bewijs/logs_75762501481/) (juni 2026)
 
 **Wijzigingsbeheer vindt plaats op basis van een algemeen geaccepteerd
 beheerraamwerk.** — Voldoet

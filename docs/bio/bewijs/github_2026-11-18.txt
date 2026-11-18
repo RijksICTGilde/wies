@@ -1,0 +1,20 @@
+# GitHub-instellingen van RijksICTGilde/wies, opgehaald op 2026-11-18 via de GitHub API (gh api).
+
+## Ruleset op de default branch (gh api repos/RijksICTGilde/wies/rulesets/18079089)
+{"bypass_actors":[],"conditions":{"ref_name":{"exclude":[],"include":["~DEFAULT_BRANCH"]}},"enforcement":"active","name":"only-merge-to-main-successful-action","rules":[{"parameters":{"do_not_enforce_on_create":false,"required_status_checks":[{"context":"test-django","integration_id":15368},{"context":"test-js","integration_id":15368}],"strict_required_status_checks_policy":false},"type":"required_status_checks"}],"target":"branch"}
+
+## Regels die op main gelden (gh api repos/RijksICTGilde/wies/rules/branches/main)
+["required_status_checks"]
+
+## Klassieke branch protection op main (gh api repos/RijksICTGilde/wies/branches/main/protection)
+{"message":"Branch not protected","documentation_url":"https://docs.github.com/rest/branches/branch-protection#get-branch-protection","status":"404"}gh: Branch not protected (HTTP 404)
+
+## Code scanning, CodeQL default setup (gh api repos/RijksICTGilde/wies/code-scanning/default-setup)
+{"state":"configured","languages":["actions","javascript","javascript-typescript","python","typescript"],"query_suite":"default","threat_model":"remote","updated_at":"2026-07-20T11:04:40Z","schedule":"weekly","runner_type":"standard","runner_label":""}
+
+## Secret scanning en Dependabot security updates (gh api repos/RijksICTGilde/wies --jq .security_and_analysis)
+{"dependabot_security_updates":{"status":"disabled"},"secret_scanning":{"status":"enabled"},"secret_scanning_non_provider_patterns":{"status":"disabled"},"secret_scanning_push_protection":{"status":"enabled"},"secret_scanning_validity_checks":{"status":"disabled"}}
+
+## Dependabot-meldingen
+open: 0
+opgelost (fixed): 60
