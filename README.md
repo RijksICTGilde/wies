@@ -92,8 +92,9 @@ for you, because docker compose mounts the checkout over the image.
 
 #### Update vendor dependencies
 
-Dependabot opens a PR that updates `package.json` and `package-lock.json`. By
-hand (needs Node):
+Dependabot opens a PR that updates `package.json` and `package-lock.json`. NLDD
+upgrades are never merged automatically; review them with the
+`nldd-design-upgrade` skill before merging. By hand (needs Node):
 
 ```bash
 npm install --package-lock-only --ignore-scripts --save-exact @nldd/design-system@<version>

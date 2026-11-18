@@ -1,0 +1,38 @@
+# Turns on auto-merge for Dependabot PRs with only minor and patch updates.
+# GitHub then merges once the required checks of the main ruleset (test-django,
+# test-js) are green; a failing test keeps the PR open. Majors and NLDD
+# upgrades are left for a human to review and merge.
+
+name: Dependabot auto-merge
+
+on: pull_request
+
+# Deny by default; the job grants itself the minimum it needs.
+permissions: {}
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+      # For a grouped PR update-type is the largest update in the group.
+      - name: Enable auto-merge
+        if: >-
+          (steps.metadata.outputs.update-type == 'version-update:semver-minor'
+          || steps.metadata.outputs.update-type == 'version-update:semver-patch')
+          && !contains(steps.metadata.outputs.dependency-names, '@nldd/design-system')
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,24 +1,47 @@
+# Minor and patch updates are grouped into one PR per ecosystem; majors stay
+# separate PRs. dependabot-automerge.yml merges the grouped PRs once the tests
+# pass, majors wait for a human.
 version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
     labels:
       - "dependencies"
+    groups:
+      github-actions:
+        update-types: ["minor", "patch"]
 
   - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
     labels:
       - "dependencies"
+    groups:
+      python:
+        update-types: ["minor", "patch"]
 
   # package.json and package-lock.json; the image build vendors the files from
-  # the lockfile. Daily: NLDD often releases several times a week.
+  # the lockfile. Daily: NLDD often releases several times a week. NLDD gets its
+  # own PR and is never merged automatically: an upgrade can break silently.
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "daily"
+      time: "06:00"
+      timezone: "Europe/Amsterdam"
     labels:
       - "dependencies"
+    groups:
+      npm:
+        update-types: ["minor", "patch"]
+        exclude-patterns:
+          - "@nldd/design-system"
