@@ -509,7 +509,7 @@ def build_aanvraag_panel_data(service, request):
         "edit_url": build_panel_url(request, aanvraag=service.public_id, bewerken=1),
     }
     # ?bewerken=1: the aanvraag's edit sheet, for a team editor only.
-    if request.GET.get("bewerken"):
+    if request.GET.get("bewerken") == "1":
         row = _team_row(team_rows, str(service.public_id))
         sheet = build_service_edit_sheet(row, request, back_text="Aanvraag") if row else None
         if sheet is not None:

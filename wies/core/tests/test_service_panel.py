@@ -218,6 +218,20 @@ class ServicePanelTest(TestCase):
         assert "data-member-form" not in body
         assert "We zoeken een developer" in body
 
+    def test_only_bewerken_1_opens_the_edit_sheet(self):
+        """Like the opdracht panel, only ?bewerken=1 opens the sheet; any other
+        value shows the read panel, even for a team editor."""
+        bdm = make_business_manager_user(email="bdm5@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        self.client.force_login(bdm)
+        url = reverse("home") + f"?aanvraag={self.service.public_id}&bewerken=abc"
+
+        body = self.client.get(url, headers=HX).content.decode()
+
+        assert "data-member-form" not in body
+        assert "We zoeken een developer" in body
+
     def test_a_member_of_another_opdracht_opens_no_sheet(self):
         """?bewerken=<service> resolves against this opdracht's team only."""
         bdm = make_business_manager_user(email="bdm4@rijksoverheid.nl")
