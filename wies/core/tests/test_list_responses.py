@@ -49,7 +49,7 @@ class ListResponseTest(TestCase):
             response = self.client.get(reverse("home"), params, headers={**HTMX, "hx-target": "results"})
         resolve.assert_not_called()
         assert response.status_code == 200
-        assert response.template_name == "parts/filter_and_table_container.html"
+        assert response.template_name == "parts/placement_results.html"
         assert "filter_groups" in response.context_data
         assert "view_options" in response.context_data
         assert "panel_data" not in response.context_data

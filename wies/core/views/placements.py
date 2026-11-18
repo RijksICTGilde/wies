@@ -551,15 +551,13 @@ class PlacementOverviewView(View):
             return side_panel_response(request)
 
         # The templates nest: the page holds the results, the results hold the
-        # cards. Each response builds its own layer on top of the one inside it.
-        context = self._cards_context()
+        # cards. Each layer's context builds on the one inside it.
         if htmx and request.GET.get(self.page_kwarg):
-            return TemplateResponse(request, "parts/placement_cards.html", context)  # "Meer tonen"
-        context |= self._results_context(context["paginator"])
+            return TemplateResponse(request, "parts/placement_cards.html", self._cards_context())  # "Meer tonen"
         if htmx:
-            return TemplateResponse(request, "parts/filter_and_table_container.html", context)  # a filter change
-        context |= self._page_context()
-        return TemplateResponse(request, self.template_name, context)
+            # A filter change.
+            return TemplateResponse(request, "parts/placement_results.html", self._results_context())
+        return TemplateResponse(request, self.template_name, self._page_context())
 
     @property
     def active_view(self) -> str:
@@ -742,13 +740,15 @@ class PlacementOverviewView(View):
             "next_page_url": next_page_url,
         }
 
-    def _results_context(self, paginator: Paginator) -> dict:
-        """Around the cards, what a filter change re-renders: the weergave toggle,
-        the sort control, the chips and the filter sidebar (swapped in out of band)."""
+    def _results_context(self) -> dict:
+        """The cards plus what a filter change re-renders around them: the weergave
+        toggle, the sort control, the chips and the filter sidebar (swapped in out of band)."""
         overview = self.overview
         filters = self.filters
         active_view = self.active_view
-        context = {
+        context = self._cards_context()
+        paginator = context["paginator"]
+        context |= {
             "render_filter_fields_oob": "HX-Request" in self.request.headers,
             # The template compares against it rather than hardcoding the name, so
             # changing the default does not silently break the hidden field.
@@ -785,8 +785,9 @@ class PlacementOverviewView(View):
         return context
 
     def _page_context(self) -> dict:
-        """What only the full page has: the side panel and the missing-opdrachten banner."""
-        return {
+        """The results plus what only the full page has: the side panel and the
+        missing-opdrachten banner."""
+        return self._results_context() | {
             # A full page load with ?collega= or ?opdracht= opens the panel too.
             "panel_data": resolve_side_panel(self.request),
             "missing_opdrachten_cookie": self.MISSING_OPDRACHTEN_COOKIE,
