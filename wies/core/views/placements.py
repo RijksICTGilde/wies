@@ -695,7 +695,9 @@ def placement_edit_view(request, public_id):
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
+        panel_data = build_placement_edit_panel_data(
+            placement, request, form=form, parent_url=return_path, back_text=request.POST.get("back_text")
+        )
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)

@@ -616,6 +616,28 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertContains(response, self.assignment.name)
         self.assertContains(response, reverse("assignment-member-edit", args=[self.assignment.public_id]))
 
+    def test_member_post_rerender_keeps_the_host_panel_label(self):
+        """Opened from an aanvraag panel, the sheet returns there; a failed
+        submit keeps "Aanvraag" on the back button instead of falling back to
+        the opdracht name, which would mislabel where terug_url leads."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
+            {
+                "service_public_id": str(service.public_id),
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": "",
+                "has_custom_period": "on",
+                "terug_url": f"/?aanvraag={service.public_id}",
+                "back_text": "Aanvraag",
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'back-text="Aanvraag"')
+        self.assertContains(response, '<input type="hidden" name="back_text" value="Aanvraag">')
+
     def test_member_delete_removes_only_that_service(self):
         skill = Skill.objects.create(name="Ontwerper")
         keep = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")

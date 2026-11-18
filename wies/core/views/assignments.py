@@ -628,6 +628,8 @@ def assignment_member_edit_view(request, public_id):
             member_form=form,
             member_heading=request.POST.get("member_heading") or "Teamlid wijzigen",
             parent_url=return_path,
+            # terug_url may point at an aanvraag or collega panel; keep its label.
+            back_text=request.POST.get("back_text"),
         )
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
