@@ -7,7 +7,7 @@ from django.urls import reverse
 from wies.core.services.urls import PAGE_PARAM, hx_current_url, rebuild_url
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
-# ``bewerken`` puts the panel in edit mode (the child sheet). The list's page
+# ``bewerken`` and ``toevoegen`` open a child sheet on the panel. The list's page
 # number goes too: "Meer tonen" fetches page N without pushing it, so a card
 # from that page would otherwise put ``pagina=N`` in the address bar when its
 # panel opens, and a reload would show page N alone.
@@ -17,7 +17,7 @@ PANEL_PARAMS = (
     "opdracht",
     "aanvraag",
     "bewerken",
-    "teamlid",
+    "toevoegen",
     "veld",
     "nieuwe-opdracht",
     "uitgeklapt",

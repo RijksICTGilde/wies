@@ -142,10 +142,11 @@ def user_profile(request):
     # Side panel handling
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
+    service_id = request.GET.get("aanvraag")
     panel_data = None
 
-    if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
-        service = resolve_aanvraag_panel(request, request.GET["aanvraag"])
+    if service_id:
+        service = resolve_aanvraag_panel(request, service_id)
         if service is not None:
             panel_data = build_aanvraag_panel_data(service, request)
     elif assignment_id:

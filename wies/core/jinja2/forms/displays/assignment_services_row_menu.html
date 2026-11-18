@@ -12,7 +12,7 @@
 {# The placed consultant's own row: the description sheet, a child of this
    panel. A team editor already has the fuller item above. #}
 {% if pl and row.can_edit_role and not user_can_edit %}
-  <nldd-menu-item text="Mijn taken wijzigen" icon="edit" hx-get="{{ row.own_edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+  <nldd-menu-item text="Mijn taken wijzigen" icon="edit" hx-get="{{ row.edit_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
 {% endif %}
 {% if pl %}
   <nldd-menu-item text="{{ 'Mijn profiel bekijken' if row.is_viewer else 'Profiel bekijken' }}" icon="user" hx-get="{{ row.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>

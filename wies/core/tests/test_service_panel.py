@@ -191,27 +191,74 @@ class ServicePanelTest(TestCase):
         body = self._panel()
 
         assert "Aanvraag wijzigen" in body
-        assert f"teamlid={self.service.public_id}" in body
+        assert f"aanvraag={self.service.public_id}&amp;bewerken=1" in body
 
     def test_editing_from_the_panel_opens_the_sheet_and_returns_to_the_aanvraag(self):
-        """The edit URL carries ?aanvraag= as well, so saving and going back
-        land on this panel; with ?teamlid= the sheet wins over the panel."""
+        """The edit URL is the aanvraag panel plus ?bewerken=1, so saving and
+        going back land on this panel."""
         bdm = make_business_manager_user(email="bdm3@rijksoverheid.nl")
         self.assignment.owner = bdm.colleague
         self.assignment.save()
         self.client.force_login(bdm)
-        edit_url = (
-            reverse("home")
-            + f"?opdracht={self.assignment.public_id}&aanvraag={self.service.public_id}&teamlid={self.service.public_id}"
-        )
+        edit_url = reverse("home") + f"?aanvraag={self.service.public_id}&bewerken=1"
 
         body = self.client.get(edit_url, headers=HX).content.decode()
 
         assert edit_url.replace("&", "&amp;") in self._panel()
         assert "data-member-form" in body
-        assert 'back-text="Aanvraag"' in body
-        # Back is the aanvraag panel alone: ?opdracht= was for the sheet.
+        # The back button names this panel as its title does, the same label
+        # the panel stack shows after a click.
+        assert 'back-text="Aanvraag: Dev"' in body
+        assert '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>' in body
         assert f'name="terug_url" value="/?aanvraag={self.service.public_id}"' in body
+
+    def test_the_edit_sheet_is_for_a_team_editor_only(self):
+        """Without the right to edit the team ?bewerken=1 shows the read panel."""
+        url = reverse("home") + f"?aanvraag={self.service.public_id}&bewerken=1"
+
+        body = self.client.get(url, headers=HX).content.decode()
+
+        assert "data-member-form" not in body
+        assert "We zoeken een developer" in body
+
+    def test_only_bewerken_1_opens_the_edit_sheet(self):
+        """Like the opdracht panel, only ?bewerken=1 opens the sheet; any other
+        value shows the read panel, even for a team editor."""
+        bdm = make_business_manager_user(email="bdm5@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        self.client.force_login(bdm)
+        url = reverse("home") + f"?aanvraag={self.service.public_id}&bewerken=abc"
+
+        body = self.client.get(url, headers=HX).content.decode()
+
+        assert "data-member-form" not in body
+        assert "We zoeken een developer" in body
+
+    def test_a_member_of_another_opdracht_opens_no_sheet(self):
+        """?bewerken=<service> resolves against this opdracht's team only."""
+        bdm = make_business_manager_user(email="bdm4@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        other = Assignment.objects.create(name="Elders", owner=bdm.colleague, source="wies")
+        foreign = Service.objects.create(assignment=other, description="Elders", source="wies")
+        self.client.force_login(bdm)
+        url = reverse("home") + f"?opdracht={self.assignment.public_id}&bewerken={foreign.public_id}"
+
+        body = self.client.get(url, headers=HX).content.decode()
+
+        assert "data-member-form" not in body
+        assert "Zaaksysteem" in body
+
+    def test_an_unknown_toevoegen_value_opens_no_sheet(self):
+        bdm = make_business_manager_user(email="bdm5@rijksoverheid.nl")
+        self.assignment.owner = bdm.colleague
+        self.assignment.save()
+        self.client.force_login(bdm)
+        base = reverse("home") + f"?opdracht={self.assignment.public_id}"
+
+        assert "data-member-form" in self.client.get(base + "&toevoegen=consultant", headers=HX).content.decode()
+        assert "data-member-form" not in self.client.get(base + "&toevoegen=iets", headers=HX).content.decode()
 
     def test_an_unknown_aanvraag_is_a_404_for_the_panel_request(self):
         """As for every other panel object: the HTMX request 404s rather than
@@ -333,7 +380,7 @@ class ServicePanelOnlyVacanciesTest(TestCase):
 
 
 class AanvraagFormRequestDescriptionTest(TestCase):
-    """The teamlid sheet keeps the vacancy text of an aanvraag apart from the
+    """The member sheet keeps the vacancy text of an aanvraag apart from the
     taken of a placement: one shows per status, both post."""
 
     def setUp(self):
@@ -375,7 +422,7 @@ class AanvraagFormRequestDescriptionTest(TestCase):
 
     def test_a_new_aanvraag_shows_the_description_and_hides_the_taken(self):
         body = self.client.get(
-            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": "nieuw-aanvraag"}
+            reverse("home"), {"opdracht": self.assignment.public_id, "toevoegen": "aanvraag"}
         ).content.decode()
 
         assert re.search(r"<div data-request-field\s*>", body)
@@ -384,7 +431,7 @@ class AanvraagFormRequestDescriptionTest(TestCase):
 
     def test_a_new_placement_shows_the_taken_and_hides_the_description(self):
         body = self.client.get(
-            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": "nieuw-ingevuld"}
+            reverse("home"), {"opdracht": self.assignment.public_id, "toevoegen": "consultant"}
         ).content.decode()
 
         assert re.search(r"<div data-request-field\s*hidden>", body)
@@ -541,7 +588,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
         )
 
         body = self.client.get(
-            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": str(service.public_id)}
+            reverse("home"), {"opdracht": self.assignment.public_id, "bewerken": str(service.public_id)}
         ).content.decode()
 
         assert re.search(r'value="PLACEMENT"[^>]*data-period-choice', body)
@@ -561,7 +608,7 @@ class AanvraagFlexiblePeriodTest(TestCase):
         )
 
         body = self.client.get(
-            reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": str(service.public_id)}
+            reverse("home"), {"opdracht": self.assignment.public_id, "bewerken": str(service.public_id)}
         ).content.decode()
 
         assert re.search(r'value="DATE"[^>]*data-end-choice', body)

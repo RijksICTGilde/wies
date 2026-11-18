@@ -636,7 +636,7 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         assignment_id = self.request.GET.get("opdracht")
         service_id = self.request.GET.get("aanvraag")
 
-        if service_id and not self.request.GET.get("teamlid"):
+        if service_id:
             service = resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = build_aanvraag_panel_data(service, self.request)
@@ -689,15 +689,15 @@ def placement_edit_view(request, public_id):
     if not specs:
         return HttpResponseForbidden()
 
-    fallback = build_panel_url(
-        request, opdracht=placement.service.assignment.public_id, collega=placement.colleague.public_id
-    )
+    fallback = build_panel_url(request, opdracht=placement.service.assignment.public_id)
     return_path = safe_return_path(request.POST.get("terug_url"), fallback)
 
     form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
-        panel_data = build_placement_edit_panel_data(placement, request, form=form, parent_url=return_path)
+        panel_data = build_placement_edit_panel_data(
+            placement, request, form=form, parent_url=return_path, back_text=request.POST.get("back_text")
+        )
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
     save_placement_edit(request, placement, specs, form.cleaned_data)

@@ -4,6 +4,7 @@ import json
 from collections import Counter
 from datetime import date
 from functools import cached_property
+from urllib.parse import urlsplit
 
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
@@ -16,7 +17,7 @@ from django.db.models import (
     Q,
     Value,
 )
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.utils import timezone
@@ -378,6 +379,7 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         # Side panel
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
+        service_id = self.request.GET.get("aanvraag")
 
         # ?nieuwe-opdracht opens the empty create form as a panel on the list.
         # Checked before the object lookups: this panel has no object. Without the
@@ -385,8 +387,8 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
         create_panel = assignment_create_panel(self.request)
         if create_panel is not None:
             context["panel_data"] = create_panel
-        elif self.request.GET.get("aanvraag") and not self.request.GET.get("teamlid"):
-            service = resolve_aanvraag_panel(self.request, self.request.GET["aanvraag"])
+        elif service_id:
+            service = resolve_aanvraag_panel(self.request, service_id)
             if service is not None:
                 context["panel_data"] = build_aanvraag_panel_data(service, self.request)
         elif colleague_id and not assignment_id:
@@ -626,6 +628,8 @@ def assignment_member_edit_view(request, public_id):
             member_form=form,
             member_heading=request.POST.get("member_heading") or "Teamlid wijzigen",
             parent_url=return_path,
+            # terug_url may point at an aanvraag or collega panel; keep its label.
+            back_text=request.POST.get("back_text"),
         )
         return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
 
@@ -647,9 +651,9 @@ def assignment_member_edit_view(request, public_id):
             form.add_error(None, message)
         return rerender(form)
 
-    if form.cleaned_data.get("is_filled") == "ingevuld":
-        # A filled aanvraag has no panel: it would 404, and htmx swaps nothing
-        # on an error, leaving the sheet open. Back to its opdracht instead.
+    # A filled aanvraag has no panel (it would 404 and htmx would leave the sheet
+    # open), so return to its opdracht's panel instead.
+    if form.cleaned_data.get("is_filled") == "ingevuld" and "aanvraag" in QueryDict(urlsplit(return_path).query):
         return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
@@ -682,7 +686,10 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     return_path = safe_return_path(
         request.POST.get("terug_url"), build_panel_url(request, opdracht=assignment.public_id)
     )
-    return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
+    # A deleted aanvraag has no panel (it would 404 and htmx would leave the sheet
+    # open), so return to its opdracht's panel instead.
+    if "aanvraag" in QueryDict(urlsplit(return_path).query):
+        return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

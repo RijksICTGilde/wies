@@ -153,7 +153,7 @@ def _services_initial(assignment):
         rows.append(
             {
                 # public_id strings: these identify the row across the client
-                # boundary (panel URLs, the hidden form inputs, the teamlid
+                # boundary (panel URLs, the hidden form inputs, the ?bewerken=
                 # resolver). The integer PK never leaves the server; the audit
                 # snapshot re-derives it from ``service`` below.
                 "service_public_id": str(service.public_id),
@@ -199,15 +199,15 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``panel_url`` is where the row leads: a placed row to the colleague panel
     with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
-    opens the row's sheet for a team editor, ``own_edit_url`` the placed
-    viewer's Taken sheet.
+    opens the row's sheet: the member sheet for a team editor, the Taken sheet
+    for the placed viewer.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
-        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
+        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], bewerken=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
             row["panel_url"] = _panel_query(aanvraag=row["service_public_id"])
@@ -216,11 +216,6 @@ def visible_service_rows(assignment, request) -> list[dict]:
             visible.append(row)
             continue
         row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])
-        row["own_edit_url"] = _panel_query(
-            opdracht=row["assignment_public_id"],
-            collega=placement.colleague.public_id,
-            teamlid=row["service_public_id"],
-        )
         # Only the viewer's own row can qualify, so the rule (a query) runs for
         # that one and not for every member of the team.
         row["can_edit_role"] = (
@@ -261,7 +256,7 @@ def visible_service_or_404(assignment, request, service_public_id):
     """Resolves a team row through the viewer's filtered rows, so a hidden row
     is as unreachable for a mutation as it is for the sheet.
 
-    The GET sheet resolves ``?teamlid=`` against ``visible_service_rows``; the
+    The GET sheet resolves ``?bewerken=`` against ``visible_service_rows``; the
     edit/delete endpoints mutate the same row and must apply the same visibility
     gate, not just the UPDATE-permission gate (#655).
     """
