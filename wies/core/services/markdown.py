@@ -49,10 +49,25 @@ def _link_open(renderer, tokens, idx, options, env):
         token.attrSet("href", "https://" + href)
     # A link to another site opens beside Wies; mailto:, tel: and #anchor
     # would only leave an empty tab behind.
-    if _WEB.match(token.attrGet("href")):
+    new_tab = bool(_WEB.match(token.attrGet("href")))
+    if new_tab:
         token.attrSet("target", "_blank")
         token.attrSet("rel", "noopener")
+    env.setdefault("new_tab", []).append(new_tab)
     return renderer.renderToken(tokens, idx, options, env)
+
+
+# As on the site's other links that open a new tab (base.html, contact.html).
+_NEW_TAB_NOTE = (
+    '<span class="wies-visually-hidden">, opent in nieuw tabblad</span>'
+    '<nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon>'
+)
+
+
+def _link_close(renderer, tokens, idx, options, env):
+    # Plain text keeps the words only: the note would end up in a sentence.
+    announce = env["new_tab"].pop() and not env.get("plain")
+    return (_NEW_TAB_NOTE if announce else "") + renderer.renderToken(tokens, idx, options, env)
 
 
 def _fence(renderer, tokens, idx, options, env):
@@ -81,6 +96,7 @@ def _drop_empty_links(state) -> None:
 
 _md.core.ruler.push("drop_empty_links", _drop_empty_links)
 _md.add_render_rule("link_open", _link_open)
+_md.add_render_rule("link_close", _link_close)
 _md.add_render_rule("heading_open", _heading)
 _md.add_render_rule("heading_close", _heading)
 _md.add_render_rule("fence", _fence)
@@ -142,7 +158,7 @@ def markdown_text(source: str | None) -> str:
     """The plain words of a Markdown source, its blocks on one line."""
     if not source:
         return ""
-    blocks = _BLOCK_END.split(_md.render(source))
+    blocks = _BLOCK_END.split(_md.render(source, {"plain": True}))
     return join_plain(" ".join(html.unescape(_TAGS.sub("", block)).split()) for block in blocks)
 
 

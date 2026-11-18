@@ -70,7 +70,18 @@ class RenderMarkdownTest(SimpleTestCase):
 
     def test_links_open_beside_wies(self):
         html = render_markdown("[Wies](https://example.org/)")
-        assert '<a href="https://example.org/" target="_blank" rel="noopener">Wies</a>' in html
+        assert (
+            '<a href="https://example.org/" target="_blank" rel="noopener">Wies<span class="wies-visually-hidden">, opent in nieuw tabblad</span>'
+            in html
+        )
+        assert 'icon="square-arrow-right-top"' in html
+
+    def test_only_a_link_that_opens_a_tab_says_so(self):
+        html = render_markdown("[m](mailto:a@b.nl) en [w](https://example.org/)")
+        assert html.count("opent in nieuw tabblad") == 1
+
+    def test_plain_text_leaves_the_new_tab_note_out(self):
+        assert markdown_text("Zie [Wies](https://example.org/) hier") == "Zie Wies hier"
 
     def test_mail_phone_anchor_and_own_links_stay_in_place(self):
         # A new tab there would stay empty, or show Wies a second time.
