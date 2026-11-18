@@ -2,7 +2,7 @@
 
 Two holes found in review:
 
-- The member-edit sheet (then ``?teamlid=``, now ``?bewerken=``) resolved its row against the unfiltered
+- The member-edit sheet (``?bewerken=``) resolved its row against the unfiltered
   team list, so a viewer with UPDATE rights but without visibility could read
   a hidden ended placement's colleague and dates through a crafted URL.
 - The timeline's privacy note was taken from the *first* noted row of the
