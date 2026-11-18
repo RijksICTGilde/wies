@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 866: (internal) Dependabot PRs with only minor and patch updates are merged automatically once the tests pass; updates are grouped per ecosystem, majors and NLDD upgrades still need a human
+- 866: (internal) Dependabot PRs with only minor and patch updates are merged automatically once the tests pass; updates are grouped per ecosystem, majors and NLDD upgrades still need a human. If the merge token stops working, the PR still merges but gets a comment and a failed check saying the deploy was skipped; "Deploy to main" can now be run by hand
 
 ## 2026-11-18
 

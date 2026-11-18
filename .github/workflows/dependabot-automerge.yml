@@ -6,7 +6,12 @@
 # AUTOMERGE_TOKEN is a fine-grained PAT (contents and pull requests: write on
 # this repo), stored as a Dependabot secret: workflows that Dependabot starts
 # cannot read Actions secrets. A merge with GITHUB_TOKEN starts no push
-# workflows, so without the PAT the PR still merges but main-deploy does not run.
+# workflows, so main-deploy only runs after the merge if the PAT enabled it.
+#
+# When the PAT is missing, expired or lacks rights, the PR still merges with
+# GITHUB_TOKEN, but this job comments on the PR and fails, so the skipped
+# deploy is visible. This job is not a required check and does not block the
+# merge.
 
 name: Dependabot auto-merge
 
@@ -24,6 +29,9 @@ jobs:
       contents: write
       pull-requests: write
 
+    env:
+      PR_URL: ${{ github.event.pull_request.html_url }}
+
     steps:
       - name: Dependabot metadata
         id: metadata
@@ -33,11 +41,50 @@ jobs:
 
       # For a grouped PR update-type is the largest update in the group.
       - name: Enable auto-merge
+        id: merge
         if: >-
           (steps.metadata.outputs.update-type == 'version-update:semver-minor'
           || steps.metadata.outputs.update-type == 'version-update:semver-patch')
           && !contains(steps.metadata.outputs.dependency-names, '@nldd/design-system')
-        run: gh pr merge --auto --squash "$PR_URL"
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.AUTOMERGE_TOKEN || secrets.GITHUB_TOKEN }}
+          AUTOMERGE_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -n "$AUTOMERGE_TOKEN" ] && GH_TOKEN="$AUTOMERGE_TOKEN" gh pr merge --auto --squash "$PR_URL"; then
+            echo "token=ok" >> "$GITHUB_OUTPUT"
+          else
+            GH_TOKEN="$GITHUB_TOKEN" gh pr merge --auto --squash "$PR_URL"
+            echo "token=broken" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fine-grained PATs report their expiry in a response header.
+          expiry=$(curl -sfI -H "Authorization: Bearer $AUTOMERGE_TOKEN" \
+            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY" \
+            | tr -d '\r' | grep -i '^github-authentication-token-expiration:' | cut -d' ' -f2- || true)
+          if [ -n "$expiry" ]; then
+            days_left=$(( ($(date -d "$expiry" +%s) - $(date +%s)) / 86400 ))
+            if [ "$days_left" -lt 14 ]; then
+              echo "days-left=$days_left" >> "$GITHUB_OUTPUT"
+            fi
+          fi
+
+      - name: Warn about expiring token
+        if: steps.merge.outputs.days-left != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DAYS_LEFT: ${{ steps.merge.outputs.days-left }}
+        run: |
+          msg="AUTOMERGE_TOKEN expires in $DAYS_LEFT days. Renew the PAT and update the Dependabot secret, or auto-merged updates stop deploying."
+          echo "::warning::$msg"
+          gh pr comment "$PR_URL" --edit-last --create-if-none --body "⚠️ $msg"
+
+      - name: Report skipped deploy
+        if: steps.merge.outputs.token == 'broken'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          msg="AUTOMERGE_TOKEN is missing, expired or lacks rights, so auto-merge was enabled with GITHUB_TOKEN. This PR still merges once the tests pass, but main-deploy will not run for it. Renew the PAT, update the Dependabot secret, and run the \"Deploy to main\" workflow by hand."
+          echo "::error::$msg"
+          gh pr comment "$PR_URL" --edit-last --create-if-none --body "❌ $msg"
+          exit 1
