@@ -45,8 +45,10 @@ def _link_open(renderer, tokens, idx, options, env):
     href = token.attrGet("href") or ""
     # "google.com" in a description means the site, not a page under the
     # current URL; without a scheme the browser would resolve it relative.
+    # An address is what the Link button gets for mail, rarely "mailto:".
     if href and not _ABSOLUTE.match(href):
-        token.attrSet("href", "https://" + href)
+        is_address = "@" in href and "/" not in href
+        token.attrSet("href", ("mailto:" if is_address else "https://") + href)
     # A link to another site opens beside Wies; mailto:, tel: and #anchor
     # would only leave an empty tab behind.
     new_tab = bool(_WEB.match(token.attrGet("href")))

@@ -95,6 +95,11 @@ class RenderMarkdownTest(SimpleTestCase):
         assert 'href="/opdrachten/"' in html
         assert 'href="mailto:a@b.nl"' in html
 
+    def test_an_address_without_scheme_becomes_a_mail_link(self):
+        html = render_markdown("[mail](anke@rijksoverheid.nl) en [pad](example.org/@team)")
+        assert '<a href="mailto:anke@rijksoverheid.nl">mail</a>' in html
+        assert 'href="https://example.org/@team"' in html
+
     def test_a_lone_asterisk_stays(self):
         html = render_markdown("2 * 3 = 6")
         assert "2 * 3 = 6" in html
