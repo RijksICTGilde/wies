@@ -62,7 +62,7 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request, sort_control_context
+from ._common import PANEL_PARAMS, build_panel_url, count_label, is_side_panel_request, sort_control_context
 from .client_picker import client_modal_response, is_client_modal_request
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
@@ -85,11 +85,6 @@ def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[i
     rows = Placement.objects.filter(id__in=filtered_qs.values_list("id", flat=True))
     pairs = rows.values_list(facet_lookup, group_field).distinct()
     return Counter(fid for fid, _ in pairs if fid is not None)
-
-
-def _count_label(count: int, singular: str, plural: str) -> str:
-    """The count with its noun in singular or plural: "1 collega", "3 collega's"."""
-    return f"{count} {singular if count == 1 else plural}"
 
 
 def _period_text(assignments: list[Assignment]) -> str:
@@ -380,14 +375,14 @@ class ColleagueOverview(_Overview):
         if not assignments:
             # "Nu": a planned placement may be in the panel, not on the card.
             assignment_text = (
-                f"Business Manager van {_count_label(owned_count, 'opdracht', 'opdrachten')}"
+                f"Business Manager van {count_label(owned_count, 'opdracht', 'opdrachten')}"
                 if owned_count
                 else "Nu geen opdracht"
             )
         elif len(assignments) == 1:
             assignment_text = assignments[0].name
         else:
-            assignment_text = _count_label(len(assignments), "opdracht", "opdrachten")
+            assignment_text = count_label(len(assignments), "opdracht", "opdrachten")
         return {
             "name": colleague.name,
             "roles": list(dict.fromkeys(p.service.skill.name for p in placements if p.service.skill)),
@@ -763,7 +758,7 @@ class PlacementOverviewView(View):
                 }
                 for option in self.VIEW_OPTIONS
             ],
-            "result_announcement": _count_label(result_count, *overview.COUNT_NOUNS),
+            "result_announcement": count_label(result_count, *overview.COUNT_NOUNS),
             "empty_text": overview.EMPTY_TEXT,
             **sort_control_context(
                 overview.order,

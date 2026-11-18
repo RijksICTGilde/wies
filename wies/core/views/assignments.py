@@ -71,6 +71,7 @@ from ._common import (
     CSV_TOO_LARGE_MSG,
     PANEL_PARAMS,
     build_panel_url,
+    count_label,
     csv_too_large,
     is_side_panel_request,
     page_url_behind_panel,
@@ -238,9 +239,9 @@ class AanvraagListView(PublicIdFacetsMixin, View):
         """ "12 aanvragen", or "12 aanvragen en 1 opdracht zonder aanvraag"."""
         without = self._assignments_without_aanvraag().count() if total else 0
         aanvragen = total - without
-        text = f"{aanvragen} {'aanvraag' if aanvragen == 1 else 'aanvragen'}"
+        text = count_label(aanvragen, "aanvraag", "aanvragen")
         if without:
-            text += f" en {without} {'opdracht' if without == 1 else 'opdrachten'} zonder aanvraag"
+            text += f" en {count_label(without, 'opdracht', 'opdrachten')} zonder aanvraag"
         return text
 
     def get(self, request, *args, **kwargs):

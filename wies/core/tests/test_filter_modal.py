@@ -57,7 +57,8 @@ class FilterModalTest(TestCase):
         admin = User.objects.create_user(email="a@rijksoverheid.nl")
         admin.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(admin)
-        with patch.object(UserListView, "get_context_data") as page:
+        # The page build starts with the rows.
+        with patch.object(UserListView, "_rows_context") as page:
             response = self._modal("admin-users", "onderdeel")
         assert response.status_code == 200
         assert _option_labels(response) == [f"merk {c}" for c in "abcde"]
