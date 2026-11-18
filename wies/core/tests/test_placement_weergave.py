@@ -26,6 +26,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.services.dates import datum_nl
 
 User = get_user_model()
 
@@ -261,8 +262,8 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht B"), self.skill)
 
         cards = self._cards()
-        assert [name for name, card in cards.items() if not card.get("no_assignment")] == ["Jan de Vries"]
-        assert len(cards["Jan de Vries"]["assignments"]) == 2
+        assert [name for name, card in cards.items() if card["period_text"]] == ["Jan de Vries"]
+        assert cards["Jan de Vries"]["assignment_text"] == "2 opdrachten"
 
     def test_single_assignment_card_links_to_the_colleague(self):
         """A person opens the colleague panel, also with one assignment; the
@@ -271,7 +272,7 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Cloud Migratie"), self.skill)
 
         card = self._cards()["Jan de Vries"]
-        assert card["assignment"] is not None
+        assert card["assignment_text"] == "Cloud Migratie"
         assert f"collega={colleague.public_id}" in card["panel_url"]
         assert "opdracht=" not in card["panel_url"]
         assert "plaatsing=" not in card["panel_url"]
@@ -283,9 +284,24 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht B"), self.skill)
 
         card = self._cards()["Jan de Vries"]
-        assert card["assignment"] is None
+        assert card["period_text"] == "Meerdere periodes"
         assert f"collega={colleague.public_id}" in card["panel_url"]
         assert "opdracht=" not in card["panel_url"]
+
+    def test_single_assignment_card_names_its_end_date(self):
+        assignment = _make_assignment("Cloud Migratie")
+        _place(_make_colleague("Jan de Vries"), assignment, self.skill)
+
+        card = self._cards()["Jan de Vries"]
+        assert card["period_text"] == f"tot {datum_nl(assignment.end_date, 'b Y')}"
+
+    def test_single_assignment_card_without_end_date(self):
+        assignment = _make_assignment("Cloud Migratie")
+        assignment.end_date = None
+        assignment.save()
+        _place(_make_colleague("Jan de Vries"), assignment, self.skill)
+
+        assert self._cards()["Jan de Vries"]["period_text"] == "Geen einddatum"
 
     def test_roles_are_deduplicated(self):
         """Two placements with the same skill list that role once."""

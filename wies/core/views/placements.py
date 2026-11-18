@@ -43,6 +43,7 @@ from wies.core.querysets import (
     annotate_placement_dates,
     label_categories_for_everyone,
 )
+from wies.core.services.dates import datum_nl
 from wies.core.services.organizations import (
     get_excluded_org_ids,
     get_top_org_options,
@@ -84,6 +85,15 @@ def _facet_counts(filtered_qs, facet_lookup: str, group_field: str) -> Counter[i
 def _count_label(count: int, singular: str, plural: str) -> str:
     """The count with its noun in singular or plural: "1 collega", "3 collega's"."""
     return f"{count} {singular if count == 1 else plural}"
+
+
+def _period_text(assignments: list[Assignment]) -> str:
+    """The card's period row: "tot aug 2027", "Geen einddatum" or, for more than
+    one assignment, "Meerdere periodes"."""
+    if len(assignments) > 1:
+        return "Meerdere periodes"
+    end_date = assignments[0].end_date
+    return f"tot {datum_nl(end_date, 'b Y')}" if end_date else "Geen einddatum"
 
 
 class PlacementListView(PublicIdFacetsMixin, ListView):
@@ -453,9 +463,10 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
     def _person_cards(self, placements, page_ids: list[int]) -> list[dict]:
         """One card per colleague on the page, in page order.
 
-        A placed colleague's card names the assignments they are placed on; an
-        unplaced one says "Geen opdracht", or how many current opdrachten they
-        manage as business manager.
+        Each card carries its text ready to render: a placed colleague's names
+        the assignments they are placed on and their period; an unplaced one
+        says "Nu geen opdracht", or how many current opdrachten they manage as
+        business manager.
         """
         grouped: dict[int, list] = {}
         for placement in placements:
@@ -472,13 +483,16 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
                 continue
             assignments = list(dict.fromkeys(row.service.assignment for row in rows))
             roles = list(dict.fromkeys(row.service.skill.name for row in rows if row.service.skill))
-            single = assignments[0] if len(assignments) == 1 else None
             cards.append(
                 {
                     "name": rows[0].colleague.name,
-                    "assignment": single,
-                    "assignments": assignments,
                     "roles": roles,
+                    "assignment_text": (
+                        assignments[0].name
+                        if len(assignments) == 1
+                        else _count_label(len(assignments), "opdracht", "opdrachten")
+                    ),
+                    "period_text": _period_text(assignments),
                     # A person opens the colleague panel, whatever their number
                     # of opdrachten; its cards lead on to each opdracht.
                     "panel_url": build_panel_url(self.request, collega=rows[0].colleague.public_id),
@@ -508,24 +522,22 @@ class PlacementListView(PublicIdFacetsMixin, ListView):
         colleagues = Colleague.objects.filter(id__in=colleague_ids).annotate(
             owned_count=Count("owned_assignments", filter=current, distinct=True)
         )
-        return {
-            colleague.id: {
+        cards = {}
+        for colleague in colleagues:
+            # "Nu": a planned placement may be in the panel, not on the card.
+            assignment_text = (
+                f"Business Manager van {_count_label(colleague.owned_count, 'opdracht', 'opdrachten')}"
+                if colleague.owned_count
+                else "Nu geen opdracht"
+            )
+            cards[colleague.id] = {
                 "name": colleague.name,
-                "assignment": None,
-                "assignments": [],
                 "roles": [],
-                "no_assignment": True,
-                "owned_count": colleague.owned_count,
-                # "Nu": a planned placement may be in the panel, not on the card.
-                "summary": (
-                    f"Business Manager van {_count_label(colleague.owned_count, 'opdracht', 'opdrachten')}"
-                    if colleague.owned_count
-                    else "Nu geen opdracht"
-                ),
+                "assignment_text": assignment_text,
+                "period_text": "",
                 "panel_url": build_panel_url(self.request, collega=colleague.public_id),
             }
-            for colleague in colleagues
-        }
+        return cards
 
     def _assignment_cards(self, placements) -> list[dict]:
         """One card per assignment, showing its FULL team.
