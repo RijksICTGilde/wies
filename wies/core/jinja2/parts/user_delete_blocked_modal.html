@@ -1,0 +1,5 @@
+{# Instead of user_delete_modal.html when the user may not go (is_last_user_admin):
+   says why, and offers nothing to confirm. #}
+<nldd-modal-dialog data-auto-show text="Gebruiker verwijderen kan nu niet" supporting-text="{{ dialog_supporting }}">
+<nldd-button slot="actions" appearance="primary" text="Sluiten" data-dismiss-modal></nldd-button>
+</nldd-modal-dialog>
