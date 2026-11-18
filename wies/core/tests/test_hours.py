@@ -1,6 +1,7 @@
 """Contract hours per colleague and hours per week per role, and what Bezetting
 makes of them."""
 
+import json
 import re
 import uuid
 from datetime import timedelta
@@ -465,9 +466,9 @@ class ServiceHoursTest(TestCase):
         assert 'text="24 uur per week"' in cards
 
     def test_a_new_member_starts_at_36_hours(self):
-        for kind in ("nieuw-ingevuld", "nieuw-aanvraag"):
+        for kind in ("consultant", "aanvraag"):
             body = self.client.get(
-                reverse("home"), {"opdracht": self.assignment.public_id, "teamlid": kind}
+                reverse("home"), {"opdracht": self.assignment.public_id, "toevoegen": kind}
             ).content.decode()
             assert re.search(r'<option value="36"[^>]*selected', body), kind
 
@@ -667,6 +668,19 @@ class UserSheetContractPeriodTest(TestCase):
         body = response.content.decode()
         assert '<nldd-validation-item id="error-end_date-1">' in body
         assert 'unmet="error-end_date-1"' in body
+
+    def test_an_end_date_switched_on_but_left_empty_is_asked_for(self):
+        """Text that is no date posts as an empty date; with the switch on that
+        must not save as "runs on"."""
+        response = self.client.post(
+            self.add_url,
+            {"hours_per_week": "32", "start_date": self.today.isoformat(), "end_date": "", "end_date_known": "on"},
+        )
+        body = response.content.decode()
+        assert "Vul een einddatum in" in body
+        assert "data-contract-end-known checked" in body
+        assert '<nldd-form-field label="Einddatum" hidden>' not in body
+        assert not self.colleague.contract_periods.exists()
 
     def test_a_new_period_starting_before_the_running_one_still_overlaps(self):
         running = ContractPeriod.objects.create(
@@ -1047,7 +1061,7 @@ class ServiceHoursPermissionTest(TestCase):
         client = Client()
         client.force_login(self.user)
         assignment = self.service.assignment
-        edit_link = f"?opdracht={assignment.public_id}&amp;collega={self.colleague.public_id}&amp;teamlid={self.service.public_id}"
+        edit_link = f"?opdracht={assignment.public_id}&amp;bewerken={self.service.public_id}"
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
         assert "Mijn taken wijzigen" in body
         assert edit_link in body
@@ -1055,6 +1069,48 @@ class ServiceHoursPermissionTest(TestCase):
         client.force_login(other.user)
         body = client.get(reverse("home"), {"opdracht": assignment.public_id}).content.decode()
         assert "Taken wijzigen" not in body
+
+    def test_the_role_sheet_from_the_colleague_panel_returns_there(self):
+        """The sheet sits on the colleague panel, so back and save land on that
+        panel with the card unfolded, not on the opdracht panel (#811)."""
+        assignment = self.service.assignment
+        panel = f"/?collega={self.colleague.public_id}&uitgeklapt={assignment.public_id}"
+        sheet = f"{panel}&bewerken={self.service.public_id}"
+        back = f'name="terug_url" value="{panel.replace("&", "&amp;")}"'
+        client = Client()
+
+        client.force_login(self.user)
+        body = client.get(sheet).content.decode()
+        assert "Taken wijzigen" in body
+        assert back in body
+        assert 'back-text="Con Sultant"' in body
+
+        client.force_login(self.business_manager)
+        body = client.get(sheet).content.decode()
+        assert "data-member-form" in body
+        assert back in body
+        assert 'back-text="Con Sultant"' in body
+
+        # Saving through the member sheet returns to the colleague panel as well.
+        response = client.post(
+            reverse("assignment-member-delete", args=[assignment.public_id, self.service.public_id]),
+            {"terug_url": panel},
+        )
+        assert response.status_code == 204, response.content
+        assert json.loads(response["HX-Location"])["path"] == panel
+
+    def test_someone_else_opens_no_role_sheet_on_a_colleague_panel(self):
+        other = _consultant("Ander", "ander@x.nl")
+        client = Client()
+        client.force_login(other.user)
+        assignment = self.service.assignment
+
+        body = client.get(
+            f"/?collega={self.colleague.public_id}&uitgeklapt={assignment.public_id}&bewerken={self.service.public_id}"
+        ).content.decode()
+
+        assert 'name="terug_url"' not in body
+        assert "Con Sultant" in body
 
     def test_an_hours_only_edit_leaves_no_trace_on_the_timeline(self):
         # No history is kept of a role's hours (agreed with Patrick, 13 July 2026).
@@ -1099,9 +1155,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "24 uur" not in team  # own
         assert "16 uur" not in team  # the team mate's
         assert "8 uur" in team  # the aanvraag's
-        mate_panel = client.get(
-            reverse("home"), {"opdracht": assignment.public_id, "collega": mate.public_id}
-        ).content.decode()
+        mate_panel = client.get(reverse("home"), {"collega": mate.public_id}).content.decode()
         assert "Maat" in mate_panel
         assert "16 uur" not in mate_panel
 
@@ -1121,9 +1175,7 @@ class ServiceHoursPermissionTest(TestCase):
         assert "description" in names
         client = Client()
         client.force_login(self.user)
-        body = client.get(
-            reverse("home"), {"opdracht": self.service.assignment.public_id, "collega": self.colleague.public_id}
-        ).content.decode()
+        body = client.get(reverse("home"), {"collega": self.colleague.public_id}).content.decode()
         assert "24 uur" not in body
 
 
@@ -1258,7 +1310,7 @@ class ContractHoursAudienceTest(TestCase):
         )
 
     def test_whoever_may_keep_the_hours_may_read_them(self):
-        """What ``_contract_block`` rests on: it returns nothing to a non-reader,
+        """What ``_contract_periods_block`` rests on: it returns nothing to a non-reader,
         and the add/edit/delete routes render it after a save on the UPDATE right
         alone. A role that could write without reading would get an empty block
         swapped back in.

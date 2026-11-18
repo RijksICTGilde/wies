@@ -10,7 +10,7 @@
     "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-title size="3">
+  <nldd-title size="display-3">
   <h1>Database</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
@@ -25,9 +25,9 @@
   {% for value, label in _tiles %}
     <nldd-card background="tinted" accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">
-    <nldd-title size="2">
+    <nldd-text size="display-2">
     <p>{{ value }}</p>
-    </nldd-title>
+    </nldd-text>
     <nldd-rich-text>
     <p>{{ label }}</p>
     </nldd-rich-text>
@@ -39,7 +39,7 @@
   {% if destructive_actions_enabled %}
     <nldd-box>
     <nldd-container padding="16">
-    <nldd-title size="5">
+    <nldd-title size="display-5">
     <h2>Dummy data genereren</h2>
     </nldd-title>
     <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -58,7 +58,7 @@
   {% endif %}
   <nldd-box>
   <nldd-container padding="16">
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h2>Organisaties synchroniseren</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -80,7 +80,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-box>
   <nldd-container padding="16">
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h2>ODI startpagina publiceren</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -102,7 +102,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-box>
   <nldd-container padding="16">
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h2>Dubbele opdrachten samenvoegen</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -129,7 +129,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-box>
   <nldd-container padding="16">
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h2>Onboarding resetten</h2>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -153,7 +153,7 @@
        heading, text and button label each name what disappears (WCAG 1.4.1). #}
     <nldd-box background="critical">
     <nldd-container padding="16">
-    <nldd-title size="5">
+    <nldd-title size="display-5">
     <h2>Database leegmaken</h2>
     </nldd-title>
     <nldd-spacer size="4" direction="vertical"></nldd-spacer>

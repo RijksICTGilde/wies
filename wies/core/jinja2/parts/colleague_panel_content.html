@@ -22,7 +22,7 @@
   <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
   <nldd-container>
   {# A light-DOM h2: focus_restore.js cannot focus one in nldd-title-cell's shadow root. #}
-  <nldd-title size="3">
+  <nldd-title size="display-3">
   <h2 id="panel-title" tabindex="-1">{{ colleague.name }}</h2>
   </nldd-title>
   {% if colleague.email %}
@@ -33,7 +33,7 @@
   {% if colleague.suborganization %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
     <nldd-container layout="wrap" gap="6">
-    <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+    <nldd-tag color="neutral"><span class="wies-tag-text">{{ colleague.suborganization.name }}</span></nldd-tag>
     </nldd-container>
   {% endif %}
   {% set labels = panel_data.labels %}
@@ -43,12 +43,12 @@
     {% for label in labels %}
       {# TEMPORARILY colourless (#565): the same labels are uncoloured as filters.
          To restore, set color back to label.category.nldd_color. #}
-      <nldd-tag>{{ label.name }}</nldd-tag>
+      <nldd-tag><span class="wies-tag-text">{{ label.name }}</span></nldd-tag>
     {% endfor %}
     </nldd-container>
   {% endif %}
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-  <nldd-title size="4">
+  <nldd-title size="display-4">
   <h3>Opdrachten</h3>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>

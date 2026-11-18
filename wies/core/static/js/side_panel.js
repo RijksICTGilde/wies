@@ -4,7 +4,40 @@
 (function () {
   "use strict";
 
-  document.addEventListener("tabchange", (e) => {
+  const SHEET_ID = "side-panel";
+  const CONTENT_ID = "side-panel-content";
+  // The params that open a panel: their presence means "a panel belongs here".
+  const PANEL_PARAMS = ["collega", "opdracht", "aanvraag", "nieuwe-opdracht"];
+
+  function hasPanelParam(url) {
+    return PANEL_PARAMS.some((name) => url.searchParams.has(name));
+  }
+
+  // Only an entry that is a panel can be gone back to; the page under the
+  // panel (the list, Mijn profiel) is reached by closing it.
+  function panelEntry(entry, origin) {
+    return entry && hasPanelParam(new URL(entry.url, origin)) ? entry : null;
+  }
+
+  // The params that open a sheet on top of a panel; without them the URL is
+  // that panel. Mirrors the parent_url drops in views/panels.py.
+  const CHILD_PARAMS = ["bewerken", "toevoegen", "veld"];
+
+  // The panel a directly loaded sheet sits on, or null when the URL is a
+  // panel itself.
+  function parentUrlOf(url) {
+    const parent = new URL(url);
+    CHILD_PARAMS.forEach((name) => parent.searchParams.delete(name));
+    if (parent.search === url.search || !hasPanelParam(parent)) return null;
+    return parent.pathname + parent.search;
+  }
+
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { panelEntry: panelEntry, parentUrlOf: parentUrlOf };
+    return;
+  }
+
+  document.addEventListener("tab-change", (e) => {
     const bar = e.target.closest("[data-side-panel-tabs]");
     if (!bar) return;
     const selectedId = e.detail?.item?.dataset.tabPanel;
@@ -17,24 +50,15 @@
     });
   });
 
-  const SHEET_ID = "side-panel";
-  const CONTENT_ID = "side-panel-content";
-  // The params that open a panel: their presence means "a panel belongs here".
-  const PANEL_PARAMS = ["collega", "opdracht", "aanvraag", "nieuwe-opdracht"];
-
   // Everything the panel puts in the URL, stripped when it closes. The ones
   // above plus the params that only modify an open panel; 'pagina' is the
-  // list's, not the panel's, so PANEL_PARAMS in views.py has one more.
+  // list's, not the panel's, so PANEL_PARAMS in views/_common.py has one more.
   const PANEL_URL_PARAMS = PANEL_PARAMS.concat([
     "bewerken",
-    "teamlid",
+    "toevoegen",
     "veld",
     "uitgeklapt",
   ]);
-
-  function hasPanelParam(url) {
-    return PANEL_PARAMS.some((name) => url.searchParams.has(name));
-  }
 
   // Entries are { url, title } of the panel being left.
   const panelStack = [];
@@ -49,26 +73,19 @@
   }
 
   function isSheetOpen(sheet) {
-    if (!sheet) return false;
-    // nldd-sheet exposes its open state as <dialog open> in the shadow root.
-    const dlg = sheet.shadowRoot && sheet.shadowRoot.querySelector("dialog");
-    return !!(dlg && dlg.open);
+    return !!(sheet && sheet.open);
   }
 
   function openSheet() {
     const sheet = getSheet();
     if (!sheet) return;
-    if (typeof sheet.show === "function") sheet.show();
-    else if (typeof sheet.open === "function") sheet.open();
-    document.documentElement.style.overflow = "hidden";
+    sheet.show();
   }
 
   function closeSheet() {
     const sheet = getSheet();
     if (!sheet) return;
-    if (typeof sheet.hide === "function") sheet.hide();
-    else if (typeof sheet.close === "function") sheet.close();
-    document.documentElement.style.overflow = "";
+    sheet.hide();
   }
 
   function clearContent() {
@@ -79,21 +96,15 @@
   // A non-empty stack is not enough: the first opening pushes the list URL, and
   // going back to the list is just closing.
   function parentPanel() {
-    const parent = panelStack[panelStack.length - 1];
-    const hasParent =
-      !!parent && hasPanelParam(new URL(parent.url, window.location.origin));
-    return hasParent ? parent : null;
+    return panelEntry(
+      panelStack[panelStack.length - 1],
+      window.location.origin,
+    );
   }
 
   // Called from afterSwap, before first paint: doing it in afterSettle redraws
   // the bar a frame later and the header visibly jumps.
   function writeBackButton(bar, section, parent) {
-    // The server named the parent (data-back-url): its back-text stays, also
-    // on a full page load where the stack is empty.
-    if (bar.hasAttribute("data-back-url")) {
-      if (section) section.removeAttribute("padding-top");
-      return;
-    }
     if (parent)
       bar.setAttribute(
         "back-text",
@@ -111,6 +122,11 @@
     if (!content) return;
     const bar = content.querySelector(":scope > nldd-top-title-bar");
     if (!bar) return;
+    // A sheet loaded straight from its URL has no stack yet. Its server
+    // back-text names the panel underneath, so that panel becomes the step back.
+    const parentUrl = parentUrlOf(new URL(window.location));
+    if (!panelStack.length && bar.hasAttribute("back-text") && parentUrl)
+      panelStack.push({ url: parentUrl, title: "" });
     const parent = parentPanel();
     writeBackButton(
       bar,
@@ -137,24 +153,7 @@
     history.replaceState({}, "", url.toString());
   }
 
-  // A sheet that names its parent (data-back-url) goes back there, so label and
-  // target agree also after a save or reload left the stack behind.
-  function serverBackUrl() {
-    const content = document.getElementById(CONTENT_ID);
-    const bar = content && content.querySelector(":scope > nldd-top-title-bar");
-    return bar ? bar.getAttribute("data-back-url") : null;
-  }
-
   function panelBack() {
-    const backUrl = serverBackUrl();
-    if (backUrl) {
-      const backTo = panelStack.findIndex((entry) => entry.url === backUrl);
-      panelStack.length = backTo === -1 ? 0 : backTo;
-      history.replaceState({}, "", backUrl);
-      _skipNextPush = true;
-      swapPanel(backUrl);
-      return;
-    }
     if (panelStack.length > 0) {
       const prevUrl = panelStack.pop().url;
       const url = new URL(prevUrl, window.location.origin);
@@ -170,6 +169,7 @@
     }
   }
 
+  // The gutter goes once NLDD #448 is fixed.
   // The panel's scroller is a div in nldd-page's shadow root, out of app.css's
   // reach; an adopted sheet, since the CSP allows no inline styles. The gutter
   // stops "Toon meer" shifting the panel sideways; the padding replaces a
@@ -203,14 +203,10 @@
     }
 
     document.addEventListener("select", (e) => {
-      const item = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.dataset &&
-            el.dataset.wiesAction === "team-member-delete",
-        );
+      const item = window.wiesClosestInPath(
+        e,
+        '[data-wies-action="team-member-delete"]',
+      );
       if (!item) return;
       const dialog = document.getElementById("team-member-delete-dialog");
       if (!dialog) return;
@@ -226,15 +222,10 @@
     });
 
     document.addEventListener("click", (e) => {
-      const btn = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.dataset &&
-            (el.dataset.wiesAction === "team-member-delete-cancel" ||
-              el.dataset.wiesAction === "team-member-delete-confirm"),
-        );
+      const btn = window.wiesClosestInPath(
+        e,
+        '[data-wies-action^="team-member-delete-"]',
+      );
       if (!btn) return;
       const dialog = document.getElementById("team-member-delete-dialog");
       if (!dialog) return;
@@ -274,7 +265,6 @@
           clearContent();
           PANEL_URL_PARAMS.forEach((name) => url.searchParams.delete(name));
           history.replaceState({}, "", url.toString());
-          document.documentElement.style.overflow = "";
         }
       });
     }
@@ -306,14 +296,20 @@
 
     pendingNewTitle = bar.getAttribute("text") || "";
 
-    // A POST is no step in the stack and brings its own server back-text.
+    // A server back-text names the opdracht the sheet belongs to, which is
+    // only right when the user came from that panel. The stack decides, the
+    // server text is the fallback title.
+    const section = content.querySelector(":scope > nldd-simple-section");
+    // A POST is no step in the stack: its parent is the one the GET had.
     const verb = event.detail.requestConfig && event.detail.requestConfig.verb;
-    if (verb && verb.toLowerCase() !== "get") return;
-    if (bar.hasAttribute("back-text")) return;
+    if (verb && verb.toLowerCase() !== "get") {
+      if (bar.hasAttribute("back-text"))
+        writeBackButton(bar, section, parentPanel());
+      return;
+    }
 
     // Under _skipNextPush the pop already happened, so panelStack[last] is the
     // parent; otherwise it is the current panel, which afterSettle will push.
-    const section = content.querySelector(":scope > nldd-simple-section");
     if (_skipNextPush) {
       writeBackButton(bar, section, parentPanel());
       return;
@@ -335,16 +331,14 @@
       writeBackButton(
         bar,
         section,
-        parentEntry &&
-          hasPanelParam(new URL(parentEntry.url, window.location.origin))
-          ? parentEntry
-          : null,
+        panelEntry(parentEntry, window.location.origin),
       );
       return;
     }
-    const parent = hasPanelParam(new URL(currentPath, window.location.origin))
-      ? { url: currentPath, title: currentPanelTitle }
-      : null;
+    const parent = panelEntry(
+      { url: currentPath, title: currentPanelTitle },
+      window.location.origin,
+    );
     writeBackButton(bar, section, parent);
   });
 

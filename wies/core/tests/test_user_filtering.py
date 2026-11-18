@@ -1,4 +1,4 @@
-"""Role tag in the user list and the filter sheet (rol/merk/labels) — #544."""
+"""Role tag in the user list and the filter sheet (rol/suborganization/labels) — #544."""
 
 import re
 
@@ -19,7 +19,7 @@ User = get_user_model()
 
 
 class UserFilterFixture:
-    """One admin, one merk and one beheerder-colleague, for the render tests below.
+    """One admin, one suborganization and one beheerder-colleague, for the render tests below.
 
     A plain mixin, not a TestCase: inheriting from a TestCase would make pytest
     collect the parent's tests again under every child class.
@@ -29,12 +29,16 @@ class UserFilterFixture:
         self.client = Client()
         self.admin = User.objects.create_user(email="a@rijksoverheid.nl", first_name="A", last_name="Admin")
         self.admin.user_permissions.add(Permission.objects.get(codename="view_user"))
-        self.merk = Suborganization.objects.create(name="Merk A")
+        self.suborganization = Suborganization.objects.create(name="Merk A")
         self.user_admin, _ = Group.objects.get_or_create(name=ROLE_USER_ADMIN)
         u = User.objects.create_user(email="c@rijksoverheid.nl", first_name="Cor", last_name="Consultant")
         u.groups.add(self.user_admin)
         Colleague.objects.create(
-            user=u, name="Cor Consultant", email="c@rijksoverheid.nl", source="wies", suborganization=self.merk
+            user=u,
+            name="Cor Consultant",
+            email="c@rijksoverheid.nl",
+            source="wies",
+            suborganization=self.suborganization,
         )
 
 
@@ -45,7 +49,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         assert f'text="{role_label(ROLE_USER_ADMIN)}"' in html
         assert f'text="{ROLE_USER_ADMIN}"' not in html
 
-    def test_filter_sheet_renders_role_and_merk(self):
+    def test_filter_sheet_renders_role_and_suborganization(self):
         # The sheet lives in the page itself: its #filter-form drives the search
         # box and the chips, so it must exist before the sheet is opened.
         self.client.force_login(self.admin)
@@ -53,9 +57,9 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         assert "user-filter-sheet" in html
         assert 'id="filter-form"' in html
         assert role_label(ROLE_USER_ADMIN) in html  # role option, by label
-        assert "Merk A" in html  # merk option
+        assert "Merk A" in html  # suborganization option
         assert 'name="rol"' in html
-        assert 'name="merk"' in html
+        assert 'name="onderdeel"' in html
 
     def test_role_filter_lists_the_roles_by_label(self):
         """The full list behind "Meer..." is the one the view builds: sorted on
@@ -76,7 +80,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         ]
 
     def test_filter_sheet_collapses_long_group_behind_meer(self):
-        # More merken than top_n=3, so the rest collapses behind "Meer...".
+        # More suborganizations than top_n=3, so the rest collapses behind "Meer...".
         for i in range(6):
             s = Suborganization.objects.create(name=f"Extra Merk {i}")
             u = User.objects.create_user(email=f"x{i}@rijksoverheid.nl", first_name=f"X{i}", last_name="Test")
@@ -87,7 +91,7 @@ class UserFilterRenderTest(UserFilterFixture, TestCase):
         html = self.client.get(reverse("admin-users")).content.decode()
         # Shared filter_sidebar pattern: top 3 plus a "Meer..." row.
         assert "Meer..." in html
-        assert "filter_modal=merk" in html
+        assert "filter_modal=onderdeel" in html
 
     def test_active_filter_renders_chip(self):
         # The chip strip replaced the button counter, which said how many but not what.
@@ -238,9 +242,9 @@ class UserListSortTest(TestCase):
 
 
 class UserRowProfileTest(UserFilterFixture, TestCase):
-    """Merk and subgroep are visible on the row itself (#672)."""
+    """Suborganization and subgroep are visible on the row itself (#672)."""
 
-    def test_row_shows_merk_and_subgroep_after_email(self):
+    def test_row_shows_suborganization_and_subgroep_after_email(self):
         subgroep = LabelCategory.objects.create(name=SUBGROEP_CATEGORY, color="#0066CC")
         expertise = LabelCategory.objects.create(name="Expertise", color="#00CC66")
         colleague = Colleague.objects.get(email="c@rijksoverheid.nl")
@@ -250,7 +254,7 @@ class UserRowProfileTest(UserFilterFixture, TestCase):
         )
         self.client.force_login(self.admin)
         html = self.client.get(reverse("admin-users")).content.decode()
-        # Merk first, then the subgroep; other categories stay in the panel and the filters.
+        # Suborganization first, then the subgroep; other categories stay in the panel and the filters.
         assert 'supporting-text="c@rijksoverheid.nl · Merk A · AI"' in html
 
     def test_row_without_colleague_shows_only_email(self):

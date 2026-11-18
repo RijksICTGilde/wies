@@ -51,13 +51,13 @@
   space. A group can render nothing, so loop.first/last is unreliable here. #}
   {% set ns = namespace(rendered=false) %}
   {% for filter_group in filter_groups %}
-    {% if filter_group.type == 'modal' %}
+    {% if filter_group.type == "modal" %}
       {% if ns.rendered %}
         <nldd-spacer size="24"></nldd-spacer>
       {% endif %}
       {# Client: top-3 quick options (each with its own param) plus a "Meer"
   button that opens the client tree. #}
-      <nldd-title size="6">
+      <nldd-title size="display-6">
       <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
@@ -90,15 +90,15 @@
         </nldd-list>
       {% endif %}
       {% set ns.rendered = true %}
-    {% elif filter_group.type == 'select-multi' %}
+    {% elif filter_group.type == "select-multi" %}
       {% set top_options = filter_group.top_options if filter_group.top_options is defined else
-      filter_group.options|selectattr('value')|list %}
+        filter_group.options|selectattr('value')|list %}
       {% if top_options %}
         {% if ns.rendered %}
           <nldd-spacer size="24"></nldd-spacer>
         {% endif %}
         {% set ns.rendered = true %}
-        <nldd-title size="6">
+        <nldd-title size="display-6">
         <h2>{{ filter_group.label }}</h2>
         </nldd-title>
         <nldd-spacer size="4"></nldd-spacer>
@@ -146,16 +146,20 @@
           {% endfor %}
         </span>
       {% endif %}
-    {% elif filter_group.type == 'date' %}
+    {% elif filter_group.type == "date" %}
       {% if ns.rendered %}<nldd-spacer size="24"></nldd-spacer>{% endif %}
       {% set ns.rendered = true %}
-      <nldd-title size="6">
+      <nldd-title size="display-6">
       <h2>{{ filter_group.label }}</h2>
       </nldd-title>
       <nldd-spacer size="4"></nldd-spacer>
-      {# id: focus_restore.js finds the field again after the sidebar swap. #}
+      {# id: focus_restore.js finds the field again after the sidebar swap.
+         The form field only adds the format hint: the heading stays the label,
+         like every other filter group. #}
+      <nldd-form-field supporting-label="{{ date_format_hint }}">
       <nldd-date-field id="filter-{{ filter_group.name }}" width="full" data-wies-input name="{{ filter_group.name }}" accessible-label="{{ filter_group.label }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
       </nldd-date-field>
+      </nldd-form-field>
     {% endif %}
   {% endfor %}
 </form>

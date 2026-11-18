@@ -38,3 +38,12 @@ class HandleidingTest(TestCase):
         html = self.client.get(reverse("user-profile")).content.decode()
 
         assert f'<a href="{reverse("handleiding")}">Handleiding</a>' in html
+
+    def test_buttons_are_named_as_well_as_shown(self):
+        """A screen reader user hears the button's name, not its shape, so the
+        text names both."""
+        html = self.client.get(reverse("handleiding")).content.decode()
+
+        assert "de knop heet <strong>Acties voor</strong>, gevolgd door je naam" in html
+        assert "<strong>Verwijder</strong> (het kruisje)" in html
+        assert "<strong>Mijn rol wijzigen</strong>" in html

@@ -1,13 +1,20 @@
 from __future__ import annotations
 
+import urllib.parse
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Count
+from django.utils import timezone
 
+from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.service import ServiceEditables
+from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
+from wies.core.permission_engine import Verb, has_permission
+from wies.core.querysets import annotate_placement_dates
 
 if TYPE_CHECKING:
     from datetime import date
@@ -219,8 +226,6 @@ def assignment_create_specs():
     without an object and without a per-object permission check — creating is
     gated on ``core.add_assignment``.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
     specs = [
         AssignmentEditables.name,
         AssignmentEditables.extra_info,
@@ -345,9 +350,6 @@ def member_audit_event(request, assignment):
     whole-team, so the audit delta still reports exactly the one row that
     changed, keyed on the internal ``service.id``.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
-
     spec = AssignmentEditables.services
     before = spec.audit_state(assignment) if spec.audit_state else None
     with transaction.atomic():
@@ -364,9 +366,6 @@ def assignment_edit_specs(assignment, user, only=None):
     ``only`` (a spec name) narrows it to one field: a row's ⋯-menu edits just that
     field, while the pencil edits everything.
     """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
-
     candidates = [
         AssignmentEditables.name,
         AssignmentEditables.extra_info,
@@ -386,3 +385,72 @@ def assignment_edit_specs(assignment, user, only=None):
 def external_source(assignment: Assignment) -> str:
     """The system that manages ``assignment`` ("OTYS"), or "" for Wies."""
     return assignment.get_source_display() if assignment.source not in ("wies", "") else ""
+
+
+def active_assignments_for(colleague: Colleague) -> list[dict]:
+    """The assignments ``colleague`` is placed on now or later, each with the
+    services they fill there: ``[{"assignment": …, "services": […]}]``."""
+    today = timezone.now().date()
+    placements = annotate_placement_dates(
+        Placement.objects.filter(colleague=colleague).select_related("service__assignment", "service__skill")
+    )
+    by_assignment: dict[int, dict] = {}
+    for placement in placements:
+        end_date = placement.actual_end_date
+        if end_date is not None and today > end_date:
+            continue
+        assignment = placement.service.assignment
+        entry = by_assignment.setdefault(assignment.id, {"assignment": assignment, "services": []})
+        if placement.service not in entry["services"]:
+            entry["services"].append(placement.service)
+    return list(by_assignment.values())
+
+
+def assignment_owner_mailto(assignment: Assignment) -> str:
+    """A mailto (address and subject, no body) for the BM of ``assignment``, or ""."""
+    if not assignment.owner or not assignment.owner.email:
+        return ""
+    subject = urllib.parse.quote(f"Opdracht {assignment.name}")
+    return f"mailto:{assignment.owner.email}?subject={subject}"
+
+
+ONBOARDING_SERVICE_SPECS = (ServiceEditables.skill, ServiceEditables.description, ServiceEditables.hours_per_week)
+
+
+def onboarding_edit_specs(entry: dict, user) -> tuple[list, list[tuple[Service, list]]]:
+    """What the onboarding edit screen lets ``user`` change on one entry.
+
+    Returns the assignment's specs and, per service, that role's specs; a service
+    with nothing editable is left out. The Business Manager is deliberately
+    excluded: here they are the contact person, not something you set yourself.
+    """
+    assignment = entry["assignment"]
+    assignment_specs = [
+        triple for triple in assignment_edit_specs(assignment, user) if triple[1] is not AssignmentEditables.owner
+    ]
+    service_specs = []
+    for service in entry["services"]:
+        specs = [
+            (ServiceEditables, spec, service)
+            for spec in ONBOARDING_SERVICE_SPECS
+            if has_permission(Verb.UPDATE, service, user, spec)
+        ]
+        if specs:
+            service_specs.append((service, specs))
+    return assignment_specs, service_specs
+
+
+def onboarding_assignments(colleague: Colleague | None, user=None) -> list[dict]:
+    """The entries for the onboarding self-check: each active assignment with its
+    services, a mailto for its BM, and whether the edit screen has anything for
+    ``user`` (which decides the "Wijzigen" button)."""
+    if colleague is None:
+        return []
+    entries = active_assignments_for(colleague)
+    for entry in entries:
+        entry["owner_mailto"] = assignment_owner_mailto(entry["assignment"])
+        entry["user_can_edit"] = False
+        if user is not None:
+            assignment_specs, service_specs = onboarding_edit_specs(entry, user)
+            entry["user_can_edit"] = bool(assignment_specs or service_specs)
+    return entries

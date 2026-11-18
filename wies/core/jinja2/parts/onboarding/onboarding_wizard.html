@@ -21,8 +21,10 @@
 <nldd-simple-section data-onboarding-section padding-top="0">
 {% set ns.step = ns.step + 1 %}
 <section data-step="{{ ns.step }}">
-  <nldd-title size="4">
-  <h3 id="onboarding-step-1-title" tabindex="-1" data-step-title>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</h3>
+  <nldd-title size="display-4">
+  <h3 id="onboarding-step-1-title"
+      tabindex="-1"
+      data-step-title>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</h3>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-rich-text>
@@ -42,7 +44,7 @@
 </section>
 {% set ns.step = ns.step + 1 %}
 <section data-step="{{ ns.step }}" hidden>
-  <nldd-title size="4">
+  <nldd-title size="display-4">
   <h3 id="onboarding-step-2-title" tabindex="-1" data-step-title>Vul je profiel aan</h3>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
@@ -54,7 +56,7 @@
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if onboarding_colleague %}
-    <nldd-form-field label="Merk">
+    <nldd-form-field label="Onderdeel">
     {{ inline_edit_form(onboarding_colleague, "suborganization") }}
     </nldd-form-field>
     {% if onboarding_label_categories %}<nldd-spacer size="12" direction="vertical"></nldd-spacer>{% endif %}
@@ -76,7 +78,7 @@
 {% if onboarding_assignments %}
   {% set ns.step = ns.step + 1 %}
   <section data-step="{{ ns.step }}" hidden>
-    <nldd-title size="4">
+    <nldd-title size="display-4">
     <h3 id="onboarding-step-3-title" tabindex="-1" data-step-title>
       {%- if onboarding_assignments|length > 1 -%}
         Controleer je {{ onboarding_assignments|length }} opdrachten

@@ -10,6 +10,7 @@ points share one implementation. See that module's docstring for the profiles.
 from django.core.management.base import BaseCommand
 
 from wies.core.management.commands.load_full_data import PROFILES, generate
+from wies.core.management.task import require_destructive_actions_enabled
 
 
 class Command(BaseCommand):
@@ -24,5 +25,6 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        require_destructive_actions_enabled()
         generate(PROFILES[options["profile"]], write=self.stdout.write)
         self.stdout.write(self.style.SUCCESS("Done!"))

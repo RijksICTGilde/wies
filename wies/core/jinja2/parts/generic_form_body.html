@@ -9,6 +9,10 @@
       hx-target="#{{ body_id }}"
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
+  {% if content.visible_fields()|rejectattr("field.required")|list|length == 0 %}
+    {% set single_field = content.visible_fields()|length == 1 %}
+    {% include "parts/form_required_note.html" %}
+  {% endif %}
   {# Field by field, not {{ content }}: that would wrap the fields in a second
      nldd-form, which in auto-wrap mode adds its own action-less <form> in the light
      DOM. The form-associated fields then belong to that one and the POST arrives

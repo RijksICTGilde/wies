@@ -268,7 +268,7 @@ class UserForm(NlddFormMixin, forms.ModelForm):
         widget=forms.CheckboxSelectMultiple(),
     )
     suborganization = forms.ModelChoiceField(
-        label="Merk",
+        label="Onderdeel",
         queryset=Suborganization.objects.all(),
         to_field_name="public_id",
         required=False,
@@ -339,8 +339,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
     def _add_person_fields(self, instance):
         # suborganization isn't in Meta.fields, so ModelForm won't populate it.
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
-            current_merk = instance.colleague.suborganization
-            self.fields["suborganization"].initial = current_merk.public_id if current_merk else None
+            current_onderdeel = instance.colleague.suborganization
+            self.fields["suborganization"].initial = current_onderdeel.public_id if current_onderdeel else None
         self._configure_field("suborganization")
 
         # Map the labels m2m onto one dynamically built field per category.
@@ -595,6 +595,10 @@ class ServiceForm(NlddFormMixin, forms.Form):
             cleaned_data["has_custom_period"] = bool(p_start or p_end or starts_now or duration)
             if end_mode == "DURATION" and not duration:
                 self.add_error("duration_months", "Kies een duur.")
+            # Text that is no date posts as an empty date; "Op datum" must not
+            # save that as an open end.
+            elif end_mode == "DATE" and not p_end and "placement_end_date" not in self.errors:
+                self.add_error("placement_end_date", "Vul een einddatum in, of kies 'Onbekend'.")
             elif not cleaned_data["has_custom_period"]:
                 self.add_error("placement_start_date", "Vul een periode in of neem de opdrachtperiode over.")
             elif p_start and p_end and p_end < p_start:

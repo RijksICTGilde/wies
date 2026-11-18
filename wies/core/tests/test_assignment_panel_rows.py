@@ -115,9 +115,9 @@ class AssignmentPanelRowsTest(TestCase):
 
         assert "Begeleidt de overgang." in closed
         assert 'text="Taken"' in closed
-        assert '<p class="wies-cv__preview">Begeleidt de overgang. Begeleidt' in closed
+        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview>Begeleidt de overgang. Begeleidt', closed)
         assert '<div class="wies-cv__more" hidden>' in closed
-        assert '<p class="wies-cv__preview" hidden>' in opened
+        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>', opened)
         # Open, the description is rendered from Markdown. The template's
         # indentation is the formatter's to change, so match on the sequence.
         role_block = opened.split('<div class="wies-role-description">')[1]
@@ -142,22 +142,26 @@ class AssignmentPanelRowsTest(TestCase):
         planner = self.client.get(panel, headers=headers).content.decode()
         # On the entry's own line, not behind the fold.
         assert "24 uur per week" in planner.split("wies-cv__more")[0]
-        # A description that fits the preview line has nothing behind the fold.
+        # A short description keeps the toggle hidden: only a narrow screen
+        # that clamps it shows it, so the blocks it unfolds are there already.
         Service.objects.filter(placements__colleague=self.bram).update(description="Kort.")
         bram = self.client.get(reverse("home") + f"?collega={self.bram.public_id}", headers=headers).content.decode()
-        assert '<p class="wies-cv__preview">Kort.</p>' in bram
-        assert "wies-cv__toggle" not in bram
-        assert "wies-cv__more" not in bram
+        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview>Kort.</p>', bram)
+        toggle = bram.split('<nldd-button class="wies-cv__toggle"')[1].split(">")[0]
+        assert toggle.endswith('data-action="toggle-card" data-reveal-when-clamped hidden')
+        assert '<div class="wies-cv__more" hidden>' in bram
         self.client.force_login(self.viewer)
         assert 'start-icon="chevron-down"' in closed
         assert " expanded" not in closed.split("wies-cv__toggle")[1].split(">")[0]
+        # Past the preview length the toggle is certain, without JavaScript too.
+        assert "hidden" not in closed.split("wies-cv__toggle")[1].split(">")[0]
         assert '<div class="wies-cv__more">' in opened
         assert 'start-icon="chevron-up"' in opened
         assert " expanded" in opened.split("wies-cv__toggle")[1].split(">")[0]
         # The Opdracht row is the link, with a chevron saying so; the toggle
         # sits below the list, so the two never compete for the same click.
         row = closed.split('<nldd-list-item class="wies-cv__link"')[1].split("</nldd-list-item>")[0]
-        assert f'href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}"' in row
+        assert f'href="/?opdracht={self.assignment.public_id}"' in row
         assert 'text="Zaaksysteem"' in row
         assert 'icon="chevron-right"' in row
         assert "data-action" not in row
@@ -198,7 +202,7 @@ class AssignmentPanelRowsTest(TestCase):
         )
         # The preview carries hidden, so it does not stand above the block that
         # repeats it; each role's text is visible exactly once.
-        preview = re.search(r'<p class="wies-cv__preview"([^>]*)>', entry)
+        preview = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview([^>]*)>', entry)
         assert preview is not None
         assert "hidden" in preview.group(1)
         # Each role's text appears in its own block; the one the preview
@@ -207,7 +211,7 @@ class AssignmentPanelRowsTest(TestCase):
         assert '<p class="wies-cv__role-label">Dev</p>' in entry
         # The preview runs both texts together; the blocks below carry them
         # once each, under their own role heading.
-        preview_text = re.search(r'<p class="wies-cv__preview" hidden>([^<]*)</p>', entry).group(1)
+        preview_text = re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>([^<]*)</p>', entry).group(1)
         assert "Tekst van de eerste rol." in preview_text
         assert "Tekst van de tweede rol." in preview_text
         assert entry.count('<div class="wies-cv__role-block">') == 2
@@ -231,7 +235,7 @@ class AssignmentPanelRowsTest(TestCase):
         # A plain consultant edits the text, not the role.
         assert 'text="Mijn taken wijzigen"' in entry
         service = Service.objects.get(placements__colleague=self.anke)
-        assert f"teamlid={service.public_id}" in entry
+        assert f"uitgeklapt={service.assignment.public_id}&amp;bewerken={service.public_id}" in entry
 
     def test_empty_taken_reads_niet_ingevuld_with_the_pencil_on_your_own(self):
         """An empty Taken keeps its row, as an empty Omschrijving does, so the
@@ -285,7 +289,7 @@ class AssignmentPanelRowsTest(TestCase):
 
         assert body.count('<li class="wies-cv__item">') == 1
         assert '<div class="wies-cv__more">' in body
-        assert '<p class="wies-cv__preview" hidden>' in body
+        assert re.search(r'<p class="wies-cv__preview"\s+data-cv-preview\s+hidden>', body)
         assert "Toon minder" in body
 
 

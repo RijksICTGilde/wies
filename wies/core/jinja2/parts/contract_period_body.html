@@ -22,13 +22,14 @@
   {% endif %}
   {{ content.hours_per_week.as_field_group() }}
   {{ content.start_date.as_field_group() }}
-  {# Off means the period runs on. The switch is not posted; it only shows the
-     end date field (contract_period_toggle.js), as in the placement forms. #}
+  {# Off means the period runs on. The switch cannot post from its shadow root;
+     contract_period_toggle.js shows the end date field and mirrors the switch
+     into the hidden input below, so the server asks for an end date when on. #}
   <nldd-form-field>
-  <nldd-switch-field label="Einddatum is bekend" data-contract-end-known {% if content.end_date.value() %}checked{% endif %}></nldd-switch-field>
+  <nldd-switch-field label="Einddatum is bekend" data-contract-end-known {% if end_date_known(content.end_date) %}checked{% endif %}></nldd-switch-field>
   </nldd-form-field>
   {% set end_errors = wire_field_errors(content.end_date) %}
-  <nldd-form-field label="{{ content.end_date.label }}"{% if not content.end_date.value() %} hidden{% endif %}>
+  <nldd-form-field label="{{ content.end_date.label }}"{% if not end_date_known(content.end_date) %} hidden{% endif %}>
   {{ content.end_date.as_widget(attrs={"width": "full"}) }}
   {% if content.end_date.errors %}
     <nldd-validation-list>
@@ -38,6 +39,10 @@
     </nldd-validation-list>
   {% endif %}
   </nldd-form-field>
+  <input type="hidden"
+         name="{{ content.end_date.html_name ~ known_suffix }}"
+         value="{{ 'on' if end_date_known(content.end_date) else '' }}"
+         data-end-known-input>
   <nldd-form-actions>
   <nldd-button appearance="primary" type="submit" width="full" text="Opslaan"></nldd-button>
   </nldd-form-actions>

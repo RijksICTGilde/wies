@@ -1,0 +1,3 @@
+{# Forms mark optional fields, not required ones. A form without optional
+   fields would then mark nothing, so it says once that everything is needed. #}
+<p class="wies-text-secondary">{{ "Dit veld is verplicht." if single_field else "Alle velden zijn verplicht." }}</p>

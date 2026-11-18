@@ -8,29 +8,33 @@ from wies.core.models import Task
 
 User = get_user_model()
 
+# The only management commands the db_worker may run. The worker executes
+# whatever command a Task row names, so without this list any write to the
+# Task table (a future bug elsewhere) would let it run e.g. ``dropdb``.
+TASK_COMMANDS = frozenset({"sync_organizations", "startpage_publish"})
 
-def create_task(command: str, created_by: User, timeout_minutes: int, parameters: dict | None = None) -> Task:
+
+def create_task(command: str, created_by: User, timeout_minutes: int) -> Task:
     """
     Create a new task for background processing.
 
     Args:
-        command: Name of the management command to execute
+        command: Name of the management command to execute (must be in ``TASK_COMMANDS``)
         created_by: User who created the task
         timeout_minutes: Task timeout in minutes
-        parameters: Optional parameters to pass to the command
 
     Returns:
         The created Task instance
     """
-    if parameters is None:
-        parameters = {}
+    if command not in TASK_COMMANDS:
+        msg = f"Not an allowed task command: {command!r}"
+        raise ValueError(msg)
 
     return Task.objects.create(
         command=command,
         label=get_task_label(command),
         created_by=created_by,
         timeout_minutes=timeout_minutes,
-        parameters=parameters,
         status="pending",
     )
 

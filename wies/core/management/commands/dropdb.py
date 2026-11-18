@@ -1,6 +1,8 @@
 from django.core import management
 from django.core.management.base import BaseCommand
 
+from wies.core.management.task import require_destructive_actions_enabled
+
 
 class Command(BaseCommand):
     help = "Clears all data from the database (wrapper around flush)"
@@ -14,6 +16,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        require_destructive_actions_enabled()
         self.stdout.write("Flushing database (clearing all data)...")
 
         management.call_command(

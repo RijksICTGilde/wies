@@ -156,6 +156,38 @@ class ErrorReportingHandlerTest(TestCase):
         assert "`wies.core.management.commands.db_worker`" in message  # location fallback
         assert "Traceback (most recent" not in message  # traceback stays behind login
 
+    @override_settings(**MATTERMOST_SETTINGS)
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_crafted_path_cannot_break_out_of_code_span(self, mock_post):
+        # The request path is attacker-chosen: a backtick would close the code span,
+        # a newline would end the line, and @channel would then notify the channel.
+        request = FakeRequest(self.user)
+        request.path = "/x`\n\n@channel [klik hier](https://evil.example)/"
+
+        self.handler.emit(make_record(exc_info=value_error_exc_info(), request=request))
+
+        location = mock_post.call_args.args[1].split("\n")[1]
+        assert location == "`GET /x' @\u200bchannel [klik hier](https://evil.example)/`"
+
+    @override_settings(**MATTERMOST_SETTINGS)
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_log_message_headline_is_neutralised(self, mock_post):
+        # Without an exception the headline is the log message, which may carry user input.
+        record = logging.LogRecord(
+            name="wies",
+            level=logging.ERROR,
+            pathname=__file__,
+            lineno=1,
+            msg="Mislukt voor %s",
+            args=("`@all`",),
+            exc_info=None,
+        )
+
+        self.handler.emit(record)
+
+        headline = mock_post.call_args.args[1].split("\n")[0]
+        assert headline.startswith("🔴 **`Mislukt voor '@\u200ball'`** (v")
+
 
 @override_settings(**MATTERMOST_SETTINGS, ERROR_THROTTLE_MINUTES=5)
 class ErrorThrottleTest(TestCase):

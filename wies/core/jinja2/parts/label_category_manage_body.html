@@ -10,7 +10,8 @@
       data-category-manage-form>
   {{ get_csrf_hidden_input(request) }}
   {{ formset.management_form }}
-  <nldd-list accessible-label="Categorieën">
+  {% include "parts/form_required_note.html" %}
+  <nldd-list type="form" accessible-label="Categorieën">
   {# Column headers instead of a label per row; the widths mirror
      label_category_row.html so the headers line up with the fields. #}
   <nldd-list-item data-category-header>

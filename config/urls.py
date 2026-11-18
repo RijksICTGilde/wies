@@ -20,63 +20,62 @@ from django.contrib.auth.decorators import login_not_required
 from django.urls import include, path
 from django.views.generic import RedirectView
 
-from wies.core.views import (
+from wies.core.views.assignments import (
     AssignmentListView,
-    PlacementListView,
-    UserListView,
     assignment_create_sheet,
     assignment_delete,
     assignment_edit_view,
-    assignment_events_partial,
     assignment_import_csv,
     assignment_member_delete_view,
     assignment_member_edit_view,
+)
+from wies.core.views.bezetting import bezetting
+from wies.core.views.client_picker import client_modal
+from wies.core.views.events import assignment_events_partial
+from wies.core.views.inline_edit import inline_edit_view
+from wies.core.views.labels import label_admin, label_category_delete, label_category_manage, label_delete, label_form
+from wies.core.views.pages import (
     beveiliging,
-    bezetting,
-    client_modal,
     contact,
-    contract_period_add,
-    contract_period_delete,
-    contract_period_edit,
-    delete_error,
     error_400,
     error_403,
     error_404,
     error_500,
-    error_detail,
-    error_table,
     faq,
     handleiding,
-    inline_edit_view,
-    label_admin,
-    label_category_delete,
-    label_category_manage,
-    label_delete,
-    label_form,
     no_access,
+    privacy,
+    robots_txt,
+    sitemap,
+    toegankelijkheid,
+    toegankelijkheid_onderzoek,
+)
+from wies.core.views.placements import PlacementListView, placement_edit_view
+from wies.core.views.profile import (
     onboarding_assignment_edit,
     onboarding_complete,
-    placement_edit_view,
-    privacy,
     profile_labels_edit,
     profile_name_edit,
-    robots_txt,
-    role_matrix,
-    search_suggestions,
-    staff_dashboard,
-    staff_database,
+    user_profile,
+    user_theme,
+)
+from wies.core.views.search import search_suggestions
+from wies.core.views.staff import delete_error, error_detail, error_table, role_matrix, staff_dashboard, staff_database
+from wies.core.views.suborganizations import (
     suborganization_admin,
     suborganization_create,
     suborganization_delete,
     suborganization_edit,
-    toegankelijkheid,
-    toegankelijkheid_onderzoek,
+)
+from wies.core.views.users import (
+    UserListView,
+    contract_period_add,
+    contract_period_delete,
+    contract_period_edit,
     user_create,
     user_delete,
     user_edit,
     user_import_csv,
-    user_profile,
-    user_theme,
 )
 from wies.rijksauth.views import auth, login, logout
 
@@ -121,10 +120,10 @@ urlpatterns = [
     path("beheer/labels/toevoegen/", label_form, name="label-form-create"),
     path("beheer/labels/<uuid:public_id>/", label_form, name="label-form-edit"),
     path("beheer/labels/<uuid:public_id>/verwijderen/", label_delete, name="label-delete"),
-    path("beheer/merken/", suborganization_admin, name="suborganization-admin"),
-    path("beheer/merken/aanmaken/", suborganization_create, name="suborganization-create"),
-    path("beheer/merken/<uuid:public_id>/bewerken/", suborganization_edit, name="suborganization-edit"),
-    path("beheer/merken/<uuid:public_id>/verwijderen/", suborganization_delete, name="suborganization-delete"),
+    path("beheer/onderdelen/", suborganization_admin, name="suborganization-admin"),
+    path("beheer/onderdelen/aanmaken/", suborganization_create, name="suborganization-create"),
+    path("beheer/onderdelen/<uuid:public_id>/bewerken/", suborganization_edit, name="suborganization-edit"),
+    path("beheer/onderdelen/<uuid:public_id>/verwijderen/", suborganization_delete, name="suborganization-delete"),
     path("beheer/rollen/", role_matrix, name="role-matrix"),
     path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
     path("beheer/statistieken/foutmeldingen/", error_table, name="error-table"),
@@ -147,6 +146,7 @@ urlpatterns = [
     path("beveiliging/", beveiliging, name="beveiliging"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
     path("toegankelijkheid/onderzoek/", toegankelijkheid_onderzoek, name="toegankelijkheid-onderzoek"),
+    path("sitemap/", sitemap, name="sitemap"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
     path(

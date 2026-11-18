@@ -7,9 +7,9 @@ from jinja2 import pass_context
 
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
-from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
+from wies.core.inline_edit.display import concurrency_token, resolve_display, spec_label
+from wies.core.inline_edit.forms import build_form_class, current_value, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.views import _concurrency_token, _resolve_display, _spec_label
 
 
 @pass_context
@@ -20,7 +20,7 @@ def inline_edit(ctx, obj, name, **extras):
     not carry them, so partials must degrade gracefully without them.
     """
     if obj is None:
-        return mark_safe("")
+        return ""
 
     # obj._meta (not type(obj)._meta) — request.user is a SimpleLazyObject wrapper
     # whose class has no _meta; instance attribute access resolves through the wrapper.
@@ -42,17 +42,17 @@ def inline_edit(ctx, obj, name, **extras):
 
     user_can_edit = has_permission(Verb.UPDATE, obj, user, spec)
 
-    display = _resolve_display(obj, spec, editables)
+    display = resolve_display(obj, spec, editables)
     if is_collection:
         value = spec.initial(obj)
     elif isinstance(spec, Editable):
-        value = _current_value(obj, spec)
+        value = current_value(obj, spec)
     else:
-        value = {e.field or e.name: _current_value(obj, e) for e in editables}
+        value = {e.field or e.name: current_value(obj, e) for e in editables}
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
         "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
-        "label": _spec_label(editable_set, spec),
+        "label": spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
         "value": value,
@@ -66,9 +66,8 @@ def inline_edit(ctx, obj, name, **extras):
         **(spec.display_context(obj, request) if getattr(spec, "display_context", None) else {}),
         **extras,
     }
-    # Trusted template; any user-supplied values go through Jinja's auto-escape.
     html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
-    return mark_safe(html)  # noqa: S308
+    return mark_safe(html)  # noqa: S308 (mark_safe) — output of an autoescaped template render, not string concatenation
 
 
 @pass_context
@@ -80,7 +79,7 @@ def inline_edit_form(ctx, obj, name, **extras):
     wizard that is "Volgende".
     """
     if obj is None:
-        return mark_safe("")
+        return ""
 
     model_label = obj._meta.model_name
     editable_set = REGISTRY.get(model_label)
@@ -104,15 +103,15 @@ def inline_edit_form(ctx, obj, name, **extras):
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.public_id}-{name}",
         "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, name]),
-        "label": _spec_label(editable_set, spec),
+        "label": spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
         "form": form_cls(initial=initial),
         "bare": True,
         # Without a token the save view rejects the post as a conflict; the view
         # sets it on a normal inline edit, but this macro renders the form itself.
-        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "concurrency_token": concurrency_token(editable_set, spec, obj),
         **extras,
     }
     html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
-    return mark_safe(html)  # noqa: S308
+    return mark_safe(html)  # noqa: S308 (mark_safe) — output of an autoescaped template render, not string concatenation

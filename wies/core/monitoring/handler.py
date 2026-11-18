@@ -18,6 +18,24 @@ across workers.
 """
 
 import logging
+import re
+
+# Control characters (incl. newlines) and runs of whitespace, collapsed to one space.
+_WHITESPACE_OR_CONTROL = re.compile(r"[\s\x00-\x1f\x7f]+")
+
+
+def _code_span(value: str) -> str:
+    """Render an untrusted value as an inline code span in a Mattermost message.
+
+    The request path and log message are attacker-influenced. Inside a code span
+    Mattermost renders no links or formatting and fires no mentions, so the only
+    job is keeping the value from leaving the span: a backtick would close it, a
+    newline could end the paragraph it lives in. The zero-width space after `@`
+    breaks `@channel`/`@all` even if the span were ever rendered as plain text.
+    """
+    value = _WHITESPACE_OR_CONTROL.sub(" ", value).strip()
+    value = value.replace("`", "'").replace("@", "@\u200b")
+    return f"`{value}`"
 
 
 class ErrorReportingHandler(logging.Handler):
@@ -120,13 +138,15 @@ class ErrorReportingHandler(logging.Handler):
         from django.conf import settings  # noqa: PLC0415 - deferred until an error is logged
         from django.urls import reverse  # noqa: PLC0415 - deferred until an error is logged
 
+        # Headline and location are untrusted (log message, request path), so both
+        # go through _code_span — never interpolate them into the markdown raw.
         headline = error_event.short_description or record.levelname
-        lines = [f"🔴 **{headline}** (v{error_event.app_version})"]
+        lines = [f"🔴 **{_code_span(headline)}** (v{error_event.app_version})"]
         # Location: the request path for web errors, else the logger name (e.g. for
         # background-task failures), mirroring how the URL shows for web errors.
         where = f"{error_event.method} {error_event.path}".strip() or error_event.logger_name
         if where:
-            lines.append(f"`{where}`")
+            lines.append(_code_span(where))
 
         base_url = getattr(settings, "SITE_BASE_URL", "")
         if base_url:

@@ -11,7 +11,7 @@ from wies.core.editables import AssignmentEditables
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.tests.role_helpers import grant_business_manager
-from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert
+from wies.core.views.inline_edit import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert
 
 User = get_user_model()
 

@@ -116,6 +116,41 @@ class PlacementEditViewTest(TestCase):
         assert 'back-text="Test Opdracht"' in content
         assert f'name="terug_url" value="{terug}"' in content
 
+    def test_invalid_post_keeps_the_host_panel_label(self):
+        """Opened from a collega panel, the back button names that colleague;
+        a failed submit keeps that label rather than the opdracht name."""
+        response = self.client.post(
+            self.url,
+            self._valid_payload(
+                specific_start_date="2026-06-30",
+                specific_end_date="2026-03-01",
+                terug_url=f"/?collega={self.owner.public_id}",
+                back_text=self.owner.name,
+            ),
+        )
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert f'back-text="{self.owner.name}"' in content
+        assert f'name="back_text" value="{self.owner.name}"' in content
+
+    def test_end_date_switched_on_but_left_empty_is_asked_for(self):
+        """Text that is no date posts as an empty date; with "Einddatum is
+        bekend" on that must not save as an open end."""
+        response = self.client.post(self.url, self._valid_payload(specific_end_date="", specific_end_date_known="on"))
+
+        assert response.status_code == 200
+        assert "Vul een einddatum in" in response.content.decode()
+        self.placement.refresh_from_db()
+        assert self.placement.period_source == Placement.SERVICE
+
+    def test_switch_off_saves_an_open_end(self):
+        response = self.client.post(self.url, self._valid_payload(specific_end_date=""))
+
+        assert response.status_code == 204
+        self.placement.refresh_from_db()
+        assert self.placement.specific_end_date is None
+
     def test_happy_path_records_team_event_on_parent_assignment(self):
         """The audit mirror records the change as a "Team" event on the assignment."""
         self.client.force_login(self.owner_user)

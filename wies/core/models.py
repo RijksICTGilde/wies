@@ -126,7 +126,7 @@ class Label(models.Model):
 
 
 class Suborganization(models.Model):
-    """A suborganisation ("merk") a colleague belongs to. Exactly one per colleague."""
+    """A suborganisation ("onderdeel") a colleague belongs to. Exactly one per colleague."""
 
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -656,7 +656,6 @@ class Task(models.Model):
         help_text="Human-readable task name, snapshotted at creation (falls back to command when empty)",
     )
     status = models.CharField(max_length=20, choices=TASK_STATUS, default="pending", db_index=True)
-    parameters = models.JSONField(default=dict, blank=True, help_text="Parameters to pass to the command")
     result = models.JSONField(null=True, blank=True, help_text="Result data from the command execution")
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     started_at = models.DateTimeField(null=True, blank=True)

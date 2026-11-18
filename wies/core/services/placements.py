@@ -1,6 +1,7 @@
 import csv
 import datetime as dt
 import logging
+from contextlib import nullcontext
 from io import StringIO
 
 from django.core.exceptions import ValidationError
@@ -8,6 +9,8 @@ from django.core.validators import validate_email
 from django.db import DataError, IntegrityError, transaction
 from django.db.models import Q
 
+from wies.core.editables.placement import PlacementEditables
+from wies.core.editables.service import ServiceEditables
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -17,9 +20,11 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.permission_engine import Verb, has_permission
 from wies.core.services.events import create_event
+from wies.core.services.inline_edit_save import save_edit_specs
 from wies.core.services.organizations import get_excluded_org_ids
-from wies.core.services.suborganizations import get_suborganization_by_name
+from wies.core.services.suborganizations import get_suborganization_by_name, renamed_column_errors
 from wies.core.services.users import validate_email_domain
 
 logger = logging.getLogger(__name__)
@@ -81,8 +86,8 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
     service_skill, placement_colleague_name, placement_colleague_email.
 
     Optional: client_1_url (PRIMARY client) and client_2_url / client_3_url
-    (INVOLVED clients), all organisaties.overheid.nl URLs; owner_brand and
-    colleague_brand set the suborganization on newly created colleagues.
+    (INVOLVED clients), all organisaties.overheid.nl URLs; owner_suborganization and
+    colleague_suborganization set the suborganization on newly created colleagues.
     """
     try:
         dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
@@ -112,18 +117,22 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
     if missing_columns:
         return {"success": False, "errors": [f"CSV mist kolommen: {', '.join(missing_columns)}."]}
 
+    renamed_errors = renamed_column_errors(csv_reader.fieldnames)
+    if renamed_errors:
+        return {"success": False, "errors": renamed_errors}
+
     try:
         with transaction.atomic():
-            # Caches brand → Suborganization lookups across rows.
+            # Caches name → Suborganization lookups across rows.
             suborg_mapping = {}
 
-            def resolve_suborganization(brand_name):
-                brand_name = (brand_name or "").strip()
-                if not brand_name:
+            def resolve_suborganization(suborganization_name):
+                suborganization_name = (suborganization_name or "").strip()
+                if not suborganization_name:
                     return None
-                if brand_name not in suborg_mapping:
-                    suborg_mapping[brand_name] = get_suborganization_by_name(brand_name)
-                return suborg_mapping[brand_name]
+                if suborganization_name not in suborg_mapping:
+                    suborg_mapping[suborganization_name] = get_suborganization_by_name(suborganization_name)
+                return suborg_mapping[suborganization_name]
 
             colleagues_created = 0
             assignments_created = 0
@@ -133,8 +142,8 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
             organizations_linked = 0
             excluded_org_ids = get_excluded_org_ids()
             for row_number, row in enumerate(csv_reader, start=2):  # Row 1 is the header.
-                owner_suborg = resolve_suborganization(row.get("owner_brand"))
-                colleague_suborg = resolve_suborganization(row.get("colleague_brand"))
+                owner_suborg = resolve_suborganization(row.get("owner_suborganization"))
+                colleague_suborg = resolve_suborganization(row.get("colleague_suborganization"))
 
                 assignment_owner_email = row["assignment_owner_email"]
                 if assignment_owner_email != "":
@@ -295,10 +304,6 @@ def placement_edit_specs(placement, user, only=None):
     ``only`` (a spec name) narrows it to one field, as with the assignment. "Rol"
     covers two specs, since the role and its description share a row.
     """
-    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
-    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
-
     service = placement.service
     candidates = [
         (ServiceEditables, ServiceEditables.skill, service),
@@ -316,11 +321,6 @@ def placement_edit_specs(placement, user, only=None):
 
 def save_placement_edit(request, placement, specs, cleaned_data):
     """Saves all specs in one transaction, with the same audit events as inline edit."""
-    from contextlib import nullcontext  # noqa: PLC0415 (import not at top level) — only used here
-
-    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.services.inline_edit_save import save_edit_specs  # noqa: PLC0415 — avoids import cycle
-
     # A placement change has no audit type of its own; audit_mirror mirrors it as a
     # "Team" event on the assignment timeline, like the inline-edit flow (#393).
     mirror = PlacementEditables.audit_mirror

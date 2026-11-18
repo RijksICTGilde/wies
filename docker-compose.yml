@@ -50,7 +50,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-      target: web
+      target: dev
       args:
         INSTALL_DEV: "true"
     ports:

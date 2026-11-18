@@ -12,6 +12,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import IO, TYPE_CHECKING
+from urllib.parse import urlsplit
 
 import requests
 
@@ -27,6 +28,21 @@ from wies.core.services.events import create_event
 logger = logging.getLogger(__name__)
 
 ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.xml"
+ORGANISATIES_OVERHEID_HOST = "organisaties.overheid.nl"
+
+
+def validate_sync_url(url: str) -> None:
+    """Reject a sync URL that is not https on organisaties.overheid.nl.
+
+    ``--url`` exists for dated archives on that same host; pinning it keeps the
+    sync from being pointed at an arbitrary (internal) address.
+    """
+    parts = urlsplit(url)
+    if parts.scheme != "https" or parts.hostname != ORGANISATIES_OVERHEID_HOST or parts.port is not None:
+        msg = f"Sync URL must be https://{ORGANISATIES_OVERHEID_HOST}/...: {url!r}"
+        raise ValueError(msg)
+
+
 # The export's XML namespace ends in a schema version (e.g. ".../export/2.6.13")
 # that overheid.nl bumps without notice, so only the prefix is fixed here and
 # the full namespace is read from each document.
@@ -86,8 +102,8 @@ def nested_folder_label(ministry_abbreviation: str, type_label: str) -> str:
 
     One recognizable plain string shared by the picker folder (get_org_tree
     JSON → org_tree.js), its selection token (tree_state.js) and the active
-    chip (_org_chip_data). Plain text so it needs no aria wiring across the
-    web-component shadow boundary.
+    chip (PublicIdFacetsMixin._org_chips). Plain text so it needs no aria wiring
+    across the web-component shadow boundary.
     """
     return f"{ORG_TYPE_PLURAL.get(type_label, type_label)} van {ministry_abbreviation}"
 
@@ -475,6 +491,7 @@ def sync_organizations(
 
     Args:
         xml_content: XML bytes (downloads from URL if not provided)
+        url: Download URL; must be https on organisaties.overheid.nl
         dry_run: If True, don't apply changes
 
     Returns:
@@ -499,6 +516,7 @@ def sync_organizations(
         result = result + _sync_stream(iter_root_organizations(io.BytesIO(xml_content)))
     else:
         fetch_url = url or ORGANISATIES_OVERHEID_URL
+        validate_sync_url(fetch_url)
         logger.info("Fetching organizations from %s", fetch_url)
 
         with requests.get(fetch_url, timeout=120, stream=True) as response:
@@ -794,7 +812,7 @@ def build_org_hierarchy(org_self_counts: Counter[int], excluded_org_ids: list[in
         folder = synthetic_folders.get(key)
         if folder is None:
             # Label the folder with the ministry's abbreviation, same rule as the
-            # chip (_org_chip_data): the abbreviation, else the label as fallback.
+            # chip (PublicIdFacetsMixin._org_chips): the abbreviation, else the label as fallback.
             ministry_abbreviation = (ministry["abbreviations"] or [None])[0] or ministry["label"] or ministry["name"]
             folder = {
                 "id": f"group-{ministry['public_id']}-{main_type}",  # unique + ministry-scoped
@@ -1060,7 +1078,7 @@ def get_org_levels_action(org: OrganizationUnit, base_url: str = "/") -> dict:
     """
     breadcrumb = get_org_breadcrumb(org, base_url)
     levels = [
-        {"text": level["label"], "icon": "stack", "attrs": f'data-href="{level["url"]}"'}
+        {"text": level["label"], "icon": "stack", "attrs": {"data-href": level["url"]}}
         for level in [breadcrumb, *reversed(breadcrumb["ancestors"])]
     ]
     return {"text": "Bekijk opdrachten", "icon": "stack", "submenu": levels}

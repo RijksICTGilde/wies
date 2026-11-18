@@ -27,7 +27,7 @@ display with a Dutch warning alert.
 
 ```
 wies/core/
-├── views.py                 # all views, including the generic inline_edit_view
+├── views/inline_edit.py     # the generic inline_edit_view
 ├── inline_edit/
 │   ├── base.py              # Editable, EditableGroup, EditableCollection, EditableSet
 │   ├── forms.py             # build_form_class, save_*
@@ -140,7 +140,7 @@ on a container `<div>` inside the body instead.
 organizations = Editable(
     label="Opdrachtgever(s)",
     form_field_factory=lambda: OrganizationsField(required=True),
-    initial=_organizations_initial,   # (obj) -> current value
+    initial=organizations_initial,   # (obj) -> current value
     save=_save_organizations,         # (obj, value) -> persist
     display="rvo/forms/displays/organizations.html",
 )

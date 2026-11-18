@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 # a nonce. style-src still allows 'unsafe-inline' because templates rely on
 # inline style attributes (some computed per request, e.g. the bezetting
 # timeline) and the published WCAG report carries an inline <style> block.
+# base-uri does not fall back to default-src; 'none' stops an injected
+# <base href> from retargeting relative URLs (no page uses <base>).
 #
 # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
 CONTENT_SECURITY_POLICY = (
@@ -20,6 +22,7 @@ CONTENT_SECURITY_POLICY = (
     "img-src 'self' data:; "
     "font-src 'self'; "
     "connect-src 'self'; "
+    "base-uri 'none'; "
     "frame-ancestors 'none';"
 )
 

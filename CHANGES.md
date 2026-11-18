@@ -5,6 +5,23 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 805: Wie zit waar? lists every colleague with an account, also without a current opdracht (card "Nu geen opdracht"); a Business Manager shows up with the number of opdrachten they manage, so new accounts can find themselves (#778). The onboarding says so. The empty state now says "Geen collega's gevonden" / "Geen opdrachten gevonden". A banner on Wie zit waar? (which you can dismiss) says missing opdrachten are still being added; the onboarding no longer says Wies only holds RIG and Digi Gilde opdrachten
+- tbd
+
+## 2026-11-18
+
+- 843: replace custom JavaScript with NLDD's own components; the "Probeer het inloggen opnieuw" button on the login error page works again, and the opdrachtgever picker and filter get a back button when opened from another sheet
+- 842: upgrade NLDD design system from 0.21.1 to 0.25.0
+- 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
+- 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
+- 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
+- 856: team member edit URLs say what they edit (`?bewerken=`/`?toevoegen=` on the panel you came from instead of `?opdracht=…&teamlid=…`); back and save from the role sheet on a colleague panel now return to that panel instead of the opdracht
+- 855: (internal) remove redundant `@login_required` decorators; `LoginRequiredMiddleware` already enforces login on every view
+- 858: (internal) one `resolve_side_panel` helper decides which side panel the URL opens, replacing four copies in the list, profile and bezetting views; `is_side_panel_request` is the single HX-Target check and only accepts `side-panel-content`
+
+## 2026-11-11
+
+- 817: upgrade NLDD design system from 0.13.2 to 0.21.1
+- 744: security hardening
 - 784: (migration) the source system is called "OTYS" instead of "OTYS IIR", in the opdracht panel and in the handleiding; the e-mail to an opdracht's owner says "Wies" instead of "WIES"
 - 804: consultants no longer see the hours per week of their own role; only business managers do, and an open aanvraag still shows its hours to everyone
 - 804: the Subgroep label category is only shown and set in Business management (Bezetting) and the user list; Wie zit waar? filters, the onboarding, the profile and the colleague panel leave it out, and a Subgroep label in an old Wie zit waar? link shows as an unknown label
@@ -12,6 +29,9 @@ This files lists the changes during the lifetime of this project.
 - 772: (migration) an aanvraag has its own "Wie we zoeken" and "Standplaats" and can start "per direct" for a duration; existing aanvragen move their old taken to "Wie we zoeken", "Taken" are left to the placed consultant
 - 772: Aanvragen shows one card per open aanvraag, plus a "Nog geen aanvraag" card for an opdracht without any role, with counts, search and filters per aanvraag and a new Standplaats filter; it moved to /aanvragen/ (/opdrachten/ redirects, #607)
 - 809: bump dependencies for security patches
+- 815: containers pull latest debian patches
+- 775: "merk" is renamed to "onderdeel" throughout the UI; the admin page moves to `/beheer/onderdelen/` and the filter parameter `merk` becomes `onderdeel`; the CSV import columns `brand`, `owner_brand` and `colleague_brand` are renamed to `suborganization`, `owner_suborganization` and `colleague_suborganization`
+- 797: accessibility fixes from the loep audit: keyboard reach, text that wraps instead of being cut off, date fields that refuse text that is no date, clearer back buttons and Handleiding, and a "Sitemap" page in the footer
 
 ## 2026-11-03_2
 

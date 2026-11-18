@@ -2,7 +2,7 @@
    parts/client_modal.html). Ticking does not filter directly; only the CTA
    applies the selection, and cancelling discards it. #}
 {% set group = (filter_groups | selectattr('group_id', 'equalto', filter_modal_group_id) | list | first) %}
-<nldd-sheet id="filter-options-modal" placement="left" width="480px" accessible-label="{{ group.label if group else 'Filter' }}" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
+<nldd-sheet id="filter-options-modal" data-auto-show data-clear-on-close placement="left" width="480px" accessible-label="{{ group.label if group else 'Filter' }}" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
 <nldd-page sticky-header sticky-footer>
 <nldd-top-title-bar slot="header" text="{{ group.label if group else 'Filter' }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-container slot="header" padding-inline="16">

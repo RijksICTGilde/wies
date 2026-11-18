@@ -7,7 +7,7 @@
    A field that is technically optional but has a sensible default can suppress
    the Optioneel badge with `hide-optional` in widget.attrs. #}
 {% set error_ids = wire_field_errors(field) %}
-<nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
+<nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if field.field.widget.attrs.get("supporting-label") %}supporting-label="{{ field.field.widget.attrs["supporting-label"] }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
 {% if field.help_text %}<nldd-form-field-help-text>{{ field.help_text }}</nldd-form-field-help-text>{% endif %}
 {% if field.errors %}

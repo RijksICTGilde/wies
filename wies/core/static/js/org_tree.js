@@ -10,6 +10,9 @@
   var INDENT_STEP = "16";
   // Shorter queries match nearly every org and would force-build the tree.
   var MIN_SEARCH_LENGTH = 2;
+  // Above this many, the tokens push the CTA off-screen; the CTA's count says
+  // the same thing.
+  var MAX_VISIBLE_TOKENS = 6;
 
   function rowLabel(node) {
     return node.self ? 'Direct onder "' + node.label + '"' : node.label;
@@ -129,7 +132,7 @@
       row.appendChild(cell("nldd-spacer-cell", { size: LEAF_CHEVRON_ZONE }));
     }
 
-    // A `button` action, not a `checkbox` action: the latter paints an
+    // A `button` action, not a `checkbox` action (NLDD #418): the latter paints an
     // unsuppressable grey fill on every checked row, cascaded children included.
     // A group folder uses the same full-width segment + checkbox column as a
     // selectable row (checkbox hidden), so its label lines up with the org rows
@@ -194,6 +197,10 @@
     // A branch can be built long after selections were restored.
     if (selectable) this._syncRow(node, row);
 
+    // Children are built on first expand; without `expandable` a row with no
+    // children yet reports no open/closed state at all.
+    if (hasChildren) row.setAttribute("expandable", "");
+
     return row;
   };
 
@@ -237,6 +244,28 @@
     this.state.nodes.forEach(function (node) {
       var row = self.domNodes.get(node.id);
       if (row) self._syncRow(node, row);
+    });
+  };
+
+  /** A dismissable token per picked row ({ nodeId, label }); dismissing one
+   *  unpicks it and calls onChange. */
+  OrgTree.prototype.renderTokens = function (box, rows, onChange) {
+    var self = this;
+    box.innerHTML = "";
+    box.hidden = rows.length === 0 || rows.length > MAX_VISIBLE_TOKENS;
+    if (box.hidden) return;
+    rows.forEach(function (row) {
+      var token = cell("nldd-token", {
+        control: "dismiss",
+        "dismiss-text": "Verwijder " + row.label,
+      });
+      token.textContent = row.label;
+      token.addEventListener("dismiss", function () {
+        self.state.removeSelection(row.nodeId);
+        self.sync();
+        onChange();
+      });
+      box.appendChild(token);
     });
   };
 
@@ -328,6 +357,7 @@
     return null;
   }
 
+  // Remove once NLDD #417 is fixed.
   // nldd-list[type=tree] handles the treeview keys itself, but ArrowRight only
   // opens what is already built, and a lazy branch has nothing yet.
   OrgTree.prototype._bindKeyboard = function () {
@@ -359,5 +389,9 @@
     return this;
   };
 
+  if (typeof module !== "undefined" && module.exports) {
+    module.exports = { OrgTree: OrgTree };
+    return;
+  }
   window.WiesOrgTree = OrgTree;
 })();

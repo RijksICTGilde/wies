@@ -153,9 +153,9 @@ FocusRestore.prototype.withControls = function (elements) {
 };
 
 // The host first; if that did not take and it hides its control in a shadow
-// root, that control. nldd-list-item and nldd-checkbox have no delegatesFocus,
-// so host.focus() is a silent no-op while the button inside is the real tab
-// stop. The document reports the host as active either way.
+// root, that control. On 0.21.1 nldd-card, nldd-link and nldd-menu-bar-item,
+// among others, still ignore host.focus() while the control inside is the real
+// tab stop. The document reports the host as active either way.
 FocusRestore.prototype.focusInto = function (element, options) {
   element.focus(options);
   if (this.focusTook(element)) return true;

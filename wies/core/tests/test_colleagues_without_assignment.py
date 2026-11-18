@@ -148,7 +148,7 @@ class TestFilters:
         assert self._unplaced_names({"labels": str(self.python.public_id)}) == ["Anna Nieuw"]
 
     def test_merk_filter_applies(self):
-        assert self._unplaced_names({"merk": str(self.merk.public_id)}) == ["Anna Nieuw"]
+        assert self._unplaced_names({"onderdeel": str(self.merk.public_id)}) == ["Anna Nieuw"]
 
     def test_unknown_label_matches_nothing(self):
         """Fail closed, like the placements: an unknown ?labels= is an empty list."""
@@ -371,7 +371,7 @@ class TestCounts:
 
     def test_label_and_merk_counts_include_the_tail(self):
         assert self._option_count({}, "labels", str(self.python.public_id)) == 2
-        assert self._option_count({}, "merk", str(self.merk.public_id)) == 2
+        assert self._option_count({}, "onderdeel", str(self.merk.public_id)) == 2
 
     def test_label_count_matches_the_cards_it_yields(self):
         count = self._option_count({}, "labels", str(self.python.public_id))

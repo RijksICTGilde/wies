@@ -11,7 +11,7 @@ from django.db import transaction
 from django.utils import timezone
 
 from wies.core.models import Task
-from wies.core.services.tasks import mark_expired_tasks_as_failed
+from wies.core.services.tasks import TASK_COMMANDS, mark_expired_tasks_as_failed
 
 logger = logging.getLogger(__name__)
 
@@ -96,46 +96,60 @@ class Command(BaseCommand):
                     task.refresh_from_db()
 
             if task:
-                logger.info("Processing task %s: %s", task.id, task.command)
-                self.last_heartbeat = time.monotonic()
-
-                # Instantiate and execute the management command for this task
-                # wrapped in try, except for extra protection. worker should not stop
-                try:
-                    command = management.load_command_class("wies.core", task.command)
-                    command.run_from_argv(["manage.py", task.command])
-                except Exception:
-                    # shouldnt happen, but worker should not crash
-                    logger.exception("Unpected error running task")
-                else:
-                    # Get result from command instance
-                    result = getattr(command, "result", None)
-
-                    # Check if command succeeded or failed
-                    if result and isinstance(result, dict) and result.get("success"):
-                        # Command succeeded
-                        task.status = "completed"
-                        task.result = result.get("result", {})
-                        task.completed_at = timezone.now()
-                        task.save(update_fields=["status", "result", "completed_at"])
-                        logger.info("Task %s completed successfully", task.id)
-                    else:
-                        # Command failed or returned unexpected result
-                        task.status = "failed"
-                        if result and isinstance(result, dict):
-                            task.error_message = result.get("error", "Command returned failure")
-                            task.completed_at = timezone.now()
-                            task.save(update_fields=["status", "error_message", "completed_at"])
-                            # WARNING (not ERROR): the task command already logged
-                            # the failure with its traceback via TaskCommand.
-                            logger.warning("Task %s failed: %s", task.id, task.error_message)
-                        else:
-                            # A command returned something that doesn't follow the
-                            # protocol; nobody logged this, so raise it to ERROR to
-                            # surface it as an ErrorEvent.
-                            task.error_message = "Command returned unexpected result format"
-                            task.completed_at = timezone.now()
-                            task.save(update_fields=["status", "error_message", "completed_at"])
-                            logger.error("Task %s failed: %s", task.id, task.error_message)
+                self.run_task(task)
 
         logger.info("DB worker shut down gracefully.")
+
+    def run_task(self, task):
+        """Run one claimed task and record its outcome on the row."""
+        logger.info("Processing task %s: %s", task.id, task.command)
+        self.last_heartbeat = time.monotonic()
+
+        # Only allowlisted commands run: the command name comes from a DB
+        # row, and the app also ships commands like dropdb.
+        if task.command not in TASK_COMMANDS:
+            logger.error("Task %s refused: command %r is not an allowed task command", task.id, task.command)
+            task.status = "failed"
+            task.error_message = "Command is not an allowed task command"
+            task.completed_at = timezone.now()
+            task.save(update_fields=["status", "error_message", "completed_at"])
+            return
+
+        # Instantiate and execute the management command for this task
+        # wrapped in try, except for extra protection. worker should not stop
+        try:
+            command = management.load_command_class("wies.core", task.command)
+            command.run_from_argv(["manage.py", task.command])
+        except Exception:
+            # shouldnt happen, but worker should not crash
+            logger.exception("Unpected error running task")
+        else:
+            # Get result from command instance
+            result = getattr(command, "result", None)
+
+            # Check if command succeeded or failed
+            if result and isinstance(result, dict) and result.get("success"):
+                # Command succeeded
+                task.status = "completed"
+                task.result = result.get("result", {})
+                task.completed_at = timezone.now()
+                task.save(update_fields=["status", "result", "completed_at"])
+                logger.info("Task %s completed successfully", task.id)
+            else:
+                # Command failed or returned unexpected result
+                task.status = "failed"
+                if result and isinstance(result, dict):
+                    task.error_message = result.get("error", "Command returned failure")
+                    task.completed_at = timezone.now()
+                    task.save(update_fields=["status", "error_message", "completed_at"])
+                    # WARNING (not ERROR): the task command already logged
+                    # the failure with its traceback via TaskCommand.
+                    logger.warning("Task %s failed: %s", task.id, task.error_message)
+                else:
+                    # A command returned something that doesn't follow the
+                    # protocol; nobody logged this, so raise it to ERROR to
+                    # surface it as an ErrorEvent.
+                    task.error_message = "Command returned unexpected result format"
+                    task.completed_at = timezone.now()
+                    task.save(update_fields=["status", "error_message", "completed_at"])
+                    logger.error("Task %s failed: %s", task.id, task.error_message)

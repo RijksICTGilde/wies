@@ -60,7 +60,7 @@ class PlacementCSVCaseInsensitiveTest(TestCase):
     HEADER = (
         "assignment_name,assignment_description,assignment_owner,assignment_owner_email,"
         "client_1_url,assignment_start_date,assignment_end_date,service_skill,"
-        "placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand"
+        "placement_colleague_name,placement_colleague_email,owner_suborganization,colleague_suborganization"
     )
 
     def test_reuses_owner_with_different_case(self):

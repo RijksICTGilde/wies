@@ -27,7 +27,7 @@ Language: Dutch UI, English code.
 
 - Python 3.14+ with type hints
 - Django models in `wies/core/models.py`
-- Views in `wies/core/views.py`
+- Views in `wies/core/views/`, one module per domain (`placements.py`, `users.py`, `search.py`, …); shared panel and filter helpers in `panels.py`, `filters.py` and `_common.py`. Nothing outside `views/` imports from it (except `config/urls.py` and tests)
 - Forms use NlddFormMixin for styling
 - Templates in `wies/core/jinja2/`
 
@@ -78,7 +78,7 @@ PR is opened, fill it in (or correct a placeholder) once the PR exists. The chan
 ## Key Files
 
 - Models: `wies/core/models.py`
-- Views: `wies/core/views.py`
+- Views: `wies/core/views/`
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`

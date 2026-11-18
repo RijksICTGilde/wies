@@ -12,8 +12,9 @@
     </nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-text-cell vertical-alignment="top" divider-start>
-    <span slot="overline" title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</span>
-    <div>
+    <p slot="overline"
+       title="{{ event.timestamp|datum_nl('j b Y, H:i') }}">{{ event.timestamp|tijdgeleden }} {{ event.type_label|lower }}</p>
+    <p>
       {{ event.sentence }}
       {# Only for a team entry naming someone not everyone may see; other fields
          are the same for everyone. Filtered-out entries are gone by now and
@@ -21,19 +22,19 @@
       {% if event.privacy_note %}
         {{ privacy_chip(event.privacy_note, size="sm", label="Beperkt zichtbaar") }}
       {% endif %}
-      {% if event.render_kind == "textarea" %}
-        {% if event.formatted_old %}
-          {% with label="Van", value=event.formatted_old %}
-            {% include "parts/event_value_block.html" %}
-          {% endwith %}
-        {% endif %}
-        {% if event.formatted_new %}
-          {% with label="Naar", value=event.formatted_new %}
-            {% include "parts/event_value_block.html" %}
-          {% endwith %}
-        {% endif %}
+    </p>
+    {% if event.render_kind == "textarea" %}
+      {% if event.formatted_old %}
+        {% with label="Van", value=event.formatted_old %}
+          {% include "parts/event_value_block.html" %}
+        {% endwith %}
       {% endif %}
-    </div>
+      {% if event.formatted_new %}
+        {% with label="Naar", value=event.formatted_new %}
+          {% include "parts/event_value_block.html" %}
+        {% endwith %}
+      {% endif %}
+    {% endif %}
     </nldd-text-cell>
     </nldd-list-item>
   {% endfor %}

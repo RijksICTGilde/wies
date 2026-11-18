@@ -78,20 +78,20 @@
     <li>
       Dependabot bewaakt wekelijks de Python-, npm- en GitHub Actions-dependencies
       (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/dependabot.yml"
-   target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+          target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
     <li>
       Trivy scant bij iedere pull request, bij iedere push naar <code>main</code> en dagelijks de broncode
       (dependencies, geheimen, configuratie) en de container-image (OS-pakketten). Bevindingen met
       ernst hoog of kritiek waarvoor een fix beschikbaar is, komen in de Security-tab van de
       repository (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/security-scan.yml"
-   target="_blank"><code>.github/workflows/security-scan.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+                     target="_blank"><code>.github/workflows/security-scan.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
     <li>GitHub secret scanning met push protection staat aan op de repository.</li>
     <li>
       Iedere wijziging gaat via een pull request en draait automatisch de testsuite
       (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/test.yml"
-   target="_blank"><code>.github/workflows/test.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+          target="_blank"><code>.github/workflows/test.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
     <li>JavaScript is gevendored, niet via een CDN; de CSP staat geen externe bronnen toe.</li>
   </ul>
