@@ -62,8 +62,8 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request, sort_control_context
-from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
+from ._common import PANEL_PARAMS, build_panel_url, sort_control_context
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups
 from .panels import (
     build_placement_edit_panel_data,
     resolve_side_panel,
@@ -539,12 +539,24 @@ class PlacementOverviewView(View):
     }
 
     def get(self, request, *args, **kwargs):
-        if is_filter_modal_request(request):
-            return filter_modal_response(request, self._filter_groups(self._active_filters()))
-        if is_side_panel_request(request):
+        htmx = "HX-Request" in request.headers
+        if htmx and request.GET.get("filter_modal"):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))  # "Meer..."
+        # The target, not a panel param: after a page load with ?collega=, the
+        # weergave toggle and sort links keep it in their url, and want the results.
+        if request.headers.get("HX-Target") == "side-panel-content":
             return side_panel_response(request)
-        context = self.get_context_data()
-        return TemplateResponse(request, self.get_template_names(), context)
+
+        # The templates nest: the page holds the results, the results hold the
+        # cards. Each response builds its own layer on top of the one inside it.
+        context = self._cards_context()
+        if htmx and request.GET.get(self.page_kwarg):
+            return TemplateResponse(request, "parts/placement_cards.html", context)  # "Meer tonen"
+        context |= self._results_context(context["paginator"])
+        if htmx:
+            return TemplateResponse(request, "parts/filter_and_table_container.html", context)  # a filter change
+        context |= self._page_context()
+        return TemplateResponse(request, self.template_name, context)
 
     @property
     def active_view(self) -> str:
@@ -563,14 +575,6 @@ class PlacementOverviewView(View):
     def org_counts(self) -> Counter[int]:
         """Cards per opdrachtgever in the active weergave, for the opdrachtgever picker."""
         return self.overview.org_counts()
-
-    def get_template_names(self):
-        """Returns the template for this request type."""
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get(self.page_kwarg):
-                return ["parts/placement_cards.html"]
-            return ["parts/filter_and_table_container.html"]
-        return [self.template_name]
 
     def _view_url(self, value: str) -> str:
         """URL for a weergave: keeps the filters and search, drops page and order.
@@ -717,73 +721,75 @@ class PlacementOverviewView(View):
         finalize_filter_groups(filter_groups)
         return filter_groups
 
-    def get_context_data(self) -> dict:
-        """The page of cards, the weergave toggle, the sort control and the filter sidebar."""
+    def _cards_context(self) -> dict:
+        """The page of cards and the link to the next one: all that "Meer tonen" renders."""
+        # get_page clamps a page number that is out of range or no number at all.
+        paginator = Paginator(self.overview.page_queryset(), self.paginate_by)
+        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
+        next_page_url = (
+            rebuild_url("", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: page.next_page_number()})
+            if page.has_next()
+            else None
+        )
+        return {
+            "paginator": paginator,
+            "page_obj": page,
+            "cards": self.overview.cards(list(page.object_list)),
+            "active_view": self.active_view,
+            "next_page_url": next_page_url,
+        }
+
+    def _results_context(self, paginator: Paginator) -> dict:
+        """Around the cards, what a filter change re-renders: the weergave toggle,
+        the sort control, the chips and the filter sidebar (swapped in out of band)."""
         overview = self.overview
         filters = self.filters
         active_view = self.active_view
-
-        # get_page clamps a page number that is out of range or no number at all.
-        paginator = Paginator(overview.page_queryset(), self.paginate_by)
-        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
         context = {
-            "paginator": paginator,
-            "page_obj": page,
-            "cards": overview.cards(list(page.object_list)),
             "render_filter_fields_oob": "HX-Request" in self.request.headers,
-            "active_view": active_view,
             # The template compares against it rather than hardcoding the name, so
             # changing the default does not silently break the hidden field.
             "default_view": self.VIEW_DEFAULT,
-        }
-        context["view_options"] = [
-            {
-                **option,
-                "url": self._view_url(option["value"]),
-                "selected": option["value"] == active_view,
-                "count": paginator.count
-                if option["value"] == active_view
-                else self.OVERVIEWS[option["value"]](filters).listed().count(),
-            }
-            for option in self.VIEW_OPTIONS
-        ]
-
-        context["result_announcement"] = _count_label(paginator.count, *overview.COUNT_NOUNS)
-        context["empty_text"] = overview.EMPTY_TEXT
-        context["missing_opdrachten_cookie"] = self.MISSING_OPDRACHTEN_COOKIE
-        context["show_missing_opdrachten_banner"] = self.MISSING_OPDRACHTEN_COOKIE not in self.request.COOKIES
-
-        context.update(
-            sort_control_context(
+            "view_options": [
+                {
+                    **option,
+                    "url": self._view_url(option["value"]),
+                    "selected": option["value"] == active_view,
+                    "count": paginator.count
+                    if option["value"] == active_view
+                    else self.OVERVIEWS[option["value"]](filters).listed().count(),
+                }
+                for option in self.VIEW_OPTIONS
+            ],
+            "result_announcement": _count_label(paginator.count, *overview.COUNT_NOUNS),
+            "empty_text": overview.EMPTY_TEXT,
+            **sort_control_context(
                 overview.order,
                 [(value, self.SORT_LABELS[value]) for value in overview.SORT_OPTIONS],
                 overview.DEFAULT_SORT_LABEL,
-            )
-        )
-
-        context["filter_target_url"] = reverse("home")
-        context["search_filter"] = self.request.GET.get("zoek")
+            ),
+            "filter_target_url": reverse("home"),
+            "search_filter": self.request.GET.get("zoek"),
+        }
 
         active_filters = self._active_filters()
         context["filter_groups"] = self._filter_groups(active_filters)
-        # Organization filter (multi-select via modal)
+        # The chips; the opdrachtgever one also adds its value to active_filters.
         filters.add_org_filter_context(context, active_filters)
         filters.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "onderdeel": Suborganization})
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["client_modal_count_mode"] = "placements"
-
-        # Build next page URL with all current filters
-        if page.has_next():
-            context["next_page_url"] = rebuild_url(
-                "", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: page.next_page_number()}
-            )
-        else:
-            context["next_page_url"] = None
-
-        # A full page load with ?collega= or ?opdracht= opens the panel too.
-        context["panel_data"] = resolve_side_panel(self.request)
         return context
+
+    def _page_context(self) -> dict:
+        """What only the full page has: the side panel and the missing-opdrachten banner."""
+        return {
+            # A full page load with ?collega= or ?opdracht= opens the panel too.
+            "panel_data": resolve_side_panel(self.request),
+            "missing_opdrachten_cookie": self.MISSING_OPDRACHTEN_COOKIE,
+            "show_missing_opdrachten_banner": self.MISSING_OPDRACHTEN_COOKIE not in self.request.COOKIES,
+        }
 
 
 @require_POST

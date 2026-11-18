@@ -29,7 +29,7 @@ from wies.core.models import (
 from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
 from wies.core.views.panels import build_assignment_panel_data, get_colleague_assignments
-from wies.core.views.placements import PlacementFilters, PlacementOverviewView
+from wies.core.views.placements import PlacementFilters
 from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
@@ -1907,14 +1907,11 @@ class OrgFilterCountCrossFilterTest(TestCase):
     def _sidebar_org_counts(self, params: dict) -> dict[str, int]:
         """{org_id (str): count} from the Opdrachtgever sidebar group's top_options.
 
-        Built by calling the view directly — the app uses Jinja2, so the test
-        client never populates response.context.
+        Read from ``context_data``: the app uses Jinja2, so the test client never
+        populates response.context, but the view returns a TemplateResponse.
         """
-        request = RequestFactory().get(reverse("home"), params)
-        request.user = self.user
-        view = PlacementOverviewView()
-        view.request = request
-        context = view.get_context_data()
+        self.client.force_login(self.user)
+        context = self.client.get(reverse("home"), params).context_data
         org_group = next(g for g in context["filter_groups"] if g["name"] == "organisatie")
         return {opt["value"]: opt["count"] for opt in org_group["top_options"] if opt["param"] == "org"}
 

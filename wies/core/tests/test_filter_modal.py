@@ -36,7 +36,8 @@ class FilterModalTest(TestCase):
     def test_wie_zit_waar_sheet_lists_the_group_without_building_the_page(self):
         self.client.force_login(self.business_manager)
         for weergave in ("persoon", "opdracht"):
-            with patch.object(PlacementOverviewView, "get_context_data") as page:
+            # The page build starts with the cards.
+            with patch.object(PlacementOverviewView, "_cards_context") as page:
                 response = self._modal("home", "onderdeel", weergave=weergave)
             assert response.status_code == 200
             assert response.context_data["filter_modal_group_id"] == "onderdeel"

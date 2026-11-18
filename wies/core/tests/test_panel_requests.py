@@ -39,7 +39,9 @@ class PanelRequestTest(TestCase):
         self.client.force_login(self.user)
 
     def _panel(self, url_name, params, view_cls):
-        with patch.object(view_cls, "get_context_data") as page:
+        # Where each view starts building its page: the cards, or ListView's context.
+        page_build = "_cards_context" if view_cls is PlacementOverviewView else "get_context_data"
+        with patch.object(view_cls, page_build) as page:
             response = self.client.get(reverse(url_name), params, headers=PANEL)
         page.assert_not_called()
         return response

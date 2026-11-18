@@ -3,6 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from wies.core.models import (
     Assignment,
@@ -16,7 +17,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_top_org_options
-from wies.core.views.placements import ColleagueOverview, PlacementFilters, PlacementOverviewView
+from wies.core.views.placements import ColleagueOverview, PlacementFilters
 
 User = get_user_model()
 
@@ -73,12 +74,8 @@ class FilterCombiningTestBase(TestCase):
 
     def _get_org_quick_options(self, params: dict) -> list[dict]:
         """Return the opdrachtgever quick options from the rendered context."""
-        factory = RequestFactory()
-        request = factory.get("/", params)
-        request.user = self.auth_user
-        view = PlacementOverviewView()
-        view.request = request
-        context = view.get_context_data()
+        self.client.force_login(self.auth_user)
+        context = self.client.get(reverse("home"), params).context_data
         org_group = next(g for g in context["filter_groups"] if g.get("type") == "modal")
         return org_group["top_options"]
 
