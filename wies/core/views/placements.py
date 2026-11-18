@@ -733,8 +733,7 @@ class PlacementOverviewView(View):
             else None
         )
         return {
-            "paginator": paginator,
-            "page_obj": page,
+            "result_count": paginator.count,
             "cards": self.overview.cards(list(page.object_list)),
             "active_view": self.active_view,
             "next_page_url": next_page_url,
@@ -747,7 +746,7 @@ class PlacementOverviewView(View):
         filters = self.filters
         active_view = self.active_view
         context = self._cards_context()
-        paginator = context["paginator"]
+        result_count = context["result_count"]
         context |= {
             "render_filter_fields_oob": "HX-Request" in self.request.headers,
             # The template compares against it rather than hardcoding the name, so
@@ -758,13 +757,13 @@ class PlacementOverviewView(View):
                     **option,
                     "url": self._view_url(option["value"]),
                     "selected": option["value"] == active_view,
-                    "count": paginator.count
+                    "count": result_count
                     if option["value"] == active_view
                     else self.OVERVIEWS[option["value"]](filters).listed().count(),
                 }
                 for option in self.VIEW_OPTIONS
             ],
-            "result_announcement": _count_label(paginator.count, *overview.COUNT_NOUNS),
+            "result_announcement": _count_label(result_count, *overview.COUNT_NOUNS),
             "empty_text": overview.EMPTY_TEXT,
             **sort_control_context(
                 overview.order,

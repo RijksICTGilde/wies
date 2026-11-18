@@ -42,6 +42,11 @@ def _make_assignment(name, *, source="wies"):
     )
 
 
+def _placed_names(response) -> list[str]:
+    """The names on a page's cards with a current placement (a period), so not the viewer's."""
+    return [card["name"] for card in response.context_data["cards"] if card["period_text"]]
+
+
 def _make_colleague(name):
     return Colleague.objects.create(
         name=name,
@@ -157,7 +162,7 @@ class TestGroupPagination:
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         # Plus the viewer, who has no placement and so ends the list.
-        assert response.context_data["paginator"].count == 6
+        assert response.context_data["result_count"] == 6
         assert len(response.context_data["cards"]) == 6
 
     def test_paginator_counts_assignments_in_opdracht_view(self):
@@ -169,7 +174,7 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"weergave": "opdracht"})
         assert response.status_code == 200
-        assert response.context_data["paginator"].count == 2
+        assert response.context_data["result_count"] == 2
         assert [len(card["team"]) for card in response.context_data["cards"]] == [3, 3]
 
     def test_group_is_never_split_across_a_page_boundary(self):
@@ -189,16 +194,16 @@ class TestGroupPagination:
         assert page2.status_code == 200
 
         # The viewer, who has no placement, ends the list on page 2.
-        page1_colleagues = {c.id for c in page1.context_data["page_obj"].object_list if c.current_placements}
-        page2_colleagues = {c.id for c in page2.context_data["page_obj"].object_list if c.current_placements}
+        page1_colleagues = set(_placed_names(page1))
+        page2_colleagues = set(_placed_names(page2))
 
         assert len(page1_colleagues) == 60
         assert len(page2_colleagues) == 1
         assert not (page1_colleagues & page2_colleagues)
 
         for page in (page1, page2):
-            placed = [c for c in page.context_data["page_obj"].object_list if c.current_placements]
-            assert {len(c.current_placements) for c in placed} == {2}
+            placed = [card for card in page.context_data["cards"] if card["period_text"]]
+            assert {card["assignment_text"] for card in placed} == {"2 opdrachten"}
 
     def test_every_group_appears_exactly_once_across_pages(self):
         for i in range(61):
@@ -207,7 +212,7 @@ class TestGroupPagination:
         seen = []
         for page_number in (1, 2):
             response = self.client.get(reverse("home"), {"pagina": str(page_number)})
-            seen.extend(c.id for c in response.context_data["page_obj"].object_list if c.current_placements)
+            seen.extend(_placed_names(response))
 
         assert len(seen) == 61
         assert len(set(seen)) == 61
@@ -219,7 +224,7 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"pagina": page})
         assert response.status_code == 200
-        assert response.context_data["page_obj"].number == 1
+        assert "Jan de Vries" in [card["name"] for card in response.context_data["cards"]]
 
     def test_page_number_above_last_page_clamps_to_last(self):
         for i in range(61):
@@ -227,12 +232,14 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"pagina": "500"})
         assert response.status_code == 200
-        assert response.context_data["page_obj"].number == 2
+        # Page 2 of 62 cards (the viewer included): the last two, and no next page.
+        assert len(response.context_data["cards"]) == 2
+        assert response.context_data["next_page_url"] is None
 
     def test_empty_result_set_renders_without_error(self):
         response = self.client.get(reverse("home"), {"zoek": "niemand-heet-zo"})
         assert response.status_code == 200
-        assert response.context_data["paginator"].count == 0
+        assert response.context_data["result_count"] == 0
         assert response.context_data["cards"] == []
 
 
@@ -454,7 +461,7 @@ class TestFilterCounts:
             params = {"weergave": view} if view != "persoon" else {}
             assert self._rol_counts(params)["Data engineering"] == expected
             response = self.client.get(reverse("home"), {**params, "rol": skill_id})
-            assert response.context_data["paginator"].count == expected
+            assert response.context_data["result_count"] == expected
 
     def _loopt_af_counts(self, params=None):
         response = self.client.get(reverse("home"), params or {})
@@ -481,7 +488,7 @@ class TestFilterCounts:
             params = {"weergave": view} if view != "persoon" else {}
             assert self._loopt_af_counts(params)["Binnen 3 maanden"] == expected
             response = self.client.get(reverse("home"), {**params, "loopt_af": "3m"})
-            assert response.context_data["paginator"].count == expected
+            assert response.context_data["result_count"] == expected
 
 
 @pytest.mark.django_db
