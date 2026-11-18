@@ -12,7 +12,7 @@ from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.role_helpers import make_business_manager_user
-from wies.core.views import _cv_taken
+from wies.core.views.panels import _cv_taken
 
 User = get_user_model()
 
@@ -165,7 +165,7 @@ class AssignmentPanelRowsTest(TestCase):
         # The Opdracht row is the link, with a chevron saying so; the toggle
         # sits below the list, so the two never compete for the same click.
         row = closed.split('<nldd-list-item class="wies-cv__link"')[1].split("</nldd-list-item>")[0]
-        assert f'href="/?opdracht={self.assignment.public_id}&amp;collega={self.anke.public_id}"' in row
+        assert f'href="/?opdracht={self.assignment.public_id}"' in row
         assert 'text="Zaaksysteem"' in row
         assert 'icon="chevron-right"' in row
         assert "data-action" not in row
@@ -241,7 +241,7 @@ class AssignmentPanelRowsTest(TestCase):
         # A plain consultant edits the text, not the role.
         assert 'text="Mijn taken wijzigen"' in entry
         service = Service.objects.get(placements__colleague=self.anke)
-        assert f"teamlid={service.public_id}" in entry
+        assert f"uitgeklapt={service.assignment.public_id}&amp;bewerken={service.public_id}" in entry
 
     def test_empty_taken_reads_niet_ingevuld_with_the_pencil_on_your_own(self):
         """An empty Taken keeps its row, as an empty Omschrijving does, so the

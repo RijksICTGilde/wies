@@ -480,7 +480,7 @@ class RoleMatrixViewTest(TestCase):
         assert content.count(f'<th scope="col">{role_matrix.STAFF}</th>') == len(role_matrix.SECTION_ORDER) + 1
         assert "Platformbeheer" not in content  # the term the page used to carry
         assert f' href="{self.url}"' in content  # sidebar
-        assert f'data-href="{self.url}"' in content
+        assert f'icon="user-admin" href="{self.url}"' in content  # utility menu
 
     def test_every_cell_says_on_screen_what_the_matrix_answers(self):
         """The cells are the page, and nothing else asserts on the rendered ones:

@@ -217,6 +217,7 @@
       }, 250);
     });
 
+    // Remove once NLDD #419 is fixed.
     // Capture phase: the field handles Enter on its inner input, so a bubbling
     // listener runs too late.
     el.addEventListener(
@@ -273,14 +274,7 @@
 
   function setupSearchSuggestionSelect() {
     document.addEventListener("select", (e) => {
-      const item = e
-        .composedPath()
-        .find(
-          (x) =>
-            x instanceof Element &&
-            x.localName === "nldd-menu-item" &&
-            x.dataset.orgId,
-        );
+      const item = window.wiesClosestInPath(e, "nldd-menu-item[data-org-id]");
       if (!item) return;
       const form = document.getElementById("filter-form");
       const container = document.getElementById("org-filter-inputs");
@@ -340,12 +334,7 @@
 
   function setupStatusCards() {
     document.addEventListener("click", (e) => {
-      const card = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element && el.hasAttribute?.("data-status-card"),
-        );
+      const card = window.wiesClosestInPath(e, "[data-status-card]");
       if (!card) return;
       const pressed = card.getAttribute("aria-pressed") === "true";
       setStatusCard(card, !pressed);
@@ -479,7 +468,6 @@
   // Ticking in the "Meer..." sheet is deferred: closing discards it.
   function setupFilterOptionsModal() {
     const SHEET_ID = "filter-options-modal";
-    const container = document.getElementById("filter-options-modal-container");
 
     function currentSheet() {
       return document.getElementById(SHEET_ID);
@@ -505,40 +493,13 @@
       button.setAttribute("text", text);
     }
 
-    function openSheet(sheet) {
-      if (!sheet) return;
-      // Only a child sheet sometimes: the sidebar is a sheet when narrow.
-      if (typeof window.syncSheetBackButton === "function") {
-        window.syncSheetBackButton(sheet);
-      }
-      sheet.show();
-    }
-
+    // dialog.js opens the sheet and drops it on close; the CTA's count
+    // still has to reflect the rows the server ticked.
     document.body.addEventListener("htmx:afterSwap", (e) => {
-      const t = e.target;
-      if (
-        t &&
-        (t.id === "filter-options-modal-container" ||
-          (t.closest && t.closest("#filter-options-modal-container")))
-      ) {
-        const sheet = currentSheet();
-        openSheet(sheet);
-        if (sheet) updateApplyLabel(sheet);
-      }
+      if (e.target.id !== "filter-options-modal-container") return;
+      const sheet = currentSheet();
+      if (sheet) updateApplyLabel(sheet);
     });
-
-    // Empty on close, so reopening fetches a fresh list.
-    document.addEventListener(
-      "close",
-      (e) => {
-        const sheet = e
-          .composedPath()
-          .find((el) => el instanceof Element && el.id === SHEET_ID);
-        if (!sheet) return;
-        if (container) container.innerHTML = "";
-      },
-      true,
-    );
 
     // A row toggle here does not submit; that is the CTA's job.
     document.addEventListener("change", (e) => {
@@ -553,11 +514,7 @@
     });
 
     document.addEventListener("click", (e) => {
-      const applyBtn = e
-        .composedPath()
-        .find(
-          (el) => el instanceof Element && el.id === "filter-options-apply-btn",
-        );
+      const applyBtn = window.wiesClosestInPath(e, "#filter-options-apply-btn");
       if (!applyBtn) return;
 
       const sheet = currentSheet();
@@ -595,11 +552,7 @@
     });
 
     document.addEventListener("input", (e) => {
-      const search = e
-        .composedPath()
-        .find(
-          (el) => el instanceof Element && el.id === "filter-options-search",
-        );
+      const search = window.wiesClosestInPath(e, "#filter-options-search");
       if (!search) return;
       const term = (search.value || "").toLowerCase().trim();
       const sheet = currentSheet();
@@ -663,13 +616,7 @@
 
   function setupClearAllFilters() {
     document.addEventListener("click", (e) => {
-      const btn = e
-        .composedPath()
-        .find(
-          (el) =>
-            el instanceof Element &&
-            el.hasAttribute?.("data-clear-all-filters"),
-        );
+      const btn = window.wiesClosestInPath(e, "[data-clear-all-filters]");
       if (!btn) return;
       e.preventDefault();
       clearAllFilters();

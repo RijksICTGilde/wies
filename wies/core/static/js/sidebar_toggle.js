@@ -28,6 +28,7 @@
     callSection(item, "show");
   });
 
+  // Remove once NLDD #450 is fixed.
   // Opened from the overflow menu, the sheet hands focus back to a menu item
   // that leaves with the menu, so it drops to <body>. "Meer" is where it came
   // from. Opened from the visible button, the sheet already gets this right.
@@ -82,6 +83,7 @@
   // filters are still open -- the bar never empties out there, only sorting
   // moves, and it stays reachable.
   //
+  // Replace with an attribute once NLDD #420 is fixed.
   // The DS threshold is not configurable since 0.10.0, so this section gets its
   // own _applyCollapsed that hands the original a width on the right side of
   // lg. In rem (1240px), like the DS's own breakpoints.

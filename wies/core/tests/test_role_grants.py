@@ -276,7 +276,7 @@ class RoleGrantTest(TestCase):
         content = self.client.get(reverse("staff-dashboard")).content.decode()
 
         assert f' href="{reverse("staff-dashboard")}"' in content, "the Beheer sidebar did not render at all"
-        assert f'data-href="{reverse("staff-dashboard")}"' in content, (
+        assert f'icon="chart-x-y-axis-line" href="{reverse("staff-dashboard")}"' in content, (
             "the utility menu's Beheer section did not render"
         )
         for url in behind_user_admin:
@@ -450,7 +450,7 @@ class RoleGrantTest(TestCase):
         content = self.client.get(reverse("admin-users")).content.decode()
 
         assert f'<nldd-list-item href="{reverse("admin-users")}"' in content, "the Beheer sidebar withheld Gebruikers"
-        assert f'data-href="{reverse("admin-users")}"' in content, "the utility menu withheld Gebruikers"
+        assert f'icon="users" href="{reverse("admin-users")}"' in content, "the utility menu withheld Gebruikers"
 
     def test_csv_import_by_user_admin_grants_user_admin(self):
         """Every role column of the import is one the Gebruikersbeheerder may grant."""

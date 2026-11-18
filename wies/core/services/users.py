@@ -65,7 +65,7 @@ def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
         raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
-def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, source):
+def find_or_create_colleague_for_user(user, first_name, last_name, email, *, source):
     """
     Link a colleague with the given source to the given user. If the user is
     already linked to a colleague, update it in place. Otherwise reuse an
@@ -134,7 +134,7 @@ def create_user(
         last_name=last_name,
     )
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
+    colleague = find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels is not None:
@@ -195,7 +195,7 @@ def update_user(
     user.email = email
     user.save()
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
+    colleague = find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels is not None:
@@ -412,6 +412,33 @@ def create_users_from_csv(creator, csv_content: str, request=None):
         "success": True,
         "users_created": users_created,
         "errors": errors,  # May contain warnings when success is True
+    }
+
+
+def contract_period_event(request, period, action, before=None):
+    """Logs a contract-period change on the colleague the hours belong to.
+
+    On the colleague, not the user: the colleague outlives the user, and the
+    hours of someone who has left are exactly what must stay traceable. Nothing
+    displays these events yet.
+    """
+    after = None if action == "delete" else contract_period_snapshot(period)
+    create_event(
+        object_type="Colleague",
+        action="update",
+        source="user",
+        object_id=period.colleague_id,
+        user=request.user,
+        request=request,
+        context={"field_name": "contract_periods", "action": action, "before": before, "after": after},
+    )
+
+
+def contract_period_snapshot(period):
+    return {
+        "hours_per_week": period.hours_per_week,
+        "start_date": period.start_date.isoformat(),
+        "end_date": period.end_date.isoformat() if period.end_date else None,
     }
 
 

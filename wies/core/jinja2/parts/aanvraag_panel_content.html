@@ -20,11 +20,8 @@
   {# collapse-anchor: the title appears in the bar only once it scrolls out of view. #}
   <nldd-top-title-bar slot="header" text="{{ panel_data.panel_title }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  <nldd-title size="6">
-  <p>Aanvraag</p>
-  </nldd-title>
-  <nldd-spacer size="2" direction="vertical"></nldd-spacer>
-  <nldd-title size="3">
+  <nldd-title size="display-3">
+  <p slot="overline">Aanvraag</p>
   {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
      in the new panel matches where they came from. #}
   <h2 id="panel-title" tabindex="-1">{{ panel_data.heading }}</h2>
@@ -87,13 +84,19 @@
   <nldd-list-item>
   <nldd-text-cell width="140px" text="Wie we zoeken" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell vertical-alignment="top">
   {% if service.request_description %}
-    <nldd-rich-text spacing="flat">{{ service.request_description|markdown }}</nldd-rich-text>
+    {# A plain cell: the formatted text is block content, which a text cell's
+       slot does not take. #}
+    <nldd-cell width="full" vertical-alignment="top">
+    <div class="wies-cell-text">
+      <nldd-rich-text spacing="flat">{{ service.request_description|markdown }}</nldd-rich-text>
+    </div>
+    </nldd-cell>
   {% else %}
-    <span class="wies-text-secondary">Niet ingevuld</span>
+    <nldd-text-cell vertical-alignment="top">
+    <p><span class="wies-text-secondary">Niet ingevuld</span></p>
+    </nldd-text-cell>
   {% endif %}
-  </nldd-text-cell>
   </nldd-list-item>
   </nldd-list>
   </nldd-simple-section>

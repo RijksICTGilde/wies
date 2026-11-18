@@ -522,14 +522,14 @@ class AssignmentPanelRenderTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
         self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;bewerken=1")
-        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-aanvraag")
-        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;teamlid=nieuw-ingevuld")
+        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;toevoegen=aanvraag")
+        self.assertContains(response, f"opdracht={self.assignment.public_id}&amp;toevoegen=consultant")
 
     def test_unresolved_panel_target_404s_for_htmx_request(self):
         """A panel HTMX request whose opdracht can't be resolved must 404 (so
         HTMX shows the graceful "Niet gevonden" partial) rather than returning a
         full page that gets swapped into the slide-over. Guards the HX-Target
-        string match in _is_side_panel_request (side-panel-content, hyphens)."""
+        string match in is_side_panel_request (side-panel-content, hyphens)."""
         response = self.client.get(
             "/?opdracht=999",  # integer, never a valid public_id
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
@@ -546,10 +546,10 @@ class AssignmentPanelRenderTest(TestCase):
         for field in ("name", "extra_info", "owner", "start_date", "end_date"):
             self.assertContains(response, f'name="{field}"')
 
-    def test_teamlid_nieuw_renders_member_form(self):
-        """?opdracht=<id>&teamlid=nieuw-aanvraag renders the member child sheet
+    def test_toevoegen_renders_member_form(self):
+        """?opdracht=<id>&toevoegen=aanvraag renders the member child sheet
         with one preset row, posting to the member endpoint."""
-        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid=nieuw-aanvraag")
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&toevoegen=aanvraag")
         assert response.status_code == 200
         self.assertContains(response, "Aanvraag toevoegen")
         self.assertContains(response, f"/opdracht/{self.assignment.public_id}/teamlid/")
@@ -559,13 +559,14 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertContains(response, '<nldd-radio-button-group name="is_filled"')
         self.assertNotContains(response, "data-status-input")
 
-    def test_teamlid_edit_renders_existing_member(self):
-        """?teamlid=<service public_id> renders the row of that one member."""
+    def test_bewerken_renders_existing_member(self):
+        """?bewerken=<service public_id> renders the row of that one member; a
+        vacancy's sheet is called after the row menu's "Aanvraag wijzigen"."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
-        response = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}")
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={service.public_id}")
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid wijzigen")
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>')
         self.assertContains(response, 'name="service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
@@ -616,6 +617,31 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertContains(response, self.assignment.name)
         self.assertContains(response, reverse("assignment-member-edit", args=[self.assignment.public_id]))
 
+    def test_member_post_rerender_keeps_the_host_panel_label(self):
+        """Opened from an aanvraag panel, the sheet returns there; a failed
+        submit keeps the aanvraag panel's title on the back button and the
+        sheet's own heading, instead of falling back to the opdracht name and
+        "Teamlid wijzigen"."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.public_id}/teamlid/",
+            {
+                "service_public_id": str(service.public_id),
+                "placement_public_id": "",
+                "is_filled": "aanvraag",
+                "skill": "",
+                "has_custom_period": "on",
+                "terug_url": f"/?aanvraag={service.public_id}",
+                "back_text": "Aanvraag: Ontwerper",
+                "member_heading": "Aanvraag wijzigen",
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, 'back-text="Aanvraag: Ontwerper"')
+        self.assertContains(response, '<input type="hidden" name="back_text" value="Aanvraag: Ontwerper">')
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>')
+
     def test_member_delete_removes_only_that_service(self):
         skill = Skill.objects.create(name="Ontwerper")
         keep = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
@@ -637,7 +663,6 @@ class AssignmentPanelRenderTest(TestCase):
         ).content.decode()
         editor = body.split("<nldd-text-editor ")[1].split(">")[0]
         assert 'name="extra_info"' in editor
-        assert 'appearance="input-field"' in editor
         assert 'syntax="hidden"' in editor
         # The error list points at the editor: the toolbar's wrapper hides it
         # from nldd-form-field.
@@ -1107,10 +1132,10 @@ class AssignmentServicesDisplayTest(TestCase):
         assert resp.status_code == 200
         filled_row = self._row_containing(resp, self.colleague.name)
         service = Placement.objects.get(colleague=self.colleague).service
-        assert f"opdracht={self.assignment.public_id}&amp;teamlid={service.public_id}" in filled_row
+        assert f"opdracht={self.assignment.public_id}&amp;bewerken={service.public_id}" in filled_row
         # Never the integer service or assignment PK.
-        assert f"teamlid={service.id}" not in filled_row
-        assert f"opdracht={self.assignment.id}&teamlid=" not in filled_row
+        assert f"bewerken={service.id}" not in filled_row
+        assert f"opdracht={self.assignment.id}&bewerken=" not in filled_row
 
     def test_row_menu_view_url_uses_public_id(self):
         """ "Profiel bekijken" must build ?collega= from the colleague's
@@ -1127,7 +1152,7 @@ class AssignmentServicesDisplayTest(TestCase):
         member-edit panel (HTTP 200), not the "Niet gevonden" partial."""
         service = Placement.objects.get(colleague=self.colleague).service
         panel = self.client.get(
-            f"/?opdracht={self.assignment.public_id}&teamlid={service.public_id}",
+            f"/?opdracht={self.assignment.public_id}&bewerken={service.public_id}",
             headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert panel.status_code == 200
@@ -1350,7 +1375,7 @@ class AssignmentServicesAuditTest(TestCase):
         updates that Service/Placement in place. Without them the save would
         create a new row instead of editing the existing one.
 
-        Each member opens in its own single-row sheet (``?teamlid=<public_id>``),
+        Each member opens in its own single-row sheet (``?bewerken=<public_id>``),
         so the ids are asserted per row instead of across one combined formset."""
 
         def hidden_value(content, field_name):
@@ -1360,13 +1385,13 @@ class AssignmentServicesAuditTest(TestCase):
             )
             return m.group(1) if m else None
 
-        vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.vacant_service.public_id}")
+        vacant = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={self.vacant_service.public_id}")
         assert vacant.status_code == 200
         vacant_content = vacant.content.decode()
         assert hidden_value(vacant_content, "service_public_id") == str(self.vacant_service.public_id)
         assert hidden_value(vacant_content, "placement_public_id") == ""
 
-        filled = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        filled = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={self.filled_service.public_id}")
         assert filled.status_code == 200
         filled_content = filled.content.decode()
         assert hidden_value(filled_content, "service_public_id") == str(self.filled_service.public_id)
@@ -1377,7 +1402,7 @@ class AssignmentServicesAuditTest(TestCase):
         (value ``__new__``) rather than free-typing, and the name field it
         reveals must render ``hidden`` for a row whose skill is an existing
         role, so member_form.js only has to unhide it on selection."""
-        resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={self.filled_service.public_id}")
+        resp = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={self.filled_service.public_id}")
         assert resp.status_code == 200
         content = resp.content.decode()
         # The discrete option is a real menu item; the combo is not allow-custom.
@@ -1590,7 +1615,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         )
 
     def test_member_sheet_renders_period_choice_matching_effective_period(self):
-        """End-to-end: opening a member's edit sheet (``?teamlid=<service-id>``)
+        """End-to-end: opening a member's edit sheet (``?bewerken=<service-id>``)
         must render that row's period choice matching its effective period.
 
         Team editing moved to the per-member sheets, so each row is fetched
@@ -1605,7 +1630,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
         def period_state_for_service(service_public_id: str) -> tuple[str, str]:
             """(hidden has_custom_period value, segmented-control value) for
             the one row rendered in this member's sheet."""
-            resp = self.client.get(f"/?opdracht={self.assignment.public_id}&teamlid={service_public_id}")
+            resp = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={service_public_id}")
             assert resp.status_code == 200
             content = resp.content.decode()
             hidden = re.search(
@@ -1949,6 +1974,13 @@ class InlineOrganizationsEditTest(TestCase):
         )
         assert resp.status_code == 200
         self.assertContains(resp, "primaire")
+
+    def test_error_list_points_at_the_picker_button(self):
+        # The picker is no form input, so without `for` a screen reader hears
+        # the error with no control at all.
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "organizations"])
+        resp = self.client.post(url, {"org-TOTAL_FORMS": "0"})
+        self.assertContains(resp, '<nldd-validation-list for="assignment-org-trigger-btn">')
 
     def test_get_edit_prefills_existing_organizations(self):
         """Editable.initial must feed the edit form with current values —

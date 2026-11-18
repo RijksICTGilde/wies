@@ -25,11 +25,8 @@
 {% else %}
   <nldd-top-title-bar slot="header" text="{{ panel_data.assignment.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
-  <nldd-title size="6">
-  <p>Opdracht</p>
-  </nldd-title>
-  <nldd-spacer size="2" direction="vertical"></nldd-spacer>
-  <nldd-title size="3">
+  <nldd-title size="display-3">
+  <p slot="overline">Opdracht</p>
   {# tabindex="-1": focus_restore.js lands a keyboard user here when nothing
      in the new panel matches where they came from. #}
   <h2 id="panel-title" tabindex="-1">{{ panel_data.assignment.name }}</h2>
@@ -87,35 +84,37 @@
         <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell>
-        {% if row_kind == "source" %}
-          {% if panel_data.assignment.source_url %}
-            <a href="{{ panel_data.assignment.source_url }}" target="_blank">
-            {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
-          {% else %}
-            {{ panel_data.assignment.get_source_display() }}
+        <p>
+          {% if row_kind == "source" %}
+            {% if panel_data.assignment.source_url %}
+              <a href="{{ panel_data.assignment.source_url }}" target="_blank">
+              {{ panel_data.assignment.get_source_display() }}<span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>
+            {% else %}
+              {{ panel_data.assignment.get_source_display() }}
+            {% endif %}
+          {% elif row_kind == "extra_info" %}
+            {# The textarea display keeps line breaks and truncates to "Toon meer". #}
+            {% with value = panel_data.assignment.extra_info %}
+              {% include "forms/displays/textarea.html" %}
+            {% endwith %}
+          {% elif row_kind == "organizations" %}
+            {# Only the first; any others get their own list-item below. #}
+            {% if panel_data.organization_rows %}
+              {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
+            {% else %}
+              <span class="wies-text-secondary">Geen organisatie opgegeven</span>
+            {% endif %}
+          {% elif row_kind == "period" %}
+            {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
+            {% include "forms/displays/assignment_period.html" %}
+          {% elif row_kind == "owner" %}
+            {% if panel_data.assignment.owner %}
+              {{ panel_data.assignment.owner.name }}
+            {% else %}
+              <span class="wies-text-secondary">Niet toegewezen</span>
+            {% endif %}
           {% endif %}
-        {% elif row_kind == "extra_info" %}
-          {# The textarea display keeps line breaks and truncates to "Toon meer". #}
-          {% with value = panel_data.assignment.extra_info %}
-            {% include "forms/displays/textarea.html" %}
-          {% endwith %}
-        {% elif row_kind == "organizations" %}
-          {# Only the first; any others get their own list-item below. #}
-          {% if panel_data.organization_rows %}
-            {{ render_org_line(panel_data.organization_rows[0], _base_url, panel_data.organization_rows|length > 1) }}
-          {% else %}
-            <span class="wies-text-secondary">Geen organisatie opgegeven</span>
-          {% endif %}
-        {% elif row_kind == "period" %}
-          {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
-          {% include "forms/displays/assignment_period.html" %}
-        {% elif row_kind == "owner" %}
-          {% if panel_data.assignment.owner %}
-            {{ panel_data.assignment.owner.name }}
-          {% else %}
-            <span class="wies-text-secondary">Niet toegewezen</span>
-          {% endif %}
-        {% endif %}
+        </p>
         </nldd-text-cell>
         {% if row_kind == "organizations" and panel_data.organization_rows %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -132,7 +131,7 @@
             {% set _ = _actions.append({"text": "Profiel bekijken", "icon": "user", "attrs": _profile_attrs}) %}
           {% endif %}
           {% if panel_data.assignment.owner.email %}
-            {% set _email_attrs = {"data-href": panel_data.owner_display.owner_mailto or ("mailto:" ~ panel_data.assignment.owner.email)} %}
+            {% set _email_attrs = {"href": panel_data.owner_display.owner_mailto or ("mailto:" ~ panel_data.assignment.owner.email)} %}
             {% set _ = _actions.append({"text": "E-mailen", "icon": "email", "attrs": _email_attrs}) %}
           {% endif %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
@@ -148,7 +147,7 @@
             <nldd-text-cell width="140px" text=""></nldd-text-cell>
             <nldd-spacer-cell size="8"></nldd-spacer-cell>
             <nldd-text-cell>
-            {{ render_org_line(org_row, _base_url, true) }}
+            <p>{{ render_org_line(org_row, _base_url, true) }}</p>
             </nldd-text-cell>
             <nldd-spacer-cell size="8"></nldd-spacer-cell>
             <nldd-cell>
@@ -161,7 +160,7 @@
     {% endfor %}
     </nldd-list>
     <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-    <nldd-title size="4">
+    <nldd-title size="display-4">
     <h2>Team</h2>
     </nldd-title>
     {% if panel_data.team_external_source %}

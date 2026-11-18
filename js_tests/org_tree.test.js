@@ -52,7 +52,7 @@ describe("OrgTree._buildRow", () => {
   it("starts a branch closed, so its chevron reports collapsed", () => {
     for (const selectable of [true, false]) {
       const row = tree(selectable)._buildRow(node("tak", [node("blad")]), 0);
-      assert.equal(row.expanded, false, `selectable=${selectable}`);
+      assert.ok(row.hasAttribute("expandable"), `selectable=${selectable}`);
       // Lazy: the children are not there yet.
       assert.equal(row.dataset.childrenBuilt, undefined);
     }
@@ -60,6 +60,6 @@ describe("OrgTree._buildRow", () => {
 
   it("leaves a leaf without an open/closed state", () => {
     const row = tree(true)._buildRow(node("blad"), 0);
-    assert.equal(row.expanded, undefined);
+    assert.ok(!row.hasAttribute("expandable"));
   });
 });

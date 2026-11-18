@@ -4,9 +4,7 @@ document.addEventListener("select", (e) => {
   const items = [
     ...document.querySelectorAll("nldd-menu-item[data-theme-choice]"),
   ];
-  const item = e
-    .composedPath()
-    .find((el) => el instanceof Element && items.includes(el));
+  const item = window.wiesClosestInPath(e, "nldd-menu-item[data-theme-choice]");
   if (!item) return;
 
   const choice = item.dataset.themeChoice;

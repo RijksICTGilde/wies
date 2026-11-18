@@ -6,6 +6,18 @@ This files lists the changes during the lifetime of this project.
 
 - 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
 - 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
+- 694: (accessibility) an error when editing "Opdrachtgever(s)" in place is tied to the picker button, so a screen reader announces it with the control; before, it belonged to no control
+
+## 2026-11-18
+
+- 843: replace custom JavaScript with NLDD's own components; the "Probeer het inloggen opnieuw" button on the login error page works again, and the opdrachtgever picker and filter get a back button when opened from another sheet
+- 842: upgrade NLDD design system from 0.21.1 to 0.25.0
+- 844: (internal) split `wies/core/views.py` into a `wies/core/views/` package with one module per domain; no change in behaviour
+- 851: (internal) clean up dependency directions: code outside `wies/core/views/` no longer imports from it, helpers shared across modules lose their underscore, and most function-local imports move to module level
+- 854: move generic helpers to services/urls.py; improve structure urls.py; add hardening on user provided values
+- 856: team member edit URLs say what they edit (`?bewerken=`/`?toevoegen=` on the panel you came from instead of `?opdracht=…&teamlid=…`); back and save from the role sheet on a colleague panel now return to that panel instead of the opdracht
+- 855: (internal) remove redundant `@login_required` decorators; `LoginRequiredMiddleware` already enforces login on every view
+- 858: (internal) one `resolve_side_panel` helper decides which side panel the URL opens, replacing four copies in the list, profile and bezetting views; `is_side_panel_request` is the single HX-Target check and only accepts `side-panel-content`
 
 ## 2026-11-11
 

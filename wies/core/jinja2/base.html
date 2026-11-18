@@ -36,7 +36,6 @@
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
     <script defer src="{{ app_asset('js/assignment_org_picker.js') }}"></script>
-    <script src="{{ app_asset('js/menu_nav.js') }}" defer></script>
     <script src="{{ app_asset('js/theme_menu.js') }}" defer></script>
     {# Not just behind show_onboarding: the "Toon meer" handler is delegated on
        document, and long texts also arrive in panels and the timeline via htmx
@@ -123,7 +122,7 @@
        page-title scale, which is too large here. nldd-title sets the size
        independently of the level, so the h2 stays an h2. #}
     <nldd-container>
-    <nldd-title size="4">
+    <nldd-title size="display-4">
     <h2>Over Wies</h2>
     </nldd-title>
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>

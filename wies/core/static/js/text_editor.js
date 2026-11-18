@@ -94,9 +94,10 @@
 
   // The other direction: a shortcut (Cmd+B) or a cursor move changes the
   // state, and the controls and their overflow twins follow.
-  document.addEventListener("nldd-text-editor-state", function (event) {
-    var wrap =
-      event.target.closest && event.target.closest("[data-text-editor]");
+  // "state-change" is a generic name, so only the editor's own counts.
+  document.addEventListener("state-change", function (event) {
+    if (event.target.localName !== "nldd-text-editor") return;
+    var wrap = event.target.closest("[data-text-editor]");
     if (!wrap) return;
     var active = event.detail.active;
     var list = listOf(active);

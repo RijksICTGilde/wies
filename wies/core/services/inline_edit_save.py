@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.inline_edit.base import EditableGroup
-from wies.core.inline_edit.forms import _current_value, resolve_editables, save_spec
+from wies.core.inline_edit.forms import current_value, resolve_editables, save_spec
 
 
 def save_edit_specs(request, specs, cleaned_data) -> bool:
@@ -25,14 +25,14 @@ def save_edit_specs(request, specs, cleaned_data) -> bool:
     for editable_set, spec, obj in specs:
         spec_editables = resolve_editables(editable_set, spec)
         if isinstance(spec, EditableGroup):
-            before = {e.name: _current_value(obj, e) for e in spec_editables}
+            before = {e.name: current_value(obj, e) for e in spec_editables}
         else:
-            before = _current_value(obj, spec)
+            before = current_value(obj, spec)
         save_spec(spec, spec_editables, cleaned_data, obj)
         if isinstance(spec, EditableGroup):
-            after = {e.name: _current_value(obj, e) for e in spec_editables}
+            after = {e.name: current_value(obj, e) for e in spec_editables}
         else:
-            after = _current_value(obj, spec)
+            after = current_value(obj, spec)
         changed = changed or (before != after)
         emit_inline_edit_audit_event(
             editable_set,

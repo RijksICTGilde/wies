@@ -5,8 +5,6 @@
 
   var INPUTS_ID = "assignment-org-inputs";
   var SELECTIONS_ID = "assignment-org-selections";
-  var SHEET_ID = "assignment-org-modal";
-  var SHEET_CONTAINER_ID = "assignment-org-modal-container";
   var PREFIX = "org";
 
   function cell(tag, attrs) {
@@ -181,9 +179,7 @@
 
   // Rows come from the hidden inputs, not from a captured array.
   document.addEventListener("select", function (e) {
-    var item = e.composedPath().find(function (el) {
-      return el instanceof Element && el.dataset && el.dataset.orgPickerAction;
-    });
+    var item = window.wiesClosestInPath(e, "[data-org-picker-action]");
     if (!item) return;
     var action = item.dataset.orgPickerAction;
     var nodeId = item.dataset.nodeId;
@@ -217,45 +213,11 @@
     renderSelection(rows);
   });
 
-  function openSheet() {
-    var sheet = document.getElementById(SHEET_ID);
-    if (!sheet) return;
-    // Inside another sheet the outer backdrop takes the opening click as a
-    // light-dismiss and the picker flashes shut; hoisting avoids the stacking.
-    if (sheet.closest("nldd-sheet") && sheet.parentElement !== document.body) {
-      document.body.appendChild(sheet);
-    }
-    sheet.show();
-  }
-
-  document.body.addEventListener("htmx:afterSettle", function (e) {
-    var target = e.detail && e.detail.target;
-    if (target && target.id === SHEET_CONTAINER_ID) {
-      openSheet();
-      return;
-    }
+  // dialog.js opens the picker sheet and drops it on close.
+  document.body.addEventListener("htmx:afterSettle", function () {
     wireTriggerButton();
     renderFromInputs();
   });
-
-  // Clear on close, so reopening fetches a fresh tree. A hoisted sheet is no
-  // longer in the mount, hence the two branches.
-  document.addEventListener(
-    "close",
-    function (e) {
-      var sheet = e.composedPath().find(function (el) {
-        return el instanceof Element && el.id === SHEET_ID;
-      });
-      if (!sheet) return;
-      if (sheet.parentElement === document.body) {
-        sheet.remove();
-      } else {
-        var container = document.getElementById(SHEET_CONTAINER_ID);
-        if (container) container.innerHTML = "";
-      }
-    },
-    true,
-  );
 
   wireTriggerButton();
   renderFromInputs();

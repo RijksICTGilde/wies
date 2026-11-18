@@ -788,7 +788,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = self.client.get(
             reverse("home") + f"?opdracht={self.external_assignment.public_id}",
-            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
         )
 
         assert response.status_code == 200
@@ -801,7 +801,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = self.client.get(
             reverse("home") + f"?opdracht={self.assignment.public_id}",
-            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
         )
 
         assert response.status_code == 200

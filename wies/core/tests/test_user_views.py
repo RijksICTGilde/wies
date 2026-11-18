@@ -469,6 +469,15 @@ class UserViewsTest(TestCase):
         assert created_event.object_id == user_id
         assert created_event.context["email"] == self.user1.email
 
+    def test_user_delete_modal_puts_the_actions_before_the_form(self):
+        # The NLDD button group hides every child of the dialog past the third.
+        self.client.force_login(self.auth_user)
+
+        response = self.client.get(reverse("user-delete", args=[self.user1.public_id]))
+
+        html = response.content.decode()
+        assert html.index("Verwijder gebruiker") < html.index('id="userDeleteForm"')
+
     def test_user_delete_records_the_roles_by_label(self):
         """The deleted user is gone, so the event is all that is left of their
         roles: it keeps the name they were called by, not the key."""
@@ -896,7 +905,7 @@ class UserImportTest(TestCase):
         content = response.content.decode()
         assert "Geen bestand geüpload" in content
 
-    @patch("wies.core.views.MAX_CSV_UPLOAD_BYTES", 10)
+    @patch("wies.core.views._common.MAX_CSV_UPLOAD_BYTES", 10)
     def test_import_rejects_oversized_file(self):
         """An upload above the size cap is rejected before it is read into
         memory (cap patched small here to avoid a real large file)."""

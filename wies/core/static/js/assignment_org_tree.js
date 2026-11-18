@@ -38,10 +38,6 @@
     });
     tree.render().bindSearch(searchInput);
 
-    // Above this many, the tokens push the CTA off-screen; the button's count
-    // says the same thing.
-    var MAX_VISIBLE_TOKENS = 6;
-
     // Group and self nodes carry no organisation, so they never reach the form;
     // groupSelectsChildren already moved a folder's selection onto its orgs.
     function selectedOrgs() {
@@ -68,22 +64,7 @@
       var rows = selectedOrgs();
       updateApplyLabel(rows);
       var box = document.getElementById("assignment-org-selection-tokens");
-      if (!box) return;
-      box.innerHTML = "";
-      box.hidden = rows.length === 0 || rows.length > MAX_VISIBLE_TOKENS;
-      if (box.hidden) return;
-      rows.forEach(function (row) {
-        var token = document.createElement("nldd-token");
-        token.setAttribute("control", "dismiss");
-        token.setAttribute("dismiss-text", "Verwijder " + row.label);
-        token.textContent = row.label;
-        token.addEventListener("dismiss", function () {
-          treeState.removeSelection(row.nodeId);
-          tree.sync();
-          rebuildSelectionList();
-        });
-        box.appendChild(token);
-      });
+      if (box) tree.renderTokens(box, rows, rebuildSelectionList);
     }
 
     // assignment_org_picker.js owns the formset inputs and listens for this

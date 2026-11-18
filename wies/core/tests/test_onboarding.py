@@ -7,6 +7,8 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.context_processors import onboarding
+from wies.core.editables.colleague import ColleagueEditables
+from wies.core.inline_edit.display import concurrency_token
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill
 from wies.core.tests.role_helpers import grant_consultant
 
@@ -115,11 +117,8 @@ class OnboardingLabelSaveTest(TestCase):
         return re.compile(r'name="_concurrency_token"\s+value="([^"]*)"')
 
     def _token_for(self, category_id):
-        from wies.core.editables.colleague import ColleagueEditables  # noqa: PLC0415 — test-local
-        from wies.core.views import _concurrency_token  # noqa: PLC0415 — avoids import cycle at module load
-
         spec = ColleagueEditables.resolve_dynamic(f"labels_{category_id}")
-        return _concurrency_token(ColleagueEditables, spec, self.colleague)
+        return concurrency_token(ColleagueEditables, spec, self.colleague)
 
     def _post_labels(self, category_id, label_id, token):
         url = reverse("inline-edit", args=["colleague", self.colleague.public_id, f"labels_{category_id}"])

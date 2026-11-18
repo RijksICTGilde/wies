@@ -6,6 +6,7 @@ Permissions live in ``wies/core/permissions.py``.
 import urllib.parse
 from types import SimpleNamespace
 
+from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.http import Http404
@@ -15,7 +16,7 @@ from django.utils import timezone
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
-from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
+from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Placement, Skill
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.dates import request_period_text
@@ -39,7 +40,7 @@ def _business_manager_queryset(assignment=None):
     return Colleague.objects.filter(in_group).distinct().order_by("name")
 
 
-def _owner_display_context(assignment, request) -> dict:
+def owner_display_context(assignment, request) -> dict:
     """Builds the link and mailto for the owner display partial.
 
     Derived only from ``assignment`` and ``request``, never the current page's GET
@@ -72,7 +73,7 @@ def _owner_display_context(assignment, request) -> dict:
     return {"owner_url": owner_url, "owner_mailto": owner_mailto}
 
 
-def _organizations_initial(assignment):
+def organizations_initial(assignment):
     return [
         {"organization": rel.organization, "role": rel.role}
         for rel in assignment.organization_relations.select_related(
@@ -119,8 +120,6 @@ def skill_choices():
 
 def _services_initial(assignment):
     """Returns one row per service, vacancies first."""
-    from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
-
     # One prefetch for the latest placement per service, instead of a query each.
     services = (
         assignment.services.select_related("skill")
@@ -154,7 +153,7 @@ def _services_initial(assignment):
         rows.append(
             {
                 # public_id strings: these identify the row across the client
-                # boundary (panel URLs, the hidden form inputs, the teamlid
+                # boundary (panel URLs, the hidden form inputs, the ?bewerken=
                 # resolver). The integer PK never leaves the server; the audit
                 # snapshot re-derives it from ``service`` below.
                 "service_public_id": str(service.public_id),
@@ -200,15 +199,15 @@ def visible_service_rows(assignment, request) -> list[dict]:
 
     ``panel_url`` is where the row leads: a placed row to the colleague panel
     with this opdracht unfolded, an aanvraag row to its own panel. ``edit_url``
-    opens the row's sheet for a team editor, ``own_edit_url`` the placed
-    viewer's Taken sheet.
+    opens the row's sheet: the member sheet for a team editor, the Taken sheet
+    for the placed viewer.
     """
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
 
     visible = []
     for row in _services_initial(assignment):
-        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], teamlid=row["service_public_id"])
+        row["edit_url"] = _panel_query(opdracht=row["assignment_public_id"], bewerken=row["service_public_id"])
         placement = row["placement"]
         if placement is None:  # vacancy → visible to everyone
             row["panel_url"] = _panel_query(aanvraag=row["service_public_id"])
@@ -217,11 +216,6 @@ def visible_service_rows(assignment, request) -> list[dict]:
             visible.append(row)
             continue
         row["panel_url"] = _panel_query(collega=placement.colleague.public_id, uitgeklapt=row["assignment_public_id"])
-        row["own_edit_url"] = _panel_query(
-            opdracht=row["assignment_public_id"],
-            collega=placement.colleague.public_id,
-            teamlid=row["service_public_id"],
-        )
         # Only the viewer's own row can qualify, so the rule (a query) runs for
         # that one and not for every member of the team.
         row["can_edit_role"] = (
@@ -262,7 +256,7 @@ def visible_service_or_404(assignment, request, service_public_id):
     """Resolves a team row through the viewer's filtered rows, so a hidden row
     is as unreachable for a mutation as it is for the sheet.
 
-    The GET sheet resolves ``?teamlid=`` against ``visible_service_rows``; the
+    The GET sheet resolves ``?bewerken=`` against ``visible_service_rows``; the
     edit/delete endpoints mutate the same row and must apply the same visibility
     gate, not just the UPDATE-permission gate (#655).
     """
@@ -317,8 +311,6 @@ def placement_audit_row(placement) -> dict:
     Lets a period edit made directly on a placement show on the assignment
     timeline, not only via "Team bewerken" (#393).
     """
-    from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
-
     service = placement.service
     return _service_audit_row(
         {
@@ -459,8 +451,6 @@ def _services_render_change(change: dict) -> dict:
 
 def _validate_period(cleaned):
     """Rejects an end date before the start date, across the period group."""
-    from django.core.exceptions import ValidationError  # noqa: PLC0415
-
     start, end = cleaned.get("start_date"), cleaned.get("end_date")
     if start and end and end < start:
         raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
@@ -506,7 +496,7 @@ class AssignmentEditables(EditableSet):
         error_messages={"required": "Selecteer een business manager."},
         audit_state=lambda c: c.name if c else None,
         display="forms/displays/assignment_owner.html",
-        display_context=_owner_display_context,
+        display_context=owner_display_context,
     )
 
     period = EditableGroup(
@@ -521,7 +511,7 @@ class AssignmentEditables(EditableSet):
         label="Opdrachtgever(s)",
         help_text="Minimaal 1 opdrachtgever.",
         form_field_factory=lambda: OrganizationsField(required=True),
-        initial=_organizations_initial,
+        initial=organizations_initial,
         save=_save_organizations,
         audit_state=_organizations_audit_state,
         render_change=_organizations_render_change,

@@ -398,6 +398,7 @@ class OidcCallbackErrorTest(TestCase):
         assert "inlogsessie is verlopen" not in body
         # Never a dead end: the user can always start the flow again themselves.
         assert "Probeer het inloggen opnieuw" in body
+        assert f'href="{reverse("login")}"' in body
 
     @patch("wies.rijksauth.views._get_oidc")
     def test_failure_without_an_oauth_error_code_also_gets_the_explanation_page(self, mock_get_oidc):

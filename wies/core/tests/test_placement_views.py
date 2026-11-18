@@ -28,11 +28,8 @@ from wies.core.models import (
 )
 from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
-from wies.core.views import (
-    PlacementListView,
-    _build_assignment_panel_data,
-    _get_colleague_assignments,
-)
+from wies.core.views.panels import build_assignment_panel_data, get_colleague_assignments
+from wies.core.views.placements import PlacementListView
 from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
@@ -128,7 +125,7 @@ class PlacementImportTest(TestCase):
         content = response.content.decode()
         assert "Ongeldig bestandstype" in content
 
-    @patch("wies.core.views.create_assignments_from_csv")
+    @patch("wies.core.views.assignments.create_assignments_from_csv")
     def test_import_successful_result_display(self, mock_create_placements):
         """Test that successful import displays correct result information"""
         # Mock the service function to return success
@@ -169,7 +166,7 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31
         call_args = mock_create_placements.call_args[0][1]
         assert "Test Assignment" in call_args
 
-    @patch("wies.core.views.create_assignments_from_csv")
+    @patch("wies.core.views.assignments.create_assignments_from_csv")
     def test_import_error_result_display(self, mock_create_placements):
         """Test that failed import displays error messages properly"""
         # Mock the service function to return failure
@@ -205,7 +202,7 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31
         # Verify the service function was called
         mock_create_placements.assert_called_once()
 
-    @patch("wies.core.views.create_assignments_from_csv")
+    @patch("wies.core.views.assignments.create_assignments_from_csv")
     def test_import_strips_utf8_bom(self, mock_create_placements):
         """Test that a UTF-8 BOM at the start of the file is stripped before parsing"""
         mock_create_placements.return_value = {
@@ -280,7 +277,7 @@ class PlacementListHistoricalFilterTest(TestCase):
             source="wies",
         )
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_historical_placements_excluded(self, mock_timezone):
         """Test that placements ending before today are excluded from list"""
         # Mock today as 2024-06-15
@@ -302,7 +299,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement is NOT in queryset
         assert placement not in qs, "Historical placement should be excluded"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_current_placements_included(self, mock_timezone):
         """Test that placements ending today are included (boundary test)"""
         # Mock today as 2024-06-15
@@ -325,7 +322,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement IS in queryset
         assert placement in qs, "Placement ending today should be included"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_future_placements_included(self, mock_timezone):
         """Test that placements ending in the future are included"""
         # Mock today as 2024-06-15
@@ -348,7 +345,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement IS in queryset
         assert placement in qs, "Future placement should be included"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_hierarchical_date_inheritance_service_level(self, mock_timezone):
         """Test that filtering uses service dates when period_source='SERVICE'"""
         # Mock today as 2024-06-15
@@ -389,7 +386,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement is NOT in queryset (service ended yesterday)
         assert placement not in qs, "Placement with service ending yesterday should be excluded"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_hierarchical_date_inheritance_assignment_level(self, mock_timezone):
         """Test that filtering uses assignment dates when service uses period_source='ASSIGNMENT'"""
         # Mock today as 2024-06-15
@@ -663,11 +660,9 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         assert rows[0]["period_label"] is None
         assert rows[0]["privacy_warning_text"] == PRIVACY_BM
 
-    @patch("wies.core.views.timezone")
     @patch("wies.core.editables.assignment.timezone")
-    def test_team_count_excludes_hidden_placement(self, mock_ed_tz, mock_views_tz):
-        for m in (mock_ed_tz, mock_views_tz):
-            m.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+    def test_team_count_excludes_hidden_placement(self, mock_ed_tz):
+        mock_ed_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         assignment = Assignment.objects.create(name="Mixed", source="wies", owner=self.colleague_bob)
         active = Service.objects.create(assignment=assignment, description="a", skill=self.skill, source="wies")
         ended = Service.objects.create(
@@ -690,8 +685,8 @@ class AssignmentServicesFutureAndCountTest(TestCase):
             source="wies",
         )
 
-        unrelated = _build_assignment_panel_data(assignment, self._request(self.user_unrelated))
-        business_manager = _build_assignment_panel_data(assignment, self._request(self.user_bdm))
+        unrelated = build_assignment_panel_data(assignment, self._request(self.user_unrelated))
+        business_manager = build_assignment_panel_data(assignment, self._request(self.user_bdm))
 
         assert len(unrelated["team_rows"]) == 1, "hidden ended placement must not be listed"
         assert len(business_manager["team_rows"]) == 2, "Business Manager sees both"
@@ -789,7 +784,7 @@ class PlacementPanelVisibilityTest(TestCase):
 
 
 class OwnRoleSheetPermissionTest(TestCase):
-    """``?opdracht=&teamlid=`` opens the right sheet for who asks.
+    """``?opdracht=&bewerken=<service>`` opens the right sheet for who asks.
 
     A placed colleague may edit their own role description but not the role,
     hours or period, so their row opens "Taken wijzigen" with the role
@@ -824,10 +819,10 @@ class OwnRoleSheetPermissionTest(TestCase):
 
     def _sheet(self, user, pl):
         self.client.force_login(user)
-        url = reverse("home") + f"?opdracht={pl.service.assignment.public_id}&teamlid={pl.service.public_id}"
+        url = reverse("home") + f"?opdracht={pl.service.assignment.public_id}&bewerken={pl.service.public_id}"
         return self.client.get(url, headers=self.HX)
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_own_row_opens_the_description_sheet_with_the_role_read_only(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         # Bob owns the assignment; Alice is only the placed colleague.
@@ -844,7 +839,7 @@ class OwnRoleSheetPermissionTest(TestCase):
         # The back button leads to the opdracht panel, not to a person.
         assert 'back-text="Test"' in body
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_owner_gets_the_full_member_form(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         # Bob owns the assignment and holds the Business Manager role, so he may edit every
@@ -857,7 +852,7 @@ class OwnRoleSheetPermissionTest(TestCase):
         assert "Teamlid wijzigen" in body
         assert "Taken wijzigen" not in body
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_own_row_menu_says_mijn(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         grant_business_manager(self.user_bob)
@@ -879,7 +874,7 @@ class OwnRoleSheetPermissionTest(TestCase):
         assert "Profiel bekijken" in bob
         assert "Mijn" not in bob
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_a_row_without_actions_is_one_link_to_the_person_with_a_chevron(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         grant_business_manager(self.user_bob)
@@ -909,7 +904,7 @@ class OwnRoleSheetPermissionTest(TestCase):
         assert "Acties voor Alice" in bob
         assert 'icon="chevron-right"' not in bob
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_someone_elses_row_stays_the_read_only_panel(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(owner=self.colleague_bob)
@@ -960,38 +955,38 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
             source="wies",
         )
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_future_placement_visible_on_own_profile(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.user_alice), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
         assert historical[0]["period_label"] is None
         assert historical[0]["privacy_warning_text"] == PRIVACY_OWN
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_future_placement_visible_to_bdm_on_other_profile(self, mock_tz):
         # A Business Manager (Business Manager role) viewing an unrelated colleague's profile
         # still sees the future placement, with the Business Manager note.
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(self._request(self.user_bdm), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.user_bdm), self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
         assert historical[0]["period_label"] is None
         assert historical[0]["privacy_warning_text"] == PRIVACY_BM
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_future_placement_hidden_from_unrelated_profile_viewer(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         self._future_placement_for_alice()
 
-        assignments = _get_colleague_assignments(self._request(self.user_unrelated), self.colleague_alice)
+        assignments = get_colleague_assignments(self._request(self.user_unrelated), self.colleague_alice)
 
         assert assignments == []
 
@@ -1110,25 +1105,25 @@ class PlacementListFutureVisibilityTest(TestCase):
         view.request = request
         return view.get_queryset()
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_unrelated(self, mock_tz):
         pl = self._future_placement(owner=self.colleague_bob)
         assert pl not in self._queryset_as(self.user_unrelated, mock_tz)
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_user_without_colleague(self, mock_tz):
         pl = self._future_placement(owner=self.colleague_bob)
         user = User.objects.create_user(email="admin@rijksoverheid.nl")
         assert pl not in self._queryset_as(user, mock_tz)
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_placed_colleague(self, mock_tz):
         # The list is active-only: even the placed colleague does not see their
         # own planned placement here (they see it on their profile instead).
         pl = self._future_placement(owner=self.colleague_bob)
         assert pl not in self._queryset_as(self.user_alice, mock_tz)
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_bdm(self, mock_tz):
         # Likewise a Business Manager (the role that sees planned placements elsewhere):
         # planned placements do not appear on the list.
@@ -1136,7 +1131,7 @@ class PlacementListFutureVisibilityTest(TestCase):
         pl = self._future_placement(owner=self.colleague_bob)
         assert pl not in self._queryset_as(self.user_bob, mock_tz)
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_active_placement_visible_to_unrelated(self, mock_tz):
         assignment = Assignment.objects.create(name="Active", source="wies", owner=self.colleague_bob)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -1203,7 +1198,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         # Create test skill
         self.skill = Skill.objects.create(name="Python Developer")
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_colleague_panel_excludes_historical_placements(self, mock_timezone):
         """Test that colleague panel filters out placements ending before today"""
         # Mock today as 2024-06-15
@@ -1255,7 +1250,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        assignments = _get_colleague_assignments(request, self.colleague)
+        assignments = get_colleague_assignments(request, self.colleague)
 
         # Verify only current assignment is in active list
         active = [a for a in assignments if not a["historical"]]
@@ -1264,7 +1259,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         assert assignment_b.id in active_ids, "Current assignment should be in panel"
         assert assignment_a.id not in active_ids, "Historical assignment should be excluded"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_colleague_panel_includes_current_placements(self, mock_timezone):
         """Test that colleague panel includes placements ending today (boundary test)"""
         # Mock today as 2024-06-15
@@ -1296,7 +1291,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        assignments = _get_colleague_assignments(request, self.colleague)
+        assignments = get_colleague_assignments(request, self.colleague)
 
         # Verify assignment ending today is included
         active = [a for a in assignments if not a["historical"]]
@@ -1353,7 +1348,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         request.user = user
         return request
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_historical_assignments_visible_to_colleague_themselves(self, mock_timezone):
         """Colleague sees their own historical assignments in their panel."""
         mock_now = Mock()
@@ -1372,13 +1367,13 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_historical_assignments_visible_to_bdm(self, mock_timezone):
         """A Business Manager (Business Manager role) sees historical placements of colleagues."""
         mock_now = Mock()
@@ -1401,13 +1396,13 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bdm)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_historical_assignments_hidden_from_unrelated_user(self, mock_timezone):
         """Unrelated user must NOT see historical assignments."""
         mock_now = Mock()
@@ -1430,12 +1425,12 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == []
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_historical_and_current_assignments_separated(self, mock_timezone):
         """Current assignments are not historical, historical ones are flagged."""
         mock_now = Mock()
@@ -1469,7 +1464,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         active = [a for a in assignments if not a["historical"]]
         historical = [a for a in assignments if a["historical"]]
@@ -1481,7 +1476,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         assert old_assignment.id in historical_ids
         assert current_assignment.id not in historical_ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_ended_bm_assignments_hidden_from_unrelated_user(self, mock_timezone):
         """Unrelated user must NOT see ended BM assignments in historical list."""
         mock_now = Mock()
@@ -1498,12 +1493,12 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], "Unrelated user should not see ended BM assignments"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_no_crash_for_user_without_colleague(self, mock_timezone):
         """User without a linked Colleague must not crash and must not see historical data."""
         mock_now = Mock()
@@ -1531,12 +1526,12 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(user_no_colleague)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], "User without colleague should not see historical assignments"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_active_placements_visible_to_unrelated_user(self, mock_timezone):
         """Unrelated user can see active placements (no over-filtering)."""
         mock_now = Mock()
@@ -1560,13 +1555,13 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         active = [a for a in assignments if not a["historical"]]
         active_ids = [a["id"] for a in active]
         assert assignment.id in active_ids, "Unrelated user should see active assignments"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_bm_sees_own_ended_placement_on_own_assignment(self, mock_timezone):
         """An owner who is also the placed colleague sees their ended placement.
 
@@ -1597,13 +1592,13 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids, "Placed colleague should see their own ended placement"
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_other_bm_cannot_see_ended_bm_assignments(self, mock_timezone):
         """A non-Business-Manager owner of a different assignment sees no ended BM assignments.
 
@@ -1631,21 +1626,21 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert historical == [], (
             "Non-Business Manager owner of a different assignment should not see ended BM assignments"
         )
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_ended_bm_role_shown_to_bdm_with_note(self, mock_timezone):
         """An ended assignment owned by a colleague (but with no placement on it)
         is surfaced on that colleague's profile only to a Business Manager, with
         the PRIVACY_BM_OWNED note.
 
         This is the role branch of ``evaluate_assignment_visibility``, reached from
-        ``_get_colleague_assignments``: a separate path from the placement-based
+        ``get_colleague_assignments``: a separate path from the placement-based
         PRIVACY_OWN/PRIVACY_BM rule, and its own note, because no consultant is
         placed on the row and "de consultant" would not fit.
         """
@@ -1665,14 +1660,14 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
 
         # A Business Manager viewer (not the owner) sees it on Alice's profile.
         request = self._make_request(self.user_bdm)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         entry = next((a for a in historical if a["id"] == assignment.id), None)
         assert entry is not None, "Business Manager should see the ended BM assignment"
         assert entry["privacy_warning_text"] == PRIVACY_BM_OWNED
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.panels.timezone")
     def test_ended_bm_role_hidden_from_non_bdm_owner(self, mock_timezone):
         """The owner viewing their OWN profile does not see their ended owned
         assignment without the Business Manager role: the gate is the role, not
@@ -1690,7 +1685,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        assignments = _get_colleague_assignments(request, self.colleague_alice)
+        assignments = get_colleague_assignments(request, self.colleague_alice)
 
         historical = [a for a in assignments if a["historical"]]
         assert next((a for a in historical if a["id"] == assignment.id), None) is None, (
@@ -2082,7 +2077,7 @@ class PlacementLooptAfFilterTest(TestCase):
         view.request = request
         return set(view.get_queryset().values_list("id", flat=True))
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_loopt_af_3m(self, mock_timezone):
         mock_now = Mock()
         mock_now.date.return_value = date(2026, 1, 1)
@@ -2097,7 +2092,7 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_later.id not in ids
         assert p_far.id not in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_loopt_af_6m(self, mock_timezone):
         mock_now = Mock()
         mock_now.date.return_value = date(2026, 1, 1)
@@ -2112,7 +2107,7 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_later.id in ids
         assert p_far.id not in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_loopt_af_beyond_6m(self, mock_timezone):
         mock_now = Mock()
         mock_now.date.return_value = date(2026, 1, 1)
@@ -2125,7 +2120,7 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_soon.id not in ids
         assert p_far.id in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_loopt_af_combined_3m_and_beyond(self, mock_timezone):
         """Selecting both 3m and 6m+ returns union: <=91 days OR >182 days."""
         mock_now = Mock()
@@ -2141,7 +2136,7 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_mid.id not in ids
         assert p_far.id in ids
 
-    @patch("wies.core.views.timezone")
+    @patch("wies.core.views.placements.timezone")
     def test_no_loopt_af_returns_all(self, mock_timezone):
         mock_now = Mock()
         mock_now.date.return_value = date(2026, 1, 1)
@@ -2834,7 +2829,7 @@ class PanelTeamPrivacyEndToEndTest(TestCase):
     Only the placement panel enforces a per-object visibility rule; the
     assignment (``?opdracht=``) and colleague (``?collega=``) panels are
     reachable by any authenticated user and rely on ``visible_service_rows`` /
-    ``_get_colleague_assignments`` to strip hidden members downstream. These
+    ``get_colleague_assignments`` to strip hidden members downstream. These
     tests drive the real request stack (not just the data builders) to confirm a
     hidden (ended or future) teammate's name never reaches an outsider's panel,
     while an active teammate on the same assignment still does.

@@ -4,7 +4,7 @@
 <div id="onboarding-assignment-{{ assignment.public_id }}">
   <nldd-box>
   <nldd-container padding="16">
-  <nldd-title size="5">
+  <nldd-title size="display-5">
   <h4>{{ assignment.name }}</h4>
   </nldd-title>
   <nldd-spacer size="4" direction="vertical"></nldd-spacer>
@@ -17,21 +17,27 @@
     <nldd-text-cell width="120px" text="Omschrijving"></nldd-text-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-text-cell>
-    {% with value = assignment.extra_info %}
-      {% include "forms/displays/textarea.html" %}
-    {% endwith %}
+    <p>
+      {% with value = assignment.extra_info %}
+        {% include "forms/displays/textarea.html" %}
+      {% endwith %}
+    </p>
     </nldd-text-cell>
     </nldd-list-item>
   {% endif %}
   <nldd-list-item>
   <nldd-text-cell width="120px" text="{{ 'Opdrachtgevers' if assignment.organization_relations.count() > 1 else 'Opdrachtgever' }}"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell>{{ inline_edit(assignment, "organizations", hide_edit_button=True, external_source=None, plain=True) }}</nldd-text-cell>
+  <nldd-cell width="full">
+  <div class="wies-cell-text">{{ inline_edit(assignment, "organizations", hide_edit_button=True, external_source=None, plain=True) }}</div>
+  </nldd-cell>
   </nldd-list-item>
   <nldd-list-item>
   <nldd-text-cell width="120px" text="Periode"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell>{{ inline_edit(assignment, "period", hide_edit_button=True, external_source=None) }}</nldd-text-cell>
+  <nldd-cell width="full">
+  <div class="wies-cell-text">{{ inline_edit(assignment, "period", hide_edit_button=True, external_source=None) }}</div>
+  </nldd-cell>
   </nldd-list-item>
   {% for service in entry.services %}
     <nldd-list-item>

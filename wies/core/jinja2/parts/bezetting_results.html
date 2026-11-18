@@ -33,7 +33,7 @@
          itself carries the accessible label and its pressed state. #}
     <span class="bezetting-stat__chevron assignment-card__chevron"
           aria-hidden="true">
-      <nldd-icon size="20" icon="chevron-right"></nldd-icon>
+      <nldd-icon size="20" icon="chevron-right" color="secondary"></nldd-icon>
     </span>
     </nldd-container>
     </nldd-card>
@@ -48,7 +48,7 @@
 
    The toolbar itself holds what must survive any width: the Filters button, with
    an nldd-menu-item twin for the overflow menu. The menu shows a CLONE of the
-   twin and reports back as `select` on the original, so user_filter.js listens
+   twin and reports back as `select` on the original, so dialog.js listens
    for that too. #}
 <div class="bezetting-toolbar-row">
   <ul class="bezetting-toolbar__stats"
@@ -76,8 +76,8 @@
   {# Lower priority than the search field, so it clears first: the cards are a
      shortcut, this is the way to every filter. #}
   <nldd-toolbar-item slot="end" priority="3">
-  <nldd-button id="user-filter-button" appearance="secondary" start-icon="filter" text="Filters" data-user-filter-open></nldd-button>
-  <nldd-menu-item slot="overflow" icon="filter" text="Filters" data-user-filter-open></nldd-menu-item>
+  <nldd-button id="user-filter-button" appearance="secondary" start-icon="filter" text="Filters" data-open-sheet="user-filter-sheet"></nldd-button>
+  <nldd-menu-item slot="overflow" icon="filter" text="Filters" data-open-sheet="user-filter-sheet"></nldd-menu-item>
   </nldd-toolbar-item>
   {# The same create action as on Aanvragen, with its menu twin. #}
   {% if primary_button %}

@@ -16,7 +16,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_top_org_options
-from wies.core.views import PlacementListView
+from wies.core.views.placements import PlacementListView
 
 User = get_user_model()
 

@@ -165,11 +165,6 @@
     titleBar.addEventListener("dismiss", complete);
   }
 
-  wizard.addEventListener("close", function (e) {
-    if (e.target !== wizard) return;
-    document.documentElement.style.overflow = "";
-  });
-
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.target === detail && detail.innerHTML.trim()) showDetail(true);
   });
@@ -181,10 +176,8 @@
 
   document.body.addEventListener("closeOnboarding", function () {
     if (wizard.hide) wizard.hide();
-    document.documentElement.style.overflow = "";
   });
 
   show(1);
   wizard.show();
-  document.documentElement.style.overflow = "hidden";
 })();

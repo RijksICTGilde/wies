@@ -41,7 +41,8 @@ from wies.core.services.occupancy import (
     timeline_horizon,
     today_marker_pct,
 )
-from wies.core.views import BEZETTING_PAGE_SIZE, _get_colleague_assignments
+from wies.core.views.bezetting import BEZETTING_PAGE_SIZE
+from wies.core.views.panels import get_colleague_assignments
 
 User = get_user_model()
 
@@ -879,7 +880,7 @@ class BezettingFilterChipTest(TestCase):
 
     def test_filters_button_has_an_overflow_twin(self):
         content = self.client.get(self.url).content.decode()
-        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-user-filter-open', content)
+        assert re.search(r'<nldd-menu-item slot="overflow"[^>]*data-open-sheet="user-filter-sheet"', content)
 
     def test_bm_gets_the_create_action_with_its_overflow_twin(self):
         """Same button and same ?nieuwe-opdracht panel as the Aanvragen list."""
@@ -1381,7 +1382,7 @@ class PlacementOrderTest(TestCase):
     def test_panel_order(self):
         request = RequestFactory().get("/")
         request.user = self.bdm
-        names = [a["name"] for a in _get_colleague_assignments(request, self.colleague)]
+        names = [a["name"] for a in get_colleague_assignments(request, self.colleague)]
         assert names == ["Lopend oud", "Lopend nieuw", "Gepland", "Afgerond"]
 
     def test_panel_and_timeline_agree(self):
