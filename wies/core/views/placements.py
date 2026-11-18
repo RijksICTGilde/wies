@@ -63,7 +63,7 @@ from wies.core.visibility_rules import (
 )
 
 from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request, sort_control_context
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     build_placement_edit_panel_data,
     resolve_side_panel,
@@ -538,6 +538,8 @@ class PlacementOverviewView(View):
     }
 
     def get(self, request, *args, **kwargs):
+        if is_filter_modal_request(request):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))
         context = self.get_context_data()
         return TemplateResponse(request, self.get_template_names(), context)
 
@@ -562,8 +564,6 @@ class PlacementOverviewView(View):
     def get_template_names(self):
         """Returns the template for this request type."""
         if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
             if is_side_panel_request(self.request):
                 # panel_data picks its own template (e.g. the edit child sheet);
                 # get_context_data has already stored it.
@@ -587,53 +587,8 @@ class PlacementOverviewView(View):
             return rebuild_url(reverse("home"), self.request.GET, drop=(*dropped, "weergave"))
         return rebuild_url(reverse("home"), self.request.GET, drop=dropped, weergave=value)
 
-    def get_context_data(self) -> dict:
-        """The page of cards, the weergave toggle, the sort control and the filter sidebar."""
-        overview = self.overview
-        filters = self.filters
-        active_view = self.active_view
-
-        # get_page clamps a page number that is out of range or no number at all.
-        paginator = Paginator(overview.page_queryset(), self.paginate_by)
-        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
-        context = {
-            "paginator": paginator,
-            "page_obj": page,
-            "cards": overview.cards(list(page.object_list)),
-            "render_filter_fields_oob": "HX-Request" in self.request.headers,
-            "active_view": active_view,
-            # The template compares against it rather than hardcoding the name, so
-            # changing the default does not silently break the hidden field.
-            "default_view": self.VIEW_DEFAULT,
-        }
-        context["view_options"] = [
-            {
-                **option,
-                "url": self._view_url(option["value"]),
-                "selected": option["value"] == active_view,
-                "count": paginator.count
-                if option["value"] == active_view
-                else self.OVERVIEWS[option["value"]](filters).listed().count(),
-            }
-            for option in self.VIEW_OPTIONS
-        ]
-
-        context["result_announcement"] = _count_label(paginator.count, *overview.COUNT_NOUNS)
-        context["empty_text"] = overview.EMPTY_TEXT
-        context["missing_opdrachten_cookie"] = self.MISSING_OPDRACHTEN_COOKIE
-        context["show_missing_opdrachten_banner"] = self.MISSING_OPDRACHTEN_COOKIE not in self.request.COOKIES
-
-        context.update(
-            sort_control_context(
-                overview.order,
-                [(value, self.SORT_LABELS[value]) for value in overview.SORT_OPTIONS],
-                overview.DEFAULT_SORT_LABEL,
-            )
-        )
-
-        context["filter_target_url"] = reverse("home")
-        context["search_filter"] = self.request.GET.get("zoek")
-
+    def _active_filters(self) -> dict:
+        """The selected values per filter, opdrachtgever aside (``add_org_filter_context`` adds it)."""
         active_filters: dict = {}
 
         loopt_af_values = set(self.request.GET.getlist("loopt_af"))
@@ -642,21 +597,26 @@ class PlacementOverviewView(View):
 
         # Multi-select facets carry public_ids. A value that resolves to nothing
         # still counts, so an empty list always comes with a way to clear it.
-        rol_filter = filters.facets("rol", Skill).active_values
+        rol_filter = self.filters.facets("rol", Skill).active_values
         if rol_filter:
             active_filters["rol"] = rol_filter
 
-        label_filter = filters.facets("labels", Label).active_values
+        label_filter = self.filters.facets("labels", Label).active_values
         if label_filter:
             active_filters["labels"] = label_filter
 
-        suborganization_filter = filters.facets("onderdeel", Suborganization).active_values
+        suborganization_filter = self.filters.facets("onderdeel", Suborganization).active_values
         if suborganization_filter:
             active_filters["onderdeel"] = suborganization_filter
+        return active_filters
 
-        # Organization filter (multi-select via modal)
-        filters.add_org_filter_context(context, active_filters)
-        filters.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "onderdeel": Suborganization})
+    def _filter_groups(self, active_filters: dict) -> list[dict]:
+        """The sidebar's filter groups, each option with the cards it would leave.
+
+        The "Meer..." sheet needs nothing else, so it is built from these alone.
+        """
+        overview = self.overview
+        filters = self.filters
 
         # Each filter category counts the cards under every filter except its own.
         label_filter_groups = []
@@ -726,13 +686,9 @@ class PlacementOverviewView(View):
 
         org_counts = overview.org_counts()
 
-        context["active_filters"] = active_filters
-        context["active_filter_count"] = len(active_filters)
-        context["client_modal_count_mode"] = "placements"
-
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
-        context["filter_groups"] = [
+        filter_groups = [
             {
                 "type": "modal",
                 "name": "organisatie",
@@ -759,11 +715,67 @@ class PlacementOverviewView(View):
                 "name": "loopt_af",
                 "label": "Loopt af",
                 "options": overview.loopt_af_options(),
-                "selected_values": list(loopt_af_values),
+                "selected_values": list(active_filters.get("loopt_af", [])),
             },
         ]
-        finalize_filter_groups(context["filter_groups"])
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
+        finalize_filter_groups(filter_groups)
+        return filter_groups
+
+    def get_context_data(self) -> dict:
+        """The page of cards, the weergave toggle, the sort control and the filter sidebar."""
+        overview = self.overview
+        filters = self.filters
+        active_view = self.active_view
+
+        # get_page clamps a page number that is out of range or no number at all.
+        paginator = Paginator(overview.page_queryset(), self.paginate_by)
+        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
+        context = {
+            "paginator": paginator,
+            "page_obj": page,
+            "cards": overview.cards(list(page.object_list)),
+            "render_filter_fields_oob": "HX-Request" in self.request.headers,
+            "active_view": active_view,
+            # The template compares against it rather than hardcoding the name, so
+            # changing the default does not silently break the hidden field.
+            "default_view": self.VIEW_DEFAULT,
+        }
+        context["view_options"] = [
+            {
+                **option,
+                "url": self._view_url(option["value"]),
+                "selected": option["value"] == active_view,
+                "count": paginator.count
+                if option["value"] == active_view
+                else self.OVERVIEWS[option["value"]](filters).listed().count(),
+            }
+            for option in self.VIEW_OPTIONS
+        ]
+
+        context["result_announcement"] = _count_label(paginator.count, *overview.COUNT_NOUNS)
+        context["empty_text"] = overview.EMPTY_TEXT
+        context["missing_opdrachten_cookie"] = self.MISSING_OPDRACHTEN_COOKIE
+        context["show_missing_opdrachten_banner"] = self.MISSING_OPDRACHTEN_COOKIE not in self.request.COOKIES
+
+        context.update(
+            sort_control_context(
+                overview.order,
+                [(value, self.SORT_LABELS[value]) for value in overview.SORT_OPTIONS],
+                overview.DEFAULT_SORT_LABEL,
+            )
+        )
+
+        context["filter_target_url"] = reverse("home")
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        active_filters = self._active_filters()
+        context["filter_groups"] = self._filter_groups(active_filters)
+        # Organization filter (multi-select via modal)
+        filters.add_org_filter_context(context, active_filters)
+        filters.add_unknown_filter_chips(context, {"rol": Skill, "labels": Label, "onderdeel": Suborganization})
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
+        context["client_modal_count_mode"] = "placements"
 
         # Build next page URL with all current filters
         if page.has_next():

@@ -56,7 +56,7 @@ from wies.core.services.users import (
 )
 
 from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 
 User = get_user_model()
 
@@ -149,25 +149,13 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             return User.objects.none()
         return self._apply_filters(self._get_base_queryset()).distinct()
 
-    def get_template_names(self):
-        """Returns the template for this request type."""
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/user_table_rows.html"]
-            # Filter change: replace the result list (the sheet swaps OOB).
-            return ["parts/user_results.html"]
-        return ["user_admin.html"]
+    def get(self, request, *args, **kwargs):
+        if is_filter_modal_request(request):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        return super().get(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        """Adds the dynamic filter options."""
-        context = super().get_context_data(**kwargs)
-
-        context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op naam of email..."
-        context["search_filter"] = self.request.GET.get("zoek")
-
+    def _active_filters(self) -> dict:
+        """The selected values per filter."""
         active_filters = {}
 
         # label filter supports multi-select (values are label public_ids)
@@ -185,10 +173,13 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             # value, and a string would be walked character by character — which
             # silently matches nothing once a Group pk hits two digits.
             active_filters["rol"] = [self.role_filter]
+        return active_filters
 
-        # Chips render in user_results.html: the filter panel is a sheet here, so
-        # nothing outside it would otherwise say WHAT is filtered.
+    def _filter_groups(self, active_filters: dict) -> list[dict]:
+        """The sheet's filter groups, each option with the users it would leave.
 
+        The "Meer..." sheet needs nothing else, so it is built from these alone.
+        """
         # For each label category, count on a queryset excluding that category's filter.
         base_qs = self._get_base_queryset()
 
@@ -277,19 +268,40 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             "selected_values": role_selected_values,
         }
 
-        context["active_filters"] = active_filters
-        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
-        context["filter_target_url"] = reverse("admin-users")
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
-
-        context["filter_groups"] = [
+        filter_groups = [
             role_filter_group,
             *label_filter_groups,
             suborganization_filter_group,
         ]
         # Adds top_options + has_more per select-multi group, so the filter sheet
         # shows a top-3 with a "Meer..." toggle like the other lists.
-        finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(filter_groups)
+        return filter_groups
+
+    def get_template_names(self):
+        """Returns the template for this request type."""
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["parts/user_table_rows.html"]
+            # Filter change: replace the result list (the sheet swaps OOB).
+            return ["parts/user_results.html"]
+        return ["user_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        """Adds the dynamic filter options."""
+        context = super().get_context_data(**kwargs)
+
+        context["search_field"] = "zoek"
+        context["search_placeholder"] = "Zoek op naam of email..."
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        # Chips render in user_results.html: the filter panel is a sheet here, so
+        # nothing outside it would otherwise say WHAT is filtered.
+        active_filters = self._active_filters()
+        context["active_filters"] = active_filters
+        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
+        context["filter_target_url"] = reverse("admin-users")
+        context["filter_groups"] = self._filter_groups(active_filters)
 
         context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
         context.update(

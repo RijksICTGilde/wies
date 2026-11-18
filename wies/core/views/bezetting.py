@@ -32,7 +32,7 @@ from wies.core.services.occupancy import (
 from wies.core.services.urls import PAGE_PARAM, rebuild_url
 
 from ._common import PANEL_PARAMS, build_panel_url, is_side_panel_request
-from .filters import finalize_filter_groups
+from .filters import filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     assignment_create_button,
     resolve_side_panel,
@@ -107,6 +107,16 @@ def bezetting(request):
     labels_by_cat = labels_by_category(labels.ids)
     search = request.GET.get("zoek", "").strip()
 
+    # Filter sheet: one select-multi group per facet, with cross-filtered counts,
+    # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
+    # everyone on this page is a consultant.
+    filter_groups = bezetting_filter_groups(suborganization_facet, labels, labels_by_cat)
+    finalize_filter_groups(filter_groups)
+    # The "Meer…" sheet (shared with the user list) needs only these groups: it
+    # returns before the occupancy rows are built. Status has no "Meer…".
+    if is_filter_modal_request(request):
+        return filter_modal_response(request, filter_groups)
+
     rows = colleague_occupancy(
         today, suborganization_ids=suborganization_facet.ids, labels_by_category=labels_by_cat, search=search
     )
@@ -124,14 +134,9 @@ def bezetting(request):
     if selected_statuses:
         rows = [r for r in rows if any(row_has_status(r, s) for s in selected_statuses)]
 
-    # Filter sheet: one select-multi group per facet, with cross-filtered counts,
-    # driving the shared filter panel (parts/filter_sidebar.html). No "Rol" group —
-    # everyone on this page is a consultant.
-    filter_groups = bezetting_filter_groups(suborganization_facet, labels, labels_by_cat)
     # Status also lives in the sheet, not only on the cards: on a narrow window
     # the cards are hidden, and a filter you cannot reach is a filter you cannot
     # switch off.
-    finalize_filter_groups(filter_groups)
     filter_groups.insert(0, _bezetting_status_group(selected_statuses, summary))
 
     active_filters = {}
@@ -165,16 +170,12 @@ def bezetting(request):
         "filter_groups": filter_groups,
         "active_filters": active_filters,
         "filter_target_url": reverse("bezetting"),
-        "filter_modal_group_id": request.GET.get("filter_modal", ""),
         "primary_button": assignment_create_button(request),
     }
 
     # HTMX filter change: return just the results block; the filter sheet swaps
-    # back OOB (see parts/bezetting_results.html). The "Meer…" sheet reuses the
-    # shared template, exactly like the user list.
+    # back OOB (see parts/bezetting_results.html).
     if "HX-Request" in request.headers:
-        if request.GET.get("filter_modal"):
-            return render(request, "parts/filter_options_modal.html", context)
         # "Meer tonen" replaces itself with the next page of rows.
         if request.GET.get("pagina"):
             return render(request, "parts/bezetting_rows.html", context)

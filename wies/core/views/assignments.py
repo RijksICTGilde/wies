@@ -73,7 +73,7 @@ from ._common import (
     is_side_panel_request,
     page_url_behind_panel,
 )
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     assignment_create_button,
     build_assignment_create_panel_data,
@@ -240,32 +240,13 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
             text += f" en {without} {'opdracht' if without == 1 else 'opdrachten'} zonder aanvraag"
         return text
 
-    def get_template_names(self):
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if is_side_panel_request(self.request):
-                # See PlacementOverviewView.get_template_names.
-                panel_data = getattr(self, "_panel_data", None)
-                if panel_data:
-                    return [panel_data["panel_content_template"]]
-                return ["parts/assignment_panel_content.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/aanvraag_card_rows.html"]
-            return ["parts/filter_and_card_container_assignments.html"]
-        return ["assignments.html"]
+    def get(self, request, *args, **kwargs):
+        if is_filter_modal_request(request):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        return super().get(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
-
-        context["object_list"] = self._cards(context["object_list"])
-        context["results_text"] = self._results_text(context["paginator"].count)
-
-        context["filter_target_url"] = reverse("assignment-list")
-        context["search_field"] = "zoek"
-        context["search_filter"] = self.request.GET.get("zoek")
-
+    def _active_filters(self) -> dict:
+        """The selected values per filter, opdrachtgever aside (``add_org_filter_context`` adds it)."""
         active_filters = {}
         if self._beschikbaar_vanaf:
             active_filters["beschikbaar_vanaf"] = self._beschikbaar_vanaf
@@ -276,7 +257,13 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
             active_filters["rol"] = rol_filter
         if self._selected_locations:
             active_filters["standplaats"] = set(self._selected_locations)
+        return active_filters
 
+    def _filter_groups(self, active_filters: dict) -> list[dict]:
+        """The sidebar's filter groups, each option with the cards it would leave.
+
+        The "Meer..." sheet needs nothing else, so it is built from these alone.
+        """
         # Role counts: exclude the role filter for cross-filtering. They count
         # aanvragen, so two for the same role on one opdracht count 2.
         base_qs = self._get_base_queryset()
@@ -309,19 +296,11 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
                 option["selected"] = True
             location_options.append(option)
 
-        # Organization filter (multi-select via modal)
-        self.add_org_filter_context(context, active_filters)
-        self.add_unknown_filter_chips(context, {"rol": Skill})
-
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
         org_counts = self.org_counts()
 
-        context["active_filters"] = active_filters
-        context["active_filter_count"] = len(active_filters)
-        context["client_modal_count_mode"] = "open_assignments"
-
-        context["filter_groups"] = [
+        filter_groups = [
             {
                 "type": "modal",
                 "name": "organisatie",
@@ -354,8 +333,41 @@ class AanvraagListView(PublicIdFacetsMixin, ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
-        finalize_filter_groups(context["filter_groups"])
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
+        finalize_filter_groups(filter_groups)
+        return filter_groups
+
+    def get_template_names(self):
+        if "HX-Request" in self.request.headers:
+            if is_side_panel_request(self.request):
+                # See PlacementOverviewView.get_template_names.
+                panel_data = getattr(self, "_panel_data", None)
+                if panel_data:
+                    return [panel_data["panel_content_template"]]
+                return ["parts/assignment_panel_content.html"]
+            if self.request.GET.get("pagina"):
+                return ["parts/aanvraag_card_rows.html"]
+            return ["parts/filter_and_card_container_assignments.html"]
+        return ["assignments.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
+
+        context["object_list"] = self._cards(context["object_list"])
+        context["results_text"] = self._results_text(context["paginator"].count)
+
+        context["filter_target_url"] = reverse("assignment-list")
+        context["search_field"] = "zoek"
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        active_filters = self._active_filters()
+        context["filter_groups"] = self._filter_groups(active_filters)
+        # Organization filter (multi-select via modal)
+        self.add_org_filter_context(context, active_filters)
+        self.add_unknown_filter_chips(context, {"rol": Skill})
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
+        context["client_modal_count_mode"] = "open_assignments"
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
