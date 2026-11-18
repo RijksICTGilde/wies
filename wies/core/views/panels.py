@@ -142,12 +142,13 @@ def build_service_edit_sheet(row, request, *, back_text):
     here. A team editor gets the member sheet; a placed consultant without
     that right the "Taken wijzigen" sheet of their own row; anyone else None,
     which leaves the host panel read-only. ``back_text`` names the host panel.
+    The heading follows the row menu's item: a vacancy is an aanvraag.
     """
     member_sheet = build_assignment_member_panel_data(
         row["service"].assignment,
         request,
         member_form=ServiceForm(initial=row, skill_choices=skill_choices()),
-        member_heading="Teamlid wijzigen",
+        member_heading="Teamlid wijzigen" if row["placement"] else "Aanvraag wijzigen",
         back_text=back_text,
     )
     if member_sheet is not None:
@@ -511,7 +512,7 @@ def build_aanvraag_panel_data(service, request):
     # ?bewerken=1: the aanvraag's edit sheet, for a team editor only.
     if request.GET.get("bewerken") == "1":
         row = _team_row(team_rows, str(service.public_id))
-        sheet = build_service_edit_sheet(row, request, back_text="Aanvraag") if row else None
+        sheet = build_service_edit_sheet(row, request, back_text=data["panel_title"]) if row else None
         if sheet is not None:
             data.update(sheet)
     return data

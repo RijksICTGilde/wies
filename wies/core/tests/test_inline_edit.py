@@ -560,12 +560,13 @@ class AssignmentPanelRenderTest(TestCase):
         self.assertNotContains(response, "data-status-input")
 
     def test_bewerken_renders_existing_member(self):
-        """?bewerken=<service public_id> renders the row of that one member."""
+        """?bewerken=<service public_id> renders the row of that one member; a
+        vacancy's sheet is called after the row menu's "Aanvraag wijzigen"."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.get(f"/?opdracht={self.assignment.public_id}&bewerken={service.public_id}")
         assert response.status_code == 200
-        self.assertContains(response, "Teamlid wijzigen")
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>')
         self.assertContains(response, 'name="service_public_id"')
 
     def test_member_post_adds_a_service_and_keeps_others(self):
@@ -618,8 +619,9 @@ class AssignmentPanelRenderTest(TestCase):
 
     def test_member_post_rerender_keeps_the_host_panel_label(self):
         """Opened from an aanvraag panel, the sheet returns there; a failed
-        submit keeps "Aanvraag" on the back button instead of falling back to
-        the opdracht name, which would mislabel where terug_url leads."""
+        submit keeps the aanvraag panel's title on the back button and the
+        sheet's own heading, instead of falling back to the opdracht name and
+        "Teamlid wijzigen"."""
         skill = Skill.objects.create(name="Ontwerper")
         service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
         response = self.client.post(
@@ -631,12 +633,14 @@ class AssignmentPanelRenderTest(TestCase):
                 "skill": "",
                 "has_custom_period": "on",
                 "terug_url": f"/?aanvraag={service.public_id}",
-                "back_text": "Aanvraag",
+                "back_text": "Aanvraag: Ontwerper",
+                "member_heading": "Aanvraag wijzigen",
             },
         )
         assert response.status_code == 200
-        self.assertContains(response, 'back-text="Aanvraag"')
-        self.assertContains(response, '<input type="hidden" name="back_text" value="Aanvraag">')
+        self.assertContains(response, 'back-text="Aanvraag: Ontwerper"')
+        self.assertContains(response, '<input type="hidden" name="back_text" value="Aanvraag: Ontwerper">')
+        self.assertContains(response, '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>')
 
     def test_member_delete_removes_only_that_service(self):
         skill = Skill.objects.create(name="Ontwerper")

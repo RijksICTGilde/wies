@@ -206,7 +206,10 @@ class ServicePanelTest(TestCase):
 
         assert edit_url.replace("&", "&amp;") in self._panel()
         assert "data-member-form" in body
-        assert 'back-text="Aanvraag"' in body
+        # The back button names this panel as its title does, the same label
+        # the panel stack shows after a click.
+        assert 'back-text="Aanvraag: Dev"' in body
+        assert '<h3 id="panel-title" tabindex="-1">Aanvraag wijzigen</h3>' in body
         assert f'name="terug_url" value="/?aanvraag={self.service.public_id}"' in body
 
     def test_the_edit_sheet_is_for_a_team_editor_only(self):
