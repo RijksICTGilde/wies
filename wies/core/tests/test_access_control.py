@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.staticfiles import finders
@@ -62,6 +64,25 @@ class AccessControlTest(TestCase):
 
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))
+
+    def test_views_without_decorator_still_require_login(self):
+        """These views have no @login_required of their own; LoginRequiredMiddleware alone guards them"""
+        public_id = uuid.uuid4()
+        urls = [
+            reverse("user-theme"),
+            reverse("profile-name-edit"),
+            reverse("profile-labels-edit"),
+            reverse("label-form-create"),
+            reverse("label-form-edit", args=[public_id]),
+            reverse("contract-period-add", args=[public_id]),
+            reverse("contract-period-edit", args=[public_id]),
+            reverse("contract-period-delete", args=[public_id]),
+        ]
+        for url in urls:
+            with self.subTest(url=url):
+                response = self.client.get(url, follow=False)
+                assert response.status_code == 302
+                assert response.url.startswith(reverse("login"))
 
     def test_faq_and_contact_require_authentication(self):
         """FAQ, handleiding, contact and security pages are only visible after login; anonymous users bounce to login"""

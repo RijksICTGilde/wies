@@ -1,7 +1,7 @@
 """Label and label-category management."""
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required, permission_required
+from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import PermissionDenied
 from django.forms.utils import ErrorDict
 from django.http import HttpResponse
@@ -131,7 +131,6 @@ def _render_category_manage_body(request, formset, template="parts/label_categor
     )
 
 
-@login_required
 def label_form(request, public_id=None):
     """One sheet for both adding and editing a label (category + name)."""
     # One view, two routes, so the permission depends on which one: checked

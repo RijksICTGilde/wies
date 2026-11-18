@@ -13,7 +13,7 @@
 {% set end_date_id = "member-end-date-" ~ date_id_suffix %}
 {% set obj = panel_data.assignment %}
 {% set panel_heading = panel_data.member_heading %}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" {%- if panel_data.parent_url %} data-back-url="{{ panel_data.parent_url }}"{% endif %} dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.back_text }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="display-3">
 <h3 id="panel-title" tabindex="-1">{{ panel_heading }}</h3>
@@ -244,6 +244,7 @@
          data-end-mode-input>
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <input type="hidden" name="member_heading" value="{{ panel_heading }}">
+  <input type="hidden" name="back_text" value="{{ panel_data.back_text }}">
   <nldd-form-actions>
   <nldd-button type="submit" appearance="primary" width="full" text="Opslaan"></nldd-button>
   </nldd-form-actions>

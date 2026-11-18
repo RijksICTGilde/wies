@@ -40,8 +40,12 @@ describe("parentUrlOf", () => {
       "/opdrachten/?opdracht=1",
     );
     assert.equal(
-      parentUrlOf(at("/?opdracht=1&collega=2&teamlid=3")),
-      "/?opdracht=1&collega=2",
+      parentUrlOf(at("/?collega=2&uitgeklapt=1&bewerken=3")),
+      "/?collega=2&uitgeklapt=1",
+    );
+    assert.equal(
+      parentUrlOf(at("/?opdracht=1&toevoegen=aanvraag")),
+      "/?opdracht=1",
     );
   });
 

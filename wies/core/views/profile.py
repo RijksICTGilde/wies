@@ -1,7 +1,6 @@
 """Your own profile: name, theme, labels and onboarding."""
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
 from django.db import transaction
 from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden
 from django.shortcuts import redirect, render
@@ -19,7 +18,6 @@ from wies.core.inline_edit.forms import (
     build_combined_form_class,
 )
 from wies.core.models import (
-    Assignment,
     Colleague,
 )
 from wies.core.querysets import (
@@ -31,17 +29,13 @@ from wies.core.services.assignments import (
 )
 from wies.core.services.inline_edit_save import save_edit_specs
 
-from ._common import resolve_panel_object
+from ._common import is_side_panel_request
 from .panels import (
-    build_aanvraag_panel_data,
-    build_assignment_panel_data,
-    build_colleague_panel_data,
     get_colleague_assignments,
-    resolve_aanvraag_panel,
+    resolve_side_panel,
 )
 
 
-@login_required
 @require_POST
 def user_theme(request):
     """Stores the display preference of the logged-in user.
@@ -63,7 +57,6 @@ def user_theme(request):
     return HttpResponse(status=204)
 
 
-@login_required
 def profile_name_edit(request):
     """First and last name of the logged-in user, in one sheet.
 
@@ -103,7 +96,6 @@ def _own_colleague_or_404(request):
     return colleague
 
 
-@login_required
 def profile_labels_edit(request):
     """All label categories of your own profile in one sheet.
 
@@ -143,29 +135,10 @@ def user_profile(request):
     user = request.user
     colleague = getattr(user, "colleague", None)
 
-    # Side panel handling
-    colleague_id = request.GET.get("collega")
-    assignment_id = request.GET.get("opdracht")
-    panel_data = None
-
-    if request.GET.get("aanvraag") and not request.GET.get("teamlid"):
-        service = resolve_aanvraag_panel(request, request.GET["aanvraag"])
-        if service is not None:
-            panel_data = build_aanvraag_panel_data(service, request)
-    elif assignment_id:
-        assignment = resolve_panel_object(request, Assignment, assignment_id)
-        if assignment is not None:
-            panel_data = build_assignment_panel_data(assignment, request)
-    elif colleague_id:
-        panel_colleague = resolve_panel_object(request, Colleague, colleague_id)
-        if panel_colleague is not None:
-            panel_data = build_colleague_panel_data(panel_colleague, request)
-
+    panel_data = resolve_side_panel(request)
     # HTMX partial responses for panel swaps
-    if "HX-Request" in request.headers:
-        hx_target = request.headers.get("HX-Target")
-        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
-            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+    if is_side_panel_request(request) and panel_data:
+        return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     label_categories = []
     for category in label_categories_for_everyone().order_by("name"):
