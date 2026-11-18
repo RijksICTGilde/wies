@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd: (internal) Dependabot PRs with only minor and patch updates are merged automatically once the tests pass; updates are grouped per ecosystem, majors and NLDD upgrades still need a human
+- 866: (internal) Dependabot PRs with only minor and patch updates are merged automatically once the tests pass; updates are grouped per ecosystem, majors and NLDD upgrades still need a human
 
 ## 2026-11-18
 
