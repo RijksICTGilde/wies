@@ -9,8 +9,8 @@ BIO-overheidsmaatregelen van de
 [BIO2, versie 1.3](https://www.nldigitalgovernment.nl/overview/government-information-security-baseline/)
 naast die van BIO 1.04. De nummers volgen NEN-EN-ISO/IEC 27002:2022.
 
-Screenshots en logs staan in [bewijs/](bewijs/). Bewijs met persoonsgegevens
-van gebruikers staat op de O-schijf in de map BIO.
+Screenshots en logs staan in [bewijs/](bewijs/). Op screenshots van gebruikers
+zijn namen, organisaties en e-mailadressen vervangen; de rollen kloppen.
 
 Statussen: **Voldoet**, **Deels**, **Onderhanden**, **n.v.t.**
 
@@ -150,7 +150,7 @@ beoordeeld.** — Voldoet
 
 Gebruikerslijst zichtbaar voor Beheerders in de interface.
 
-Bewijs: `gebruikers_lijst.png` (op de O-schijf: toont namen van alle gebruikers)
+Bewijs: [gebruikers_lijst_2026-11-18.png](bewijs/gebruikers_lijst_2026-11-18.png) (18 november 2026, geanonimiseerd)
 
 **Ongeautoriseerde afwijkingen op of ongeautoriseerde aanpassingen aan
 uitgegeven toegangsrechten worden beschouwd als beveiligingsgebeurtenis en als
