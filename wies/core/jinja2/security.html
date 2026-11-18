@@ -76,9 +76,13 @@
   <ul>
     <li>Inloggen via SSO-Rijk met OIDC; geen lokale wachtwoorden, geen groepsaccounts.</li>
     <li>
-      Dependabot bewaakt wekelijks de Python-, npm- en GitHub Actions-dependencies
+      Dependabot bewaakt de Python-, npm- en GitHub Actions-dependencies
       (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/dependabot.yml"
-          target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
+          target="_blank"><code>.github/dependabot.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>). Minor- en patch-updates worden
+      automatisch gemerged zodra de tests groen zijn; major-updates en het NLDD-designsysteem
+      beoordeelt een ontwikkelaar eerst
+      (<a href="https://github.com/RijksICTGilde/wies/blob/main/.github/workflows/dependabot-automerge.yml"
+          target="_blank"><code>.github/workflows/dependabot-automerge.yml</code><span class="wies-visually-hidden">, opent in nieuw tabblad</span><nldd-icon icon="square-arrow-right-top" size="16"></nldd-icon></a>).
     </li>
     <li>
       Trivy scant bij iedere pull request, bij iedere push naar <code>main</code> en dagelijks de broncode

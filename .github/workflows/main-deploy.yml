@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  # Catches up on a deploy that an auto-merge without AUTOMERGE_TOKEN skipped.
+  workflow_dispatch:
 
 env:
   IMAGE_NAME: ghcr.io/rijksictgilde/wies
@@ -15,6 +17,8 @@ permissions: {}
 jobs:
   build:
     runs-on: ubuntu-latest
+    # A manual run from another branch must not deploy that branch.
+    if: github.ref == 'refs/heads/main'
 
     permissions:
       contents: read
