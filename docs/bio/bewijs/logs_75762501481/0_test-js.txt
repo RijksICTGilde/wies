@@ -1,0 +1,419 @@
+﻿2026-06-24T09:27:09.0823744Z Current runner version: '2.335.1'
+2026-06-24T09:27:09.0852937Z ##[group]Runner Image Provisioner
+2026-06-24T09:27:09.0854105Z Hosted Compute Agent
+2026-06-24T09:27:09.0854978Z Version: 20260611.554
+2026-06-24T09:27:09.0855916Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+2026-06-24T09:27:09.0857066Z Build Date: 2026-06-11T21:40:46Z
+2026-06-24T09:27:09.0858168Z Worker ID: {ef51357e-ee05-4225-a911-e3be363f3dfc}
+2026-06-24T09:27:09.0859306Z Azure Region: eastus2
+2026-06-24T09:27:09.0860428Z ##[endgroup]
+2026-06-24T09:27:09.0862467Z ##[group]Operating System
+2026-06-24T09:27:09.0863419Z Ubuntu
+2026-06-24T09:27:09.0864269Z 24.04.4
+2026-06-24T09:27:09.0865039Z LTS
+2026-06-24T09:27:09.0865783Z ##[endgroup]
+2026-06-24T09:27:09.0866709Z ##[group]Runner Image
+2026-06-24T09:27:09.0867667Z Image: ubuntu-24.04
+2026-06-24T09:27:09.0868648Z Version: 20260615.205.1
+2026-06-24T09:27:09.0870830Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-24T09:27:09.0873428Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+2026-06-24T09:27:09.0874993Z ##[endgroup]
+2026-06-24T09:27:09.0876776Z ##[group]GITHUB_TOKEN Permissions
+2026-06-24T09:27:09.0880023Z Contents: read
+2026-06-24T09:27:09.0881497Z Metadata: read
+2026-06-24T09:27:09.0882444Z ##[endgroup]
+2026-06-24T09:27:09.0885819Z Secret source: Actions
+2026-06-24T09:27:09.0887277Z Prepare workflow directory
+2026-06-24T09:27:09.1356807Z Prepare all required actions
+2026-06-24T09:27:09.1411608Z Getting action download info
+2026-06-24T09:27:09.4008285Z Download action repository 'actions/checkout@v6' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-24T09:27:09.6922795Z Download action repository 'actions/setup-node@v6' (SHA:48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e)
+2026-06-24T09:27:09.9258657Z Complete job name: test-js
+2026-06-24T09:27:09.9967774Z ##[group]Run actions/checkout@v6
+2026-06-24T09:27:09.9968622Z with:
+2026-06-24T09:27:09.9969098Z   repository: RijksICTGilde/wies
+2026-06-24T09:27:09.9973924Z   token: ***
+2026-06-24T09:27:09.9974390Z   ssh-strict: true
+2026-06-24T09:27:09.9974864Z   ssh-user: git
+2026-06-24T09:27:09.9975344Z   persist-credentials: true
+2026-06-24T09:27:09.9975874Z   clean: true
+2026-06-24T09:27:09.9976353Z   sparse-checkout-cone-mode: true
+2026-06-24T09:27:09.9976915Z   fetch-depth: 1
+2026-06-24T09:27:09.9977377Z   fetch-tags: false
+2026-06-24T09:27:09.9977847Z   show-progress: true
+2026-06-24T09:27:09.9978316Z   lfs: false
+2026-06-24T09:27:09.9978752Z   submodules: false
+2026-06-24T09:27:09.9979233Z   set-safe-directory: true
+2026-06-24T09:27:09.9980156Z ##[endgroup]
+2026-06-24T09:27:10.1041620Z Syncing repository: RijksICTGilde/wies
+2026-06-24T09:27:10.1044232Z ##[group]Getting Git version info
+2026-06-24T09:27:10.1045284Z Working directory is '/home/runner/work/wies/wies'
+2026-06-24T09:27:10.1046968Z [command]/usr/bin/git version
+2026-06-24T09:27:10.2413870Z git version 2.54.0
+2026-06-24T09:27:10.2438181Z ##[endgroup]
+2026-06-24T09:27:10.2453961Z Temporarily overriding HOME='/home/runner/work/_temp/9ffde7a5-38e5-433e-b963-d171a0981e93' before making global git config changes
+2026-06-24T09:27:10.2455423Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-24T09:27:10.2459916Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wies/wies
+2026-06-24T09:27:10.2698351Z Deleting the contents of '/home/runner/work/wies/wies'
+2026-06-24T09:27:10.2703024Z ##[group]Determining repository object format
+2026-06-24T09:27:10.2705323Z ##[endgroup]
+2026-06-24T09:27:10.2706207Z ##[group]Initializing the repository
+2026-06-24T09:27:10.2710928Z [command]/usr/bin/git init /home/runner/work/wies/wies
+2026-06-24T09:27:10.3094836Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-24T09:27:10.3095999Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-24T09:27:10.3096979Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-24T09:27:10.3098081Z hint: call:
+2026-06-24T09:27:10.3098522Z hint:
+2026-06-24T09:27:10.3099079Z hint: 	git config --global init.defaultBranch <name>
+2026-06-24T09:27:10.3099971Z hint:
+2026-06-24T09:27:10.3100845Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-24T09:27:10.3102258Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-24T09:27:10.3103444Z hint:
+2026-06-24T09:27:10.3104135Z hint: 	git branch -m <name>
+2026-06-24T09:27:10.3104859Z hint:
+2026-06-24T09:27:10.3105754Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-24T09:27:10.3107056Z Initialized empty Git repository in /home/runner/work/wies/wies/.git/
+2026-06-24T09:27:10.3115396Z [command]/usr/bin/git remote add origin https://github.com/RijksICTGilde/wies
+2026-06-24T09:27:10.3369297Z ##[endgroup]
+2026-06-24T09:27:10.3370285Z ##[group]Disabling automatic garbage collection
+2026-06-24T09:27:10.3373244Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-24T09:27:10.3405258Z ##[endgroup]
+2026-06-24T09:27:10.3406031Z ##[group]Setting up auth
+2026-06-24T09:27:10.3407206Z Removing SSH command configuration
+2026-06-24T09:27:10.3413598Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-24T09:27:10.3447274Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-24T09:27:10.5475673Z Removing HTTP extra header
+2026-06-24T09:27:10.5482839Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-24T09:27:10.5520230Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-24T09:27:10.5776407Z Removing includeIf entries pointing to credentials config files
+2026-06-24T09:27:10.5779180Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-24T09:27:10.5811513Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-24T09:27:10.6051942Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-24T09:27:10.6091966Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/wies/wies/.git.path /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:10.6123488Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:10.6199166Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:10.6232158Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:10.6260465Z ##[endgroup]
+2026-06-24T09:27:10.6261966Z ##[group]Fetching the repository
+2026-06-24T09:27:10.6270736Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3a8c9f4867993d949046ba53b5d7e92a02c67515:refs/remotes/origin/main
+2026-06-24T09:27:11.0515726Z From https://github.com/RijksICTGilde/wies
+2026-06-24T09:27:11.0516802Z  * [new ref]         3a8c9f4867993d949046ba53b5d7e92a02c67515 -> origin/main
+2026-06-24T09:27:11.0731932Z [command]/usr/bin/git branch --list --remote origin/main
+2026-06-24T09:27:11.0815421Z   origin/main
+2026-06-24T09:27:11.0824406Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-06-24T09:27:11.0850358Z 3a8c9f4867993d949046ba53b5d7e92a02c67515
+2026-06-24T09:27:11.0855176Z ##[endgroup]
+2026-06-24T09:27:11.0856043Z ##[group]Determining the checkout info
+2026-06-24T09:27:11.0856970Z ##[endgroup]
+2026-06-24T09:27:11.0861150Z [command]/usr/bin/git sparse-checkout disable
+2026-06-24T09:27:11.0961259Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-24T09:27:11.0990266Z ##[group]Checking out the ref
+2026-06-24T09:27:11.0994399Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-24T09:27:11.1247435Z Switched to a new branch 'main'
+2026-06-24T09:27:11.1248947Z branch 'main' set up to track 'origin/main'.
+2026-06-24T09:27:11.1256418Z ##[endgroup]
+2026-06-24T09:27:11.1298984Z [command]/usr/bin/git log -1 --format=%H
+2026-06-24T09:27:11.1324906Z 3a8c9f4867993d949046ba53b5d7e92a02c67515
+2026-06-24T09:27:11.1594814Z ##[group]Run actions/setup-node@v6
+2026-06-24T09:27:11.1595204Z with:
+2026-06-24T09:27:11.1595492Z   node-version: 22
+2026-06-24T09:27:11.1595833Z   check-latest: false
+2026-06-24T09:27:11.1598889Z   token: ***
+2026-06-24T09:27:11.1599198Z   package-manager-cache: true
+2026-06-24T09:27:11.1599746Z ##[endgroup]
+2026-06-24T09:27:11.3458152Z Found in cache @ /opt/hostedtoolcache/node/22.22.3/x64
+2026-06-24T09:27:11.3463122Z ##[group]Environment details
+2026-06-24T09:27:14.1590875Z node: v22.22.3
+2026-06-24T09:27:14.1591246Z npm: 10.9.8
+2026-06-24T09:27:14.1591614Z yarn: 1.22.22
+2026-06-24T09:27:14.1593295Z ##[endgroup]
+2026-06-24T09:27:14.1732330Z ##[group]Run node --test "js_tests/**/*.test.js"
+2026-06-24T09:27:14.1732769Z [36;1mnode --test "js_tests/**/*.test.js"[0m
+2026-06-24T09:27:14.3284175Z shell: /usr/bin/bash -e {0}
+2026-06-24T09:27:14.3284503Z ##[endgroup]
+2026-06-24T09:27:14.4105662Z TAP version 13
+2026-06-24T09:27:14.4570517Z # Subtest: TreeState construction
+2026-06-24T09:27:14.4571395Z     # Subtest: indexes all nodes
+2026-06-24T09:27:14.4580638Z     ok 1 - indexes all nodes
+2026-06-24T09:27:14.4581592Z       ---
+2026-06-24T09:27:14.4582464Z       duration_ms: 0.877734
+2026-06-24T09:27:14.4582965Z       type: 'test'
+2026-06-24T09:27:14.4583385Z       ...
+2026-06-24T09:27:14.4583837Z     # Subtest: converts numeric ids to strings
+2026-06-24T09:27:14.4584458Z     ok 2 - converts numeric ids to strings
+2026-06-24T09:27:14.4584948Z       ---
+2026-06-24T09:27:14.4585301Z       duration_ms: 0.247759
+2026-06-24T09:27:14.4585718Z       type: 'test'
+2026-06-24T09:27:14.4586074Z       ...
+2026-06-24T09:27:14.4587434Z     # Subtest: sets parent references
+2026-06-24T09:27:14.4590026Z     ok 3 - sets parent references
+2026-06-24T09:27:14.4590720Z       ---
+2026-06-24T09:27:14.4597739Z       duration_ms: 0.141911
+2026-06-24T09:27:14.4598430Z       type: 'test'
+2026-06-24T09:27:14.4599108Z       ...
+2026-06-24T09:27:14.4600124Z     # Subtest: handles empty data
+2026-06-24T09:27:14.4600846Z     ok 4 - handles empty data
+2026-06-24T09:27:14.4601655Z       ---
+2026-06-24T09:27:14.4602073Z       duration_ms: 0.120019
+2026-06-24T09:27:14.4602548Z       type: 'test'
+2026-06-24T09:27:14.4602934Z       ...
+2026-06-24T09:27:14.4603452Z     # Subtest: preserves group and self flags
+2026-06-24T09:27:14.4604042Z     ok 5 - preserves group and self flags
+2026-06-24T09:27:14.4604524Z       ---
+2026-06-24T09:27:14.4604879Z       duration_ms: 0.181901
+2026-06-24T09:27:14.4605292Z       type: 'test'
+2026-06-24T09:27:14.4605910Z       ...
+2026-06-24T09:27:14.4606381Z     1..5
+2026-06-24T09:27:14.4606777Z ok 1 - TreeState construction
+2026-06-24T09:27:14.4607249Z   ---
+2026-06-24T09:27:14.4607598Z   duration_ms: 2.568328
+2026-06-24T09:27:14.4607979Z   type: 'suite'
+2026-06-24T09:27:14.4608321Z   ...
+2026-06-24T09:27:14.4608682Z # Subtest: cascadeDown
+2026-06-24T09:27:14.4609186Z     # Subtest: checking a leaf marks only that node
+2026-06-24T09:27:14.4610085Z     ok 1 - checking a leaf marks only that node
+2026-06-24T09:27:14.4610611Z       ---
+2026-06-24T09:27:14.4610965Z       duration_ms: 0.419003
+2026-06-24T09:27:14.4611373Z       type: 'test'
+2026-06-24T09:27:14.4612279Z       ...
+2026-06-24T09:27:14.4612745Z     # Subtest: checking a parent checks all descendants
+2026-06-24T09:27:14.4623687Z     ok 2 - checking a parent checks all descendants
+2026-06-24T09:27:14.4624277Z       ---
+2026-06-24T09:27:14.4624628Z       duration_ms: 0.243732
+2026-06-24T09:27:14.4625038Z       type: 'test'
+2026-06-24T09:27:14.4625383Z       ...
+2026-06-24T09:27:14.4625939Z     # Subtest: unchecking a parent unchecks all descendants
+2026-06-24T09:27:14.4627097Z     ok 3 - unchecking a parent unchecks all descendants
+2026-06-24T09:27:14.4627635Z       ---
+2026-06-24T09:27:14.4686871Z       duration_ms: 0.392584
+2026-06-24T09:27:14.4700736Z       type: 'test'
+2026-06-24T09:27:14.4701376Z       ...
+2026-06-24T09:27:14.4702330Z     # Subtest: unchecking clears indeterminate on descendants
+2026-06-24T09:27:14.4703442Z     ok 4 - unchecking clears indeterminate on descendants
+2026-06-24T09:27:14.4704265Z       ---
+2026-06-24T09:27:14.4704873Z       duration_ms: 0.349029
+2026-06-24T09:27:14.4705672Z       type: 'test'
+2026-06-24T09:27:14.4706316Z       ...
+2026-06-24T09:27:14.4706923Z     1..4
+2026-06-24T09:27:14.4707534Z ok 2 - cascadeDown
+2026-06-24T09:27:14.4708149Z   ---
+2026-06-24T09:27:14.4708735Z   duration_ms: 1.834577
+2026-06-24T09:27:14.4709356Z   type: 'suite'
+2026-06-24T09:27:14.4710172Z   ...
+2026-06-24T09:27:14.4710790Z # Subtest: cascadeUp
+2026-06-24T09:27:14.4711648Z     # Subtest: checking all siblings makes parent fully checked
+2026-06-24T09:27:14.4713111Z     ok 1 - checking all siblings makes parent fully checked
+2026-06-24T09:27:14.4713996Z       ---
+2026-06-24T09:27:14.4714604Z       duration_ms: 0.276701
+2026-06-24T09:27:14.4715262Z       type: 'test'
+2026-06-24T09:27:14.4715869Z       ...
+2026-06-24T09:27:14.4716625Z     # Subtest: checking one sibling makes parent indeterminate
+2026-06-24T09:27:14.4717625Z     ok 2 - checking one sibling makes parent indeterminate
+2026-06-24T09:27:14.4718418Z       ---
+2026-06-24T09:27:14.4718998Z       duration_ms: 0.125527
+2026-06-24T09:27:14.4719873Z       type: 'test'
+2026-06-24T09:27:14.4720492Z       ...
+2026-06-24T09:27:14.4721253Z     # Subtest: unchecking all siblings makes parent unchecked
+2026-06-24T09:27:14.4722210Z     ok 3 - unchecking all siblings makes parent unchecked
+2026-06-24T09:27:14.4722952Z       ---
+2026-06-24T09:27:14.4723549Z       duration_ms: 0.112297
+2026-06-24T09:27:14.4724216Z       type: 'test'
+2026-06-24T09:27:14.4724785Z       ...
+2026-06-24T09:27:14.4725468Z     # Subtest: propagates multiple levels up
+2026-06-24T09:27:14.4726304Z     ok 4 - propagates multiple levels up
+2026-06-24T09:27:14.4727011Z       ---
+2026-06-24T09:27:14.4727606Z       duration_ms: 0.850123
+2026-06-24T09:27:14.4728238Z       type: 'test'
+2026-06-24T09:27:14.4728808Z       ...
+2026-06-24T09:27:14.4729812Z     # Subtest: checking all leaves makes entire ancestor chain fully checked
+2026-06-24T09:27:14.4731035Z     ok 5 - checking all leaves makes entire ancestor chain fully checked
+2026-06-24T09:27:14.4731862Z       ---
+2026-06-24T09:27:14.4732458Z       duration_ms: 0.128822
+2026-06-24T09:27:14.4733058Z       type: 'test'
+2026-06-24T09:27:14.4733615Z       ...
+2026-06-24T09:27:14.4734146Z     1..5
+2026-06-24T09:27:14.4734671Z ok 3 - cascadeUp
+2026-06-24T09:27:14.4735227Z   ---
+2026-06-24T09:27:14.4735768Z   duration_ms: 1.676012
+2026-06-24T09:27:14.4736356Z   type: 'suite'
+2026-06-24T09:27:14.4736893Z   ...
+2026-06-24T09:27:14.4737475Z # Subtest: explicitSelections
+2026-06-24T09:27:14.4738279Z     # Subtest: checking a node adds it as explicit selection
+2026-06-24T09:27:14.4739189Z     ok 1 - checking a node adds it as explicit selection
+2026-06-24T09:27:14.4740121Z       ---
+2026-06-24T09:27:14.4740660Z       duration_ms: 0.122492
+2026-06-24T09:27:14.4741247Z       type: 'test'
+2026-06-24T09:27:14.4741787Z       ...
+2026-06-24T09:27:14.4742569Z     # Subtest: checking a parent removes descendant explicit selections
+2026-06-24T09:27:14.4743605Z     ok 2 - checking a parent removes descendant explicit selections
+2026-06-24T09:27:14.4744739Z       ---
+2026-06-24T09:27:14.4745275Z       duration_ms: 0.079999
+2026-06-24T09:27:14.4745868Z       type: 'test'
+2026-06-24T09:27:14.4746400Z       ...
+2026-06-24T09:27:14.4747133Z     # Subtest: unchecking a node removes it from explicit selections
+2026-06-24T09:27:14.4748108Z     ok 3 - unchecking a node removes it from explicit selections
+2026-06-24T09:27:14.4748859Z       ---
+2026-06-24T09:27:14.4749840Z       duration_ms: 0.077385
+2026-06-24T09:27:14.4750603Z       type: 'test'
+2026-06-24T09:27:14.4751242Z       ...
+2026-06-24T09:27:14.4751887Z     # Subtest: self-node labels include (direct)
+2026-06-24T09:27:14.4752677Z     ok 4 - self-node labels include (direct)
+2026-06-24T09:27:14.4753350Z       ---
+2026-06-24T09:27:14.4753888Z       duration_ms: 0.082422
+2026-06-24T09:27:14.4754504Z       type: 'test'
+2026-06-24T09:27:14.4755037Z       ...
+2026-06-24T09:27:14.4755531Z     1..4
+2026-06-24T09:27:14.4756101Z ok 4 - explicitSelections
+2026-06-24T09:27:14.4756680Z   ---
+2026-06-24T09:27:14.4757224Z   duration_ms: 0.467485
+2026-06-24T09:27:14.4757803Z   type: 'suite'
+2026-06-24T09:27:14.4758328Z   ...
+2026-06-24T09:27:14.4758905Z # Subtest: promote/demote
+2026-06-24T09:27:14.4760061Z     # Subtest: unchecking child of explicit parent promotes remaining siblings
+2026-06-24T09:27:14.4761290Z     ok 1 - unchecking child of explicit parent promotes remaining siblings
+2026-06-24T09:27:14.4762169Z       ---
+2026-06-24T09:27:14.4762776Z       duration_ms: 0.166388
+2026-06-24T09:27:14.4763776Z       type: 'test'
+2026-06-24T09:27:14.4764351Z       ...
+2026-06-24T09:27:14.4765097Z     # Subtest: promotion recurses through indeterminate children
+2026-06-24T09:27:14.4766106Z     ok 2 - promotion recurses through indeterminate children
+2026-06-24T09:27:14.4766868Z       ---
+2026-06-24T09:27:14.4767437Z       duration_ms: 0.110094
+2026-06-24T09:27:14.4768053Z       type: 'test'
+2026-06-24T09:27:14.4768623Z       ...
+2026-06-24T09:27:14.4769441Z     # Subtest: demote works across multiple ancestor levels
+2026-06-24T09:27:14.4770652Z     ok 3 - demote works across multiple ancestor levels
+2026-06-24T09:27:14.4771447Z       ---
+2026-06-24T09:27:14.4772032Z       duration_ms: 0.10091
+2026-06-24T09:27:14.4772674Z       type: 'test'
+2026-06-24T09:27:14.4773266Z       ...
+2026-06-24T09:27:14.4773817Z     1..3
+2026-06-24T09:27:14.4774414Z ok 5 - promote/demote
+2026-06-24T09:27:14.4775016Z   ---
+2026-06-24T09:27:14.4775591Z   duration_ms: 0.579682
+2026-06-24T09:27:14.4776202Z   type: 'suite'
+2026-06-24T09:27:14.4776805Z   ...
+2026-06-24T09:27:14.4777432Z # Subtest: combined scenarios
+2026-06-24T09:27:14.4778364Z     # Subtest: check parent, uncheck one child: parent gone, sibling explicit
+2026-06-24T09:27:14.4779702Z     ok 1 - check parent, uncheck one child: parent gone, sibling explicit
+2026-06-24T09:27:14.4780926Z       ---
+2026-06-24T09:27:14.4781538Z       duration_ms: 0.126648
+2026-06-24T09:27:14.4782194Z       type: 'test'
+2026-06-24T09:27:14.4782770Z       ...
+2026-06-24T09:27:14.4783589Z     # Subtest: check two siblings individually, uncheck one: only other remains
+2026-06-24T09:27:14.4784696Z     ok 2 - check two siblings individually, uncheck one: only other remains
+2026-06-24T09:27:14.4785482Z       ---
+2026-06-24T09:27:14.4786047Z       duration_ms: 0.082012
+2026-06-24T09:27:14.4787632Z       type: 'test'
+2026-06-24T09:27:14.4788283Z       ...
+2026-06-24T09:27:14.4789052Z     # Subtest: check leaf, then check parent: leaf subsumed by parent
+2026-06-24T09:27:14.4790325Z     ok 3 - check leaf, then check parent: leaf subsumed by parent
+2026-06-24T09:27:14.4791250Z       ---
+2026-06-24T09:27:14.4791842Z       duration_ms: 0.075332
+2026-06-24T09:27:14.4792471Z       type: 'test'
+2026-06-24T09:27:14.4793023Z       ...
+2026-06-24T09:27:14.4793683Z     # Subtest: removeSelection unchecks and cascades
+2026-06-24T09:27:14.4794512Z     ok 4 - removeSelection unchecks and cascades
+2026-06-24T09:27:14.4795189Z       ---
+2026-06-24T09:27:14.4795713Z       duration_ms: 0.149442
+2026-06-24T09:27:14.4796140Z       type: 'test'
+2026-06-24T09:27:14.4796805Z       ...
+2026-06-24T09:27:14.4797225Z     # Subtest: clearAll resets everything
+2026-06-24T09:27:14.4797981Z     ok 5 - clearAll resets everything
+2026-06-24T09:27:14.4798658Z       ---
+2026-06-24T09:27:14.4799345Z       duration_ms: 0.124835
+2026-06-24T09:27:14.4799909Z       type: 'test'
+2026-06-24T09:27:14.4800252Z       ...
+2026-06-24T09:27:14.4800545Z     1..5
+2026-06-24T09:27:14.4800897Z ok 6 - combined scenarios
+2026-06-24T09:27:14.4801264Z   ---
+2026-06-24T09:27:14.4801615Z   duration_ms: 0.685469
+2026-06-24T09:27:14.4801994Z   type: 'suite'
+2026-06-24T09:27:14.4802309Z   ...
+2026-06-24T09:27:14.4802651Z # Subtest: restoreSelections
+2026-06-24T09:27:14.4803217Z     # Subtest: restores a single selection and cascades down
+2026-06-24T09:27:14.4803680Z     ok 1 - restores a single selection and cascades down
+2026-06-24T09:27:14.4804012Z       ---
+2026-06-24T09:27:14.4804238Z       duration_ms: 0.153258
+2026-06-24T09:27:14.4804495Z       type: 'test'
+2026-06-24T09:27:14.4804729Z       ...
+2026-06-24T09:27:14.4805036Z     # Subtest: restores multiple selections
+2026-06-24T09:27:14.4805380Z     ok 2 - restores multiple selections
+2026-06-24T09:27:14.4805676Z       ---
+2026-06-24T09:27:14.4805892Z       duration_ms: 0.099258
+2026-06-24T09:27:14.4806142Z       type: 'test'
+2026-06-24T09:27:14.4806366Z       ...
+2026-06-24T09:27:14.4806569Z     1..2
+2026-06-24T09:27:14.4806803Z ok 7 - restoreSelections
+2026-06-24T09:27:14.4807054Z   ---
+2026-06-24T09:27:14.4807523Z   duration_ms: 0.318333
+2026-06-24T09:27:14.4807771Z   type: 'suite'
+2026-06-24T09:27:14.4807993Z   ...
+2026-06-24T09:27:14.4808226Z # Subtest: edge cases
+2026-06-24T09:27:14.4808512Z     # Subtest: handles single-node tree
+2026-06-24T09:27:14.4808851Z     ok 1 - handles single-node tree
+2026-06-24T09:27:14.4809136Z       ---
+2026-06-24T09:27:14.4809373Z       duration_ms: 0.120529
+2026-06-24T09:27:14.4809814Z       type: 'test'
+2026-06-24T09:27:14.4810154Z       ...
+2026-06-24T09:27:14.4810624Z     # Subtest: check/uncheck on nonexistent node does nothing
+2026-06-24T09:27:14.4811230Z     ok 2 - check/uncheck on nonexistent node does nothing
+2026-06-24T09:27:14.4811573Z       ---
+2026-06-24T09:27:14.4811799Z       duration_ms: 0.071716
+2026-06-24T09:27:14.4812058Z       type: 'test'
+2026-06-24T09:27:14.4812283Z       ...
+2026-06-24T09:27:14.4812600Z     # Subtest: handles string node IDs like self- and group-
+2026-06-24T09:27:14.4813027Z     ok 3 - handles string node IDs like self- and group-
+2026-06-24T09:27:14.4813364Z       ---
+2026-06-24T09:27:14.4813582Z       duration_ms: 0.085978
+2026-06-24T09:27:14.4813826Z       type: 'test'
+2026-06-24T09:27:14.4814048Z       ...
+2026-06-24T09:27:14.4814252Z     1..3
+2026-06-24T09:27:14.4814473Z ok 8 - edge cases
+2026-06-24T09:27:14.4814705Z   ---
+2026-06-24T09:27:14.4814934Z   duration_ms: 0.355178
+2026-06-24T09:27:14.4815180Z   type: 'suite'
+2026-06-24T09:27:14.4815413Z   ...
+2026-06-24T09:27:14.4955547Z 1..8
+2026-06-24T09:27:14.4955916Z # tests 31
+2026-06-24T09:27:14.4956278Z # suites 8
+2026-06-24T09:27:14.4956637Z # pass 31
+2026-06-24T09:27:14.4956958Z # fail 0
+2026-06-24T09:27:14.4957275Z # cancelled 0
+2026-06-24T09:27:14.4957601Z # skipped 0
+2026-06-24T09:27:14.4957943Z # todo 0
+2026-06-24T09:27:14.4958579Z # duration_ms 109.194607
+2026-06-24T09:27:14.5126946Z Post job cleanup.
+2026-06-24T09:27:14.6497216Z Post job cleanup.
+2026-06-24T09:27:14.7349027Z [command]/usr/bin/git version
+2026-06-24T09:27:14.7386111Z git version 2.54.0
+2026-06-24T09:27:14.7456252Z Temporarily overriding HOME='/home/runner/work/_temp/0370c2b3-a584-4a14-b85e-258786a2717f' before making global git config changes
+2026-06-24T09:27:14.7457704Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-24T09:27:14.7461274Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wies/wies
+2026-06-24T09:27:14.7493103Z Removing SSH command configuration
+2026-06-24T09:27:14.7499406Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-24T09:27:14.7535399Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-24T09:27:14.7781446Z Removing HTTP extra header
+2026-06-24T09:27:14.7787172Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-24T09:27:14.7826575Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-24T09:27:14.8083828Z Removing includeIf entries pointing to credentials config files
+2026-06-24T09:27:14.8094378Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-24T09:27:14.8123370Z includeif.gitdir:/home/runner/work/wies/wies/.git.path
+2026-06-24T09:27:14.8124309Z includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path
+2026-06-24T09:27:14.8130329Z includeif.gitdir:/github/workspace/.git.path
+2026-06-24T09:27:14.8130999Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-24T09:27:14.8135373Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/wies/wies/.git.path
+2026-06-24T09:27:14.8161706Z /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8174654Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/wies/wies/.git.path /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8214595Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path
+2026-06-24T09:27:14.8240571Z /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8251510Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8289759Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-06-24T09:27:14.8314314Z /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8324216Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8360167Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-24T09:27:14.8385523Z /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8396644Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config
+2026-06-24T09:27:14.8432137Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-24T09:27:14.8677638Z Removing credentials config '/home/runner/work/_temp/git-credentials-54afcb26-1459-4fe1-8f6a-b9ad9d935987.config'
+2026-06-24T09:27:14.8859476Z Cleaning up orphan processes

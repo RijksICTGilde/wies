@@ -1,8 +1,16 @@
 # BIO-checklist Wies
 
 Hoe Wies voldoet aan de Baseline Informatiebeveiliging Overheid (BIO), per
-maatregel: de status, de toelichting en waar het bewijs staat. Bewijs in de
-vorm van een screenshot staat op de O-schijf in de map BIO.
+maatregel: de status, de toelichting en waar het bewijs staat.
+
+Bron: de Handreiking BIO2-opmaat, v2.5 definitief (5 maart 2026), van het
+Centrum Informatiebeveiliging en Privacybescherming (CIP). Die zet de
+BIO-overheidsmaatregelen van de
+[BIO2, versie 1.3](https://www.nldigitalgovernment.nl/overview/government-information-security-baseline/)
+naast die van BIO 1.04. De nummers volgen NEN-EN-ISO/IEC 27002:2022.
+
+Screenshots en logs staan in [bewijs/](bewijs/). Bewijs met persoonsgegevens
+van gebruikers staat op de O-schijf in de map BIO.
 
 Statussen: **Voldoet**, **Deels**, **Onderhanden**, **n.v.t.**
 
@@ -57,7 +65,7 @@ wetgeving.** — Deels
 Wel encryptie via Let's Encrypt. OV-certificaten lijken wel nodig. We gaan deze
 aanvragen. Actie: Robbert U.
 
-Bewijs: `lets_encrypt.pdf`
+Bewijs: [lets_encrypt.pdf](bewijs/lets_encrypt.pdf)
 
 **Om zekerheid te bieden over de integriteit van het elektronische bericht,
 wordt voor elektronische handtekeningen gebruik gemaakt van de AdES Baseline
@@ -141,7 +149,7 @@ beoordeeld.** — Voldoet
 
 Gebruikerslijst zichtbaar voor Beheerders in de interface.
 
-Bewijs: `gebruikers_lijst.png`
+Bewijs: `gebruikers_lijst.png` (op de O-schijf: toont namen van alle gebruikers)
 
 **Ongeautoriseerde afwijkingen op of ongeautoriseerde aanpassingen aan
 uitgegeven toegangsrechten worden beschouwd als beveiligingsgebeurtenis en als
@@ -166,7 +174,7 @@ in de GitHub-repo. Zichtbaar wie beheerder is in de gebruikerslijst op
 https://wies.rijksorganisatieodi.nl/beheer/gebruikers/.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permissions.py), `beheerders.png`,
+[permission definitions](../../wies/core/permissions.py), [beheerders.png](bewijs/beheerders.png),
 [controle speciale rollen](20261014_speciale_rollen.md)
 
 **Alle uitgegeven toegangsrechten worden minimaal eenmaal per halfjaar
@@ -229,7 +237,7 @@ beoordeeld.** — Voldoet
 Drie rollen met duidelijke permissies. Rollen zichtbaar in UI. Staff-toegang via
 `STAFF_EMAILS` env var. Env var zichtbaar in ZAD.
 
-Bewijs: `beheerders.png`, [controle speciale rollen](20261014_speciale_rollen.md)
+Bewijs: [beheerders.png](bewijs/beheerders.png), [controle speciale rollen](20261014_speciale_rollen.md)
 
 ## 8.03
 
@@ -322,7 +330,7 @@ voor vulnerabilities bij dependencies.
 Bewijs: [access control tests](../../wies/core/tests/test_access_control.py),
 [permission tests](../../wies/core/tests/test_permissions.py),
 [role tests](../../wies/core/tests/test_roles.py),
-`security_scan_dependencies.png`, `security_scanning_config.png`
+[security_scan_dependencies.png](bewijs/security_scan_dependencies.png), [security_scanning_config.png](bewijs/security_scanning_config.png)
 
 ## 8.13
 
@@ -361,7 +369,7 @@ tegen veranderingen.** — Voldoet
 om de goede werking te waarborgen als deze in noodgevallen uitgevoerd moet
 worden.** — Voldoet
 
-Bewijs: `periodieke_beheertaken.png`
+Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png)
 
 ## 8.15
 
@@ -413,7 +421,7 @@ Bewijs: [enforcen van niet bewerken](../../wies/core/models.py) (`Event.save`)
 opzichte van de uitvoering) getoetst op het ongewijzigd bestaan van logbestanden
 gedurende de bewaartermijn.** — Voldoet
 
-Bewijs: `periodieke_beheertaken.png`
+Bewijs: [periodieke_beheertaken.png](bewijs/periodieke_beheertaken.png)
 
 ## 8.21
 
@@ -478,7 +486,7 @@ gebruikt. De testen worden bij voorkeur geautomatiseerd uitgevoerd.** — Voldoe
 Django TestCase-framework met `just test`. CI-pipeline via GitHub Actions.
 Pre-commit hooks.
 
-Bewijs: `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`, `logs_75762501481`,
+Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png), [logs_75762501481](bewijs/logs_75762501481/),
 [testworkflow](../../.github/workflows/test.yml)
 
 **Van de resultaten van de testen wordt verslag gemaakt.** — Voldoet
@@ -486,7 +494,7 @@ Bewijs: `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`, `logs_75762501481`
 CI-pipeline genereert testresultaten. Eventueel testresultaten opnemen in
 release packages: onderzoekend.
 
-Bewijs: `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`, `logs_75762501481`
+Bewijs: [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png), [logs_75762501481](bewijs/logs_75762501481/)
 
 ## 8.31
 
@@ -497,7 +505,7 @@ Standaardisatie.** — dubbel, zie 8.24
 door de proceseigenaar en schriftelijke vastlegging hiervan, kan hiervan worden
 afgeweken.** — Voldoet
 
-Bewijs: `separate_deployments.png`
+Bewijs: [separate_deployments.png](bewijs/separate_deployments.png)
 
 **Wijzigingen in de productieomgeving worden altijd getest voordat zij in
 productie gebracht worden. Alleen met voorafgaande goedkeuring door de
@@ -508,7 +516,7 @@ GitHub PR-workflow met review (4-ogenprincipe). Test pipeline checkt of wordt
 voldaan aan alle eisen. Als tests niet slagen kan de branch niet naar main
 worden gemerged.
 
-Bewijs: `github_ruleset.png`
+Bewijs: [github_ruleset.png](bewijs/github_ruleset.png)
 
 **In de procedure voor wijzigingenbeheer is minimaal aandacht besteed aan:**
 **(a) het administreren van wijzigingen;**
@@ -518,8 +526,8 @@ Bewijs: `github_ruleset.png`
 Git + GitHub PR-workflow. CI checks (tests, linting). Django migrations voor
 databasewijzigingen. PR-review als goedkeuringsprocedure.
 
-Bewijs: `pr_approval.png`, `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`,
-`logs_75762501481`
+Bewijs: [pr_approval.png](bewijs/pr_approval.png), [test_django_ci_run_pr.png](bewijs/test_django_ci_run_pr.png), [test_js_ci_run_pr.png](bewijs/test_js_ci_run_pr.png),
+[logs_75762501481](bewijs/logs_75762501481/)
 
 **Wijzigingsbeheer vindt plaats op basis van een algemeen geaccepteerd
 beheerraamwerk.** — Voldoet
