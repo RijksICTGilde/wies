@@ -6,7 +6,7 @@ vorm van een screenshot staat op de O-schijf in de map BIO.
 
 Statussen: **Voldoet**, **Deels**, **Onderhanden**, **n.v.t.**
 
-## 5.03 Toegang tot bedrijfsmiddelen
+## 5.03
 
 **Er zijn maatregelen getroffen die onbedoelde of ongeautoriseerde toegang tot
 bedrijfsmiddelen waarnemen of voorkomen.** — Voldoet
@@ -16,10 +16,10 @@ RBAC met 3 rollen (Beheerder, Consultant, BDM). Permission engine op veld-niveau
 (@rijksoverheid.nl, @minbzk.nl).
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py),
+[permission definitions](../../wies/core/permissions.py),
 [login required en allowed domains](../../config/settings/base.py)
 
-## 5.12 Classificatie van informatie
+## 5.12
 
 **De informatie in alle informatiesystemen is door middel van een expliciete
 risicoafweging geclassificeerd, zodat duidelijk is welke bescherming nodig
@@ -31,7 +31,7 @@ privacyverklaring. Deze gegevensset is besproken met de CISO.
 
 Bewijs: [privacyverklaring](../privacy.md)
 
-## 5.14 Informatieoverdracht
+## 5.14
 
 **Voor de beveiliging van elektronische (e-mail)berichten gelden de vastgestelde
 open standaarden tegen phishing en afluisteren op de 'pas toe of leg uit'-lijst
@@ -57,7 +57,7 @@ wetgeving.** — Deels
 Wel encryptie via Let's Encrypt. OV-certificaten lijken wel nodig. We gaan deze
 aanvragen. Actie: Robbert U.
 
-Bewijs: `lets_encrypt.png`
+Bewijs: `lets_encrypt.pdf`
 
 **Om zekerheid te bieden over de integriteit van het elektronische bericht,
 wordt voor elektronische handtekeningen gebruik gemaakt van de AdES Baseline
@@ -65,7 +65,7 @@ Profile standaard.** — n.v.t.
 
 Geen berichtenuitwisseling.
 
-## 5.15 Toegangsbeveiliging
+## 5.15
 
 **Alleen geauthentiseerde apparatuur kan toegang krijgen tot een vertrouwde
 zone.** — Voldoet
@@ -80,7 +80,7 @@ Bewijs: [login required](../../config/settings/base.py),
 **Gebruikers met eigen of ongeauthentiseerde apparatuur (Bring Your Own Device)
 krijgen alleen toegang tot een onvertrouwde zone.** — n.v.t.
 
-## 5.16 Identiteitsbeheer
+## 5.16
 
 **Er is een sluitende formele registratie- en afmeldprocedure voor het beheren
 van gebruikersidentificaties.** — Voldoet
@@ -93,12 +93,12 @@ Bewijs: [user create service](../../wies/core/services/users.py),
 [user delete endpoint](../../wies/core/views/users.py),
 [unieke email](../../wies/rijksauth/models.py),
 [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py)
+[permission definitions](../../wies/core/permissions.py)
 
 **Het gebruiken van groepsaccounts is niet toegestaan, tenzij dit wordt
 gemotiveerd en vastgelegd door de proceseigenaar.** — Voldoet
 
-## 5.17 Authenticatie-informatie
+## 5.17
 
 **Bij het aanloggen op een vertrouwde zone:**
 **(a) is het gebruik van tweefactor-authenticatie altijd verplicht;**
@@ -123,7 +123,7 @@ n.v.t., SSO
 **Van initiële wachtwoorden en wachtwoorden die gereset zijn, wordt automatisch
 afgedwongen dat deze bij het eerste gebruik worden gewijzigd.** — n.v.t., SSO
 
-## 5.18 Toegangsrechten
+## 5.18
 
 **Er is uitsluitend toegang verleend tot informatiesystemen na autorisatie door
 een bevoegde functionaris.** — Voldoet
@@ -132,7 +132,7 @@ Gebruikers worden aangemaakt door Beheerders (permission: `change_user`).
 Roltoewijzing via groepen. Staff-toegang beperkt tot `STAFF_EMAILS` whitelist.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py)
+[permission definitions](../../wies/core/permissions.py)
 
 ### 5.18.1
 
@@ -166,7 +166,7 @@ in de GitHub-repo. Zichtbaar wie beheerder is in de gebruikerslijst op
 https://wies.rijksorganisatieodi.nl/beheer/gebruikers/.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py),
+[permission definitions](../../wies/core/permissions.py), `beheerders.png`,
 [controle speciale rollen](20261014_speciale_rollen.md)
 
 **Alle uitgegeven toegangsrechten worden minimaal eenmaal per halfjaar
@@ -174,7 +174,7 @@ beoordeeld.** — Voldoet
 
 Zie 5.18.1.
 
-## 5.24 Incidentbeheer
+## 5.24
 
 **Een Coordinated Vulnerability Disclosure (CVD)-procedure is gepubliceerd en
 ingericht, inclusief de opvolging. Voorheen werd Coordinated Vulnerability
@@ -194,7 +194,7 @@ integriteit van informatieverwerkende systemen, behoren zo snel mogelijk
 (binnen 72 uur) al dan niet geautomatiseerd te worden gemeld aan het NCSC
 (alleen voor rijksoverheidsorganisaties) of de sectorale CERT.** — n.v.t.
 
-## 5.33 Bewaartermijnen
+## 5.33
 
 **De proceseigenaar heeft per soort informatie inzichtelijk gemaakt wat de
 bewaartermijn is.** — Deels, onderhanden
@@ -204,23 +204,24 @@ automatische cleanup. Daarnaast nog geen beleid over uit dienst treding en
 historische opdrachten.
 
 - TODO: retentiebeleid implementeren / opstellen
-- TODO: delete user → annoteren `deleted_at`? (#419)
+- TODO: delete user → annoteren `deleted_at`?
+  ([#419](https://github.com/RijksICTGilde/wies/issues/419))
 
-## 5.34 Naleving privacy
+## 5.34
 
 **Organisaties controleren regelmatig de naleving van de privacyregels en
 informatieverwerking en -procedures binnen hun verantwoordelijkheidsgebied aan
 de hand van de desbetreffende beleidsregels, normen en andere eisen betreffende
 beveiliging.** — n.v.t.
 
-## 6.08 Melden van incidenten
+## 6.08
 
 **Incidenten worden zo snel mogelijk, maar in ieder geval binnen 24 uur na
 bekendwording, intern gemeld.** — Deels, onderhanden
 
 Aan wie moet dit worden gemeld? Aan de CISO?
 
-## 8.02 Speciale bevoegdheden
+## 8.02
 
 **De uitgegeven speciale bevoegdheden worden minimaal ieder kwartaal
 beoordeeld.** — Voldoet
@@ -228,9 +229,9 @@ beoordeeld.** — Voldoet
 Drie rollen met duidelijke permissies. Rollen zichtbaar in UI. Staff-toegang via
 `STAFF_EMAILS` env var. Env var zichtbaar in ZAD.
 
-Bewijs: [controle speciale rollen](20261014_speciale_rollen.md)
+Bewijs: `beheerders.png`, [controle speciale rollen](20261014_speciale_rollen.md)
 
-## 8.03 Beperking toegang tot informatie
+## 8.03
 
 **Er zijn maatregelen genomen die het fysiek en/of logisch isoleren van
 informatie met specifiek belang waarborgen.** — Voldoet
@@ -239,7 +240,7 @@ Permission engine dwingt veld-niveau toegang af. Row-level checks via
 `has_permission()`.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py)
+[permission definitions](../../wies/core/permissions.py)
 
 **Gebruikers kunnen alleen die informatie met specifiek belang inzien en
 verwerken die ze nodig hebben voor de uitoefening van hun taak.** — Voldoet
@@ -249,9 +250,9 @@ is de bewerking beperkt per rol. Alle mutaties worden gelogd.
 
 Bewijs: [dataset in de privacyverklaring](../privacy.md),
 [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py)
+[permission definitions](../../wies/core/permissions.py)
 
-## 8.05 Veilige authenticatie
+## 8.05
 
 **Als vanuit een onvertrouwde zone toegang wordt verleend naar een vertrouwde
 zone, gebeurt dit alleen op basis van minimaal tweefactor-authenticatie.** —
@@ -259,7 +260,7 @@ Voldoet
 
 SSO-Rijk/Keycloak dwingt MFA af.
 
-## 8.07 Bescherming tegen malware
+## 8.07
 
 **Het downloaden van bestanden is beheerst en beperkt op basis van risico en
 need-of-use.** — Voldoet
@@ -279,7 +280,7 @@ toegangsverlening tot het netwerk van de organisatie;**
 **(c) alle bestanden die via netwerken of via elke vorm van opslagmedium zijn
 ontvangen, vóór gebruik of opslag in de eigen omgeving.** — n.v.t.
 
-## 8.08 Beheer van technische kwetsbaarheden
+## 8.08
 
 **Als de kans op misbruik en de verwachte schade beide hoog zijn (bijvoorbeeld
 met de NCSC-Inschalingsmatrix beveiligingsadviezen of
@@ -319,11 +320,11 @@ security check of PR's vulnerabilities introduceren en waarschuwt Dependabot
 voor vulnerabilities bij dependencies.
 
 Bewijs: [access control tests](../../wies/core/tests/test_access_control.py),
-[permission tests](../../wies/core/tests/),
-[role tests](../../wies/core/tests/test_role_matrix.py),
+[permission tests](../../wies/core/tests/test_permissions.py),
+[role tests](../../wies/core/tests/test_roles.py),
 `security_scan_dependencies.png`, `security_scanning_config.png`
 
-## 8.13 Back-up van informatie
+## 8.13
 
 **Er is een back-up beleid waarin de eisen voor het bewaren en beschermen zijn
 gedefinieerd en vastgesteld. Er moet speciale aandacht zijn voor het beschermen
@@ -362,7 +363,7 @@ worden.** — Voldoet
 
 Bewijs: `periodieke_beheertaken.png`
 
-## 8.15 Logging
+## 8.15
 
 **Een logregel bevat minimaal:**
 **(a) de gebeurtenis;**
@@ -406,13 +407,15 @@ bekend is.
 
 TODO: hoe moet dit gemeld worden?
 
+Bewijs: [enforcen van niet bewerken](../../wies/core/models.py) (`Event.save`)
+
 **Minimaal halfjaarlijks wordt door een onafhankelijke functionaris (ten
 opzichte van de uitvoering) getoetst op het ongewijzigd bestaan van logbestanden
 gedurende de bewaartermijn.** — Voldoet
 
 Bewijs: `periodieke_beheertaken.png`
 
-## 8.21 Beveiliging netwerkdiensten
+## 8.21
 
 **In koppelpunten met externe of onvertrouwde zones zijn maatregelen getroffen
 om mogelijke aanvallen die de beschikbaarheid van de informatievoorziening
@@ -421,7 +424,7 @@ Service attacks) te signaleren en hierop te reageren.** — Onderhanden
 
 TODO Robbert U: uitvragen bij ODC Noord
 
-## 8.24 Gebruik van cryptografie
+## 8.24
 
 **In het cryptografiebeleid zijn minimaal de volgende onderwerpen uitgewerkt:**
 **(a) Wanneer cryptografie ingezet wordt.**
@@ -448,8 +451,6 @@ voor het beheer van cryptografische sleutels.** — Voldoet
 **Er zijn (contractuele) afspraken over reservecertificaten van een alternatieve
 leverancier als uit risicoafweging blijkt dat deze noodzakelijk zijn.** — n.v.t.
 
-## Security by design
-
 **De gangbare principes rondom 'security by design' zijn uitgangspunt voor de
 ontwikkeling van software en systemen.** — Voldoet
 
@@ -465,10 +466,11 @@ ontwikkeling van software en systemen.** — Voldoet
   zodat de Content Security Policy geen externe bronnen hoeft toe te staan.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permission_engine.py),
+[permission definitions](../../wies/core/permissions.py),
+[voorbeeld van ORM-gebruik](../../wies/core/querysets.py),
 [CSP-policy](../../wies/core/middleware.py)
 
-## 8.29 Beveiligingstesten
+## 8.29
 
 **Voor acceptatietesten van systemen worden gestructureerde testmethodieken
 gebruikt. De testen worden bij voorkeur geautomatiseerd uitgevoerd.** — Voldoet
@@ -476,14 +478,17 @@ gebruikt. De testen worden bij voorkeur geautomatiseerd uitgevoerd.** — Voldoe
 Django TestCase-framework met `just test`. CI-pipeline via GitHub Actions.
 Pre-commit hooks.
 
-Bewijs: [testworkflow](../../.github/workflows/test.yml)
+Bewijs: `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`, `logs_75762501481`,
+[testworkflow](../../.github/workflows/test.yml)
 
 **Van de resultaten van de testen wordt verslag gemaakt.** — Voldoet
 
 CI-pipeline genereert testresultaten. Eventueel testresultaten opnemen in
 release packages: onderzoekend.
 
-## 8.31 Scheiding van ontwikkel-, test- en productieomgevingen
+Bewijs: `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`, `logs_75762501481`
+
+## 8.31
 
 **Cryptografische toepassingen voldoen aan passende standaarden van het Forum
 Standaardisatie.** — dubbel, zie 8.24
@@ -513,7 +518,8 @@ Bewijs: `github_ruleset.png`
 Git + GitHub PR-workflow. CI checks (tests, linting). Django migrations voor
 databasewijzigingen. PR-review als goedkeuringsprocedure.
 
-Bewijs: `pr_approval.png`, [testworkflow](../../.github/workflows/test.yml)
+Bewijs: `pr_approval.png`, `test_django_ci_run_pr.png`, `test_js_ci_run_pr.png`,
+`logs_75762501481`
 
 **Wijzigingsbeheer vindt plaats op basis van een algemeen geaccepteerd
 beheerraamwerk.** — Voldoet
