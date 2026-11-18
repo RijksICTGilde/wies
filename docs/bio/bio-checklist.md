@@ -175,7 +175,7 @@ in de GitHub-repo. Zichtbaar wie beheerder is in de gebruikerslijst op
 https://wies.rijksorganisatieodi.nl/beheer/gebruikers/.
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permissions.py), [beheerders.png](bewijs/beheerders.png) (juni 2026),
+[permission definitions](../../wies/core/permissions.py), [beheerders_2026-11-18.png](bewijs/beheerders_2026-11-18.png) (18 november 2026, geanonimiseerd),
 [controle speciale rollen](20261014_speciale_rollen.md)
 
 **Alle uitgegeven toegangsrechten worden minimaal eenmaal per halfjaar
@@ -238,7 +238,7 @@ beoordeeld.** — Voldoet
 Drie rollen met duidelijke permissies. Rollen zichtbaar in UI. Staff-toegang via
 `STAFF_EMAILS` env var. Env var zichtbaar in ZAD.
 
-Bewijs: [beheerders.png](bewijs/beheerders.png) (juni 2026), [controle speciale rollen](20261014_speciale_rollen.md)
+Bewijs: [beheerders_2026-11-18.png](bewijs/beheerders_2026-11-18.png) (18 november 2026, geanonimiseerd), [controle speciale rollen](20261014_speciale_rollen.md)
 
 ## 8.03
 
