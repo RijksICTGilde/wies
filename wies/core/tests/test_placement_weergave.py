@@ -26,6 +26,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.services.dates import datum_nl
 
 User = get_user_model()
 
@@ -39,6 +40,11 @@ def _make_assignment(name, *, source="wies"):
         end_date=today + timedelta(days=30),
         source=source,
     )
+
+
+def _placed_names(response) -> list[str]:
+    """The names on a page's cards with a current placement (a period), so not the viewer's."""
+    return [card["name"] for card in response.context_data["cards"] if card["period_text"]]
 
 
 def _make_colleague(name):
@@ -156,8 +162,8 @@ class TestGroupPagination:
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         # Plus the viewer, who has no placement and so ends the list.
-        assert response.context_data["paginator"].count == 6
-        assert len(response.context_data["object_list"]) == 10
+        assert response.context_data["result_count"] == 6
+        assert len(response.context_data["cards"]) == 6
 
     def test_paginator_counts_assignments_in_opdracht_view(self):
         """Two assignments with three team members each is six placements but two cards."""
@@ -168,8 +174,8 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"weergave": "opdracht"})
         assert response.status_code == 200
-        assert response.context_data["paginator"].count == 2
-        assert len(response.context_data["object_list"]) == 6
+        assert response.context_data["result_count"] == 2
+        assert [len(card["team"]) for card in response.context_data["cards"]] == [3, 3]
 
     def test_group_is_never_split_across_a_page_boundary(self):
         """Every placement of a person sits on the same page as that person's card.
@@ -187,21 +193,17 @@ class TestGroupPagination:
         assert page1.status_code == 200
         assert page2.status_code == 200
 
-        page1_colleagues = {p.colleague_id for p in page1.context_data["object_list"]}
-        page2_colleagues = {p.colleague_id for p in page2.context_data["object_list"]}
+        # The viewer, who has no placement, ends the list on page 2.
+        page1_colleagues = set(_placed_names(page1))
+        page2_colleagues = set(_placed_names(page2))
 
         assert len(page1_colleagues) == 60
         assert len(page2_colleagues) == 1
         assert not (page1_colleagues & page2_colleagues)
 
         for page in (page1, page2):
-            counts = {}
-            for placement in page.context_data["object_list"]:
-                counts[placement.colleague_id] = counts.get(placement.colleague_id, 0) + 1
-            assert set(counts.values()) == {2}
-
-        assert len(page1.context_data["object_list"]) == 120
-        assert len(page2.context_data["object_list"]) == 2
+            placed = [card for card in page.context_data["cards"] if card["period_text"]]
+            assert {card["assignment_text"] for card in placed} == {"2 opdrachten"}
 
     def test_every_group_appears_exactly_once_across_pages(self):
         for i in range(61):
@@ -210,7 +212,7 @@ class TestGroupPagination:
         seen = []
         for page_number in (1, 2):
             response = self.client.get(reverse("home"), {"pagina": str(page_number)})
-            seen.extend(p.colleague_id for p in response.context_data["object_list"])
+            seen.extend(_placed_names(response))
 
         assert len(seen) == 61
         assert len(set(seen)) == 61
@@ -222,7 +224,7 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"pagina": page})
         assert response.status_code == 200
-        assert response.context_data["page_obj"].number == 1
+        assert "Jan de Vries" in [card["name"] for card in response.context_data["cards"]]
 
     def test_page_number_above_last_page_clamps_to_last(self):
         for i in range(61):
@@ -230,12 +232,14 @@ class TestGroupPagination:
 
         response = self.client.get(reverse("home"), {"pagina": "500"})
         assert response.status_code == 200
-        assert response.context_data["page_obj"].number == 2
+        # Page 2 of 62 cards (the viewer included): the last two, and no next page.
+        assert len(response.context_data["cards"]) == 2
+        assert response.context_data["next_page_url"] is None
 
     def test_empty_result_set_renders_without_error(self):
         response = self.client.get(reverse("home"), {"zoek": "niemand-heet-zo"})
         assert response.status_code == 200
-        assert response.context_data["paginator"].count == 0
+        assert response.context_data["result_count"] == 0
         assert response.context_data["cards"] == []
 
 
@@ -261,8 +265,8 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht B"), self.skill)
 
         cards = self._cards()
-        assert [name for name, card in cards.items() if not card.get("no_assignment")] == ["Jan de Vries"]
-        assert len(cards["Jan de Vries"]["assignments"]) == 2
+        assert [name for name, card in cards.items() if card["period_text"]] == ["Jan de Vries"]
+        assert cards["Jan de Vries"]["assignment_text"] == "2 opdrachten"
 
     def test_single_assignment_card_links_to_the_colleague(self):
         """A person opens the colleague panel, also with one assignment; the
@@ -271,7 +275,7 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Cloud Migratie"), self.skill)
 
         card = self._cards()["Jan de Vries"]
-        assert card["assignment"] is not None
+        assert card["assignment_text"] == "Cloud Migratie"
         assert f"collega={colleague.public_id}" in card["panel_url"]
         assert "opdracht=" not in card["panel_url"]
         assert "plaatsing=" not in card["panel_url"]
@@ -283,9 +287,24 @@ class TestPersonCards:
         _place(colleague, _make_assignment("Opdracht B"), self.skill)
 
         card = self._cards()["Jan de Vries"]
-        assert card["assignment"] is None
+        assert card["period_text"] == "Meerdere periodes"
         assert f"collega={colleague.public_id}" in card["panel_url"]
         assert "opdracht=" not in card["panel_url"]
+
+    def test_single_assignment_card_names_its_end_date(self):
+        assignment = _make_assignment("Cloud Migratie")
+        _place(_make_colleague("Jan de Vries"), assignment, self.skill)
+
+        card = self._cards()["Jan de Vries"]
+        assert card["period_text"] == f"tot {datum_nl(assignment.end_date, 'b Y')}"
+
+    def test_single_assignment_card_without_end_date(self):
+        assignment = _make_assignment("Cloud Migratie")
+        assignment.end_date = None
+        assignment.save()
+        _place(_make_colleague("Jan de Vries"), assignment, self.skill)
+
+        assert self._cards()["Jan de Vries"]["period_text"] == "Geen einddatum"
 
     def test_roles_are_deduplicated(self):
         """Two placements with the same skill list that role once."""
@@ -442,7 +461,7 @@ class TestFilterCounts:
             params = {"weergave": view} if view != "persoon" else {}
             assert self._rol_counts(params)["Data engineering"] == expected
             response = self.client.get(reverse("home"), {**params, "rol": skill_id})
-            assert response.context_data["paginator"].count == expected
+            assert response.context_data["result_count"] == expected
 
     def _loopt_af_counts(self, params=None):
         response = self.client.get(reverse("home"), params or {})
@@ -469,7 +488,7 @@ class TestFilterCounts:
             params = {"weergave": view} if view != "persoon" else {}
             assert self._loopt_af_counts(params)["Binnen 3 maanden"] == expected
             response = self.client.get(reverse("home"), {**params, "loopt_af": "3m"})
-            assert response.context_data["paginator"].count == expected
+            assert response.context_data["result_count"] == expected
 
 
 @pytest.mark.django_db
@@ -704,7 +723,7 @@ class TestClientModalCounts:
         Read back out of the tree container's data-tree: these templates are Jinja2, so
         there is no response.context to inspect.
         """
-        response = self.client.get("/client-modal/", {"count_mode": "placements", "ndd": "1", **(params or {})})
+        response = self.client.get("/", {"client_modal": "1", **(params or {})}, headers={"HX-Request": "true"})
         assert response.status_code == 200
         html = response.content.decode()
         raw = re.search(r'id="client-tree-container"\s+data-tree="([^"]*)"', html).group(1)

@@ -7,7 +7,7 @@
    the grid fell back to a single 576px-wide card for that stretch -- and then
    jumped straight to three columns once the sidebar collapsed and handed the
    room back. 260px keeps two columns across that range. #}
-{% if paginator.count %}
+{% if result_count %}
   {# max-items="9999": the component paginates its own slot at 24 by default and
      hides every card past that (and the "Meer tonen" cell with them). Wies
      paginates server-side and appends via its own button, so the built-in limit

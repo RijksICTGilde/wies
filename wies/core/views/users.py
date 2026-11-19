@@ -9,6 +9,7 @@ from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import (
     Q,
@@ -17,10 +18,11 @@ from django.db.models import (
 from django.db.models.functions import Concat
 from django.http import HttpResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
-from django.views.generic.list import ListView
+from django.views.generic import View
 
 from wies.core.forms import (
     ContractPeriodForm,
@@ -55,19 +57,18 @@ from wies.core.services.users import (
     update_user,
 )
 
-from ._common import CSV_TOO_LARGE_MSG, csv_too_large, sort_control_context
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from ._common import CSV_TOO_LARGE_MSG, count_label, csv_too_large, sort_control_context
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 
 User = get_user_model()
 
 
-class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
+class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, View):
     """User list with filtering and infinite scroll pagination."""
 
-    model = User
     template_name = "user_admin.html"
     paginate_by = 60
-    page_kwarg = "pagina"
+    page_kwarg = PAGE_PARAM
     permission_required = "rijksauth.view_user"
 
     # ``?order=`` value -> (label, ordering); the default is the absence of the parameter.
@@ -82,33 +83,29 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     # Label categories shown on the row next to the onderdeel, by name (see SUBGROEP_CATEGORY).
     ROW_LABEL_CATEGORIES = (SUBGROEP_CATEGORY,)
 
+    def get(self, request, *args, **kwargs):
+        if is_filter_modal_request(request):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))  # "Meer..."
+
+        # The templates nest: the page holds the results, the results hold the
+        # rows. Each layer's context builds on the one inside it.
+        htmx = "HX-Request" in request.headers
+        if htmx and request.GET.get(self.page_kwarg):
+            return TemplateResponse(request, "parts/user_rows.html", self._rows_context())  # "Meer tonen"
+        if htmx:
+            # A filter change.
+            return TemplateResponse(request, "parts/user_results.html", self._results_context())
+        return TemplateResponse(request, self.template_name, self._page_context())
+
     @cached_property
     def active_order(self) -> str:
         """The requested ``?order=``; empty for the default and for unknown values."""
         requested = self.request.GET.get("order", "")
         return requested if requested in self.SORT_OPTIONS else ""
 
-    def _get_base_queryset(self):
-        """Base queryset with search and ordering applied."""
-        ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
-        qs = annotate_sort_names(
-            User.objects.select_related("colleague__suborganization")
-            .prefetch_related("groups", "colleague__labels__category")
-            .filter(is_superuser=False)
-        ).order_by(*ordering)
-
-        search_filter = self.request.GET.get("zoek")
-        if search_filter:
-            qs = qs.annotate(
-                full_name=Concat("first_name", Value(" "), "last_name"),
-            ).filter(
-                Q(full_name__icontains=search_filter)
-                | Q(first_name__icontains=search_filter)
-                | Q(last_name__icontains=search_filter)
-                | Q(email__icontains=search_filter)
-            )
-
-        return qs
+    @cached_property
+    def search(self) -> str:
+        return self.request.GET.get("zoek") or ""
 
     @cached_property
     def role_filter(self) -> str:
@@ -122,11 +119,24 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             return []
         return list(Group.objects.filter(id=self.role_filter).values_list("id", flat=True))
 
-    def _apply_filters(self, qs, *, exclude_filter=None):
-        """Applies all selection filters, optionally excluding one filter type.
+    def _matching_users(self, *, exclude_filter=None):
+        """The users that pass the search and the filters.
 
-        ``exclude_filter`` is "rol", "onderdeel", or a category_id (int) for labels.
+        ``exclude_filter`` leaves one filter out, for the count next to its own
+        options: "rol", "onderdeel", or a category_id (int) for labels.
+
+        Unordered and not distinct: callers re-key on ids.
         """
+        qs = User.objects.filter(is_superuser=False)
+
+        if self.search:
+            qs = qs.annotate(full_name=Concat("first_name", Value(" "), "last_name")).filter(
+                Q(full_name__icontains=self.search)
+                | Q(first_name__icontains=self.search)
+                | Q(last_name__icontains=self.search)
+                | Q(email__icontains=self.search)
+            )
+
         # Label filter: OR within category, AND between categories
         for cat_id, cat_label_ids in self.labels_by_category.items():
             if exclude_filter != cat_id:
@@ -143,31 +153,65 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
 
         return qs
 
-    def get_queryset(self):
-        """Applies the filters to the users queryset."""
+    def listed(self):
+        """The users in the list.
+
+        A label filter that resolves to no label empties the list (fail closed);
+        the sheet counts carry on without it, so the user can clear the chip.
+        """
         if self.labels_match_nothing:
             return User.objects.none()
-        return self._apply_filters(self._get_base_queryset()).distinct()
+        return User.objects.filter(id__in=self._matching_users().values("id"))
 
-    def get_template_names(self):
-        """Returns the template for this request type."""
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/user_table_rows.html"]
-            # Filter change: replace the result list (the sheet swaps OOB).
-            return ["parts/user_results.html"]
-        return ["user_admin.html"]
+    def page_queryset(self):
+        """The listed users in list order, with what their rows show."""
+        ordering = self.SORT_OPTIONS[self.active_order][1] if self.active_order else self.DEFAULT_ORDERING
+        return annotate_sort_names(
+            self.listed()
+            .select_related("colleague__suborganization")
+            .prefetch_related("groups", "colleague__labels__category")
+        ).order_by(*ordering, "id")
 
-    def get_context_data(self, **kwargs):
-        """Adds the dynamic filter options."""
-        context = super().get_context_data(**kwargs)
+    def _counts(self, field: str, *, exclude_filter) -> Counter[int]:
+        """Users per value of ``field``, under every filter but its own.
 
-        context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op naam of email..."
-        context["search_filter"] = self.request.GET.get("zoek")
+        Re-keys on ids first: the filters join, so a user can match more than once.
+        """
+        users = User.objects.filter(id__in=self._matching_users(exclude_filter=exclude_filter).values("id"))
+        return Counter(value for value in users.values_list(field, flat=True) if value is not None)
 
+    def rows(self, users) -> list[dict]:
+        """One row per user, its text ready to render.
+
+        The onderdeel and subgroep go after the e-mail as text: every label read
+        as a blob, tags next to the role tags was too much.
+        """
+        rows = []
+        for user in users:
+            # A user without a colleague profile has no onderdeel or labels.
+            colleague = getattr(user, "colleague", None)
+            profile = []
+            if colleague:
+                if colleague.suborganization:
+                    profile.append(colleague.suborganization.name)
+                profile += [
+                    label.name for label in colleague.labels.all() if label.category.name in self.ROW_LABEL_CATEGORIES
+                ]
+            rows.append(
+                {
+                    "name": f"{user.first_name} {user.last_name}",
+                    "display_name": user.get_full_name() or user.email,
+                    "email": user.email,
+                    "roles": [role_label(group.name) for group in user.groups.all()],
+                    "supporting_text": " · ".join(part for part in [user.email, *profile] if part),
+                    "edit_url": reverse("user-edit", args=[user.public_id]),
+                    "delete_url": reverse("user-delete", args=[user.public_id]),
+                }
+            )
+        return rows
+
+    def _active_filters(self) -> dict:
+        """The selected values per filter."""
         active_filters = {}
 
         # label filter supports multi-select (values are label public_ids)
@@ -185,19 +229,17 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             # value, and a string would be walked character by character — which
             # silently matches nothing once a Group pk hits two digits.
             active_filters["rol"] = [self.role_filter]
+        return active_filters
 
-        # Chips render in user_results.html: the filter panel is a sheet here, so
-        # nothing outside it would otherwise say WHAT is filtered.
+    def _filter_groups(self, active_filters: dict) -> list[dict]:
+        """The sheet's filter groups, each option with the users it would leave.
 
-        # For each label category, count on a queryset excluding that category's filter.
-        base_qs = self._get_base_queryset()
-
+        The "Meer..." sheet needs nothing else, so it is built from these alone.
+        """
+        # Each filter category counts the users under every filter except its own.
         label_filter_groups = []
         for category in LabelCategory.objects.all():
-            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_ids = cat_user_qs.values_list("colleague__labels__id", flat=True)
-            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
+            cat_label_counts = self._counts("colleague__labels__id", exclude_filter=category.id)
 
             options = [{"value": "", "label": ""}]
             selected_values = []
@@ -223,11 +265,8 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
                 }
             )
 
-        # Onderdeel filter group (one per colleague; counts exclude its own filter)
-        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="onderdeel").distinct()
-        suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
-        suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
-        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+        # Onderdeel filter group (one per colleague)
+        suborg_counts = self._counts("colleague__suborganization_id", exclude_filter="onderdeel")
 
         suborganization_options = [{"value": "", "label": ""}]
         suborganization_selected_values = []
@@ -251,11 +290,7 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             "selected_values": suborganization_selected_values,
         }
 
-        # Rol group; counts exclude the rol filter itself, like the suborganization group.
-        role_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        role_user_qs = User.objects.filter(id__in=role_filtered_qs.values_list("id", flat=True))
-        role_id_values = role_user_qs.values_list("groups__id", flat=True)
-        role_counts = Counter(gid for gid in role_id_values if gid is not None)
+        role_counts = self._counts("groups__id", exclude_filter="rol")
 
         role_options = [{"value": "", "label": ""}]
         role_selected_values = []
@@ -277,47 +312,56 @@ class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
             "selected_values": role_selected_values,
         }
 
-        context["active_filters"] = active_filters
-        # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
-        context["filter_target_url"] = reverse("admin-users")
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
-
-        context["filter_groups"] = [
+        filter_groups = [
             role_filter_group,
             *label_filter_groups,
             suborganization_filter_group,
         ]
         # Adds top_options + has_more per select-multi group, so the filter sheet
         # shows a top-3 with a "Meer..." toggle like the other lists.
-        finalize_filter_groups(context["filter_groups"])
+        finalize_filter_groups(filter_groups)
+        return filter_groups
 
-        context["row_label_categories"] = self.ROW_LABEL_CATEGORIES
-        context.update(
-            sort_control_context(
+    def _rows_context(self) -> dict:
+        """The page of rows and the link to the next one: all that "Meer tonen" renders."""
+        # get_page clamps a page number that is out of range or no number at all.
+        paginator = Paginator(self.page_queryset(), self.paginate_by)
+        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
+        next_page_url = (
+            rebuild_url("", self.request.GET, **{PAGE_PARAM: page.next_page_number()}) if page.has_next() else None
+        )
+        return {
+            "result_count": paginator.count,
+            "rows": self.rows(page.object_list),
+            "next_page_url": next_page_url,
+        }
+
+    def _results_context(self) -> dict:
+        """The rows plus what a filter change re-renders around them: the count,
+        the chips, the sort control and the filter sheet (swapped in out of band)."""
+        context = self._rows_context()
+        active_filters = self._active_filters()
+        context |= {
+            "result_announcement": count_label(context["result_count"], "gebruiker", "gebruikers"),
+            "search_filter": self.request.GET.get("zoek"),
+            # Chips render in user_results.html: the filter panel is a sheet here, so
+            # nothing outside it would otherwise say WHAT is filtered.
+            "active_filters": active_filters,
+            # Target URL for the filter form and the "Meer…" sheet (see filter_sidebar).
+            "filter_target_url": reverse("admin-users"),
+            "filter_groups": self._filter_groups(active_filters),
+            **sort_control_context(
                 self.active_order,
                 [(value, label) for value, (label, _) in self.SORT_OPTIONS.items()],
                 self.DEFAULT_SORT_LABEL,
-            )
-        )
-
-        context["primary_button"] = {
-            "button_text": "Gebruiker toevoegen",
-            "attrs": {
-                "hx-get": reverse("user-create"),
-                "hx-target": "#userFormModal",
-                "hx-push-url": "false",  # necessary because nested in htmx powered form
-            },
+            ),
         }
-
-        # Build next page URL with all current filters
-        if context.get("page_obj") and context["page_obj"].has_next():
-            context["next_page_url"] = rebuild_url(
-                "", self.request.GET, **{PAGE_PARAM: context["page_obj"].next_page_number()}
-            )
-        else:
-            context["next_page_url"] = None
-
         return context
+
+    def _page_context(self) -> dict:
+        """The results, which is all the full page needs: the toolbar and the
+        filter sheet render from the same keys, and there is no side panel."""
+        return self._results_context()
 
 
 def _user_list_behind_sheet(request) -> str:

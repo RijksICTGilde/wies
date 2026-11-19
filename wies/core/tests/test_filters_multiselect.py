@@ -3,6 +3,7 @@ from datetime import date
 
 from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
+from django.urls import reverse
 
 from wies.core.models import (
     Assignment,
@@ -16,7 +17,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_top_org_options
-from wies.core.views.placements import PlacementListView
+from wies.core.views.placements import ColleagueOverview, PlacementFilters
 
 User = get_user_model()
 
@@ -69,20 +70,12 @@ class FilterCombiningTestBase(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        return list(view.get_queryset().values_list("id", flat=True))
+        return list(PlacementFilters(request).matching_placements().distinct().values_list("id", flat=True))
 
     def _get_org_quick_options(self, params: dict) -> list[dict]:
         """Return the opdrachtgever quick options from the rendered context."""
-        factory = RequestFactory()
-        request = factory.get("/", params)
-        request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
+        self.client.force_login(self.auth_user)
+        context = self.client.get(reverse("home"), params).context_data
         org_group = next(g for g in context["filter_groups"] if g.get("type") == "modal")
         return org_group["top_options"]
 
@@ -383,6 +376,8 @@ class AllFiltersCombinedTest(FilterCombiningTestBase):
         """Non-existent label ID should return no results."""
         self._create_placement("Alice", self.skill_python, labels=[self.label_thema_a])
 
-        ids = self._get_placement_ids({"labels": "99999"})
+        request = RequestFactory().get("/", {"labels": "99999"})
+        request.user = self.auth_user
+        listed = ColleagueOverview(PlacementFilters(request)).listed()
 
-        assert len(ids) == 0, "Non-existent label should return no results"
+        assert not listed.exists(), "Non-existent label should return no results"

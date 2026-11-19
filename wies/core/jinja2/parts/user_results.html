@@ -12,10 +12,9 @@
 {% endif %}
 {# No count line at zero: the empty state below already says it, and "0
    gebruikers" above would make it two messages. #}
-{% if paginator.count %}
-  {% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
+{% if result_count %}
   <nldd-rich-text spacing="flat">
-  <p>{{ paginator.count }} {{ count_label }}</p>
+  <p>{{ result_announcement }}</p>
   </nldd-rich-text>
 {% endif %}
 </nldd-container>
@@ -25,7 +24,7 @@
 {# The list sits NEXT TO #results, not inside it, so it is a direct child of the
    nldd-sidebar-section: only then does the empty state's flex-grow do anything.
    Nested in block containers it would stick to the count line. #}
-{% include "parts/user_table.html" %}
+{% include "parts/user_list.html" %}
 {% if request.headers.get("HX-Request") %}
   {# The sort control rides along OOB so the button shows the new order. #}
   {% set sort_control_oob = true %}

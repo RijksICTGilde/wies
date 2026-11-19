@@ -29,7 +29,7 @@ from wies.core.models import (
 from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
 from wies.core.views.panels import build_assignment_panel_data, get_colleague_assignments
-from wies.core.views.placements import PlacementListView
+from wies.core.views.placements import PlacementFilters
 from wies.core.visibility_rules import PRIVACY_BM, PRIVACY_BM_OWNED, PRIVACY_OWN
 
 User = get_user_model()
@@ -230,7 +230,7 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31
 
 
 class PlacementListHistoricalFilterTest(TestCase):
-    """Tests for historical placement filtering in PlacementListView"""
+    """Tests for historical placement filtering in the Wie zit waar? list"""
 
     def setUp(self):
         """Create test data"""
@@ -292,9 +292,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        qs = view.get_queryset()
+        qs = PlacementFilters(request).matching_placements().distinct()
 
         # Verify placement is NOT in queryset
         assert placement not in qs, "Historical placement should be excluded"
@@ -315,9 +313,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        qs = view.get_queryset()
+        qs = PlacementFilters(request).matching_placements().distinct()
 
         # Verify placement IS in queryset
         assert placement in qs, "Placement ending today should be included"
@@ -338,9 +334,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        qs = view.get_queryset()
+        qs = PlacementFilters(request).matching_placements().distinct()
 
         # Verify placement IS in queryset
         assert placement in qs, "Future placement should be included"
@@ -379,9 +373,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        qs = view.get_queryset()
+        qs = PlacementFilters(request).matching_placements().distinct()
 
         # Verify placement is NOT in queryset (service ended yesterday)
         assert placement not in qs, "Placement with service ending yesterday should be excluded"
@@ -420,9 +412,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        qs = view.get_queryset()
+        qs = PlacementFilters(request).matching_placements().distinct()
 
         # Verify placement is NOT in queryset (assignment ended yesterday)
         assert placement not in qs, "Placement with assignment ending yesterday should be excluded"
@@ -1101,9 +1091,7 @@ class PlacementListFutureVisibilityTest(TestCase):
         mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         request = RequestFactory().get(self.list_url)
         request.user = user
-        view = PlacementListView()
-        view.request = request
-        return view.get_queryset()
+        return PlacementFilters(request).matching_placements().distinct()
 
     @patch("wies.core.views.placements.timezone")
     def test_future_placement_hidden_from_unrelated(self, mock_tz):
@@ -1721,7 +1709,7 @@ class OrgDescendantHelperTest(TestCase):
 
 
 class PlacementOrganizationFilterTest(TestCase):
-    """Tests for organization filtering in PlacementListView."""
+    """Tests for organization filtering in the Wie zit waar? list."""
 
     def setUp(self):
         self.auth_user = User.objects.create_user(
@@ -1766,9 +1754,7 @@ class PlacementOrganizationFilterTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        return view.get_queryset()
+        return PlacementFilters(request).matching_placements().distinct()
 
     def test_org_filter_rejects_sequential_pk(self):
         """Anti-enumeration: the org's integer pk is not a usable filter token, so
@@ -1921,16 +1907,11 @@ class OrgFilterCountCrossFilterTest(TestCase):
     def _sidebar_org_counts(self, params: dict) -> dict[str, int]:
         """{org_id (str): count} from the Opdrachtgever sidebar group's top_options.
 
-        Built by calling the view directly — the app uses Jinja2, so the test
-        client never populates response.context.
+        Read from ``context_data``: the app uses Jinja2, so the test client never
+        populates response.context, but the view returns a TemplateResponse.
         """
-        request = RequestFactory().get(reverse("home"), params)
-        request.user = self.user
-        view = PlacementListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
+        self.client.force_login(self.user)
+        context = self.client.get(reverse("home"), params).context_data
         org_group = next(g for g in context["filter_groups"] if g["name"] == "organisatie")
         return {opt["value"]: opt["count"] for opt in org_group["top_options"] if opt["param"] == "org"}
 
@@ -1951,8 +1932,9 @@ class OrgFilterCountCrossFilterTest(TestCase):
 
         self.client.force_login(self.user)
         response = self.client.get(
-            reverse("client-modal"),
-            {"count_mode": "placements", "rol": str(self.skill_a.public_id)},
+            reverse("home"),
+            {"client_modal": "1", "rol": str(self.skill_a.public_id)},
+            headers={"HX-Request": "true"},
         )
         counts = _modal_org_self_counts(response)
 
@@ -1972,7 +1954,7 @@ class OrgFilterCountCrossFilterTest(TestCase):
 
 
 class PlacementSearchTest(TestCase):
-    """Tests for the 'zoek' search parameter in PlacementListView."""
+    """Tests for the 'zoek' search parameter in the Wie zit waar? list."""
 
     def setUp(self):
         self.auth_user = User.objects.create_user(
@@ -2017,9 +1999,7 @@ class PlacementSearchTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", {"zoek": query})
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        return view.get_queryset()
+        return PlacementFilters(request).matching_placements().distinct()
 
     def test_search_by_colleague_name(self):
         p = self._create_placement(colleague_name="Jan de Vries")
@@ -2045,7 +2025,7 @@ class PlacementSearchTest(TestCase):
 
 
 class PlacementLooptAfFilterTest(TestCase):
-    """Tests for the 'loopt af' end-date filter in PlacementListView."""
+    """Tests for the 'loopt af' end-date filter in the Wie zit waar? list."""
 
     def setUp(self):
         self.auth_user = User.objects.create_user(email="test@rijksoverheid.nl")
@@ -2073,9 +2053,7 @@ class PlacementLooptAfFilterTest(TestCase):
         factory = RequestFactory()
         request = factory.get("/", params)
         request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        return set(view.get_queryset().values_list("id", flat=True))
+        return set(PlacementFilters(request).matching_placements().distinct().values_list("id", flat=True))
 
     @patch("wies.core.views.placements.timezone")
     def test_loopt_af_3m(self, mock_timezone):
@@ -2150,8 +2128,8 @@ class PlacementLooptAfFilterTest(TestCase):
         assert p_far.id in ids
 
 
-class ClientModalCountModeTest(TestCase):
-    """Tests for count_mode parameter in client_modal view."""
+class ClientModalTest(TestCase):
+    """The org tree: the form picker on /client-modal/, the filter sheet on the list views."""
 
     def setUp(self):
         self.client = Client()
@@ -2169,34 +2147,33 @@ class ClientModalCountModeTest(TestCase):
         service = Service.objects.create(assignment=assignment, description="S", skill=skill, source="wies")
         Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
 
-    def test_count_mode_none_uses_assignment_org_modal_template(self):
+    def test_form_picker_uses_assignment_org_modal_template(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
+        response = self.client.get(reverse("client-modal"))
         assert response.status_code == 200
         # assignment_org_modal.html has this unique element
         assert b'id="assignment-org-modal"' in response.content
 
-    def test_count_mode_none_includes_orgs_without_placements(self):
-        """count_mode=none should not prune orgs with zero placements."""
+    def test_form_picker_includes_orgs_without_placements(self):
+        """The form picker shows the whole tree, unpruned."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
-        content = response.content.decode()
-        assert "Org B" in content
+        response = self.client.get(reverse("client-modal"))
+        assert "Org B" in response.content.decode()
 
-    def test_placements_count_mode_prunes_empty_orgs(self):
-        """count_mode=placements should prune orgs with zero placements."""
+    def test_list_filter_sheet_prunes_empty_orgs(self):
+        """The filter sheet on a list drops orgs without cards."""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
+        response = self.client.get(reverse("home"), {"client_modal": "1"}, headers={"HX-Request": "true"})
         content = response.content.decode()
+        assert 'id="client-modal"' in content
+        assert "Org A" in content
         assert "Org B" not in content
 
-    def test_missing_count_mode_is_bad_request(self):
+    def test_list_filter_sheet_needs_htmx(self):
+        """A plain page load with ?client_modal= renders the page, not the sheet."""
         self.client.force_login(self.auth_user)
-        assert self.client.get(reverse("client-modal")).status_code == 400
-
-    def test_unknown_count_mode_is_bad_request(self):
-        self.client.force_login(self.auth_user)
-        assert self.client.get(reverse("client-modal"), {"count_mode": "bogus"}).status_code == 400
+        response = self.client.get(reverse("home"), {"client_modal": "1"})
+        assert 'id="client-modal"' not in response.content.decode()
 
 
 MNRE_BZK = "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034"
@@ -2365,9 +2342,11 @@ class ScopedOrgTypeInFilterTest(TestCase):
         unit.save(update_fields=["main_type"])
 
     def _matched_ids(self, params):
-        view = PlacementListView()
-        view.request = RequestFactory().get("/", params)
-        return set(view.apply_org_filter(OrganizationUnit.objects.all(), "id__in").values_list("id", flat=True))
+        return set(
+            PlacementFilters(RequestFactory().get("/", params))
+            .apply_org_filter(OrganizationUnit.objects.all(), "id__in")
+            .values_list("id", flat=True)
+        )
 
     def test_selecting_ministry_includes_its_linked_units(self):
         matched = self._matched_ids({"org": str(self.bzk.public_id)})
@@ -2456,9 +2435,11 @@ class TopLevelTypeFolderFilterTest(TestCase):
         unit.save(update_fields=["main_type"])
 
     def _matched_ids(self, params):
-        view = PlacementListView()
-        view.request = RequestFactory().get("/", params)
-        return set(view.apply_org_filter(OrganizationUnit.objects.all(), "id__in").values_list("id", flat=True))
+        return set(
+            PlacementFilters(RequestFactory().get("/", params))
+            .apply_org_filter(OrganizationUnit.objects.all(), "id__in")
+            .values_list("id", flat=True)
+        )
 
     def test_ministries_folder_includes_units_nested_under_them(self):
         matched = self._matched_ids({"org_type": "Ministerie"})
@@ -2621,7 +2602,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
 
     def _modal_count_for(self, user) -> int:
         self.client.force_login(user)
-        response = self.client.get(reverse("client-modal"), {"count_mode": "placements"})
+        response = self.client.get(reverse("home"), {"client_modal": "1"}, headers={"HX-Request": "true"})
         assert response.status_code == 200
         return _modal_org_self_counts(response).get(str(self.org.public_id), 0)
 

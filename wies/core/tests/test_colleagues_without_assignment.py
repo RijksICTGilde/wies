@@ -97,14 +97,14 @@ class TestWhoIsInTheTail:
         _place(colleague, _assignment("Oude opdracht", start_days=start_days, end_days=end_days))
 
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bob Tussendoor")
-        assert card["no_assignment"] is True
+        assert card["assignment_text"] == "Nu geen opdracht"
 
     def test_a_placed_colleague_is_not_in_the_tail(self, viewer_client):
         _place(_account("Carla Geplaatst"), _assignment("Lopend"))
 
         cards = [card for card in _cards(viewer_client) if card["name"] == "Carla Geplaatst"]
         assert len(cards) == 1
-        assert not cards[0].get("no_assignment")
+        assert cards[0]["assignment_text"] == "Lopend"
 
     def test_a_colleague_without_account_stays_out(self, viewer_client):
         _without_account("Dirk Zonderaccount")
@@ -139,7 +139,7 @@ class TestFilters:
         _account("Bob Nieuw")
 
     def _unplaced_names(self, params):
-        return [card["name"] for card in _cards(self.client, params) if card.get("no_assignment")]
+        return [card["name"] for card in _cards(self.client, params) if not card["period_text"]]
 
     def test_search_matches_the_name(self):
         assert self._unplaced_names({"zoek": "anna"}) == ["Anna Nieuw"]
@@ -223,9 +223,7 @@ class TestOrderAndPagination:
 
         first, second = (_cards(self.client, {"pagina": str(page)}) for page in (1, 2))
         placed_total = 2 + extra_placed
-        assert [bool(card.get("no_assignment")) for card in first] == [False] * placed_total + [True] * (
-            60 - placed_total
-        )
+        assert [not card["period_text"] for card in first] == [False] * placed_total + [True] * (60 - placed_total)
         names = [card["name"] for card in first + second]
         assert len(names) == len(set(names)) == placed_total + 3  # Anna, Carla, viewer
 
@@ -236,11 +234,9 @@ class TestCard:
         colleague = _account("Anna Nieuw")
         card = next(card for card in _cards(viewer_client) if card["name"] == "Anna Nieuw")
 
-        assert card["no_assignment"] is True
-        assert card["assignment"] is None
         assert card["roles"] == []
-        assert card["owned_count"] == 0
-        assert card["summary"] == "Nu geen opdracht"
+        assert card["assignment_text"] == "Nu geen opdracht"
+        assert card["period_text"] == ""
         assert f"collega={colleague.public_id}" in card["panel_url"]
 
     def test_business_manager_counts_current_and_planned_opdrachten_only(self, viewer_client):
@@ -250,7 +246,7 @@ class TestCard:
         _assignment("Afgelopen", start_days=-90, end_days=-10, owner=bm)
 
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
-        assert card["owned_count"] == 2
+        assert card["assignment_text"] == "Business Manager van 2 opdrachten"
         assert card["roles"] == []
 
     def test_business_manager_count_leaves_out_hidden_organizations(self, viewer_client):
@@ -260,7 +256,7 @@ class TestCard:
         _assignment("Geheim", org=hidden, owner=bm)
 
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
-        assert card["owned_count"] == 1
+        assert card["assignment_text"] == "Business Manager van 1 opdracht"
 
     def test_business_manager_count_leaves_out_an_opdracht_with_a_hidden_and_a_visible_client(self, viewer_client):
         """The list drops the whole opdracht; the count must not keep it for its visible client."""
@@ -272,7 +268,7 @@ class TestCard:
         )
 
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
-        assert card["owned_count"] == 0
+        assert card["assignment_text"] == "Nu geen opdracht"
 
     def test_a_placed_business_manager_gets_the_placement_not_the_count(self, viewer_client):
         bm = _account("Bea Manager")
@@ -280,8 +276,7 @@ class TestCard:
         _place(bm, _assignment("Plaatsing"))
 
         card = next(card for card in _cards(viewer_client) if card["name"] == "Bea Manager")
-        assert not card.get("no_assignment")
-        assert card["assignment"].name == "Plaatsing"
+        assert card["assignment_text"] == "Plaatsing"
 
     def test_html_says_geen_opdracht(self, viewer_client):
         _account("Anna Nieuw")

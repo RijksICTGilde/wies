@@ -3,6 +3,8 @@
 from functools import cached_property
 from typing import TYPE_CHECKING
 
+from django.template.response import TemplateResponse
+
 from wies.core.models import (
     Label,
     OrganizationUnit,
@@ -261,3 +263,21 @@ def finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None
         top.extend(o for o in by_count if o["value"] in selected and o["value"] not in top_values)
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
+
+
+def is_filter_modal_request(request) -> bool:
+    """A "Meer..." click: htmx asks for the full option list of one filter group."""
+    return "HX-Request" in request.headers and bool(request.GET.get("filter_modal"))
+
+
+def filter_modal_response(request, filter_groups: list[dict]) -> TemplateResponse:
+    """The "Meer..." sheet for the group ``?filter_modal=`` names.
+
+    The sheet reads nothing but the groups, so a list view returns this before
+    it builds its page of results.
+    """
+    return TemplateResponse(
+        request,
+        "parts/filter_options_modal.html",
+        {"filter_groups": filter_groups, "filter_modal_group_id": request.GET.get("filter_modal", "")},
+    )
