@@ -167,16 +167,6 @@
     renderSelection(rowsFromInputs());
   }
 
-  // count_mode=none: the picker does not need placement counts.
-  function wireTriggerButton() {
-    var button = document.getElementById("assignment-org-trigger-btn");
-    if (!button || button.__wiesOrgPickerWired) return;
-    button.__wiesOrgPickerWired = true;
-    button.addEventListener("htmx:configRequest", function (e) {
-      e.detail.parameters["count_mode"] = "none";
-    });
-  }
-
   // Rows come from the hidden inputs, not from a captured array.
   document.addEventListener("select", function (e) {
     var item = window.wiesClosestInPath(e, "[data-org-picker-action]");
@@ -215,10 +205,8 @@
 
   // dialog.js opens the picker sheet and drops it on close.
   document.body.addEventListener("htmx:afterSettle", function () {
-    wireTriggerButton();
     renderFromInputs();
   });
 
-  wireTriggerButton();
   renderFromInputs();
 })();
