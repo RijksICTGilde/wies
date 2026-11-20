@@ -4,7 +4,8 @@ on:
   push:
     branches:
       - main
-  # Catches up on a deploy that an auto-merge without AUTOMERGE_TOKEN skipped.
+  # dependabot-automerge.yml starts this after a merge with GITHUB_TOKEN, whose
+  # push to main does not trigger the push event above.
   workflow_dispatch:
 
 env:

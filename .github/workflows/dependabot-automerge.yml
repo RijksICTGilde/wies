@@ -1,90 +1,94 @@
-# Turns on auto-merge for Dependabot PRs with only minor and patch updates.
-# GitHub then merges once the required checks of the main ruleset (test-django,
-# test-js) are green; a failing test keeps the PR open. Majors and NLDD
-# upgrades are left for a human to review and merge.
+# Merges Dependabot PRs with only minor and patch updates once the tests on
+# the PR are green. Majors and NLDD upgrades are left for a human.
 #
-# AUTOMERGE_TOKEN is a fine-grained PAT (contents and pull requests: write on
-# this repo), stored as a Dependabot secret: workflows that Dependabot starts
-# cannot read Actions secrets. A merge with GITHUB_TOKEN starts no push
-# workflows, so main-deploy only runs after the merge if the PAT enabled it.
+# The merge uses GITHUB_TOKEN, and a push made with GITHUB_TOKEN starts no push
+# workflows. So after the merge this job dispatches the workflows that a push
+# to main would have started: workflow_dispatch is the one trigger GITHUB_TOKEN
+# may fire. That is why this merges itself instead of using auto-merge: with
+# auto-merge GitHub merges later, when no job is left to dispatch anything.
 #
-# When the PAT is missing, expired or lacks rights, the PR still merges with
-# GITHUB_TOKEN, but this job comments on the PR and fails, so the skipped
-# deploy is visible. This job is not a required check and does not block the
-# merge.
+# A workflow_run job runs the workflow from main with a write token, so it
+# never checks out PR code; it only reads the PR through the API.
 
 name: Dependabot auto-merge
 
-on: pull_request
+on:
+  workflow_run:
+    workflows: [Run Tests]
+    types: [completed]
 
 # Deny by default; the job grants itself the minimum it needs.
 permissions: {}
 
 jobs:
-  automerge:
+  merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'dependabot[bot]'
+    if: >-
+      github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.conclusion == 'success'
+      && github.event.workflow_run.actor.login == 'dependabot[bot]'
 
     permissions:
       contents: write
       pull-requests: write
+      actions: write
 
     env:
-      PR_URL: ${{ github.event.pull_request.html_url }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+      HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+      HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
 
     steps:
-      - name: Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
-        with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
-      # For a grouped PR update-type is the largest update in the group.
-      - name: Enable auto-merge
-        id: merge
-        if: >-
-          (steps.metadata.outputs.update-type == 'version-update:semver-minor'
-          || steps.metadata.outputs.update-type == 'version-update:semver-patch')
-          && !contains(steps.metadata.outputs.dependency-names, '@nldd/design-system')
-        env:
-          AUTOMERGE_TOKEN: ${{ secrets.AUTOMERGE_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Dependabot lists every updated dependency with its update type in the
+      # commit message. Merge only if each one is a minor or patch, none is
+      # NLDD, and Dependabot wrote the commit (nobody pushed on top of it).
+      - name: Check the update
+        id: check
         run: |
-          if [ -n "$AUTOMERGE_TOKEN" ] && GH_TOKEN="$AUTOMERGE_TOKEN" gh pr merge --auto --squash "$PR_URL"; then
-            echo "token=ok" >> "$GITHUB_OUTPUT"
-          else
-            GH_TOKEN="$GITHUB_TOKEN" gh pr merge --auto --squash "$PR_URL"
-            echo "token=broken" >> "$GITHUB_OUTPUT"
+          pr_url=$(gh pr view "$HEAD_BRANCH" --json url,state,headRefOid \
+            --jq "select(.state == \"OPEN\" and .headRefOid == \"$HEAD_SHA\") | .url")
+          if [ -z "$pr_url" ]; then
+            echo "No open PR with head $HEAD_SHA on $HEAD_BRANCH; nothing to merge."
             exit 0
           fi
+          echo "pr-url=$pr_url" >> "$GITHUB_OUTPUT"
 
-          # Fine-grained PATs report their expiry in a response header.
-          expiry=$(curl -sfI -H "Authorization: Bearer $AUTOMERGE_TOKEN" \
-            "$GITHUB_API_URL/repos/$GITHUB_REPOSITORY" \
-            | tr -d '\r' | grep -i '^github-authentication-token-expiration:' | cut -d' ' -f2- || true)
-          if [ -n "$expiry" ]; then
-            days_left=$(( ($(date -d "$expiry" +%s) - $(date +%s)) / 86400 ))
-            if [ "$days_left" -lt 14 ]; then
-              echo "days-left=$days_left" >> "$GITHUB_OUTPUT"
-            fi
+          commit=$(gh api "repos/$GH_REPO/commits/$HEAD_SHA")
+          author=$(jq -r '.author.login' <<< "$commit")
+          message=$(jq -r '.commit.message' <<< "$commit")
+
+          names=$(grep -cE '^- dependency-name:' <<< "$message" || true)
+          minor_patch=$(grep -cE '^  update-type: version-update:semver-(minor|patch)$' <<< "$message" || true)
+
+          if [ "$author" != "dependabot[bot]" ]; then
+            echo "Head commit is by $author, not Dependabot; leaving it for a human."
+          elif [ "$names" -eq 0 ] || [ "$names" -ne "$minor_patch" ]; then
+            echo "Not only minor and patch updates; leaving it for a human."
+          elif grep -qE '^- dependency-name: "?@nldd/design-system' <<< "$message"; then
+            echo "NLDD upgrade; review it with nldd-design-upgrade first."
+          else
+            echo "merge=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Warn about expiring token
-        if: steps.merge.outputs.days-left != ''
+      - name: Merge
+        if: steps.check.outputs.merge == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DAYS_LEFT: ${{ steps.merge.outputs.days-left }}
-        run: |
-          msg="AUTOMERGE_TOKEN expires in $DAYS_LEFT days. Renew the PAT and update the Dependabot secret, or auto-merged updates stop deploying."
-          echo "::warning::$msg"
-          gh pr comment "$PR_URL" --edit-last --create-if-none --body "⚠️ $msg"
+          PR_URL: ${{ steps.check.outputs.pr-url }}
+        run: gh pr merge --squash --match-head-commit "$HEAD_SHA" "$PR_URL"
 
-      - name: Report skipped deploy
-        if: steps.merge.outputs.token == 'broken'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run the push workflows on main
+        if: steps.check.outputs.merge == 'true'
         run: |
-          msg="AUTOMERGE_TOKEN is missing, expired or lacks rights, so auto-merge was enabled with GITHUB_TOKEN. This PR still merges once the tests pass, but main-deploy will not run for it. Renew the PAT, update the Dependabot secret, and run the \"Deploy to main\" workflow by hand."
-          echo "::error::$msg"
-          gh pr comment "$PR_URL" --edit-last --create-if-none --body "❌ $msg"
-          exit 1
+          gh workflow run main-deploy.yml --ref main
+          gh workflow run test.yml --ref main
+          gh workflow run security-scan.yml --ref main
+
+      - name: Report a failed merge
+        if: failure() && steps.check.outputs.pr-url != ''
+        env:
+          PR_URL: ${{ steps.check.outputs.pr-url }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh pr comment "$PR_URL" --edit-last --create-if-none \
+            --body "❌ Auto-merge or the deploy after it failed, see $RUN_URL. Merge by hand, or run \"Deploy to main\" if the PR is already merged."

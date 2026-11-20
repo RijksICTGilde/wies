@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - "*"
+  # dependabot-automerge.yml runs the tests on main after its merge.
+  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
