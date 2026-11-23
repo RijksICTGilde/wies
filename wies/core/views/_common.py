@@ -31,6 +31,11 @@ def build_panel_url(request, **overrides):
     return rebuild_url(request.path, request.GET, drop=PANEL_PARAMS, **overrides)
 
 
+def count_label(count: int, singular: str, plural: str) -> str:
+    """The count with its noun in singular or plural: "1 collega", "3 collega's"."""
+    return f"{count} {singular if count == 1 else plural}"
+
+
 def sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
     """The four keys parts/sort_control.html reads, built once for every list.
 

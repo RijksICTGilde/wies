@@ -7,6 +7,11 @@ This files lists the changes during the lifetime of this project.
 - 694: the opdracht description, the aanvraag's "Wie we zoeken" and a role's "Taken" are a text editor with formatting (bold, italic, strikethrough, lists, quotes, links, headings) and a formatting bar; the text is stored as Markdown and shown formatted on the panels, in onboarding and on the timeline
 - 694: the opdrachten on your profile update right after a save in the side panel, instead of after a reload
 - 694: (accessibility) an error when editing "Opdrachtgever(s)" in place is tied to the picker button, so a screen reader announces it with the control; before, it belonged to no control
+- 877: remove staging deployment from pipeline
+
+## 2026-11-23
+
+- 805: Wie zit waar? lists every colleague with an account, also without a current opdracht (card "Nu geen opdracht"); a Business Manager shows up with the number of opdrachten they manage, so new accounts can find themselves (#778). The onboarding says so. The empty state now says "Geen collega's gevonden" / "Geen opdrachten gevonden". A banner on Wie zit waar? (which you can dismiss) says missing opdrachten are still being added; the onboarding no longer says Wies only holds RIG and Digi Gilde opdrachten
 
 ## 2026-11-18
 

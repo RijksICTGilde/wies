@@ -4,7 +4,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.db import IntegrityError, transaction
-from django.test import Client, RequestFactory, TestCase
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.errors import SuborganizationNotFoundError
@@ -13,8 +13,6 @@ from wies.core.models import Assignment, Colleague, Placement, Service, Skill, S
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
 from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views.placements import PlacementListView
-from wies.core.views.users import UserListView
 
 User = get_user_model()
 
@@ -150,13 +148,8 @@ class SuborganizationPlacementFilterTest(TestCase):
         Placement.objects.create(colleague=self.c_none, service=self.service, source="wies")
 
     def _suborganization_group(self, params=None):
-        request = RequestFactory().get("/", params or {})
-        request.user = self.auth_user
-        view = PlacementListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
+        self.client.force_login(self.auth_user)
+        context = self.client.get(reverse("home"), params or {}).context_data
         return next(g for g in context["filter_groups"] if g.get("name") == "onderdeel")
 
     def _count_for(self, suborganization, params=None):
@@ -241,13 +234,8 @@ class SuborganizationUserFilterTest(TestCase):
         )
 
     def _suborganization_group(self, params=None):
-        request = RequestFactory().get("/", params or {})
-        request.user = self.auth_user
-        view = UserListView()
-        view.request = request
-        view.kwargs = {}
-        view.object_list = view.get_queryset()
-        context = view.get_context_data()
+        self.client.force_login(self.auth_user)
+        context = self.client.get(reverse("admin-users"), params or {}).context_data
         return next(g for g in context["filter_groups"] if g.get("name") == "onderdeel")
 
     def _count_for(self, suborganization, params=None):

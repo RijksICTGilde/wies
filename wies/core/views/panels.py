@@ -2,6 +2,7 @@
 
 from django.core.exceptions import ValidationError
 from django.http import Http404
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 
@@ -585,6 +586,20 @@ def resolve_side_panel(request, *, allow_create=False):
         colleague = resolve_panel_object(request, Colleague, colleague_id)
         return build_colleague_panel_data(colleague, request) if colleague else None
     return None
+
+
+def side_panel_response(request, *, allow_create=False) -> TemplateResponse:
+    """The panel partial for an htmx panel request (see ``is_side_panel_request``).
+
+    The panel templates read nothing but ``panel_data``, so a list view returns
+    this before it builds its page. An unknown object still 404s, in
+    ``resolve_side_panel``. A request with no panel to open (no panel param, or
+    the create form without the permission) gets the "Niet gevonden" panel.
+    """
+    panel_data = resolve_side_panel(request, allow_create=allow_create)
+    if panel_data is None:
+        return TemplateResponse(request, "parts/assignment_panel_content.html", {"panel_data": None})
+    return TemplateResponse(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
 
 def build_placement_edit_panel_data(placement, request, *, only=None, form=None, parent_url=None, back_text=None):

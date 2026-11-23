@@ -21,7 +21,7 @@ from django.urls import include, path
 from django.views.generic import RedirectView
 
 from wies.core.views.assignments import (
-    AssignmentListView,
+    AanvraagListView,
     assignment_create_sheet,
     assignment_delete,
     assignment_edit_view,
@@ -50,7 +50,7 @@ from wies.core.views.pages import (
     toegankelijkheid,
     toegankelijkheid_onderzoek,
 )
-from wies.core.views.placements import PlacementListView, placement_edit_view
+from wies.core.views.placements import PlacementOverviewView, placement_edit_view
 from wies.core.views.profile import (
     onboarding_assignment_edit,
     onboarding_complete,
@@ -91,12 +91,12 @@ urlpatterns = [
         name="security-txt",
     ),
     # Wies
-    path("", PlacementListView.as_view(), name="home"),
+    path("", PlacementOverviewView.as_view(), name="home"),
     path("inloggen/", login, name="login"),
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),
     path("auth/", auth, name="auth"),
-    path("aanvragen/", AssignmentListView.as_view(), name="assignment-list"),
+    path("aanvragen/", AanvraagListView.as_view(), name="assignment-list"),
     path("opdrachten/", RedirectView.as_view(pattern_name="assignment-list", query_string=True)),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),

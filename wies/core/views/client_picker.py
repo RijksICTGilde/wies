@@ -1,9 +1,9 @@
-"""The opdrachtgever picker modal, counting over the list views' own filters."""
+"""The opdrachtgever tree: the filter lists' "Meer..." sheet and the assignment form's org picker."""
 
 from collections import Counter
 
-from django.http import HttpResponseBadRequest
 from django.shortcuts import render
+from django.template.response import TemplateResponse
 
 from wies.core.models import (
     OrganizationUnit,
@@ -15,9 +15,6 @@ from wies.core.services.organizations import (
     get_excluded_org_ids,
     nested_folder_label,
 )
-
-from .assignments import AssignmentListView
-from .placements import PlacementListView
 
 
 def _build_current_selections(request) -> dict[str, str]:
@@ -60,35 +57,36 @@ def _build_current_selections(request) -> dict[str, str]:
     return current_selections
 
 
+def is_client_modal_request(request) -> bool:
+    """An opdrachtgever "Meer..." click on a filter list: htmx asks for the org tree."""
+    return "HX-Request" in request.headers and bool(request.GET.get("client_modal"))
+
+
+def client_modal_response(request, org_self_counts: Counter[int]) -> TemplateResponse:
+    """The opdrachtgever tree for a filter list, counted by that list.
+
+    The list view returns this from its own ``get()`` with its own
+    ``org_counts()``, so the tree counts what the sidebar counts (including the
+    weergave on "Wie zit waar?") without this module knowing the list views.
+    Orgs without cards are pruned.
+    """
+    hierarchy = build_org_hierarchy(org_self_counts, get_excluded_org_ids(), prune_empty=True)
+    return TemplateResponse(
+        request,
+        "parts/client_modal.html",
+        {"hierarchy": hierarchy, "current_selections": _build_current_selections(request)},
+    )
+
+
 def client_modal(request):
-    """Returns the client tree selection modal (HTMX partial)."""
-    excluded_org_ids = get_excluded_org_ids()
-    count_mode = request.GET.get("count_mode")
+    """The org picker of the assignment form (HTMX partial).
 
-    # count_mode "none" is the assignment-form org picker, not a filter list, so
-    # the tree carries no counts (the whole org tree is shown, unpruned). The
-    # filter modes count over the list's other active filters (sent along via
-    # hx-include) so the tree matches the sidebar: ask the list view for its
-    # org_counts (the single source of the predicates) rather than re-implementing
-    # them here, which would drift.
-    if count_mode == "none":
-        org_self_counts = Counter()
-    elif count_mode == "open_assignments":
-        view = AssignmentListView()
-        view.request = request
-        org_self_counts = view.org_counts()
-    elif count_mode == "placements":
-        view = PlacementListView()
-        view.request = request
-        org_self_counts = view.org_counts()
-    else:
-        return HttpResponseBadRequest("Onbekende count_mode")
-    hierarchy = build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
-    current_selections = _build_current_selections(request)
-
-    template = "parts/assignment_org_modal.html" if count_mode == "none" else "parts/client_modal.html"
+    Not a filter list, so the tree carries no counts and shows the whole org
+    tree, unpruned. The filter lists' tree is ``client_modal_response``.
+    """
+    hierarchy = build_org_hierarchy(Counter(), get_excluded_org_ids(), prune_empty=False)
     return render(
         request,
-        template,
-        {"hierarchy": hierarchy, "current_selections": current_selections},
+        "parts/assignment_org_modal.html",
+        {"hierarchy": hierarchy, "current_selections": _build_current_selections(request)},
     )

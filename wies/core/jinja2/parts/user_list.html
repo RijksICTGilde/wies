@@ -5,10 +5,10 @@ List and empty state share one id and swap OOB themselves. No wrapper: this must
 stay a direct child of the nldd-sidebar-section, or the empty state does not fill
 the remaining height. #}
 {% set list_oob = request.headers.get("HX-Request") %}
-{% if paginator.count %}
+{% if result_count %}
   {# data-announce: live_region.js reads this out after a filter change. #}
-  <nldd-list id="user-table" appearance="simple" accessible-label="Gebruikers" data-announce="{{ paginator.count }} {{ 'gebruiker' if paginator.count == 1 else 'gebruikers' }}" {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}>
-  {% include "parts/user_table_rows.html" %}
+  <nldd-list id="user-table" appearance="simple" accessible-label="Gebruikers" data-announce="{{ result_announcement }}" {% if list_oob %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/user_rows.html" %}
   </nldd-list>
 {% else %}
   {# Not an empty list row: that reads as a result and gets a divider. #}
