@@ -78,9 +78,10 @@
         {% endfor %}
         {# "Meer" is a row rather than a button below, so it shares the row
         height, hover and alignment of the list. #}
-        {# hx-include="[data-filter-input]" (not just #org-filter-inputs) also
-        sends the other active filters, so counts in the tree follow them. #}
-        <nldd-list-item button hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="[data-filter-input]">
+        {# The list view itself answers, with its own counts. hx-include="[data-filter-input]"
+        (not just #org-filter-inputs) also sends the other active filters and the
+        weergave, so counts in the tree follow them. #}
+        <nldd-list-item button hx-get="{{ filter_target_url }}?client_modal=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="[data-filter-input]">
         {# 24 for the checkbox cell, 8 for its spacer: aligns "Meer..." with the
         labels above. #}
         <nldd-spacer-cell size="24"></nldd-spacer-cell>

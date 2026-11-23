@@ -1,4 +1,4 @@
-{% for card in object_list %}
+{% for card in cards %}
   {# href keeps the card a real link (status bar, cmd/middle click opens a tab);
      hx_link_guard.js catches the plain click so htmx opens the panel instead. #}
   <nldd-card role="listitem" background="tinted" accessible-label="{{ card.link_name }}" href="{{ card.panel_url }}" hx-get="{{ card.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">

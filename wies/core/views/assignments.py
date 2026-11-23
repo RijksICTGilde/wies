@@ -9,6 +9,7 @@ from urllib.parse import urlsplit
 from django.contrib import messages
 from django.contrib.auth.decorators import permission_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import (
     F,
@@ -19,10 +20,11 @@ from django.db.models import (
 )
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, render
+from django.template.response import TemplateResponse
 from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from django.views.generic.list import ListView
+from django.views.generic import View
 
 from wies.core.editables.assignment import AssignmentEditables, skill_choices, visible_service_or_404
 from wies.core.forms import ServiceForm
@@ -69,28 +71,30 @@ from ._common import (
     CSV_TOO_LARGE_MSG,
     PANEL_PARAMS,
     build_panel_url,
+    count_label,
     csv_too_large,
     is_side_panel_request,
     page_url_behind_panel,
 )
-from .filters import PublicIdFacetsMixin, finalize_filter_groups
+from .client_picker import client_modal_response, is_client_modal_request
+from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
     assignment_create_button,
     build_assignment_create_panel_data,
     build_assignment_edit_panel_data,
     build_assignment_member_panel_data,
     resolve_side_panel,
+    side_panel_response,
 )
 
 
-class AssignmentListView(PublicIdFacetsMixin, ListView):
+class AanvraagListView(PublicIdFacetsMixin, View):
     """Aanvragen as cards: one per role nobody fills yet, and one per opdracht
     that has no role at all yet. Infinite scroll pagination."""
 
-    model = Service
     template_name = "assignments.html"
     paginate_by = 60
-    page_kwarg = "pagina"
+    page_kwarg = PAGE_PARAM
 
     @cached_property
     def _search(self) -> str:
@@ -183,10 +187,10 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             assignments, Assignment, "organizations__id"
         )
 
-    def get_queryset(self):
+    def card_rows(self):
         """(created, opdracht id, aanvraag id) per card, newest opdracht first;
         the aanvraag id is None on an opdracht without one. A union, so paging
-        and counting stay in the database; get_context_data loads the cards."""
+        and counting stay in the database; _cards loads the cards."""
         columns = ("card_created", "card_assignment", "card_service")
         aanvragen = (
             self._apply_filters(self._get_base_queryset())
@@ -231,41 +235,35 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 cards.append(opdracht_without_aanvraag_card(assignment, url))
         return cards
 
-    def _results_text(self, total: int) -> str:
+    def _result_announcement(self, total: int) -> str:
         """ "12 aanvragen", or "12 aanvragen en 1 opdracht zonder aanvraag"."""
         without = self._assignments_without_aanvraag().count() if total else 0
         aanvragen = total - without
-        text = f"{aanvragen} {'aanvraag' if aanvragen == 1 else 'aanvragen'}"
+        text = count_label(aanvragen, "aanvraag", "aanvragen")
         if without:
-            text += f" en {without} {'opdracht' if without == 1 else 'opdrachten'} zonder aanvraag"
+            text += f" en {count_label(without, 'opdracht', 'opdrachten')} zonder aanvraag"
         return text
 
-    def get_template_names(self):
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if is_side_panel_request(self.request):
-                # See PlacementListView.get_template_names.
-                panel_data = getattr(self, "_panel_data", None)
-                if panel_data:
-                    return [panel_data["panel_content_template"]]
-                return ["parts/assignment_panel_content.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/aanvraag_card_rows.html"]
-            return ["parts/filter_and_card_container_assignments.html"]
-        return ["assignments.html"]
+    def get(self, request, *args, **kwargs):
+        if is_filter_modal_request(request):
+            return filter_modal_response(request, self._filter_groups(self._active_filters()))
+        if is_client_modal_request(request):
+            return client_modal_response(request, self.org_counts())
+        if is_side_panel_request(request):
+            return side_panel_response(request, allow_create=True)
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
+        # The templates nest: the page holds the results, the results hold the
+        # cards. Each layer's context builds on the one inside it.
+        htmx = "HX-Request" in request.headers
+        if htmx and request.GET.get(self.page_kwarg):
+            return TemplateResponse(request, "parts/aanvraag_cards.html", self._cards_context())  # "Meer tonen"
+        if htmx:
+            # A filter change.
+            return TemplateResponse(request, "parts/aanvraag_results.html", self._results_context())
+        return TemplateResponse(request, self.template_name, self._page_context())
 
-        context["object_list"] = self._cards(context["object_list"])
-        context["results_text"] = self._results_text(context["paginator"].count)
-
-        context["filter_target_url"] = reverse("assignment-list")
-        context["search_field"] = "zoek"
-        context["search_filter"] = self.request.GET.get("zoek")
-
+    def _active_filters(self) -> dict:
+        """The selected values per filter, opdrachtgever aside (``add_org_filter_context`` adds it)."""
         active_filters = {}
         if self._beschikbaar_vanaf:
             active_filters["beschikbaar_vanaf"] = self._beschikbaar_vanaf
@@ -276,7 +274,13 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
             active_filters["rol"] = rol_filter
         if self._selected_locations:
             active_filters["standplaats"] = set(self._selected_locations)
+        return active_filters
 
+    def _filter_groups(self, active_filters: dict) -> list[dict]:
+        """The sidebar's filter groups, each option with the cards it would leave.
+
+        The "Meer..." sheet needs nothing else, so it is built from these alone.
+        """
         # Role counts: exclude the role filter for cross-filtering. They count
         # aanvragen, so two for the same role on one opdracht count 2.
         base_qs = self._get_base_queryset()
@@ -309,19 +313,11 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 option["selected"] = True
             location_options.append(option)
 
-        # Organization filter (multi-select via modal)
-        self.add_org_filter_context(context, active_filters)
-        self.add_unknown_filter_chips(context, {"rol": Skill})
-
         # Org counts exclude the org filter, so the numbers reflect the other
         # active filters — same cross-filter rule as the skill counts above.
         org_counts = self.org_counts()
 
-        context["active_filters"] = active_filters
-        context["active_filter_count"] = len(active_filters)
-        context["client_modal_count_mode"] = "open_assignments"
-
-        context["filter_groups"] = [
+        filter_groups = [
             {
                 "type": "modal",
                 "name": "organisatie",
@@ -354,27 +350,57 @@ class AssignmentListView(PublicIdFacetsMixin, ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
-        finalize_filter_groups(context["filter_groups"])
-        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
+        finalize_filter_groups(filter_groups)
+        return filter_groups
 
-        # Build next page URL with all current filters
-        if context.get("page_obj") and context["page_obj"].has_next():
-            context["next_page_url"] = rebuild_url(
-                "", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: context["page_obj"].next_page_number()}
-            )
-        else:
-            context["next_page_url"] = None
+    def _cards_context(self) -> dict:
+        """The page of cards and the link to the next one: all that "Meer tonen" renders."""
+        # get_page clamps a page number that is out of range or no number at all.
+        paginator = Paginator(self.card_rows(), self.paginate_by)
+        page = paginator.get_page(self.request.GET.get(self.page_kwarg))
+        next_page_url = (
+            rebuild_url("", self.request.GET, drop=PANEL_PARAMS, **{PAGE_PARAM: page.next_page_number()})
+            if page.has_next()
+            else None
+        )
+        return {
+            "result_count": paginator.count,
+            "cards": self._cards(page.object_list),
+            "next_page_url": next_page_url,
+        }
 
-        # Opens the create sheet as a panel on the list itself via
-        # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
-        # in the address bar so a reload reopens the sheet (see side_panel.js).
-        context["primary_button"] = assignment_create_button(self.request)
+    def _results_context(self) -> dict:
+        """The cards plus what a filter change re-renders around them: the count,
+        the chips and the filter sidebar (swapped in out of band)."""
+        context = self._cards_context()
+        context |= {
+            "render_filter_fields_oob": "HX-Request" in self.request.headers,
+            "result_announcement": self._result_announcement(context["result_count"]),
+            "filter_target_url": reverse("assignment-list"),
+            "search_field": "zoek",
+            "search_filter": self.request.GET.get("zoek"),
+        }
 
-        # Side panel; ?nieuwe-opdracht opens the empty create form on the list.
-        context["panel_data"] = resolve_side_panel(self.request, allow_create=True)
-        # See PlacementListView.get_context_data: get_template_names reads this.
-        self._panel_data = context["panel_data"]
+        active_filters = self._active_filters()
+        context["filter_groups"] = self._filter_groups(active_filters)
+        # The chips; the opdrachtgever one also adds its value to active_filters.
+        self.add_org_filter_context(context, active_filters)
+        self.add_unknown_filter_chips(context, {"rol": Skill})
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
         return context
+
+    def _page_context(self) -> dict:
+        """The results plus what only the full page has: the create button and the side panel."""
+        return self._results_context() | {
+            # Opens the create sheet as a panel on the list itself via
+            # ?nieuwe-opdracht, like an assignment card does. hx-push-url puts the URL
+            # in the address bar so a reload reopens the sheet (see side_panel.js).
+            "primary_button": assignment_create_button(self.request),
+            # A full page load with a panel param (or ?nieuwe-opdracht, the empty
+            # create form) opens the panel too.
+            "panel_data": resolve_side_panel(self.request, allow_create=True),
+        }
 
 
 @permission_required(
@@ -537,7 +563,7 @@ def assignment_edit_view(request, public_id):
 def assignment_create_sheet(request):
     """Creates the assignment from the create sheet and sends the client to its
     panel via HX-Location. Roles are added afterwards in that panel. The empty
-    form itself is rendered by AssignmentListView (?nieuwe-opdracht), so it lives
+    form itself is rendered by AanvraagListView (?nieuwe-opdracht), so it lives
     on the list URL like the object panels and survives a reload."""
     if not request.user.has_perm("core.add_assignment"):
         return HttpResponseForbidden()

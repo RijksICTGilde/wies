@@ -21,7 +21,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.roles import ROLE_USER_ADMIN, setup_roles
-from wies.core.views.placements import PlacementListView
+from wies.core.views.placements import PlacementOverviewView
 
 User = get_user_model()
 
@@ -62,7 +62,7 @@ class A11yMarkupTest(TestCase):
         """The cards follow the page h1, so an h3 there skips a level.
 
         Both lists: Wie zit waar? renders placement_cards.html, Aanvragen
-        renders aanvraag_card_rows.html, whose heading is the role.
+        renders aanvraag_cards.html, whose heading is the role.
         """
         org = OrganizationUnit.objects.create(name="Toets Org", label="Toets Org")
         skill = Skill.objects.create(name="Python Developer")
@@ -115,7 +115,7 @@ class A11yMarkupTest(TestCase):
             colleague = Colleague.objects.create(name=name, email=f"{name.split()[0].lower()}@rijksoverheid.nl")
             Placement.objects.create(colleague=colleague, service=service, source="wies")
 
-        with patch.object(PlacementListView, "paginate_by", 1):
+        with patch.object(PlacementOverviewView, "paginate_by", 1):
             body = self.client.get(reverse("home")).content.decode()
 
         assert '<div class="wies-load-more" role="listitem">' in body
