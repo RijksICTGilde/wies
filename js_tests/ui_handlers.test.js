@@ -80,19 +80,16 @@ function tree(root) {
   return root;
 }
 
-// The markup of forms/displays/textarea.html: the rendered text in a body
-// that a class on the wrapper collapses, with the toggle beside it.
+// The markup of forms/displays/textarea.html: the rendered text, collapsed by
+// a class on the wrapper, with the toggle beside it.
 function longText() {
-  const richText = element("nldd-rich-text");
-  const body = element("wies-long-text__body", { children: [richText] });
   const toggle = element("inline-edit-show-more");
   const wrapper = tree(
     element("wies-long-text wies-long-text--collapsed", {
-      children: [body, toggle],
+      children: [element("nldd-rich-text"), toggle],
     }),
   );
-  richText.setAttribute("spacing", "flat");
-  return { wrapper, richText, toggle };
+  return { wrapper, toggle };
 }
 
 // The markup of parts/colleague_assignment_cards.html: a preview and a
@@ -108,13 +105,12 @@ function cvEntry() {
 }
 
 describe("toggle-long-text (a description folded to its first lines)", () => {
-  it("lifts the collapse and keeps the layout the text was written with", () => {
-    const { wrapper, richText, toggle } = longText();
+  it("lifts the collapse", () => {
+    const { wrapper, toggle } = longText();
 
     toggleLongText(toggle);
 
     assert.ok(!wrapper.classList.contains("wies-long-text--collapsed"));
-    assert.equal(richText.getAttribute("spacing"), "flat");
   });
 
   it("folds it back on a second click", () => {

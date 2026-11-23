@@ -9,17 +9,18 @@ import re
 from typing import TYPE_CHECKING
 
 from markdown_it import MarkdownIt
+from markdown_it.token import Token
 from markupsafe import Markup
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 # js-default: raw HTML is escaped and javascript: links are refused. Off:
-# images (nothing to host them), indented code (four leading spaces in an
-# existing description would turn into a code block) and setext headings (a
-# line of dashes under a sentence is not meant as a heading). breaks: a
-# single newline stays a line break, as it did as plain text.
-_md = MarkdownIt("js-default", {"breaks": True}).disable(["image", "code", "lheading"])
+# indented code (four leading spaces in an existing description would turn
+# into a code block) and setext headings (a line of dashes under a sentence is
+# not meant as a heading). breaks: a single newline stays a line break, as it
+# did as plain text.
+_md = MarkdownIt("js-default", {"breaks": True}).disable(["code", "lheading"])
 
 # A description sits under the panel's own h2 headings, so its "# Kop" comes
 # out two levels down (h3), never above the page's structure. data-level keeps
@@ -38,6 +39,9 @@ def _heading(renderer, tokens, idx, options, env):
 # Anything with a scheme, or a path on this site.
 _ABSOLUTE = re.compile(r"^([a-z][a-z0-9+.-]*:|/|#)", re.IGNORECASE)
 _WEB = re.compile(r"^(https?:)?//", re.IGNORECASE)
+# "wies.nl:8080" reads as scheme "wies.nl:" above. A dot or "localhost" keeps
+# "tel:0612345678" out.
+_HOST_PORT = re.compile(r"^(localhost|[\w-]+(\.[\w-]+)+):\d+(/|$)", re.IGNORECASE)
 
 
 def _link_open(renderer, tokens, idx, options, env):
@@ -46,7 +50,7 @@ def _link_open(renderer, tokens, idx, options, env):
     # "google.com" in a description means the site, not a page under the
     # current URL; without a scheme the browser would resolve it relative.
     # An address is what the Link button gets for mail, rarely "mailto:".
-    if href and not _ABSOLUTE.match(href):
+    if href and (not _ABSOLUTE.match(href) or _HOST_PORT.match(href)):
         is_address = "@" in href and "/" not in href
         token.attrSet("href", ("mailto:" if is_address else "https://") + href)
     # A link to another site opens beside Wies; mailto:, tel: and #anchor
@@ -80,6 +84,27 @@ def _fence(renderer, tokens, idx, options, env):
     return rendered.replace("<pre>", f'<pre data-gap="{gap}">', 1) if gap else rendered
 
 
+def _images_as_links(state) -> None:
+    """There is nothing to host an image: ![tekst](url) becomes a link to it,
+    instead of a "!" before one."""
+    for block in state.tokens:
+        if not block.children:
+            continue
+        tokens = []
+        for token in block.children:
+            if token.type != "image":
+                tokens.append(token)
+                continue
+            src = token.attrGet("src") or ""
+            # markdown-it lets data:image through for images; as a link it opens
+            # nothing, so the words stay as text.
+            if src.lower().startswith("data:"):
+                src = ""
+            text = token.children or [Token("text", "", 0, content=src)]
+            tokens += [Token("link_open", "a", 1, attrs={"href": src}), *text, Token("link_close", "a", -1)]
+        block.children = tokens
+
+
 def _drop_empty_links(state) -> None:
     """[tekst]() leads nowhere: keep the words, drop the link around them."""
     for block in state.tokens:
@@ -96,6 +121,7 @@ def _drop_empty_links(state) -> None:
         block.children = kept
 
 
+_md.core.ruler.push("images_as_links", _images_as_links)
 _md.core.ruler.push("drop_empty_links", _drop_empty_links)
 _md.add_render_rule("link_open", _link_open)
 _md.add_render_rule("link_close", _link_close)

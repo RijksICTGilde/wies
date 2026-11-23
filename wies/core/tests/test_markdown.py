@@ -64,9 +64,16 @@ class RenderMarkdownTest(SimpleTestCase):
         assert 'style="' not in html
         assert "&lt;script&gt;" in html
 
-    def test_images_stay_text(self):
-        html = render_markdown("![alt](https://example.org/x.png)")
+    def test_an_image_becomes_a_link_to_it(self):
+        html = render_markdown("Kijk ![logo](https://example.org/x.png) en ![](beeld.nl/y.png)")
         assert "<img" not in html
+        assert "!" not in html
+        assert 'Kijk <a href="https://example.org/x.png" target="_blank" rel="noopener">logo<span' in html
+        assert '<a href="https://beeld.nl/y.png" target="_blank" rel="noopener">beeld.nl/y.png<span' in html
+
+    def test_an_image_without_target_stays_text(self):
+        assert render_markdown("![logo]()").strip() == "<p>logo</p>"
+        assert render_markdown("![logo](data:image/png;base64,AAAA)").strip() == "<p>logo</p>"
 
     def test_links_open_beside_wies(self):
         html = render_markdown("[Wies](https://example.org/)")
@@ -99,6 +106,13 @@ class RenderMarkdownTest(SimpleTestCase):
         html = render_markdown("[mail](anke@rijksoverheid.nl) en [pad](example.org/@team)")
         assert '<a href="mailto:anke@rijksoverheid.nl">mail</a>' in html
         assert 'href="https://example.org/@team"' in html
+
+    def test_a_host_with_a_port_gets_https(self):
+        # Read as a scheme, "wies.nl:" would leave a link that opens nothing.
+        html = render_markdown("[app](localhost:8000) [pad](wies.nl:8080/pad) [bel](tel:0612345678)")
+        assert 'href="https://localhost:8000"' in html
+        assert 'href="https://wies.nl:8080/pad"' in html
+        assert 'href="tel:0612345678"' in html
 
     def test_a_lone_asterisk_stays(self):
         html = render_markdown("2 * 3 = 6")
