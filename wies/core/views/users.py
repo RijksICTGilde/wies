@@ -46,6 +46,7 @@ from wies.core.querysets import (
 from wies.core.roles import (
     role_label,
 )
+from wies.core.services import access_requests
 from wies.core.services.events import create_event
 from wies.core.services.urls import PAGE_PARAM, current_page_url_on, rebuild_url
 from wies.core.services.users import (
@@ -402,10 +403,7 @@ def user_create(request):
         form = UserForm(request.POST, editor=request.user)
         if form.is_valid() and (user := _create_user_with_contract_period(request, form)):
             # HTMX needs HX-Redirect to force a full page redirect.
-            messages.success(
-                request,
-                f"Gebruiker {user.first_name} {user.last_name} is toegevoegd.{_access_request_note(user)}",
-            )
+            _report_user_created(request, user)
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
                 response["HX-Redirect"] = _user_list_behind_sheet(request)
@@ -427,12 +425,18 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-def _access_request_note(user: User) -> str:
-    """Tells the beheerder that adding this user also answered their access request."""
+def _report_user_created(request, user: User) -> None:
+    """Also tells the beheerder when adding this user answered their access request."""
+    text = f"Gebruiker {user.first_name} {user.last_name} is toegevoegd."
     if not user.access_requests.exists():
-        return ""
-    mail = f" {user.first_name} krijgt hierover een e-mail." if settings.EMAIL_ENABLED else ""
-    return f" De toegangsaanvraag van {user.first_name} is daarmee goedgekeurd.{mail}"
+        messages.success(request, text)
+        return
+    access_requests.decision_message(
+        request,
+        f"{text} De toegangsaanvraag van {user.first_name} is daarmee goedgekeurd.",
+        user.first_name,
+        mailed=settings.EMAIL_ENABLED,
+    )
 
 
 def _create_user_with_contract_period(request, form, *, mail_access_request: bool = True) -> User | None:

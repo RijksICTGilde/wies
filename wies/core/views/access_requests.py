@@ -81,13 +81,10 @@ access_request_admin_required = role_required(_may_decide_access_requests)
 
 def _approved_mailto(request, access_request) -> str:
     """A prepared mail for the beheerder, for when Wies sends no mail itself."""
-    subject, body = access_requests.approval_mail(access_request, request)
+    first_name = (access_request.created_user or access_request).first_name
+    subject, body = access_requests.approval_mail(first_name, request)
     query = urllib.parse.urlencode({"subject": subject, "body": body}, quote_via=urllib.parse.quote)
     return f"mailto:{access_request.email}?{query}"
-
-
-def _mail_note(access_request, form) -> str:
-    return f" {access_request.first_name} krijgt hierover een e-mail." if form.cleaned_data.get("send_mail") else ""
 
 
 def _decision_form(form_class, request, mail_label: str, **kwargs):
@@ -105,7 +102,7 @@ def access_request_admin(request):
     access_requests.purge_decided()
     decided = list(
         AccessRequest.objects.exclude(status=AccessRequest.Status.PENDING)
-        .select_related("decided_by")
+        .select_related("decided_by", "created_user")
         .order_by("-decided_at")
     )
     for access_request in decided:
@@ -140,8 +137,12 @@ def _pending_access_request_or_back(request, public_id):
     access_request = get_object_or_404(AccessRequest, public_id=public_id)
     if access_request.status == AccessRequest.Status.PENDING:
         return access_request, None
+    return None, _already_decided(request, access_request)
+
+
+def _already_decided(request, access_request) -> HttpResponse:
     messages.info(request, f"De toegangsaanvraag van {access_request.full_name} is al afgehandeld.")
-    return None, _back_to_access_request_admin()
+    return _back_to_access_request_admin()
 
 
 @access_request_admin_required
@@ -170,17 +171,12 @@ def access_request_approve(request, public_id):
     )
     # Disabled: Django takes the initial value and ignores whatever is posted.
     form.fields["email"].disabled = True
-    if (
-        request.method == "POST"
-        and form.is_valid()
-        and _create_user_with_contract_period(
-            request, form, mail_access_request=form.cleaned_data.get("send_mail", False)
-        )
-    ):
-        messages.success(
-            request, f"{access_request.full_name} heeft nu toegang tot Wies.{_mail_note(access_request, form)}"
-        )
-        return _back_to_access_request_admin()
+    if request.method == "POST" and form.is_valid():
+        mailed = form.cleaned_data.get("send_mail", False)
+        if user := _create_user_with_contract_period(request, form, mail_access_request=mailed):
+            text = f"{user.first_name} {user.last_name} heeft nu toegang tot Wies."
+            access_requests.decision_message(request, text, user.first_name, mailed=mailed)
+            return _back_to_access_request_admin()
     return render(
         request,
         "parts/user_form_modal.html",
@@ -204,16 +200,16 @@ def access_request_reject(request, public_id):
         AccessRequestRejectForm, request, f"Stuur {access_request.first_name} een e-mail met de afwijzing"
     )
     if request.method == "POST" and form.is_valid():
-        access_requests.reject(
-            access_request,
-            request.user,
-            form.cleaned_data["decision_note"],
-            request=request,
-            send_mail=form.cleaned_data.get("send_mail", False),
-        )
-        messages.success(
+        mailed = form.cleaned_data.get("send_mail", False)
+        if not access_requests.reject(
+            access_request, request.user, form.cleaned_data["decision_note"], request=request, send_mail=mailed
+        ):
+            return _already_decided(request, access_request)
+        access_requests.decision_message(
             request,
-            f"De toegangsaanvraag van {access_request.full_name} is afgewezen.{_mail_note(access_request, form)}",
+            f"De toegangsaanvraag van {access_request.full_name} is afgewezen.",
+            access_request.first_name,
+            mailed=mailed,
         )
         return _back_to_access_request_admin()
     return render(

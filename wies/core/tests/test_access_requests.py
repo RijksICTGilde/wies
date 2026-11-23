@@ -11,14 +11,14 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.contrib.messages import get_messages
 from django.core import mail
-from django.test import TestCase, override_settings
+from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
 from config.jinja2 import NL_TIMEZONE
 from wies.core.models import AccessRequest, Colleague, Event, Suborganization
 from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, setup_roles
-from wies.core.services.access_requests import DECIDED_RETENTION, REJECTION_COOLDOWN
+from wies.core.services.access_requests import DECIDED_RETENTION, REJECTION_COOLDOWN, approve, reject
 from wies.core.services.users import create_user, create_users_from_csv
 from wies.core.tests.role_helpers import (
     STAFF_EMAIL,
@@ -550,6 +550,19 @@ class RejectTest(TestCase):
         self.access_request.refresh_from_db()
         assert self.access_request.decision_note == ""
 
+    def test_a_decision_made_meanwhile_is_not_overwritten(self):
+        """Two beheerders past the pending check at once: the second decision changes nothing."""
+        stale = AccessRequest.objects.get(pk=self.access_request.pk)
+        assert reject(self.access_request, self.admin, "Eerste")
+
+        assert not reject(stale, self.admin, "Tweede")
+        approve(stale, make_user_admin("ander@rijksoverheid.nl"), self.admin)
+
+        self.access_request.refresh_from_db()
+        assert self.access_request.decision_note == "Eerste"
+        assert self.access_request.created_user is None
+        assert Event.objects.filter(object_type="AccessRequest", action="update").count() == 1
+
     def test_decided_requests_past_retention_are_purged_on_list_load(self):
         now = timezone.now()
         old = make_pending(
@@ -623,6 +636,15 @@ class DecisionMailTest(TestCase):
         assert message.reply_to == ["wies-odi@rijksoverheid.nl"]
         assert message.subject == "Je hebt toegang tot Wies"
         assert "https://wies.example/inloggen/" in message.body
+
+    def test_the_approval_mail_uses_the_name_the_beheerder_confirmed(self):
+        url = reverse("access-request-approve", args=[self.access_request.public_id])
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.post(url, {"first_name": "Noor", "last_name": "Nieuwe", **SEND_MAIL})
+
+        assert mail.outbox[0].body.startswith("Hoi Noor,")
+        [message] = get_messages(response.wsgi_request)
+        assert str(message) == "Noor Nieuwe heeft nu toegang tot Wies. Noor krijgt hierover een e-mail."
 
     def test_rejecting_mails_the_reason(self):
         self._reject("Geen ODI-collega")
@@ -703,3 +725,36 @@ class AccessRequestPublicIdTest(TestCase):
             with self.subTest(name=name):
                 url = reverse(name, args=["00000000-0000-0000-0000-000000000000"])
                 assert self.client.get(url).status_code == 404
+
+
+@override_settings(EMAIL_ENABLED=True, SITE_BASE_URL="https://wies.example")
+class DecisionMailFailureTest(TransactionTestCase):
+    """A real commit, so the mail is tried before the beheerder's message is written."""
+
+    def setUp(self):
+        setup_roles()
+        self.client.force_login(make_user_admin())
+        self.access_request = make_pending()
+
+    def _post(self, name, data):
+        url = reverse(name, args=[self.access_request.public_id])
+        with patch("django.core.mail.EmailMessage.send", side_effect=OSError("relay down")):
+            response = self.client.post(url, {**data, **SEND_MAIL})
+        [message] = get_messages(response.wsgi_request)
+        return message
+
+    def test_rejecting_says_the_mail_did_not_go_out(self):
+        message = self._post("access-request-reject", {"decision_note": ""})
+
+        assert message.level_tag == "warning"
+        assert str(message) == (
+            "De toegangsaanvraag van Nora Nieuw is afgewezen. "
+            "De e-mail aan Nora kon niet worden verstuurd. Laat het Nora zelf weten."
+        )
+
+    def test_approving_says_the_mail_did_not_go_out(self):
+        message = self._post("access-request-approve", {"first_name": "Nora", "last_name": "Nieuw"})
+
+        assert message.level_tag == "warning"
+        assert str(message).endswith("De e-mail aan Nora kon niet worden verstuurd. Laat het Nora zelf weten.")
+        assert User.objects.filter(email=REQUESTER_EMAIL).exists()
