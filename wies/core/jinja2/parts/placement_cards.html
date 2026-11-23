@@ -1,6 +1,6 @@
 {# `href` keeps the card a real link (status bar, cmd/middle click opens a
    tab); hx_link_guard.js catches the plain click so htmx fills the panel
-   instead of navigating. Same pattern as aanvraag_card_rows.html.
+   instead of navigating. Same pattern as aanvraag_cards.html.
 
    The card titles are h2: they follow the page h1 directly, so an h3 skips a
    level (finding 1 of the WCAG audit). The sidebar's own h2s cannot fill that
@@ -91,22 +91,24 @@
     <nldd-list-item size="sm">
     <nldd-icon-cell size="16" icon="business-suitcase"></nldd-icon-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    {# djlint:off T028 #}
-    <nldd-text-cell size="sm" text="{% if card.assignment %}{{ card.assignment.name }}{% else %}{{ card.assignments|length }} opdrachten{% endif %}"></nldd-text-cell>
-    {# djlint:on #}
+    <nldd-text-cell size="sm" text="{{ card.assignment_text }}"></nldd-text-cell>
     </nldd-list-item>
-    {# The row stays even on more than one assignment -- dropping it shrank the
-       card and broke the even heights in the grid -- but it says what it means:
-       there is no single period to name, so the calendar icon would otherwise
-       label an empty cell. #}
-    <nldd-list-item size="sm">
-    <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
-    <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    {# djlint:off T028 #}
-    <nldd-text-cell size="sm" text="{% if not card.assignment %}Meerdere periodes{% elif card.assignment.end_date %}tot {{ card.assignment.end_date|datum_nl('b Y') }}{% else %}Geen einddatum{% endif %}"></nldd-text-cell>
-    {# djlint:on #}
-    <nldd-cell>{{ chevron() }}</nldd-cell>
-    </nldd-list-item>
+    {# The period row is always there: dropping it shrank the card and broke the
+       even heights in the grid. Without a period (no placement) it stays empty
+       and hidden, so the list "Gegevens" counts only the rows that say something. #}
+    {% if card.period_text %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ card.period_text }}"></nldd-text-cell>
+      <nldd-cell>{{ chevron() }}</nldd-cell>
+      </nldd-list-item>
+    {% else %}
+      <nldd-list-item size="sm" aria-hidden="true">
+      <nldd-text-cell size="sm" text=""></nldd-text-cell>
+      <nldd-cell>{{ chevron() }}</nldd-cell>
+      </nldd-list-item>
+    {% endif %}
   {% endif %}
   </nldd-list>
   </nldd-container>
