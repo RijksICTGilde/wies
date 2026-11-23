@@ -82,16 +82,3 @@ jobs:
               {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
               {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
             ]
-      - name: Deploy to ZAD staging
-        id: deploy-staging
-        uses: RijksICTGilde/zad-actions/deploy@4217ceaa5c347f3c6d16142b5ad8ab94110c4cdb # v4.4.0
-        with:
-          api-key: ${{ secrets.ZAD_STAGING_API_KEY }}
-          api-base-url: https://zad.staging.rijksapp.dev/api
-          project-id: wies-6z3
-          deployment-name: productie
-          components: |
-            [
-              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
-              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
-            ]

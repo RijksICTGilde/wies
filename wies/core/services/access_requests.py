@@ -7,6 +7,7 @@ from datetime import timedelta
 
 import requests
 from django.conf import settings
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.db import IntegrityError, transaction
@@ -103,10 +104,10 @@ def site_url(path: str, request=None) -> str:
     return request.build_absolute_uri(path)
 
 
-def approval_mail(access_request: AccessRequest, request=None) -> tuple[str, str]:
+def approval_mail(first_name: str, request=None) -> tuple[str, str]:
     """Subject and body of the mail that says the account is there."""
     body = (
-        f"Hoi {access_request.first_name},\n\n"
+        f"Hoi {first_name},\n\n"
         f"Je hebt nu toegang tot Wies. Log in via {site_url(reverse('login'), request)}\n\n"
         "Heb je een vraag? Antwoord dan op deze e-mail.\n\n"
         "Groet,\nTeam Wies"
@@ -127,8 +128,13 @@ def _rejection_mail(access_request: AccessRequest) -> tuple[str, str]:
     return "Je toegangsaanvraag voor Wies is afgewezen", body
 
 
-def _mail_after_commit(access_request: AccessRequest, subject: str, body: str) -> None:
-    """Sent once the decision is stored; a relay that fails costs a warning, not the decision."""
+def _mail_after_commit(access_request: AccessRequest, subject: str, body: str, request=None) -> None:
+    """Sent once the decision is stored; a relay that fails costs the mail, not the decision.
+
+    The failure is marked on ``request`` for the beheerder's message (see
+    ``decision_message``). The commit comes before that message: reject runs outside a
+    transaction, approve at the end of the user's.
+    """
     if not settings.EMAIL_ENABLED:
         return
     message = EmailMessage(subject, body, to=[access_request.email], reply_to=[settings.EMAIL_REPLY_TO])
@@ -137,10 +143,24 @@ def _mail_after_commit(access_request: AccessRequest, subject: str, body: str) -
         try:
             message.send()
         except (smtplib.SMTPException, OSError) as exc:
-            # Only the type: SMTPRecipientsRefused carries the requester's address.
-            logger.warning("Could not mail the access request decision: %s", type(exc).__name__)
+            # TRY400 (logging.exception in except) suppressed: no traceback, as
+            # SMTPRecipientsRefused carries the requester's address; only the type is logged.
+            logger.error("Could not mail the access request decision: %s", type(exc).__name__)  # noqa: TRY400
+            if request is not None:
+                request.access_request_mail_failed = True
 
     transaction.on_commit(send)
+
+
+def decision_message(request, text: str, first_name: str, *, mailed: bool) -> None:
+    """The beheerder's message after a decision, saying whether the mail went out."""
+    if not mailed:
+        messages.success(request, text)
+    elif getattr(request, "access_request_mail_failed", False):
+        failed = f"De e-mail aan {first_name} kon niet worden verstuurd. Laat het {first_name} zelf weten."
+        messages.warning(request, f"{text} {failed}")
+    else:
+        messages.success(request, f"{text} {first_name} krijgt hierover een e-mail.")
 
 
 def _notify_ops(request) -> None:
@@ -154,13 +174,16 @@ def _notify_ops(request) -> None:
         logger.warning("Could not post the access request notification to Mattermost", exc_info=True)
 
 
-def _decide(access_request: AccessRequest, status: str, decided_by, request, **fields) -> None:
-    access_request.status = status
-    access_request.decided_at = timezone.now()
-    access_request.decided_by = decided_by
+def _decide(access_request: AccessRequest, status: str, decided_by, request, **fields) -> bool:
+    """Stores the decision; False when another beheerder decided first."""
+    fields |= {"status": status, "decided_at": timezone.now(), "decided_by": decided_by}
+    # On the pending row only: two beheerders deciding at once would otherwise
+    # overwrite each other, and the second one's mail contradicts the first.
+    pending = AccessRequest.objects.filter(pk=access_request.pk, status=AccessRequest.Status.PENDING)
+    if not pending.update(**fields):
+        return False
     for name, value in fields.items():
         setattr(access_request, name, value)
-    access_request.save()
     create_event(
         object_type="AccessRequest",
         action="update",
@@ -171,18 +194,23 @@ def _decide(access_request: AccessRequest, status: str, decided_by, request, **f
         # No decision_note: free text about someone, kept on the request for its retention only.
         context={"status": status},
     )
+    return True
 
 
 def approve(access_request: AccessRequest, created_user, decided_by, request=None, *, send_mail: bool = True) -> None:
-    _decide(access_request, AccessRequest.Status.APPROVED, decided_by, request, created_user=created_user)
-    if send_mail:
-        _mail_after_commit(access_request, *approval_mail(access_request, request))
+    decided = _decide(access_request, AccessRequest.Status.APPROVED, decided_by, request, created_user=created_user)
+    if decided and send_mail:
+        # The name the beheerder confirmed on the user sheet, not the one typed in the request.
+        _mail_after_commit(access_request, *approval_mail(created_user.first_name, request), request)
 
 
-def reject(access_request: AccessRequest, decided_by, note: str = "", request=None, *, send_mail: bool = True) -> None:
-    _decide(access_request, AccessRequest.Status.REJECTED, decided_by, request, decision_note=note)
+def reject(access_request: AccessRequest, decided_by, note: str = "", request=None, *, send_mail: bool = True) -> bool:
+    """False when another beheerder decided first."""
+    if not _decide(access_request, AccessRequest.Status.REJECTED, decided_by, request, decision_note=note):
+        return False
     if send_mail:
-        _mail_after_commit(access_request, *_rejection_mail(access_request))
+        _mail_after_commit(access_request, *_rejection_mail(access_request), request)
+    return True
 
 
 def close_pending_for(user, decided_by, request=None, *, send_mail: bool = True) -> None:

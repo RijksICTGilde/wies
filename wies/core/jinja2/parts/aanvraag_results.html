@@ -33,9 +33,9 @@
   {{ filter_chips(filter_groups, active_filters, org_chip_data, unknown_chip_data) }}
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}
-{% if paginator.count %}
+{% if result_count %}
   <nldd-rich-text spacing="flat">
-  <p>{{ results_text }}</p>
+  <p>{{ result_announcement }}</p>
   </nldd-rich-text>
 {% endif %}
 </nldd-container>
@@ -43,15 +43,15 @@
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
 {# Both branches share one id, so the OOB swap can replace either with the other. #}
-{% if paginator.count %}
+{% if result_count %}
   {# max-items="9999": the component paginates its own slot at 24 by default and
      hides every card past that (and the "Meer tonen" cell with them). Wies
      paginates server-side and appends via its own button, so the built-in limit
      has to be lifted -- the component can't know our pages accumulate. #}
   {# role=list: nldd-collection sets no role of its own. #}
   {# data-announce: live_region.js reads this out after a filter change. #}
-  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ results_text }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
-  {% include "parts/aanvraag_card_rows.html" %}
+  <nldd-collection id="assignment-card-grid" role="list" layout="grid" max-items="9999" data-announce="{{ result_announcement }}" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
+  {% include "parts/aanvraag_cards.html" %}
   </nldd-collection>
 {% else %}
   {# Without a filter or search there is nothing to adjust: the list is empty. #}
