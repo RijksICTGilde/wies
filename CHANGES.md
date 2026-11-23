@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- tbd: remove staging deployment from pipeline
 
 ## 2026-11-23
 
