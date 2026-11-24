@@ -22,8 +22,6 @@ User = get_user_model()
 
 logger = logging.getLogger(__name__)
 
-# After a rejection the same address may not ask again for this long.
-REJECTION_COOLDOWN = timedelta(days=30)
 # Decided requests hold a name and free text of someone who may never get an
 # account (docs/privacy.md); the audit event outlives them.
 DECIDED_RETENTION = timedelta(days=90)
@@ -42,9 +40,9 @@ class AccessRequestState:
     access_request: AccessRequest | None = None
 
     @property
-    def retry_from(self):
-        """When a rejected address may ask again."""
-        return self.access_request.decided_at + REJECTION_COOLDOWN
+    def may_request(self) -> bool:
+        """A rejection does not block a new request; the page shows it above the button."""
+        return self.kind in (AccessState.FORM, AccessState.REJECTED)
 
 
 def state_for_claims(claims: dict | None) -> AccessRequestState | None:
@@ -65,9 +63,7 @@ def state_for_claims(claims: dict | None) -> AccessRequestState | None:
         return AccessRequestState(AccessState.FORM)
     if latest.status == AccessRequest.Status.PENDING:
         return AccessRequestState(AccessState.PENDING, latest)
-    if latest.decided_at and timezone.now() - latest.decided_at < REJECTION_COOLDOWN:
-        return AccessRequestState(AccessState.REJECTED, latest)
-    return AccessRequestState(AccessState.FORM)
+    return AccessRequestState(AccessState.REJECTED, latest)
 
 
 def submit_access_request(claims: dict, cleaned_data: dict, request=None) -> AccessRequest | None:
@@ -115,13 +111,13 @@ def approval_mail(first_name: str, request=None) -> tuple[str, str]:
     return "Je hebt toegang tot Wies", body
 
 
-def _rejection_mail(access_request: AccessRequest) -> tuple[str, str]:
+def _rejection_mail(access_request: AccessRequest, request=None) -> tuple[str, str]:
     reason = f"De reden: {access_request.decision_note}\n\n" if access_request.decision_note else ""
     body = (
         f"Hoi {access_request.first_name},\n\n"
         "Een gebruikersbeheerder heeft je toegangsaanvraag voor Wies afgewezen.\n\n"
         f"{reason}"
-        f"Over {REJECTION_COOLDOWN.days} dagen kun je opnieuw toegang aanvragen. "
+        f"Je kunt opnieuw toegang aanvragen via {site_url(reverse('login'), request)}\n\n"
         "Heb je een vraag? Antwoord dan op deze e-mail.\n\n"
         "Groet,\nTeam Wies"
     )
@@ -209,7 +205,7 @@ def reject(access_request: AccessRequest, decided_by, note: str = "", request=No
     if not _decide(access_request, AccessRequest.Status.REJECTED, decided_by, request, decision_note=note):
         return False
     if send_mail:
-        _mail_after_commit(access_request, *_rejection_mail(access_request), request)
+        _mail_after_commit(access_request, *_rejection_mail(access_request, request), request)
     return True
 
 

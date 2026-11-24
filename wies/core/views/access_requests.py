@@ -49,11 +49,11 @@ def _back_to_no_access(request) -> HttpResponse:
 def access_request_create(request):
     """The request sheet: GET returns it, POST stores the request.
 
-    Only for a verified login without an account and without a pending or recently
-    rejected request; anything else goes back to the page that explains why.
+    Only for a verified login without an account and without a pending request;
+    anything else goes back to the page that explains why.
     """
     access = access_request_state(request)
-    if access is None or access.kind != access_requests.AccessState.FORM:
+    if access is None or not access.may_request:
         return _back_to_no_access(request)
     claims = request.session[FAILED_LOGIN_CLAIMS_SESSION_KEY]
 
