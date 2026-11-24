@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 877: remove staging deployment from pipeline
+- ???: keyboard focus returns to the menu button after closing a sheet or modal opened from a menu item (it used to drop to the top of the page); a modal dialog gets its own live region, so screen readers announce its messages
 
 ## 2026-11-23
 
