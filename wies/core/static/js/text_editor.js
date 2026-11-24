@@ -1,3 +1,4 @@
+// Remove once NLDD #497 is fixed.
 // autofocus on nldd-text-editor does nothing before its CodeMirror view exists
 // (focus() is a no-op until then), so wait for the render after a swap.
 (function () {
