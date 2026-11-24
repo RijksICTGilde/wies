@@ -663,14 +663,9 @@ class AssignmentPanelRenderTest(TestCase):
         ).content.decode()
         editor = body.split("<nldd-text-editor ")[1].split(">")[0]
         assert 'name="extra_info"' in editor
-        assert 'syntax="hidden"' in editor
-        # The error list points at the editor: the toolbar's wrapper hides it
-        # from nldd-form-field.
-        assert 'id="id_extra_info"' in editor
-        assert 'data-editor-group="inline"' in body
-        assert 'data-editor-group="list"' in body
-        assert 'data-editor-toggle="link"' in body
-        assert "data-editor-heading" in body
+        assert 'slot="toolbar"' in body
+        for command in ("bold", "link", "setList", "setHeading:2"):
+            assert f'text-editor-command="{command}"' in body
         # A narrow sheet moves the bar's items into its overflow menu.
         assert 'slot="overflow" type="checkbox" text="Vet"' in body
         assert "<nldd-multi-line-text-field" not in body
@@ -696,10 +691,8 @@ class AssignmentPanelRenderTest(TestCase):
         editor = body.split("<nldd-text-editor")[1].split(">")[0]
         assert "invalid" in editor
         assert 'unmet="error-extra_info-1"' in editor
-        # No `for`: nldd-form-field finds the editor itself, as it comes before
-        # the formatting bar.
+        # No `for`: nldd-form-field skips the toolbar and finds the editor.
         assert "<nldd-validation-list>" in body
-        assert body.index("<nldd-text-editor") < body.index("<nldd-toolbar")
         # The editor hides the marks, so the message says they count.
         assert "Opmaak telt mee" in body
 

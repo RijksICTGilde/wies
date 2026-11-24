@@ -309,20 +309,6 @@ nldd-rich-text blockquote {
   margin-left: calc(-1 * var(--primitives-space-8, 8px));
 }
 
-/* The formatting bar and its editor read as one control: a little air between
-   them, no more than the gap between a label and its field. */
-.wies-text-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-8, 8px);
-}
-
-/* Above the editor it follows in the markup (see text_editor.html): the form
-   field binds to the first form input, so the editor has to come first. */
-.wies-text-editor > nldd-toolbar {
-  order: -1;
-}
-
 /* A rendered description, collapsed to five lines until "Toon meer". A
    line count, not a height: a heading is taller than a line of text, so a
    height would cut through one. Not a fade: a gradient over a tinted list is
