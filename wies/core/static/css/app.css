@@ -441,6 +441,9 @@ nldd-rich-text > [data-gap="3"] {
 .wies-cell-text {
   font: var(--primitives-font-body-md-regular-tight);
   color: var(--context-content-color);
+  /* As wide as the cell, which aligns its items to the start: nldd-rich-text is
+     an inline-size container and adds no width of its own. */
+  align-self: stretch;
 }
 
 .wies-cv__more:not([hidden]) {
