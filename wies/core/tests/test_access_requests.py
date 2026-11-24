@@ -15,10 +15,9 @@ from django.test import TestCase, TransactionTestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
-from config.jinja2 import NL_TIMEZONE
 from wies.core.models import AccessRequest, Colleague, Event, Suborganization
 from wies.core.roles import ROLE_BUSINESS_MANAGER, ROLE_CONSULTANT, ROLE_USER_ADMIN, setup_roles
-from wies.core.services.access_requests import DECIDED_RETENTION, REJECTION_COOLDOWN, approve, reject
+from wies.core.services.access_requests import DECIDED_RETENTION, approve, reject
 from wies.core.services.users import create_user, create_users_from_csv
 from wies.core.tests.role_helpers import (
     STAFF_EMAIL,
@@ -178,37 +177,27 @@ class RequesterTest(TestCase):
         self.assertContains(second, "wacht nog op beoordeling")
         self.assertNotContains(second, SHEET_BUTTON)
 
-    def test_post_refused_within_cooldown_after_rejection(self):
+    def test_rejected_page_shows_the_reason_and_offers_a_new_request(self):
         make_pending(
-            status=AccessRequest.Status.REJECTED,
-            decided_at=timezone.now() - REJECTION_COOLDOWN + timedelta(days=1),
-            decision_note="Geen ODI-medewerker",
+            status=AccessRequest.Status.REJECTED, decided_at=timezone.now(), decision_note="Geen ODI-medewerker"
         )
         self._login_without_account()
 
-        response = self._post()
-
-        assert response["Location"] == NO_ACCESS_URL
-        assert AccessRequest.objects.count() == 1
         page = self.client.get(NO_ACCESS_URL)
+
         self.assertContains(page, "Je aanvraag is afgewezen")
         self.assertContains(page, "Geen ODI-medewerker")
-        self.assertNotContains(page, SHEET_BUTTON)
-        retry_from = (timezone.now() + timedelta(days=1)).astimezone(NL_TIMEZONE)
-        self.assertContains(page, f"Vanaf {retry_from.day} ")
+        self.assertContains(page, 'text="Vraag opnieuw toegang aan"')
 
-    def test_post_allowed_after_cooldown(self):
-        make_pending(
-            status=AccessRequest.Status.REJECTED,
-            decided_at=timezone.now() - REJECTION_COOLDOWN - timedelta(days=1),
-        )
+    def test_post_allowed_right_after_rejection(self):
+        make_pending(status=AccessRequest.Status.REJECTED, decided_at=timezone.now())
         self._login_without_account()
-        self.assertContains(self.client.get(NO_ACCESS_URL), SHEET_BUTTON)
 
         self._post()
 
         assert AccessRequest.objects.filter(status=AccessRequest.Status.PENDING).count() == 1
         assert AccessRequest.objects.count() == 2
+        self.assertContains(self.client.get(NO_ACCESS_URL), "Je aanvraag is verstuurd")
 
     def test_motivation_over_500_characters_is_a_form_error(self):
         self._login_without_account()
@@ -652,7 +641,7 @@ class DecisionMailTest(TestCase):
         [message] = mail.outbox
         assert message.subject == "Je toegangsaanvraag voor Wies is afgewezen"
         assert "Geen ODI-collega" in message.body
-        assert f"{REJECTION_COOLDOWN.days} dagen" in message.body
+        assert "Je kunt opnieuw toegang aanvragen via http" in message.body
 
     def test_a_failing_relay_keeps_the_decision(self):
         with patch("django.core.mail.EmailMessage.send", side_effect=OSError("relay down")):

@@ -43,29 +43,32 @@
         </nldd-rich-text>
       {% endset %}
       <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-      {% if access.kind == access_states.FORM %}
-        <nldd-rich-text>
-        <p>Vraag hier toegang aan. Een gebruikersbeheerder beoordeelt je aanvraag.</p>
-        </nldd-rich-text>
-        <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-        <nldd-button appearance="primary" start-icon="person-badge-plus" text="Vraag toegang aan" hx-get="{{ url('access-request-create') }}" hx-target="#accessRequestModal" hx-swap="innerHTML"></nldd-button>
-        <div id="accessRequestModal"></div>
-      {% elif access.kind == access_states.PENDING and just_sent %}
-        <nldd-banner variant="success" text="Je aanvraag is verstuurd" supporting-text="Een gebruikersbeheerder beoordeelt je aanvraag. Na goedkeuring kun je inloggen."></nldd-banner>
-      {% elif access.kind == access_states.PENDING %}
-        <nldd-banner icon="clock" text="Je aanvraag wacht nog op beoordeling" supporting-text="Je hebt op {{ access.access_request.created_at|datetime_nl('%Y-%m-%d')|datum_nl('j b') }} toegang aangevraagd.">{{ contact }}</nldd-banner>
-      {% elif access.kind == access_states.REJECTED %}
+      {% if access.kind == access_states.REJECTED %}
         <nldd-banner variant="warning" text="Je aanvraag is afgewezen" supporting-text="Je hebt op {{ access.access_request.created_at|datetime_nl('%Y-%m-%d')|datum_nl('j b') }} toegang aangevraagd. Een gebruikersbeheerder heeft deze aanvraag afgewezen.">
         <nldd-rich-text>
         {% if access.access_request.decision_note %}
           <p><strong>Reden:</strong> {{ access.access_request.decision_note }}</p>
         {% endif %}
-        <p>
-          Heb je een vraag? Mail naar <a href="mailto:wies-odi@rijksoverheid.nl?subject=Toegang%20Wies">wies-odi@rijksoverheid.nl</a>.
-          Vanaf {{ access.retry_from|datetime_nl("%Y-%m-%d")|datum_nl('j b') }} kun je opnieuw toegang aanvragen.
-        </p>
+        <p>Heb je een vraag? Mail naar <a href="mailto:wies-odi@rijksoverheid.nl?subject=Toegang%20Wies">wies-odi@rijksoverheid.nl</a>.</p>
         </nldd-rich-text>
         </nldd-banner>
+        <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+      {% endif %}
+      {% if access.may_request %}
+        <nldd-rich-text>
+        {% if access.kind == access_states.REJECTED %}
+          <p>Je kunt opnieuw toegang aanvragen.</p>
+        {% else %}
+          <p>Vraag hier toegang aan. Een gebruikersbeheerder beoordeelt je aanvraag.</p>
+        {% endif %}
+        </nldd-rich-text>
+        <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+        <nldd-button appearance="primary" start-icon="person-badge-plus" text="{{ 'Vraag opnieuw toegang aan' if access.kind == access_states.REJECTED else 'Vraag toegang aan' }}" hx-get="{{ url('access-request-create') }}" hx-target="#accessRequestModal" hx-swap="innerHTML"></nldd-button>
+        <div id="accessRequestModal"></div>
+      {% elif access.kind == access_states.PENDING and just_sent %}
+        <nldd-banner variant="success" text="Je aanvraag is verstuurd" supporting-text="Een gebruikersbeheerder beoordeelt je aanvraag. Na goedkeuring kun je inloggen."></nldd-banner>
+      {% elif access.kind == access_states.PENDING %}
+        <nldd-banner icon="clock" text="Je aanvraag wacht nog op beoordeling" supporting-text="Je hebt op {{ access.access_request.created_at|datetime_nl('%Y-%m-%d')|datum_nl('j b') }} toegang aangevraagd.">{{ contact }}</nldd-banner>
       {% elif access.kind == access_states.ACCOUNT_EXISTS %}
         <nldd-banner variant="warning" text="Er bestaat al een account met dit e-mailadres" supporting-text="Dat account hoort bij een andere inlog. Daarom kun je hier geen toegang aanvragen.">{{ contact }}</nldd-banner>
       {% endif %}
