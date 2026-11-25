@@ -86,10 +86,10 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
 
 /* Bridges the tick in which the search field jumps from narrow to wide.
    nldd-toolbar reads the item's width attributes only in a later tick
-   (_syncHosts), which then sets the custom state `fluid`; until then the item
-   sits at flex-basis:auto and shrinks to its intrinsic width. Not the
-   :not(:defined) FOUC case — the element is already defined. The rule drops
-   out once `:state(fluid)` matches.
+   (_syncHosts), which then sets `fluid`; until then the item sits at
+   flex-basis:auto and shrinks to its intrinsic width. Not the :not(:defined)
+   FOUC case — the element is already defined. The rule drops out once `fluid`
+   appears.
 
    The generic rule carries the value the other three toolbars use, since the
    attribute itself does nothing during this tick; only the item that deviates

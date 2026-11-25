@@ -174,9 +174,8 @@
     {% if panel_data.user_can_edit_team %}
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <nldd-toolbar accessible-label="Team" size="sm">
-      {# size="sm" repeated on the button: nldd-toolbar only forwards its size
-           after its own first render, so without this the button paints at the
-           md default and then shrinks — a visible resize flash. #}
+      {# size="sm" repeated on the button: nldd-toolbar forwards its size only
+           after its first render, so the button would visibly shrink. #}
       <nldd-toolbar-item slot="start">
       <nldd-button size="sm" text="Toevoegen" start-icon="plus" expandable accessible-label="Teamlid toevoegen">
       <nldd-menu slot="popup" placement="bottom-start">
