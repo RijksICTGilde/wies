@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 880: upgrade NLDD design system from 0.27.1 to 0.28.0
 - 877: remove staging deployment from pipeline
 
 ## 2026-11-23
