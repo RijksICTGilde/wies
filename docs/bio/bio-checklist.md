@@ -45,9 +45,18 @@ Bewijs: [privacyverklaring](../privacy.md)
 open standaarden tegen phishing en afluisteren op de 'pas toe of leg uit'-lijst
 van het Forum Standaardisatie. Voor beveiliging van websiteverkeer gelden de
 open standaarden tegen afluisteren op de 'pas toe of leg uit'-lijst van het
-Forum Standaardisatie.** — n.v.t.
+Forum Standaardisatie.** — Deels, onderhanden
 
-Wies verstuurt geen mails.
+Wies mailt alleen de uitkomst van een toegangsaanvraag, naar het geverifieerde
+adres van de aanvrager, vanaf een noreply-adres. De mail gaat via de mailrelay
+van ZAD ("E-mail versturen"). Binnen het cluster zonder TLS: de relay heeft een
+self-signed certificaat. Zonder relay verstuurt Wies niets.
+
+- TODO: bij ZAD nagaan dat de relay naar buiten SPF, DKIM, DMARC en STARTTLS
+  toepast
+
+Bewijs: [mailinstellingen](../../config/settings/base.py),
+[beslismails](../../wies/core/services/access_requests.py)
 
 **Voor veilige berichtenuitwisseling met basisregistraties wordt, conform de
 'pas toe of leg uit'-lijst van het Forum Standaardisatie, gebruik gemaakt van de
@@ -96,6 +105,8 @@ van gebruikersidentificaties.** — Voldoet
 
 `create_user()` service en `delete_user` endpoint met Event-logging. Unieke
 email als identifier. Alleen beheerders mogen gebruikers aanmaken/verwijderen.
+Wie zonder account inlogt, kan op de pagina Geen toegang een toegangsaanvraag
+doen, alleen op het geverifieerde e-mailadres uit SSO-Rijk.
 Netwerktoegang wordt afgedwongen door SSO-Rijk en de hosting-omgeving.
 
 Bewijs: [user create service](../../wies/core/services/users.py),
@@ -139,9 +150,12 @@ een bevoegde functionaris.** — Voldoet
 
 Gebruikers worden aangemaakt door Beheerders (permission: `change_user`).
 Roltoewijzing via groepen. Staff-toegang beperkt tot `STAFF_EMAILS` whitelist.
+Een toegangsaanvraag geeft zelf geen toegang: het account bestaat pas als een
+Gebruikersbeheerder de aanvraag goedkeurt (regel "Toegangsaanvragen beoordelen").
 
 Bewijs: [RBAC](../../wies/core/roles.py),
-[permission definitions](../../wies/core/permissions.py)
+[permission definitions](../../wies/core/permissions.py),
+[toegangsaanvragen](../../wies/core/views/access_requests.py)
 
 ### 5.18.1
 
@@ -210,7 +224,8 @@ bewaartermijn is.** — Deels, onderhanden
 
 Geen retentiebeleid geïmplementeerd. Event-tabel groeit onbeperkt. Geen
 automatische cleanup. Daarnaast nog geen beleid over uit dienst treding en
-historische opdrachten.
+historische opdrachten. Uitzondering: afgehandelde toegangsaanvragen worden na
+90 dagen verwijderd ([privacyverklaring](../privacy.md)).
 
 - TODO: retentiebeleid implementeren / opstellen
 - TODO: delete user → annoteren `deleted_at`?
@@ -390,7 +405,8 @@ Bewijs: [Event-model](../../wies/core/models.py)
 beveiliging kunnen leiden.** — Voldoet
 
 Event-tabel slaat geen wachtwoorden, tokens of sessiegegevens op. AuthEvent logt
-alleen email + success/failure.
+alleen email + success/failure. Een event van een toegangsaanvraag bevat het
+e-mailadres en de status, niet de toelichting of de reden van afwijzing.
 
 Bewijs: [Event-model](../../wies/core/models.py),
 [AuthEvent-model](../../wies/rijksauth/models.py)
