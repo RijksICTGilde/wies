@@ -96,15 +96,15 @@ nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
    from it is scoped. Dropping the generic rule instead would leave
    organization_admin, user_admin and aanvraag_results
    without a bridge at all, which is the flash this rule exists to prevent. */
-nldd-toolbar-item[width]:not([fluid]) {
+nldd-toolbar-item[width]:not(:state(fluid)) {
   flex: 0 1 560px;
   min-width: 240px;
   max-width: 560px;
 }
-nldd-toolbar-item[width]:not([fluid]) > * {
+nldd-toolbar-item[width]:not(:state(fluid)) > * {
   width: 100%;
 }
-#search-toolbar-item:not([fluid]) {
+#search-toolbar-item:not(:state(fluid)) {
   min-width: 240px;
 }
 

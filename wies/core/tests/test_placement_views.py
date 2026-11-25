@@ -25,6 +25,7 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from wies.core.services.organizations import build_org_hierarchy, get_org_descendant_ids
 from wies.core.tests.role_helpers import grant_business_manager, grant_consultant, make_business_manager_user
@@ -771,6 +772,19 @@ class PlacementPanelVisibilityTest(TestCase):
 
         assert 'text="Gepland"' not in body
         assert PRIVACY_BM in body
+
+    def test_team_row_shows_the_onderdeel(self):
+        self.colleague_alice.suborganization = Suborganization.objects.create(name="Rijks ICT Gilde")
+        self.colleague_alice.save()
+        pl = self._placement(start=date(2026, 1, 1), end=None, owner=self.colleague_bob)
+        self.client.force_login(self.user_alice)
+
+        body = self.client.get(
+            reverse("home") + f"?opdracht={pl.service.assignment.public_id}",
+            headers={"HX-Request": "true", "HX-Target": "side-panel-content"},
+        ).content.decode()
+
+        assert '<span class="wies-text-secondary">· Rijks ICT Gilde</span>' in body
 
 
 class OwnRoleSheetPermissionTest(TestCase):

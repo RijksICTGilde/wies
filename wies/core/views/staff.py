@@ -31,6 +31,8 @@ from wies.core.services.events import create_event
 from wies.core.services.tasks import create_task, get_latest_tasks, has_active_task
 from wies.rijksauth.services.usage import get_usage_stats
 
+from ._common import hx_redirect
+
 
 def _merge_preview_rows(group) -> list[dict]:
     """One row per placement for the merge preview: assignment, consultant, fate.
@@ -137,9 +139,7 @@ def delete_error(request, public_id):
         )
     if request.method == "POST":
         error.delete()
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("staff-dashboard")
-        return response
+        return hx_redirect(reverse("staff-dashboard"))
     return HttpResponse(status=405)
 
 

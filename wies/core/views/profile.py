@@ -29,7 +29,7 @@ from wies.core.services.assignments import (
 )
 from wies.core.services.inline_edit_save import save_edit_specs
 
-from ._common import is_side_panel_request
+from ._common import hx_redirect, is_side_panel_request
 from .panels import (
     get_colleague_assignments,
     resolve_side_panel,
@@ -71,9 +71,7 @@ def profile_name_edit(request):
             UserEditables.first_name.save(user, form.cleaned_data["first_name"])
             UserEditables.last_name.save(user, form.cleaned_data["last_name"])
             messages.success(request, "Je naam is aangepast.")
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("user-profile")
-            return response
+            return hx_redirect(reverse("user-profile"))
     else:
         form = ProfileNameForm(instance=user)
 
@@ -111,9 +109,7 @@ def profile_labels_edit(request):
         if form.is_valid():
             form.save()
             messages.success(request, "Je labels zijn aangepast.")
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("user-profile")
-            return response
+            return hx_redirect(reverse("user-profile"))
     else:
         form = ProfileLabelsForm(colleague=colleague, categories=categories)
 

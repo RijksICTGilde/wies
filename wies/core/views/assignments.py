@@ -73,6 +73,7 @@ from ._common import (
     build_panel_url,
     count_label,
     csv_too_large,
+    hx_redirect,
     is_side_panel_request,
     page_url_behind_panel,
 )
@@ -497,9 +498,7 @@ def assignment_delete(request, public_id):
                 context=context,
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = page_url_behind_panel(request)
-        return response
+        return hx_redirect(page_url_behind_panel(request))
     return HttpResponse(status=405)
 
 

@@ -132,17 +132,26 @@ def is_user_admin(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_USER_ADMIN).exists()
 
 
-def staff_required(view_func):
-    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
+def role_required(test_func):
+    """A view decorator: logged in without ``test_func``, the no-access page; not
+    logged in, the login.
+
+    LoginRequiredMiddleware sends an anonymous visitor to the view's own
+    ``login_url``, and user_passes_test sets that to the no-access page.
+    """
+
+    def decorator(view_func):
+        wrapped = user_passes_test(test_func, login_url="/geen-toegang/")(view_func)
+        wrapped.login_url = settings.LOGIN_URL
+        return wrapped
+
+    return decorator
 
 
-def business_management_access_required(view_func):
-    """Gate the "Business management" section: Business Managers."""
-    return user_passes_test(is_business_manager, login_url="/geen-toegang/")(view_func)
-
-
-def user_admin_required(view_func):
-    return user_passes_test(is_user_admin, login_url="/geen-toegang/")(view_func)
+staff_required = role_required(is_staff_member)
+# Gate the "Business management" section: Business Managers.
+business_management_access_required = role_required(is_business_manager)
+user_admin_required = role_required(is_user_admin)
 
 
 def may_grant(_editor, role: str) -> bool:

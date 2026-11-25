@@ -128,7 +128,9 @@ def _services_initial(assignment):
                 "placements",
                 # service__assignment keeps placement.start_date/end_date, which
                 # resolve through service → assignment, from querying per row.
-                queryset=Placement.objects.select_related("colleague", "service__assignment").order_by("-id"),
+                queryset=Placement.objects.select_related("colleague__suborganization", "service__assignment").order_by(
+                    "-id"
+                ),
                 to_attr="ordered_placements",
             )
         )

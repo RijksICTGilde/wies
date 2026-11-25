@@ -38,10 +38,13 @@
         <nldd-identity text="{{ row.colleague.name }}" supporting-text="{{ [row.role, hours_text]|select|join(' · ') }}">
         <nldd-avatar slot="avatars" name="{{ row.colleague.name }}" decorative></nldd-avatar>
         </nldd-identity>
-        {# Only the gilde labels: they explain why a filtered row is here, and
-             the full expertise list would fill the cell. #}
-        {% if row.gilde_labels %}
+        {# Onderdeel and gilde labels only: they explain why a filtered row is
+             here, and the full expertise list would fill the cell. #}
+        {% if row.colleague.suborganization or row.gilde_labels %}
           <span class="bezetting-person__labels">
+            {%- if row.colleague.suborganization -%}
+              <nldd-tag size="sm" color="neutral" text="{{ row.colleague.suborganization.name }}"></nldd-tag>
+            {%- endif -%}
             {%- for name, colour in row.gilde_labels -%}
               <nldd-tag size="sm" color="{{ colour }}" text="{{ name }}"></nldd-tag>
             {%- endfor -%}

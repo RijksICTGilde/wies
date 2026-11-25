@@ -107,10 +107,10 @@ class BezettingAuthTest(TestCase):
         self.consultant = User.objects.create(email="consultant@rijksoverheid.nl")
         self.consultant.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
 
-    def test_anonymous_redirected(self):
+    def test_anonymous_goes_to_login(self):
         response = self.client.get(self.url)
         assert response.status_code == 302
-        assert "/geen-toegang/" in response.url
+        assert response.url.startswith(reverse("login"))
 
     def test_non_bdm_redirected(self):
         self.client.force_login(self.regular_user)
@@ -663,6 +663,12 @@ class BezettingSuborganizationFilterViewTest(TestCase):
         response = self.client.get(self.url, {"onderdeel": str(self.digi.public_id)})
         assert b"Aisha Digi" in response.content
         assert b"Bram Mindful" not in response.content
+
+    def test_row_shows_the_onderdeel_as_a_tag(self):
+        # On the tag, not the bare name: the filter sheet lists every name too.
+        response = self.client.get(self.url)
+        assert b'<nldd-tag size="sm" color="neutral" text="Digi Gilde"></nldd-tag>' in response.content
+        assert b'<nldd-tag size="sm" color="neutral" text="Mindful Rijk"></nldd-tag>' in response.content
 
     def test_unknown_suborganization_token_ignored(self):
         # A bogus public_id resolves to no ids: an empty filter shows everyone.
