@@ -4,7 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 694: text editor with formatting (Markdown) for the opdracht description, "Wie we zoeken" and "Taken"; your profile updates right after a save; (accessibility) a screen reader announces the "Opdrachtgever(s)" error with the picker
+- 694: text editor with formatting (Markdown) for the opdracht description, "Wie we zoeken" and "Taken"
+- 694: your profile updates right after a save
+- 694: (accessibility) a screen reader announces the "Opdrachtgever(s)" error with the picker
 - 877: remove staging deployment from pipeline
 
 ## 2026-11-23
