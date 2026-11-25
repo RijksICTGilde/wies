@@ -175,6 +175,24 @@ OTYS_URL = os.environ.get("OTYS_URL", "")
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
 MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
 
+# EMAIL settings: ZAD's mail relay ("E-mail versturen") sets SMTP_*. Without it
+# Wies sends no mail and the beheerder gets a mailto link instead.
+EMAIL_ENABLED = bool(os.environ.get("SMTP_HOST"))
+if EMAIL_ENABLED:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    EMAIL_HOST = os.environ["SMTP_HOST"]
+    EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
+    EMAIL_HOST_USER = os.environ.get("SMTP_USERNAME", "")
+    EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+    # STARTTLS unless switched off: ZAD's in-cluster relay presents a self-signed
+    # certificate, so that deployment sets SMTP_USE_TLS=false.
+    EMAIL_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() != "false"
+    # A decision must not hang on a slow relay.
+    EMAIL_TIMEOUT = 10
+    DEFAULT_FROM_EMAIL = os.environ.get("SMTP_FROM", "")
+# Mail goes out from a noreply address: replies go to the team.
+EMAIL_REPLY_TO = "wies-odi@rijksoverheid.nl"
+
 # SITE_BASE_URL is used if links need to be shared outside (e.g. in mattermost message)
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
 

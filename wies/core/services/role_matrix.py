@@ -17,7 +17,7 @@ from typing import TYPE_CHECKING
 
 from django.contrib.auth.models import Group, Permission
 
-from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
+from wies.core.models import AccessRequest, Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import (
     ANY,
     SCOPES,
@@ -66,6 +66,7 @@ SECTION_BY_MODEL = {
     Colleague: "Gebruikers en collega's",
     ContractPeriod: "Gebruikers en collega's",
     User: "Gebruikers en collega's",
+    AccessRequest: "Gebruikers en collega's",
 }
 
 _OTHER = -99  # pk of a colleague that is not the stand-in

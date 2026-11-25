@@ -82,12 +82,27 @@ class LiveAnnounceTest(TestCase):
         Placement.objects.create(colleague=colleague, service=self._open_assignment(), source="wies")
         response = self.client.get(reverse("home"), **HX)
         assert response.status_code == 200
-        # Jinja escapes the apostrophe in the attribute; the browser reads it back as-is.
-        self.assertContains(response, 'data-announce="1 collega&#39;s"')
+        # The viewer has no placement but is on the list too. Jinja escapes the
+        # apostrophe in the attribute; the browser reads it back as-is.
+        self.assertContains(response, 'data-announce="2 collega&#39;s"')
+
+    def test_home_announces_a_single_colleague_in_singular(self):
+        response = self.client.get(reverse("home"), {"zoek": "Auth"}, **HX)
+        self.assertContains(response, 'data-announce="1 collega"')
+
+    def test_opdracht_view_announces_a_single_opdracht_in_singular(self):
+        colleague = Colleague.objects.create(name="Collega", email="collega@rijksoverheid.nl", source="wies")
+        Placement.objects.create(colleague=colleague, service=self._open_assignment(), source="wies")
+        response = self.client.get(reverse("home"), {"weergave": "opdracht"}, **HX)
+        self.assertContains(response, 'data-announce="1 opdracht"')
 
     def test_empty_home_announces_the_empty_state(self):
-        response = self.client.get(reverse("home"), **HX)
-        self.assertContains(response, 'data-announce="Geen inzetten gevonden"')
+        response = self.client.get(reverse("home"), {"zoek": "niemand-heet-zo"}, **HX)
+        self.assertContains(response, 'data-announce="Geen collega&#39;s gevonden"')
+
+    def test_empty_opdracht_view_announces_the_empty_state(self):
+        response = self.client.get(reverse("home"), {"weergave": "opdracht"}, **HX)
+        self.assertContains(response, 'data-announce="Geen opdrachten gevonden"')
 
     def test_the_page_has_exactly_one_live_region(self):
         """getElementById returns the first, so a second one is dead markup that

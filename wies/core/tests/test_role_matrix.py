@@ -17,7 +17,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, ContractPeriod, Placement, Service
+from wies.core.models import AccessRequest, Assignment, Colleague, ContractPeriod, Placement, Service
 from wies.core.permission_engine import (
     ANY,
     OWN,
@@ -52,6 +52,7 @@ SCOPES_BY_MODEL = {
     Colleague: (SELF, ANY),
     ContractPeriod: (ANY,),
     User: (SELF, ANY),
+    AccessRequest: (ANY,),
 }
 
 PAST = (date(2000, 1, 1), date(2000, 1, 2))
@@ -220,6 +221,7 @@ class RoleMatrixReaderTest(TestCase):
                 (Colleague, ANY): self.other,
                 (User, SELF): user,
                 (User, ANY): self.other_user,
+                (AccessRequest, ANY): AccessRequest(email="aanvraag@rijksoverheid.nl"),
             },
         )
 

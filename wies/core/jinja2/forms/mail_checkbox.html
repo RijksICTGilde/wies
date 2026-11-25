@@ -1,0 +1,7 @@
+{# A lone checkbox with its label beside it, outside a field group: as_field_group
+   would put the label above a single box. Form-associated, so it posts "on" when
+   checked and nothing when not, which a BooleanField reads as False. #}
+{% macro mail_checkbox(field) %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-checkbox-field name="{{ field.html_name }}" label="{{ field.label }}" {% if field.value() %}checked{% endif %}></nldd-checkbox-field>
+{% endmacro %}

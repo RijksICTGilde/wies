@@ -2,6 +2,7 @@
    returns only this part. Deleting lives in the row's more menu, not here. The
    save button is in the sheet's footer (user_form_modal.html), so it stays at
    the bottom under the contract periods; the hidden submit keeps Enter working. #}
+{% from "forms/mail_checkbox.html" import mail_checkbox %}
 {% set body_id = modal_element_id ~ "Body" %}
 <nldd-form>
 <form id="userForm"
@@ -31,6 +32,9 @@
     {{ content.contract_hours_per_week.as_field_group() }}
     {{ content.contract_start_date.as_field_group() }}
     </nldd-form-section>
+  {% endif %}
+  {% if "send_mail" in content.fields %}
+    {{ mail_checkbox(content.send_mail) }}
   {% endif %}
   <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>

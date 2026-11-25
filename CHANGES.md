@@ -4,7 +4,16 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- tbd
+- 853: (migration)(add env vars) people without an account request access from the no-access page; Gebruikersbeheerders approve or reject on Beheer > Toegangsaanvragen; with ZAD's mail relay (`SMTP_*`; `SMTP_USE_TLS=false` on ZAD) the person gets the decision by mail, unless the beheerder unticks it; logging out on the no-access page clears the failed login; a Gebruikersbeheerder can delete their own account without an error; a visitor who is not logged in goes to the login instead of the no-access page on Beheer and Bezetting
+- 885: upgrade NLDD design system from 0.27.1 to 0.28.0 (#880)
+- 883: (internal) one `hx_redirect` helper in `views/_common.py` replaces twelve copies of the HX-Redirect response
+- 882: a Gebruikersbeheerder can delete their own account without an error; they are logged out right away
+- 881: opening a beheer or business-management page while logged out now leads to the login instead of the "Geen toegang" page
+- 877: remove staging deployment from pipeline
+
+## 2026-11-23
+
+- 805: Wie zit waar? lists every colleague with an account, also without a current opdracht (card "Nu geen opdracht"); a Business Manager shows up with the number of opdrachten they manage, so new accounts can find themselves (#778). The onboarding says so. The empty state now says "Geen collega's gevonden" / "Geen opdrachten gevonden". A banner on Wie zit waar? (which you can dismiss) says missing opdrachten are still being added; the onboarding no longer says Wies only holds RIG and Digi Gilde opdrachten
 
 ## 2026-11-18
 

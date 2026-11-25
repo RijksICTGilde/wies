@@ -20,8 +20,14 @@ from django.contrib.auth.decorators import login_not_required
 from django.urls import include, path
 from django.views.generic import RedirectView
 
+from wies.core.views.access_requests import (
+    access_request_admin,
+    access_request_approve,
+    access_request_create,
+    access_request_reject,
+)
 from wies.core.views.assignments import (
-    AssignmentListView,
+    AanvraagListView,
     assignment_create_sheet,
     assignment_delete,
     assignment_edit_view,
@@ -50,7 +56,7 @@ from wies.core.views.pages import (
     toegankelijkheid,
     toegankelijkheid_onderzoek,
 )
-from wies.core.views.placements import PlacementListView, placement_edit_view
+from wies.core.views.placements import PlacementOverviewView, placement_edit_view
 from wies.core.views.profile import (
     onboarding_assignment_edit,
     onboarding_complete,
@@ -91,12 +97,13 @@ urlpatterns = [
         name="security-txt",
     ),
     # Wies
-    path("", PlacementListView.as_view(), name="home"),
+    path("", PlacementOverviewView.as_view(), name="home"),
     path("inloggen/", login, name="login"),
-    path("geen-toegang/", no_access),
+    path("geen-toegang/", no_access, name="no-access"),
+    path("geen-toegang/aanvragen/", access_request_create, name="access-request-create"),
     path("uitloggen/", logout, name="logout"),
     path("auth/", auth, name="auth"),
-    path("aanvragen/", AssignmentListView.as_view(), name="assignment-list"),
+    path("aanvragen/", AanvraagListView.as_view(), name="assignment-list"),
     path("opdrachten/", RedirectView.as_view(pattern_name="assignment-list", query_string=True)),
     path("opdrachten/invoeren/", assignment_create_sheet, name="assignment-create-sheet"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
@@ -114,6 +121,13 @@ urlpatterns = [
     path("beheer/gebruikers/<uuid:public_id>/bewerken/", user_edit, name="user-edit"),
     path("beheer/gebruikers/<uuid:public_id>/verwijderen/", user_delete, name="user-delete"),
     path("beheer/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
+    path("beheer/toegangsaanvragen/", access_request_admin, name="access-request-admin"),
+    path(
+        "beheer/toegangsaanvragen/<uuid:public_id>/goedkeuren/",
+        access_request_approve,
+        name="access-request-approve",
+    ),
+    path("beheer/toegangsaanvragen/<uuid:public_id>/afwijzen/", access_request_reject, name="access-request-reject"),
     path("beheer/labels/", label_admin, name="label-admin"),
     path("beheer/labels/categorieen/", label_category_manage, name="label-category-manage"),
     path("beheer/labels/categorie/<uuid:public_id>/verwijderen/", label_category_delete, name="label-category-delete"),

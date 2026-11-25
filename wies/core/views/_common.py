@@ -1,7 +1,7 @@
-"""Helpers shared by the views: panel URLs, sort controls, CSV upload limit."""
+"""Helpers shared by the views: panel URLs, sort controls, CSV upload limit, htmx redirects."""
 
 from django.core.exceptions import ValidationError
-from django.http import Http404
+from django.http import Http404, HttpResponse
 from django.urls import reverse
 
 from wies.core.services.urls import PAGE_PARAM, hx_current_url, rebuild_url
@@ -27,6 +27,11 @@ PANEL_PARAMS = (
 def build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     return rebuild_url(request.path, request.GET, drop=PANEL_PARAMS, **overrides)
+
+
+def count_label(count: int, singular: str, plural: str) -> str:
+    """The count with its noun in singular or plural: "1 collega", "3 collega's"."""
+    return f"{count} {singular if count == 1 else plural}"
 
 
 def sort_control_context(active_order: str, options: list[tuple[str, str]], default_label: str) -> dict:
@@ -101,3 +106,10 @@ CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CS
 
 def csv_too_large(csv_file) -> bool:
     return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
+
+
+def hx_redirect(url: str) -> HttpResponse:
+    """A full page load of ``url`` for an htmx request, which would swap a plain redirect in place."""
+    response = HttpResponse(status=200)
+    response["HX-Redirect"] = url
+    return response

@@ -173,4 +173,4 @@ def create_user(email, ...):
 
 ## No-access page
 
-When a user logs in via OIDC but doesn't exist in the database, rijksauth redirects to `AUTH_NO_ACCESS_URL`. Point this to your own view that explains which domains are allowed and how to request access. The failed email is available in `request.session["failed_login_email"]` so you can show a tailored message.
+When a user logs in via OIDC but doesn't exist in the database, rijksauth redirects to `AUTH_NO_ACCESS_URL`. Point this to your own view that explains which domains are allowed and how to request access. The failed email is available in `request.session["failed_login_email"]` so you can show a tailored message. When the provider marked that address as verified, `request.session["failed_login_claims"]` also holds `email` (lowercased), `given_name` and `family_name`: trust only these for anything that acts on the identity, such as an access request.

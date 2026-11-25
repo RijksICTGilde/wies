@@ -8,7 +8,7 @@
 <div id="flash-messages"
      {% if flash_oob %}hx-swap-oob="outerHTML"{% endif %}>
   {% for message in get_messages(request) %}
-    {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
+    {% set _variant = 'success' if 'success' in message.tags else 'warning' if 'warning' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
     <nldd-notification variant="{{ _variant }}" text="{{ message }}"></nldd-notification>
   {% endfor %}
 </div>

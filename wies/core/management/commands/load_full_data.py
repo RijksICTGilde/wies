@@ -36,6 +36,7 @@ from django.utils import timezone
 from wies.core.management.task import require_destructive_actions_enabled
 from wies.core.models import (
     SUBGROEP_CATEGORY,
+    AccessRequest,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
@@ -94,6 +95,10 @@ CONTRACT_HOURS_WEIGHTS = {36: 50, 32: 25, 40: 15, 24: 10}
 ROLE_HOURS_WEIGHTS = {None: 15, 8: 5, 16: 10, 24: 20, 32: 25, 36: 20, 40: 5}
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
+# Share of colleagues without any placement at all: 3 of 50 in base, about 6%
+# in full. The "Geen opdracht" cards on Wie zit waar? are more than that, as
+# colleagues with only ended or planned placements show up there too.
+UNPLACED_SHARE = 0.06
 # Share of placements continued by a second placement on the same opdracht, so
 # Bezetting has extensions to show.
 EXTENSION_PROBABILITY = 0.1
@@ -853,6 +858,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
 
     # ── 0. Clean up existing dummy data ──────────────────────────────
     write("Cleaning up existing data...")
+    AccessRequest.objects.all().delete()
     Placement.objects.all().delete()
     Service.objects.all().delete()
     # Assignment events carry the assignment PK in object_id (not a FK), so they
@@ -942,6 +948,7 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
     role_counts = dict.fromkeys(ROLE_WEIGHTS, 0)
     roles = assign_roles(rng, len(colleagues))
     business_manager_colleagues = []
+    consultant_colleagues = []
     for colleague, role in zip(colleagues, roles, strict=True):
         first_name, _, last_name = colleague.name.partition(" ")
         # A previous run may have left a user with this email (colleagues are
@@ -958,6 +965,8 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
         role_counts[role] += 1
         if role == ROLE_BUSINESS_MANAGER:
             business_manager_colleagues.append(colleague)
+        elif role == ROLE_CONSULTANT:
+            consultant_colleagues.append(colleague)
     write("Colleague roles: " + ", ".join(f"{role_counts[n]} {role_label(n)}" for n in ROLE_WEIGHTS))
 
     # ── 4e. Contract periods ─────────────────────────────────────────
@@ -977,6 +986,46 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
                 end_date=started - timedelta(days=1),
             )
     write("Contract periods assigned")
+
+    # ── 4f. Access requests ──────────────────────────────────────────
+    # Three open, one approved and one rejected, so every state of the admin page
+    # and of the no-access page has something to show. Requesters have no account,
+    # so their addresses must not collide with a colleague's. Own random stream,
+    # so the data generated after this stays the same as before it existed.
+    request_rng = random.Random(7)  # noqa: S311
+    user_admin = next(
+        (c.user for c, role in zip(colleagues, roles, strict=True) if role == ROLE_USER_ADMIN),
+        None,
+    )
+    motivations = ["Ik begin maandag in een nieuw team.", "", "Ik vervang tijdelijk een collega."]
+    requesters = []
+    while len(requesters) < 5:  # noqa: PLR2004 (5 = three open, one approved, one rejected)
+        name = generate_name(request_rng)
+        email = f"{sanitize_email(name)}.aanvraag@rijksoverheid.nl"
+        if email not in used_emails:
+            used_emails.add(email)
+            requesters.append((name, email))
+    for index, (name, email) in enumerate(requesters):
+        first_name, _, last_name = name.partition(" ")
+        access_request = AccessRequest.objects.create(
+            email=email,
+            first_name=first_name,
+            last_name=last_name,
+            suborganization=request_rng.choice(suborganizations) if suborganizations and index % 2 == 0 else None,
+            motivation=motivations[index % len(motivations)],
+            created_at=timezone.now() - timedelta(days=index + 1),
+        )
+        if index == 3:  # noqa: PLR2004 (the approved one)
+            access_request.status = AccessRequest.Status.APPROVED
+            access_request.created_user = colleagues[0].user
+        elif index == 4:  # noqa: PLR2004 (the rejected one)
+            access_request.status = AccessRequest.Status.REJECTED
+            access_request.decision_note = "Wies is alleen voor medewerkers van ODI."
+        if access_request.status != AccessRequest.Status.PENDING:
+            access_request.decided_by = user_admin
+            access_request.decided_at = access_request.created_at + timedelta(hours=4)
+            access_request.save()
+    write("Access requests: 3 open, 1 approved, 1 rejected")
 
     # ── 5. Assignments ───────────────────────────────────────────────
     assignments = []
@@ -1081,6 +1130,16 @@ def generate(profile: Profile, *, write=lambda msg: None) -> None:  # noqa: C901
             colleague_targets[colleague.id] = 2
         else:
             colleague_targets[colleague.id] = rng.randint(3, 4)
+
+    # Left to chance, every colleague may end up placed, and the "Geen opdracht"
+    # card on Wie zit waar? would have nothing to show. A business manager (who
+    # still owns opdrachten) and a consultant are always among them.
+    unplaced = {rng.choice(business_manager_colleagues).id, rng.choice(consultant_colleagues).id}
+    num_unplaced = max(len(unplaced), round(len(colleagues) * UNPLACED_SHARE))
+    others = [c.id for c in colleagues if c.id not in unplaced]
+    unplaced.update(rng.sample(others, num_unplaced - len(unplaced)))
+    for colleague_id in unplaced:
+        colleague_targets[colleague_id] = 0
 
     placement_count = 0
     service_idx = 0
