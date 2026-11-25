@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ???: a Gebruikersbeheerder can delete their own account without an error; they are logged out right away
 - 877: remove staging deployment from pipeline
 
 ## 2026-11-23
