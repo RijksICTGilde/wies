@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ???: the opdracht link in the "mail the owner" message uses `SITE_BASE_URL` when set, like other links shared outside Wies; the helper `site_url` lives in `services/urls.py`
 - 877: remove staging deployment from pipeline
 
 ## 2026-11-23

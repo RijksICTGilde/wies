@@ -8,6 +8,7 @@ URL with some query parameters dropped or set.
 from typing import TYPE_CHECKING
 from urllib.parse import SplitResult, urlsplit
 
+from django.conf import settings
 from django.http import QueryDict
 from django.utils.http import url_has_allowed_host_and_scheme
 
@@ -136,3 +137,11 @@ def url_replacing_param(url: str, name: str, **params) -> str:
         raise ValueError(msg)
     parsed = urlsplit(url)
     return rebuild_url(parsed.path, parsed.query, drop=(name,), **params)
+
+
+def site_url(path: str, request=None) -> str:
+    """An absolute link for outside Wies (chat, mail): on ``SITE_BASE_URL`` when set,
+    else on the host of ``request``."""
+    if settings.SITE_BASE_URL or request is None:
+        return f"{settings.SITE_BASE_URL}{path}"
+    return request.build_absolute_uri(path)

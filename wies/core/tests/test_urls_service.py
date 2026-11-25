@@ -1,6 +1,6 @@
 import pytest
 from django.http import QueryDict
-from django.test import RequestFactory, SimpleTestCase
+from django.test import RequestFactory, SimpleTestCase, override_settings
 
 from wies.core.services.urls import (
     current_page_path,
@@ -9,6 +9,7 @@ from wies.core.services.urls import (
     is_local_path,
     rebuild_url,
     safe_return_path,
+    site_url,
     url_replacing_param,
     url_with_param,
     url_without_param,
@@ -165,3 +166,15 @@ class CurrentPageUrlOnTests(SimpleTestCase):
     def test_bare_path_when_the_address_bar_is_elsewhere(self):
         request = self.factory.get("/x/", headers={"HX-Current-URL": "https://testserver/elders/?zoek=a"})
         assert current_page_url_on(request, "/beheer/gebruikers/") == "/beheer/gebruikers/"
+
+
+class SiteUrlTests(SimpleTestCase):
+    @override_settings(SITE_BASE_URL="https://wies.example.nl")
+    def test_prefers_the_configured_base(self):
+        request = RequestFactory().get("/x/")
+        assert site_url("/inloggen/", request) == "https://wies.example.nl/inloggen/"
+
+    @override_settings(SITE_BASE_URL="")
+    def test_falls_back_to_the_request_host(self):
+        request = RequestFactory().get("/x/")
+        assert site_url("/inloggen/", request) == "http://testserver/inloggen/"
