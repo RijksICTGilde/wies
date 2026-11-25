@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 864: the last Gebruikersbeheerder can no longer be deleted or lose that role; deleting your own account also logs you out of SSO, so the login asks for credentials instead of landing you on the no-access page
 - 853: (migration)(add env vars) people without an account request access from the no-access page; Gebruikersbeheerders approve or reject on Beheer > Toegangsaanvragen; with ZAD's mail relay (`SMTP_*`; `SMTP_USE_TLS=false` on ZAD) the person gets the decision by mail, unless the beheerder unticks it; logging out on the no-access page clears the failed login; a Gebruikersbeheerder can delete their own account without an error; a visitor who is not logged in goes to the login instead of the no-access page on Beheer and Bezetting
 - 885: upgrade NLDD design system from 0.27.1 to 0.28.0 (#880)
 - 883: (internal) one `hx_redirect` helper in `views/_common.py` replaces twelve copies of the HX-Redirect response

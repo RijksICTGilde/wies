@@ -1,5 +1,6 @@
 import functools
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import urlencode
 
 from authlib.integrations.base_client import OAuthError
@@ -14,6 +15,9 @@ from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 
 from .services.events import create_auth_event
+
+if TYPE_CHECKING:
+    from django.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -164,9 +168,9 @@ def _handle_callback_error(request, exc: Exception):
     return redirect(reverse("login"))
 
 
-@login_not_required
-@require_POST
-def logout(request):
+def end_session(request) -> str:
+    """Logs out of Wies and returns where the browser goes next: Keycloak's
+    end_session, which also ends SSO-Rijk, or else the login."""
     id_token = request.session.get(settings.OIDC_ID_TOKEN_SESSION_KEY)
     if request.user and request.user.is_authenticated:
         # Capture the email before auth_logout flushes the session and turns
@@ -179,9 +183,11 @@ def logout(request):
         # out has to drop it, or the next person at this browser could request
         # access on that address.
         request.session.flush()
+    return _build_end_session_url(request, id_token) or reverse("login")
 
-    end_session_url = _build_end_session_url(request, id_token)
-    response = redirect(end_session_url) if end_session_url else redirect(reverse("login"))
+
+def mark_logged_out(request, response: HttpResponse) -> HttpResponse:
+    """Makes the next login ask for credentials again (see ``login``)."""
     # Session cookie (max_age=None): persists until the browser is closed, matching
     # BZK's own "sluit je browser" guidance. Cleared after the next completed auth round-trip.
     response.set_cookie(
@@ -194,6 +200,12 @@ def logout(request):
         secure=request.is_secure(),
     )
     return response
+
+
+@login_not_required
+@require_POST
+def logout(request):
+    return mark_logged_out(request, redirect(end_session(request)))
 
 
 def _build_end_session_url(request, id_token: str | None) -> str | None:

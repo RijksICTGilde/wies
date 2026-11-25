@@ -132,6 +132,18 @@ def is_user_admin(user) -> bool:
     return user.is_authenticated and user.groups.filter(name=ROLE_USER_ADMIN).exists()
 
 
+LAST_USER_ADMIN_MESSAGE = "{name} is de enige gebruikersbeheerder. Geef eerst iemand anders de rol Gebruikersbeheerder."
+
+
+def is_last_user_admin(user) -> bool:
+    """Whether ``user`` is the only Gebruikersbeheerder. Without one nobody can add
+    users or hand out roles any more, and getting one back takes a deploy."""
+    return (
+        is_user_admin(user)
+        and not get_user_model().objects.filter(groups__name=ROLE_USER_ADMIN).exclude(pk=user.pk).exists()
+    )
+
+
 def role_required(test_func):
     """A view decorator: logged in without ``test_func``, the no-access page; not
     logged in, the login.
