@@ -57,7 +57,7 @@ from wies.core.services.users import (
     update_user,
 )
 
-from ._common import CSV_TOO_LARGE_MSG, count_label, csv_too_large, sort_control_context
+from ._common import CSV_TOO_LARGE_MSG, count_label, csv_too_large, hx_redirect, sort_control_context
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 
 User = get_user_model()
@@ -400,14 +400,11 @@ def user_create(request):
     if request.method == "POST":
         form = UserForm(request.POST, editor=request.user)
         if form.is_valid() and _create_user_with_contract_period(request, form):
-            # HTMX needs HX-Redirect to force a full page redirect.
             messages.success(
                 request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is toegevoegd."
             )
             if "HX-Request" in request.headers:
-                response = HttpResponse(status=200)
-                response["HX-Redirect"] = _user_list_behind_sheet(request)
-                return response
+                return hx_redirect(_user_list_behind_sheet(request))
             return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
@@ -504,14 +501,11 @@ def user_edit(request, public_id):
                 suborganization=form.cleaned_data.get("suborganization"),
                 request=request,
             )
-            # HTMX needs HX-Redirect to force a full page redirect.
             messages.success(
                 request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is aangepast."
             )
             if "HX-Request" in request.headers:
-                response = HttpResponse(status=200)
-                response["HX-Redirect"] = _user_list_behind_sheet(request)
-                return response
+                return hx_redirect(_user_list_behind_sheet(request))
             return redirect(_user_list_behind_sheet(request))
         # Re-render with errors; HTMX keeps the modal open.
         return render(
@@ -756,9 +750,7 @@ def user_delete(request, public_id):
             )
         name = f"{user.first_name} {user.last_name}".strip() or user.email
         messages.success(request, f"{name} is verwijderd.")
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = _user_list_behind_sheet(request)
-        return response
+        return hx_redirect(_user_list_behind_sheet(request))
     return HttpResponse(status=405)
 
 
