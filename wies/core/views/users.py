@@ -4,7 +4,7 @@ from collections import Counter
 from functools import cached_property
 
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import permission_required
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
@@ -715,9 +715,6 @@ def user_delete(request, public_id):
         # The colleague outlives the user (SET_NULL) and drops off Bezetting with
         # the user. The contract and the placements end here so the colleague
         # panel, the opdrachten and the history say when the work stopped.
-        # Capture the int PK before delete() nulls it; Event.object_id keeps
-        # referencing the internal id, not the public_id.
-        user_pk = user.id
         # One transaction: a contract ended without the user gone, or a user
         # gone without a trace, would both be worse than the failure itself.
         with transaction.atomic():
@@ -738,16 +735,23 @@ def user_delete(request, public_id):
                 "placements_ended": [_placement_snapshot(p) for p in placements_ended],
                 "placements_dropped": [_placement_snapshot(p) for p in placements_dropped],
             }
-            user.delete()
+            # Before the delete: when you delete yourself, the delete then nulls
+            # your own event's user (SET_NULL) and user_email keeps who it was.
+            # Event.object_id is the internal id, not the public_id.
             create_event(
                 object_type="User",
                 action="delete",
                 source="user",
-                object_id=user_pk,
+                object_id=user.id,
                 user=request.user,
                 request=request,
                 context=context,
             )
+            user.delete()
+        if user.public_id == request.user.public_id:
+            # The session belongs to a user that no longer exists.
+            logout(request)
+            return hx_redirect(reverse("home"))
         name = f"{user.first_name} {user.last_name}".strip() or user.email
         messages.success(request, f"{name} is verwijderd.")
         return hx_redirect(_user_list_behind_sheet(request))
