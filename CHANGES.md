@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 883: (internal) one `hx_redirect` helper in `views/_common.py` replaces twelve copies of the HX-Redirect response
 - 882: a Gebruikersbeheerder can delete their own account without an error; they are logged out right away
 - 881: opening a beheer or business-management page while logged out now leads to the login instead of the "Geen toegang" page
 - 877: remove staging deployment from pipeline

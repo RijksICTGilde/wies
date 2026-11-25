@@ -16,6 +16,8 @@ from wies.core.querysets import (
     annotate_suborganization_usage_counts,
 )
 
+from ._common import hx_redirect
+
 
 @permission_required("core.view_suborganization", raise_exception=True)
 def suborganization_admin(request):
@@ -143,7 +145,5 @@ def suborganization_delete(request, public_id):
         name = suborganization.name  # Read before delete() clears the instance.
         suborganization.delete()
         messages.success(request, f'Onderdeel "{name}" is verwijderd.')
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("suborganization-admin")
-        return response
+        return hx_redirect(reverse("suborganization-admin"))
     return HttpResponse(status=405)
