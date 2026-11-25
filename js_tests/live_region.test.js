@@ -33,9 +33,8 @@ function container(held) {
 
 // A sheet: a host with a shadow dialog that is modal or not, and a light-DOM
 // child list that the region is appended to.
-function sheet(modal, localName = "nldd-sheet") {
+function sheet(modal) {
   return {
-    localName,
     children: [],
     shadowRoot: {
       querySelector: () => ({
@@ -86,7 +85,7 @@ beforeEach(() => {
     },
     querySelectorAll(selector) {
       if (selector === "nldd-notification[text]") return this.notifications;
-      if (selector === "nldd-sheet, nldd-modal-dialog") return this.sheets;
+      if (selector === "nldd-sheet") return this.sheets;
       return [];
     },
     createElement: () => focusable(),
@@ -190,15 +189,6 @@ describe("modal sheet", () => {
 
     doc.sheets = [sheet(false)];
     assert.equal(live().region(), region);
-  });
-
-  it("gives a modal dialog its region in the slot that lands inside the dialog", () => {
-    const dialog = sheet(true, "nldd-modal-dialog");
-    doc.sheets = [dialog];
-    const l = live();
-    l.prepareSheets();
-    assert.equal(dialog.children[0].attributes.slot, "notifications");
-    assert.equal(l.region(), dialog.children[0]);
   });
 });
 
