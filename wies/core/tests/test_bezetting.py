@@ -107,10 +107,10 @@ class BezettingAuthTest(TestCase):
         self.consultant = User.objects.create(email="consultant@rijksoverheid.nl")
         self.consultant.groups.add(Group.objects.get(name=ROLE_CONSULTANT))
 
-    def test_anonymous_redirected(self):
+    def test_anonymous_goes_to_login(self):
         response = self.client.get(self.url)
         assert response.status_code == 302
-        assert "/geen-toegang/" in response.url
+        assert response.url.startswith(reverse("login"))
 
     def test_non_bdm_redirected(self):
         self.client.force_login(self.regular_user)
