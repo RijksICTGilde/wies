@@ -20,6 +20,8 @@ from wies.core.querysets import (
     annotate_usage_counts,
 )
 
+from ._common import hx_redirect
+
 
 @permission_required("core.view_labelcategory", raise_exception=True)
 def label_admin(request):
@@ -66,9 +68,7 @@ def label_category_manage(request):
         if formset.is_valid():
             formset.save()
             messages.success(request, "De categorieën zijn aangepast.")
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
+            return hx_redirect(reverse("label-admin"))
         invalid_post = True
     else:
         formset = LabelCategoryFormSet(queryset=queryset)
@@ -146,9 +146,7 @@ def label_form(request, public_id=None):
         if form.is_valid():
             label = form.save()
             messages.success(request, f'Label "{label.name}" is {"aangepast" if is_edit else "toegevoegd"}.')
-            response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
-            return response
+            return hx_redirect(reverse("label-admin"))
         invalid_post = True
     else:
         form = LabelForm(instance=label, category_id=request.GET.get("categorie"))
@@ -210,9 +208,7 @@ def label_category_delete(request, public_id):
         # The labels cascade away with the category.
         category.delete()
         messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("label-admin")
-        return response
+        return hx_redirect(reverse("label-admin"))
     return HttpResponse(status=405)
 
 
@@ -243,8 +239,6 @@ def label_delete(request, public_id):
         label_name = label.name  # Read before delete() clears the instance.
         label.delete()
         messages.success(request, f'Label "{label_name}" is verwijderd.')
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("label-admin")
-        return response
+        return hx_redirect(reverse("label-admin"))
 
     return HttpResponse(status=405)

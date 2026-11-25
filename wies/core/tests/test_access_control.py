@@ -127,8 +127,8 @@ class AccessControlTest(TestCase):
         assert response.url.startswith(reverse("login"))
 
     def test_staff_page_requires_authentication(self):
-        """Test that staff subpages send unauthenticated users to the login"""
-        for path in ("/beheer/statistieken/", "/beheer/database/"):
+        """Role-gated pages send unauthenticated users to the login, not to no-access"""
+        for path in ("/beheer/statistieken/", "/beheer/database/", "/business-management/bezetting/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 
