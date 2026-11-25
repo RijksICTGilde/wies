@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ???: (internal) one `hx_redirect` helper in `views/_common.py` replaces eleven copies of the HX-Redirect response
+- 883: (internal) one `hx_redirect` helper in `views/_common.py` replaces eleven copies of the HX-Redirect response
 - 877: remove staging deployment from pipeline
 
 ## 2026-11-23
