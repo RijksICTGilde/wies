@@ -8,19 +8,24 @@ import html
 import re
 from typing import TYPE_CHECKING
 
+import nh3
 from markdown_it import MarkdownIt
-from markdown_it.token import Token
 from markupsafe import Markup
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
+    from markdown_it.token import Token
+
 # js-default: raw HTML is escaped and javascript: links are refused. Off:
 # indented code (four leading spaces in an existing description would turn
 # into a code block) and setext headings (a line of dashes under a sentence is
-# not meant as a heading). breaks: a single newline stays a line break, as it
-# did as plain text.
-_md = MarkdownIt("js-default", {"breaks": True}).disable(["code", "lheading"])
+# not meant as a heading), and images: the editor cannot insert one and there
+# is nothing to host it. breaks: a single newline stays a line break, as it did
+# as plain text. linkify: a typed address is a link, as it is in the editor.
+_md = (
+    MarkdownIt("js-default", {"breaks": True, "linkify": True}).disable(["code", "lheading", "image"]).enable("linkify")
+)
 
 # A description sits under the panel's own h2 headings, so its "# Kop" comes
 # out two levels down (h3), never above the page's structure. data-level keeps
@@ -84,45 +89,43 @@ def _fence(renderer, tokens, idx, options, env):
     return rendered.replace("<pre>", f'<pre data-gap="{gap}">', 1) if gap else rendered
 
 
-def _images_as_links(state) -> None:
-    """There is nothing to host an image: ![tekst](url) becomes a link to it,
-    instead of a "!" before one."""
-    for block in state.tokens:
-        if not block.children:
-            continue
-        tokens = []
-        for token in block.children:
-            if token.type != "image":
-                tokens.append(token)
-                continue
-            src = token.attrGet("src") or ""
-            # markdown-it lets data:image through for images; as a link it opens
-            # nothing, so the words stay as text.
-            if src.lower().startswith("data:"):
-                src = ""
-            text = token.children or [Token("text", "", 0, content=src)]
-            tokens += [Token("link_open", "a", 1, attrs={"href": src}), *text, Token("link_close", "a", -1)]
-        block.children = tokens
+# The addresses the editor links by itself (GFM autolinks); linkify would also
+# take "google.com" or "//host".
+_EDITOR_AUTOLINK = re.compile(r"^(https?://|www\.)", re.IGNORECASE)
 
 
-def _drop_empty_links(state) -> None:
-    """[tekst]() leads nowhere: keep the words, drop the link around them."""
+def _leads_nowhere(link: Token, text: str) -> bool:
+    href = link.attrGet("href") or ""
+    if link.markup != "linkify":
+        return not href
+    return not (_EDITOR_AUTOLINK.match(text) or href.startswith("mailto:"))
+
+
+def _unlink(state) -> None:
+    """Keep the words of a link that leads nowhere, such as [tekst](), and of
+    an address the editor does not link either."""
     for block in state.tokens:
         if not block.children:
             continue
         kept, unlinking = [], False
-        for token in block.children:
-            if token.type == "link_open" and not token.attrGet("href"):
-                unlinking = True
+        for i, token in enumerate(block.children):
+            if token.type == "link_open":
+                # Its text, or its link_close when it has none.
+                text = block.children[i + 1].content
+                if _leads_nowhere(token, text):
+                    unlinking = True
+                    continue
+                if token.markup == "linkify" and text.lower().startswith("www."):
+                    # As the editor does; linkify would make it http://.
+                    token.attrSet("href", "https://" + text)
             elif token.type == "link_close" and unlinking:
                 unlinking = False
-            else:
-                kept.append(token)
+                continue
+            kept.append(token)
         block.children = kept
 
 
-_md.core.ruler.push("images_as_links", _images_as_links)
-_md.core.ruler.push("drop_empty_links", _drop_empty_links)
+_md.core.ruler.push("unlink", _unlink)
 _md.add_render_rule("link_open", _link_open)
 _md.add_render_rule("link_close", _link_close)
 _md.add_render_rule("heading_open", _heading)
@@ -160,9 +163,44 @@ def render_markdown(source: str | None) -> Markup:
     env: dict = {}
     tokens = _md.parse(source, env)
     _mark_gaps(tokens, source.splitlines())
-    # S704 (unsafe Markup) is suppressed: the renderer escapes raw HTML and
-    # refuses javascript: links (js-default preset), so the output is safe.
-    return Markup(_md.renderer.render(tokens, _md.options, env))  # noqa: S704
+    html = _md.renderer.render(tokens, _md.options, env)
+    # S704 (unsafe Markup) is suppressed: nh3 keeps only the allowlist below.
+    return Markup(_sanitize(html))  # noqa: S704
+
+
+_BLOCK = {"data-gap"}
+_ALLOWED = {
+    "p": _BLOCK,
+    "br": set(),
+    "strong": set(),
+    "em": set(),
+    "s": set(),
+    "code": set(),
+    "a": {"href", "target", "rel"},
+    "span": {"class"},
+    "nldd-icon": {"icon", "size"},
+    "ul": _BLOCK,
+    "ol": _BLOCK | {"start"},
+    "li": set(),
+    "blockquote": _BLOCK,
+    "pre": _BLOCK,
+    "hr": _BLOCK,
+    **{f"h{n}": _BLOCK | {"data-level"} for n in range(3, 7)},
+    **dict.fromkeys(("table", "thead", "tbody", "tr", "th", "td"), _BLOCK),
+}
+
+
+def _sanitize(html: str) -> str:
+    """Second line behind the renderer: only the tags, attributes and link
+    schemes it is meant to produce. The schemes are those the editor follows."""
+    return nh3.clean(
+        html,
+        tags=set(_ALLOWED),
+        attributes=_ALLOWED,
+        url_schemes={"http", "https", "mailto", "tel"},
+        # The renderer sets rel itself, only on links that open a new tab.
+        link_rel=None,
+    )
 
 
 # A block's end separates; an inline tag (<strong>) does not.

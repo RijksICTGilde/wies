@@ -61,19 +61,34 @@ class RenderMarkdownTest(SimpleTestCase):
         assert 'href="javascript:' not in html
         assert "<a " not in html
         # The raw tag is escaped to text, so no real style attribute survives.
-        assert 'style="' not in html
+        assert "<b " not in html
+        assert "&lt;b style" in html
         assert "&lt;script&gt;" in html
 
-    def test_an_image_becomes_a_link_to_it(self):
-        html = render_markdown("Kijk ![logo](https://example.org/x.png) en ![](beeld.nl/y.png)")
+    def test_an_image_is_not_rendered(self):
+        html = render_markdown("Kijk ![logo](https://example.org/x.png)")
         assert "<img" not in html
-        assert "!" not in html
-        assert 'Kijk <a href="https://example.org/x.png" target="_blank" rel="noopener">logo<span' in html
-        assert '<a href="https://beeld.nl/y.png" target="_blank" rel="noopener">beeld.nl/y.png<span' in html
+        assert 'Kijk !<a href="https://example.org/x.png"' in html
 
-    def test_an_image_without_target_stays_text(self):
-        assert render_markdown("![logo]()").strip() == "<p>logo</p>"
-        assert render_markdown("![logo](data:image/png;base64,AAAA)").strip() == "<p>logo</p>"
+    def test_typed_addresses_link_as_in_the_editor(self):
+        html = render_markdown("www.wies.nl, https://x.nl/pad en anke@rijksoverheid.nl")
+        assert '<a href="https://www.wies.nl" target="_blank" rel="noopener">www.wies.nl<span' in html
+        assert '<a href="https://x.nl/pad" target="_blank" rel="noopener">https://x.nl/pad<span' in html
+        assert '<a href="mailto:anke@rijksoverheid.nl">anke@rijksoverheid.nl</a>' in html
+
+    def test_a_bare_domain_stays_text(self):
+        # The editor does not link it either.
+        html = render_markdown("google.com en //x.nl")
+        assert "<a" not in html
+
+    def test_a_link_reading_www_keeps_its_target(self):
+        html = render_markdown("[www.a.nl](https://b.nl/)")
+        assert 'href="https://b.nl/"' in html
+
+    def test_a_scheme_the_editor_does_not_follow_loses_its_href(self):
+        html = render_markdown("[f](ftp://x.nl/bestand)")
+        assert "ftp:" not in html
+        assert "f" in html
 
     def test_links_open_beside_wies(self):
         html = render_markdown("[Wies](https://example.org/)")
