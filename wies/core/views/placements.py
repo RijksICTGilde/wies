@@ -336,7 +336,7 @@ class ColleagueOverview(_Overview):
 
     def page_queryset(self) -> QuerySet:
         """The listed colleagues in list order, with what their cards show."""
-        qs = self.listed()
+        qs = self.listed().select_related("suborganization")
         field, placement_order = self._placement_order()
         matching = self.filters.matching_placements()
         qs = qs.prefetch_related(
@@ -385,6 +385,7 @@ class ColleagueOverview(_Overview):
             assignment_text = count_label(len(assignments), "opdracht", "opdrachten")
         return {
             "name": colleague.name,
+            "suborganization": colleague.suborganization,
             "roles": list(dict.fromkeys(p.service.skill.name for p in placements if p.service.skill)),
             "assignment_text": assignment_text,
             "period_text": _period_text(assignments) if assignments else "",

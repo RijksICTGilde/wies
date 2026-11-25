@@ -37,6 +37,9 @@ profiel" with the actions. #}
         {% else %}
           {{ row.colleague.name }}
         {% endif %}
+        {% if row.colleague.suborganization %}
+          <span class="wies-text-secondary">· {{ row.colleague.suborganization.name }}</span>
+        {% endif %}
       </p>
       {% if row.skill_name or pl.start_date or pl.end_date or row.shown_hours %}
         <p slot="supporting-text">
