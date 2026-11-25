@@ -17,6 +17,7 @@ from django.utils import timezone
 from wies.core.models import AccessRequest
 from wies.core.services.events import create_event
 from wies.core.services.mattermost import send_ops_message
+from wies.core.services.urls import site_url
 
 User = get_user_model()
 
@@ -91,13 +92,6 @@ def submit_access_request(claims: dict, cleaned_data: dict, request=None) -> Acc
     )
     _notify_ops(request)
     return access_request
-
-
-def site_url(path: str, request=None) -> str:
-    """An absolute link for outside Wies (chat, mail)."""
-    if settings.SITE_BASE_URL or request is None:
-        return f"{settings.SITE_BASE_URL}{path}"
-    return request.build_absolute_uri(path)
 
 
 def approval_mail(first_name: str, request=None) -> tuple[str, str]:

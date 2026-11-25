@@ -17,7 +17,8 @@ from wies.core.services import access_requests
 from wies.core.services.users import is_allowed_email_domain
 from wies.rijksauth.views import FAILED_LOGIN_CLAIMS_SESSION_KEY
 
-from .users import _create_user_with_contract_period
+from ._common import hx_redirect
+from .users import create_user_with_contract_period
 
 # Set for one page view after a request was stored, so the page says it was sent.
 ACCESS_REQUEST_SENT_SESSION_KEY = "access_request_sent"
@@ -39,9 +40,7 @@ def access_request_state(request) -> access_requests.AccessRequestState | None:
 
 def _back_to_no_access(request) -> HttpResponse:
     if "HX-Request" in request.headers:
-        response = HttpResponse(status=200)
-        response["HX-Redirect"] = settings.AUTH_NO_ACCESS_URL
-        return response
+        return hx_redirect(settings.AUTH_NO_ACCESS_URL)
     return redirect(settings.AUTH_NO_ACCESS_URL)
 
 
@@ -123,9 +122,7 @@ def access_request_admin(request):
 
 
 def _back_to_access_request_admin() -> HttpResponse:
-    response = HttpResponse(status=200)
-    response["HX-Redirect"] = reverse("access-request-admin")
-    return response
+    return hx_redirect(reverse("access-request-admin"))
 
 
 def _pending_access_request_or_back(request, public_id):
@@ -173,7 +170,7 @@ def access_request_approve(request, public_id):
     form.fields["email"].disabled = True
     if request.method == "POST" and form.is_valid():
         mailed = form.cleaned_data.get("send_mail", False)
-        if user := _create_user_with_contract_period(request, form, mail_access_request=mailed):
+        if user := create_user_with_contract_period(request, form, mail_access_request=mailed):
             text = f"{user.first_name} {user.last_name} heeft nu toegang tot Wies."
             access_requests.decision_message(request, text, user.first_name, mailed=mailed)
             return _back_to_access_request_admin()
