@@ -1,7 +1,5 @@
 """Access requests: the sheet on the no-access page and the beheer page that decides."""
 
-import urllib.parse
-
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_not_required, permission_required
@@ -14,11 +12,12 @@ from wies.core.models import AccessRequest, ContractPeriod
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import role_required
 from wies.core.services import access_requests
+from wies.core.services.dates import datum_nl, local_date
 from wies.core.services.users import is_allowed_email_domain
 from wies.rijksauth.views import FAILED_LOGIN_CLAIMS_SESSION_KEY
 
 from ._common import hx_redirect
-from .users import create_user_with_contract_period
+from .users import access_decision_message, create_user_with_contract_period
 
 # Set for one page view after a request was stored, so the page says it was sent.
 ACCESS_REQUEST_SENT_SESSION_KEY = "access_request_sent"
@@ -78,12 +77,54 @@ def _may_decide_access_requests(user) -> bool:
 access_request_admin_required = role_required(_may_decide_access_requests)
 
 
-def _approved_mailto(request, access_request) -> str:
-    """A prepared mail for the beheerder, for when Wies sends no mail itself."""
-    first_name = (access_request.created_user or access_request).first_name
-    subject, body = access_requests.approval_mail(first_name, request)
-    query = urllib.parse.urlencode({"subject": subject, "body": body}, quote_via=urllib.parse.quote)
-    return f"mailto:{access_request.email}?{query}"
+def day_text(moment) -> str:
+    return datum_nl(local_date(moment), "j b")
+
+
+# Both decisions open in the mount the user sheet uses.
+_OPENS_IN_MODAL = {"hx-target": "#userFormModal", "hx-swap": "innerHTML"}
+
+
+def _pending_row(access_request) -> dict:
+    suborganization = access_request.suborganization
+    details = [
+        access_request.email,
+        suborganization.name if suborganization else "Geen onderdeel",
+        f"aangevraagd {day_text(access_request.created_at)}",
+    ]
+    if access_request.motivation:
+        details.append(f"“{access_request.motivation}”")
+    approve_url = reverse("access-request-approve", args=[access_request.public_id])
+    reject_url = reverse("access-request-reject", args=[access_request.public_id])
+    return {
+        "name": access_request.full_name,
+        "details": " · ".join(details),
+        "actions": [
+            {"text": "Goedkeuren", "attrs": {"hx-get": approve_url, **_OPENS_IN_MODAL}},
+            {"text": "E-mailen", "attrs": {"href": f"mailto:{access_request.email}"}},
+            {"text": "Afwijzen", "attrs": {"destructive": "", "hx-get": reject_url, **_OPENS_IN_MODAL}},
+        ],
+    }
+
+
+def _decided_row(request, access_request) -> dict:
+    approved = access_request.status == AccessRequest.Status.APPROVED
+    decider = access_request.decided_by.get_full_name() if access_request.decided_by else "een verwijderde gebruiker"
+    details = [access_request.email, f"door {decider} op {day_text(access_request.decided_at)}"]
+    if access_request.decision_note:
+        details.append(f"Reden: {access_request.decision_note}")
+    actions = []
+    # Without a relay the beheerder sends the approval mail from their own mail program.
+    if approved and not settings.EMAIL_ENABLED:
+        mailto = access_requests.approval_mailto(access_request, request)
+        actions.append({"text": "E-mailen dat er toegang is", "icon": "envelope", "attrs": {"href": mailto}})
+    return {
+        "name": access_request.full_name,
+        "details": " · ".join(details),
+        "status_label": access_request.get_status_display(),
+        "approved": approved,
+        "actions": actions,
+    }
 
 
 def _decision_form(form_class, request, mail_label: str, **kwargs):
@@ -99,24 +140,19 @@ def _decision_form(form_class, request, mail_label: str, **kwargs):
 @access_request_admin_required
 def access_request_admin(request):
     access_requests.purge_decided()
-    decided = list(
+    pending = AccessRequest.objects.filter(status=AccessRequest.Status.PENDING).select_related("suborganization")
+    decided = (
         AccessRequest.objects.exclude(status=AccessRequest.Status.PENDING)
         .select_related("decided_by", "created_user")
         .order_by("-decided_at")
     )
-    for access_request in decided:
-        if access_request.status == AccessRequest.Status.APPROVED and not settings.EMAIL_ENABLED:
-            access_request.mailto = _approved_mailto(request, access_request)
     return render(
         request,
         "access_request_admin.html",
         {
-            "pending": AccessRequest.objects.filter(status=AccessRequest.Status.PENDING).select_related(
-                "suborganization"
-            ),
-            "decided": decided,
+            "pending": [_pending_row(access_request) for access_request in pending],
+            "decided": [_decided_row(request, access_request) for access_request in decided],
             "retention_days": access_requests.DECIDED_RETENTION.days,
-            "email_enabled": settings.EMAIL_ENABLED,
         },
     )
 
@@ -172,7 +208,7 @@ def access_request_approve(request, public_id):
         mailed = form.cleaned_data.get("send_mail", False)
         if user := create_user_with_contract_period(request, form, mail_access_request=mailed):
             text = f"{user.first_name} {user.last_name} heeft nu toegang tot Wies."
-            access_requests.decision_message(request, text, user.first_name, mailed=mailed)
+            access_decision_message(request, text, user.first_name, mailed=mailed)
             return _back_to_access_request_admin()
     return render(
         request,
@@ -202,7 +238,7 @@ def access_request_reject(request, public_id):
             access_request, request.user, form.cleaned_data["decision_note"], request=request, send_mail=mailed
         ):
             return _already_decided(request, access_request)
-        access_requests.decision_message(
+        access_decision_message(
             request,
             f"De toegangsaanvraag van {access_request.full_name} is afgewezen.",
             access_request.first_name,

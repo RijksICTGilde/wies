@@ -428,12 +428,24 @@ def _report_user_created(request, user: User) -> None:
     if not user.access_requests.exists():
         messages.success(request, text)
         return
-    access_requests.decision_message(
+    access_decision_message(
         request,
         f"{text} De toegangsaanvraag van {user.first_name} is daarmee goedgekeurd.",
         user.first_name,
         mailed=settings.EMAIL_ENABLED,
     )
+
+
+def access_decision_message(request, text: str, first_name: str, *, mailed: bool) -> None:
+    """The beheerder's message after a decision on an access request, saying
+    whether the mail went out."""
+    if not mailed:
+        messages.success(request, text)
+    elif access_requests.decision_mail_failed(request):
+        failed = f"De e-mail aan {first_name} kon niet worden verstuurd. Laat het {first_name} zelf weten."
+        messages.warning(request, f"{text} {failed}")
+    else:
+        messages.success(request, f"{text} {first_name} krijgt hierover een e-mail.")
 
 
 def create_user_with_contract_period(request, form, *, mail_access_request: bool = True) -> User | None:

@@ -17,9 +17,7 @@
       hx-swap="innerHTML">
   {{ get_csrf_hidden_input(request) }}
   {{ content.decision_note.as_field_group() }}
-  {% if "send_mail" in content.fields %}
-    {{ mail_checkbox(content.send_mail) }}
-  {% endif %}
+  {{ mail_checkbox(content) }}
 </form>
 </nldd-form>
 <nldd-spacer size="8" direction="vertical"></nldd-spacer>

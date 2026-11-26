@@ -14,7 +14,7 @@
   <nldd-title size="display-3">
   <h1>Gebruikers</h1>
   </nldd-title>
-  {% set open_requests = pending_access_request_count(request) %}
+  {% set open_requests = pending_access_request_count() %}
   {% if open_requests %}
     <nldd-spacer size="16" direction="vertical"></nldd-spacer>
     <nldd-banner size="sm" variant="accent" text="{{ open_requests }} {{ 'toegangsaanvraag wacht' if open_requests == 1 else 'toegangsaanvragen wachten' }} op beoordeling">

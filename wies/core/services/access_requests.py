@@ -2,12 +2,12 @@
 
 import logging
 import smtplib
+import urllib.parse
 from dataclasses import dataclass
 from datetime import timedelta
 
 import requests
 from django.conf import settings
-from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.core.mail import EmailMessage
 from django.db import IntegrityError, transaction
@@ -105,6 +105,14 @@ def approval_mail(first_name: str, request=None) -> tuple[str, str]:
     return "Je hebt toegang tot Wies", body
 
 
+def approval_mailto(access_request: AccessRequest, request=None) -> str:
+    """The approval mail as a mailto link, for a beheerder to send when Wies sends no mail."""
+    first_name = (access_request.created_user or access_request).first_name
+    subject, body = approval_mail(first_name, request)
+    query = urllib.parse.urlencode({"subject": subject, "body": body}, quote_via=urllib.parse.quote)
+    return f"mailto:{access_request.email}?{query}"
+
+
 def _rejection_mail(access_request: AccessRequest, request=None) -> tuple[str, str]:
     reason = f"De reden: {access_request.decision_note}\n\n" if access_request.decision_note else ""
     body = (
@@ -121,9 +129,9 @@ def _rejection_mail(access_request: AccessRequest, request=None) -> tuple[str, s
 def _mail_after_commit(access_request: AccessRequest, subject: str, body: str, request=None) -> None:
     """Sent once the decision is stored; a relay that fails costs the mail, not the decision.
 
-    The failure is marked on ``request`` for the beheerder's message (see
-    ``decision_message``). The commit comes before that message: reject runs outside a
-    transaction, approve at the end of the user's.
+    The failure is marked on ``request`` (see ``decision_mail_failed``). The commit
+    comes before the view reads it: reject runs outside a transaction, approve at the
+    end of the user's.
     """
     if not settings.EMAIL_ENABLED:
         return
@@ -142,15 +150,9 @@ def _mail_after_commit(access_request: AccessRequest, subject: str, body: str, r
     transaction.on_commit(send)
 
 
-def decision_message(request, text: str, first_name: str, *, mailed: bool) -> None:
-    """The beheerder's message after a decision, saying whether the mail went out."""
-    if not mailed:
-        messages.success(request, text)
-    elif getattr(request, "access_request_mail_failed", False):
-        failed = f"De e-mail aan {first_name} kon niet worden verstuurd. Laat het {first_name} zelf weten."
-        messages.warning(request, f"{text} {failed}")
-    else:
-        messages.success(request, f"{text} {first_name} krijgt hierover een e-mail.")
+def decision_mail_failed(request) -> bool:
+    """Whether the relay refused a decision mail sent during this request."""
+    return getattr(request, "access_request_mail_failed", False)
 
 
 def _notify_ops(request) -> None:
@@ -216,8 +218,5 @@ def purge_decided() -> None:
     AccessRequest.objects.filter(decided_at__lt=timezone.now() - DECIDED_RETENTION).delete()
 
 
-def pending_count(request) -> int:
-    """Counted once per request: the sidebar and the user list both show it."""
-    if not hasattr(request, "pending_access_request_count"):
-        request.pending_access_request_count = AccessRequest.objects.filter(status=AccessRequest.Status.PENDING).count()
-    return request.pending_access_request_count
+def pending_count() -> int:
+    return AccessRequest.objects.filter(status=AccessRequest.Status.PENDING).count()

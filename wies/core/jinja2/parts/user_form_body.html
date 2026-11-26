@@ -33,9 +33,7 @@
     {{ content.contract_start_date.as_field_group() }}
     </nldd-form-section>
   {% endif %}
-  {% if "send_mail" in content.fields %}
-    {{ mail_checkbox(content.send_mail) }}
-  {% endif %}
+  {{ mail_checkbox(content) }}
   <button type="submit" hidden tabindex="-1" aria-hidden="true"></button>
 </form>
 </nldd-form>
