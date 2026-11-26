@@ -243,6 +243,11 @@ XSS_PAYLOADS = [
     '<span class="wies-visually-hidden" title="t">x</span>',
 ]
 SAFE_SCHEMES = {"http", "https", "mailto", "tel"}
+# Tags and attributes that run script, load a resource or post a form.
+UNSAFE_TAGS = {
+    "script", "img", "svg", "iframe", "style", "body", "object", "embed", "form", "base", "meta", "link", "math"
+}  # fmt: skip
+UNSAFE_ATTRIBUTES = {"style", "src", "srcdoc", "action", "formaction"}
 # Browsers drop these from a URL before they read its scheme.
 _URL_NOISE = re.compile(r"[\x00-\x20\x7f-\x9f]")
 _SCHEME = re.compile(r"^([a-z][a-z0-9+.-]*):", re.IGNORECASE)
@@ -264,15 +269,24 @@ def _tags(html: str) -> list[tuple[str, dict]]:
 
 
 class XssTest(SimpleTestCase):
-    def test_a_payload_renders_only_allowed_tags_attributes_and_schemes(self):
+    def test_no_payload_gets_a_script_a_handler_or_an_unsafe_link(self):
+        # Its own list, apart from the renderer's: it holds when the allowlist is widened.
+        for payload in XSS_PAYLOADS:
+            with self.subTest(payload=payload):
+                for tag, attrs in _tags(render_markdown(payload)):
+                    assert tag not in UNSAFE_TAGS
+                    assert not [name for name in attrs if name.startswith("on") or name in UNSAFE_ATTRIBUTES]
+                    scheme = _SCHEME.match(_URL_NOISE.sub("", attrs.get("href") or ""))
+                    assert scheme is None or scheme[1].lower() in SAFE_SCHEMES
+
+    def test_a_payload_renders_nothing_outside_the_allowlist(self):
+        # Catches what the list above does not name, such as a title attribute.
         for payload in XSS_PAYLOADS:
             with self.subTest(payload=payload):
                 for tag, attrs in _tags(render_markdown(payload)):
                     assert tag in _ALLOWED
                     assert set(attrs) <= _ALLOWED[tag] | ({"class"} if tag == "span" else set())
                     assert attrs.get("class") in {None, "wies-visually-hidden"}
-                    scheme = _SCHEME.match(_URL_NOISE.sub("", attrs.get("href") or ""))
-                    assert scheme is None or scheme[1].lower() in SAFE_SCHEMES
 
     def test_plain_text_is_not_marked_safe(self):
         # It carries "<script>" as text; only the template's escaping makes it safe.
