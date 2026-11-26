@@ -13,6 +13,7 @@ This files lists the changes during the lifetime of this project.
 - 882: a Gebruikersbeheerder can delete their own account without an error; they are logged out right away
 - 881: opening a beheer or business-management page while logged out now leads to the login instead of the "Geen toegang" page
 - 877: remove staging deployment from pipeline
+- 879: keyboard focus returns to the menu button after closing a sheet or modal opened from a menu item (it used to drop to the top of the page); a modal dialog gets its own live region, so screen readers announce its messages
 
 ## 2026-11-23
 
