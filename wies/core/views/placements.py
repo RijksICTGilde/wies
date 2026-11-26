@@ -1,6 +1,5 @@
 """Wie zit waar: the placement list and editing a placement."""
 
-import json
 from collections import Counter
 from datetime import timedelta
 
@@ -19,7 +18,7 @@ from django.db.models import (
     Subquery,
     When,
 )
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -62,7 +61,14 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, count_label, is_side_panel_request, sort_control_context
+from ._common import (
+    PANEL_PARAMS,
+    back_to_panel,
+    build_panel_url,
+    count_label,
+    is_side_panel_request,
+    sort_control_context,
+)
 from .client_picker import client_modal_response, is_client_modal_request
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
@@ -840,6 +846,4 @@ def placement_edit_view(request, public_id):
     # The panel that HX-Location fetches swaps the banner in out of band.
     messages.success(request, f"Plaatsing van {placement.colleague.name} is aangepast.")
 
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return back_to_panel(return_path)

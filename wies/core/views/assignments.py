@@ -1,6 +1,5 @@
 """Opdrachten: list, create, edit, delete, team members and CSV import."""
 
-import json
 from collections import Counter
 from datetime import date
 from functools import cached_property
@@ -70,6 +69,7 @@ from wies.core.services.urls import PAGE_PARAM, rebuild_url, safe_return_path, u
 from ._common import (
     CSV_TOO_LARGE_MSG,
     PANEL_PARAMS,
+    back_to_panel,
     build_panel_url,
     count_label,
     csv_too_large,
@@ -553,9 +553,7 @@ def assignment_edit_view(request, public_id):
     # The panel that HX-Location fetches swaps the banner in out of band.
     assignment.refresh_from_db(fields=["name"])
     messages.success(request, f'Opdracht "{assignment.name}" is aangepast.')
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return back_to_panel(return_path)
 
 
 @require_POST
@@ -590,9 +588,7 @@ def assignment_create_sheet(request):
         # so assignment_panel_content.html swaps the banner in separately (OOB).
         # No link to the opdracht: HX-Location opens its panel already.
         messages.success(request, f'Opdracht "{assignment.name}" is aangemaakt. Voeg een aanvraag toe.')
-        response = HttpResponse(status=204)
-        response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
-        return response
+        return back_to_panel(path)
 
     # Invalid: re-render the fragment with messages. parent_url is the sanitised
     # return address, so terug_url survives a failed submit.
@@ -654,9 +650,7 @@ def assignment_member_edit_view(request, public_id):
         return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
     verb = "aangepast" if form.cleaned_data.get("service_public_id") else "toegevoegd"
     messages.success(request, f"Teamlid is {verb}.")
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return back_to_panel(return_path)
 
 
 @require_POST
@@ -687,6 +681,4 @@ def assignment_member_delete_view(request, public_id, service_public_id):
     # open), so return to its opdracht's panel instead.
     if "aanvraag" in QueryDict(urlsplit(return_path).query):
         return_path = url_replacing_param(return_path, "aanvraag", opdracht=str(assignment.public_id))
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return back_to_panel(return_path)

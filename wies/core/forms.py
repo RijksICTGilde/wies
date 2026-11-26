@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from datetime import timedelta
 from typing import NamedTuple
@@ -514,13 +515,11 @@ class ServiceForm(NlddFormMixin, forms.Form):
     # A plain ChoiceField (not ModelChoiceField), so the "__new__" sentinel is a
     # valid submitted value; its choices are DB-driven and injected in __init__.
     skill = forms.ChoiceField(label="Rol", choices=(), required=True)
-    description = forms.CharField(
-        label="Taken",
-        help_text="Wat doet deze collega op de opdracht?",
-        max_length=500,
-        required=False,
-        widget=forms.Textarea(attrs={"rows": 2}),
-    )
+    # The help text speaks about the colleague, so it fits this form, not the
+    # consultant's own "Taken wijzigen" that shares the Editable.
+    description = dataclasses.replace(
+        ServiceEditables.description, help_text="Wat doet deze collega op de opdracht?"
+    ).form_field()
     request_description = ServiceEditables.request_description.form_field()
     location = ServiceEditables.location.form_field()
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)

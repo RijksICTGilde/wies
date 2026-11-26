@@ -6,7 +6,6 @@ Permissions live in ``wies/core/permissions.py``.
 import urllib.parse
 from types import SimpleNamespace
 
-from django import forms
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
@@ -21,9 +20,10 @@ from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, 
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.dates import request_period_text
+from wies.core.services.markdown import markdown_text
 from wies.core.services.urls import current_page_path
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
-from wies.core.widgets import ComboBoxSelect
+from wies.core.widgets import MARKDOWN_ERROR_MESSAGES, ComboBoxSelect, MarkdownEditorWidget
 
 
 def _business_manager_queryset(assignment=None):
@@ -441,8 +441,9 @@ def _services_render_change(change: dict) -> dict:
     new_period = _period_label(new)
     if old_period != new_period:
         return {"text": f"de periode van {new_label} van {old_period} naar {new_period} gewijzigd"}
-    old_desc = old.get("description") or ""
-    new_desc = new.get("description") or ""
+    # The quote runs inside a sentence, so the Markdown markers stay out of it.
+    old_desc = markdown_text(old.get("description"))
+    new_desc = markdown_text(new.get("description"))
     if not old_desc:
         return {"text": f'de toelichting "{new_desc}" voor {new_label} toegevoegd'}
     if not new_desc:
@@ -479,7 +480,8 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Opdrachtomschrijving",
         help_text="Waar gaat de opdracht over?",
-        widget=forms.Textarea(attrs={"rows": 2}),
+        widget=MarkdownEditorWidget(attrs={"rows": 4}),
+        error_messages=MARKDOWN_ERROR_MESSAGES,
         display="forms/displays/textarea.html",
     )
 

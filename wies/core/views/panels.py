@@ -45,6 +45,7 @@ from wies.core.services.assignments import (
     external_source,
 )
 from wies.core.services.dates import request_period_text
+from wies.core.services.markdown import is_long_text, join_plain, markdown_text
 from wies.core.services.occupancy import (
     PHASE_BY_TIMING,
     placement_order_key,
@@ -402,15 +403,26 @@ def _add_cv_rows(entry: dict, *, open_requested: bool) -> None:
 
 
 def _cv_taken(roles: list[dict], *, open_requested: bool) -> dict:
-    """The Taken row: every role's text run together as the preview, one block
-    per role behind "Toon meer", and the viewer's own pencil."""
+    """The Taken row: a preview, one block per role behind "Toon meer", and
+    the viewer's own pencil.
+
+    One role's preview is its formatted text, cut at five lines. Several
+    roles run together as plain words, so a list or a second paragraph only
+    shows in their blocks and needs "Toon meer" even when short.
+    """
     described = [role for role in roles if role["description"]]
-    preview = " ".join(role["description"] for role in described)
-    has_more = len(preview) > _CV_PREVIEW_CHARS
+    preview = join_plain(markdown_text(role["description"]) for role in described)
+    formatted = len(described) == 1
+    if formatted:
+        has_more = is_long_text(described[0]["description"])
+    else:
+        multiline = any("\n" in role["description"].strip() for role in described)
+        has_more = len(preview) > _CV_PREVIEW_CHARS or multiline
     # The sheet is per role, so with several roles the pencil could not say which.
     own = roles[0] if len(roles) == 1 and roles[0]["edit_url"] else None
     return {
         "preview": preview,
+        "formatted": formatted,
         "has_more": has_more,
         "open": has_more and open_requested,
         "blocks": [

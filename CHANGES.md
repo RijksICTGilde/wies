@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 694: text editor with formatting (Markdown) for the opdracht description, "Wie we zoeken" and "Taken"
+- 694: your profile updates right after a save
+- 694: (accessibility) a screen reader announces the "Opdrachtgever(s)" error with the picker
 - #868: Show the onderdeel on the person cards in "Wie zit waar?", on the rows in Bezetting and in the team list of an opdracht
 - 885: upgrade NLDD design system from 0.27.1 to 0.28.0 (#880)
 - 883: (internal) one `hx_redirect` helper in `views/_common.py` replaces twelve copies of the HX-Redirect response
