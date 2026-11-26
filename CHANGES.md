@@ -5,10 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 853: (migration)(add env vars) people without an account request access on the no-access page; Gebruikersbeheerders approve or reject on Beheer > Toegangsaanvragen
-- 853: a new access request posts a link in the Mattermost ops channel; decided requests are deleted after 90 days
-- 853: with a mail relay (`SMTP_*`; `SMTP_USE_TLS=false` on ZAD) the person gets the decision by mail, unless the beheerder unticks it
-- 853: logging out on the no-access page clears the failed login
-- 853: the mail link to the Business Manager of an opdracht uses `SITE_BASE_URL` when it is set
+- 853: a new access request posts a link in the Mattermost ops channel
+- 853: with a mail relay the person gets the decision by mail, unless the beheerder unticks it
 - 694: text editor with formatting (Markdown) for the opdracht description, "Wie we zoeken" and "Taken"
 - 694: your profile updates right after a save
 - 694: (accessibility) a screen reader announces the "Opdrachtgever(s)" error with the picker
