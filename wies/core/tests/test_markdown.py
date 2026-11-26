@@ -1,5 +1,9 @@
 """The description renderer: Markdown in, safe HTML out, plain text unharmed."""
 
+import re
+from html.parser import HTMLParser
+from unittest import mock
+
 from django.test import SimpleTestCase
 from markupsafe import Markup
 
@@ -172,3 +176,90 @@ class IsLongTextTest(SimpleTestCase):
     def test_characters_count_without_the_marks(self):
         assert not is_long_text("**" + "x" * 300 + "**")
         assert is_long_text("x" * 301)
+
+
+# From the OWASP XSS Filter Evasion Cheat Sheet, written as Markdown can
+# carry them: raw HTML, link and image targets, autolinks, references, link
+# titles and fence info strings.
+XSS_PAYLOADS = [
+    "<script>alert(1)</script>",
+    "<<script>script>alert(1)<</script>/script>",
+    "<img src=x onerror=alert(1)>",
+    "<IMG SRC=JaVaScRiPt:alert(1)>",
+    "<svg onload=alert(1)>",
+    "<svg><script>alert(1)</script></svg>",
+    "<iframe src=javascript:alert(1)></iframe>",
+    '<a href="javascript:alert(1)">x</a>',
+    "<style>*{background:url(javascript:alert(1))}</style>",
+    "<body onload=alert(1)>",
+    "[x](javascript:alert(1))",
+    "[x](JaVaScRiPt:alert(1))",
+    "[x](javascript&#58;alert(1))",
+    "[x](&#106;avascript:alert(1))",
+    "[x](&#x6A;avascript:alert(1))",
+    "[x](<java script:alert(1)>)",
+    "[x](java\u0000script:alert(1))",
+    "[x]( javascript:alert(1))",
+    "[x](vbscript:msgbox(1))",
+    "[x](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)",
+    "[x](file:///etc/passwd)",
+    "[x](smb://host/share)",
+    "![x](javascript:alert(1))",
+    "![x](x onerror=alert(1))",
+    "<javascript:alert(1)>",
+    "[x][r]\n\n[r]: javascript:alert(1)",
+    '[x](https://a.nl "t\\" onmouseover=\\"alert(1)")',
+    '[x](https://a.nl" onclick="alert(1))',
+    'www.a.nl"onmouseover="alert(1)',
+    'a@b.nl"onclick="alert(1)',
+    '```" onclick="alert(1)\nx\n```',
+    "```js onclick=alert(1)\nx\n```",
+    "**<img src=x onerror=alert(1)>**",
+    "- [x](javascript:alert(1))\n> <script>alert(1)</script>",
+]
+SAFE_SCHEMES = {"http", "https", "mailto", "tel"}
+# Browsers drop these from a URL before they read its scheme.
+_URL_NOISE = re.compile(r"[\x00-\x20\x7f-\x9f]")
+_SCHEME = re.compile(r"^([a-z][a-z0-9+.-]*):", re.IGNORECASE)
+
+
+class _Tags(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.tags: list[tuple[str, dict]] = []
+
+    def handle_starttag(self, tag, attrs):
+        self.tags.append((tag, dict(attrs)))
+
+
+def _tags(html: str) -> list[tuple[str, dict]]:
+    parser = _Tags()
+    parser.feed(html)
+    return parser.tags
+
+
+class XssTest(SimpleTestCase):
+    def test_no_payload_gets_a_script_a_handler_or_an_unsafe_link(self):
+        for payload in XSS_PAYLOADS:
+            with self.subTest(payload=payload):
+                for tag, attrs in _tags(render_markdown(payload)):
+                    assert tag not in {"script", "img", "svg", "iframe", "style", "body"}
+                    assert not [name for name in attrs if name.startswith("on") or name == "style"]
+                    scheme = _SCHEME.match(_URL_NOISE.sub("", attrs.get("href") or ""))
+                    assert scheme is None or scheme[1].lower() in SAFE_SCHEMES
+
+    def test_the_sanitizer_leaves_the_renderers_own_output_alone(self):
+        source = (
+            "# Kop\n\nTekst met **vet**, *cursief*, ~~weg~~ en `code`.\n\n\n"
+            "- een\n- [link](https://example.org/)\n\n3. drie\n\n> citaat\n\n"
+            "---\n\n```\ncode\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n\n"
+            "[mail](a@b.nl) [bel](tel:0612345678) [anker](#kop) [pad](/opdrachten/)"
+        )
+        unsanitized = mock.patch("wies.core.services.markdown._sanitize", side_effect=lambda html: html)
+        with unsanitized:
+            expected = render_markdown(source)
+
+        assert render_markdown(source) == expected
+        assert 'data-level="1"' in expected
+        assert 'data-gap="2"' in expected
+        assert '<nldd-icon icon="square-arrow-right-top"' in expected
