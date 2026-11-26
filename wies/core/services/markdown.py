@@ -41,26 +41,27 @@ def _heading(renderer, tokens, idx, options, env):
     return renderer.renderToken(tokens, idx, options, env)
 
 
-# Anything with a scheme, or a path on this site.
-_ABSOLUTE = re.compile(r"^([a-z][a-z0-9+.-]*:|/|#)", re.IGNORECASE)
 _WEB = re.compile(r"^(https?:)?//", re.IGNORECASE)
-# "wies.nl:8080" reads as scheme "wies.nl:" above. A dot or "localhost" keeps
-# "tel:0612345678" out.
-_HOST_PORT = re.compile(r"^(localhost|[\w-]+(\.[\w-]+)+):\d+(/|$)", re.IGNORECASE)
+
+
+def _complete(href: str) -> str:
+    """A link to google.com means the site, not a page under the current URL.
+    linkify reads it as it reads an address typed in the text; a path, an
+    anchor or tel: is no match and stays as written."""
+    match = _md.linkify.match(href)
+    if not match or match[0].index != 0 or match[0].last_index != len(href) or match[0].url == href:
+        return href
+    url = match[0].url
+    return "https://" + href if url.startswith("http://") else url
 
 
 def _link_open(renderer, tokens, idx, options, env):
     token = tokens[idx]
-    href = token.attrGet("href") or ""
-    # "google.com" in a description means the site, not a page under the
-    # current URL; without a scheme the browser would resolve it relative.
-    # An address is what the Link button gets for mail, rarely "mailto:".
-    if href and (not _ABSOLUTE.match(href) or _HOST_PORT.match(href)):
-        is_address = "@" in href and "/" not in href
-        token.attrSet("href", ("mailto:" if is_address else "https://") + href)
+    if token.attrGet("href"):
+        token.attrSet("href", _complete(token.attrGet("href")))
     # A link to another site opens beside Wies; mailto:, tel: and #anchor
     # would only leave an empty tab behind.
-    new_tab = bool(_WEB.match(token.attrGet("href")))
+    new_tab = bool(_WEB.match(token.attrGet("href") or ""))
     if new_tab:
         token.attrSet("target", "_blank")
         token.attrSet("rel", "noopener")

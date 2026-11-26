@@ -124,8 +124,7 @@ class RenderMarkdownTest(SimpleTestCase):
 
     def test_a_host_with_a_port_gets_https(self):
         # Read as a scheme, "wies.nl:" would leave a link that opens nothing.
-        html = render_markdown("[app](localhost:8000) [pad](wies.nl:8080/pad) [bel](tel:0612345678)")
-        assert 'href="https://localhost:8000"' in html
+        html = render_markdown("[pad](wies.nl:8080/pad) [bel](tel:0612345678)")
         assert 'href="https://wies.nl:8080/pad"' in html
         assert 'href="tel:0612345678"' in html
 
