@@ -58,14 +58,11 @@ function LiveRegion(doc, options) {
   this.loadTexts = [];
 }
 
-// A modal makes everything outside it inert: for a screen reader that content
-// is not there. That holds for a sheet (the side panel on a narrow viewport)
-// and for a modal dialog alike. Slotted content belongs to the dialog, so each
-// gets its own region.
-var OVERLAYS = "nldd-sheet, nldd-modal-dialog";
-
+// On a narrow viewport the side panel is a modal dialog, and a modal makes
+// everything outside it inert: for a screen reader that content is not there.
+// Slotted content belongs to the dialog, so a modal sheet gets its own region.
 LiveRegion.prototype.modalSheet = function () {
-  var sheets = this.doc.querySelectorAll(OVERLAYS);
+  var sheets = this.doc.querySelectorAll("nldd-sheet");
   for (var i = 0; i < sheets.length; i++) {
     var root = sheets[i].shadowRoot;
     var dialog =
@@ -82,17 +79,13 @@ LiveRegion.prototype.modalSheet = function () {
 
 // Ahead of time: a region only counts once it exists before its text changes.
 LiveRegion.prototype.prepareSheets = function () {
-  var sheets = this.doc.querySelectorAll(OVERLAYS);
+  var sheets = this.doc.querySelectorAll("nldd-sheet");
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].querySelector(SHEET_REGION)) continue;
     var region = this.doc.createElement("div");
     region.className = "wies-visually-hidden";
     region.setAttribute("role", "status");
     region.setAttribute("data-wies-live", "");
-    // A modal dialog forwards its default slot to an inline dialog that has no
-    // room for it; this slot lands inside the <dialog>.
-    if (sheets[i].localName === "nldd-modal-dialog")
-      region.setAttribute("slot", "notifications");
     sheets[i].appendChild(region);
   }
 };
