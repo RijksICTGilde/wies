@@ -4,11 +4,21 @@ from __future__ import annotations
 
 from datetime import date
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 from django.utils.formats import date_format
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from wies.core.models import Service
+
+NL_TIMEZONE = ZoneInfo("Europe/Amsterdam")
+
+
+def local_date(moment: datetime) -> date:
+    """The day a stored moment (UTC) fell on in the Netherlands."""
+    return moment.astimezone(NL_TIMEZONE).date()
 
 
 def datum_nl(datum, fmt="j b Y"):

@@ -1,6 +1,5 @@
 import json
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -23,14 +22,13 @@ from wies.core.editables import (
 from wies.core.form_mixins import DATE_FORMAT_HINT, KNOWN_SUFFIX, end_date_known, wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.roles import role_label
-from wies.core.services.dates import datum_nl
+from wies.core.services.access_requests import pending_count as pending_access_request_count
+from wies.core.services.dates import NL_TIMEZONE, datum_nl
 from wies.core.services.markdown import is_long_text, render_markdown
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
 from wies.core.services.version import get_app_version, get_nldd_version
 from wies.core.visibility_rules import show_bm_page, show_staff_pages, show_user_admin_pages
-
-NL_TIMEZONE = ZoneInfo("Europe/Amsterdam")
 
 
 def datetime_nl(dt, fmt="%Y-%m-%d %H:%M:%S"):
@@ -183,6 +181,7 @@ def environment(**options):
             "show_bm_page": show_bm_page,
             "show_staff_pages": show_staff_pages,
             "show_user_admin_pages": show_user_admin_pages,
+            "pending_access_request_count": pending_access_request_count,
             "role_label": role_label,
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),

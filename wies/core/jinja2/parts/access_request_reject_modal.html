@@ -1,0 +1,24 @@
+{# Like user_delete_modal.html: the form and the destructive button both post
+   through htmx, and a validation error brings the modal back into its mount. #}
+{% from "forms/mail_checkbox.html" import mail_checkbox %}
+<nldd-modal-dialog data-auto-show text="Toegangsaanvraag afwijzen?" supporting-text="Weet je zeker dat je de toegangsaanvraag van {{ access_request.full_name }} wilt afwijzen? {{ access_request.first_name }} ziet de afwijzing en de reden bij de volgende keer inloggen.">
+{# The actions come first: the button group hides every child past the third
+   with :nth-child, which counts the host's children, form and spacers included. #}
+<nldd-button slot="actions" appearance="primary" text="Behoud toegangsaanvraag" data-dismiss-modal></nldd-button>
+<nldd-button slot="actions" appearance="destructive" text="Wijs toegangsaanvraag af" hx-post="{{ form_post_url }}" hx-include="#accessRequestRejectForm" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#userFormModal" hx-swap="innerHTML"></nldd-button>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form id="accessRequestRejectForm"
+      novalidate
+      method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#userFormModal"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {{ content.decision_note.as_field_group() }}
+  {{ mail_checkbox(content) }}
+</form>
+</nldd-form>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+</nldd-modal-dialog>

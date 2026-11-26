@@ -31,6 +31,7 @@ opdrachten. Het gaat om de volgende gegevens:
 - Contracturen per week, met de periode waarin die golden; zichtbaar voor business managers en gebruikersbeheerders
 - Uren per week van je rol op een opdracht; zichtbaar voor business managers
 - De datum waarop je uit dienst bent gegaan, als einde van je laatste contractperiode
+- Als je toegang aanvraagt: je naam, zakelijk e-mailadres, onderdeel en toelichting; zichtbaar voor gebruikersbeheerders. Op dit e-mailadres kun je het besluit krijgen
 
 ## Waarvoor gebruiken wij jouw gegevens?
 
@@ -62,6 +63,7 @@ Wij bewaren jouw persoonsgegevens niet langer dan noodzakelijk is voor de doelei
 ze zijn verzameld. Gegevens over afgeronde plaatsingen en opdrachten worden bewaard zolang dit
 nodig is voor de bedrijfsvoering en verantwoording. Dat geldt ook voor je contracturen per periode:
 die blijven bewaard na je vertrek, zodat de bezetting van eerdere jaren te verantwoorden is.
+Een toegangsaanvraag bewaren we tot 90 dagen nadat een gebruikersbeheerder erover heeft beslist.
 
 ## Cookies en tracking
 

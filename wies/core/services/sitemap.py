@@ -39,6 +39,7 @@ def sitemap_sections(request) -> list[SitemapSection]:
     if show_user_admin_pages(request):
         admin += [
             ("Gebruikers", "admin-users"),
+            ("Toegangsaanvragen", "access-request-admin"),
             ("Labels", "label-admin"),
             ("Onderdelen", "suborganization-admin"),
             ("Rollen", "role-matrix"),

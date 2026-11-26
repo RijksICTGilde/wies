@@ -3,6 +3,7 @@
 from collections import Counter
 from functools import cached_property
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model, logout
 from django.contrib.auth.decorators import permission_required
@@ -45,6 +46,7 @@ from wies.core.querysets import (
 from wies.core.roles import (
     role_label,
 )
+from wies.core.services import access_requests
 from wies.core.services.events import create_event
 from wies.core.services.urls import PAGE_PARAM, current_page_url_on, rebuild_url
 from wies.core.services.users import (
@@ -399,10 +401,8 @@ def user_create(request):
         )
     if request.method == "POST":
         form = UserForm(request.POST, editor=request.user)
-        if form.is_valid() and _create_user_with_contract_period(request, form):
-            messages.success(
-                request, f"Gebruiker {form.cleaned_data['first_name']} {form.cleaned_data['last_name']} is toegevoegd."
-            )
+        if form.is_valid() and (user := create_user_with_contract_period(request, form)):
+            _report_user_created(request, user)
             if "HX-Request" in request.headers:
                 return hx_redirect(_user_list_behind_sheet(request))
             return redirect(_user_list_behind_sheet(request))
@@ -422,11 +422,37 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-def _create_user_with_contract_period(request, form) -> bool:
+def _report_user_created(request, user: User) -> None:
+    """Also tells the beheerder when adding this user answered their access request."""
+    text = f"Gebruiker {user.first_name} {user.last_name} is toegevoegd."
+    if not user.access_requests.exists():
+        messages.success(request, text)
+        return
+    access_decision_message(
+        request,
+        f"{text} De toegangsaanvraag van {user.first_name} is daarmee goedgekeurd.",
+        user.first_name,
+        mailed=settings.EMAIL_ENABLED,
+    )
+
+
+def access_decision_message(request, text: str, first_name: str, *, mailed: bool) -> None:
+    """The beheerder's message after a decision on an access request, saying
+    whether the mail went out."""
+    if not mailed:
+        messages.success(request, text)
+    elif access_requests.decision_mail_failed(request):
+        failed = f"De e-mail aan {first_name} kon niet worden verstuurd. Laat het {first_name} zelf weten."
+        messages.warning(request, f"{text} {failed}")
+    else:
+        messages.success(request, f"{text} {first_name} krijgt hierover een e-mail.")
+
+
+def create_user_with_contract_period(request, form, *, mail_access_request: bool = True) -> User | None:
     """Creates the user and, when filled in, its first contract period.
 
     One transaction: a period that does not validate (the colleague may be an
-    existing one with periods of its own) leaves no user behind. Returns False
+    existing one with periods of its own) leaves no user behind. Returns None
     with the error on the form then.
     """
     hours = form.cleaned_data.get("contract_hours_per_week")
@@ -440,6 +466,7 @@ def _create_user_with_contract_period(request, form) -> bool:
             groups=form.cleaned_data.get("groups"),
             suborganization=form.cleaned_data.get("suborganization"),
             request=request,
+            mail_access_request=mail_access_request,
         )
         if hours:
             period = ContractPeriod(
@@ -453,10 +480,10 @@ def _create_user_with_contract_period(request, form) -> bool:
                 transaction.set_rollback(True)
                 for field, errors in e.message_dict.items():
                     form.add_error(f"contract_{field}" if f"contract_{field}" in form.fields else None, errors)
-                return False
+                return None
             period.save()
             contract_period_event(request, period, "create")
-    return True
+    return user
 
 
 @permission_required("rijksauth.change_user", raise_exception=True)
@@ -798,5 +825,5 @@ def user_import_csv(request):
 
         result = create_users_from_csv(request.user, csv_content, request=request)
 
-        return render(request, "user_import.html", {"result": result})
+        return render(request, "user_import.html", {"result": result, "email_enabled": settings.EMAIL_ENABLED})
     return HttpResponse(status=405)

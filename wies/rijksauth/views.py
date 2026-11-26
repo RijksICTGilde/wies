@@ -20,6 +20,9 @@ logger = logging.getLogger(__name__)
 # Set after a failed callback so the automatic restart cannot loop.
 OIDC_AUTH_RETRY_SESSION_KEY = "oidc_auth_retried"
 
+# The verified identity of a login that found no account, for an access request.
+FAILED_LOGIN_CLAIMS_SESSION_KEY = "failed_login_claims"
+
 # Part of a normal login attempt: the Keycloak authentication session is gone, or
 # the user backed out. Anything else is ours or Keycloak's to fix, so it gets ERROR.
 OIDC_EXPECTED_CALLBACK_ERRORS = frozenset(
@@ -81,6 +84,9 @@ def auth(request):
     )
     if user:
         auth_login(request, user)
+        # A failed attempt earlier in this browser session left these behind.
+        request.session.pop("failed_login_email", None)
+        request.session.pop(FAILED_LOGIN_CLAIMS_SESSION_KEY, None)
         # Keep the id_token so logout can end the upstream Keycloak/SSO session.
         request.session[settings.OIDC_ID_TOKEN_SESSION_KEY] = oidc_response.get("id_token")
         logger.info("login successful, access granted")
@@ -92,6 +98,16 @@ def auth(request):
         # the upstream Keycloak session (otherwise Keycloak re-logs the same user).
         request.session[settings.OIDC_ID_TOKEN_SESSION_KEY] = oidc_response.get("id_token")
         request.session["failed_login_email"] = userinfo["email"]
+        # Only a verified address may become an account: the backend refuses an
+        # unverified one, so whatever acts on these claims must not trust it either.
+        if userinfo.get("email_verified", False):
+            request.session[FAILED_LOGIN_CLAIMS_SESSION_KEY] = {
+                "email": userinfo["email"].lower(),
+                "given_name": userinfo.get("given_name", ""),
+                "family_name": userinfo.get("family_name", ""),
+            }
+        else:
+            request.session.pop(FAILED_LOGIN_CLAIMS_SESSION_KEY, None)
         response = redirect(settings.AUTH_NO_ACCESS_URL)
 
     # Clear the post-logout cookie only after the upstream auth round-trip completes,
@@ -158,6 +174,11 @@ def logout(request):
         user_email = request.user.email
         auth_logout(request)
         create_auth_event(user_email, "Logout", request=request)
+    else:
+        # A login without an account leaves its identity in the session; logging
+        # out has to drop it, or the next person at this browser could request
+        # access on that address.
+        request.session.flush()
 
     end_session_url = _build_end_session_url(request, id_token)
     response = redirect(end_session_url) if end_session_url else redirect(reverse("login"))

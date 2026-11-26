@@ -21,7 +21,7 @@ from wies.core.permission_engine import Verb, has_permission
 from wies.core.roles import ROLE_BUSINESS_MANAGER, can_view_role_hours, is_business_manager_request
 from wies.core.services.dates import request_period_text
 from wies.core.services.markdown import markdown_text
-from wies.core.services.urls import current_page_path
+from wies.core.services.urls import current_page_path, site_url
 from wies.core.visibility_rules import LABELS, evaluate_placement_visibility
 from wies.core.widgets import MARKDOWN_ERROR_MESSAGES, ComboBoxSelect, MarkdownEditorWidget
 
@@ -55,7 +55,7 @@ def owner_display_context(assignment, request) -> dict:
 
     owner_mailto = ""
     if assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.public_id}")
+        opdracht_url = site_url(reverse("assignment-list") + f"?opdracht={assignment.public_id}", request)
         subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
         body_lines = [
             f"Beste {assignment.owner.name},",

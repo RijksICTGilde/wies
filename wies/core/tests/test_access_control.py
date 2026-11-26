@@ -44,6 +44,13 @@ class AccessControlTest(TestCase):
                 response = self.client.get(path, follow=False)
                 assert response.status_code == 200, f"{path} returned unexpected status {response.status_code}"
 
+    def test_access_request_sheet_without_claims_goes_back_to_no_access(self):
+        """Login-not-required too, but gated on the verified claims of a failed login."""
+        response = self.client.get("/geen-toegang/aanvragen/", follow=False)
+
+        assert response.status_code == 302
+        assert response.url == "/geen-toegang/"
+
     def test_security_txt_redirects_to_ncsc_without_login(self):
         """security.txt must reach the NCSC redirect for anonymous scanners, not bounce to SSO login"""
         response = self.client.get("/.well-known/security.txt", follow=False)

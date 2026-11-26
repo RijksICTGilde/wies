@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 853: (migration)(add env vars) people without an account request access on the no-access page; Gebruikersbeheerders approve or reject on Beheer > Toegangsaanvragen
+- 853: a new access request posts a link in the Mattermost ops channel
+- 853: with a mail relay the person gets the decision by mail, unless the beheerder unticks it
 - 694: text editor with formatting (Markdown) for the opdracht description, "Wie we zoeken" and "Taken"
 - 694: your profile updates right after a save
 - 694: (accessibility) a screen reader announces the "Opdrachtgever(s)" error with the picker

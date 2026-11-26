@@ -48,15 +48,16 @@ class NoAccessViewTest(TestCase):
         self.assertContains(response, "nog geen toegang")
         self.assertContains(response, "wies-odi@rijksoverheid.nl")
 
-    def test_no_access_page_clears_email_from_session(self):
-        """Test that viewing no_access page clears email from session"""
+    def test_no_access_page_keeps_email_until_logout(self):
+        """The access request sheet posts back to the same session; logging out clears it."""
         session = self.client.session
         session["failed_login_email"] = "user@external.com"
         session.save()
 
         self.client.get("/geen-toegang/")
+        assert self.client.session.get("failed_login_email") == "user@external.com"
 
-        # Email should be cleared from session after viewing
+        self.client.post("/uitloggen/")
         assert self.client.session.get("failed_login_email") is None
 
     def test_no_access_page_without_email(self):

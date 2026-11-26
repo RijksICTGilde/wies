@@ -25,6 +25,11 @@
       <p>
         <strong>{{ result.users_created }}</strong> gebruiker(s) geïmporteerd
       </p>
+      {% if result.access_requests_approved %}
+        <p>
+          {{ result.access_requests_approved }} van hen had(den) toegang aangevraagd. Die aanvraag is daarmee goedgekeurd{% if email_enabled %} en ze krijgen hierover een e-mail{% endif %}.
+        </p>
+      {% endif %}
       </nldd-rich-text>
       </nldd-banner>
       {% if result.errors and result.errors|length > 0 %}
