@@ -25,6 +25,7 @@ from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.roles import role_label
 from wies.core.services.access_requests import pending_count as pending_access_request_count
 from wies.core.services.dates import datum_nl
+from wies.core.services.markdown import is_long_text, render_markdown
 from wies.core.services.organizations import get_org_breadcrumb, get_org_levels_action
 from wies.core.services.urls import current_page_path, url_with_param, url_without_param
 from wies.core.services.version import get_app_version, get_nldd_version
@@ -190,6 +191,7 @@ def environment(**options):
             "inline_edit": inline_edit,
             "inline_edit_form": inline_edit_form,
             "wire_field_errors": wire_field_errors,
+            "is_long_text": is_long_text,
             "date_format_hint": DATE_FORMAT_HINT,
             "end_date_known": end_date_known,
             "known_suffix": KNOWN_SUFFIX,
@@ -206,6 +208,7 @@ def environment(**options):
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["markdown"] = render_markdown
     env.filters["bankduur"] = bankduur
     env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden

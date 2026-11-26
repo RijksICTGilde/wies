@@ -1,6 +1,5 @@
 """Wie zit waar: the placement list and editing a placement."""
 
-import json
 from collections import Counter
 from datetime import timedelta
 
@@ -19,7 +18,7 @@ from django.db.models import (
     Subquery,
     When,
 )
-from django.http import Http404, HttpResponse, HttpResponseForbidden
+from django.http import Http404, HttpResponseForbidden
 from django.shortcuts import render
 from django.template.response import TemplateResponse
 from django.urls import reverse
@@ -62,7 +61,14 @@ from wies.core.visibility_rules import (
     evaluate_placement_visibility,
 )
 
-from ._common import PANEL_PARAMS, build_panel_url, count_label, is_side_panel_request, sort_control_context
+from ._common import (
+    PANEL_PARAMS,
+    back_to_panel,
+    build_panel_url,
+    count_label,
+    is_side_panel_request,
+    sort_control_context,
+)
 from .client_picker import client_modal_response, is_client_modal_request
 from .filters import PublicIdFacetsMixin, filter_modal_response, finalize_filter_groups, is_filter_modal_request
 from .panels import (
@@ -336,7 +342,7 @@ class ColleagueOverview(_Overview):
 
     def page_queryset(self) -> QuerySet:
         """The listed colleagues in list order, with what their cards show."""
-        qs = self.listed()
+        qs = self.listed().select_related("suborganization")
         field, placement_order = self._placement_order()
         matching = self.filters.matching_placements()
         qs = qs.prefetch_related(
@@ -385,6 +391,7 @@ class ColleagueOverview(_Overview):
             assignment_text = count_label(len(assignments), "opdracht", "opdrachten")
         return {
             "name": colleague.name,
+            "suborganization": colleague.suborganization,
             "roles": list(dict.fromkeys(p.service.skill.name for p in placements if p.service.skill)),
             "assignment_text": assignment_text,
             "period_text": _period_text(assignments) if assignments else "",
@@ -839,6 +846,4 @@ def placement_edit_view(request, public_id):
     # The panel that HX-Location fetches swaps the banner in out of band.
     messages.success(request, f"Plaatsing van {placement.colleague.name} is aangepast.")
 
-    response = HttpResponse(status=204)
-    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
-    return response
+    return back_to_panel(return_path)

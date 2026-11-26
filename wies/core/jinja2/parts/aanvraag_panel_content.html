@@ -84,13 +84,19 @@
   <nldd-list-item>
   <nldd-text-cell width="140px" text="Wie we zoeken" vertical-alignment="top"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-text-cell vertical-alignment="top">
   {% if service.request_description %}
-    <p><span class="wies-role-description__text">{{ service.request_description }}</span></p>
+    {# A plain cell: the formatted text is block content, which a text cell's
+       slot does not take. #}
+    <nldd-cell width="full" vertical-alignment="top">
+    <div class="wies-cell-text">
+      <nldd-rich-text spacing="flat">{{ service.request_description|markdown }}</nldd-rich-text>
+    </div>
+    </nldd-cell>
   {% else %}
+    <nldd-text-cell vertical-alignment="top">
     <p><span class="wies-text-secondary">Niet ingevuld</span></p>
+    </nldd-text-cell>
   {% endif %}
-  </nldd-text-cell>
   </nldd-list-item>
   </nldd-list>
   </nldd-simple-section>

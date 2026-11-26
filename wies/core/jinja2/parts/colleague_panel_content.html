@@ -25,17 +25,22 @@
   <nldd-title size="display-3">
   <h2 id="panel-title" tabindex="-1">{{ colleague.name }}</h2>
   </nldd-title>
-  {% if colleague.email %}
-    <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>
+  {% if colleague.suborganization or colleague.email %}
+    <nldd-rich-text spacing="flat">
+    <p>
+      {%- if colleague.suborganization -%}
+        <span class="wies-text-secondary">{{ colleague.suborganization.name }}</span>
+      {%- endif -%}
+      {%- if colleague.suborganization and colleague.email %} <span class="wies-text-secondary"
+                                                                    aria-hidden="true">·</span> {% endif -%}
+      {%- if colleague.email -%}
+        <a href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+      {%- endif -%}
+    </p>
+    </nldd-rich-text>
   {% endif %}
   </nldd-container>
   </nldd-container>
-  {% if colleague.suborganization %}
-    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-    <nldd-container layout="wrap" gap="6">
-    <nldd-tag color="neutral"><span class="wies-tag-text">{{ colleague.suborganization.name }}</span></nldd-tag>
-    </nldd-container>
-  {% endif %}
   {% set labels = panel_data.labels %}
   {% if labels %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>
