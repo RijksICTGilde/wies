@@ -178,7 +178,7 @@ _ALLOWED = {
     "s": set(),
     "code": set(),
     "a": {"href", "target", "rel"},
-    "span": {"class"},
+    "span": set(),
     "nldd-icon": {"icon", "size"},
     "ul": _BLOCK,
     "ol": _BLOCK | {"start"},
@@ -197,7 +197,9 @@ def _sanitize(html: str) -> str:
     return nh3.clean(
         html,
         tags=set(_ALLOWED),
-        attributes=_ALLOWED,
+        # "*": nh3 would allow title and lang on every tag by itself.
+        attributes={**_ALLOWED, "*": set()},
+        allowed_classes={"span": {"wies-visually-hidden"}},
         url_schemes={"http", "https", "mailto", "tel"},
         # The renderer sets rel itself, only on links that open a new tab.
         link_rel=None,

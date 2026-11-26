@@ -7,7 +7,7 @@ from unittest import mock
 from django.test import SimpleTestCase
 from markupsafe import Markup
 
-from wies.core.services.markdown import is_long_text, markdown_text, render_markdown
+from wies.core.services.markdown import _ALLOWED, is_long_text, markdown_text, render_markdown
 
 
 class RenderMarkdownTest(SimpleTestCase):
@@ -225,6 +225,22 @@ XSS_PAYLOADS = [
     "```js onclick=alert(1)\nx\n```",
     "**<img src=x onerror=alert(1)>**",
     "- [x](javascript:alert(1))\n> <script>alert(1)</script>",
+    '[x](https://a.nl "t")',
+    '[x][r]\n\n[r]: https://a.nl "<img src=x onerror=alert(1)>"',
+    "<ms-msdt:/id>",
+    "[x](sms:123)",
+    "[x](blob:https://a.nl/b)",
+    "[x](/\\evil.example)",
+    "[x](https:\\\\evil.example)",
+    "[x](https:evil.example)",
+    "[x](//evil.example)",
+    "[x](///evil.example)",
+    "[x](javascript:a@b.nl)",
+    "&lt;script&gt;alert(1)&lt;/script&gt;",
+    "```\n</code></pre><script>alert(1)</script>\n```",
+    "| <script>alert(1)</script> | b |\n|---|---|\n| 1 | <img src=x onerror=alert(1)> |",
+    "# <svg onload=alert(1)>",
+    '<span class="wies-visually-hidden" title="t">x</span>',
 ]
 SAFE_SCHEMES = {"http", "https", "mailto", "tel"}
 # Browsers drop these from a URL before they read its scheme.
@@ -248,14 +264,21 @@ def _tags(html: str) -> list[tuple[str, dict]]:
 
 
 class XssTest(SimpleTestCase):
-    def test_no_payload_gets_a_script_a_handler_or_an_unsafe_link(self):
+    def test_a_payload_renders_only_allowed_tags_attributes_and_schemes(self):
         for payload in XSS_PAYLOADS:
             with self.subTest(payload=payload):
                 for tag, attrs in _tags(render_markdown(payload)):
-                    assert tag not in {"script", "img", "svg", "iframe", "style", "body"}
-                    assert not [name for name in attrs if name.startswith("on") or name == "style"]
+                    assert tag in _ALLOWED
+                    assert set(attrs) <= _ALLOWED[tag] | ({"class"} if tag == "span" else set())
+                    assert attrs.get("class") in {None, "wies-visually-hidden"}
                     scheme = _SCHEME.match(_URL_NOISE.sub("", attrs.get("href") or ""))
                     assert scheme is None or scheme[1].lower() in SAFE_SCHEMES
+
+    def test_plain_text_is_not_marked_safe(self):
+        # It carries "<script>" as text; only the template's escaping makes it safe.
+        text = markdown_text("&lt;script&gt;alert(1)&lt;/script&gt;")
+        assert text == "<script>alert(1)</script>"
+        assert not isinstance(text, Markup)
 
     def test_the_sanitizer_leaves_the_renderers_own_output_alone(self):
         source = (
