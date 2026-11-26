@@ -1,0 +1,626 @@
+﻿2026-06-24T09:27:08.4066918Z Current runner version: '2.335.1'
+2026-06-24T09:27:08.4104963Z ##[group]Runner Image Provisioner
+2026-06-24T09:27:08.4106691Z Hosted Compute Agent
+2026-06-24T09:27:08.4107750Z Version: 20260611.554
+2026-06-24T09:27:08.4109091Z Commit: 5e0782fdc9014723d3be820dd114dd31555c2bd1
+2026-06-24T09:27:08.4110456Z Build Date: 2026-06-11T21:40:46Z
+2026-06-24T09:27:08.4111952Z Worker ID: {3a528059-1c2d-4867-b484-20ac6821b6dc}
+2026-06-24T09:27:08.4113378Z Azure Region: eastus
+2026-06-24T09:27:08.4114432Z ##[endgroup]
+2026-06-24T09:27:08.4117607Z ##[group]Operating System
+2026-06-24T09:27:08.4118694Z Ubuntu
+2026-06-24T09:27:08.4119719Z 24.04.4
+2026-06-24T09:27:08.4120943Z LTS
+2026-06-24T09:27:08.4122035Z ##[endgroup]
+2026-06-24T09:27:08.4123115Z ##[group]Runner Image
+2026-06-24T09:27:08.4124204Z Image: ubuntu-24.04
+2026-06-24T09:27:08.4125388Z Version: 20260615.205.1
+2026-06-24T09:27:08.4127589Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260615.205/images/ubuntu/Ubuntu2404-Readme.md
+2026-06-24T09:27:08.4130897Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260615.205
+2026-06-24T09:27:08.4132763Z ##[endgroup]
+2026-06-24T09:27:08.4134661Z ##[group]GITHUB_TOKEN Permissions
+2026-06-24T09:27:08.4137584Z Contents: read
+2026-06-24T09:27:08.4138682Z Metadata: read
+2026-06-24T09:27:08.4139635Z ##[endgroup]
+2026-06-24T09:27:08.4143181Z Secret source: Actions
+2026-06-24T09:27:08.4144482Z Prepare workflow directory
+2026-06-24T09:27:08.4797306Z Prepare all required actions
+2026-06-24T09:27:08.4855419Z Getting action download info
+2026-06-24T09:27:08.7519662Z Download action repository 'actions/checkout@v6' (SHA:df4cb1c069e1874edd31b4311f1884172cec0e10)
+2026-06-24T09:27:08.8273391Z Download action repository 'astral-sh/setup-uv@v7' (SHA:37802adc94f370d6bfd71619e3f0bf239e1f3b78)
+2026-06-24T09:27:09.0364511Z Download action repository 'actions/upload-artifact@v7' (SHA:043fb46d1a93c77aae656e7c1c64a875d1fc6a0a)
+2026-06-24T09:27:09.2387001Z Complete job name: test-django
+2026-06-24T09:27:09.2928118Z ##[group]Checking docker version
+2026-06-24T09:27:09.2941470Z ##[command]/usr/bin/docker version --format '{{.Server.APIVersion}}'
+2026-06-24T09:27:09.3812590Z '1.48'
+2026-06-24T09:27:09.3825750Z Docker daemon API version: '1.48'
+2026-06-24T09:27:09.3826711Z ##[command]/usr/bin/docker version --format '{{.Client.APIVersion}}'
+2026-06-24T09:27:09.4017017Z '1.48'
+2026-06-24T09:27:09.4034749Z Docker client API version: '1.48'
+2026-06-24T09:27:09.4041595Z ##[endgroup]
+2026-06-24T09:27:09.4045771Z ##[group]Clean up resources from previous jobs
+2026-06-24T09:27:09.4052751Z ##[command]/usr/bin/docker ps --all --quiet --no-trunc --filter "label=0037d5"
+2026-06-24T09:27:09.4243737Z ##[command]/usr/bin/docker network prune --force --filter "label=0037d5"
+2026-06-24T09:27:09.4402131Z ##[endgroup]
+2026-06-24T09:27:09.4403218Z ##[group]Create local container network
+2026-06-24T09:27:09.4418180Z ##[command]/usr/bin/docker network create --label 0037d5 github_network_5d2efe1afde2470bb8a7b62c9fe2b69e
+2026-06-24T09:27:09.4946675Z af706e6dc44473222002874d6e1a3031628840add7d3fc8daaa5cd353992f11d
+2026-06-24T09:27:09.4968213Z ##[endgroup]
+2026-06-24T09:27:09.4993716Z ##[group]Starting postgres service container
+2026-06-24T09:27:09.5016849Z ##[command]/usr/bin/docker pull postgres:17
+2026-06-24T09:27:09.8028504Z 17: Pulling from library/postgres
+2026-06-24T09:27:09.8815695Z e95a6c7ea7d4: Pulling fs layer
+2026-06-24T09:27:09.8825088Z 38152547e42e: Pulling fs layer
+2026-06-24T09:27:09.8826766Z d062ec8fea4f: Pulling fs layer
+2026-06-24T09:27:09.8827859Z bcc3d59e883a: Pulling fs layer
+2026-06-24T09:27:09.8828993Z 534fe585f4dc: Pulling fs layer
+2026-06-24T09:27:09.8830043Z 489167399717: Pulling fs layer
+2026-06-24T09:27:09.8831387Z 4568948a1fd5: Pulling fs layer
+2026-06-24T09:27:09.8832437Z 4839f71271cd: Pulling fs layer
+2026-06-24T09:27:09.8833485Z 21bfd0bf3c7a: Pulling fs layer
+2026-06-24T09:27:09.8834543Z fdb634303aa4: Pulling fs layer
+2026-06-24T09:27:09.8835505Z 444edd01ecc1: Pulling fs layer
+2026-06-24T09:27:09.8837324Z 03771fe89717: Pulling fs layer
+2026-06-24T09:27:09.8838534Z 9339eae16e52: Pulling fs layer
+2026-06-24T09:27:09.8839728Z f11962e37fe6: Pulling fs layer
+2026-06-24T09:27:09.8841256Z bcc3d59e883a: Waiting
+2026-06-24T09:27:09.8842086Z 21bfd0bf3c7a: Waiting
+2026-06-24T09:27:09.8842971Z 534fe585f4dc: Waiting
+2026-06-24T09:27:09.8843764Z fdb634303aa4: Waiting
+2026-06-24T09:27:09.8844798Z 444edd01ecc1: Waiting
+2026-06-24T09:27:09.8846545Z 489167399717: Waiting
+2026-06-24T09:27:09.8847823Z 4568948a1fd5: Waiting
+2026-06-24T09:27:09.8848812Z 4839f71271cd: Waiting
+2026-06-24T09:27:09.8849863Z 03771fe89717: Waiting
+2026-06-24T09:27:09.8851069Z 9339eae16e52: Waiting
+2026-06-24T09:27:09.8852148Z f11962e37fe6: Waiting
+2026-06-24T09:27:09.9104771Z 38152547e42e: Verifying Checksum
+2026-06-24T09:27:09.9106727Z 38152547e42e: Download complete
+2026-06-24T09:27:09.9465249Z d062ec8fea4f: Verifying Checksum
+2026-06-24T09:27:09.9467464Z d062ec8fea4f: Download complete
+2026-06-24T09:27:09.9523186Z bcc3d59e883a: Verifying Checksum
+2026-06-24T09:27:09.9525401Z bcc3d59e883a: Download complete
+2026-06-24T09:27:09.9962013Z 489167399717: Verifying Checksum
+2026-06-24T09:27:09.9964501Z 489167399717: Download complete
+2026-06-24T09:27:10.0171251Z e95a6c7ea7d4: Verifying Checksum
+2026-06-24T09:27:10.0173421Z e95a6c7ea7d4: Download complete
+2026-06-24T09:27:10.0228967Z 534fe585f4dc: Verifying Checksum
+2026-06-24T09:27:10.0235258Z 534fe585f4dc: Download complete
+2026-06-24T09:27:10.0348476Z 4568948a1fd5: Verifying Checksum
+2026-06-24T09:27:10.0351126Z 4568948a1fd5: Download complete
+2026-06-24T09:27:10.0472100Z 4839f71271cd: Verifying Checksum
+2026-06-24T09:27:10.0475512Z 4839f71271cd: Download complete
+2026-06-24T09:27:10.0610505Z fdb634303aa4: Verifying Checksum
+2026-06-24T09:27:10.0616353Z fdb634303aa4: Download complete
+2026-06-24T09:27:10.0732918Z 444edd01ecc1: Verifying Checksum
+2026-06-24T09:27:10.0738056Z 444edd01ecc1: Download complete
+2026-06-24T09:27:10.0910164Z 03771fe89717: Verifying Checksum
+2026-06-24T09:27:10.0913032Z 03771fe89717: Download complete
+2026-06-24T09:27:10.1038515Z 9339eae16e52: Verifying Checksum
+2026-06-24T09:27:10.1042079Z 9339eae16e52: Download complete
+2026-06-24T09:27:10.1178441Z f11962e37fe6: Verifying Checksum
+2026-06-24T09:27:10.1180325Z f11962e37fe6: Download complete
+2026-06-24T09:27:10.4403219Z 21bfd0bf3c7a: Verifying Checksum
+2026-06-24T09:27:10.4404201Z 21bfd0bf3c7a: Download complete
+2026-06-24T09:27:11.0784270Z e95a6c7ea7d4: Pull complete
+2026-06-24T09:27:11.3784654Z 38152547e42e: Pull complete
+2026-06-24T09:27:11.5482779Z d062ec8fea4f: Pull complete
+2026-06-24T09:27:11.5890763Z bcc3d59e883a: Pull complete
+2026-06-24T09:27:11.8859765Z 534fe585f4dc: Pull complete
+2026-06-24T09:27:11.9668732Z 489167399717: Pull complete
+2026-06-24T09:27:11.9766586Z 4568948a1fd5: Pull complete
+2026-06-24T09:27:11.9868580Z 4839f71271cd: Pull complete
+2026-06-24T09:27:14.9405356Z 21bfd0bf3c7a: Pull complete
+2026-06-24T09:27:14.9557937Z fdb634303aa4: Pull complete
+2026-06-24T09:27:14.9662967Z 444edd01ecc1: Pull complete
+2026-06-24T09:27:14.9796541Z 03771fe89717: Pull complete
+2026-06-24T09:27:14.9944682Z 9339eae16e52: Pull complete
+2026-06-24T09:27:15.0047955Z f11962e37fe6: Pull complete
+2026-06-24T09:27:15.0086851Z Digest: sha256:b6e56e35dc2ffd4a697a259f68b4f2df36f0c4251bef2493fa9034f82583f881
+2026-06-24T09:27:15.0098508Z Status: Downloaded newer image for postgres:17
+2026-06-24T09:27:15.0106678Z docker.io/library/postgres:17
+2026-06-24T09:27:15.0167820Z ##[command]/usr/bin/docker create --name 3a5a9515756340d098bcc3598e15554d_postgres17_3eac15 --label 0037d5 --network github_network_5d2efe1afde2470bb8a7b62c9fe2b69e --network-alias postgres -p 5432:5432 --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5 -e "POSTGRES_DB=wies" -e "POSTGRES_USER=wies" -e "POSTGRES_PASSWORD=wies" -e GITHUB_ACTIONS=true -e CI=true postgres:17
+2026-06-24T09:27:15.0448758Z 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:15.0476481Z ##[command]/usr/bin/docker start 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:15.2642183Z 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:15.2648168Z ##[command]/usr/bin/docker ps --all --filter id=2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a --filter status=running --no-trunc --format "{{.ID}} {{.Status}}"
+2026-06-24T09:27:15.2785622Z 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a Up Less than a second (health: starting)
+2026-06-24T09:27:15.2808133Z ##[command]/usr/bin/docker port 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:15.2956780Z 5432/tcp -> 0.0.0.0:5432
+2026-06-24T09:27:15.2957299Z 5432/tcp -> [::]:5432
+2026-06-24T09:27:15.2997468Z ##[endgroup]
+2026-06-24T09:27:15.3006819Z ##[group]Waiting for all services to be ready
+2026-06-24T09:27:15.3023706Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:15.3185512Z starting
+2026-06-24T09:27:15.3206685Z postgres service is starting, waiting 2 seconds before checking again.
+2026-06-24T09:27:17.3209165Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:17.3338758Z starting
+2026-06-24T09:27:17.3351437Z postgres service is starting, waiting 3 seconds before checking again.
+2026-06-24T09:27:21.3134792Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:21.3262655Z starting
+2026-06-24T09:27:21.3275362Z postgres service is starting, waiting 7 seconds before checking again.
+2026-06-24T09:27:28.4669825Z ##[command]/usr/bin/docker inspect --format="{{if .Config.Healthcheck}}{{print .State.Health.Status}}{{end}}" 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:27:28.4806421Z healthy
+2026-06-24T09:27:28.4823488Z postgres service is healthy.
+2026-06-24T09:27:28.4824315Z ##[endgroup]
+2026-06-24T09:27:28.5171161Z ##[group]Run actions/checkout@v6
+2026-06-24T09:27:28.5171779Z with:
+2026-06-24T09:27:28.5172025Z   repository: RijksICTGilde/wies
+2026-06-24T09:27:28.5174944Z   token: ***
+2026-06-24T09:27:28.5175177Z   ssh-strict: true
+2026-06-24T09:27:28.5175400Z   ssh-user: git
+2026-06-24T09:27:28.5175630Z   persist-credentials: true
+2026-06-24T09:27:28.5175890Z   clean: true
+2026-06-24T09:27:28.5176130Z   sparse-checkout-cone-mode: true
+2026-06-24T09:27:28.5176418Z   fetch-depth: 1
+2026-06-24T09:27:28.5176645Z   fetch-tags: false
+2026-06-24T09:27:28.5176875Z   show-progress: true
+2026-06-24T09:27:28.5177107Z   lfs: false
+2026-06-24T09:27:28.5177319Z   submodules: false
+2026-06-24T09:27:28.5177550Z   set-safe-directory: true
+2026-06-24T09:27:28.5177995Z ##[endgroup]
+2026-06-24T09:27:28.6226243Z Syncing repository: RijksICTGilde/wies
+2026-06-24T09:27:28.6227798Z ##[group]Getting Git version info
+2026-06-24T09:27:28.6228199Z Working directory is '/home/runner/work/wies/wies'
+2026-06-24T09:27:28.6228862Z [command]/usr/bin/git version
+2026-06-24T09:27:28.6292976Z git version 2.54.0
+2026-06-24T09:27:28.6317143Z ##[endgroup]
+2026-06-24T09:27:28.6333756Z Temporarily overriding HOME='/home/runner/work/_temp/d85be3b7-3321-4bee-b3d1-8b8e7896352b' before making global git config changes
+2026-06-24T09:27:28.6335251Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-24T09:27:28.6340172Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wies/wies
+2026-06-24T09:27:28.6394690Z Deleting the contents of '/home/runner/work/wies/wies'
+2026-06-24T09:27:28.6398854Z ##[group]Determining repository object format
+2026-06-24T09:27:28.6401833Z ##[endgroup]
+2026-06-24T09:27:28.6402428Z ##[group]Initializing the repository
+2026-06-24T09:27:28.6407851Z [command]/usr/bin/git init /home/runner/work/wies/wies
+2026-06-24T09:27:28.6512470Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-06-24T09:27:28.6513791Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-06-24T09:27:28.6514774Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-06-24T09:27:28.6515327Z hint: call:
+2026-06-24T09:27:28.6515639Z hint:
+2026-06-24T09:27:28.6516081Z hint: 	git config --global init.defaultBranch <name>
+2026-06-24T09:27:28.6516523Z hint:
+2026-06-24T09:27:28.6516929Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-06-24T09:27:28.6517650Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-06-24T09:27:28.6518540Z hint:
+2026-06-24T09:27:28.6519032Z hint: 	git branch -m <name>
+2026-06-24T09:27:28.6519355Z hint:
+2026-06-24T09:27:28.6519797Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-06-24T09:27:28.6520528Z Initialized empty Git repository in /home/runner/work/wies/wies/.git/
+2026-06-24T09:27:28.6531667Z [command]/usr/bin/git remote add origin https://github.com/RijksICTGilde/wies
+2026-06-24T09:27:28.6575713Z ##[endgroup]
+2026-06-24T09:27:28.6576631Z ##[group]Disabling automatic garbage collection
+2026-06-24T09:27:28.6580664Z [command]/usr/bin/git config --local gc.auto 0
+2026-06-24T09:27:28.6609688Z ##[endgroup]
+2026-06-24T09:27:28.6610190Z ##[group]Setting up auth
+2026-06-24T09:27:28.6611444Z Removing SSH command configuration
+2026-06-24T09:27:28.6617108Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-24T09:27:28.6650016Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-24T09:27:28.7005629Z Removing HTTP extra header
+2026-06-24T09:27:28.7011783Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-24T09:27:28.7046128Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-24T09:27:28.7265024Z Removing includeIf entries pointing to credentials config files
+2026-06-24T09:27:28.7271665Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-24T09:27:28.7305006Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-24T09:27:28.7536575Z [command]/usr/bin/git config --file /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-06-24T09:27:28.7577803Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/wies/wies/.git.path /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:27:28.7608282Z [command]/usr/bin/git config --local includeIf.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:27:28.7642377Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:27:28.7673221Z [command]/usr/bin/git config --local includeIf.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:27:28.7699386Z ##[endgroup]
+2026-06-24T09:27:28.7699956Z ##[group]Fetching the repository
+2026-06-24T09:27:28.7709856Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +3a8c9f4867993d949046ba53b5d7e92a02c67515:refs/remotes/origin/main
+2026-06-24T09:27:29.0458338Z From https://github.com/RijksICTGilde/wies
+2026-06-24T09:27:29.0459533Z  * [new ref]         3a8c9f4867993d949046ba53b5d7e92a02c67515 -> origin/main
+2026-06-24T09:27:29.0504308Z [command]/usr/bin/git branch --list --remote origin/main
+2026-06-24T09:27:29.0541851Z   origin/main
+2026-06-24T09:27:29.0550508Z [command]/usr/bin/git rev-parse refs/remotes/origin/main
+2026-06-24T09:27:29.0574594Z 3a8c9f4867993d949046ba53b5d7e92a02c67515
+2026-06-24T09:27:29.0578783Z ##[endgroup]
+2026-06-24T09:27:29.0579203Z ##[group]Determining the checkout info
+2026-06-24T09:27:29.0580160Z ##[endgroup]
+2026-06-24T09:27:29.0591724Z [command]/usr/bin/git sparse-checkout disable
+2026-06-24T09:27:29.0635967Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-06-24T09:27:29.0663487Z ##[group]Checking out the ref
+2026-06-24T09:27:29.0667731Z [command]/usr/bin/git checkout --progress --force -B main refs/remotes/origin/main
+2026-06-24T09:27:29.0881741Z Switched to a new branch 'main'
+2026-06-24T09:27:29.0883542Z branch 'main' set up to track 'origin/main'.
+2026-06-24T09:27:29.0891458Z ##[endgroup]
+2026-06-24T09:27:29.0938878Z [command]/usr/bin/git log -1 --format=%H
+2026-06-24T09:27:29.0964295Z 3a8c9f4867993d949046ba53b5d7e92a02c67515
+2026-06-24T09:27:29.1237820Z ##[group]Run astral-sh/setup-uv@v7
+2026-06-24T09:27:29.1238134Z with:
+2026-06-24T09:27:29.1238340Z   enable-cache: true
+2026-06-24T09:27:29.1238582Z   activate-environment: false
+2026-06-24T09:27:29.1238893Z   working-directory: /home/runner/work/wies/wies
+2026-06-24T09:27:29.1242074Z   github-token: ***
+2026-06-24T09:27:29.1242692Z   cache-dependency-glob: **/*requirements*.txt
+**/*requirements*.in
+**/*constraints*.txt
+**/*constraints*.in
+**/pyproject.toml
+**/uv.lock
+**/*.py.lock
+
+2026-06-24T09:27:29.1243356Z   restore-cache: true
+2026-06-24T09:27:29.1243575Z   save-cache: true
+2026-06-24T09:27:29.1243781Z   prune-cache: true
+2026-06-24T09:27:29.1243994Z   cache-python: false
+2026-06-24T09:27:29.1244222Z   ignore-nothing-to-cache: false
+2026-06-24T09:27:29.1244487Z   ignore-empty-workdir: false
+2026-06-24T09:27:29.1244742Z   add-problem-matchers: true
+2026-06-24T09:27:29.1245017Z   resolution-strategy: highest
+2026-06-24T09:27:29.1245275Z ##[endgroup]
+2026-06-24T09:27:29.2954357Z Trying to find version for uv in: /home/runner/work/wies/wies/uv.toml
+2026-06-24T09:27:29.2955248Z Could not find file: /home/runner/work/wies/wies/uv.toml
+2026-06-24T09:27:29.2956097Z Trying to find version for uv in: /home/runner/work/wies/wies/pyproject.toml
+2026-06-24T09:27:29.2964823Z Could not determine uv version from uv.toml or pyproject.toml. Falling back to latest.
+2026-06-24T09:27:29.2967152Z Fetching version data from https://raw.githubusercontent.com/astral-sh/versions/main/v1/uv.ndjson ...
+2026-06-24T09:27:29.3623039Z Downloading uv from "https://releases.astral.sh/github/uv/releases/download/0.11.24/uv-x86_64-unknown-linux-gnu.tar.gz" ...
+2026-06-24T09:27:29.5380127Z [command]/usr/bin/tar xz --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/0dd410a7-1b09-4b89-9b8a-b68c6979621f -f /home/runner/work/_temp/f7251ffe-5684-4ad4-8c3f-f4ebd79b0184
+2026-06-24T09:27:30.0170201Z Added /home/runner/.local/bin to the path
+2026-06-24T09:27:30.0173830Z Added /opt/hostedtoolcache/uv/0.11.24/x86_64 to the path
+2026-06-24T09:27:30.0175183Z Set UV_PYTHON_INSTALL_DIR to /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:27:30.0176454Z Added /home/runner/work/_temp/uv-python-dir to the path
+2026-06-24T09:27:30.0205022Z Set UV_CACHE_DIR to /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:27:30.0205517Z Successfully installed uv version 0.11.24
+2026-06-24T09:27:30.1376303Z Searching files using cache dependency glob: /home/runner/work/wies/wies/**/*requirements*.txt,/home/runner/work/wies/wies/**/*requirements*.in,/home/runner/work/wies/wies/**/*constraints*.txt,/home/runner/work/wies/wies/**/*constraints*.in,/home/runner/work/wies/wies/**/pyproject.toml,/home/runner/work/wies/wies/**/uv.lock,/home/runner/work/wies/wies/**/*.py.lock
+2026-06-24T09:27:30.1590103Z /home/runner/work/wies/wies/pyproject.toml
+2026-06-24T09:27:30.1611093Z /home/runner/work/wies/wies/uv.lock
+2026-06-24T09:27:30.1926494Z Found 2 files to hash.
+2026-06-24T09:27:30.2002436Z Trying to restore cache from GitHub Actions cache with key: setup-uv-2-x86_64-unknown-linux-gnu-ubuntu-24.04-unknown-pruned-3ec3b836339cc5c8994bde3f2ac1aecd63121b9844ac0cd4ce9ef99d1d35c99a
+2026-06-24T09:27:30.2613068Z Cache hit for: setup-uv-2-x86_64-unknown-linux-gnu-ubuntu-24.04-unknown-pruned-3ec3b836339cc5c8994bde3f2ac1aecd63121b9844ac0cd4ce9ef99d1d35c99a
+2026-06-24T09:27:30.8432413Z Received 74084547 of 74084547 (100.0%), 134.8 MBs/sec
+2026-06-24T09:27:30.8433637Z Cache Size: ~71 MB (74084547 B)
+2026-06-24T09:27:30.8475553Z [command]/usr/bin/tar -xf /home/runner/work/_temp/a51d9111-383f-4f7b-aa51-5eea5f782bce/cache.tzst -P -C /home/runner/work/wies/wies --use-compress-program unzstd
+2026-06-24T09:27:31.0124539Z Cache restored successfully
+2026-06-24T09:27:31.0163231Z cache restored from GitHub Actions cache with key: setup-uv-2-x86_64-unknown-linux-gnu-ubuntu-24.04-unknown-pruned-3ec3b836339cc5c8994bde3f2ac1aecd63121b9844ac0cd4ce9ef99d1d35c99a
+2026-06-24T09:27:31.0841819Z ##[group]Run uv sync --frozen
+2026-06-24T09:27:31.0842177Z [36;1muv sync --frozen[0m
+2026-06-24T09:27:31.0880193Z shell: /usr/bin/bash -e {0}
+2026-06-24T09:27:31.0880485Z env:
+2026-06-24T09:27:31.0881060Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:27:31.0881523Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:27:31.0881881Z ##[endgroup]
+2026-06-24T09:27:31.2064823Z Downloading cpython-3.14.6-linux-x86_64-gnu (download) (34.4MiB)
+2026-06-24T09:27:32.1063839Z  Downloaded cpython-3.14.6-linux-x86_64-gnu (download)
+2026-06-24T09:27:32.2856119Z Using CPython 3.14.6
+2026-06-24T09:27:32.2856741Z Creating virtual environment at: .venv
+2026-06-24T09:27:32.3389545Z Downloading pydantic-core (2.0MiB)
+2026-06-24T09:27:32.3395344Z Downloading pygments (1.2MiB)
+2026-06-24T09:27:32.3397574Z Downloading cryptography (4.5MiB)
+2026-06-24T09:27:32.3407644Z Downloading psycopg-binary (4.9MiB)
+2026-06-24T09:27:32.3412586Z Downloading ruff (10.9MiB)
+2026-06-24T09:27:32.3470158Z Downloading virtualenv (5.7MiB)
+2026-06-24T09:27:32.3484646Z Downloading django (8.0MiB)
+2026-06-24T09:27:32.6578257Z  Downloaded pydantic-core
+2026-06-24T09:27:32.8238012Z  Downloaded psycopg-binary
+2026-06-24T09:27:32.8279293Z  Downloaded virtualenv
+2026-06-24T09:27:32.9500999Z  Downloaded ruff
+2026-06-24T09:27:32.9692472Z  Downloaded cryptography
+2026-06-24T09:27:32.9926810Z  Downloaded pygments
+2026-06-24T09:27:33.5658211Z  Downloaded django
+2026-06-24T09:27:33.5661778Z Prepared 56 packages in 1.27s
+2026-06-24T09:27:33.7760507Z Installed 56 packages in 209ms
+2026-06-24T09:27:33.7761801Z  + annotated-types==0.7.0
+2026-06-24T09:27:33.7762684Z  + asgiref==3.11.0
+2026-06-24T09:27:33.7763112Z  + authlib==1.7.2
+2026-06-24T09:27:33.7763530Z  + beautifulsoup4==4.14.3
+2026-06-24T09:27:33.7763986Z  + certifi==2026.1.4
+2026-06-24T09:27:33.7764383Z  + cffi==2.0.0
+2026-06-24T09:27:33.7764752Z  + cfgv==3.5.0
+2026-06-24T09:27:33.7765144Z  + charset-normalizer==3.4.4
+2026-06-24T09:27:33.7765659Z  + click==8.3.1
+2026-06-24T09:27:33.7766030Z  + colorama==0.4.6
+2026-06-24T09:27:33.7766424Z  + coverage==7.14.1
+2026-06-24T09:27:33.7766829Z  + cryptography==48.0.1
+2026-06-24T09:27:33.7767263Z  + cssbeautifier==1.15.4
+2026-06-24T09:27:33.7767727Z  + distlib==0.4.0
+2026-06-24T09:27:33.7768100Z  + django==6.0.6
+2026-06-24T09:27:33.7768459Z  + djlint==1.39.0
+2026-06-24T09:27:33.7768825Z  + editorconfig==0.17.1
+2026-06-24T09:27:33.7769216Z  + filelock==3.20.3
+2026-06-24T09:27:33.7769609Z  + gunicorn==25.3.0
+2026-06-24T09:27:33.7771656Z  + identify==2.6.16
+2026-06-24T09:27:33.7772766Z  + idna==3.15
+2026-06-24T09:27:33.7773425Z  + iniconfig==2.3.0
+2026-06-24T09:27:33.7774911Z  + jinja-roos-components==0.5 (from git+https://github.com/RijksICTGilde/jinja-roos-components.git@df0124e265c95b9c685a074f87057edab3ff9402)
+2026-06-24T09:27:33.7776493Z  + jinja2==3.1.6
+2026-06-24T09:27:33.7777118Z  + joserfc==1.6.4
+2026-06-24T09:27:33.7777718Z  + jsbeautifier==1.15.4
+2026-06-24T09:27:33.7778791Z  + json5==0.13.0
+2026-06-24T09:27:33.7779433Z  + markupsafe==3.0.3
+2026-06-24T09:27:33.7780170Z  + nodeenv==1.10.0
+2026-06-24T09:27:33.7781024Z  + packaging==25.0
+2026-06-24T09:27:33.7781627Z  + pathspec==1.0.3
+2026-06-24T09:27:33.7782223Z  + platformdirs==4.5.1
+2026-06-24T09:27:33.7782870Z  + pluggy==1.6.0
+2026-06-24T09:27:33.7783559Z  + pre-commit==4.6.0
+2026-06-24T09:27:33.7784149Z  + psycopg==3.3.4
+2026-06-24T09:27:33.7784728Z  + psycopg-binary==3.3.4
+2026-06-24T09:27:33.7785367Z  + pycparser==2.23
+2026-06-24T09:27:33.7785980Z  + pydantic==2.12.5
+2026-06-24T09:27:33.7787018Z  + pydantic-core==2.41.5
+2026-06-24T09:27:33.7787475Z  + pygments==2.20.0
+2026-06-24T09:27:33.7787830Z  + pytest==9.0.3
+2026-06-24T09:27:33.7788175Z  + pytest-cov==7.1.0
+2026-06-24T09:27:33.7788539Z  + pytest-django==4.12.0
+2026-06-24T09:27:33.7788913Z  + pyyaml==6.0.3
+2026-06-24T09:27:33.7827872Z  + regex==2026.1.15
+2026-06-24T09:27:33.7828517Z  + requests==2.34.2
+2026-06-24T09:27:33.7828970Z  + ruff==0.15.15
+2026-06-24T09:27:33.7829699Z  + six==1.17.0
+2026-06-24T09:27:33.7830111Z  + soupsieve==2.8.1
+2026-06-24T09:27:33.7830518Z  + sqlparse==0.5.5
+2026-06-24T09:27:33.7831103Z  + tqdm==4.67.1
+2026-06-24T09:27:33.7831508Z  + typing-extensions==4.15.0
+2026-06-24T09:27:33.7831973Z  + typing-inspection==0.4.2
+2026-06-24T09:27:33.7832411Z  + urllib3==2.7.0
+2026-06-24T09:27:33.7832814Z  + virtualenv==20.36.1
+2026-06-24T09:27:33.7833228Z  + whitenoise==6.12.0
+2026-06-24T09:27:33.7901275Z ##[group]Run uv run pytest --cov-report=html
+2026-06-24T09:27:33.7901742Z [36;1muv run pytest --cov-report=html[0m
+2026-06-24T09:27:33.7936794Z shell: /usr/bin/bash -e {0}
+2026-06-24T09:27:33.7937121Z env:
+2026-06-24T09:27:33.7937486Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:27:33.7938003Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:27:33.7938410Z   POSTGRES_HOST: localhost
+2026-06-24T09:27:33.7938720Z   POSTGRES_PORT: 5432
+2026-06-24T09:27:33.7939099Z   POSTGRES_USER: wies
+2026-06-24T09:27:33.7939437Z   POSTGRES_PASSWORD: wies
+2026-06-24T09:27:33.7939726Z   POSTGRES_DB: wies
+2026-06-24T09:27:33.7939990Z ##[endgroup]
+2026-06-24T09:27:37.7285727Z ============================= test session starts ==============================
+2026-06-24T09:27:37.7286629Z platform linux -- Python 3.14.6, pytest-9.0.3, pluggy-1.6.0
+2026-06-24T09:27:37.7287466Z django: version: 6.0.6, settings: config.settings.test (from ini)
+2026-06-24T09:27:37.7288248Z rootdir: /home/runner/work/wies/wies
+2026-06-24T09:27:37.7288751Z configfile: pyproject.toml
+2026-06-24T09:27:37.7289233Z plugins: cov-7.1.0, django-4.12.0
+2026-06-24T09:27:37.7289699Z collected 546 items
+2026-06-24T09:27:37.7289934Z
+2026-06-24T09:27:39.3132041Z wies/core/tests/test_access_control.py .....                             [  0%]
+2026-06-24T09:27:45.5152923Z wies/core/tests/test_assignment_create.py ...................            [  4%]
+2026-06-24T09:27:46.1892214Z wies/core/tests/test_assignment_list.py .............                    [  6%]
+2026-06-24T09:27:46.9903591Z wies/core/tests/test_assignment_views.py ............................... [ 12%]
+2026-06-24T09:27:47.4699327Z ................                                                         [ 15%]
+2026-06-24T09:27:47.5193935Z wies/core/tests/test_auth_views.py .....                                 [ 16%]
+2026-06-24T09:27:47.9969363Z wies/core/tests/test_data_import_integration.py ................         [ 19%]
+2026-06-24T09:27:48.1116046Z wies/core/tests/test_email_case_insensitive.py ........                  [ 20%]
+2026-06-24T09:27:48.4143921Z wies/core/tests/test_filters_multiselect.py .............                [ 23%]
+2026-06-24T09:27:48.5508002Z wies/core/tests/test_forms.py ............                               [ 25%]
+2026-06-24T09:27:49.8695277Z wies/core/tests/test_inline_edit.py .................................... [ 31%]
+2026-06-24T09:27:50.9239541Z ................................................                         [ 40%]
+2026-06-24T09:27:51.0896445Z wies/core/tests/test_label_delete.py ..                                  [ 41%]
+2026-06-24T09:27:52.0963455Z wies/core/tests/test_label_filtering_and_display.py ...........          [ 43%]
+2026-06-24T09:27:52.4354129Z wies/core/tests/test_label_management_integration.py .......             [ 44%]
+2026-06-24T09:27:52.5199280Z wies/core/tests/test_labels_view_simple.py ..                            [ 44%]
+2026-06-24T09:27:52.6168369Z wies/core/tests/test_merge_duplicate_assignments.py ......               [ 45%]
+2026-06-24T09:27:52.6562716Z wies/core/tests/test_migrations.py .                                     [ 45%]
+2026-06-24T09:27:53.0096082Z wies/core/tests/test_organization_views.py ....                          [ 46%]
+2026-06-24T09:27:53.1919870Z wies/core/tests/test_organizations_service.py .......................... [ 51%]
+2026-06-24T09:27:54.3935643Z ....................................                                     [ 58%]
+2026-06-24T09:27:54.7475825Z wies/core/tests/test_permissions.py ..........................           [ 62%]
+2026-06-24T09:27:55.6402551Z wies/core/tests/test_placement_pagination.py ..                          [ 63%]
+2026-06-24T09:27:56.4153866Z wies/core/tests/test_placement_views.py ................................ [ 69%]
+2026-06-24T09:27:56.9013518Z ...........................                                              [ 73%]
+2026-06-24T09:27:57.3076459Z wies/core/tests/test_placements_service.py ..........................    [ 78%]
+2026-06-24T09:27:57.7451162Z wies/core/tests/test_roles.py ...                                        [ 79%]
+2026-06-24T09:27:58.1334760Z wies/core/tests/test_staff_view.py .....                                 [ 80%]
+2026-06-24T09:27:58.3628516Z wies/core/tests/test_user_services.py ........................           [ 84%]
+2026-06-24T09:27:59.6463818Z wies/core/tests/test_user_views.py ..................................... [ 91%]
+2026-06-24T09:28:00.1195414Z .................                                                        [ 94%]
+2026-06-24T09:28:00.1636113Z wies/rijksauth/tests/test_auth_backend.py .........                      [ 96%]
+2026-06-24T09:28:00.2048486Z wies/rijksauth/tests/test_ensure_initial_user.py ....                    [ 96%]
+2026-06-24T09:28:00.2754551Z wies/rijksauth/tests/test_usage.py ......                                [ 97%]
+2026-06-24T09:28:02.6544524Z wies/rijksauth/tests/test_views.py ...........                           [100%]
+2026-06-24T09:28:02.6545704Z
+2026-06-24T09:28:02.6546223Z ================================ tests coverage ================================
+2026-06-24T09:28:02.6547769Z _______________ coverage: platform linux, python 3.14.6-final-0 ________________
+2026-06-24T09:28:02.6548796Z
+2026-06-24T09:28:02.6549178Z Name                                                                  Stmts   Miss  Cover   Missing
+2026-06-24T09:28:02.6550257Z ---------------------------------------------------------------------------------------------------
+2026-06-24T09:28:02.6551781Z wies/core/__init__.py                                                     0      0   100%
+2026-06-24T09:28:02.6552874Z wies/core/apps.py                                                         8      0   100%
+2026-06-24T09:28:02.6553940Z wies/core/editables/__init__.py                                           8      0   100%
+2026-06-24T09:28:02.6554987Z wies/core/editables/assignment.py                                       136      4    97%   81, 85-88
+2026-06-24T09:28:02.6556017Z wies/core/editables/colleague.py                                         37      1    97%   60
+2026-06-24T09:28:02.6557010Z wies/core/editables/placement.py                                         17      1    94%   17
+2026-06-24T09:28:02.6557963Z wies/core/editables/service.py                                           12      0   100%
+2026-06-24T09:28:02.6558878Z wies/core/editables/user.py                                              20      0   100%
+2026-06-24T09:28:02.6559723Z wies/core/errors.py                                                      15      0   100%
+2026-06-24T09:28:02.6561155Z wies/core/fields.py                                                      34      4    88%   38-39, 54, 68
+2026-06-24T09:28:02.6562049Z wies/core/form_mixins.py                                                 35      0   100%
+2026-06-24T09:28:02.6562961Z wies/core/forms.py                                                      139      6    96%   79, 81-82, 228-229, 274
+2026-06-24T09:28:02.6563901Z wies/core/inline_edit/__init__.py                                         2      0   100%
+2026-06-24T09:28:02.6564831Z wies/core/inline_edit/base.py                                            72      1    99%   178
+2026-06-24T09:28:02.6565770Z wies/core/inline_edit/forms.py                                          106     16    85%   29, 34, 40, 48, 58, 62, 80, 110-111, 114, 116, 129, 132-133, 139-140
+2026-06-24T09:28:02.6566690Z wies/core/inline_edit/jinja.py                                           45      2    96%   24, 26
+2026-06-24T09:28:02.6567438Z wies/core/management/__init__.py                                          0      0   100%
+2026-06-24T09:28:02.6568205Z wies/core/management/commands/__init__.py                                 0      0   100%
+2026-06-24T09:28:02.6569085Z wies/core/management/commands/assign_random_labels_to_colleagues.py      28     28     0%   11-50
+2026-06-24T09:28:02.6570000Z wies/core/management/commands/db_worker.py                               85     85     0%   1-133
+2026-06-24T09:28:02.6571191Z wies/core/management/commands/dropdb.py                                  10     10     0%   1-25
+2026-06-24T09:28:02.6572065Z wies/core/management/commands/load_full_data.py                         164    164     0%   11-772
+2026-06-24T09:28:02.6572927Z wies/core/management/commands/setup.py                                   16     16     0%   1-24
+2026-06-24T09:28:02.6573796Z wies/core/management/commands/setup_initial_user.py                      94     94     0%   1-192
+2026-06-24T09:28:02.6574702Z wies/core/management/commands/sync_organizations.py                      19     19     0%   3-35
+2026-06-24T09:28:02.6575369Z wies/core/middleware.py                                                   8      0   100%
+2026-06-24T09:28:02.6576131Z wies/core/models.py                                                     207     27    87%   76, 98, 144, 148-156, 176, 217, 268, 274-275, 284, 387-389, 395, 433, 462, 466-469
+2026-06-24T09:28:02.6576944Z wies/core/permission_engine.py                                           36      3    92%   46-50, 76
+2026-06-24T09:28:02.6577577Z wies/core/permissions.py                                                 63      2    97%   51, 58
+2026-06-24T09:28:02.6578165Z wies/core/querysets.py                                                    8      0   100%
+2026-06-24T09:28:02.6578715Z wies/core/roles.py                                                       16      0   100%
+2026-06-24T09:28:02.6579281Z wies/core/services/__init__.py                                            0      0   100%
+2026-06-24T09:28:02.6580031Z wies/core/services/assignments.py                                       148     16    89%   29, 70, 105-106, 141-143, 152-153, 158-159, 163-164, 196-198
+2026-06-24T09:28:02.6581068Z wies/core/services/events.py                                             17      7    59%   19-20, 22-23, 25-26, 29
+2026-06-24T09:28:02.6581840Z wies/core/services/organizations.py                                     278     32    88%   42, 88-90, 274, 369-373, 425-435, 558-574
+2026-06-24T09:28:02.6582960Z wies/core/services/otys.py                                              134    110    18%   40, 65-71, 74-75, 78, 83-85, 92-97, 100-104, 109-140, 143-166, 171-202, 207-236, 244-275, 279-288, 293-324, 327-345, 349-367, 371-391, 395-409
+2026-06-24T09:28:02.6584408Z wies/core/services/placements.py                                        108      3    97%   43, 90, 118
+2026-06-24T09:28:02.6585374Z wies/core/services/sync.py                                               87     44    49%   35-43, 70-71, 95-179
+2026-06-24T09:28:02.6586259Z wies/core/services/tasks.py                                              28     11    61%   67, 81-92
+2026-06-24T09:28:02.6587445Z wies/core/services/users.py                                             154      3    98%   21, 134, 220
+2026-06-24T09:28:02.6588388Z wies/core/services/version.py                                             5      0   100%
+2026-06-24T09:28:02.6589205Z wies/core/signals.py                                                     13      0   100%
+2026-06-24T09:28:02.6594189Z wies/core/views.py                                                     1372    270    80%   241-244, 305, 325, 348, 378-389, 418-422, 433-468, 510-519, 523-524, 528, 540-590, 631, 651-655, 710-715, 763, 770, 772, 775-777, 798, 822-823, 825-826, 828-829, 834-837, 846-851, 963-971, 973-977, 982-983, 1015-1019, 1039, 1041-1046, 1071, 1073-1080, 1104-1107, 1138-1139, 1144-1145, 1150-1153, 1212-1214, 1231-1237, 1239-1243, 1248-1249, 1309, 1326-1329, 1352, 1395-1396, 1423-1425, 1469-1471, 1486, 1530-1532, 1550, 1560, 1597, 1631-1632, 1642, 1685-1686, 1696, 1703, 1740, 1748-1749, 1781-1782, 1804-1816, 1826-1868, 1878, 1901, 1931, 1947-1948, 1973-1986, 2032, 2059, 2063, 2066, 2073-2080, 2147, 2196-2204, 2206-2210, 2212-2216, 2220-2224, 2229-2230, 2248, 2252, 2256, 2260, 2275, 2283-2327, 2395, 2400-2402, 2410-2420, 2426, 2452, 2459, 2471, 2485, 2502, 2514, 2521-2522, 2528-2530, 2549, 2553, 2556-2557, 2594-2596, 2629, 2645, 2727-2728, 2742-2745, 2747, 2797, 2836
+2026-06-24T09:28:02.6597349Z wies/core/widgets.py                                                     52      6    88%   55-56, 63-64, 81-82
+2026-06-24T09:28:02.6597883Z wies/rijksauth/__init__.py                                                0      0   100%
+2026-06-24T09:28:02.6598361Z wies/rijksauth/apps.py                                                    5      0   100%
+2026-06-24T09:28:02.6598851Z wies/rijksauth/auth_backend.py                                           26      0   100%
+2026-06-24T09:28:02.6599365Z wies/rijksauth/management/__init__.py                                     0      0   100%
+2026-06-24T09:28:02.6599904Z wies/rijksauth/management/commands/__init__.py                            0      0   100%
+2026-06-24T09:28:02.6600477Z wies/rijksauth/management/commands/ensure_initial_user.py                25      0   100%
+2026-06-24T09:28:02.6601480Z wies/rijksauth/middleware.py                                             20      1    95%   24
+2026-06-24T09:28:02.6602002Z wies/rijksauth/models.py                                                 29      3    90%   9-10, 41
+2026-06-24T09:28:02.6602516Z wies/rijksauth/services/__init__.py                                       0      0   100%
+2026-06-24T09:28:02.6603045Z wies/rijksauth/services/events.py                                         7      2    71%   8-9
+2026-06-24T09:28:02.6603570Z wies/rijksauth/services/usage.py                                         31      0   100%
+2026-06-24T09:28:02.6604085Z wies/rijksauth/views.py                                                  65      6    91%   23-30, 101-103, 106
+2026-06-24T09:28:02.6604609Z ---------------------------------------------------------------------------------------------------
+2026-06-24T09:28:02.6605070Z TOTAL                                                                  4044    997    75%
+2026-06-24T09:28:02.6605424Z Coverage HTML written to dir htmlcov
+2026-06-24T09:28:02.6605754Z ============================= 546 passed in 25.68s =============================
+2026-06-24T09:28:03.2118849Z ##[group]Run echo "## Test Coverage" >> $GITHUB_STEP_SUMMARY
+2026-06-24T09:28:03.2119466Z [36;1mecho "## Test Coverage" >> $GITHUB_STEP_SUMMARY[0m
+2026-06-24T09:28:03.2120067Z [36;1muv run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY[0m
+2026-06-24T09:28:03.2120847Z [36;1mecho "" >> $GITHUB_STEP_SUMMARY[0m
+2026-06-24T09:28:03.2121555Z [36;1mecho "📥 Download the HTML report artifact for line-by-line coverage details." >> $GITHUB_STEP_SUMMARY[0m
+2026-06-24T09:28:03.2154249Z shell: /usr/bin/bash -e {0}
+2026-06-24T09:28:03.2154588Z env:
+2026-06-24T09:28:03.2155192Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:28:03.2155779Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:28:03.2156217Z ##[endgroup]
+2026-06-24T09:28:03.6731315Z ##[group]Run actions/upload-artifact@v7
+2026-06-24T09:28:03.6731651Z with:
+2026-06-24T09:28:03.6731862Z   name: coverage-report
+2026-06-24T09:28:03.6732098Z   path: htmlcov/
+2026-06-24T09:28:03.6732320Z   if-no-files-found: warn
+2026-06-24T09:28:03.6732573Z   compression-level: 6
+2026-06-24T09:28:03.6732803Z   overwrite: false
+2026-06-24T09:28:03.6733024Z   include-hidden-files: false
+2026-06-24T09:28:03.6733272Z   archive: true
+2026-06-24T09:28:03.6733477Z env:
+2026-06-24T09:28:03.6733744Z   UV_PYTHON_INSTALL_DIR: /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:28:03.6734156Z   UV_CACHE_DIR: /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:28:03.6734470Z ##[endgroup]
+2026-06-24T09:28:03.8305768Z With the provided path, there will be 64 files uploaded
+2026-06-24T09:28:03.8310740Z Artifact name is valid!
+2026-06-24T09:28:03.8311628Z Root directory input is valid!
+2026-06-24T09:28:03.9965865Z Uploading artifact: coverage-report.zip
+2026-06-24T09:28:04.0011729Z Beginning upload of artifact content to blob storage
+2026-06-24T09:28:04.2409622Z Uploaded bytes 364082
+2026-06-24T09:28:04.2564113Z Finished uploading artifact content to blob storage!
+2026-06-24T09:28:04.2565900Z SHA256 digest of uploaded artifact is ad083de966e0a60e730b926a57c694d0812d44b89e247f97ed8f92271ee9813a
+2026-06-24T09:28:04.2566880Z Finalizing artifact upload
+2026-06-24T09:28:04.4820980Z Artifact coverage-report successfully finalized. Artifact ID 7845475257
+2026-06-24T09:28:04.4822498Z Artifact coverage-report has been successfully uploaded! Final size is 364082 bytes. Artifact ID is 7845475257
+2026-06-24T09:28:04.4826184Z Artifact download URL: https://github.com/RijksICTGilde/wies/actions/runs/28088801275/artifacts/7845475257
+2026-06-24T09:28:04.5049097Z Post job cleanup.
+2026-06-24T09:28:04.6169838Z UV_CACHE_DIR is already set to /home/runner/work/_temp/setup-uv-cache
+2026-06-24T09:28:04.6174779Z UV_PYTHON_INSTALL_DIR is already set to /home/runner/work/_temp/uv-python-dir
+2026-06-24T09:28:04.6177244Z Cache hit occurred on key setup-uv-2-x86_64-unknown-linux-gnu-ubuntu-24.04-unknown-pruned-3ec3b836339cc5c8994bde3f2ac1aecd63121b9844ac0cd4ce9ef99d1d35c99a, not saving cache.
+2026-06-24T09:28:04.6840215Z Post job cleanup.
+2026-06-24T09:28:04.7672298Z [command]/usr/bin/git version
+2026-06-24T09:28:04.7743332Z git version 2.54.0
+2026-06-24T09:28:04.7783774Z Temporarily overriding HOME='/home/runner/work/_temp/94118346-56cb-488f-9e46-d72db16f1c5a' before making global git config changes
+2026-06-24T09:28:04.7785190Z Adding repository directory to the temporary git global config as a safe directory
+2026-06-24T09:28:04.7789376Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/wies/wies
+2026-06-24T09:28:04.7820188Z Removing SSH command configuration
+2026-06-24T09:28:04.7827251Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-06-24T09:28:04.7865580Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-06-24T09:28:04.8104887Z Removing HTTP extra header
+2026-06-24T09:28:04.8111153Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-06-24T09:28:04.8148982Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-06-24T09:28:04.8389878Z Removing includeIf entries pointing to credentials config files
+2026-06-24T09:28:04.8397497Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-06-24T09:28:04.8427214Z includeif.gitdir:/home/runner/work/wies/wies/.git.path
+2026-06-24T09:28:04.8428792Z includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path
+2026-06-24T09:28:04.8429829Z includeif.gitdir:/github/workspace/.git.path
+2026-06-24T09:28:04.8431005Z includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-24T09:28:04.8435877Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/wies/wies/.git.path
+2026-06-24T09:28:04.8458295Z /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8469109Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/wies/wies/.git.path /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8506892Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path
+2026-06-24T09:28:04.8529151Z /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8539485Z [command]/usr/bin/git config --local --unset includeif.gitdir:/home/runner/work/wies/wies/.git/worktrees/*.path /home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8570966Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git.path
+2026-06-24T09:28:04.8592762Z /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8601249Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git.path /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8632791Z [command]/usr/bin/git config --local --get-all includeif.gitdir:/github/workspace/.git/worktrees/*.path
+2026-06-24T09:28:04.8656709Z /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8672517Z [command]/usr/bin/git config --local --unset includeif.gitdir:/github/workspace/.git/worktrees/*.path /github/runner_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config
+2026-06-24T09:28:04.8703450Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-06-24T09:28:04.8944914Z Removing credentials config '/home/runner/work/_temp/git-credentials-9b47a125-0bc3-4e72-b212-554d3e5afe84.config'
+2026-06-24T09:28:04.9075696Z Print service container logs: 3a5a9515756340d098bcc3598e15554d_postgres17_3eac15
+2026-06-24T09:28:04.9080408Z ##[command]/usr/bin/docker logs --details 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:28:04.9212986Z  initdb: warning: enabling "trust" authentication for local connections
+2026-06-24T09:28:04.9213976Z  The files belonging to this database system will be owned by user "postgres".
+2026-06-24T09:28:04.9214947Z  initdb: hint: You can change this by editing pg_hba.conf or using the option -A, or --auth-local and --auth-host, the next time you run initdb.
+2026-06-24T09:28:04.9216134Z  2026-06-24 09:27:16.212 UTC [1] LOG:  starting PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-06-24T09:28:04.9217068Z  2026-06-24 09:27:16.213 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2026-06-24T09:28:04.9217729Z  2026-06-24 09:27:16.213 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2026-06-24T09:28:04.9218353Z  2026-06-24 09:27:16.214 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-24T09:28:04.9219011Z  2026-06-24 09:27:16.216 UTC [64] LOG:  database system was shut down at 2026-06-24 09:27:16 UTC
+2026-06-24T09:28:04.9219606Z  2026-06-24 09:27:16.220 UTC [1] LOG:  database system is ready to accept connections
+2026-06-24T09:28:04.9220127Z  2026-06-24 09:27:25.323 UTC [75] FATAL:  role "root" does not exist
+2026-06-24T09:28:04.9220802Z  2026-06-24 09:27:35.399 UTC [83] FATAL:  role "root" does not exist
+2026-06-24T09:28:04.9221397Z  2026-06-24 09:27:45.481 UTC [95] FATAL:  role "root" does not exist
+2026-06-24T09:28:04.9222021Z  2026-06-24 09:27:48.095 UTC [106] ERROR:  duplicate key value violates unique constraint "unique_user_email_ci"
+2026-06-24T09:28:04.9223059Z  2026-06-24 09:27:48.095 UTC [106] DETAIL:  Key (lower(email::text))=(dup@rijksoverheid.nl) already exists.
+2026-06-24T09:28:04.9224749Z  2026-06-24 09:27:48.095 UTC [106] STATEMENT:  INSERT INTO "auth_user" ("password", "last_login", "is_superuser", "first_name", "last_name", "is_staff", "is_active", "date_joined", "email") VALUES ('!z5IwvChFJ2LD3xjih4yVRe4doj7gGZve7WPnI7g3', NULL, false, 'B', 'B', false, true, '2026-06-24 09:27:48.095430+00:00'::timestamptz, 'DUP@rijksoverheid.nl') RETURNING "auth_user"."id"
+2026-06-24T09:28:04.9226300Z  2026-06-24 09:27:55.555 UTC [164] FATAL:  role "root" does not exist
+2026-06-24T09:28:04.9226806Z  2026-06-24 09:28:00.391 UTC [62] LOG:  checkpoint starting: immediate force wait
+2026-06-24T09:28:04.9228046Z  2026-06-24 09:28:00.394 UTC [62] LOG:  checkpoint complete: wrote 7 buffers (0.0%); 0 WAL file(s) added, 0 removed, 1 recycled; write=0.001 s, sync=0.001 s, total=0.004 s; sync files=5, longest=0.001 s, average=0.001 s; distance=8066 kB, estimate=8066 kB; lsn=0/20F6318, redo lsn=0/20F62C0
+2026-06-24T09:28:04.9229125Z  This user must also own the server process.
+2026-06-24T09:28:04.9229412Z
+2026-06-24T09:28:04.9229705Z  The database cluster will be initialized with locale "en_US.utf8".
+2026-06-24T09:28:04.9230166Z  The default database encoding has accordingly been set to "UTF8".
+2026-06-24T09:28:04.9230753Z  The default text search configuration will be set to "english".
+2026-06-24T09:28:04.9231097Z
+2026-06-24T09:28:04.9231292Z  Data page checksums are disabled.
+2026-06-24T09:28:04.9231550Z
+2026-06-24T09:28:04.9231850Z  fixing permissions on existing directory /var/lib/postgresql/data ... ok
+2026-06-24T09:28:04.9232259Z  creating subdirectories ... ok
+2026-06-24T09:28:04.9232580Z  selecting dynamic shared memory implementation ... posix
+2026-06-24T09:28:04.9232942Z  selecting default "max_connections" ... 100
+2026-06-24T09:28:04.9233266Z  selecting default "shared_buffers" ... 128MB
+2026-06-24T09:28:04.9233573Z  selecting default time zone ... Etc/UTC
+2026-06-24T09:28:04.9233868Z  creating configuration files ... ok
+2026-06-24T09:28:04.9234149Z  running bootstrap script ... ok
+2026-06-24T09:28:04.9234680Z  performing post-bootstrap initialization ... ok
+2026-06-24T09:28:04.9235010Z  syncing data to disk ... ok
+2026-06-24T09:28:04.9235244Z
+2026-06-24T09:28:04.9235418Z
+2026-06-24T09:28:04.9235649Z  Success. You can now start the database server using:
+2026-06-24T09:28:04.9235953Z
+2026-06-24T09:28:04.9236195Z      pg_ctl -D /var/lib/postgresql/data -l logfile start
+2026-06-24T09:28:04.9236499Z
+2026-06-24T09:28:04.9237163Z  waiting for server to start....2026-06-24 09:27:15.904 UTC [48] LOG:  starting PostgreSQL 17.10 (Debian 17.10-1.pgdg13+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit
+2026-06-24T09:28:04.9238091Z  2026-06-24 09:27:15.905 UTC [48] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2026-06-24T09:28:04.9238694Z  2026-06-24 09:27:15.907 UTC [51] LOG:  database system was shut down at 2026-06-24 09:27:15 UTC
+2026-06-24T09:28:04.9239219Z  2026-06-24 09:27:15.911 UTC [48] LOG:  database system is ready to accept connections
+2026-06-24T09:28:04.9239599Z   done
+2026-06-24T09:28:04.9239795Z  server started
+2026-06-24T09:28:04.9240001Z  CREATE DATABASE
+2026-06-24T09:28:04.9240202Z
+2026-06-24T09:28:04.9240367Z
+2026-06-24T09:28:04.9241240Z  /usr/local/bin/docker-entrypoint.sh: ignoring /docker-entrypoint-initdb.d/*
+2026-06-24T09:28:04.9242301Z
+2026-06-24T09:28:04.9242960Z  waiting for server to shut down...2026-06-24 09:27:16.093 UTC [48] LOG:  received fast shutdown request
+2026-06-24T09:28:04.9243929Z  .2026-06-24 09:27:16.093 UTC [48] LOG:  aborting any active transactions
+2026-06-24T09:28:04.9244981Z  2026-06-24 09:27:16.095 UTC [48] LOG:  background worker "logical replication launcher" (PID 54) exited with exit code 1
+2026-06-24T09:28:04.9245958Z  2026-06-24 09:27:16.096 UTC [49] LOG:  shutting down
+2026-06-24T09:28:04.9246871Z  2026-06-24 09:27:16.096 UTC [49] LOG:  checkpoint starting: shutdown immediate
+2026-06-24T09:28:04.9248796Z  2026-06-24 09:27:16.110 UTC [49] LOG:  checkpoint complete: wrote 925 buffers (5.6%); 0 WAL file(s) added, 0 removed, 0 recycled; write=0.011 s, sync=0.002 s, total=0.015 s; sync files=301, longest=0.001 s, average=0.001 s; distance=4256 kB, estimate=4256 kB; lsn=0/1915968, redo lsn=0/1915968
+2026-06-24T09:28:04.9250954Z  2026-06-24 09:27:16.117 UTC [48] LOG:  database system is shut down
+2026-06-24T09:28:04.9251553Z   done
+2026-06-24T09:28:04.9251879Z  server stopped
+2026-06-24T09:28:04.9252212Z
+2026-06-24T09:28:04.9252626Z  PostgreSQL init process complete; ready for start up.
+2026-06-24T09:28:04.9253115Z
+2026-06-24T09:28:04.9263537Z Stop and remove container: 3a5a9515756340d098bcc3598e15554d_postgres17_3eac15
+2026-06-24T09:28:04.9268624Z ##[command]/usr/bin/docker rm --force 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:28:05.0744980Z 2f3c10b16c7c3dc94a621ba77f5687496d6e621151d0259e3988ae8095e3203a
+2026-06-24T09:28:05.0773534Z Remove container network: github_network_5d2efe1afde2470bb8a7b62c9fe2b69e
+2026-06-24T09:28:05.0778204Z ##[command]/usr/bin/docker network rm github_network_5d2efe1afde2470bb8a7b62c9fe2b69e
+2026-06-24T09:28:05.1938404Z github_network_5d2efe1afde2470bb8a7b62c9fe2b69e
+2026-06-24T09:28:05.2013639Z Cleaning up orphan processes
